@@ -1,0 +1,9 @@
+.DS_Store
+*.pyc
+.idea/
+*.iml
+/static
+/node_modules
+db.test.sqlite3
+.coverage
+*.log
