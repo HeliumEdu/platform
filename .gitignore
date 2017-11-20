@@ -7,5 +7,3 @@ db.sqlite3
 db.test.sqlite3
 .coverage
 *.log
-.vagrant
-*_tmp
