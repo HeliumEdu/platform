@@ -3,14 +3,13 @@
 {% block title %}{{ PROJECT_NAME }} | Internal Server Error{% endblock %}
 
 {% block content %}
-    <div class="container main-content">
-        <div class="row">
-            <div class="col-sm-8 col-sm-offset-2 col-xs-12 m-b-3">
-                <div class="title"><span>Internal Server Error</span></div>
+<div class="page-content">
+    <h3 class="page-header">Internal Server Error</h3>
 
-                <p class="text-center">Oops! Looks like something went wrong on our end. Try refreshing the page. If the
-                    issue persists, <a href="{% url 'contact' %}">contact support</a>.</p>
-            </div>
+    <div class="row">
+        <div class="col-sm-12">Oops! Looks like something went wrong on our end. Try refreshing the page. If the
+            issue persists, <a href="{% url 'contact' %}">contact support</a>.
         </div>
     </div>
+</div>
 {% endblock %}

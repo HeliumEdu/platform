@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def planner(request):
+def account_settings(request):
     if authservice.is_anonymous_or_non_admin(request.user):
-        statsd.incr('platform.view.planner')
+        statsd.incr('platform.view.settings')
 
-    return render(request, "planner.html")
+    return render(request, "account/settings.html")

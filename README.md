@@ -59,6 +59,7 @@ The project's base configuration is defined under `conf`. Application-specific c
 prefix.
 
 * users
+* planner
 
 ### Local Development
 Development can be done locally without the use of provisioning through Ansible scripts. To develop in this way, you should have the ENVIRONMENT

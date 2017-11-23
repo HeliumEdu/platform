@@ -50,6 +50,7 @@ DEFAULT_INSTALLED_APPS = (
     # Project modules
     'helium.common',
     'helium.users',
+    'helium.planner',
 )
 
 DEFAULT_MIDDLEWARE_CLASSES = (

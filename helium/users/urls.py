@@ -4,7 +4,7 @@ Users URLs.
 
 from django.conf.urls import url
 
-from helium.users.views.authenticatedviews import planner
+from helium.users.views.accountviews import account_settings
 from helium.users.views.authenticationviews import *
 
 __author__ = 'Alex Laird'
@@ -18,6 +18,6 @@ urlpatterns = [
     url(r'^logout', logout, name='logout'),
     url(r'^forgot', forgot, name='forgot'),
 
-    # Authenticated URLs
-    url(r'^planner', planner, name='planner'),
+    # Account URLs
+    url(r'^account/settings', account_settings, name='settings'),
 ]

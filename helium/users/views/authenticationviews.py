@@ -114,7 +114,7 @@ def forgot(request):
     status = None
 
     if request.user.is_authenticated():
-        redirect = reverse('password')
+        redirect = reverse('account_password')
     else:
         if request.method == 'POST':
             redirect = authservice.process_forgot_password(request)
@@ -131,7 +131,7 @@ def forgot(request):
             'status': status
         }
 
-        return render(request, 'authentication/password.html', {'data': data})
+        return render(request, 'authentication/forgot.html', {'data': data})
     else:
         response = HttpResponseRedirect(redirect)
         if status:
