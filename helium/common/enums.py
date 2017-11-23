@@ -1,0 +1,78 @@
+"""
+Common enums.
+"""
+
+__author__ = 'Alex Laird'
+__copyright__ = 'Copyright 2017, Helium Edu'
+__version__ = '0.5.0'
+
+STATE_CHOICES = (
+    ('AL', 'Alabama'),
+    ('AK', 'Alaska'),
+    ('AZ', 'Arizona'),
+    ('AR', 'Arkansas'),
+    ('CA', 'California'),
+    ('CO', 'Colorado'),
+    ('CT', 'Connecticut'),
+    ('DE', 'Delaware'),
+    ('DC', 'District Of Columbia'),
+    ('FL', 'Florida'),
+    ('GA', 'Georgia'),
+    ('HI', 'Hawaii'),
+    ('ID', 'Idaho'),
+    ('IL', 'Illinois'),
+    ('IN', 'Indiana'),
+    ('IA', 'Iowa'),
+    ('KS', 'Kansas'),
+    ('KY', 'Kentucky'),
+    ('LA', 'Louisiana'),
+    ('ME', 'Maine'),
+    ('MD', 'Maryland'),
+    ('MA', 'Massachusetts'),
+    ('MI', 'Michigan'),
+    ('MN', 'Minnesota'),
+    ('MS', 'Mississippi'),
+    ('MO', 'Missouri'),
+    ('MT', 'Montana'),
+    ('NE', 'Nebraska'),
+    ('NV', 'Nevada'),
+    ('NH', 'New Hampshire'),
+    ('NJ', 'New Jersey'),
+    ('NM', 'New Mexico'),
+    ('NY', 'New York'),
+    ('NC', 'North Carolina'),
+    ('ND', 'North Dakota'),
+    ('OH', 'Ohio'),
+    ('OK', 'Oklahoma'),
+    ('OR', 'Oregon'),
+    ('PA', 'Pennsylvania'),
+    ('RI', 'Rhode Island'),
+    ('SC', 'South Carolina'),
+    ('SD', 'South Dakota'),
+    ('TN', 'Tennessee'),
+    ('TX', 'Texas'),
+    ('UT', 'Utah'),
+    ('VT', 'Vermont'),
+    ('VA', 'Virginia'),
+    ('WA', 'Washington'),
+    ('WV', 'West Virginia'),
+    ('WI', 'Wisconsin'),
+    ('WY', 'Wyoming')
+)
+
+TIME_ZONE_CHOICES = (
+    ('America',
+     [('US/Alaska', 'Alaska'),
+      ('US/Aleutian', 'Aleutian'),
+      ('US/Arizona', 'Arizona'),
+      ('US/Central', 'Central'),
+      ('US/East-Indiana', 'East-Indiana'),
+      ('US/Eastern', 'Eastern'),
+      ('US/Hawaii', 'Hawaii'),
+      ('US/Indiana-Starke', 'Indiana-Starke'),
+      ('US/Michigan', 'Michigan'),
+      ('US/Mountain', 'Mountain'),
+      ('US/Pacific', 'Pacific'),
+      ('US/Pacific-New', 'Pacific-New'),
+      ('US/Samoa', 'Samoa')]),
+)

@@ -34,11 +34,11 @@ coverage run --source='.' manage.py test && coverage report
 ```
 
 ### Fixtures
-Fixtures are an easy way to load data from a JSON blob into a database, as we just did with vendor data. However, these should never be loaded into
-production.
+Fixtures are an easy way to load data from a JSON blob into a database, as we just did above. However, these should never be loaded into
+non-dev environments.
 
 ### Superusers
-Superusers may not always fully function properly, as they are created through a mechanism handled by Django rather than through the impelemented
+Superusers may not always fully function properly, as they are created through a mechanism handled by Django rather than through the implemented
 registration flow. As a result, they should not be relied on, and only one should ever be created—this gives you access to the Django admin for the
 first time. From this point forward, users should be created through the proper registration flow, and if those users are to be administrators,
 their user permissions should be elevated properly through the admin. 
@@ -52,10 +52,8 @@ and test the Platform, as it is quick and easy to setup, and it fully emulates a
 the same way staging and production environments are deployed, using Ansible scripts.
 
 ### Modules
-The Platform project is split up into several modules, all contained within this repository. Eventually, they should be made into Pip dependencies
-(which would also allow the Crawler project to make use of a more modular import of necessary Platform components), but they are currently simply
-included as sub-applications in Django. Still, they are independent modules that can be deployed separately, functioning on separate nodes for
-scalability, as needed.
+The Platform project is split up into several modules, all contained within this repository.They are independent modules that can be deployed
+separately, functioning on separate nodes for scalability, as needed.
 
 The project's base configuration is defined under `conf`. Application-specific configuration variables should have their application name as their
 prefix.

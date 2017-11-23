@@ -12,3 +12,4 @@ requests[security]
 django-pipeline==1.6.13
 celery==3.1.25
 celery[redis]
+psycopg2==2.5.2

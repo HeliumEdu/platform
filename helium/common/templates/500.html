@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ PROJECT_NAME }} | Internal Server Error{% endblock %}
+
+{% block content %}
+    <div class="container main-content">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-xs-12 m-b-3">
+                <div class="title"><span>Internal Server Error</span></div>
+
+                <p class="text-center">Oops! Looks like something went wrong on our end. Try refreshing the page. If the
+                    issue persists, <a href="{% url 'contact' %}">contact support</a>.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

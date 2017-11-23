@@ -1,0 +1,2 @@
+<div id="status" class="alert {% if data.status %}
+alert-{{ data.status.type }}{% else %}hidden{% endif %}">{{ data.status.msg|safe|escape }}</div>

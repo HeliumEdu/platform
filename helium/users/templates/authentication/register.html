@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{{ PROJECT_NAME }} | Register{% endblock %}
+
+{% block content %}
+    <div class="container main-content">
+        <div class="row">
+            <!-- Register Form -->
+            <div class="col-sm-6 col-sm-offset-3 col-xs-12 login-register-form m-b-3">
+                <div class="title"><span>Create An Account</span></div>
+
+                {% include 'snippets/status.html' %}
+
+                <form name="register-form" action="{{ request.get_full_path }}" method="post">{% csrf_token %}
+                    {% for field in data.user_form %}
+                        <div class="form-group{% if field.errors %} has-error{% endif %} col-sm-12">
+                            <label for="{{ field.label }}">
+                                {{ field.label_tag }}{% if not field.field.required %} (optional){% endif %}</label>
+                            {% if field.field.required %}
+                                {% render_field field class+="form-control" required+="true" %}
+                            {% else %}
+                                {% render_field field class+="form-control" %}
+                            {% endif %}
+                            {% render_field field.errors %}
+                        </div>
+                    {% endfor %}
+                    <div class="col-sm-12">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="terms" style="display: block; opacity: 0" required><span> I agree with <a
+                                    target="_blank" href="{% url 'terms' %}">Terms of Service</a> and <a target="_blank"
+                                                                                                         href="{% url 'privacy' %}">Privacy
+                                Policy</a></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <button type="submit" class="btn btn-theme pull-right"><i class="fa fa-long-arrow-right"></i>
+                            Register
+                        </button>
+                    </div>
+                    <div class="clearfix"></div>
+                </form>
+            </div>
+            <!-- End Register Form -->
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_footer %}
+    <script type="text/javascript">
+        $("#username").focus();
+    </script>
+{% endblock %}
