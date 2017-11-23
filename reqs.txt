@@ -1,0 +1,14 @@
+django==1.8.18
+django-redis==4.7.0
+pytz==2016.10
+django-debug-toolbar==1.6
+django-widget-tweaks==1.4.1
+django-storages==1.5.1
+statsd==3.2.1
+dotenv==0.0.5
+boto==2.45.0
+pycrypto==2.6.1
+requests[security]
+django-pipeline==1.6.13
+celery==3.1.25
+celery[redis]
