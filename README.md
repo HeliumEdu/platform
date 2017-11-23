@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
+
 # Platform Project
 
 ## Prerequisites
