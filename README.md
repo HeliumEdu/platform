@@ -65,7 +65,7 @@ prefix.
 
 ### Local Development
 Development can be done locally without the use of provisioning through Ansible scripts. To develop in this way, you should have the ENVIRONMENT
-variable set to "dev" for configs to pickup and use the locally committed .env file.
+variable set to "dev" for configs to pickup and use the locally committed `.env` file.
 
 Then, to start the development server, simply execute:
 
@@ -74,3 +74,10 @@ python manage.py runserver
 ```
 
 Django will start a development server at http://localhost:8000.
+
+Note that credentials to third-party services (for example, AWS services like SES), are only provided in `.env` as
+examples. They are not real credentials, and while the application as a whole will function without them being changed
+real credentials, certain parts of the app pertaining to those third-party functions (for instance, sending an email)
+will not work until you supply your own credentials.
+
+Do NOT commit real credentials to third-party servies, even in example files.
