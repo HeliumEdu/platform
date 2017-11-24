@@ -89,8 +89,6 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-PREPEND_WWW = os.environ.get('PLATFORM_PREPEND_WWW', 'False') == 'True'
-
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'
