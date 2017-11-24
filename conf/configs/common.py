@@ -89,6 +89,8 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
+PREPEND_WWW = True
+
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'
@@ -100,11 +102,11 @@ USE_TZ = True
 
 # Email settings
 
-ADMIN_EMAIL_ADDRESS = 'admin@heliumedu.com'
+ADMIN_EMAIL_ADDRESS = os.environ.get('PROJECT_ADMIN_EMAIL')
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = os.environ.get('PLATFORM_EMAIL_PORT')
-EMAIL_ADDRESS = 'contact@heliumedu.com'
+EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
 DEFAULT_FROM_EMAIL = PROJECT_NAME + ' <' + EMAIL_ADDRESS + '>'
 EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
 
