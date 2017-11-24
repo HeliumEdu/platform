@@ -5,7 +5,7 @@ build:
 	python manage.py collectstatic --noinput
 
 build-migrations:
-    python manage.py makemigrations users planner
+	python manage.py makemigrations users planner
 
 migrate:
 	python manage.py migrate

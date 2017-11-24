@@ -36,6 +36,10 @@ if DEBUG:
 # Django configuration
 #############################
 
+# Application configuration
+
+PREPEND_WWW = os.environ.get('PLATFORM_PREPEND_WWW', 'False') == 'True'
+
 # Security
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
