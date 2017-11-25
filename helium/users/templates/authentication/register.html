@@ -4,16 +4,127 @@
 
 {% block title %}{{ PROJECT_NAME }} | Register{% endblock %}
 
-{% block nav_class %}{% endblock %}
+{% block body_class_attrs %}navbar-fixed{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <h3 class="page-header">Register</h3>
+<div class="main-container">
+    <div class="container">
+        <div class="page-content">
+            <div class="row">
+                <div class="col-sm-6 col-sm-offset-3">
+                    <div class="helper-container">
+                        <div class="well">
+                            <h4 class="header green lighter bigger">
+                                <i class="icon-user blue"></i>
+                                New User Registration
+                            </h4>
 
-    <div class="row">
-        <div class="col-sm-12">
-            Nothing to do here just yet ...
+                            <div class="space-6"></div>
+
+                            {% include 'snippets/status.html' %}
+
+                            <form action="{{ request.get_full_path }}" method="post">{% csrf_token %}
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <fieldset>
+                                            <label class="block clearfix">
+                                                <div class="input-group no-padding">
+                                                        <span class="input-group-addon">
+                                                            <i class="icon-envelope"></i>
+                                                        </span>
+
+                                                    <input type="email" class="form-control" name="email" id="email"
+                                                           placeholder="Email" tabindex="3" maxlength="255" required/>
+                                                </div>
+                                            </label>
+
+                                            <label class="block clearfix">
+                                                <div class="input-group no-padding">
+                                                        <span class="input-group-addon">
+                                                            <i class="icon-user"></i>
+                                                        </span>
+
+                                                    <input type="text" class="form-control" name="username"
+                                                           id="username" maxlength="255"
+                                                           placeholder="Username" tabindex="4" required/>
+                                                </div>
+                                            </label>
+
+                                            <label class="block clearfix">
+                                                <div class="input-group no-padding">
+                                                        <span class="input-group-addon">
+                                                            <i class="icon-lock"></i>
+                                                        </span>
+
+                                                    <input type="password" class="form-control" name="password"
+                                                           id="password" maxlength="255"
+                                                           placeholder="Password" tabindex="5" required/>
+                                                </div>
+                                            </label>
+
+                                            <label class="block clearfix">
+                                                <div class="input-group no-padding">
+                                                        <span class="input-group-addon">
+                                                            <i class="icon-retweet"></i>
+                                                        </span>
+
+                                                    <input type="password" class="form-control"
+                                                           name="confirm-password" maxlength="255"
+                                                           id="confirm-password" tabindex="6"
+                                                           placeholder="Confirm password" required/>
+                                                </div>
+                                            </label>
+
+                                            <label class="block clearfix">
+                                                <label class="col-sm-3 control-label" style="margin-top: 3px;"
+                                                       for="id_{{ time_zone_form.time_zone.name }}">Time zone</label>
+
+                                                <div class="col-sm-9">
+                                                    {% render_field time_zone_form.time_zone class+="form-control chosen-select" %}
+                                                </div>
+                                            </label>
+
+                                            <label class="block">
+                                                <input type="checkbox" class="ace" required/>
+                                        <span class="lbl">
+                                            I agree to Helium's <a href="{% url 'terms' %}" target="_blank">Terms of Service</a> and <a href="{% url 'privacy' %}" target="_blank">Privacy Policy</a>
+                                        </span>
+                                            </label>
+
+                                            <div class="space-24"></div>
+                                        </fieldset>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-8 col-sm-offset-2">
+                                        <button type="submit"
+                                                class="width-85 pull-right btn btn-sm btn-success">
+                                            Sign Me Up!
+                                            <i class="icon-signin icon-on-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block page_footer %}
+{% javascript 'jstz_js' %}
+<script type="application/javascript">
+    (function () {
+        "use strict";
+
+        $("#email").focus();
+        $("#id_time_zone").chosen({width: "100%", search_contains: true, no_results_text: "No time zones match"});
+        $("#id_time_zone").val(jstz.determine().name());
+        $("#id_time_zone").trigger("change");
+        $("#id_time_zone").trigger("chosen:updated")
+    }());
+</script>
 {% endblock %}

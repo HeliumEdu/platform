@@ -17,12 +17,6 @@ __version__ = '0.5.0'
 logger = logging.getLogger(__name__)
 
 
-def internal_server_error(request):
-    return render_to_response("500.html",
-                              context_instance=RequestContext(request),
-                              status=500)
-
-
 def bad_request(request):
     return render_to_response("400.html",
                               context_instance=RequestContext(request),
@@ -39,6 +33,18 @@ def forbidden(request):
     return render_to_response("403.html",
                               context_instance=RequestContext(request),
                               status=403)
+
+
+def internal_server_error(request):
+    return render_to_response("500.html",
+                              context_instance=RequestContext(request),
+                              status=500)
+
+
+def website_unavailable(request):
+    return render_to_response("503.html",
+                              context_instance=RequestContext(request),
+                              status=503)
 
 
 def home(request):

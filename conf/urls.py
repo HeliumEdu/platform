@@ -15,10 +15,11 @@ __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '0.5.0'
 
-handler500 = 'helium.common.views.internal_server_error'
 handler400 = 'helium.common.views.bad_request'
 handler401 = 'helium.common.views.unauthorized'
 handler403 = 'helium.common.views.forbidden'
+handler500 = 'helium.common.views.internal_server_error'
+handler503 = 'helium.common.views.website_unavailable'
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -28,7 +29,7 @@ urlpatterns = [
     # Include app-specific URL files
     url(r'^', include(helium.common.urls)),
     url(r'^', include(helium.users.urls)),
-    url(r'^', include(helium.planner.urls)),
+    url(r'^planner/', include(helium.planner.urls)),
 
     url(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps}),
 ]

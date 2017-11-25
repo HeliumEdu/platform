@@ -18,8 +18,32 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def planner(request):
+def calendar(request):
     if authservice.is_anonymous_or_non_admin(request.user):
-        statsd.incr('platform.view.planner')
+        statsd.incr('platform.view.calendar')
 
-    return render(request, "planner.html")
+    return render(request, "calendar.html")
+
+
+@login_required
+def classes(request):
+    if authservice.is_anonymous_or_non_admin(request.user):
+        statsd.incr('platform.view.classes')
+
+    return render(request, "classes.html")
+
+
+@login_required
+def materials(request):
+    if authservice.is_anonymous_or_non_admin(request.user):
+        statsd.incr('platform.view.materials')
+
+    return render(request, "materials.html")
+
+
+@login_required
+def grades(request):
+    if authservice.is_anonymous_or_non_admin(request.user):
+        statsd.incr('platform.view.grades')
+
+    return render(request, "grades.html")

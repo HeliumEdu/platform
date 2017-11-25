@@ -141,15 +141,56 @@ PIPELINE = {
     'STYLESHEETS': {
         'base': {
             'source_filenames': (
-                ),
-            'output_filename': 'css/base_' + PROJECT_VERSION + '.min.css'
+                'css/jquery-ui.full.min.css',
+                'css/chosen.css',
+                'css/font-awesome.css',
+                'css/ace-fonts.css',
+                'css/ace.css',
+                'css/helium.css',
+            ),
+            'output_filename': 'css/helium_' + PROJECT_VERSION + '.min.css'
         },
+        'base_ie8': {
+            'source_filenames': (
+                'css/ace-ie.css',
+            ),
+            'output_filename': 'css/helium_ie8_' + PROJECT_VERSION + '.min.css'
+        }
     },
     'JAVASCRIPT': {
         'base': {
             'source_filenames': (
+                'js/jquery.cookie.js',
+                'js/jquery.ui.touch-punch.min.js',
+                'js/chosen.jquery.js',
+                'js/globalize.js',
+                'js/spin.js',
+                'js/jquery.spin.js',
+                'js/helium.js',
+                'js/ace-elements.js',
+                'js/ace.js',
+                'js/planner-api.js',
             ),
-            'output_filename': 'js/base_' + PROJECT_VERSION + '.min.js'
+            'output_filename': 'js/helium_' + PROJECT_VERSION + '.min.js'
+        },
+        'base_header_js': {
+            'source_filenames': (
+                'js/ace-extra.js',
+            ),
+            'output_filename': 'js/helium_header_' + PROJECT_VERSION + '.min.js',
+        },
+        'base_ie9_js': {
+            'source_filenames': (
+                'js/html5shiv.js',
+                'js/respond.js',
+            ),
+            'output_filename': 'js/helium_ie9_' + PROJECT_VERSION + '.min.js',
+        },
+        'jstz_js': {
+            'source_filenames': (
+                'js/jstz.js',
+            ),
+            'output_filename': 'js/helium_jstz.min_' + PROJECT_VERSION + '.js',
         },
     }
 }

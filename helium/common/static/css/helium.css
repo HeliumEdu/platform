@@ -1,0 +1,315 @@
+/**
+ * Copyright (c) 2017 Helium Edu.
+ *
+ * Helium stylesheet shared among all pages.
+ *
+ * @author Alex Laird
+ * @version 0.5.0
+ */
+
+body, html {
+    height: 100%;
+}
+
+/****************
+Containers and Content
+****************/
+
+body.navbar-fixed {
+    padding-top: 45px;
+}
+
+.full-container {
+    height: 100%;
+    background-color: #ededed;
+}
+
+.main-container {
+    min-height: 550px;
+    background-color: #ffffff;
+}
+
+.login-container {
+    margin-top: 20px;
+    background-color: #393939;
+}
+
+.helper-container {
+    margin: 20px;
+}
+
+/****************
+Navbar
+****************/
+
+.navbar-collapse {
+    max-height: 190px;
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: #ffffff;
+    background-color: #62a8d1;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+    color: #ffffff;
+    background-color: #62a8d1;
+}
+
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+    color: #ffffff;
+    background-color: #62a8d1;
+}
+
+.navbar-default .navbar-toggle {
+    border-color: #ffffff;
+}
+
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+    background-color: #62a8d1;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #ffffff;
+}
+
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #ffffff;
+    }
+
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #ffffff;
+        background-color: #62a8d1;
+    }
+}
+
+/****************
+Footer
+****************/
+
+footer {
+    padding: 30px 0;
+    background-image: -webkit-linear-gradient(top, #ffffff, #ededed);
+    background-image: -moz-linear-gradient(top, #ffffff, #ededed);
+    background-image: -ms-linear-gradient(top, #ffffff, #ededed);
+    background-image: -o-linear-gradient(top, #ffffff, #ededed);
+}
+
+footer span {
+    float: left;
+}
+
+footer ul {
+    float: right;
+    list-style: none;
+    display: block;
+}
+
+footer ul li {
+    float: left;
+    padding-left: 30px;
+}
+
+/****************
+Adjust library components
+****************/
+
+.simplecolorpicker {
+    margin-top: 5px;
+    border-radius: .25em;
+    width: 20px;
+}
+
+.simplecolorpicker span.color {
+    border-radius: .25em;
+    width: 20px;
+}
+
+.course-preview-color {
+    display: inline-block;
+    line-height: 1.15;
+    padding: .2em .6em .3em;
+    border-radius: .25em;
+}
+
+.modal-content {
+    border-radius: .5em;
+}
+
+.form-horizontal .input-group {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.bootstrap-timepicker-widget.dropdown-menu {
+    margin-left: 15px;
+}
+
+/****************
+Adjustment classes
+****************/
+
+.navbar-brand {
+    padding-top: 8px !important;
+    padding-bottom: 0px !important;
+    margin-right: 6px;
+}
+
+.loading-mini {
+    display: inline-block;
+}
+
+.to-hide {
+    display: none;
+}
+
+.top-buffer-10 {
+    margin-top: 10px;
+}
+
+.bottom-buffer-10 {
+    margin-bottom: 10px;
+}
+
+.top-buffer-20 {
+    margin-top: 20px;
+}
+
+.left-buffer-15 {
+    margin-left: 15px;
+}
+
+.left-buffer-50 {
+    margin-left: 50px;
+}
+
+.left-buffer-70 {
+    margin-left: 70px;
+}
+
+.right-buffer-30 {
+    margin-right: 30px;
+}
+
+span.twitter-typeahead > input.form-control.input-sm.tt-query {
+    background-color: #FFF !important;
+}
+
+.errorlist {
+    list-style-type: none;
+}
+
+.dataTable {
+    width: 100% !important;
+}
+
+.featurette-divider {
+    margin: 60px 30px 80px 30px;
+}
+
+.carousel-inner > .item > img, .carousel-inner > .item > a > img {
+    margin: 0 auto;
+}
+
+.carousel-control.left, .carousel-control.right {
+    background-image: none
+}
+
+.carousel-caption {
+    width: 60%;
+    margin: 0 auto;
+    background-color: rgba(67, 142, 185, 0.3);
+    border-radius: 10px;
+}
+
+.carousel-indicators li {
+    background-color: rgba(171, 186, 195, .2);
+}
+
+.carousel-indicators .active {
+    background-color: #478fca;
+}
+
+.dropzone {
+    min-height: 200px;
+}
+
+#version-badge {
+    position: absolute; left: 103px; top: 7px;
+}
+
+.input-group-addon i {
+    width: 15px;
+}
+
+.logo-icon {
+    display: inline !important;
+    margin-top: -15px;
+}
+
+.social-footer {
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.reminder-msg-body {
+    padding: 10px 0 10px 0;
+}
+
+.reminder-msg-body {
+    display: inline-block !important;
+}
+
+.reminder-popup {
+    border-bottom: 1px solid;
+    border-bottom-color: #e4ecf3;
+}
+
+.reminder-popup > span {
+    border-bottom: none !important;
+    padding: 10px 2px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 16px;
+    color: #555;
+    min-width: 190px !important;
+}
+
+.reminder-msg-body > span > span.msg-title > a:hover {
+    color: #428bca;
+    background-color: transparent;
+    text-decoration: underline;
+}
+
+.reminder-close i {
+    font-size: 16px;
+}
+
+.cursor-hover:hover {
+    cursor: pointer;
+}
+
+.wysiwyg-editor {
+    resize: vertical;
+    max-height: none;
+}
+
+.comment-editor {
+    height: 125px;
+}
+
+.arrow-up-icon:before {
+    content: "\f062";
+}
+
+.arrow-down-icon:before {
+    content: "\f063";
+}
