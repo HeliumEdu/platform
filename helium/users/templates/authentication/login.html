@@ -2,6 +2,8 @@
 
 {% block title %}{{ PROJECT_NAME }} | Login{% endblock %}
 
+{% block body_class_attrs %}navbar-fixed{% endblock %}
+
 {% block content %}
 <div class="main-container">
     <div class="container">
@@ -17,7 +19,7 @@
 
                             <div class="space-6"></div>
 
-                            {{ status_div|safe|escape }}
+                            {% include 'snippets/status.html' %}
 
                             <form class="form" action="{{ request.get_full_path }}" method="post">{% csrf_token %}
                                 <div class="form-group">
@@ -51,7 +53,7 @@
                             </form>
 
                             <div class="clearfix">
-                                <a href="/forgot" class="pull-right">
+                                <a href="{% url 'forgot' %}" class="pull-right">
                                     Forgot your password?
                                 </a>
                             </div>

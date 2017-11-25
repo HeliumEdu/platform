@@ -38,7 +38,7 @@ urlpatterns = [
     url(r'^tour', RedirectView.as_view(pattern_name='home', permanent=True)),
     url(r'^prodigy', RedirectView.as_view(pattern_name='home', permanent=True)),
     url(r'^plans', RedirectView.as_view(pattern_name='home', permanent=True)),
-    url(r'^purchase', RedirectView.as_view(pattern_name='purchase', permanent=True)),
+    url(r'^purchase', RedirectView.as_view(pattern_name='home', permanent=True)),
 
     # Legacy Planner URLs
     url(r'^calendar', RedirectView.as_view(pattern_name='calendar', permanent=True)),

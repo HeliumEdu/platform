@@ -13,3 +13,8 @@ django-pipeline==1.6.13
 celery==3.1.25
 celery[redis]
 psycopg2==2.5.2
+Pillow==2.5.3
+Pygments==1.6
+icalendar==3.8.3
+python-dateutil==2.4.2
+mock==1.0.1
