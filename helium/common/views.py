@@ -8,7 +8,6 @@ from django.shortcuts import render, render_to_response, redirect
 from django.template import RequestContext
 from statsd.defaults.django import statsd
 
-from helium.common import tasks
 from helium.users.services import authservice
 
 __author__ = 'Alex Laird'
@@ -50,29 +49,36 @@ def home(request):
 
 
 def support(request):
-    return redirect('https://heliumedu.zendesk.com/hc')
+    statsd.incr('platform.view.support')
+
+    return redirect('https://heliumedu.uservoice.com')
+
+
+def terms(request):
+    statsd.incr('platform.view.terms')
+
+    return render(request, "terms.html")
+
+
+def privacy(request):
+    statsd.incr('platform.view.privacy')
+
+    return render(request, "privacy.html")
+
+
+def press(request):
+    statsd.incr('platform.view.press')
+
+    return render(request, "press.html")
+
+
+def about(request):
+    statsd.incr('platform.view.about')
+
+    return render(request, "about.html")
 
 
 def contact(request):
-    if request.method == 'POST':
-        if 'name' in request.POST and 'email' in request.POST and 'subject' in request.POST and 'message' in request.POST:
-            name = request.POST['name'].strip()
-            email = request.POST['email']
-            subject = request.POST['subject'].strip()
-            body = request.POST['message'].strip()
+    statsd.incr('platform.view.contact')
 
-            tasks.send_contact_email(name, email, subject, body)
-
-            data = {
-                'status': {'type': 'success',
-                           'msg': 'Sent!'}
-            }
-        else:
-            data = {
-                'status': {'type': 'warning',
-                           'msg': 'All form fields are required.'}
-            }
-    else:
-        data = {}
-
-    return render(request, "contact.html", {'data': data})
+    return render(request, "contact.html")
