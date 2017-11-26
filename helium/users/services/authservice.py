@@ -22,7 +22,7 @@ def process_register(request, user):
 
     tasks.send_registration_email.delay(user.email, request.get_host())
 
-    user = authenticate(username=request.POST['email'], password=request.POST['password1'])
+    user = authenticate(username=request.POST['username'], password=request.POST['password1'])
     login(request, user)
 
     logger.info('Logged in user ' + user.get_username())

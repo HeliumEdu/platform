@@ -9,8 +9,9 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '0.5.0'
 
 
-def given_a_user_exists(email='test@heliumedu.com'):
-    user = get_user_model().objects.create_user(email=email,
+def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
+    user = get_user_model().objects.create_user(username=username,
+                                                email=email,
                                                 password='test_pass_1!')
     user.address_1 = 'address 1'
     user.city = 'city'
