@@ -6,15 +6,81 @@
 {% block body_class_attrs %}navbar-fixed{% endblock %}
 
 {% block content %}
-<div class="main-container">
+<div class="main-container" id="main-container">
     <div class="container">
         <div class="page-content">
+            <div class="page-header">
+                <h1>
+                    Contact
+                    <small>
+                        <i class="icon-double-angle-right"></i>
+                        &nbsp;we'd love to hear from you
+                    </small>
+                </h1>
+            </div>
+
             <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    Nothing to do here yet ...
+                <div class="col-sm-9">
+                    <div data-uv-embed="contact" data-uv-screenshot_enabled="false"></div>
+                </div>
+                <div class="col-sm-3 hidden-xs">
+                    <h3 class="lighter smaller">Connect with Us</h3>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-rss"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="http://blog.heliumedu.com"
+                               target="_blank">Read our</a>
+
+                            <div class="infobox-content">Blog</div>
+                        </div>
+                    </div>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-twitter"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="https://www.twitter.com/heliumstudents"
+                               target="_blank">Follow us on</a>
+
+                            <div class="infobox-content">Twitter</div>
+                        </div>
+                    </div>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-facebook"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="https://www.facebook.com/heliumstudents"
+                               target="_blank">Like us on</a>
+
+                            <div class="infobox-content">Facebook</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block page_footer %}
+<!-- UserVoice JavaScript SDK (only needed once on a page) -->
+<script>(function () {
+    var uv = document.createElement('script');
+    uv.type = 'text/javascript';
+    uv.async = true;
+    uv.src = '//widget.uservoice.com/w7OD33G1CR78e0pGaGfw.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(uv, s);
+})()</script>
+{% endblock %}
+
+{% block user_voice_footer %}{% endblock %}

@@ -65,7 +65,7 @@ prefix.
 
 ### Local Development
 Development can be done locally without the use of provisioning through Ansible scripts. To develop in this way, you should have the ENVIRONMENT
-variable set to "dev" for configs to pickup and execute `cp .env.example .env` to move the example `.env` file into place.
+variable set to "dev" for configs to pickup and execute `cp -n .env.example .env` to move the example `.env` file into place.
 
 Then, to start the development server, simply execute:
 
