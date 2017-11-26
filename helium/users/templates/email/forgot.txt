@@ -1,3 +1,8 @@
-A temporary password has been generated for you, which is {{ password }}. We recommend that you login immediately using this new password and visit {{ site_url }}/account/password to change your password.
+We Reset Your Password!
+
+A temporary password has been generated for you, which is {{ password }}. We recommend that you login immediately using this new password and visit {{ site_url }}/settings to change your password.
 
 If you have any more troubles, contact support at {{ site_url }}/support and we'll get it straightened out for you.
+
+Thanks,
+The Helium Team

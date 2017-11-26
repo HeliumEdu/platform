@@ -1,20 +1,13 @@
 """
-Account view entrance functions.
+Authenticated views for user accounts.
 """
 
 import logging
 
-import pytz
-from django.conf import settings
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.utils import timezone
 from statsd.defaults.django import statsd
 
-from helium.users.forms.userpasswordform import UserPasswordForm
 from helium.users.services import authservice
 
 __author__ = 'Alex Laird'
@@ -25,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def account_settings(request):
+def settings(request):
     if authservice.is_anonymous_or_non_admin(request.user):
         statsd.incr('platform.view.account.settings')
 

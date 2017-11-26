@@ -75,7 +75,23 @@ class TestCaseUserAuthentication(TestCase):
 
         # THEN
         user = get_user_model().objects.get(email='test@test.com')
+        self.assertFalse(user.is_active)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('verify your email address', str(response.cookies['status']))
+
+    def test_verification_success(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.is_active = False
+        user.save()
+
+        # WHEN
+        response = self.client.get('/verify?username=' + user.username + '&code=' + user.verification_code)
+
+        # THEN
+        user = get_user_model().objects.get(email='test@heliumedu.com')
         self.assertEqual(response.status_code, 302)
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEquals(get_user_model().objects.count(), 1)
-        self.assertEquals(user.get_username(), 'my_test_user')
+        self.assertEquals(user.get_username(), 'test_user')
+        self.assertTrue(user.is_active)

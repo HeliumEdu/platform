@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.urlresolvers import reverse
 
 from helium.users import tasks
+from helium.users.models import User
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -20,13 +21,38 @@ logger = logging.getLogger(__name__)
 def process_register(request, user):
     logger.info('Registered new user with username: ' + user.get_username())
 
-    tasks.send_registration_email.delay(user.email, request.get_host())
+    tasks.send_verification_email.delay(user.email, user.username, user.verification_code, request.get_host())
 
-    user = authenticate(username=request.POST['username'], password=request.POST['password1'])
-    login(request, user)
+    redirect = reverse('login')
 
-    logger.info('Logged in user ' + user.get_username())
-    redirect = reverse('planner')
+    request.session['status'] = {'type': 'info',
+                                 'msg': 'You\'re almost there! The last step is to verify your email address. Click the link in the email we just sent you and your registration will be complete!'}
+
+    return redirect
+
+
+def process_verification(request, username, verification_code):
+    try:
+        user = get_user_model().objects.get(username=username, verification_code=verification_code)
+
+        if not user.is_active:
+            logger.info('Verified user ' + username)
+
+            user.is_active = True
+            user.save()
+
+            tasks.send_registration_email.delay(user.email, request.get_host())
+
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+
+            logger.info('Logged in user ' + username)
+
+            redirect = reverse('planner')
+        else:
+            redirect = reverse('login')
+    except User.DoesNotExist:
+        redirect = reverse('register')
 
     return redirect
 
@@ -55,7 +81,7 @@ def process_login(request):
                     redirect = request.GET['next']
             else:
                 logger.info('Inactive user ' + username + " attempted login")
-                error_msg = 'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">Contact support</a> and we\'ll help you sort this out!'
+                error_msg = 'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">contact support</a> and we\'ll help you sort this out!'
         else:
             logger.info('Non-existent user ' + username + " attempted login")
             error_msg = 'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.'
@@ -86,31 +112,16 @@ def process_forgot_password(request):
 
         tasks.send_password_reset.delay(user.email, password, request.get_host())
 
-        request.session['status'] = {'type': 'info',
-                                     'msg': 'You\'ve been emailed a temporary password. Login to your account immediately using the temporary password, then change your password.'}
         request.session.modified = True
 
         redirect = reverse('login')
     except get_user_model().DoesNotExist:
         logger.info('A visitor tried to reset the password for an unknown email address of ' + email)
 
-        request.session['status'] = {'type': 'warning',
-                                     'msg': 'Sorry, that email doesn\'t belong to any user in our system. <a href="mailto:' + settings.EMAIL_ADDRESS + '">Contact support</a> if you believe this is an error.'}
+    request.session['status'] = {'type': 'info',
+                                 'msg': 'You\'ve been emailed a temporary password. Login to your account immediately using the temporary password, then change your password.'}
 
     return redirect
-
-
-def is_password_valid(password):
-    valid = True
-
-    if len(password) < 8:
-        valid = False
-
-    first_isalpha = password[0].isalpha()
-    if all(c.isalpha() == first_isalpha for c in password):
-        valid = False
-
-    return valid
 
 
 def is_admin(user):

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.utils.timezone
 import django.core.validators
+import helium.common.utils
 
 
 class Migration(migrations.Migration):
@@ -23,11 +24,12 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('username', models.CharField(help_text=b'Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=255, unique=True, error_messages={b'unique': b'A user with that username already exists.'}, validators=[django.core.validators.RegexValidator(b'^[\\w.@+-]+$', b'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.', b'invalid')])),
-                ('email', models.EmailField(unique=True, max_length=255)),
+                ('email', models.EmailField(unique=True, max_length=255, error_messages={b'unique': b'A user with that email already exists.'})),
                 ('first_name', models.CharField(max_length=30, null=True, blank=True)),
                 ('last_name', models.CharField(max_length=30, null=True, blank=True)),
                 ('is_staff', models.BooleanField(default=False)),
-                ('is_active', models.BooleanField(default=True)),
+                ('is_active', models.BooleanField(default=False)),
+                ('verification_code', models.SlugField(default=helium.common.utils.generate_verification_code, unique=True)),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
                 ('address_1', models.CharField(max_length=255, null=True, blank=True)),
                 ('address_2', models.CharField(max_length=255, null=True, blank=True)),

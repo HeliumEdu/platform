@@ -19,6 +19,8 @@ def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
     user.postal_code = '94530'
     user.phone = '555-5555'
 
+    user.is_active = True
+
     user.save()
 
     return user
