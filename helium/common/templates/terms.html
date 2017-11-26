@@ -6,12 +6,184 @@
 {% block body_class_attrs %}navbar-fixed{% endblock %}
 
 {% block content %}
-<div class="main-container">
+<div class="main-container" id="main-container">
     <div class="container">
         <div class="page-content">
+            <div class="page-header">
+                <h1>
+                    Terms of Service
+                    <small>
+                        <i class="icon-double-angle-right"></i>
+                        &nbsp;acceptable ways to use the service
+                    </small>
+                </h1>
+            </div>
+
             <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    Nothing to do here yet ...
+                <div class="col-sm-9">
+                    <div class="helper-container">
+                        <div class="well">
+
+                            <p>Last updated November 26, 2017</p>
+
+                            <h1 class="lighter smaller">Acceptance of Terms</h1>
+
+                            <p>By using the www.HeliumEdu.com web site ("Service"), you are agreeing to the
+                                following terms and conditions ("Terms of Service"), including any subsequent
+                                changes or modifications to them. If you do not agree to these Terms or to the
+                                Service's <a href="{% url 'privacy' %}">Privacy Policy</a>, do not access the
+                                Service.</p>
+
+                            <h1 class="lighter smaller">Privacy and Communications</h1>
+
+                            <p>See the Privacy Policy, which is incorporated into this Agreement by
+                                reference. You acknowledge and agree that the Service may contact you occasionally via
+                                email
+                                regarding services for which you are registered or in which you have expressed
+                                interest.</p>
+
+                            <h1 class="lighter smaller">Account Terms</h1>
+
+                            <p>
+                            <ul>
+                                <li>You must be a human.</li>
+                                <li>You must be thirteen (13) year or older to use the Service.</li>
+                                <li>Full legal name and valid email address must be provided at registration if
+                                    registering for a non-free account.
+                                </li>
+                                <li>You must be registered with an Account to use the service.</li>
+                                <li>Beyond the preliminary security of the Service, you are responsible for maintaining
+                                    the security of your Account by protecting your username and password.
+                                </li>
+                                <li>The Account holder is responsible for the Content and activity of the Account
+                                    associated with them, even if the Content or activity is enacted by others who have
+                                    access to the Account.
+                                </li>
+                                <li>The Service may not be used for illegal or unauthorized purposes.</li>
+                            </ul>
+                            </p>
+
+                            <h1 class="lighter smaller">Cancellation and Termination</h1>
+
+                            <p>You are responsible for properly cancelling your Account. A phone call or email
+                                requesting Account cancellation is not sufficient to cancel your Account. You must
+                                explicitly cancel your Account through the link provided on the Services page within
+                                the "Settings" page. If the Service is cancelled before a
+                                billing cycle is complete, your cancellation will be effective immediately, and you
+                                will not be charged for subsequent billing periods. You will not be refunded for
+                                partial billing periods. The Service, in its sole discretion, reserves the right to
+                                terminate your Account at any time and refuse any and all current or future use of
+                                the Service for any reason at any time. Upon cancellation or termination, all of
+                                your Content and activity will be immediately deleted from the Service. This
+                                information cannot be recovered once your Account is cancelled or
+                                terminated.</p>
+
+                            <h1 class="lighter smaller">Limitation of Liability</h1>
+
+                            <p>The Service shall never be liable for any indirect, special,
+                                incidental, consequential or punitive damages (including but not limited to loss of
+                                data) whether in an action in contract, negligence, equity or otherwise, arising out
+                                of or in any way connected with the use of or inability to use the Service or the
+                                materials therein or resulting from unauthorized access to or alteration of
+                                data.</p>
+
+                            <h1 class="lighter smaller">Grading</h1>
+
+                            <p>Grading is offered as an estimation from general calculations
+                                and based on the input provided by the user. The Service does not guarantee the
+                                accuracy of a grade at any point in time, nor does the Service guarantee that a
+                                current or projected grade will exactly match the final grade
+                                received.
+                            </p>
+
+                            <h1 class="lighter smaller">General Conditions</h1>
+
+                            <p>
+                            <ul>
+                                <li>The Service is provided "as is" and "as available". Use of the Service is at your
+                                    own risk.
+                                </li>
+                                <li>You understand that Service is made up of both local and third
+                                    party hardware and software that is required to run the Service.
+                                </li>
+                                <li>The Service reserves the right to remove Content and/or Accounts
+                                    containing
+                                    Content that the Service has determined, in their sole discretion, are unlawful,
+                                    offensive, threatening, libelous, defamatory, pornographic, obscene or otherwise
+                                    objectionable or violates any party's intellectual property or these Terms of
+                                    Service.
+                                </li>
+                                <li>You understand that processing and transmission of their Content
+                                    may be transferred unencrypted over various networks during the your use of the
+                                    Service.
+                                </li>
+                                <li>Technical support is only available via email in English.</li>
+                            </ul>
+                            </p>
+
+                            <h1 class="lighter smaller">Questions</h1>
+
+                            <p>If you have any questions regarding these Terms of Service, contact us by <a
+                                    href="{% url 'contact' %}">clicking
+                                here</a>.</p>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-3 hidden-xs">
+                    <h3 class="lighter smaller">Connect with Us</h3>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-envelope"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="{% url 'contact' %}">Send us</a>
+
+                            <div class="infobox-content">Feedback</div>
+                        </div>
+                    </div>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-rss"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="http://blog.heliumedu.com"
+                               target="_blank">Read our</a>
+
+                            <div class="infobox-content">Blog</div>
+                        </div>
+                    </div>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-twitter"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="https://www.twitter.com/heliumstudents"
+                               target="_blank">Follow us on</a>
+
+                            <div class="infobox-content">Twitter</div>
+                        </div>
+                    </div>
+
+                    <div class="infobox infobox-blue">
+                        <div class="infobox-icon">
+                            <i class="icon-facebook"></i>
+                        </div>
+
+                        <div class="infobox-data">
+                            <a class="infobox-data-number" href="https://www.facebook.com/heliumstudents"
+                               target="_blank">Like us on</a>
+
+                            <div class="infobox-content">Facebook</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
