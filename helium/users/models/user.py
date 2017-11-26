@@ -4,12 +4,14 @@ User model.
 
 import logging
 
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core import validators
+from django.db import models
+from django.utils import timezone
+
 from helium.common import enums
 from helium.common.models.base import BaseModel
 from helium.users.managers.usermanager import UserManager
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.db import models
-from django.utils import timezone
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -19,11 +21,25 @@ logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, PermissionsMixin, BaseModel):
-    first_name = models.CharField(max_length=30, blank=True)
+    username = models.CharField(max_length=255, unique=True,
+                                help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.',
+                                validators=[
+                                    validators.RegexValidator(r'^[\w.@+-]+$',
+                                                              'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.',
+                                                              'invalid'),
+                                ],
+                                error_messages={
+                                    'unique': "A user with that username already exists.",
+                                })
 
-    last_name = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(max_length=255, unique=True,
+                              error_messages={
+                                  'unique': "A user with that email already exists.",
+                              })
 
-    email = models.EmailField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=30, blank=True, null=True)
+
+    last_name = models.CharField(max_length=30, blank=True, null=True)
 
     is_staff = models.BooleanField(default=False)
 
@@ -37,7 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     city = models.CharField(max_length=255, blank=True, null=True)
 
-    state = models.CharField(choices=enums.STATE_CHOICES, max_length=2)
+    state = models.CharField(choices=enums.STATE_CHOICES, max_length=2, blank=True, null=True)
 
     postal_code = models.CharField(max_length=255, blank=True, null=True)
 
@@ -51,7 +67,8 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     objects = UserManager()
 
     # Fields required to define the abstracted Django user
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     def get_full_name(self):
         """

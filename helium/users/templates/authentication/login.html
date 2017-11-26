@@ -9,11 +9,11 @@
     <div class="container">
         <div class="page-content">
             <div class="row">
-                <div class="col-sm-4 col-sm-offset-4">
+                <div class="col-sm-10 col-sm-offset-1">
                     <div class="login-container">
                         <div class="well">
                             <h4 class="header blue lighter bigger">
-                                <i class="fa fa-key"></i>
+                                <i class="icon-key blue"></i>
                                 Enter Your Login Information
                             </h4>
 
@@ -21,38 +21,63 @@
 
                             {% include 'snippets/status.html' %}
 
-                            <form class="form" action="{{ request.get_full_path }}" method="post">{% csrf_token %}
-                                <div class="form-group">
-                                    <div class="input-group margin-bottom-sm">
-                                        <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-                                        <input class="form-control" type="email" name="username" id="username"
-                                               placeholder="Email">
-                                    </div>
-                                </div>
+                            {% if form.non_field_errors %}
+                            {% for error in form.non_field_errors %}
+                            <div id="login-status" class="alert alert-warning">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
 
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                                        <input class="form-control" type="password" name="password" id="password"
-                                               placeholder="Password">
-                                    </div>
-                                </div>
+                            <form action="{{ request.get_full_path }}" method="post">{% csrf_token %}
+                                <fieldset>
+                                    <label class="block clearfix">
+                                        <div class="input-group no-padding">
+                                                <span class="input-group-addon">
+                                                    <i class="icon-user"></i>
+                                                </span>
 
-                                <div class="form-group">
-                                    <label class="inline">
-                                        <input type="checkbox" name="remember-me" id="remember-me"
-                                               class="ace"/>
-                                        <span class="lbl"> Stay signed in</span>
+                                            <input type="text" class="form-control" name="username" id="username"
+                                                   placeholder="Username" maxlength="255" required/>
+                                        </div>
                                     </label>
 
-                                    <button type="submit"
-                                            class="width-35 pull-right btn btn-sm btn-primary">
-                                        Sign in <i class="fa fa-sign-in icon-on-right"></i>
-                                    </button>
-                                </div>
+                                    <label class="block clearfix">
+                                        <div class="input-group no-padding">
+                                                <span class="input-group-addon">
+                                                    <i class="icon-lock"></i>
+                                                </span>
+
+                                            <input type="password" class="form-control" name="password"
+                                                   id="password" placeholder="Password"
+                                            maxlength="255" required/>
+                                        </div>
+                                    </label>
+
+                                    <div class="space"></div>
+
+                                    <div class="clearfix">
+                                        <label class="inline">
+                                            <input type="checkbox" name="remember-me" id="remember-me"
+                                                   class="ace"/>
+                                            <span class="lbl">Stay signed in</span>
+                                        </label>
+
+                                        <button type="submit"
+                                                class="width-35 pull-right btn btn-sm btn-primary">
+                                            Sign in
+                                            <i class="icon-signin icon-on-right"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="space-4"></div>
+                                </fieldset>
                             </form>
 
                             <div class="clearfix">
+                                <a href="{% url 'register' %}">
+                                    Need an account?
+                                </a>
                                 <a href="{% url 'forgot' %}" class="pull-right">
                                     Forgot your password?
                                 </a>
@@ -67,7 +92,11 @@
 {% endblock %}
 
 {% block page_footer %}
-<script type="text/javascript">
-    $("#username").focus();
+<script type="application/javascript">
+    (function () {
+        "use strict";
+
+        $("#username").focus();
+    }());
 </script>
 {% endblock %}
