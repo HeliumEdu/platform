@@ -1,15 +1,17 @@
 .PHONY: all build build-migrations clean
 
-build:
-	cp .env.example .env
+_env:
+	cp -n .env.example .env | true
+
+build: _env
 	pip install -r requirements.txt --user
 	python manage.py collectstatic --noinput
 
-build-migrations:
+build-migrations: _env
 	python manage.py makemigrations users planner
 
-migrate:
+migrate: _env
 	python manage.py migrate
 
-test:
+test: _env
 	python manage.py test
