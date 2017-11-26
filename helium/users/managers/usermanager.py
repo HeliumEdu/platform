@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None):
+    def create_user(self, username, email, password=None):
         """
         Create a new user with the given username, password, and email.
 
+        :param username: the username for the user
         :param email: the email for the new user
         :param password: the password for the new user
         :return: the created object
@@ -27,6 +28,7 @@ class UserManager(BaseUserManager):
 
         user = self.model(
                 email=self.normalize_email(email),
+                username=username
         )
 
         user.set_password(password)
@@ -35,15 +37,17 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, email, password):
+    def create_superuser(self, email, username, password):
         """
         Create a new super user with admin privileges.
 
+        :param username: the username for the user
         :param email: the email for the new user
         :param password: the password for the new user
         :return: the created object
         """
-        user = self.create_user(email=email,
+        user = self.create_user(username=username,
+                                email=email,
                                 password=password)
         user.is_staff = True
         user.save(using=self._db)

@@ -52,7 +52,7 @@ class TestCaseUserAuthentication(TestCase):
     def test_password_reset(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        response = self.client.post('/forgot', {'email': user.get_username()})
+        response = self.client.post('/forgot', {'email': user.email})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/login')
         temp_pass = response.context['password']
@@ -70,13 +70,12 @@ class TestCaseUserAuthentication(TestCase):
 
         # WHEN
         response = self.client.post('/register',
-                                    {'email': 'test@test.com', 'password1': 'test_pass_1!',
-                                     'password2': 'test_pass_1!', 'first_name': 'first', 'last_name': 'last',
-                                     'time_zone': 'US/Pacific'})
+                                    {'email': 'test@test.com', 'username': 'my_test_user', 'password1': 'test_pass_1!',
+                                     'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
 
         # THEN
         user = get_user_model().objects.get(email='test@test.com')
         self.assertEqual(response.status_code, 302)
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEquals(get_user_model().objects.count(), 1)
-        self.assertEquals(user.get_username(), 'test@test.com')
+        self.assertEquals(user.get_username(), 'my_test_user')

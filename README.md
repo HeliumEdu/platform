@@ -49,7 +49,7 @@ their user permissions should be elevated properly through the admin.
 Once the project has been built and migrations applied, the Platform can be started in a few different ways. For quick and easy local development,
 see the "Local Development" section below, which uses in-memory databases and a dev server for easy debugging.
 
-To emulate a production environment, use the Vagrant box, available in the `server-configuration` project. This is the recommended way to develop
+To emulate a production environment, use the Vagrant box, available in the `deploy` project. This is the recommended way to develop
 and test the Platform, as it is quick and easy to setup, and it fully emulates a production environment—the Vagrant environment is provisioned in
 the same way staging and production environments are deployed, using Ansible scripts.
 
@@ -65,7 +65,7 @@ prefix.
 
 ### Local Development
 Development can be done locally without the use of provisioning through Ansible scripts. To develop in this way, you should have the ENVIRONMENT
-variable set to "dev" for configs to pickup and use the locally committed `.env` file.
+variable set to "dev" for configs to pickup and execute `cp .env.example .env` to move the example `.env` file into place.
 
 Then, to start the development server, simply execute:
 
@@ -76,4 +76,4 @@ python manage.py runserver
 Django will start a development server at http://localhost:8000.
 
 Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
-before those services will work properly. Do NOT commit real credentials to third-party servies, even in example files.
+before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
