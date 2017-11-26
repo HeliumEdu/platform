@@ -2,18 +2,18 @@
 {% load humanize %}
 {% load helpers %}
 
+{% block greeting %}We Reset Your Password!{% endblock %}
+
 {% block content %}
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-            <td style="padding: 20px 0 30px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
-                A temporary password has been generated for you, which is <strong>{{ password }}</strong>. We recommend
-                that you
-                login immediately using this new password and <a href="{{ site_url }}/account/password"
-                                                                 target="_blank">click here</a>
-                <br/><br/>If you have any more trouble, <a href="{{ site_url }}/support" target="_blank">contact
-                support</a>
-                and we'll get it straightened out for you.
-            </td>
-        </tr>
-    </table>
+<tr>
+    <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+        A temporary password has been generated for you, which is <strong>{{ password }}</strong>. We recommend
+        that you
+        login immediately using this new password and <a href="{{ site_url }}/settings"
+                                                         target="_blank">click here</a> to change your password.
+        <br/><br/>If you have any more trouble, <a href="{{ site_url }}/support" target="_blank">contact
+        support</a>
+        and we'll get it straightened out for you.
+    </td>
+</tr>
 {% endblock %}

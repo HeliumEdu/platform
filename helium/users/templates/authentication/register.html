@@ -29,7 +29,7 @@
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <fieldset>
-                                            <label class="block clearfix{% if data.user_form.email.errors %} has-error{% endif %}">
+                                            <label class="block clearfix">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-envelope"></i>
@@ -39,9 +39,8 @@
                                                            placeholder="Email" tabindex="3" maxlength="255" required/>
                                                 </div>
                                             </label>
-                                            {% render_field data.user_form.email.errors %}
 
-                                            <label class="block clearfix{% if data.user_form.username.errors %} has-error{% endif %}">
+                                            <label class="block clearfix">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-user"></i>
@@ -52,9 +51,8 @@
                                                            placeholder="Username" tabindex="4" required/>
                                                 </div>
                                             </label>
-                                            {% render_field data.user_form.username.errors %}
 
-                                            <label class="block clearfix{% if data.user_form.password1.errors %} has-error{% endif %}">
+                                            <label class="block clearfix">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-lock"></i>
@@ -65,9 +63,8 @@
                                                            placeholder="Password" tabindex="5" required/>
                                                 </div>
                                             </label>
-                                            {% render_field data.user_form.password1.errors %}
 
-                                            <label class="block clearfix{% if data.user_form.password2.errors %} has-error{% endif %}">
+                                            <label class="block clearfix">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-retweet"></i>
@@ -79,7 +76,6 @@
                                                            placeholder="Confirm password" required/>
                                                 </div>
                                             </label>
-                                            {% render_field data.user_form.password2.errors %}
 
                                             <label class="block clearfix">
                                                 <label class="col-sm-3 control-label" style="margin-top: 3px;"

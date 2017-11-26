@@ -9,11 +9,11 @@
     <div class="container">
         <div class="page-content">
             <div class="row">
-                <div class="col-sm-4 col-sm-offset-4">
+                <div class="col-sm-10 col-sm-offset-1">
                     <div class="login-container">
                         <div class="well">
                             <h4 class="header blue lighter bigger">
-                                <i class="fa fa-key"></i>
+                                <i class="icon-key"></i>
                                 Retrieve Password
                             </h4>
 
@@ -25,18 +25,31 @@
                                 Enter the email associated with your account. We'll reset your password and send the temporary password to your email address.
                             </p>
 
-                            <form class="form" action="{{ request.get_full_path }}" method="post">{% csrf_token %}
-                                <div class="form-group">
-                                    <div class="input-group margin-bottom-sm">
-                                        <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-                                        <input class="form-control" type="text" name="email" id="email" placeholder="Email">
-                                    </div>
-                                </div>
+                            <form action="{% url 'forgot' %}" method="post">{% csrf_token %}
+                                <fieldset>
+                                    <label class="block clearfix">
+                                        <div class="input-group no-padding">
+                                                <span class="input-group-addon">
+                                                    <i class="icon-envelope"></i>
+                                                </span>
+                                            <input type="email" class="form-control" name="email" id="email"
+                                                   placeholder="Email"
+                                            required/>
+                                        </div>
+                                    </label>
+
+                                    <div class="space"></div>
+                                </fieldset>
 
                                 <div class="clearfix">
+                                    <a href="{% url 'register' %}">
+                                        Need an account?
+                                    </a>
                                     <button type="submit"
-                                            class="width-35 pull-right btn btn-sm btn-primary">
-                                        Get It <i class="fa fa-unlock-alt icon-on-right"></i>
+                                            class="width-35 pull-right btn btn-sm btn-primary"
+                                            style="margin-top: -5px;">
+                                        Get It
+                                        <i class="icon-unlock-alt icon-on-right"></i>
                                     </button>
                                 </div>
                             </form>
@@ -50,7 +63,11 @@
 {% endblock %}
 
 {% block page_footer %}
-    <script type="text/javascript">
+<script type="application/javascript">
+    (function () {
+        "use strict";
+
         $("#email").focus();
-    </script>
+    }());
+</script>
 {% endblock %}
