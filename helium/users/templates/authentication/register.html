@@ -1,6 +1,8 @@
+{% extends "base.html" %}
 {% load staticfiles %}
 {% load pipeline %}
 {% load helpers %}
+{% load widget_tweaks %}
 
 {% block title %}{{ PROJECT_NAME }} | Register{% endblock %}
 
@@ -27,7 +29,7 @@
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <fieldset>
-                                            <label class="block clearfix">
+                                            <label class="block clearfix{% if data.user_form.email.errors %} has-error{% endif %}">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-envelope"></i>
@@ -37,8 +39,9 @@
                                                            placeholder="Email" tabindex="3" maxlength="255" required/>
                                                 </div>
                                             </label>
+                                            {% render_field data.user_form.email.errors %}
 
-                                            <label class="block clearfix">
+                                            <label class="block clearfix{% if data.user_form.username.errors %} has-error{% endif %}">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-user"></i>
@@ -49,38 +52,41 @@
                                                            placeholder="Username" tabindex="4" required/>
                                                 </div>
                                             </label>
+                                            {% render_field data.user_form.username.errors %}
 
-                                            <label class="block clearfix">
+                                            <label class="block clearfix{% if data.user_form.password1.errors %} has-error{% endif %}">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-lock"></i>
                                                         </span>
 
-                                                    <input type="password" class="form-control" name="password"
-                                                           id="password" maxlength="255"
+                                                    <input type="password" class="form-control" name="password1"
+                                                           id="password1" maxlength="255"
                                                            placeholder="Password" tabindex="5" required/>
                                                 </div>
                                             </label>
+                                            {% render_field data.user_form.password1.errors %}
 
-                                            <label class="block clearfix">
+                                            <label class="block clearfix{% if data.user_form.password2.errors %} has-error{% endif %}">
                                                 <div class="input-group no-padding">
                                                         <span class="input-group-addon">
                                                             <i class="icon-retweet"></i>
                                                         </span>
 
                                                     <input type="password" class="form-control"
-                                                           name="confirm-password" maxlength="255"
-                                                           id="confirm-password" tabindex="6"
+                                                           name="password2" maxlength="255"
+                                                           id="password2" tabindex="6"
                                                            placeholder="Confirm password" required/>
                                                 </div>
                                             </label>
+                                            {% render_field data.user_form.password2.errors %}
 
                                             <label class="block clearfix">
                                                 <label class="col-sm-3 control-label" style="margin-top: 3px;"
-                                                       for="id_{{ time_zone_form.time_zone.name }}">Time zone</label>
+                                                       for="id_{{ data.user_form.time_zone.name }}">Time zone</label>
 
                                                 <div class="col-sm-9">
-                                                    {% render_field time_zone_form.time_zone class+="form-control chosen-select" %}
+                                                    {% render_field data.user_form.time_zone class+="form-control chosen-select" %}
                                                 </div>
                                             </label>
 

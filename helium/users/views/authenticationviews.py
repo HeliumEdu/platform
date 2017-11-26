@@ -40,6 +40,7 @@ def register(request):
             if not user_form.instance.email.endswith('@heliumedu.com'):
                 statsd.incr('platform.vol.user-added')
         else:
+            print(user_form.errors)
             request.session['status'] = {'type': 'warning', 'msg': 'Correct the errors below and try again.'}
     else:
         user_form = UserCreationForm()

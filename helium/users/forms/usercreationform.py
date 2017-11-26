@@ -19,16 +19,13 @@ class UserCreationForm(BaseForm):
     def __init__(self, *args, **kwargs):
         super(UserCreationForm, self).__init__(*args, **kwargs)
 
-        self.fields['first_name'].required = True
-        self.fields['last_name'].required = True
-
     class Meta:
         """
         Define metadata for this model.
         """
 
         model = get_user_model()
-        fields = ['email', 'first_name', 'last_name', 'time_zone']
+        fields = ['email', 'username', 'time_zone']
 
     def clean_password2(self):
         """
