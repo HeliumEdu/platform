@@ -13,7 +13,7 @@ from conf.sitemaps import StaticViewSitemap
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
-__version__ = '0.5.0'
+__version__ = '1.0.0'
 
 handler400 = 'helium.common.views.errorviews.bad_request'
 handler401 = 'helium.common.views.errorviews.unauthorized'
