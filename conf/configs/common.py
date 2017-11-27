@@ -141,18 +141,18 @@ PIPELINE = {
     'STYLESHEETS': {
         'base': {
             'source_filenames': (
-                'css/jquery-ui.full.min.css',
-                'css/chosen.css',
-                'css/font-awesome.css',
-                'css/ace-fonts.css',
-                'css/ace.css',
+                'css/vendors/jquery-ui.full.min.css',
+                'css/vendors/chosen.css',
+                'css/vendors/font-awesome.css',
+                'css/vendors/ace-fonts.css',
+                'css/vendors/ace.css',
                 'css/helium.css',
             ),
             'output_filename': 'css/helium_' + PROJECT_VERSION + '.min.css'
         },
         'base_ie8': {
             'source_filenames': (
-                'css/ace-ie.css',
+                'css/vendors/ace-ie.css',
             ),
             'output_filename': 'css/helium_ie8_' + PROJECT_VERSION + '.min.css'
         }
@@ -160,35 +160,35 @@ PIPELINE = {
     'JAVASCRIPT': {
         'base': {
             'source_filenames': (
-                'js/jquery.cookie.js',
-                'js/jquery.ui.touch-punch.min.js',
-                'js/chosen.jquery.js',
-                'js/globalize.js',
-                'js/spin.js',
-                'js/jquery.spin.js',
+                'js/vendors/jquery.cookie.js',
+                'js/vendors/jquery.ui.touch-punch.min.js',
+                'js/vendors/chosen.jquery.js',
+                'js/vendors/globalize.js',
+                'js/vendors/spin.js',
+                'js/vendors/jquery.spin.js',
                 'js/helium.js',
-                'js/ace-elements.js',
-                'js/ace.js',
+                'js/vendors/ace-elements.js',
+                'js/vendors/ace.js',
                 'js/planner-api.js',
             ),
             'output_filename': 'js/helium_' + PROJECT_VERSION + '.min.js'
         },
         'base_header_js': {
             'source_filenames': (
-                'js/ace-extra.js',
+                'js/vendors/ace-extra.js',
             ),
             'output_filename': 'js/helium_header_' + PROJECT_VERSION + '.min.js',
         },
         'base_ie9_js': {
             'source_filenames': (
-                'js/html5shiv.js',
-                'js/respond.js',
+                'js/vendors/html5shiv.js',
+                'js/vendors/respond.js',
             ),
             'output_filename': 'js/helium_ie9_' + PROJECT_VERSION + '.min.js',
         },
         'jstz_js': {
             'source_filenames': (
-                'js/jstz.js',
+                'js/vendors/jstz.js',
             ),
             'output_filename': 'js/helium_jstz.min_' + PROJECT_VERSION + '.js',
         },
