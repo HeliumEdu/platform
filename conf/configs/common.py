@@ -23,7 +23,7 @@ PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
 
 # Version information
 
-PROJECT_VERSION = '0.5.0'
+PROJECT_VERSION = __version__
 
 # AWS S3
 
