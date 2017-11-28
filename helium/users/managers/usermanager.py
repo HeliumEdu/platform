@@ -6,6 +6,9 @@ import logging
 
 from django.contrib.auth.models import BaseUserManager
 
+from helium.users.models.userprofile import UserProfile
+from helium.users.models.usersetting import UserSetting
+
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
@@ -14,6 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
+    @staticmethod
+    def create_references(user):
+        UserProfile.objects.create(user=user)
+        UserSetting.objects.create(user=user)
+
     def create_user(self, username, email, password=None):
         """
         Create a new user with the given username, password, and email.
@@ -34,6 +42,8 @@ class UserManager(BaseUserManager):
         user.set_password(password)
 
         user.save(using=self._db)
+
+        UserManager.create_references(user)
 
         return user
 

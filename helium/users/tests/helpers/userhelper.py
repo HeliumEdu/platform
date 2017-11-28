@@ -13,11 +13,13 @@ def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
     user = get_user_model().objects.create_user(username=username,
                                                 email=email,
                                                 password='test_pass_1!')
-    user.address_1 = 'address 1'
-    user.city = 'city'
-    user.state = 'CA'
-    user.postal_code = '94530'
-    user.phone = '555-5555'
+
+    user.profile.address_1 = 'address 1'
+    user.profile.city = 'city'
+    user.profile.state = 'CA'
+    user.profile.postal_code = '94530'
+    user.profile.phone = '555-5555'
+    user.profile.save()
 
     user.is_active = True
 

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 
 from helium.common.forms.base import BaseForm
 from helium.common.utils import is_password_valid
+from helium.users.managers.usermanager import UserManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -26,7 +27,7 @@ class UserCreationForm(BaseForm):
         """
 
         model = get_user_model()
-        fields = ['email', 'username', 'time_zone']
+        fields = ['email', 'username']
 
     def clean_password2(self):
         """
@@ -55,5 +56,7 @@ class UserCreationForm(BaseForm):
 
         if commit:
             user.save()
+
+        UserManager.create_references(user)
 
         return user

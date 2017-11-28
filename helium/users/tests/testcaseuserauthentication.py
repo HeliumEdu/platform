@@ -76,6 +76,7 @@ class TestCaseUserAuthentication(TestCase):
         # THEN
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
+        self.assertEqual(user.settings.time_zone, 'America/Chicago')
         self.assertEqual(response.status_code, 302)
         self.assertIn('verify your email address', str(response.cookies['status']))
 
