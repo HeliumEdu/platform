@@ -1,9 +1,10 @@
 """
-UserSetting model.
+UserProfile model.
 """
 
 import logging
 
+from django.conf import settings
 from django.db import models
 
 from helium.common import enums
@@ -35,4 +36,4 @@ class UserProfile(BaseModel):
 
     phone = models.CharField(max_length=255, blank=True, null=True)
 
-    user = models.OneToOneField('User', related_name='profile', on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
