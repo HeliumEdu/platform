@@ -14,13 +14,6 @@ def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
                                                 email=email,
                                                 password='test_pass_1!')
 
-    user.profile.address_1 = 'address 1'
-    user.profile.city = 'city'
-    user.profile.state = 'CA'
-    user.profile.postal_code = '94530'
-    user.profile.phone = '555-5555'
-    user.profile.save()
-
     user.is_active = True
 
     user.save()
