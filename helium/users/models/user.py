@@ -9,7 +9,6 @@ from django.core import validators
 from django.db import models
 from django.utils import timezone
 
-from helium.common import enums
 from helium.common.models.base import BaseModel
 from helium.common.utils import generate_verification_code
 from helium.users.managers.usermanager import UserManager
@@ -38,10 +37,6 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
                                   'unique': "A user with that email already exists.",
                               })
 
-    first_name = models.CharField(max_length=30, blank=True, null=True)
-
-    last_name = models.CharField(max_length=30, blank=True, null=True)
-
     is_staff = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=False)
@@ -49,22 +44,6 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     verification_code = models.SlugField(unique=True, default=generate_verification_code)
 
     date_joined = models.DateTimeField(default=timezone.now)
-
-    address_1 = models.CharField(max_length=255, blank=True, null=True)
-
-    address_2 = models.CharField(max_length=255, blank=True, null=True)
-
-    city = models.CharField(max_length=255, blank=True, null=True)
-
-    state = models.CharField(choices=enums.STATE_CHOICES, max_length=2, blank=True, null=True)
-
-    postal_code = models.CharField(max_length=255, blank=True, null=True)
-
-    country = models.CharField(max_length=255, blank=True, null=True, default='United States')
-
-    phone = models.CharField(max_length=255, blank=True, null=True)
-
-    time_zone = models.CharField(default='America/Chicago', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
     # Manager
     objects = UserManager()
