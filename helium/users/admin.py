@@ -60,7 +60,7 @@ class UserSettingAdmin(ModelAdmin):
 class UserProfileAdmin(ModelAdmin):
     model = UserProfile
     list_display = ['get_user', 'first_name', 'last_name']
-    list_filter = ('country', 'state',)
+    list_filter = ('phone_carrier',)
     ordering = ('user__username',)
     readonly_fields = ('user',)
 

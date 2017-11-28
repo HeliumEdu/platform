@@ -25,6 +25,13 @@ PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
 
 PROJECT_VERSION = __version__
 
+# Special configs
+
+ALLOWED_COLORS = ['#ac725e', '#d06b64', '#f83a22', '#fa573c', '#ff7537', '#ffad46', '#42d692', '#16a765',
+                  '#7bd148', '#b3dc6c', '#fad165', '#92e1c0', '#9fe1e7', '#9fc6e7', '#4986e7', '#9a9cff', '#b99aff',
+                  '#c2c2c2', '#cabdbf', '#cca6ac', '#f691b2', '#cd74e6', '#a47ae2',
+                  '#555']
+
 # AWS S3
 
 AWS_S3_ACCESS_KEY_ID = os.environ.get('PLATFORM_AWS_S3_ACCESS_KEY_ID')

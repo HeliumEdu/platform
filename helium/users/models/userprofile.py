@@ -9,6 +9,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models.base import BaseModel
+from helium.common.utils import generate_phone_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -22,18 +23,16 @@ class UserProfile(BaseModel):
 
     last_name = models.CharField(max_length=30, blank=True, null=True)
 
-    address_1 = models.CharField(max_length=255, blank=True, null=True)
-
-    address_2 = models.CharField(max_length=255, blank=True, null=True)
-
-    city = models.CharField(max_length=255, blank=True, null=True)
-
-    state = models.CharField(choices=enums.STATE_CHOICES, max_length=2, blank=True, null=True)
-
-    postal_code = models.CharField(max_length=255, blank=True, null=True)
-
-    country = models.CharField(max_length=255, blank=True, null=True, default='United States')
-
     phone = models.CharField(max_length=255, blank=True, null=True)
+
+    phone_carrier = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True, null=True)
+
+    phone_changing = models.CharField(max_length=15, blank=True, null=True)
+
+    phone_carrier_changing = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True, null=True)
+
+    phone_verification_code = models.PositiveIntegerField(default=generate_phone_verification_code)
+
+    phone_verified = models.BooleanField(default=False)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)

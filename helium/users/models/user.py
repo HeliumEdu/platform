@@ -37,6 +37,8 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
                                   'unique': "A user with that email already exists.",
                               })
 
+    email_changing = models.EmailField(max_length=255, blank=True, null=True)
+
     is_staff = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=False)
