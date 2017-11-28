@@ -10,6 +10,7 @@ from django.shortcuts import render
 from statsd.defaults.django import statsd
 
 from helium.users.forms.usercreationform import UserCreationForm
+from helium.users.forms.usersettingsform import UserSettingsForm
 from helium.users.services import authservice
 
 __author__ = 'Alex Laird'
@@ -28,19 +29,26 @@ def register(request):
     if request.user.is_authenticated():
         redirect = reverse('planner')
 
+    user_form = UserCreationForm()
+    user_settings_form = UserSettingsForm()
     if request.method == 'POST':
         user_form = UserCreationForm(request.POST)
         if user_form.is_valid():
             user_form.save()
 
-            redirect = authservice.process_register(request, user_form.instance)
+            user_settings_form = UserSettingsForm(data=request.POST, instance=user_form.instance.settings)
+            if user_settings_form.is_valid():
+                user_settings_form.save()
 
-            if not user_form.instance.email.endswith('@heliumedu.com'):
-                statsd.incr('platform.vol.user-added')
+                redirect = authservice.process_register(request, user_form.instance)
+
+                if not user_form.instance.email.endswith('@heliumedu.com'):
+                    statsd.incr('platform.vol.user-added')
+            else:
+                print user_settings_form.errors
+                request.session['status'] = {'type': 'warning', 'msg': user_settings_form.errors.values()[0][0]}
         else:
             request.session['status'] = {'type': 'warning', 'msg': user_form.errors.values()[0][0]}
-    else:
-        user_form = UserCreationForm()
 
     status = request.session.get('status', '')
     if 'status' in request.session:
@@ -57,6 +65,7 @@ def register(request):
 
         data = {
             'user_form': user_form,
+            'user_settings_form': user_settings_form,
             'status': status
         }
 
