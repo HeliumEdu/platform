@@ -110,7 +110,7 @@ def process_forgot_password(request):
         user.save()
         logger.info('Reset password for user with email ' + email)
 
-        tasks.send_password_reset.delay(user.email, password, request.get_host())
+        tasks.send_password_reset_email.delay(user.email, password, request.get_host())
 
         request.session.modified = True
 

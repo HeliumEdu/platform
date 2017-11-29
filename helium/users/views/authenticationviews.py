@@ -9,8 +9,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from statsd.defaults.django import statsd
 
-from helium.users.forms.usercreationform import UserCreationForm
-from helium.users.forms.usersettingsform import UserSettingsForm
+from helium.users.forms.userregisterform import UserRegisterForm
 from helium.users.services import authservice
 
 __author__ = 'Alex Laird'
@@ -29,26 +28,18 @@ def register(request):
     if request.user.is_authenticated():
         redirect = reverse('planner')
 
-    user_form = UserCreationForm()
-    user_settings_form = UserSettingsForm()
+    user_register_form = UserRegisterForm()
     if request.method == 'POST':
-        user_form = UserCreationForm(request.POST)
-        if user_form.is_valid():
-            user_form.save()
+        user_register_form = UserRegisterForm(request.POST)
+        if user_register_form.is_valid():
+            user_register_form.save()
 
-            user_settings_form = UserSettingsForm(data=request.POST, instance=user_form.instance.settings)
-            if user_settings_form.is_valid():
-                user_settings_form.save()
+            redirect = authservice.process_register(request, user_register_form.instance)
 
-                redirect = authservice.process_register(request, user_form.instance)
-
-                if not user_form.instance.email.endswith('@heliumedu.com'):
-                    statsd.incr('platform.vol.user-added')
-            else:
-                print user_settings_form.errors
-                request.session['status'] = {'type': 'warning', 'msg': user_settings_form.errors.values()[0][0]}
+            if not user_register_form.instance.email.endswith('@heliumedu.com'):
+                statsd.incr('platform.vol.user-added')
         else:
-            request.session['status'] = {'type': 'warning', 'msg': user_form.errors.values()[0][0]}
+            request.session['status'] = {'type': 'warning', 'msg': user_register_form.errors.values()[0][0]}
 
     status = request.session.get('status', '')
     if 'status' in request.session:
@@ -64,8 +55,7 @@ def register(request):
             statsd.incr('platform.view.register')
 
         data = {
-            'user_form': user_form,
-            'user_settings_form': user_settings_form,
+            'user_register_form': user_register_form,
             'status': status
         }
 

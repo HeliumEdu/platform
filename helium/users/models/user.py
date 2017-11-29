@@ -60,8 +60,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
         :return: The user's email address.
         """
-        full_name = '%s %s' % (self.profile.first_name, self.profile.last_name)
-        return full_name.strip()
+        return self.email
 
     def get_short_name(self):
         """
@@ -69,7 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
         :return: The user's email address.
         """
-        return self.profile.first_name
+        return self.email
 
     def has_perm(self, perm, obj=None):
         """
