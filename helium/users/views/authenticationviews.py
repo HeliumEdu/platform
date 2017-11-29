@@ -9,6 +9,7 @@ from django.shortcuts import render
 from statsd.defaults.django import statsd
 
 from helium.common.utils.viewutils import set_request_status, get_request_status, set_response_status, clear_response_status
+from helium.users.forms.userloginform import UserLoginForm
 from helium.users.forms.userregisterform import UserRegisterForm
 from helium.users.services import authservice
 
@@ -28,7 +29,6 @@ def register(request):
     if request.user.is_authenticated():
         redirect = reverse('planner')
 
-    user_register_form = UserRegisterForm()
     if request.method == 'POST':
         user_register_form = UserRegisterForm(request.POST)
         if user_register_form.is_valid():
@@ -37,6 +37,8 @@ def register(request):
             redirect = authservice.process_register(request, user_register_form.instance)
         else:
             set_request_status(request, 'warning', user_register_form.errors.values()[0][0])
+    else:
+        user_register_form = UserRegisterForm()
 
     # Check if a status has been set (either by this view or another view from which we were redirect)
     status = get_request_status(request, '')
@@ -76,14 +78,22 @@ def login(request):
     redirect = None
     status = None
 
+    user_login_form = UserLoginForm()
     if request.user.is_authenticated():
-        redirect = reverse('planner')
+        redirect = HttpResponseRedirect(reverse('planner'))
     else:
         if request.method == 'POST':
-            redirect = authservice.process_login(request)
+            user_login_form = UserLoginForm(request.POST)
+            if user_login_form.is_valid():
+                username = user_login_form.cleaned_data.get('username')
+                password = user_login_form.cleaned_data.get('password')
 
-            if authservice.is_anonymous_or_non_admin(request.user):
-                statsd.incr('platform.action.user-logged-in')
+                redirect = authservice.process_login(request, username, password)
+
+                if authservice.is_anonymous_or_non_admin(request.user):
+                    statsd.incr('platform.action.user-logged-in')
+            else:
+                set_request_status(request, 'warning', user_login_form.errors.values()[0][0])
 
         status = get_request_status(request, None)
 
@@ -98,6 +108,7 @@ def login(request):
             http_status = 401
 
         data = {
+            'user_login_form': user_login_form,
             'status': status
         }
 

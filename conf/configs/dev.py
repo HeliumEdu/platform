@@ -6,7 +6,7 @@ import os
 import warnings
 
 import deploy
-from .common import DEFAULT_TEMPLATE_CONTEXT_PROCESSORS, DEFAULT_MIDDLEWARE_CLASSES, DEFAULT_INSTALLED_APPS, PIPELINE
+from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -21,12 +21,14 @@ INSTALLED_APPS = DEFAULT_INSTALLED_APPS + (
     'debug_toolbar',
 )
 
-MIDDLEWARE_CLASSES = DEFAULT_MIDDLEWARE_CLASSES + (
+MIDDLEWARE = DEFAULT_MIDDLEWARE + (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_TEMPLATE_CONTEXT_PROCESSORS + (
-    'django.core.context_processors.debug',
+TEMPLATES = DEFAULT_TEMPLATES
+
+TEMPLATES[0]['OPTIONS']['context_processors'] += (
+    'django.template.context_processors.debug',
 )
 
 #############################

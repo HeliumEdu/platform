@@ -60,7 +60,7 @@ DEFAULT_INSTALLED_APPS = (
     'helium.planner',
 )
 
-DEFAULT_MIDDLEWARE_CLASSES = (
+DEFAULT_MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -70,16 +70,22 @@ DEFAULT_MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-DEFAULT_TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.request',
-    'helium.common.handlers.processors.template',
-)
+DEFAULT_TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'APP_DIRS': True,
+    'OPTIONS': {
+        'context_processors': [
+            'django.contrib.auth.context_processors.auth',
+            'django.template.context_processors.media',
+            'django.template.context_processors.static',
+            'django.template.context_processors.tz',
+            'django.contrib.messages.context_processors.messages',
+            'django.template.context_processors.request',
+            'helium.common.handlers.processors.template',
+        ],
+        'debug': os.environ.get('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
+    },
+}]
 
 #############################
 # Django configuration
@@ -129,7 +135,6 @@ CSRF_MIDDLEWARE_SECRET = os.environ.get('PLATFORM_CSRF_MIDDLEWARE_SECRET')
 # Logging
 
 DEBUG = os.environ.get('PLATFORM_DEBUG', 'False') == 'True'
-TEMPLATE_DEBUG = os.environ.get('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
 
 # Static files (CSS, JavaScript, Images)
 

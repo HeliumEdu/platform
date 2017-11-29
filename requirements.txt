@@ -1,7 +1,7 @@
-django==1.8.18
+django==1.10.8
 django-redis==4.7.0
 pytz==2016.10
-django-debug-toolbar==1.6
+django-debug-toolbar==1.9
 django-widget-tweaks==1.4.1
 django-storages==1.5.1
 statsd==3.2.1

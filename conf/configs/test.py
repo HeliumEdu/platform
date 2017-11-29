@@ -5,7 +5,7 @@ Streamlined Django settings for running test cases.
 import logging
 import os
 
-from .common import DEFAULT_TEMPLATE_CONTEXT_PROCESSORS, DEFAULT_MIDDLEWARE_CLASSES, DEFAULT_INSTALLED_APPS, PIPELINE
+from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -18,9 +18,9 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 INSTALLED_APPS = DEFAULT_INSTALLED_APPS
 
-MIDDLEWARE_CLASSES = DEFAULT_MIDDLEWARE_CLASSES
+MIDDLEWARE = DEFAULT_MIDDLEWARE
 
-TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_TEMPLATE_CONTEXT_PROCESSORS
+TEMPLATES = DEFAULT_TEMPLATES
 
 # This is an insecure password hasher, but much faster than what would be used in production
 PASSWORD_HASHERS = (
