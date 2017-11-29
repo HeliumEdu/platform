@@ -1,5 +1,5 @@
 """
-Form for user's personal information modification.
+Form for user's settings modification.
 """
 
 from helium.common.forms.base import BaseForm
@@ -10,7 +10,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class UserSettingsForm(BaseForm):
+class UserSettingForm(BaseForm):
     class Meta:
         model = UserSetting
         fields = ('time_zone',)

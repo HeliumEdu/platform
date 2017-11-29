@@ -13,4 +13,4 @@ __version__ = '1.0.0'
 class UserProfileForm(BaseForm):
     class Meta:
         model = UserSetting
-        fields = ('first_name', 'last_name', 'phone',)
+        fields = ('phone',)

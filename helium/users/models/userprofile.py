@@ -19,10 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserProfile(BaseModel):
-    first_name = models.CharField(max_length=30, blank=True, null=True)
-
-    last_name = models.CharField(max_length=30, blank=True, null=True)
-
     phone = models.CharField(max_length=255, blank=True, null=True)
 
     phone_carrier = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True, null=True)

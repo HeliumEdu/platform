@@ -53,7 +53,7 @@ def send_registration_email(email, platform_host):
 
 
 @app.task
-def send_password_reset(email, temp_password, platform_host):
+def send_password_reset_email(email, temp_password, platform_host):
     plaintext = get_template('email/forgot.txt')
     html = get_template('email/forgot.html')
     c = Context({'password': temp_password,

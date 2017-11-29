@@ -21,14 +21,6 @@
 
                             {% include 'snippets/status.html' %}
 
-                            {% if form.non_field_errors %}
-                            {% for error in form.non_field_errors %}
-                            <div id="login-status" class="alert alert-warning">
-                                {{ error }}
-                            </div>
-                            {% endfor %}
-                            {% endif %}
-
                             <form action="{{ request.get_full_path }}" method="post">{% csrf_token %}
                                 <fieldset>
                                     <label class="block clearfix">

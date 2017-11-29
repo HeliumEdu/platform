@@ -22,7 +22,7 @@ class UserAdmin(admin.UserAdmin):
 
     list_display = ('email', 'username', 'last_login', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email', 'username', 'profile__first_name', 'profile__last_name')
+    search_fields = ('email', 'username')
     ordering = ('email',)
     add_fieldsets = (
         (None, {
@@ -59,7 +59,7 @@ class UserSettingAdmin(ModelAdmin):
 
 class UserProfileAdmin(ModelAdmin):
     model = UserProfile
-    list_display = ['get_user', 'first_name', 'last_name']
+    list_display = ['get_user']
     list_filter = ('phone_carrier',)
     ordering = ('user__username',)
     readonly_fields = ('user',)

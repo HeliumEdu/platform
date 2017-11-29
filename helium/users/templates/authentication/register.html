@@ -35,8 +35,7 @@
                                                             <i class="icon-envelope"></i>
                                                         </span>
 
-                                                    <input type="email" class="form-control" name="email" id="email"
-                                                           placeholder="Email" tabindex="3" maxlength="255" required/>
+                                                    {% render_field data.user_register_form.email class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -46,9 +45,7 @@
                                                             <i class="icon-user"></i>
                                                         </span>
 
-                                                    <input type="text" class="form-control" name="username"
-                                                           id="username" maxlength="255"
-                                                           placeholder="Username" tabindex="4" required/>
+                                                    {% render_field data.user_register_form.username class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -58,9 +55,7 @@
                                                             <i class="icon-lock"></i>
                                                         </span>
 
-                                                    <input type="password" class="form-control" name="password1"
-                                                           id="password1" maxlength="255"
-                                                           placeholder="Password" tabindex="5" required/>
+                                                    {% render_field data.user_register_form.password1 class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -70,19 +65,16 @@
                                                             <i class="icon-retweet"></i>
                                                         </span>
 
-                                                    <input type="password" class="form-control"
-                                                           name="password2" maxlength="255"
-                                                           id="password2" tabindex="6"
-                                                           placeholder="Confirm password" required/>
+                                                    {% render_field data.user_register_form.password2 class+="form-control" %}
                                                 </div>
                                             </label>
 
                                             <label class="block clearfix">
                                                 <label class="col-sm-3 control-label" style="margin-top: 3px;"
-                                                       for="id_{{ data.user_settings_form.time_zone.name }}">Time zone</label>
+                                                       for="id_{{ data.user_register_form.time_zone.name }}">{{ data.user_register_form.time_zone.label }}</label>
 
                                                 <div class="col-sm-9">
-                                                    {% render_field data.user_settings_form.time_zone class+="form-control chosen-select" %}
+                                                    {% render_field data.user_register_form.time_zone class+="form-control chosen-select" %}
                                                 </div>
                                             </label>
 
