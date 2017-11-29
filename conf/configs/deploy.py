@@ -7,7 +7,7 @@ import os
 
 from boto.s3.connection import OrdinaryCallingFormat
 
-from .common import DEFAULT_TEMPLATE_CONTEXT_PROCESSORS, DEFAULT_MIDDLEWARE_CLASSES, DEFAULT_INSTALLED_APPS, \
+from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, \
     PROJECT_NAME, ADMIN_EMAIL_ADDRESS, DEBUG
 
 __author__ = 'Alex Laird'
@@ -23,13 +23,13 @@ INSTALLED_APPS = DEFAULT_INSTALLED_APPS + (
     'storages',
 )
 
-MIDDLEWARE_CLASSES = DEFAULT_MIDDLEWARE_CLASSES
+MIDDLEWARE = DEFAULT_MIDDLEWARE
 
-TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_TEMPLATE_CONTEXT_PROCESSORS
+TEMPLATES = DEFAULT_TEMPLATES
 
 if DEBUG:
-    TEMPLATE_CONTEXT_PROCESSORS += (
-        'django.core.context_processors.debug',
+    TEMPLATES[0]['OPTIONS']['context_processors'] += (
+        'django.template.context_processors.debug',
     )
 
 #############################

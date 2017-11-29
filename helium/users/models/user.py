@@ -10,8 +10,8 @@ from django.db import models
 from django.utils import timezone
 
 from helium.common.models.base import BaseModel
-from helium.users.utils.userutils import generate_verification_code
 from helium.users.managers.usermanager import UserManager
+from helium.users.utils.userutils import generate_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -29,12 +29,12 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
                                                               'invalid'),
                                 ],
                                 error_messages={
-                                    'unique': "A user with that username already exists.",
+                                    'unique': "Sorry, that username is already in use.",
                                 })
 
     email = models.EmailField(max_length=255, unique=True,
                               error_messages={
-                                  'unique': "A user with that email already exists.",
+                                  'unique': "Sorry, that email is already in use. If you already have an account, try <a href='/forgot'>resetting your password</a>."
                               })
 
     email_changing = models.EmailField(max_length=255, blank=True, null=True)

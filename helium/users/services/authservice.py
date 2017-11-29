@@ -11,7 +11,6 @@ from statsd.defaults.django import statsd
 
 from helium.common.utils.viewutils import set_request_status
 from helium.users import tasks
-from helium.users.models import User
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -71,21 +70,21 @@ def process_verification(request, username, verification_code):
             redirect = reverse('planner')
         else:
             redirect = reverse('login')
-    except User.DoesNotExist:
+    except get_user_model().DoesNotExist:
         redirect = reverse('register')
 
     return redirect
 
 
-def process_login(request):
+def process_login(request, username, password):
     redirect = None
-    if 'username' in request.POST and 'password' in request.POST:
-        username = request.POST['username']
-        password = request.POST['password']
 
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.is_active:
+    try:
+        user = get_user_model().objects.get(username=username)
+        if user.is_active:
+            user = authenticate(username=username, password=password)
+
+            if user:
                 login(request, user)
 
                 logger.info('Logged in user ' + username)
@@ -99,15 +98,18 @@ def process_login(request):
                 else:
                     redirect = reverse('planner')
             else:
-                logger.info('Inactive user ' + username + " attempted login")
-
                 set_request_status(request, 'warning',
-                                   'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">contact support</a> and we\'ll help you sort this out!')
+                                   'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
         else:
-            logger.info('Non-existent user ' + username + " attempted login")
+            logger.info('Inactive user ' + username + " attempted login")
 
             set_request_status(request, 'warning',
-                               'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
+                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">contact support</a> and we\'ll help you sort this out!')
+    except get_user_model().DoesNotExist:
+        logger.info('Non-existent user ' + username + " attempted login")
+
+        set_request_status(request, 'warning',
+                           'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
 
     return redirect
 

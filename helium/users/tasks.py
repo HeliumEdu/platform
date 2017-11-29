@@ -32,7 +32,7 @@ def send_verification_email(email, username, verification_code, platform_host):
     html_content = html.render(c)
 
     msg = EmailMultiAlternatives('Verify Your Email Address with Helium', text_content,
-                                 settings.DEFAULT_FROM_EMAIL, [email], bcc=[settings.ADMIN_EMAIL_ADDRESS])
+                                 settings.DEFAULT_FROM_EMAIL, [email])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
