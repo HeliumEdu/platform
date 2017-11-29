@@ -79,33 +79,27 @@ def process_verification(request, username, verification_code):
 def process_login(request, username, password):
     redirect = None
 
-    try:
-        user = get_user_model().objects.get(username=username)
+    user = authenticate(username=username, password=password)
+    if user is not None:
         if user.is_active:
-            user = authenticate(username=username, password=password)
+            login(request, user)
 
-            if user:
-                login(request, user)
+            logger.info('Logged in user ' + username)
 
-                logger.info('Logged in user ' + username)
+            if request.POST.get('remember-me', False):
+                request.session.set_expiry(1209600)
 
-                if request.POST.get('remember-me', False):
-                    request.session.set_expiry(1209600)
-
-                # If 'next' exists as a parameter in the URL, redirect to the specified page instead
-                if 'next' in request.GET:
-                    redirect = request.GET['next']
-                else:
-                    redirect = reverse('planner')
+            # If 'next' exists as a parameter in the URL, redirect to the specified page instead
+            if 'next' in request.GET:
+                redirect = request.GET['next']
             else:
-                set_request_status(request, 'warning',
-                                   'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
+                redirect = reverse('planner')
         else:
             logger.info('Inactive user ' + username + " attempted login")
 
             set_request_status(request, 'warning',
                                'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">contact support</a> and we\'ll help you sort this out!')
-    except get_user_model().DoesNotExist:
+    else:
         logger.info('Non-existent user ' + username + " attempted login")
 
         set_request_status(request, 'warning',
