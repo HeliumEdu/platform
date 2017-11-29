@@ -1,7 +1,6 @@
 """
-Unauthenticated views for authenticating a user.
+Unauthenticated views for user authentication.
 """
-import ast
 import logging
 
 from django.core.urlresolvers import reverse
@@ -9,6 +8,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from statsd.defaults.django import statsd
 
+from helium.common.utils.viewutils import set_request_status, get_request_status, set_response_status, clear_response_status
 from helium.users.forms.userregisterform import UserRegisterForm
 from helium.users.services import authservice
 
@@ -35,20 +35,18 @@ def register(request):
             user_register_form.save()
 
             redirect = authservice.process_register(request, user_register_form.instance)
-
-            if not user_register_form.instance.email.endswith('@heliumedu.com'):
-                statsd.incr('platform.vol.user-added')
         else:
-            request.session['status'] = {'type': 'warning', 'msg': user_register_form.errors.values()[0][0]}
+            set_request_status(request, 'warning', user_register_form.errors.values()[0][0])
 
-    status = request.session.get('status', '')
-    if 'status' in request.session:
-        del request.session['status']
+    # Check if a status has been set (either by this view or another view from which we were redirect)
+    status = get_request_status(request, '')
 
     if redirect:
         response = HttpResponseRedirect(redirect)
-        if status:
-            response.set_cookie('status', status)
+
+        # In the case of a redirect, we move the status to the response so it gets passed
+        set_response_status(response, status)
+
         return response
     else:
         if authservice.is_anonymous_or_non_admin(request.user):
@@ -87,30 +85,24 @@ def login(request):
             if authservice.is_anonymous_or_non_admin(request.user):
                 statsd.incr('platform.action.user-logged-in')
 
-        status = request.session.get('status', None)
-        if not status:
-            status = request.COOKIES.get('status', None)
-            if status:
-                status = ast.literal_eval(status)
-        if 'status' in request.session:
-            del request.session['status']
+        status = get_request_status(request, None)
 
+    # Login was successful, or the user is already logged in
     if redirect:
         redirect = HttpResponseRedirect(redirect)
 
         return redirect
     else:
-        response_status = 200
+        http_status = 200
         if request.method == 'POST':
-            response_status = 401
+            http_status = 401
 
         data = {
             'status': status
         }
 
-        response = render(request, 'authentication/login.html', {'data': data}, status=response_status)
-        if 'status' in request.COOKIES:
-            response.delete_cookie(key='status')
+        response = render(request, 'authentication/login.html', {'data': data}, status=http_status)
+        clear_response_status(response)
         return response
 
 
@@ -131,9 +123,7 @@ def forgot(request):
         if request.method == 'POST':
             redirect = authservice.process_forgot_password(request)
 
-        status = request.session.get('status', None)
-        if 'status' in request.session:
-            del request.session['status']
+        status = get_request_status(request)
 
     if not redirect:
         if authservice.is_anonymous_or_non_admin(request.user):
@@ -146,6 +136,7 @@ def forgot(request):
         return render(request, 'authentication/forgot.html', {'data': data})
     else:
         response = HttpResponseRedirect(redirect)
-        if status:
-            response.set_cookie('status', status)
+
+        set_response_status(response, status)
+
         return response

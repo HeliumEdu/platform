@@ -7,8 +7,7 @@ from django.contrib.auth import get_user_model
 
 from helium.common import enums
 from helium.common.forms.base import BaseForm
-from helium.common.utils import is_password_valid
-from helium.users.managers.usermanager import UserManager
+from helium.users.utils.userutils import is_password_valid
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -16,15 +15,9 @@ __version__ = '1.0.0'
 
 
 class UserRegisterForm(BaseForm):
-    password1 = forms.CharField(label='Password')
-    password2 = forms.CharField(label='Confirm password')
+    password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Confirm password', widget=forms.PasswordInput)
     time_zone = forms.ChoiceField(label='Time zone', choices=enums.TIME_ZONE_CHOICES)
-
-    def __init__(self, *args, **kwargs):
-        super(UserRegisterForm, self).__init__(*args, **kwargs)
-
-        for field in self.fields.values():
-            field.widget.attrs['placeholder'] = field.label
 
     class Meta:
         """
@@ -54,6 +47,8 @@ class UserRegisterForm(BaseForm):
         """
         Save the provided password in hashed format.
 
+        If commit is not set to True, time_zone will also not be saved (as it requires a persisted user object).
+
         :param commit: If True, changes to the instance will be saved to the database.
         """
         user = super(UserRegisterForm, self).save(commit=False)
@@ -62,10 +57,9 @@ class UserRegisterForm(BaseForm):
         if commit:
             user.save()
 
-            UserManager.create_references(user)
-
+            # On registration, the user's time zone is also provided; now that the user is created, it's dependent models
+            # have also been created, so save it to the user's settings
             user.settings.time_zone = self.cleaned_data.get("time_zone")
-
             user.settings.save()
 
         return user

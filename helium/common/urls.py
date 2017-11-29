@@ -1,5 +1,5 @@
 """
-Common URLs.
+Landing and other unauthenticated URLs.
 """
 
 from django.conf import settings as config

@@ -1,27 +1,17 @@
 """
-Utility functions.
+Utility function for user data.
 """
 
 import datetime
 import hashlib
 import sys
-from random import randint, choice
+from random import randint
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
-
-
-def generate_random_color(used=()):
-    color = choice(settings.ALLOWED_COLORS)
-    # Once we've used all allowed colors, we have to duplicate, but until then try to be unique
-    if len(used) < len(settings.ALLOWED_COLORS):
-        while color in used:
-            color = choice(settings.ALLOWED_COLORS)
-    return color
 
 
 def generate_verification_code():

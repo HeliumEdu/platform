@@ -1,5 +1,5 @@
 """
-Reminder functions.
+Service for interacting with reminders.
 """
 
 import logging

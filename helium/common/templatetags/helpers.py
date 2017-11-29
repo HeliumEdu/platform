@@ -1,5 +1,5 @@
 """
-Helper tag functions.
+Helper functions for use in extending the base functional of templates.
 """
 from urllib import urlencode
 

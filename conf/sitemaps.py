@@ -1,5 +1,5 @@
 """
-Sitemaps URLs.
+Sitemap configurations.
 """
 
 from django.contrib import sitemaps

@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 class UserManager(BaseUserManager):
     @staticmethod
     def create_references(user):
+        """
+        Create necessary dependency models for a user.
+
+        :param user: the user to create the dependencies for
+        """
         UserProfile.objects.create(user=user)
         UserSetting.objects.create(user=user)
 
@@ -42,8 +47,6 @@ class UserManager(BaseUserManager):
         user.set_password(password)
 
         user.save(using=self._db)
-
-        UserManager.create_references(user)
 
         return user
 

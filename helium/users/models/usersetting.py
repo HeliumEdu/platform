@@ -9,7 +9,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models.base import BaseModel
-from helium.common.utils import generate_random_color
+from helium.common.utils.commonutils import generate_random_color
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

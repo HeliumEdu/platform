@@ -10,7 +10,7 @@ from django.db import models
 from django.utils import timezone
 
 from helium.common.models.base import BaseModel
-from helium.common.utils import generate_verification_code
+from helium.users.utils.userutils import generate_verification_code
 from helium.users.managers.usermanager import UserManager
 
 __author__ = 'Alex Laird'
@@ -91,3 +91,14 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     def get_username(self):
         return getattr(self, self.USERNAME_FIELD)
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            new_instance = True
+        else:
+            new_instance = False
+
+        super(User, self).save(*args, **kwargs)
+
+        if new_instance:
+            UserManager.create_references(self)

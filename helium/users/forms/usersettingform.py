@@ -1,5 +1,5 @@
 """
-Form for user's settings modification.
+Form for user settings modification.
 """
 
 from helium.common.forms.base import BaseForm

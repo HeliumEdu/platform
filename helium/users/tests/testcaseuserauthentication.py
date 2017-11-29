@@ -5,6 +5,7 @@ Tests for authentication.
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from helium.users.models import UserProfile, UserSetting
 from helium.users.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
@@ -79,6 +80,9 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
         self.assertEqual(response.status_code, 302)
         self.assertIn('verify your email address', str(response.cookies['status']))
+
+        self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
+        self.assertTrue(UserSetting.objects.filter(user__email='test@test.com').exists())
 
     def test_verification_success(self):
         # GIVEN

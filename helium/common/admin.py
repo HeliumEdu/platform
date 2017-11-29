@@ -1,5 +1,5 @@
 """
-Initialize the Admin site.
+Base configuration for the admin site.
 """
 
 from django.conf import settings
