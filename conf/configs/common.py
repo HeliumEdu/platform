@@ -124,6 +124,10 @@ EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
 EMAIL_HOST_USER = os.environ.get('PLATFORM_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('PLATFORM_EMAIL_HOST_PASSWORD')
 
+# Authentication
+
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
+
 # Security
 
 SECRET_KEY = os.environ.get('PLATFORM_SECRET_KEY')
