@@ -1,5 +1,5 @@
 """
-Abstract model for Base model, which all other models should derive from.
+Base attributes from which all other models should derive.
 """
 
 import logging

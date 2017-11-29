@@ -1,5 +1,5 @@
 """
-Form for user's personal information modification.
+Form for user profile modification.
 """
 
 from helium.common.forms.base import BaseForm

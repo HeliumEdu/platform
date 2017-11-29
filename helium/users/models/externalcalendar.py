@@ -1,5 +1,5 @@
 """
-ExternalCalendar model for the Planner app of Helium.
+ExternalCalendar model.
 """
 import logging
 
@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import models
 
 from helium.common.models.base import BaseModel
-from helium.common.utils import generate_random_color
+from helium.common.utils.commonutils import generate_random_color
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2015, Helium Edu'
@@ -17,10 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class ExternalCalendar(BaseModel):
-    """
-    The model for calendar sources.
-    """
-
     title = models.CharField(max_length=255, db_index=True, default='')
 
     url = models.URLField(max_length=255)

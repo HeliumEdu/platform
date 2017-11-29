@@ -1,5 +1,5 @@
 """
-Unauthenticated view entrance functions.
+Authenticated views for displaying planner pages.
 """
 
 import logging

@@ -1,5 +1,5 @@
 """
-Context processors for project-specific attributes to be passed to templates.
+Context processors defining attributes that will be passed to all templates.
 """
 
 from django.conf import settings

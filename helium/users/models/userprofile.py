@@ -9,7 +9,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models.base import BaseModel
-from helium.common.utils import generate_phone_verification_code
+from helium.users.utils.userutils import generate_phone_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

@@ -1,5 +1,5 @@
 """
-Abstract model for Base form.
+Base attributes from which all other forms should derive.
 """
 
 from django import forms
@@ -14,6 +14,9 @@ class BaseForm(forms.ModelForm):
         kwargs.setdefault('label_suffix', '')
 
         super(BaseForm, self).__init__(*args, **kwargs)
+
+        for field in self.fields.values():
+            field.widget.attrs['placeholder'] = field.label
 
     class Meta:
         abstract = True

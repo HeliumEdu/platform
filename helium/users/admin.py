@@ -1,5 +1,5 @@
 """
-Customize the Admin site.
+User admin site.
 """
 
 from django.contrib.admin import ModelAdmin

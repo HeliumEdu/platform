@@ -1,5 +1,5 @@
 """
-Authenticated views for user accounts.
+Authenticated views for displaying user details.
 """
 
 import logging
