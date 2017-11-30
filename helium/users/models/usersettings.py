@@ -1,5 +1,5 @@
 """
-UserSetting model.
+UserSettings model.
 """
 
 import logging
@@ -18,7 +18,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserSetting(BaseModel):
+class UserSettings(BaseModel):
     time_zone = models.CharField(default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
     default_view = models.PositiveIntegerField(choices=enums.VIEW_CHOICES, default=enums.MONTH)
