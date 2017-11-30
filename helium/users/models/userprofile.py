@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import models
 
 from helium.common import enums
-from helium.common.models.base import BaseModel
+from helium.common.models import BaseModel
 from helium.users.utils.userutils import generate_phone_verification_code
 
 __author__ = 'Alex Laird'

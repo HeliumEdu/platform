@@ -91,7 +91,7 @@ class TestCaseUserAuthentication(TestCase):
         user.save()
 
         # WHEN
-        response = self.client.get('/verify?username=' + user.username + '&code=' + user.verification_code)
+        response = self.client.get('/verify?username=' + user.username + '&code=' + str(user.verification_code))
 
         # THEN
         user = get_user_model().objects.get(email='test@heliumedu.com')

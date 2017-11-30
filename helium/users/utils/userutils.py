@@ -2,9 +2,6 @@
 Utility function for user data.
 """
 
-import datetime
-import hashlib
-import sys
 from random import randint
 
 from django.contrib.auth import get_user_model
@@ -12,19 +9,6 @@ from django.contrib.auth import get_user_model
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
-
-
-def generate_verification_code():
-    code = None
-    while not code:
-        seed_text = randint(0, sys.maxint)
-
-        code = hashlib.sha1(str(seed_text) + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S%f')).hexdigest()
-        # Ensure the slug does not already exist in the database
-        if get_user_model().objects.filter(verification_code=code).exists():
-            code = None
-
-    return code
 
 
 def generate_phone_verification_code():
