@@ -213,9 +213,6 @@
 
 {% javascript 'base' %}
 
-{% if request.user.is_authenticated %}
-{% include "snippets/userinit-js.html" %}
-{% endif %}
 <script type="application/javascript">
     $(window).load(function () {
         "use strict";

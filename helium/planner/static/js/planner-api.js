@@ -9,28 +9,6 @@
  * @version 1.0.0
  */
 
-var CSRF_TOKEN = $.cookie("csrftoken");
-
-// Initialize AJAX configuration
-function csrfSafeMethod(method) {
-    "use strict";
-
-    // These HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-}
-$.ajaxSetup({
-    beforeSend: function (xhr, settings) {
-        "use strict";
-
-        if (!csrfSafeMethod(settings.type)) {
-            // Send the token to same-origin, relative URLs only.
-            // Send the token only if the method warrants CSRF protection
-            // Using the CSRFToken value acquired earlier
-            xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
-        }
-    }
-});
-
 /**
  * Create the Helium API persistence object.
  *

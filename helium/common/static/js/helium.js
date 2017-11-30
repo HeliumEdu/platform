@@ -9,6 +9,28 @@
  * @version 1.0.0
  */
 
+var CSRF_TOKEN = $.cookie("csrftoken");
+
+// Initialize AJAX configuration
+function csrfSafeMethod(method) {
+    "use strict";
+
+    // These HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+        "use strict";
+
+        if (!csrfSafeMethod(settings.type)) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
+        }
+    }
+});
+
 /**
  * Create the Helium persistence object.
  *
@@ -100,7 +122,6 @@ function Helium() {
     this.calendar = null;
     this.materials = null;
     this.grades = null;
-    this.school = null;
 
     /**
      * From a given string (which may be a mathematical operation), convert the string to a percentage string.
@@ -150,7 +171,7 @@ function Helium() {
      *
      * @param grade
      */
-    this.grade_for_display = function(grade) {
+    this.grade_for_display = function (grade) {
         var split, value;
         if (grade.indexOf("/") !== -1) {
             split = grade.split("/");
@@ -170,7 +191,7 @@ function Helium() {
      *
      * @param data the returned data object
      */
-    this.is_data_invalid = function(data) {
+    this.is_data_invalid = function (data) {
         return (data == undefined || (data.length === 1 && (data[0].hasOwnProperty("err_msg"))));
     };
 
@@ -182,11 +203,11 @@ function Helium() {
      *
      * @param data the returned data object
      */
-    this.data_has_err_msg = function(data) {
+    this.data_has_err_msg = function (data) {
         return data != undefined && data.length === 1 && data[0].hasOwnProperty("err_msg");
     };
 
-    this.bytes_to_size = function(bytes) {
+    this.bytes_to_size = function (bytes) {
         var sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
         if (bytes === 0) {
             return '0 ' + sizes[0];
@@ -237,3 +258,13 @@ function Helium() {
 
 // Initialize the Helium object
 var helium = new Helium();
+
+$.ajax({
+    type: "GET",
+    url: "/api/user/settings",
+    async: false,
+    dataType: "json",
+    success: function (data) {
+        helium.USER_PREFS = data;
+    }
+});
