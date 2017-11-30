@@ -77,6 +77,7 @@ class TestCaseUserAuthentication(TestCase):
         # THEN
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
+        self.assertEqual(user.username, 'my_test_user')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
         self.assertEqual(response.status_code, 302)
         self.assertIn('verify your email address', str(response.cookies['status']))
@@ -86,8 +87,7 @@ class TestCaseUserAuthentication(TestCase):
 
     def test_verification_success(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.is_active = False
+        user = userhelper.given_an_inactive_user_exists()
         user.save()
 
         # WHEN

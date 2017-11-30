@@ -14,4 +14,5 @@ __version__ = '1.0.0'
 class UserSettingForm(forms.ModelForm, BaseForm):
     class Meta:
         model = UserSetting
-        fields = ('time_zone',)
+        fields = ('default_view', 'week_starts_on', 'show_getting_started', 'default_reminder_offset',
+                  'default_reminder_offset_type', 'default_reminder_type', 'time_zone',)
