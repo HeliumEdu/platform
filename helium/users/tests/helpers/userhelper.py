@@ -9,10 +9,18 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
+def given_an_inactive_user_exists(username='test_user', email='test@heliumedu.com'):
     user = get_user_model().objects.create_user(username=username,
                                                 email=email,
                                                 password='test_pass_1!')
+
+    user.save()
+
+    return user
+
+
+def given_a_user_exists(username='test_user', email='test@heliumedu.com'):
+    user = given_an_inactive_user_exists(username, email)
 
     user.is_active = True
 
