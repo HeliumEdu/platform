@@ -4,6 +4,7 @@ Tests for authentication.
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from helium.users.models import UserProfile, UserSettings
 from helium.users.tests.helpers import userhelper
@@ -20,7 +21,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
         # WHEN
-        response = self.client.post('/login', {'username': user.get_username(), 'password': 'test_pass_1!'})
+        response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
 
         # THEN
         self.assertEqual(response.status_code, 302)
@@ -29,7 +30,7 @@ class TestCaseUserAuthentication(TestCase):
     def test_logout_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        self.client.post('/login', {'username': user.get_username(), 'password': 'test_pass_1!'})
+        self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
 
         # WHEN
         response = self.client.post('/logout')
@@ -44,7 +45,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
         # WHEN
-        response = self.client.post('/login', {'username': user.get_username(), 'password': 'wrong_pass'})
+        response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'wrong_pass'})
 
         # THEN
         self.assertEqual(response.status_code, 401)
@@ -53,13 +54,13 @@ class TestCaseUserAuthentication(TestCase):
     def test_password_reset(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        response = self.client.post('/forgot', {'email': user.email})
+        response = self.client.post(reverse('forgot'), {'email': user.email})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/login')
         temp_pass = response.context['password']
 
         # WHEN
-        response = self.client.post('/login', {'username': user.get_username(), 'password': temp_pass})
+        response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': temp_pass})
 
         # THEN
         self.assertEqual(response.status_code, 302)
@@ -70,7 +71,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
         # WHEN
-        response = self.client.post('/register',
+        response = self.client.post(reverse('register'),
                                     {'email': 'test@test.com', 'username': 'my_test_user', 'password1': 'test_pass_1!',
                                      'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
 
@@ -91,7 +92,8 @@ class TestCaseUserAuthentication(TestCase):
         user.save()
 
         # WHEN
-        response = self.client.get('/verify?username=' + user.username + '&code=' + str(user.verification_code))
+        response = self.client.get(
+            reverse('verify') + '?username=' + user.username + '&code=' + str(user.verification_code))
 
         # THEN
         user = get_user_model().objects.get(email='test@heliumedu.com')

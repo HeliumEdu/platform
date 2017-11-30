@@ -17,3 +17,4 @@ Pygments==1.6
 icalendar==3.8.3
 python-dateutil==2.4.2
 mock==1.0.1
+djangorestframework==3.7.3

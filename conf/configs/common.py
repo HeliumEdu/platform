@@ -54,6 +54,7 @@ DEFAULT_INSTALLED_APPS = (
     # Third-party modules
     'widget_tweaks',
     'pipeline',
+    'rest_framework',
     # Project modules
     'helium.common',
     'helium.users',
