@@ -5,10 +5,9 @@ User model.
 import logging
 import uuid
 
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
-from django.utils import timezone
 
 from helium.common.models import BaseModel
 from helium.users.managers.usermanager import UserManager
@@ -20,7 +19,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class User(AbstractBaseUser, PermissionsMixin, BaseModel):
+class User(AbstractBaseUser, BaseModel):
     username = models.CharField(max_length=255, unique=True,
                                 help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.',
                                 validators=[
@@ -39,13 +38,11 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     email_changing = models.EmailField(max_length=255, blank=True, null=True)
 
-    is_staff = models.BooleanField(default=False)
-
     is_active = models.BooleanField(default=False)
 
-    verification_code = models.UUIDField(default=uuid.uuid4, unique=True)
+    verification_code = models.SlugField(default=uuid.uuid4, unique=True)
 
-    date_joined = models.DateTimeField(default=timezone.now)
+    is_superuser = models.BooleanField(default=False)
 
     # Manager
     objects = UserManager()
@@ -88,6 +85,15 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
         :return: True if the user has privileges for app, False otherwise
         """
         return True
+
+    @property
+    def is_staff(self):
+        """
+        Check if this user has administrative privileges.
+
+        :return: True if the user is an admin, False otherwise
+        """
+        return self.is_superuser
 
     def get_username(self):
         return getattr(self, self.USERNAME_FIELD)

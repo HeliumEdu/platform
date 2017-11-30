@@ -33,7 +33,8 @@ class UserSettings(BaseModel):
 
     default_reminder_offset = models.PositiveIntegerField(default=30)
 
-    default_reminder_offset_type = models.PositiveIntegerField(default=enums.MINUTES, choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
+    default_reminder_offset_type = models.PositiveIntegerField(default=enums.MINUTES,
+                                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
 
     default_reminder_type = models.PositiveIntegerField(default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
 
@@ -44,3 +45,6 @@ class UserSettings(BaseModel):
     private_slug = models.SlugField(blank=True, null=True)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = 'User settings'

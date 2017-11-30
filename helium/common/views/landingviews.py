@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.home')
 
     return render(request, "home.html")

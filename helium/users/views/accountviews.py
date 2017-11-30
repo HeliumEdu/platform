@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def settings(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.account.settings')
 
     return render(request, "account/settings.html")

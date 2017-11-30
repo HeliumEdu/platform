@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def calendar(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.calendar')
 
     return render(request, "calendar.html")
@@ -27,7 +27,7 @@ def calendar(request):
 
 @login_required
 def classes(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.classes')
 
     return render(request, "classes.html")
@@ -35,7 +35,7 @@ def classes(request):
 
 @login_required
 def materials(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.materials')
 
     return render(request, "materials.html")
@@ -43,7 +43,7 @@ def materials(request):
 
 @login_required
 def grades(request):
-    if authservice.is_anonymous_or_non_admin(request.user):
+    if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.grades')
 
     return render(request, "grades.html")

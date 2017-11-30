@@ -20,10 +20,11 @@ class UserAdmin(admin.UserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
 
-    list_display = ('email', 'username', 'last_login', 'is_staff')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    list_display = ('email', 'username', 'created_at', 'last_login',)
+    list_filter = (
+        'is_active', 'profile__phone_verified', 'settings__default_view', 'settings__receive_emails_from_admin',)
     search_fields = ('email', 'username')
-    ordering = ('email',)
+    ordering = ('-last_login',)
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -31,19 +32,18 @@ class UserAdmin(admin.UserAdmin):
         }),
     )
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser',
-                                    'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        (None, {'fields': ('email', 'password', 'is_active', 'is_superuser', 'last_login', 'created_at')}),
     )
+    filter_horizontal = ()
 
     def get_readonly_fields(self, request, obj=None):
-        return 'date_joined', 'last_login'
+        return 'created_at', 'last_login'
 
 
 class UserSettingsAdmin(ModelAdmin):
     model = UserSettings
-    list_display = ['get_user', 'time_zone']
+    list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
+    list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     ordering = ('user__username',)
     readonly_fields = ('user',)
 
@@ -59,7 +59,7 @@ class UserSettingsAdmin(ModelAdmin):
 
 class UserProfileAdmin(ModelAdmin):
     model = UserProfile
-    list_display = ['get_user']
+    list_display = ['get_user', 'phone_carrier']
     list_filter = ('phone_carrier',)
     ordering = ('user__username',)
     readonly_fields = ('user',)

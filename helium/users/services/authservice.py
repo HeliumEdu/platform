@@ -141,9 +141,9 @@ def process_forgot_password(request):
     return redirect
 
 
-def is_admin(user):
+def is_staff(user):
     return user.is_staff
 
 
-def is_anonymous_or_non_admin(user):
-    return not user.is_authenticated() or not is_admin(user)
+def is_anonymous_or_non_staff(user):
+    return not user.is_authenticated() or not is_staff(user)
