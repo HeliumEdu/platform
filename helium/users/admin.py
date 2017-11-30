@@ -9,7 +9,7 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
 from helium.common.admin import admin_site
 from helium.users.models import UserProfile
-from helium.users.models import UserSetting
+from helium.users.models import UserSettings
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -41,8 +41,8 @@ class UserAdmin(admin.UserAdmin):
         return 'date_joined', 'last_login'
 
 
-class UserSettingAdmin(ModelAdmin):
-    model = UserSetting
+class UserSettingsAdmin(ModelAdmin):
+    model = UserSettings
     list_display = ['get_user', 'time_zone']
     ordering = ('user__username',)
     readonly_fields = ('user',)
@@ -76,5 +76,5 @@ class UserProfileAdmin(ModelAdmin):
 
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
-admin_site.register(UserSetting, UserSettingAdmin)
+admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)

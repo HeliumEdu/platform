@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('username', models.CharField(help_text=b'Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=255, unique=True, error_messages={b'unique': b'A user with that username already exists.'}, validators=[django.core.validators.RegexValidator(b'^[\\w.@+-]+$', b'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.', b'invalid')])),
-                ('email', models.EmailField(unique=True, max_length=255, error_messages={b'unique': b'A user with that email already exists.'})),
+                ('username', models.CharField(help_text=b'Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=255, unique=True, error_messages={b'unique': b'Sorry, that username is already in use.'}, validators=[django.core.validators.RegexValidator(b'^[\\w.@+-]+$', b'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.', b'invalid')])),
+                ('email', models.EmailField(unique=True, max_length=255, error_messages={b'unique': b'Sorry, that email is already in use. If you already have an account, try <a href=\'/forgot\'>resetting your password</a>.'})),
                 ('email_changing', models.EmailField(max_length=255, null=True, blank=True)),
                 ('is_staff', models.BooleanField(default=False)),
                 ('is_active', models.BooleanField(default=False)),
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='UserSetting',
+            name='UserSettings',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),

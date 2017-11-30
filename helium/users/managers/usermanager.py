@@ -7,7 +7,7 @@ import logging
 from django.contrib.auth.models import BaseUserManager
 
 from helium.users.models.userprofile import UserProfile
-from helium.users.models.usersetting import UserSetting
+from helium.users.models.usersettings import UserSettings
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -25,7 +25,7 @@ class UserManager(BaseUserManager):
         :param user: the user to create the dependencies for
         """
         UserProfile.objects.create(user=user)
-        UserSetting.objects.create(user=user)
+        UserSettings.objects.create(user=user)
 
     def create_user(self, username, email, password=None):
         """
