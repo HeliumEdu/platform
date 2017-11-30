@@ -3,15 +3,15 @@ User model.
 """
 
 import logging
+import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core import validators
 from django.db import models
 from django.utils import timezone
 
-from helium.common.models.base import BaseModel
+from helium.common.models import BaseModel
 from helium.users.managers.usermanager import UserManager
-from helium.users.utils.userutils import generate_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -43,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     is_active = models.BooleanField(default=False)
 
-    verification_code = models.SlugField(unique=True, default=generate_verification_code)
+    verification_code = models.UUIDField(default=uuid.uuid4, unique=True)
 
     date_joined = models.DateTimeField(default=timezone.now)
 

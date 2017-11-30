@@ -6,7 +6,7 @@ import logging
 from django.conf import settings
 from django.db import models
 
-from helium.common.models.base import BaseModel
+from helium.common.models import BaseModel
 from helium.common.utils.commonutils import generate_random_color
 
 __author__ = 'Alex Laird'
