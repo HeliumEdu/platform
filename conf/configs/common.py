@@ -52,6 +52,7 @@ DEFAULT_INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.sitemaps',
     # Third-party modules
+    'maintenance_mode',
     'widget_tweaks',
     'pipeline',
     'rest_framework',
@@ -69,6 +70,7 @@ DEFAULT_MIDDLEWARE = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'maintenance_mode.middleware.MaintenanceModeMiddleware',
 )
 
 DEFAULT_TEMPLATES = [{
@@ -102,6 +104,18 @@ ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
+
+# Maintenance mode
+
+MAINTENANCE_MODE_IGNORE_STAFF = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_STAFF', 'False') == 'True'
+
+MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_SUPERUSER', 'True') == 'True'
+
+MAINTENANCE_MODE_IGNORE_TESTS = True
+
+MAINTENANCE_MODE_IGNORE_URLS = ('/admin',)
+
+MAINTENANCE_MODE_TEMPLATE = os.environ.get('PLATFORM_MAINTENANCE_MODE_TEMPLATE', 'errors/maintenance.html')
 
 # Internationalization
 
