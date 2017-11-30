@@ -51,7 +51,7 @@ def register(request):
 
         return response
     else:
-        if authservice.is_anonymous_or_non_admin(request.user):
+        if authservice.is_anonymous_or_non_staff(request.user):
             statsd.incr('platform.view.register')
 
         data = {
@@ -90,7 +90,7 @@ def login(request):
 
                 redirect = authservice.process_login(request, username, password)
 
-                if authservice.is_anonymous_or_non_admin(request.user):
+                if authservice.is_anonymous_or_non_staff(request.user):
                     statsd.incr('platform.action.user-logged-in')
             else:
                 set_request_status(request, 'warning', user_login_form.errors.values()[0][0])
@@ -137,7 +137,7 @@ def forgot(request):
         status = get_request_status(request)
 
     if not redirect:
-        if authservice.is_anonymous_or_non_admin(request.user):
+        if authservice.is_anonymous_or_non_staff(request.user):
             statsd.incr('platform.view.forgotpassword')
 
         data = {
