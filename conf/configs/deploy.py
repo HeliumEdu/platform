@@ -124,11 +124,12 @@ DATABASES = {
 
 # Static
 
+STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
 AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
 AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
-AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/%s' % AWS_STORAGE_BUCKET_NAME
-STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
-STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
+AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
+STATIC_URL = "https://{}/static".format(AWS_S3_CUSTOM_DOMAIN)
+MEDIA_URL = "https://{}/media".format(AWS_S3_CUSTOM_DOMAIN)
 
 # Celery
 

@@ -99,6 +99,7 @@ DEFAULT_TEMPLATES = [{
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/planner'
 LOGOUT_URL = '/logout'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
@@ -165,6 +166,10 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'pipeline.finders.PipelineFinder',
 )
+
+# Media files
+
+MEDIA_ROOT = 'media/'
 
 # Pipelines
 
