@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^settings', settings, name='settings'),
 
     # API URLs
-    url(r'^api/user', UserApiView.as_view(), name='api_user'),
+    url(r'^api/user/$', UserApiView.as_view(), name='api_user'),
     url(r'^api/user/profile', UserProfileApiView.as_view(), name='api_user_profile'),
     url(r'^api/user/settings', UserSettingsApiView.as_view(), name='api_user_settings'),
     url(r'^api/user/externalcalendars/$', ExternalCalendarApiListView.as_view(), name='api_user_externalcalendar_list'),
