@@ -20,5 +20,5 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'time_zone', 'default_view', 'week_starts_on', 'all_day_offset', 'show_getting_started', 'events_color',
             'default_reminder_offset', 'default_reminder_offset_type', 'default_reminder_type', 'receive_emails_from_admin',
-            'events_private_slug', 'private_slug',)
-        read_only_fields = ('events_private_slug', 'private_slug',)
+            'events_private_slug', 'private_slug', 'user',)
+        read_only_fields = ('events_private_slug', 'private_slug', 'user',)

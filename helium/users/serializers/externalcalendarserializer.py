@@ -17,4 +17,5 @@ logger = logging.getLogger(__name__)
 class ExternalCalendarSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExternalCalendar
-        fields = ('title', 'url', 'color', 'shown_on_calendar',)
+        fields = ('title', 'url', 'color', 'shown_on_calendar', 'user',)
+        read_only_fields = ('user',)

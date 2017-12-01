@@ -14,8 +14,6 @@ def given_an_inactive_user_exists(username='test_user', email='test@heliumedu.co
                                                 email=email,
                                                 password=password)
 
-    user.save()
-
     return user
 
 
