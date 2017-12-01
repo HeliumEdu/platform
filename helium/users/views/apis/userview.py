@@ -27,7 +27,7 @@ class UserApiView(APIView):
         return Response(serializer.data)
 
     def put(self, request, format=None):
-        serializer = UserSerializer(request.user, data=request.data)
+        serializer = UserSerializer(request.user, data=request.data, context={'request': request})
 
         if serializer.is_valid():
             serializer.save()

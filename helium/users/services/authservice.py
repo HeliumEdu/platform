@@ -68,6 +68,18 @@ def process_verification(request, username, verification_code):
             logger.info('Auto-logged in user {}'.format(username))
 
             redirect = reverse('planner')
+        elif user.email_changing:
+            user.email = user.email_changing
+            user.email_changing = None
+            user.save()
+
+            # Ensure the user is logged in
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+
+            logger.info('Reverified email for user {}'.format(username))
+
+            redirect = reverse('planner')
         else:
             redirect = reverse('login')
     except get_user_model().DoesNotExist:

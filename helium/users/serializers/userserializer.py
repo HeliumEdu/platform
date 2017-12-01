@@ -2,9 +2,12 @@
 User serializer.
 """
 import logging
+import uuid
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
+from helium.users import tasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2015, Helium Edu'
@@ -17,25 +20,34 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'username', 'email', 'email_changing', 'password',)
-        read_only_fields = ('email',)
+            'username', 'email', 'email_changing', 'verification_code')
+        read_only_fields = ('email_changing',)
         extra_kwargs = {
-            'email_changing': {'write_only': True},
-            'password': {'write_only': True}
+            'verification_code': {'write_only': True},
         }
 
-    def validate_email_changing(self, value):
+    def validate_email(self, value):
         """
-        Ensure the email the user isn't already taken by another user.
+        Ensure the email the user isn't already taken (or being changed to) by another user.
 
         :param value: the new email address
         """
-        if get_user_model().objects.filter(email=value).exists():
-            raise serializers.ValidationError("Sorry, that email is already in use.")
+        if get_user_model().objects.filter(email_changing=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
 
         return value
 
     def update(self, instance, validated_data):
-        if 'email_changing' in validated_data:
-            # TODO: if the email is changing, send a new validation email
-            pass
+        instance.username = validated_data.get('username')
+
+        if 'email' in validated_data and instance.email != validated_data.get('email'):
+            instance.email_changing = validated_data.get('email')
+
+            instance.verification_code = uuid.uuid4
+
+            tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code,
+                                                self.context['request'].get_host())
+
+        instance.save()
+
+        return instance
