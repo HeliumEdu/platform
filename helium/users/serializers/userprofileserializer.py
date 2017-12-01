@@ -20,8 +20,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
-            'phone', 'phone_changing', 'phone_carrier', 'phone_carrier_changing', 'phone_verification_code')
-        read_only_fields = ('phone_changing', 'phone_carrier_changing')
+            'phone', 'phone_changing', 'phone_carrier', 'phone_carrier_changing', 'phone_verification_code', 'user')
+        read_only_fields = ('phone_changing', 'phone_carrier_changing', 'user',)
         extra_kwargs = {
             'phone_verification_code': {'write_only': True},
         }

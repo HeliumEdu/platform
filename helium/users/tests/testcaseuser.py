@@ -1,5 +1,5 @@
 """
-Tests for authentication.
+Tests for User interaction.
 """
 import json
 
@@ -14,8 +14,8 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserAuthentication(TestCase):
-    def test_user_settings_login_required(self):
+class TestCaseUser(TestCase):
+    def test_user_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 

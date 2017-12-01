@@ -1,5 +1,5 @@
 """
-Tests for authentication.
+Tests for UserSettings interaction.
 """
 import json
 import uuid
@@ -15,7 +15,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserAuthentication(TestCase):
+class TestCaseUserSettings(TestCase):
     def test_user_settings_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -46,6 +46,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEquals(user.settings.receive_emails_from_admin, response.data['receive_emails_from_admin'])
         self.assertEquals(user.settings.events_private_slug, response.data['events_private_slug'])
         self.assertEquals(user.settings.private_slug, response.data['private_slug'])
+        self.assertEquals(user.settings.user.pk, response.data['user'])
 
     def test_put_user_setting(self):
         # GIVEN

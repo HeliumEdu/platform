@@ -1,5 +1,5 @@
 """
-Tests for authentication.
+Tests for UserProfile interaction.
 """
 import json
 import uuid
@@ -16,8 +16,8 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserAuthentication(TestCase):
-    def test_user_settings_login_required(self):
+class TestCaseUserProfile(TestCase):
+    def test_user_profile_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
@@ -39,6 +39,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertNotIn('phone_verification_code', response.data)
         self.assertEquals(user.profile.phone, response.data['phone'])
         self.assertEquals(user.profile.phone_carrier, response.data['phone_carrier'])
+        self.assertEquals(user.profile.user.pk, response.data['user'])
 
     def test_put_bad_data_fails(self):
         # GIVEN
