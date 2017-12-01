@@ -17,5 +17,10 @@ logger = logging.getLogger(__name__)
 class ExternalCalendarSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExternalCalendar
-        fields = ('title', 'url', 'color', 'shown_on_calendar', 'user',)
+        fields = ('id', 'title', 'url', 'color', 'shown_on_calendar', 'user',)
         read_only_fields = ('user',)
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+
+        return super(ExternalCalendarSerializer, self).create(validated_data)
