@@ -21,11 +21,13 @@ logger = logging.getLogger(__name__)
 class UserProfile(BaseModel):
     phone = models.CharField(max_length=255, blank=True, null=True)
 
-    phone_carrier = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True, null=True)
-
     phone_changing = models.CharField(max_length=15, blank=True, null=True)
 
-    phone_carrier_changing = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True, null=True)
+    phone_carrier = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,
+                                     null=True)
+
+    phone_carrier_changing = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None,
+                                              blank=True, null=True)
 
     phone_verification_code = models.PositiveIntegerField(default=generate_phone_verification_code)
 

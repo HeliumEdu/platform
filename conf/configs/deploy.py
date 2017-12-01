@@ -66,7 +66,7 @@ LOGGING = {
         'django_log': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/' + PROJECT_NAME.lower() + '/django.log',
+            'filename': '/var/log/{}/django.log'.format(PROJECT_NAME.lower()),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -74,7 +74,7 @@ LOGGING = {
         'platform_users_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/' + PROJECT_NAME.lower() + '/platform_users.log',
+            'filename': '/var/log/{}/platform_users.log'.format(PROJECT_NAME.lower()),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
