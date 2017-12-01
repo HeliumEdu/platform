@@ -31,7 +31,8 @@ class ExternalCalendarApiListView(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = ExternalCalendarSerializer(data=request.data)
+        request.data['user'] = request.user.pk
+        serializer = ExternalCalendarSerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
             serializer.save()

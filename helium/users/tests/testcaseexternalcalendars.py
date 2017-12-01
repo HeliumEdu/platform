@@ -44,8 +44,27 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEquals(len(response.data), 2)
 
     def test_post_externalcalendar(self):
-        # TODO: test creating a new external calendar for a user
-        pass
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'url': 'http://go.com',
+            'color': '#f552',
+            'shown_on_calendar': False,
+        }
+        response = self.client.post(reverse('api_user_externalcalendar_list'), json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEquals(response.status_code, 201)
+        self.assertEquals(ExternalCalendar.objects.count(), 1)
+        externalcalendar = ExternalCalendar.objects.get(pk=response.data['id'])
+        self.assertEquals(externalcalendar.title, 'some title')
+        self.assertEquals(externalcalendar.url, 'http://go.com')
+        self.assertEquals(externalcalendar.color, '#f552')
+        self.assertEquals(externalcalendar.shown_on_calendar, False)
+        self.assertEquals(externalcalendar.user.pk, user.pk)
 
     def test_get_externalcalendar_by_id(self):
         # GIVEN
