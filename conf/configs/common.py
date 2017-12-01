@@ -113,7 +113,8 @@ MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IG
 
 MAINTENANCE_MODE_IGNORE_TESTS = True
 
-MAINTENANCE_MODE_IGNORE_URLS = ('/admin',)
+MAINTENANCE_MODE_IGNORE_URLS = (
+    '^/admin', '^/$', '^/support', '^/terms', '^/privacy', '^/press', '^/about', '^/contact')
 
 MAINTENANCE_MODE_TEMPLATE = os.environ.get('PLATFORM_MAINTENANCE_MODE_TEMPLATE', 'errors/maintenance.html')
 
