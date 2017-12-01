@@ -135,7 +135,7 @@ SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = os.environ.get('PLATFORM_EMAIL_PORT')
 EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
-DEFAULT_FROM_EMAIL = PROJECT_NAME + ' <' + EMAIL_ADDRESS + '>'
+DEFAULT_FROM_EMAIL = PROJECT_NAME + '{} <{}>'.format(PROJECT_NAME, EMAIL_ADDRESS)
 EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
 
 EMAIL_HOST_USER = os.environ.get('PLATFORM_EMAIL_HOST_USER')
@@ -185,13 +185,13 @@ PIPELINE = {
                 'css/vendors/ace.css',
                 'css/helium.css',
             ),
-            'output_filename': 'css/helium_' + PROJECT_VERSION + '.min.css'
+            'output_filename': 'css/helium_{}.min.css'.format(PROJECT_VERSION)
         },
         'base_ie8': {
             'source_filenames': (
                 'css/vendors/ace-ie.css',
             ),
-            'output_filename': 'css/helium_ie8_' + PROJECT_VERSION + '.min.css'
+            'output_filename': 'css/helium_ie8_{}.min.css'.format(PROJECT_VERSION)
         }
     },
     'JAVASCRIPT': {
@@ -208,26 +208,26 @@ PIPELINE = {
                 'js/vendors/ace.js',
                 'js/planner-api.js',
             ),
-            'output_filename': 'js/helium_' + PROJECT_VERSION + '.min.js'
+            'output_filename': 'js/helium_{}.min.js'.format(PROJECT_VERSION)
         },
         'base_header_js': {
             'source_filenames': (
                 'js/vendors/ace-extra.js',
             ),
-            'output_filename': 'js/helium_header_' + PROJECT_VERSION + '.min.js',
+            'output_filename': 'js/helium_header_{}.min.js'.format(PROJECT_VERSION)
         },
         'base_ie9_js': {
             'source_filenames': (
                 'js/vendors/html5shiv.js',
                 'js/vendors/respond.js',
             ),
-            'output_filename': 'js/helium_ie9_' + PROJECT_VERSION + '.min.js',
+            'output_filename': 'js/helium_ie9_{}'.format(PROJECT_VERSION)
         },
         'jstz_js': {
             'source_filenames': (
                 'js/vendors/jstz.js',
             ),
-            'output_filename': 'js/helium_jstz.min_' + PROJECT_VERSION + '.js',
+            'output_filename': 'js/helium_jstz.{}.min.js'.format(PROJECT_VERSION)
         },
     }
 }

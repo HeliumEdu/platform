@@ -20,7 +20,7 @@ if 'test' not in sys.argv:
     else:
         conf = 'deploy'
 
-    print 'Using conf: conf.configs.%s' % conf
+    print 'Using conf: conf.configs.{}'.format(conf)
 
     if conf == 'dev':
         print 'Loading .env file'
@@ -31,7 +31,7 @@ if 'test' not in sys.argv:
         os.environ.update(dotenv)
 
     # Load conf properties into the local scope
-    conf_module = __import__('conf.configs.%s' % conf, globals(), locals(), 'helium')
+    conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), 'helium')
 # If we're running tests, run a streamlined settings file for efficiency
 else:
     print 'Loading .env file'

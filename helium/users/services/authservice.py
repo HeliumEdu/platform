@@ -28,7 +28,7 @@ def process_register(request, user):
     :param user: the user that has been created
     :return: a redirect for the next page in the registration flow
     """
-    logger.info('Registered new user with username: ' + user.get_username())
+    logger.info('Registered new user with username: {}'.format(user.get_username()))
 
     tasks.send_verification_email.delay(user.email, user.username, user.verification_code, request.get_host())
 
@@ -51,7 +51,7 @@ def process_verification(request, username, verification_code):
         user = get_user_model().objects.get(username=username, verification_code=verification_code)
 
         if not user.is_active:
-            logger.info('Verified user ' + username)
+            logger.info('Verified user {}'.format(username))
 
             user.is_active = True
             user.save()
@@ -65,7 +65,7 @@ def process_verification(request, username, verification_code):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
 
-            logger.info('Auto-logged in user ' + username)
+            logger.info('Auto-logged in user {}'.format(username))
 
             redirect = reverse('planner')
         else:
@@ -84,7 +84,7 @@ def process_login(request, username, password):
         if user.is_active:
             login(request, user)
 
-            logger.info('Logged in user ' + username)
+            logger.info('Logged in user {}'.format(username))
 
             if request.POST.get('remember-me', False):
                 request.session.set_expiry(1209600)
@@ -95,12 +95,13 @@ def process_login(request, username, password):
             else:
                 redirect = reverse('planner')
         else:
-            logger.info('Inactive user ' + username + " attempted login")
+            logger.info('Inactive user {} attempted login'.format(username))
 
             set_request_status(request, 'warning',
-                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:' + settings.EMAIL_ADDRESS + '">contact support</a> and we\'ll help you sort this out!')
+                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:{}">contact support</a> and we\'ll help you sort this out!'.format(
+                                       settings.EMAIL_ADDRESS))
     else:
-        logger.info('Non-existent user ' + username + " attempted login")
+        logger.info('Non-existent user {} attempted login'.format(username))
 
         set_request_status(request, 'warning',
                            'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
@@ -111,7 +112,7 @@ def process_login(request, username, password):
 def process_logout(request):
     email = request.user.email
     logout(request)
-    logger.info('Logged out user ' + email)
+    logger.info('Logged out user {}'.format(email))
 
 
 def process_forgot_password(request):
@@ -125,7 +126,7 @@ def process_forgot_password(request):
         user.set_password(password)
         user.save()
 
-        logger.info('Reset password for user with email ' + email)
+        logger.info('Reset password for user with email {}'.format(email))
 
         tasks.send_password_reset_email.delay(user.email, password, request.get_host())
 
@@ -133,7 +134,7 @@ def process_forgot_password(request):
 
         redirect = reverse('login')
     except get_user_model().DoesNotExist:
-        logger.info('A visitor tried to reset the password for an unknown email address of ' + email)
+        logger.info('A visitor tried to reset the password for an unknown email address of {}'.format(email))
 
     set_request_status(request, 'info',
                        'You\'ve been emailed a temporary password. Login to your account immediately using the temporary password, then change your password.')

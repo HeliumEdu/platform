@@ -27,7 +27,7 @@ def send_verification_email(email, username, verification_code, platform_host):
     c = Context({'PROJECT_NAME': settings.PROJECT_NAME,
                  'username': username,
                  'verification_code': verification_code,
-                 'site_url': 'http://' + platform_host})
+                 'site_url': 'http://{}'.format(platform_host)})
     text_content = plaintext.render(c)
     html_content = html.render(c)
 
@@ -42,7 +42,7 @@ def send_registration_email(email, platform_host):
     plaintext = get_template('email/register.txt')
     html = get_template('email/register.html')
     c = Context({'PROJECT_NAME': settings.PROJECT_NAME,
-                 'site_url': 'http://' + platform_host})
+                 'site_url': 'http://{}'.format(platform_host)})
     text_content = plaintext.render(c)
     html_content = html.render(c)
 
@@ -57,7 +57,7 @@ def send_password_reset_email(email, temp_password, platform_host):
     plaintext = get_template('email/forgot.txt')
     html = get_template('email/forgot.html')
     c = Context({'password': temp_password,
-                 'site_url': 'http://' + platform_host})
+                 'site_url': 'http://{}'.format(platform_host)})
     text_content = plaintext.render(c)
     html_content = html.render(c)
 
