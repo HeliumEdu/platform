@@ -25,7 +25,7 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
 
     def clean_password2(self):
         """
-        Check that the two password entries match.
+        Check the password meets the validation criteria.
         """
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")

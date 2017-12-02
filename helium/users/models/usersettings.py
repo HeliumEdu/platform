@@ -48,3 +48,6 @@ class UserSettings(BaseModel):
 
     class Meta:
         verbose_name_plural = 'User settings'
+
+    def __unicode__(self):
+        return unicode('{} ({})'.format(self.pk, self.user.get_username()))

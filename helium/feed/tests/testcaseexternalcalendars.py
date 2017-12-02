@@ -6,8 +6,9 @@ import json
 from django.test import TestCase
 from django.urls import reverse
 
-from helium.users.models import ExternalCalendar
-from helium.users.tests.helpers import userhelper, externalcalendarhelper
+from helium.feed.models import ExternalCalendar
+from helium.feed.tests.helpers import externalcalendarhelper
+from helium.users.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -20,14 +21,14 @@ class TestCaseUserAuthentication(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_user_externalcalendar_list'))
-        response2 = self.client.get(reverse('api_user_externalcalendar_detail', kwargs={'pk': 1}))
+        response1 = self.client.get(reverse('api_feed_externalcalendar_list'))
+        response2 = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1}))
 
         # THEN
         self.assertEqual(response1.status_code, 302)
-        self.assertRedirects(response1, '/login?next={}'.format(reverse('api_user_externalcalendar_list')))
+        self.assertRedirects(response1, '/login?next={}'.format(reverse('api_feed_externalcalendar_list')))
         self.assertEqual(response2.status_code, 302)
-        self.assertRedirects(response2, '/login?next={}'.format(reverse('api_user_externalcalendar_detail', kwargs={'pk': 1})))
+        self.assertRedirects(response2, '/login?next={}'.format(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1})))
 
     def test_get_externalcalendars(self):
         # GIVEN
@@ -38,7 +39,7 @@ class TestCaseUserAuthentication(TestCase):
         externalcalendarhelper.given_external_calendar(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_user_externalcalendar_list'))
+        response = self.client.get(reverse('api_feed_externalcalendar_list'))
 
         # THEN
         self.assertEquals(len(response.data), 2)
@@ -54,7 +55,7 @@ class TestCaseUserAuthentication(TestCase):
             'color': '#f552',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_user_externalcalendar_list'), json.dumps(data), content_type='application/json')
+        response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEquals(response.status_code, 201)
@@ -73,7 +74,7 @@ class TestCaseUserAuthentication(TestCase):
         externalcalendarhelper.given_external_calendar(user)
 
         # WHEN
-        response = self.client.get(reverse('api_user_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
+        response = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
 
         # THEN
         self.assertEquals(externalcalendar.title, response.data['title'])
@@ -96,7 +97,7 @@ class TestCaseUserAuthentication(TestCase):
             # Intentionally NOT changing this value
             'url': externalcalendar.url
         }
-        response = self.client.put(reverse('api_user_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -114,7 +115,7 @@ class TestCaseUserAuthentication(TestCase):
         externalcalendarhelper.given_external_calendar(user)
 
         # WHEN
-        self.client.delete(reverse('api_user_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
+        self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
 
         # THEN
         self.assertFalse(ExternalCalendar.objects.filter(pk=externalcalendar.pk).exists())
@@ -127,7 +128,7 @@ class TestCaseUserAuthentication(TestCase):
         externalcalendar = externalcalendarhelper.given_external_calendar(user1)
 
         # WHEN
-        response = self.client.delete(reverse('api_user_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
+        response = self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
 
         # THEN
         self.assertEquals(response.status_code, 404)

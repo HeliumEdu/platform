@@ -34,3 +34,6 @@ class UserProfile(BaseModel):
     phone_verified = models.BooleanField(default=False)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
+
+    def __unicode__(self):
+        return unicode('{} ({})'.format(self.pk, self.user.get_username()))

@@ -26,3 +26,6 @@ class ExternalCalendar(BaseModel):
     shown_on_calendar = models.BooleanField(default=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars')
+
+    def __unicode__(self):
+        return unicode('{} ({})'.format(self.title, self.user.get_username()))

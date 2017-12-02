@@ -13,11 +13,11 @@ __version__ = '1.0.0'
 
 urlpatterns = [
     # Base URL
-    url(r'^$', RedirectView.as_view(pattern_name='calendar', permanent=True), name='planner'),
+    url(r'^planner/$', RedirectView.as_view(pattern_name='calendar', permanent=True), name='planner'),
 
     # Planner URLs
-    url(r'^calendar', calendar, name='calendar'),
-    url(r'^classes', classes, name='classes'),
-    url(r'^materials', materials, name='materials'),
-    url(r'^grades', grades, name='grades'),
+    url(r'^planner/calendar', calendar, name='calendar'),
+    url(r'^planner/classes', classes, name='classes'),
+    url(r'^planner/materials', materials, name='materials'),
+    url(r'^planner/grades', grades, name='grades'),
 ]

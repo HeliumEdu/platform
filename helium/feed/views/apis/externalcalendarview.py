@@ -11,8 +11,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from helium.users.models import ExternalCalendar
-from helium.users.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

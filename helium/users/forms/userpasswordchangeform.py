@@ -15,7 +15,7 @@ __version__ = '1.0.0'
 class UserPasswordForm(PasswordChangeForm, BaseForm):
     def clean_new_password2(self):
         """
-        Check that the two password entries match.
+        Check the password meets the validation criteria.
         """
         password1 = self.cleaned_data.get("new_password1")
         password2 = self.cleaned_data.get("new_password2")
