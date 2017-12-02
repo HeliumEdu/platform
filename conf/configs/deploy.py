@@ -71,19 +71,43 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_users_log': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_users.log'.format(PROJECT_NAME.lower()),
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
             'include_html': True,
-        }
+        },
+        'platform_common_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_common.log'.format(PROJECT_NAME.lower()),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
+        'platform_auth_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_auth.log'.format(PROJECT_NAME.lower()),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
+        'platform_planner_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_planner.log'.format(PROJECT_NAME.lower()),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
+        'platform_feed_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_feed.log'.format(PROJECT_NAME.lower()),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
     },
     'loggers': {
         'django.request': {
@@ -91,8 +115,20 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'helium.users': {
-            'handlers': ['platform_users_log', 'mail_admins'],
+        'helium.common': {
+            'handlers': ['platform_common_log', 'mail_admins'],
+            'level': 'INFO',
+        },
+        'helium.auth': {
+            'handlers': ['platform_auth_log', 'mail_admins'],
+            'level': 'INFO',
+        },
+        'helium.planner': {
+            'handlers': ['platform_planner_log', 'mail_admins'],
+            'level': 'INFO',
+        },
+        'helium.feed': {
+            'handlers': ['platform_feed_log', 'mail_admins'],
             'level': 'INFO',
         }
     }

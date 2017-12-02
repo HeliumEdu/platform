@@ -7,7 +7,7 @@ from django.conf.urls import include, url
 from django.contrib.sitemaps.views import sitemap
 
 import helium.common.urls
-import helium.users.urls
+import helium.auth.urls
 import helium.feed.urls
 import helium.planner.urls
 from conf.sitemaps import StaticViewSitemap
@@ -30,7 +30,7 @@ sitemaps = {
 urlpatterns = [
     # Include app-specific URL files
     url(r'^', include(helium.common.urls)),
-    url(r'^', include(helium.users.urls)),
+    url(r'^', include(helium.auth.urls)),
     url(r'^', include(helium.feed.urls)),
     url(r'^', include(helium.planner.urls)),
 

@@ -7,7 +7,7 @@ from django.conf.urls import include, url
 from django.views.generic import RedirectView, TemplateView
 
 from helium.common.views.landingviews import *
-from helium.users.admin import admin_site
+from helium.auth.admin import admin_site
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

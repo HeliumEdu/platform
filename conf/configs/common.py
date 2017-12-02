@@ -58,9 +58,9 @@ DEFAULT_INSTALLED_APPS = (
     'rest_framework',
     # Project modules
     'helium.common',
-    'helium.users',
-    'helium.feed',
+    'helium.auth',
     'helium.planner',
+    'helium.feed',
 )
 
 DEFAULT_MIDDLEWARE = (
@@ -98,7 +98,7 @@ DEFAULT_TEMPLATES = [{
 # Application definition
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'helium_auth.User'
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/planner'
 LOGOUT_URL = '/logout'

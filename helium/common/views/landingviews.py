@@ -7,7 +7,7 @@ import logging
 from django.shortcuts import render, redirect
 from statsd.defaults.django import statsd
 
-from helium.users.services import authservice
+from helium.auth.services import authservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
