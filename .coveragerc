@@ -1,0 +1,9 @@
+# .coveragerc to control coverage.py
+[run]
+omit =
+    conf/configs/deploy.py
+    conf/configs/dev.py
+    conf/monitor.py
+    conf/s3storages.py
+    conf/wsgi.py
+    helium/*/apps.py
