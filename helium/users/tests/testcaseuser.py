@@ -47,6 +47,7 @@ class TestCaseUser(TestCase):
         # WHEN
         data = {
             'username': 'new_username',
+            # Intentionally NOT changing this value
             'email': user.email
         }
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
@@ -68,8 +69,9 @@ class TestCaseUser(TestCase):
 
         # WHEN
         data = {
-            'username': user.username,
-            'email': 'new@email.com'
+            'email': 'new@email.com',
+            # Intentionally NOT changing this value
+            'username': user.username
         }
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
@@ -96,6 +98,86 @@ class TestCaseUser(TestCase):
         self.assertEquals(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
 
+    def test_password_change(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # THEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'new_password1': 'new_pass_1!',
+            'new_password2': 'new_pass_1!'
+        }
+        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # WHEN
+        self.assertEquals(response.status_code, 204)
+        user = get_user_model().objects.get(id=user.id)
+        self.assertTrue(user.check_password('new_pass_1!'))
+
+    def test_password_change_fails_missing_old_new_pass(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # THEN
+        data = {
+            'old_password': '',
+            'new_password1': 'new_pass_1!',
+        }
+        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # WHEN
+        self.assertEquals(response.status_code, 400)
+        self.assertIn('old_password', response.data)
+
+    def test_password_change_fails_blank_new_pass(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # THEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'new_password1': '',
+            'new_password2': '',
+        }
+        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # WHEN
+        self.assertEquals(response.status_code, 400)
+        self.assertIn('new_password1', response.data)
+
+    def test_password_change_fails_mismatch(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # THEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'new_password1': 'new_pass_1!',
+            'new_password2': 'new_pass_1!oops',
+        }
+        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # WHEN
+        self.assertEquals(response.status_code, 400)
+        self.assertIn('new_password2', response.data)
+
+    def test_password_change_fails_to_meet_requirements(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # THEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'new_password1': 'blerg',
+            'new_password2': 'blerg',
+        }
+        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # WHEN
+        self.assertEquals(response.status_code, 400)
+        self.assertIn('new_password2', response.data)
+
     def test_username_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
@@ -103,6 +185,7 @@ class TestCaseUser(TestCase):
 
         # WHEN
         data = {
+            # Trying to change username to match user1's email
             'username': user1.username,
             'email': user2.email
         }
@@ -119,8 +202,9 @@ class TestCaseUser(TestCase):
 
         # WHEN
         data = {
-            'username': user2.username,
-            'email': user1.email
+            # Trying to change email to match user1's email
+            'email': user1.email,
+            'username': user2.username
         }
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 

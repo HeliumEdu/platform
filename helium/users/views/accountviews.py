@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from statsd.defaults.django import statsd
 
+from helium.users.forms.userpasswordchangeform import UserPasswordForm
 from helium.users.services import authservice
 
 __author__ = 'Alex Laird'
@@ -22,4 +23,10 @@ def settings(request):
     if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.account.settings')
 
-    return render(request, "account/settings.html")
+    user_password_form = UserPasswordForm(user=request.user)
+
+    data = {
+        'user_password_form': user_password_form
+    }
+
+    return render(request, "account/settings.html", {'data': data})

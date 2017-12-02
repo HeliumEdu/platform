@@ -23,14 +23,13 @@ def generate_phone_verification_code():
     return code
 
 
-def is_password_valid(password):
-    valid = True
+def validate_password(password1, password2):
+    if password1 != password2:
+        return "You must enter matching passwords."
+    else:
+        if not password1 or not password2 or len(password2) < 8:
+            return "Your password must be at least 8 characters long and contain one letter and one number."
 
-    if len(password) < 8:
-        valid = False
-
-    first_isalpha = password[0].isalpha()
-    if all(c.isalpha() == first_isalpha for c in password):
-        valid = False
-
-    return valid
+        first_isalpha = password2[0].isalpha()
+        if all(c.isalpha() == first_isalpha for c in password2):
+            return "Your password must be at least 8 characters long and contain one letter and one number."

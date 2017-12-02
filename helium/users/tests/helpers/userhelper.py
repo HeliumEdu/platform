@@ -34,3 +34,11 @@ def given_a_user_exists_and_is_logged_in(client, username='test_user', email='te
     client.login(username=user.get_username(), password=password)
 
     return user
+
+
+def verify_user_not_logged_in(test_case):
+    test_case.assertNotIn('_auth_user_id', test_case.client.session)
+
+
+def verify_user_logged_in(test_case):
+    test_case.assertIn('_auth_user_id', test_case.client.session)

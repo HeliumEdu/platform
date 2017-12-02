@@ -49,7 +49,7 @@ class UserSettingsAdmin(ModelAdmin):
 
     def get_user(self, obj):
         if obj.user:
-            return obj.user.username
+            return obj.user.get_username()
         else:
             return ''
 
@@ -66,7 +66,7 @@ class UserProfileAdmin(ModelAdmin):
 
     def get_user(self, obj):
         if obj.user:
-            return obj.user.username
+            return obj.user.get_username()
         else:
             return ''
 

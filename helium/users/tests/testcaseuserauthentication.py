@@ -18,14 +18,14 @@ class TestCaseUserAuthentication(TestCase):
     def test_login_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        self.assertNotIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_not_logged_in(self)
 
         # WHEN
         response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
 
         # THEN
         self.assertEqual(response.status_code, 302)
-        self.assertIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_logged_in(self)
 
     def test_logout_success(self):
         # GIVEN
@@ -37,19 +37,19 @@ class TestCaseUserAuthentication(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, 302)
-        self.assertNotIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_not_logged_in(self)
 
     def test_login_failure_wrong_password(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        self.assertNotIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_not_logged_in(self)
 
         # WHEN
         response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'wrong_pass'})
 
         # THEN
         self.assertEqual(response.status_code, 401)
-        self.assertNotIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_not_logged_in(self)
 
     def test_password_reset(self):
         # GIVEN
@@ -64,11 +64,11 @@ class TestCaseUserAuthentication(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, 302)
-        self.assertIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_logged_in(self)
 
     def test_registration_success(self):
         # GIVEN
-        self.assertNotIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_not_logged_in(self)
 
         # WHEN
         response = self.client.post(reverse('register'),
@@ -97,7 +97,7 @@ class TestCaseUserAuthentication(TestCase):
         # THEN
         user = get_user_model().objects.get(email='test@heliumedu.com')
         self.assertEqual(response.status_code, 302)
-        self.assertIn('_auth_user_id', self.client.session)
+        userhelper.verify_user_logged_in(self)
         self.assertEquals(get_user_model().objects.count(), 1)
         self.assertEquals(user.get_username(), 'test_user')
         self.assertTrue(user.is_active)
