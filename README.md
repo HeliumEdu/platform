@@ -96,3 +96,6 @@ Django will start a development server at http://localhost:8000.
 
 Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
 before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
+
+## Deployment
+Details regarding deployment of this and related projects can be found [here](https://github.com/HeliumEdu/deploy).
