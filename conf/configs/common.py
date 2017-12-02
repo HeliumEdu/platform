@@ -59,6 +59,7 @@ DEFAULT_INSTALLED_APPS = (
     # Project modules
     'helium.common',
     'helium.users',
+    'helium.feed',
     'helium.planner',
 )
 
@@ -135,7 +136,7 @@ SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = os.environ.get('PLATFORM_EMAIL_PORT')
 EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
-DEFAULT_FROM_EMAIL = PROJECT_NAME + '{} <{}>'.format(PROJECT_NAME, EMAIL_ADDRESS)
+DEFAULT_FROM_EMAIL = '{} <{}>'.format(PROJECT_NAME, EMAIL_ADDRESS)
 EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
 
 EMAIL_HOST_USER = os.environ.get('PLATFORM_EMAIL_HOST_USER')

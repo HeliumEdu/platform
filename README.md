@@ -67,6 +67,7 @@ The project's base configuration is defined under `conf`. Application-specific c
 prefix.
 
 * users
+* feed
 * planner
 
 ### Vagrant Development
@@ -78,8 +79,9 @@ As the Vagrant environment does take a bit more time to setup (even though the s
 and system resources, the local development environment described below is the quickest and easiest way to get up and running.
 
 ### Local Development
-This is the simplest way to get started with minimal effort, as it requires no additional projects or environments. To get started (assuming
-you have followed the "Getting Started" directions above), simply move the example config into place with `cp -n .env.example .env`.
+This is the simplest way to get started with minimal effort, as it requires no additional projects or environments. To get going (assuming
+you have followed the "Getting Started" directions above), you should have the ENVIRONMENT environment variable set to "dev". Then, simply
+move the example config into place with `cp -n .env.example .env`.
 
 Now you're all set! To start the development server, execute:
 

@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 class User(AbstractBaseUser, BaseModel):
     username = models.CharField(max_length=255, unique=True,
-                                help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.',
                                 validators=[
                                     validators.RegexValidator(r'^[\w.@+-]+$',
                                                               'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.',
@@ -50,6 +49,9 @@ class User(AbstractBaseUser, BaseModel):
     # Fields required to define the abstracted Django user
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+    def __unicode__(self):
+        return unicode(self.get_username())
 
     def get_full_name(self):
         """

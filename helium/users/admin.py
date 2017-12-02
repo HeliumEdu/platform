@@ -1,7 +1,7 @@
 """
 User admin site.
 """
-
+from django import forms
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin
 from django.contrib.auth import get_user_model
@@ -10,15 +10,41 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from helium.common.admin import admin_site
 from helium.users.models import UserProfile
 from helium.users.models import UserSettings
+from helium.users.utils.userutils import validate_password
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class UserAdmin(admin.UserAdmin):
+class AdminUserCreationForm(UserCreationForm):
+    def clean_password2(self):
+        """
+        Check the password meets the validation criteria
+        """
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        error = validate_password(password1, password2)
+
+        if error:
+            raise forms.ValidationError(error)
+
+        return password2
+
+    def save(self, commit=True):
+        super(UserCreationForm, self).save(commit)
+
+        self.instance.is_active = True
+
+        self.instance.save()
+
+        return self.instance
+
+
+class UserAdmin(admin.UserAdmin, ModelAdmin):
     form = UserChangeForm
-    add_form = UserCreationForm
+    add_form = AdminUserCreationForm
 
     list_display = ('email', 'username', 'created_at', 'last_login',)
     list_filter = (
@@ -27,17 +53,17 @@ class UserAdmin(admin.UserAdmin):
     ordering = ('-last_login',)
     add_fieldsets = (
         (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('username', 'email', 'password1', 'password2',),
         }),
     )
-    fieldsets = (
-        (None, {'fields': ('email', 'password', 'is_active', 'is_superuser', 'last_login', 'created_at')}),
-    )
+    fieldsets = None
     filter_horizontal = ()
 
     def get_readonly_fields(self, request, obj=None):
-        return 'created_at', 'last_login'
+        if obj:
+            return self.readonly_fields + ('created_at', 'last_login',)
+
+        return self.readonly_fields
 
 
 class UserSettingsAdmin(ModelAdmin):
@@ -45,13 +71,16 @@ class UserSettingsAdmin(ModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     ordering = ('user__username',)
-    readonly_fields = ('user',)
+    readonly_fields = ('user', 'created_at', 'updated_at')
 
     def get_user(self, obj):
         if obj.user:
             return obj.user.get_username()
         else:
             return ''
+
+    def has_add_permission(self, request):
+        return False
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
@@ -62,7 +91,10 @@ class UserProfileAdmin(ModelAdmin):
     list_display = ['get_user', 'phone_carrier']
     list_filter = ('phone_carrier',)
     ordering = ('user__username',)
-    readonly_fields = ('user',)
+    readonly_fields = ('user', 'created_at', 'updated_at')
+
+    def has_add_permission(self, request):
+        return False
 
     def get_user(self, obj):
         if obj.user:
