@@ -32,6 +32,8 @@ class UserProfileApiView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+            logger.info('Profile updated for user {}'.format(request.user.get_username()))
+
             return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 
 from helium.common import enums
 from helium.common.forms.base import BaseForm
-from helium.users.utils.userutils import is_password_valid
+from helium.users.utils.userutils import validate_password
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -30,12 +30,10 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
-        if password1 and password2:
-            if password1 != password2:
-                raise forms.ValidationError("You must enter matching passwords.")
-            elif not is_password_valid(password1):
-                raise forms.ValidationError(
-                        "Your password must be at least 8 characters long and contain one letter and one number.")
+        error = validate_password(password1, password2)
+
+        if error:
+            raise forms.ValidationError(error)
 
         return password2
 

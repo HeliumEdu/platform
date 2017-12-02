@@ -92,8 +92,9 @@ class TestCaseUserAuthentication(TestCase):
         # WHEN
         data = {
             'title': 'new title',
-            'url': externalcalendar.url,
-            'shown_on_calendar': False
+            'shown_on_calendar': False,
+            # Intentionally NOT changing this value
+            'url': externalcalendar.url
         }
         response = self.client.put(reverse('api_user_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}), json.dumps(data),
                                    content_type='application/json')

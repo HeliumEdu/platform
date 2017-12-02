@@ -17,6 +17,6 @@ def find_by_user(user):
         # TODO: not yet implemented
         reminders_count = 0
 
-    logger.debug('User {} has {} reminders'.format(user.username, reminders_count))
+    logger.debug('User {} has {} reminders'.format(user.get_username(), reminders_count))
 
     return reminders_count
