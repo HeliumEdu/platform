@@ -8,6 +8,25 @@
 * MySQL (>= 5.7)
 * Redis (>= 3.2)
 
+## Virtualenv
+Virtualenv creates isolated Python development environments so your development environment(s play
+nicely with each other in regards to dependencies, permissions, and a myriad of other ways. While this is not necessary for development, it
+is highly recommended.
+ 
+This project is configured to expect a Virtualenv in the `.venv` folder, and it can be setup like this:
+
+```
+pip install virtualenv
+virtualenv .venv
+```
+
+If you're unfamiliar with how works, [read up on it](https://virtualenv.pypa.io/en/stable/). The short version is, you only need to run the
+above one time. After that point, you only need to execute the following command to active and use the isolated environment when developing:
+
+```
+source .venv/bin/activate
+```
+
 ## Getting Started
 The Platform is developed on [Django](https://www.djangoproject.com/). To run the Python/Django Platform build, execute:
 
