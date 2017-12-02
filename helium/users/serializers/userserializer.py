@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = (
-            'username', 'email', 'email_changing', 'verification_code')
+        fields = ('id', 'username', 'email', 'email_changing', 'verification_code')
         read_only_fields = ('email_changing',)
         extra_kwargs = {
             'verification_code': {'write_only': True},
