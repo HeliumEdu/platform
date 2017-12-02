@@ -8,3 +8,4 @@ db.test.sqlite3
 .coverage
 *.log
 .env
+.venv
