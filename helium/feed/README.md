@@ -2,11 +2,12 @@
 
 ## Dependencies
 * common
+* planner
 * users
 
 ## Overview
-This module depends on `common` and `users`, and it serves to feed external dependencies (for instance, calendars) into
-the Platform.
+This module serves to feed external dependencies (for instance, calendars) into the Platform and make internal feeds
+available outside of the Platform.
 
 ## Configuration Variables
 No variables must be defined in the parent project's configuration for this module.
