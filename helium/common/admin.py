@@ -5,8 +5,6 @@ Base configuration for the admin site.
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 
-from helium.users.forms.userloginform import UserLoginForm
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
