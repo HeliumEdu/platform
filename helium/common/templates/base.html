@@ -40,18 +40,17 @@
     <!-- CDN dependencies -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
 
-    {% block page_header_css %}
+    {% block page_header_css %}{% endblock %}
     {% stylesheet 'base' %}
-    {% endblock %}
 
     <!--[if lte IE 8]>
     {% stylesheet 'base_ie8' %}
     <![endif]-->
 
-    {% stylesheet 'base_header_js' %}
+    {% stylesheet 'base_header' %}
 
     <!--[if lt IE 9]>
-    {% stylesheet 'base_ie9_js' %}
+    {% stylesheet 'base_ie9' %}
     <![endif]-->
 
     {% block page_header %}{% endblock %}

@@ -8,10 +8,11 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from statsd.defaults.django import statsd
 
-from helium.common.utils.viewutils import set_request_status, get_request_status, set_response_status, clear_response_status
 from helium.auth.forms.userloginform import UserLoginForm
 from helium.auth.forms.userregisterform import UserRegisterForm
 from helium.auth.services import authservice
+from helium.common.utils.viewutils import set_request_status, get_request_status, set_response_status, \
+    clear_response_status
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -59,7 +60,7 @@ def register(request):
             'status': status
         }
 
-        return render(request, 'authentication/register.html', {'data': data})
+        return render(request, 'authentication/register.html', data)
 
 
 def verify(request):
@@ -112,7 +113,7 @@ def login(request):
             'status': status
         }
 
-        response = render(request, 'authentication/login.html', {'data': data}, status=http_status)
+        response = render(request, 'authentication/login.html', data, status=http_status)
         clear_response_status(response)
         return response
 
@@ -144,7 +145,7 @@ def forgot(request):
             'status': status
         }
 
-        return render(request, 'authentication/forgot.html', {'data': data})
+        return render(request, 'authentication/forgot.html', data)
     else:
         response = HttpResponseRedirect(redirect)
 

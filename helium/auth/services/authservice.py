@@ -4,13 +4,12 @@ Service for processing authentication-related requests.
 
 import logging
 
-from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.urlresolvers import reverse
 from statsd.defaults.django import statsd
 
-from helium.common.utils.viewutils import set_request_status
 from helium.auth import tasks
+from helium.common.utils.viewutils import set_request_status
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -110,8 +109,8 @@ def process_login(request, username, password):
             logger.info('Inactive user {} attempted login'.format(username))
 
             set_request_status(request, 'warning',
-                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="mailto:{}">contact support</a> and we\'ll help you sort this out!'.format(
-                                       settings.EMAIL_ADDRESS))
+                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="{}">contact us</a> and we\'ll help you sort this out!'.format(
+                                   reverse('contact')))
     else:
         logger.info('Non-existent user {} attempted login'.format(username))
 

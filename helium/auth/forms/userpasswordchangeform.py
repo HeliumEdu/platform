@@ -12,7 +12,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class UserPasswordForm(PasswordChangeForm, BaseForm):
+class UserPasswordChangeForm(PasswordChangeForm, BaseForm):
     def clean_new_password2(self):
         """
         Check the password meets the validation criteria.

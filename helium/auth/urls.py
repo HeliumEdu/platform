@@ -4,11 +4,11 @@ Users URLs.
 
 from django.conf.urls import url
 
-from helium.auth.views.accountviews import *
 from helium.auth.views.apis.userprofileview import UserProfileApiView
 from helium.auth.views.apis.usersettingsview import UserSettingsApiView
 from helium.auth.views.apis.userview import UserApiView
 from helium.auth.views.authenticationviews import *
+from helium.auth.views.settingsviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^forgot', forgot, name='forgot'),
 
     # Account URLs
+    url(r'^unsubscribe', unsubscribe, name='unsubscribe'),
     url(r'^settings', settings, name='settings'),
 
     # API URLs

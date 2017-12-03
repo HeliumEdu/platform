@@ -11,8 +11,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
+from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -36,6 +36,9 @@ class ExternalCalendarApiListView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+
+            logger.info('ExternalCalendar {} created for user {}'.format(serializer.instance.pk,
+                                                                         request.user.get_username()))
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -63,6 +66,9 @@ class ExternalCalendarApiDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+            logger.info('ExternalCalendar {} updated for user {}'.format(serializer.instance.pk,
+                                                                         request.user.get_username()))
+
             return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -71,5 +77,8 @@ class ExternalCalendarApiDetailView(APIView):
         externalcalendar = self.get_object(request, pk)
 
         externalcalendar.delete()
+
+        logger.info('ExternalCalendar {} updated for user {}'.format(externalcalendar.pk,
+                                                                     request.user.get_username()))
 
         return Response(status=status.HTTP_204_NO_CONTENT)

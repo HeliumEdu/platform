@@ -35,7 +35,7 @@
                                                             <i class="icon-envelope"></i>
                                                         </span>
 
-                                                    {% render_field data.user_register_form.email class+="form-control" %}
+                                                    {% render_field user_register_form.email class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -45,7 +45,7 @@
                                                             <i class="icon-user"></i>
                                                         </span>
 
-                                                    {% render_field data.user_register_form.username class+="form-control" %}
+                                                    {% render_field user_register_form.username class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -55,7 +55,7 @@
                                                             <i class="icon-lock"></i>
                                                         </span>
 
-                                                    {% render_field data.user_register_form.password1 class+="form-control" %}
+                                                    {% render_field user_register_form.password1 class+="form-control" %}
                                                 </div>
                                             </label>
 
@@ -65,16 +65,16 @@
                                                             <i class="icon-retweet"></i>
                                                         </span>
 
-                                                    {% render_field data.user_register_form.password2 class+="form-control" %}
+                                                    {% render_field user_register_form.password2 class+="form-control" %}
                                                 </div>
                                             </label>
 
                                             <label class="block clearfix">
                                                 <label class="col-sm-3 control-label" style="margin-top: 3px;"
-                                                       for="id_{{ data.user_register_form.time_zone.name }}">{{ data.user_register_form.time_zone.label }}</label>
+                                                       for="id_{{ user_register_form.time_zone.name }}">{{ user_register_form.time_zone.label }}</label>
 
                                                 <div class="col-sm-9">
-                                                    {% render_field data.user_register_form.time_zone class+="form-control chosen-select" %}
+                                                    {% render_field user_register_form.time_zone class+="form-control chosen-select" %}
                                                 </div>
                                             </label>
 
@@ -109,7 +109,7 @@
 {% endblock %}
 
 {% block page_footer %}
-{% javascript 'jstz_js' %}
+{% javascript 'register_footer' %}
 <script type="application/javascript">
     (function () {
         "use strict";

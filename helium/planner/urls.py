@@ -5,7 +5,7 @@ Planner URLs.
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
-from helium.planner.views.pages import calendar, classes, materials, grades
+from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

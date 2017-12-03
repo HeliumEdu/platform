@@ -11,7 +11,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from helium.auth.forms.userpasswordchangeform import UserPasswordForm
+from helium.auth.forms.userdeleteform import UserDeleteForm
+from helium.auth.forms.userpasswordchangeform import UserPasswordChangeForm
 from helium.auth.serializers.userserializer import UserSerializer
 
 __author__ = 'Alex Laird'
@@ -29,20 +30,20 @@ class UserApiView(APIView):
         return Response(serializer.data)
 
     def put(self, request, format=None):
-        # Process password change (if present) first, as we're going to use a form-based mechanism to do this
-        # so we can rely on Django's built-in authentication system
+        # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
+        # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
         errors = {}
         if 'old_password' in request.data or 'new_password1' in request.data or 'new_password2' in request.data:
-            user_password_form = UserPasswordForm(user=request.user, data=request.data)
+            form = UserPasswordChangeForm(user=request.user, data=request.data)
 
-            if user_password_form.is_valid():
+            if form.is_valid():
                 # print user_password_form
-                user_password_form.save()
-                update_session_auth_hash(request, user_password_form.user)
+                form.save()
+                update_session_auth_hash(request, form.user)
 
                 logger.info('Password updated for {}'.format(request.user.get_username()))
             else:
-                errors.update(user_password_form.errors.items())
+                errors.update(form.errors.items())
 
         # Process remaining attributes (if any) using serializers
         if 'username' in request.data and 'email' in request.data:
@@ -57,6 +58,16 @@ class UserApiView(APIView):
             else:
                 errors.update(serializer.errors)
         elif len(errors) == 0:
-            return Response(status=204)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, format=None):
+        form = UserDeleteForm(user=request.user, data=request.data)
+
+        if form.is_valid():
+            form.user.delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(dict(form.errors.items()), status=status.HTTP_400_BAD_REQUEST)

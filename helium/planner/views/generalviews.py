@@ -22,7 +22,7 @@ def calendar(request):
     if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.calendar')
 
-    return render(request, "calendar.html")
+    return render(request, "calendar/main.html")
 
 
 @login_required
@@ -30,7 +30,7 @@ def classes(request):
     if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.classes')
 
-    return render(request, "classes.html")
+    return render(request, "classes/main.html")
 
 
 @login_required
@@ -38,7 +38,7 @@ def materials(request):
     if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.materials')
 
-    return render(request, "materials.html")
+    return render(request, "materials/main.html")
 
 
 @login_required
@@ -46,4 +46,4 @@ def grades(request):
     if authservice.is_anonymous_or_non_staff(request.user):
         statsd.incr('platform.view.grades')
 
-    return render(request, "grades.html")
+    return render(request, "grades/main.html")

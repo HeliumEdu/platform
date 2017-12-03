@@ -25,16 +25,16 @@ class UserSerializer(serializers.ModelSerializer):
             'verification_code': {'write_only': True},
         }
 
-    def validate_email(self, value):
+    def validate_email(self, email):
         """
         Ensure the email the user isn't already taken (or being changed to) by another user.
 
-        :param value: the new email address
+        :param email: the new email address
         """
-        if get_user_model().objects.filter(email_changing=value).exists():
+        if get_user_model().objects.filter(email_changing=email).exists():
             raise serializers.ValidationError("This email is already in use.")
 
-        return value
+        return email
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username')
