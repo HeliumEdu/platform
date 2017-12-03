@@ -1,0 +1,36 @@
+/**
+ * Copyright (c) 2015 Helium Edu.
+ *
+ * Helium stylesheet the /settings page.
+ *
+ * @author Alex Laird
+ * @version 0.4.4
+ */
+ 
+#sources-table {
+    width:100%;
+    table-layout:fixed;
+}
+
+#sources-table td {
+    overflow:hidden;
+    white-space:nowrap;
+}
+
+.calendar-sources-help {
+    margin-right: 5px;
+}
+
+.popover-content {
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+#ical-feed-url {
+    width: 320px;
+}
+
+.help-button {
+    text-decoration: none !important;
+    color: #fff !important;
+}

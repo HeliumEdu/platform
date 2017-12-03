@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from helium.auth.models import UserSettings, UserProfile
 from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
@@ -211,3 +212,39 @@ class TestCaseUser(TestCase):
         # THEN
         self.assertEquals(response.status_code, 400)
         self.assertIn('email', response.data)
+
+    def test_delete_user(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # WHEN
+        data = {
+            # Trying to change email to match user1's email
+            'email': user.email,
+            'username': user.username,
+            'password': 'test_pass_1!'
+        }
+        response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEquals(response.status_code, 204)
+        self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
+        self.assertFalse(UserSettings.objects.filter(user__id=user.pk).exists())
+        self.assertFalse(UserProfile.objects.filter(user__id=user.pk).exists())
+
+    def test_delete_fails_bad_request(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # WHEN
+        data = {
+            # Trying to change email to match user1's email
+            'email': user.email,
+            'username': user.username,
+            'password': 'wrong_pass'
+        }
+        response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEquals(response.status_code, 400)
+        self.assertIn('password', response.data)

@@ -23,48 +23,8 @@
                 <div class="col-sm-9">
                     <div data-uv-embed="contact" data-uv-screenshot_enabled="false"></div>
                 </div>
-                <div class="col-sm-3 hidden-xs">
-                    <h3 class="lighter smaller">Connect with Us</h3>
 
-                    <div class="infobox infobox-blue">
-                        <div class="infobox-icon">
-                            <i class="icon-rss"></i>
-                        </div>
-
-                        <div class="infobox-data">
-                            <a class="infobox-data-number" href="http://blog.heliumedu.com"
-                               target="_blank">Read our</a>
-
-                            <div class="infobox-content">Blog</div>
-                        </div>
-                    </div>
-
-                    <div class="infobox infobox-blue">
-                        <div class="infobox-icon">
-                            <i class="icon-twitter"></i>
-                        </div>
-
-                        <div class="infobox-data">
-                            <a class="infobox-data-number" href="https://www.twitter.com/heliumstudents"
-                               target="_blank">Follow us on</a>
-
-                            <div class="infobox-content">Twitter</div>
-                        </div>
-                    </div>
-
-                    <div class="infobox infobox-blue">
-                        <div class="infobox-icon">
-                            <i class="icon-facebook"></i>
-                        </div>
-
-                        <div class="infobox-data">
-                            <a class="infobox-data-number" href="https://www.facebook.com/heliumstudents"
-                               target="_blank">Like us on</a>
-
-                            <div class="infobox-content">Facebook</div>
-                        </div>
-                    </div>
-                </div>
+                {% include 'snippets/connectsidebar.html' with hide_contact_section=True %}
             </div>
         </div>
     </div>

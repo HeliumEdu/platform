@@ -193,7 +193,21 @@ PIPELINE = {
                 'css/vendors/ace-ie.css',
             ),
             'output_filename': 'css/helium_ie8_{}.min.css'.format(PROJECT_VERSION)
-        }
+        },
+        'settings_pre': {
+            'source_filenames': (
+                'css/vendors/bootstrap-editable.css',
+                'css/vendors/jquery.simplecolorpicker.css',
+                'css/vendors/jquery.simplecolorpicker-glyphicons.css',
+            ),
+            'output_filename': 'css/helium_settings_pre_{}.min.css'.format(PROJECT_VERSION),
+        },
+        'settings': {
+            'source_filenames': (
+                'css/settings.css',
+            ),
+            'output_filename': 'css/helium_settings_{}.min.css'.format(PROJECT_VERSION),
+        },
     },
     'JAVASCRIPT': {
         'base': {
@@ -211,24 +225,33 @@ PIPELINE = {
             ),
             'output_filename': 'js/helium_{}.min.js'.format(PROJECT_VERSION)
         },
-        'base_header_js': {
+        'base_header': {
             'source_filenames': (
                 'js/vendors/ace-extra.js',
             ),
             'output_filename': 'js/helium_header_{}.min.js'.format(PROJECT_VERSION)
         },
-        'base_ie9_js': {
+        'base_ie9': {
             'source_filenames': (
                 'js/vendors/html5shiv.js',
                 'js/vendors/respond.js',
             ),
             'output_filename': 'js/helium_ie9_{}'.format(PROJECT_VERSION)
         },
-        'jstz_js': {
+        'register_footer': {
             'source_filenames': (
                 'js/vendors/jstz.js',
             ),
             'output_filename': 'js/helium_jstz.{}.min.js'.format(PROJECT_VERSION)
+        },
+        'settings': {
+            'source_filenames': (
+                'js/vendors/bootstrap-editable.js',
+                'js/vendors/jquery.simplecolorpicker.js',
+                'js/vendors/bootbox.js',
+                'js/settings.js',
+            ),
+            'output_filename': 'js/helium_settings_{}.min.js'.format(PROJECT_VERSION),
         },
     }
 }

@@ -99,3 +99,14 @@ class TestCaseUserSettings(TestCase):
         user = get_user_model().objects.get(id=user.id)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(user.settings.private_slug, private_slug)
+
+    def test_unsubscribe_admin_emails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        self.assertTrue(user.settings.receive_emails_from_admin)
+
+        self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username, user.verification_code))
+
+        # THEN
+        user = get_user_model().objects.get(id=user.id)
+        self.assertFalse(user.settings.receive_emails_from_admin)

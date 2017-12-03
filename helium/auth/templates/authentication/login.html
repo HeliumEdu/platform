@@ -30,8 +30,8 @@
                                                     <i class="icon-user"></i>
                                                 </span>
 
-                                                {% if data.user_login_form %}
-                                                    {% render_field data.user_login_form.username class+="form-control" %}
+                                                {% if user_login_form %}
+                                                    {% render_field user_login_form.username class+="form-control" %}
                                                 {% else %}
                                                     <input type="text" class="form-control" name="username" id="id_username"
                                                            placeholder="Username" maxlength="255" required/>
@@ -45,8 +45,8 @@
                                                     <i class="icon-lock"></i>
                                                 </span>
 
-                                                {% if data.user_login_form %}
-                                                    {% render_field data.user_login_form.password class+="form-control" %}
+                                                {% if user_login_form %}
+                                                    {% render_field user_login_form.password class+="form-control" %}
                                                 {% else %}
                                                     <input type="password" class="form-control" name="password"
                                                            id="password" placeholder="Password"

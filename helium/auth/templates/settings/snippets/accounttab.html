@@ -1,0 +1,137 @@
+<div id="settings-tab-account"
+     class="tab-pane fade{% if settings_tab == '#settings-tab-account' %} in active{% endif %}">
+    <h4 class="orange page-header">
+        <i class="icon-cog bigger-110"></i>
+        Account
+    </h4>
+
+    {% include 'snippets/status.html' with status_div_suffix='_account' %}
+
+    <div class="space-8"></div>
+
+    <form id="account-settings-form" class="form-horizontal" role="form"
+          method="post">{% csrf_token %}
+        <input type="hidden" name="post-tab" value="account">
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="username">Username</label>
+
+            <div class="col-sm-5">
+                <div class="input-group no-padding">
+                        <span class="input-group-addon">
+                            <i class="icon-user"></i>
+                        </span>
+
+                    <input class="form-control" id="id_username" maxlength="255" name="username" type="text">
+                </div>
+            </div>
+            <div class="col-sm-5 has-error help-block">
+                {% include 'snippets/status.html' with status_div_suffix='_username' %}
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="email">Email</label>
+
+            <div class="col-sm-5">
+                <div class="input-group no-padding">
+                        <span class="input-group-addon">
+                            <i class="icon-envelope"></i>
+                        </span>
+
+                    <input class="form-control" id="id_email" maxlength="255" name="email" type="text">
+                </div>
+            </div>
+            <div class="col-sm-5 has-error help-block">
+                {% include 'snippets/status.html' with status_div_suffix='_email' %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-5" id="id_email_verification_status"></div>
+            <div class="col-sm-5"></div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="id_current_password">Current password</label>
+
+            <div class="col-sm-5">
+                <div class="input-group no-padding">
+                        <span class="input-group-addon">
+                            <i class="icon-lock"></i>
+                        </span>
+
+                    <input type="password" id="id_old_password" name="old_password" class="form-control"
+                           maxlength="255">
+                </div>
+            </div>
+            <div class="col-sm-5 has-error help-block">
+                {% include 'snippets/status.html' with status_div_suffix='_current_password' %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="id_new_password">New password</label>
+
+            <div class="col-sm-5">
+                <div class="input-group no-padding">
+                        <span class="input-group-addon">
+                            <i class="icon-lock"></i>
+                        </span>
+
+                    <input type="password" id="id_new_password1" name="new_password1" class="form-control"
+                           maxlength="255">
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <span id="new-password-error"></span>
+            </div>
+            <div class="col-sm-5 has-error help-block">
+                {% include 'snippets/status.html' with status_div_suffix='_new_password1' %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="id_confirm_password">Confirm password</label>
+
+            <div class="col-sm-5">
+                <div class="input-group no-padding">
+                        <span class="input-group-addon">
+                            <i class="icon-retweet"></i>
+                        </span>
+
+                    <input type="password" id="id_new_password2" name="new_password2" class="form-control"
+                           maxlength="255">
+                </div>
+            </div>
+            <div class="col-sm-5 has-error help-block">
+                {% include 'snippets/status.html' with status_div_suffix='_new_password2' %}
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-8">
+                <a class="btn btn-sm btn-danger" id="delete-account">
+                    <i class="icon-trash"></i>
+                    Delete Account
+                </a>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="icon-check"></i>
+                    Save
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

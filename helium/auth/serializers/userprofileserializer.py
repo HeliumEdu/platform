@@ -38,16 +38,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def validate_phone_verification_code(self, value):
+    def validate_phone_verification_code(self, phone_verification_code):
         """
         Ensure the email the user isn't already taken by another user.
 
-        :param value: the new email address
+        :param phone_verification_code: the new email address
         """
-        if value != self.instance.phone_verification_code:
+        if phone_verification_code != self.instance.phone_verification_code:
             raise serializers.ValidationError("The verification code does not match our records")
 
-        return value
+        return phone_verification_code
 
     def update(self, instance, validated_data):
 
