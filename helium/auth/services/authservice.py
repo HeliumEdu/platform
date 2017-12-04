@@ -64,6 +64,8 @@ def process_verification(request, username, verification_code):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
 
+            # FIXME: tests are passing, but when going through this workflow in the app, login is not done at this step
+
             logger.info('Auto-logged in user {}'.format(username))
 
             redirect = reverse('planner')
