@@ -9,8 +9,7 @@
 
     <div class="space-8"></div>
 
-    <form class="form-horizontal" id="preferences-form" role="form"
-          method="post">{% csrf_token %}
+    <form class="form-horizontal" id="preferences-form" role="form">{% csrf_token %}
         <input type="hidden" name="post-tab" value="preferences">
 
         <div class="row">
@@ -106,17 +105,14 @@
                         </h5>
 
                         <div class="widget-toolbar no-border">
-                            <div id="calendar-sources-loading" class="loading-mini">
-                                <div id="loading-calendar-sources"></div>
-                            </div>
-                            <span class="calendar-sources-help help-button"
+                            <span class="externalcalendars-help help-button"
                                   data-rel="popover"
                                   data-trigger="hover" data-container="body"
                                   data-placement="left"
                                   data-content="The URL for a calendar feed needs to point to a Google Calendar XML feed, instructions for which can be found by clicking on this question mark"
                                   title="Calendar Feeds">?</span>
                             <button type="button" class="btn btn-xs btn-primary"
-                                    id="create-calendar-source">
+                                    id="create-externalcalendar">
                                 <i class="icon-plus align-top bigger-125"></i>
                                 Feed
                             </button>
@@ -125,7 +121,7 @@
 
                     <div class="widget-body no-padding">
                         <div class="widget-main no-padding">
-                            <table id="sources-table"
+                            <table id="externalcalendars-table"
                                    class="table table-striped table-bordered table-hover">
                                 <thead class="thin-border-bottom">
                                 <tr>
@@ -139,8 +135,8 @@
                                 </tr>
                                 </thead>
 
-                                <tbody id="sources-table-body">
-                                <tr id="no-sources">
+                                <tbody id="externalcalendars-table-body">
+                                <tr id="no-externalcalendars">
                                     <td colspan="5" class="text-center">
                                         No external calendars. Add calendar feeds that
                                         you'd like to see displayed on the Calendar.
@@ -157,7 +153,10 @@
         <hr/>
 
         <div class="form-group pull-right">
-            <button id="save-sources" type="submit" class="btn btn-primary btn-sm">
+            <div id="preferences-loading" class="loading-mini">
+                <div id="loading-preferences"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
                 <i class="icon-check"></i>
                 Save
             </button>
