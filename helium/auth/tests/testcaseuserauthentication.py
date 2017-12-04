@@ -81,7 +81,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEqual(user.username, 'my_test_user')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
         self.assertEqual(response.status_code, 302)
-        self.assertIn('verify your email address', str(response.cookies['status']))
+        self.assertIn('verify your email address', str(response.cookies['status_msg']))
 
         self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())

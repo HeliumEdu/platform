@@ -1,7 +1,7 @@
 """
 Utility functions for view data.
 """
-import ast
+import urllib2
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -16,9 +16,10 @@ def get_request_status(request, default=None):
     status = request.session.get('status', default)
 
     if not status:
-        status = request.COOKIES.get('status', None)
-        if status:
-            status = ast.literal_eval(status)
+        status_type = request.COOKIES.get('status_type', None)
+        status_msg = request.COOKIES.get('status_msg', None)
+        if status_type and status_msg:
+            status = {'type': status_type, 'msg': urllib2.unquote(status_msg)}
 
     if 'status' in request.session:
         del request.session['status']
@@ -28,8 +29,10 @@ def get_request_status(request, default=None):
 
 def set_response_status(response, status):
     if status:
-        response.set_cookie('status', status)
+        response.set_cookie('status_type', status['type'])
+        response.set_cookie('status_msg', status['msg'])
 
 
 def clear_response_status(response):
-    response.delete_cookie(key='status')
+    response.delete_cookie(key='status_type')
+    response.delete_cookie(key='status_msg')
