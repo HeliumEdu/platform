@@ -17,92 +17,169 @@
 function HeliumSettings() {
     "use strict";
 
-    this.external_calendar_id = -1;
-
     var self = this;
 
-    this.delete_source = function () {
-        var row = $(this).parent().parent().parent();
-        row.hide("fast", function () {
-            $(this).remove();
-            if ($("#sources-table-body").children().length === 1) {
-                $("#no-sources").show();
-            }
-        });
-    };
+    this.create_externalcalendar = function (id, title, url, shown_on_calendar, color) {
+        var row = $('<tr id="externalcalendar-' + id + '">');
+        row.append($('<td>').append('<a class="cursor-hover external-title">' + title + '</a>'));
+        row.append($('<td class="hidden-480">').append('<a class="cursor-hover external-url">' + url + '</a>'));
+        row.append($('<td>').append('<input type="checkbox" class="ace" /><span class="lbl" />'));
+        row.append($('<td>').append($('<select class="hide color-picker">' + $("#id_events_color").html() + '</select>')));
+        row.append($('<td>').append('<div class="btn-group"><button type="button" class="btn btn-xs btn-danger delete-externalcalendar"><i class="icon-trash bigger-120"></i></button></div></td></tr>'));
 
-    $("#create-calendar-source").on("click", function () {
-        self.external_calendar_id = self.external_calendar_id + 1;
+        $("#externalcalendars-table-body").append(row);
 
-        var div = $("#sources-table-body").append("<tr id=\"source-" + self.external_calendar_id + "-unsaved\"><td><a class=\"cursor-hover\" id=\"source-" + self.external_calendar_id + "-unsaved-title\">" + "New Sources" + "</td><td class=\"hidden-480\"><a class=\"cursor-hover\" id=\"source-" + self.external_calendar_id + "-unsaved-url\">" + "http://www.externalcalendar.com/feed" + "</a></td><td><input id=\"source-" + self.external_calendar_id + "-unsaved-enabled\" type=\"checkbox\" class=\"ace\" /><span class=\"lbl\" /></td><td><select id=\"source-" + self.external_calendar_id + "-unsaved-color-picker\" class=\"hide\">" + $("#allowed-colors").html() + "</select></td><td><div class=\"btn-group\"><button type=\"button\" class=\"btn btn-xs btn-danger\" id=\"delete-source-" + self.external_calendar_id + "-unsaved\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>"), color_picker = div.find("#source-" + self.external_calendar_id + "-unsaved-color-picker").simplecolorpicker({
+        row.find(".color-picker").simplecolorpicker({
             picker: true,
             theme: "glyphicons"
         });
-        color_picker.simplecolorpicker("selectColor", $($("#allowed-colors option")[Math.floor(Math.random() * $("#allowed-colors option").length)]).val());
-        div.find("#source-" + self.external_calendar_id + "-unsaved-title").editable({
+        row.find(".color-picker").simplecolorpicker("selectColor", color);
+        row.find(".external-title").editable({
             type: "text",
             tpl: '<input type="text" maxlength="255">'
         });
-        div.find("#source-" + self.external_calendar_id + "-unsaved-url").editable({
-            type: "url",
-            tpl: '<input type="url" maxlength="255">'
+        row.find(".external-url").editable({
+            type: "text",
+            tpl: '<input type="text" maxlength="255">'
         });
-        div.find("#delete-source-" + self.external_calendar_id + "-unsaved").on("click", self.delete_source);
+        row.find(".delete-externalcalendar").on("click", self.delete_externalcalendar);
 
-        if ($("#sources-table-body").children().length === 2) {
-            $("#no-sources").hide();
+        if ($("#externalcalendars-table-body").children().length === 2) {
+            $("#no-externalcalendars").hide();
         }
-    });
+    };
 
-    $("[id^='delete-source-']").on("click", self.delete_source);
+    this.delete_externalcalendar = function () {
+        var row = $(this).parent().parent().parent();
+        row.hide("fast", function () {
+            $(this).remove();
+            if ($("#externalcalendars-table-body").children().length === 1) {
+                $("#no-externalcalendars").show();
+            }
+
+            // TODO: need to save this off so that the delete is persisted on save
+        });
+    };
+
+    self.save_externalcalendars = function (form) {
+        var dom_id, id, unsaved_string;
+
+        $.each(form.find("tr[id^='externalcalendar-']"), function () {
+            dom_id = $(this).attr("id");
+            id = dom_id.split("-");
+            if (dom_id.indexOf("-unsaved") !== -1) {
+                id = id[id.length - 2];
+            } else {
+                id = id[id.length - 1];
+            }
+            unsaved_string = "";
+            if (dom_id.indexOf("-unsaved") !== -1) {
+                unsaved_string = "-unsaved";
+            }
+            var data = {
+                title: form.find("#externalcalendar-" + id + unsaved_string + "-title").html(),
+                url: form.find("#externalcalendar-" + id + unsaved_string + "-url").html(),
+                color: form.find("#externalcalendar-" + id + unsaved_string + "-color-picker").val(),
+                shown_on_calendar: form.find("#externalcalendar-" + id + unsaved_string + "-enabled").is(":checked")
+            };
+            $.ajax({
+                async: false,
+                context: form,
+                data: data,
+                type: 'POST',
+                url: '/api/feed/externalcalendars/',
+                error: function () {
+                    // TODO: show errors
+                }
+            });
+        });
+    };
+
+    $("#create-externalcalendar").on("click", function () {
+        self.create_externalcalendar(-1, 'New Source', 'http://www.externalcalendar.com/feed', false, $($("#id_events_color option")[Math.floor(Math.random() * $("#id_events_color option").length)]).val());
+    });
 
     $("#preferences-form").submit(function (e) {
         // Prevent default submit
         e.preventDefault();
         e.returnValue = false;
 
-        $("#loading-calendar-sources").spin(helium.SMALL_LOADING_OPTS);
+        $("#loading-preferences").spin(helium.SMALL_LOADING_OPTS);
 
         $.ajax().always(function () {
-            var form = $("#preferences-form"), data = form.serializeArray(), dom_id, id, unsaved_string;
+            var form = $("#preferences-form"), data = form.serializeArray();
 
-            $.each(form.find("tr[id^='source-']"), function () {
-                dom_id = $(this).attr("id");
-                id = dom_id.split("-");
-                if (dom_id.indexOf("-unsaved") !== -1) {
-                    id = id[id.length - 2];
-                } else {
-                    id = id[id.length - 1];
-                }
-                unsaved_string = "";
-                if (dom_id.indexOf("-unsaved") !== -1) {
-                    unsaved_string = "-unsaved";
-                }
-                data.push({
-                    name: dom_id, value: JSON.stringify({
-                        title: form.find("#source-" + id + unsaved_string + "-title").html(),
-                        url: form.find("#source-" + id + unsaved_string + "-url").html(),
-                        color: form.find("#source-" + id + unsaved_string + "-color-picker").val(),
-                        shown_on_calendar: form.find("#source-" + id + unsaved_string + "-enabled").is(":checked")
-                    })
-                });
-            });
+            self.save_externalcalendars(form);
+
             $.ajax({
                 async: false,
                 context: form,
                 data: data,
-                type: form.attr("method"),
-                url: form.attr("action"),
+                type: 'PUT',
+                url: '/api/user/settings',
                 error: function () {
-                    $("#loading-calendar-sources").spin(false);
+                    $("#loading-preferences").spin(false);
 
-                    $("#settings-tab-1 > .page-header").after("<div id='preferences-status-div' class='alert alert-warning'>" + "Oops, an unknown error occurred when we tried to save the changes to your external calendars." + "</div>");
+                    // TODO: show errors
                 },
                 success: function () {
-                    // Prevent the default submit action
-                    this.off("submit");
-                    // And submit the rest of the form manually
-                    this.submit();
+                    $("#loading-preferences").spin(false);
+                }
+            });
+        });
+    });
+
+    $("#personal-form").submit(function (e) {
+        // Prevent default submit
+        e.preventDefault();
+        e.returnValue = false;
+
+        $("#loading-personal").spin(helium.SMALL_LOADING_OPTS);
+
+        $.ajax().always(function () {
+            var form = $("#personal-form"), data = form.serializeArray();
+
+            $.ajax({
+                async: false,
+                context: form,
+                data: data,
+                type: 'PUT',
+                url: '/api/user/profile',
+                error: function () {
+                    $("#loading-personal").spin(false);
+
+                    // TODO: show errors
+                },
+                success: function () {
+                    $("#loading-personal").spin(false);
+                }
+            });
+        });
+    });
+
+    $("#account-form").submit(function (e) {
+        // Prevent default submit
+        e.preventDefault();
+        e.returnValue = false;
+
+        $("#loading-account").spin(helium.SMALL_LOADING_OPTS);
+
+        $.ajax().always(function () {
+            var form = $("#account-form"), data = form.serializeArray();
+
+            $.ajax({
+                async: false,
+                context: form,
+                data: data,
+                type: 'PUT',
+                url: '/api/user',
+                error: function () {
+                    $("#loading-account").spin(false);
+
+                    // TODO: show errors
+                },
+                success: function () {
+                    $("#loading-account").spin(false);
                 }
             });
         });
@@ -123,9 +200,32 @@ function HeliumSettings() {
                     label: "OK",
                     className: "btn-primary",
                     callback: function () {
-                        var password = $("input[name='delete-account']").val();
-                        $("#account-settings-form").append($("<input>").attr("type", "hidden").attr("name", "delete-account").val(password));
-                        $("#account-settings-form").submit();
+                        $("#loading-account").spin(helium.SMALL_LOADING_OPTS);
+
+                        var data = {
+                            "username": helium.USER_PREFS.username,
+                            "email": helium.USER_PREFS.email,
+                            "password": $("input[name='delete-account']").val()
+                        };
+
+                        $.ajax({
+                            async: false,
+                            data: data,
+                            type: 'DELETE',
+                            url: '/api/user',
+                            error: function () {
+                                $("#loading-account").spin(false);
+
+                                // TODO: show errors
+                            },
+                            success: function () {
+                                $("#loading-account").spin(false);
+
+                                // TODO: set a cookie so a message is shown about the delete being successful after logout
+
+                                window.location = "/logout";
+                            }
+                        });
                     }
                 }
             }
@@ -139,42 +239,26 @@ helium.settings = new HeliumSettings();
 $(document).ready(function () {
     "use strict";
 
-    var id;
-
-    $("#loading-calendar-sources").spin(false);
-
-    // After a post, we want to remember which settings tab was being viewed
-    $("a[data-toggle='tab']").on("shown.bs.tab", function (event) {
-        $.cookie("settings_tab", $(event.target).attr("href"), {path: "/"});
-    });
+    $("#loading-preferences").spin(false);
+    $("#loading-personal").spin(false);
+    $("#loading-account").spin(false);
 
     $("#id_phone_carrier").chosen({width: "100%", search_contains: true, no_results_text: "No carriers match"});
     $("#id_time_zone").chosen({width: "100%", search_contains: true, no_results_text: "No time zones match"});
     $("#id_events_color").simplecolorpicker({picker: true, theme: "glyphicons"});
 
-    $.each($("[id^='source-']"), function () {
-        id = $(this).attr("id");
-        if (id.indexOf("color-picker") !== -1) {
-            id = id.split("-");
-            id = id[id.length - 3];
-            $(this).append($("#allowed-colors").html()).simplecolorpicker({picker: true, theme: "glyphicons"});
-            $(this).simplecolorpicker("selectColor", $("#source-" + id + "-color").html());
-        } else if (id.indexOf("title") !== -1 || id.indexOf("url") !== -1) {
-            $(this).editable({
-                type: "text",
-                tpl: '<input type="text" maxlength="255">'
-            });
-        }
-    });
-
-    if ($("#sources-table-body").children().length === 1) {
-        $("#no-sources").show();
-    }
-
-    if ($(".calendar-sources-help").length > 0) {
-        $(".calendar-sources-help").popover({html: true}).data("bs.popover").tip().css("z-index", 1060);
-        $(".calendar-sources-help").on("click", function () {
+    if ($(".externalcalendars-help").length > 0) {
+        $(".externalcalendars-help").popover({html: true}).data("bs.popover").tip().css("z-index", 1060);
+        $(".externalcalendars-help").on("click", function () {
             window.open("https://support.google.com/calendar/answer/37648?hl=en");
         });
     }
+
+    // TODO: perform a GET on externalcalendars and call "create" for any that already exist
+
+    // TODO: preload form fields
+
+    // TODO: show status of verified or pending verifications for email
+
+    // TODO: show status of verified or pending verifications for phone (if all is verified, hide verification input field)
 });

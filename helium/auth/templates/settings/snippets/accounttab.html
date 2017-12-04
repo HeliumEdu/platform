@@ -9,8 +9,7 @@
 
     <div class="space-8"></div>
 
-    <form id="account-settings-form" class="form-horizontal" role="form"
-          method="post">{% csrf_token %}
+    <form id="account-form" class="form-horizontal" role="form">{% csrf_token %}
         <input type="hidden" name="post-tab" value="account">
 
         <div class="form-group">
@@ -127,6 +126,9 @@
                 </a>
             </div>
             <div class="col-sm-3">
+                <div id="account-loading" class="loading-mini">
+                    <div id="loading-account"></div>
+                </div>
                 <button type="submit" class="btn btn-primary btn-sm">
                     <i class="icon-check"></i>
                     Save

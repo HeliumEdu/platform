@@ -261,10 +261,19 @@ var helium = new Helium();
 
 $.ajax({
     type: "GET",
+    url: "/api/user",
+    async: false,
+    dataType: "json",
+    success: function (data) {
+        $.extend(helium.USER_PREFS, data);
+    }
+});
+$.ajax({
+    type: "GET",
     url: "/api/user/settings",
     async: false,
     dataType: "json",
     success: function (data) {
-        helium.USER_PREFS = data;
+        $.extend(helium.USER_PREFS, data);
     }
 });

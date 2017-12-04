@@ -9,7 +9,7 @@
 
     <div class="space-8"></div>
 
-    <form class="form-horizontal" role="form" method="post">{% csrf_token %}
+    <form class="form-horizontal" id="personal-form" role="form">{% csrf_token %}
         <input type="hidden" name="post-tab" value="personal_info">
 
         <div class="form-group">
@@ -92,6 +92,9 @@
         <hr/>
 
         <div class="form-group pull-right">
+            <div id="personal-loading" class="loading-mini">
+                <div id="loading-personal"></div>
+            </div>
             <button type="submit" class="btn btn-primary btn-sm">
                 <i class="icon-check"></i>
                 Save
