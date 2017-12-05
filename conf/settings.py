@@ -25,10 +25,8 @@ if 'test' not in sys.argv:
     if conf == 'dev':
         print 'Loading .env file'
 
-        from dotenv import Dotenv
-
-        dotenv = Dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-        os.environ.update(dotenv)
+        import dotenv
+        dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
     # Load conf properties into the local scope
     conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), 'helium')
@@ -36,10 +34,8 @@ if 'test' not in sys.argv:
 else:
     print 'Loading .env file'
 
-    from dotenv import Dotenv
-
-    dotenv = Dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-    os.environ.update(dotenv)
+    import dotenv
+    dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
     conf_module = __import__('conf.configs.test', globals(), locals(), 'helium')
 
