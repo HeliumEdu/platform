@@ -20,8 +20,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
-            'phone', 'phone_changing', 'phone_carrier', 'phone_carrier_changing', 'phone_verification_code', 'user')
-        read_only_fields = ('phone_changing', 'phone_carrier_changing', 'user',)
+            'phone', 'phone_changing', 'phone_carrier', 'phone_carrier_changing', 'phone_verification_code',
+            'phone_verified', 'user')
+        read_only_fields = ('phone_changing', 'phone_carrier_changing', 'phone_verified', 'user',)
         extra_kwargs = {
             'phone_verification_code': {'write_only': True},
         }
@@ -50,8 +51,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return phone_verification_code
 
     def update(self, instance, validated_data):
-
-        if 'phone_verification_code' in validated_data:
+        if 'phone_verification_code' in validated_data and validated_data.get('phone_verification_code'):
             if instance.phone_changing:
                 instance.phone = instance.phone_changing
                 instance.phone_changing = None
@@ -59,13 +59,33 @@ class UserProfileSerializer(serializers.ModelSerializer):
             if instance.phone_carrier_changing:
                 instance.phone_carrier = instance.phone_carrier_changing
                 instance.phone_carrier_changing = None
-        elif 'phone' in validated_data and 'phone_carrier' in validated_data:
-            instance.phone_changing = validated_data.get('phone')
-            instance.phone_carrier_changing = validated_data.get('phone_carrier')
 
-            instance.phone_verification_code = generate_phone_verification_code()
+            instance.phone_verified = True
+        elif ('phone' in validated_data and not validated_data.get('phone')) or (
+                'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
+            # The user is trying to clear out their phone details
+            instance.phone = None
+            instance.phone_changing = None
+            instance.phone_carrier = None
+            instance.phone_carrier_changing = None
+            instance.phone_verified = False
+        else:
+            # The user is trying to change their phone or carrier, so revalidate
+            phone = instance.phone
+            phone_carrier = instance.phone_carrier
 
-            tasks.send_verification_text.delay(instance.phone_changing, instance.phone_carrier_changing, instance.phone_verification_code)
+            if 'phone' in validated_data and instance.phone != validated_data.get('phone'):
+                instance.phone_changing = validated_data.get('phone')
+                phone = instance.phone_changing
+            if 'phone_carrier' in validated_data and instance.phone_carrier != validated_data.get('phone_carrier'):
+                instance.phone_carrier_changing = validated_data.get('phone_carrier')
+                phone_carrier = instance.phone_carrier_changing
+
+            if (instance.phone != phone or instance.phone_carrier != instance.phone_carrier) \
+                    and phone and phone_carrier:
+                instance.phone_verification_code = generate_phone_verification_code()
+
+                tasks.send_verification_text.delay(phone, phone_carrier, instance.phone_verification_code)
 
         instance.save()
 

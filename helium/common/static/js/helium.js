@@ -224,6 +224,22 @@ function Helium() {
             return "<a target=\"_blank\" class=\"material-with-link\" href=\"" + str + "\">" + str + "</a>";
         });
     };
+
+    this.clear_form_errors = function (selector) {
+        $("#status_" + selector.split("-form")[0]).html("").addClass("hidden");
+
+        $("#" + selector + " *").filter(':input').each(function (index, data) {
+            if ($(data).attr("id") !== undefined) {
+                $($(data).parent()).removeClass("has-error");
+                $("#status_" + $(data).attr("id").substring(3)).html("").addClass("hidden");
+            }
+        });
+    };
+
+    this.show_error = function (selector, error_msg) {
+        $($("#id_" + selector).parent()).addClass("has-error");
+        $("#status_" + selector).html(error_msg).removeClass("hidden");
+    };
 }
 
 // Be responsible; don't clutter the global namespace

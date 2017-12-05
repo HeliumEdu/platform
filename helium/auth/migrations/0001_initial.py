@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('username', models.CharField(error_messages={b'unique': b'Sorry, that username is already in use.'}, max_length=255, unique=True, validators=[django.core.validators.RegexValidator(b'^[\\w.@+-]+$', b'Enter a valid username, which means less than 30 characters consisting of letters, numbers, or these symbols: @+-_.', b'invalid')])),
-                ('email', models.EmailField(error_messages={b'unique': b"Sorry, that email is already in use. If you already have an account, try <a href='/forgot'>resetting your password</a>."}, max_length=255, unique=True)),
+                ('email', models.EmailField(error_messages={b'unique': b'Sorry, that email is already in use.'}, max_length=255, unique=True)),
                 ('email_changing', models.EmailField(blank=True, max_length=255, null=True)),
                 ('is_active', models.BooleanField(default=False)),
                 ('verification_code', models.SlugField(default=uuid.uuid4, unique=True)),

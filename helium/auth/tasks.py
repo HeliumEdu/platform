@@ -39,7 +39,9 @@ def send_verification_email(email, username, verification_code, platform_host):
 
 @app.task
 def send_verification_text(phone, phone_carrier, phone_verification_code):
-    send_mail('', 'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code), settings.DEFAULT_FROM_EMAIL,
+    logger.info('Sending verification code to {}@{}'.format(phone, phone_carrier))
+
+    send_mail('Verify Your Phone', 'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code), settings.DEFAULT_FROM_EMAIL,
               ['{}@{}'.format(phone, phone_carrier)])
 
 

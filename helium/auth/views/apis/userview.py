@@ -32,12 +32,12 @@ class UserApiView(APIView):
     def put(self, request, format=None):
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
+        data = {}
         errors = {}
         if 'old_password' in request.data or 'new_password1' in request.data or 'new_password2' in request.data:
             form = UserPasswordChangeForm(user=request.user, data=request.data)
 
             if form.is_valid():
-                # print user_password_form
                 form.save()
                 update_session_auth_hash(request, form.user)
 
@@ -54,13 +54,16 @@ class UserApiView(APIView):
 
                 logger.info('Details updated for user {}'.format(request.user.get_username()))
 
-                return Response(serializer.data)
+                data.update(serializer.data)
             else:
                 errors.update(serializer.errors)
-        elif len(errors) == 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        if len(errors) > 0:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        elif len(data) > 0:
+            return Response(data)
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     def delete(self, request, format=None):
         form = UserDeleteForm(user=request.user, data=request.data)

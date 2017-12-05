@@ -5,13 +5,11 @@
         Preferences
     </h4>
 
-    {% include 'snippets/status.html' with status_div_suffix='_preferences' %}
+    {% include 'snippets/status.html' with status_id_suffix='_preferences' %}
 
     <div class="space-8"></div>
 
     <form class="form-horizontal" id="preferences-form" role="form">{% csrf_token %}
-        <input type="hidden" name="post-tab" value="preferences">
-
         <div class="row">
             <div class="col-sm-6 col-xs-12">
                 <div class="form-group">
