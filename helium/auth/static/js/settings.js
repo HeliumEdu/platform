@@ -140,7 +140,7 @@ function HeliumSettings() {
     };
 
     $("#create-externalcalendar").on("click", function () {
-        self.create_externalcalendar("null", 'New Source', 'http://www.externalcalendar.com/feed', false, $($("#id_events_color option")[Math.floor(Math.random() * $("#id_events_color option").length)]).val());
+        self.create_externalcalendar("null", 'Holidays', 'https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics', false, $($("#id_events_color option")[Math.floor(Math.random() * $("#id_events_color option").length)]).val());
     });
 
     $("#preferences-form").submit(function (e) {

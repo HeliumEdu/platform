@@ -32,8 +32,8 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         """
         if urlopen(url).getcode() != 200:
             serializers.ValidationError("The URL is not reachable.")
-        elif 'google.com/calendar/ical' not in url and '/private' not in url:
-            serializers.ValidationError("This does not appear to be a valid, private Google Calendar ICAL feed URL.")
+        elif 'google.com/calendar/ical' not in url:
+            serializers.ValidationError("This does not appear to be a Google Calendar ICAL feed URL.")
 
         return url
 
