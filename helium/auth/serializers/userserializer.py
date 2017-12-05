@@ -31,8 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
 
         :param email: the new email address
         """
-        if get_user_model().objects.filter(email_changing=email).exists():
-            raise serializers.ValidationError("This email is already in use.")
+        if self.instance.email != email and get_user_model().objects.filter(email_changing=email).exclude(
+                pk=self.instance.pk).exists():
+            raise serializers.ValidationError("Sorry, that email is already in use.")
 
         return email
 
@@ -42,7 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
         if 'email' in validated_data and instance.email != validated_data.get('email'):
             instance.email_changing = validated_data.get('email')
 
-            instance.verification_code = uuid.uuid4
+            instance.verification_code = uuid.uuid4()
 
             tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code,
                                                 self.context['request'].get_host())

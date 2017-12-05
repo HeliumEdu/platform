@@ -85,7 +85,7 @@ class TestCaseUserSettings(TestCase):
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        private_slug = str(uuid.uuid4)
+        private_slug = str(uuid.uuid4())
         user.settings.private_slug = private_slug
         user.settings.save()
 

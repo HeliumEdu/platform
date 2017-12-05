@@ -74,13 +74,9 @@ def process_verification(request, username, verification_code):
             user.email_changing = None
             user.save()
 
-            # Ensure the user is logged in
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-            login(request, user)
-
             logger.info('Reverified email for user {}'.format(username))
 
-            redirect = reverse('planner')
+            redirect = reverse('settings')
         else:
             redirect = reverse('login')
     except get_user_model().DoesNotExist:

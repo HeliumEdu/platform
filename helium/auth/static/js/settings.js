@@ -21,6 +21,15 @@ function HeliumSettings() {
 
     self.to_delete = [];
 
+    self.email_pending = function (email_changing) {
+        ($("#id_email_verification_status").html('<i class="icon-time bigger-110 orange"></i> Pending verification of ' + email_changing));
+    };
+
+    self.phone_pending = function (phone_changing) {
+        $($("#id_phone_verification_status").html('<i class="icon-time bigger-110 orange"></i> Pending verification of ' + phone_changing));
+        $("#phone_verification_row").show("fast");
+    };
+
     self.create_externalcalendar = function (id, title, url, shown_on_calendar, color) {
         var row = $('<tr id="externalcalendar-' + id + '">');
         row.append($('<td>').append('<a class="cursor-hover external-title">' + title + '</a>'));
@@ -89,7 +98,7 @@ function HeliumSettings() {
                     data: data,
                     type: 'POST',
                     url: '/api/feed/externalcalendars/',
-                    error: function () {
+                    error: function (xhr) {
                         // TODO: show errors
                     }
                 });
@@ -100,7 +109,7 @@ function HeliumSettings() {
                     data: data,
                     type: 'PUT',
                     url: '/api/feed/externalcalendar/' + id + '/',
-                    error: function () {
+                    error: function (xhr) {
                         // TODO: show errors
                     }
                 });
@@ -119,6 +128,8 @@ function HeliumSettings() {
 
         $("#loading-preferences").spin(helium.SMALL_LOADING_OPTS);
 
+        helium.clear_form_errors($(this).attr("id"));
+
         $.ajax().always(function () {
             var form = $("#preferences-form"), data = form.serializeArray();
             data.push({"name": "show_getting_started", "value": helium.USER_PREFS.show_getting_started});
@@ -134,7 +145,7 @@ function HeliumSettings() {
                     context: form,
                     type: 'DELETE',
                     url: '/api/feed/externalcalendar/' + id + '/',
-                    error: function () {
+                    error: function (xhr) {
                         // TODO: show errors
                     }
                 });
@@ -146,11 +157,11 @@ function HeliumSettings() {
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user/settings',
-                error: function () {
-                    $("#loading-preferences").spin(false);
-
+                url: '/api/user/settings/',
+                error: function (xhr) {
                     // TODO: show errors
+
+                    $("#loading-preferences").spin(false);
                 },
                 success: function () {
                     $("#loading-preferences").spin(false);
@@ -166,6 +177,8 @@ function HeliumSettings() {
 
         $("#loading-personal").spin(helium.SMALL_LOADING_OPTS);
 
+        helium.clear_form_errors($(this).attr("id"));
+
         $.ajax().always(function () {
             var form = $("#personal-form"), data = form.serializeArray();
 
@@ -174,13 +187,29 @@ function HeliumSettings() {
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user/profile',
-                error: function () {
-                    $("#loading-personal").spin(false);
-
+                url: '/api/user/profile/',
+                error: function (xhr) {
                     // TODO: show errors
+
+                    $("#loading-personal").spin(false);
                 },
-                success: function () {
+                success: function (data) {
+                    if (data.phone_changing || data.phone_carrier_changing) {
+                        self.phone_pending(data.phone_changing);
+                    } else {
+                        $("#id_phone").val(data.phone);
+                        $("#id_phone_carrier").val(data.phone_carrier);
+                        $("#id_phone_carrier").trigger("change");
+                        $("#id_phone_carrier").trigger("chosen:updated");
+
+                        if (data.phone_verified) {
+                            $($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
+                        } else {
+                            $($("#id_phone_verification_status").html(''));
+                        }
+                        $("#phone_verification_row").hide("fast");
+                    }
+
                     $("#loading-personal").spin(false);
                 }
             });
@@ -194,21 +223,57 @@ function HeliumSettings() {
 
         $("#loading-account").spin(helium.SMALL_LOADING_OPTS);
 
+        helium.clear_form_errors($(this).attr("id"));
+
+        if ($("#id_old_password").val() !== '' || $("#id_new_password1").val() !== '' || $("#id_new_password2").val() !== '') {
+            // If one is present, all three must be present
+            var has_error = false;
+            if ($("#id_old_password").val() === '') {
+                helium.show_error("old_password", "This field is required.");
+
+                has_error = true;
+            }
+            if ($("#id_new_password1").val() === '') {
+                helium.show_error("new_password1", "This field is required.");
+
+                has_error = true;
+            }
+            if ($("#id_new_password2").val() === '') {
+                helium.show_error("new_password2", "This field is required.");
+
+                has_error = true;
+            }
+
+            if (has_error) {
+                return false;
+            }
+        }
+
         $.ajax().always(function () {
             var form = $("#account-form"), data = form.serializeArray();
+
+            for (var i = data.length - 1; i >= 0; --i) {
+                if (data[i].value == '') {
+                    data.splice(i);
+                }
+            }
 
             $.ajax({
                 async: false,
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user',
-                error: function () {
-                    $("#loading-account").spin(false);
-
+                url: '/api/user/',
+                error: function (xhr) {
                     // TODO: show errors
+
+                    $("#loading-account").spin(false);
                 },
-                success: function () {
+                success: function (data) {
+                    if (data.email_changing) {
+                        self.email_pending(data.email_changing);
+                    }
+
                     $("#loading-account").spin(false);
                 }
             });
@@ -244,10 +309,10 @@ function HeliumSettings() {
                             data: data,
                             type: 'DELETE',
                             url: '/api/user',
-                            error: function () {
-                                $("#loading-account").spin(false);
-
+                            error: function (xhr) {
                                 // TODO: show errors
+
+                                $("#loading-account").spin(false);
                             },
                             success: function () {
                                 $("#loading-account").spin(false);
@@ -308,7 +373,6 @@ $(document).ready(function () {
         }
     });
 
-    // TODO: preload form fields
     $("#id_default_view").val(helium.USER_PREFS.default_view);
     $("#id_week_starts_on").val(helium.USER_PREFS.week_starts_on);
     $("#id_time_zone").val(helium.USER_PREFS.time_zone);
@@ -325,7 +389,16 @@ $(document).ready(function () {
     $("#id_username").val(helium.USER_PREFS.username);
     $("#id_email").val(helium.USER_PREFS.email);
 
-    // TODO: show status of verified or pending verifications for email
+    if (helium.USER_PREFS.email_changing === null) {
+        ($("#id_email_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
+    } else {
+        helium.settings.email_pending(helium.USER_PREFS.email_changing);
+    }
 
-    // TODO: show status of verified or pending verifications for phone (if all is verified, hide verification input field)
+    if ((helium.USER_PREFS.phone_changing !== null && helium.USER_PREFS.phone_changing !== '') ||
+        (helium.USER_PREFS.phone_carrier_changing !== null && helium.USER_PREFS.phone_carrier_changing !== '')) {
+        helium.settings.phone_pending(helium.USER_PREFS.phone_changing);
+    } else if (helium.USER_PREFS.phone_verified) {
+        ($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
+    }
 });

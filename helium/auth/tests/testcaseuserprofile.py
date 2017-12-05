@@ -82,6 +82,7 @@ class TestCaseUserProfile(TestCase):
         user.profile.phone_changing = '555-5555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
+        self.assertFalse(user.profile.phone_verified)
 
         # WHEN
         data = {
@@ -95,6 +96,7 @@ class TestCaseUserProfile(TestCase):
         user = get_user_model().objects.get(id=user.id)
         self.assertEquals(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
+        self.assertTrue(user.profile.phone_verified)
 
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN

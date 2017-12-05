@@ -32,7 +32,7 @@ class User(AbstractBaseUser, BaseModel):
 
     email = models.EmailField(max_length=255, unique=True,
                               error_messages={
-                                  'unique': "Sorry, that email is already in use. If you already have an account, try <a href='/forgot'>resetting your password</a>."
+                                  'unique': "Sorry, that email is already in use."
                               })
 
     email_changing = models.EmailField(max_length=255, blank=True, null=True)
