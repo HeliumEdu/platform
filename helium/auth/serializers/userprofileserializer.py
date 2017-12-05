@@ -2,6 +2,7 @@
 UserProfile serializer.
 """
 import logging
+import re
 
 from rest_framework import serializers
 
@@ -39,6 +40,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def validate_phone(self, phone):
+        """
+        Cleanup the phone number. This currently does no validation, just ensures the stored value is numeric.
+
+        :param phone: the phone number being saved
+        :return:
+        """
+        return re.sub("[^0-9]", "", phone)
+
     def validate_phone_verification_code(self, phone_verification_code):
         """
         Ensure the email the user isn't already taken by another user.
@@ -62,7 +72,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
             instance.phone_verified = True
         elif ('phone' in validated_data and not validated_data.get('phone')) or (
-                'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
+                        'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
             # The user is trying to clear out their phone details
             instance.phone = None
             instance.phone_changing = None

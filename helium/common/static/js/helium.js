@@ -239,6 +239,8 @@ function Helium() {
     this.show_error = function (selector, error_msg) {
         $($("#id_" + selector).parent()).addClass("has-error");
         $("#status_" + selector).html(error_msg).removeClass("hidden");
+
+        // TODO: if the given status_{field_id} select is not found, show the error in the form's status div at the top
     };
 }
 

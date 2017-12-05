@@ -6,9 +6,9 @@ import json
 from django.test import TestCase
 from django.urls import reverse
 
+from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
-from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

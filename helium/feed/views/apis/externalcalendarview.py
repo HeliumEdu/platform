@@ -62,6 +62,7 @@ class ExternalCalendarApiDetailView(APIView):
 
     def put(self, request, pk, format=None):
         externalcalendar = self.get_object(request, pk)
+
         serializer = ExternalCalendarSerializer(externalcalendar, data=request.data)
 
         if serializer.is_valid():
@@ -77,9 +78,9 @@ class ExternalCalendarApiDetailView(APIView):
     def delete(self, request, pk, format=None):
         externalcalendar = self.get_object(request, pk)
 
-        externalcalendar.delete()
-
-        logger.info('ExternalCalendar {} updated for user {}'.format(externalcalendar.pk,
+        logger.info('ExternalCalendar {} deleted for user {}'.format(externalcalendar.pk,
                                                                      request.user.get_username()))
+
+        externalcalendar.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -21,6 +21,28 @@ function HeliumSettings() {
 
     self.to_delete = [];
 
+    self.populate_externalcalendars = function () {
+        $('tr[id^="externalcalendar-"]').each(function () {
+            $(this).remove();
+        });
+
+        $.ajax({
+            type: "GET",
+            url: "/api/feed/externalcalendars/",
+            async: false,
+            dataType: "json",
+            success: function (data) {
+                $.each(data, function (key, externalcalendar) {
+                    helium.settings.create_externalcalendar(externalcalendar.id, externalcalendar.title, externalcalendar.url, externalcalendar.shown_on_calendar, externalcalendar.color);
+                });
+            }
+        });
+
+        if ($("#externalcalendars-table-body").children().length === 1) {
+            $("#no-externalcalendars").show();
+        }
+    };
+
     self.email_pending = function (email_changing) {
         ($("#id_email_verification_status").html('<i class="icon-time bigger-110 orange"></i> Pending verification of ' + email_changing));
     };
@@ -99,7 +121,7 @@ function HeliumSettings() {
                     type: 'POST',
                     url: '/api/feed/externalcalendars/',
                     error: function (xhr) {
-                        // TODO: show errors
+                        $("#status_preferences").html('Oops, an error occurred while saving changes to external calendars. Was the URL valid?').addClass("alert-warning").removeClass("hidden");
                     }
                 });
             } else {
@@ -110,7 +132,7 @@ function HeliumSettings() {
                     type: 'PUT',
                     url: '/api/feed/externalcalendar/' + id + '/',
                     error: function (xhr) {
-                        // TODO: show errors
+                        $("#status_preferences").html('Oops, an error occurred while saving changes to external calendars. Was the URL valid?').addClass("alert-warning").removeClass("hidden");
                     }
                 });
             }
@@ -152,6 +174,8 @@ function HeliumSettings() {
             });
             self.to_delete = [];
 
+            self.populate_externalcalendars();
+
             $.ajax({
                 async: false,
                 context: form,
@@ -159,7 +183,9 @@ function HeliumSettings() {
                 type: 'PUT',
                 url: '/api/user/settings/',
                 error: function (xhr) {
-                    // TODO: show errors
+                    $.each(xhr.responseJSON, function (key, value) {
+                        helium.show_error(key, value);
+                    });
 
                     $("#loading-preferences").spin(false);
                 },
@@ -189,7 +215,9 @@ function HeliumSettings() {
                 type: 'PUT',
                 url: '/api/user/profile/',
                 error: function (xhr) {
-                    // TODO: show errors
+                    $.each(xhr.responseJSON, function (key, value) {
+                        helium.show_error(key, value);
+                    });
 
                     $("#loading-personal").spin(false);
                 },
@@ -245,6 +273,8 @@ function HeliumSettings() {
             }
 
             if (has_error) {
+                $("#loading-account").spin(false);
+
                 return false;
             }
         }
@@ -253,7 +283,7 @@ function HeliumSettings() {
             var form = $("#account-form"), data = form.serializeArray();
 
             for (var i = data.length - 1; i >= 0; --i) {
-                if (data[i].value == '') {
+                if (data[i].name.indexOf('password') !== -1 && data[i].value == '') {
                     data.splice(i);
                 }
             }
@@ -265,7 +295,9 @@ function HeliumSettings() {
                 type: 'PUT',
                 url: '/api/user/',
                 error: function (xhr) {
-                    // TODO: show errors
+                    $.each(xhr.responseJSON, function (key, value) {
+                        helium.show_error(key, value);
+                    });
 
                     $("#loading-account").spin(false);
                 },
@@ -309,8 +341,8 @@ function HeliumSettings() {
                             data: data,
                             type: 'DELETE',
                             url: '/api/user',
-                            error: function (xhr) {
-                                // TODO: show errors
+                            error: function () {
+                                $("#status_account").html('Sorry, an unknown error occurred while trying to delete your account. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
 
                                 $("#loading-account").spin(false);
                             },
@@ -361,17 +393,7 @@ $(document).ready(function () {
         }
     });
 
-    $.ajax({
-        type: "GET",
-        url: "/api/feed/externalcalendars/",
-        async: false,
-        dataType: "json",
-        success: function (data) {
-            $.each(data, function (key, externalcalendar) {
-                helium.settings.create_externalcalendar(externalcalendar.id, externalcalendar.title, externalcalendar.url, externalcalendar.shown_on_calendar, externalcalendar.color);
-            });
-        }
-    });
+    helium.settings.populate_externalcalendars();
 
     $("#id_default_view").val(helium.USER_PREFS.default_view);
     $("#id_week_starts_on").val(helium.USER_PREFS.week_starts_on);
