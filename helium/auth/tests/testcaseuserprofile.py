@@ -71,7 +71,7 @@ class TestCaseUserProfile(TestCase):
 
         # THEN
         self.assertIsNone(response.data['phone'])
-        self.assertEqual(response.data['phone_changing'], '555-5555')
+        self.assertEqual(response.data['phone_changing'], '5555555')
         user = get_user_model().objects.get(id=user.id)
         self.assertIsNone(user.profile.phone)
         self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
@@ -79,7 +79,7 @@ class TestCaseUserProfile(TestCase):
     def test_phone_changes_after_verification(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        user.profile.phone_changing = '555-5555'
+        user.profile.phone_changing = '5555555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
         self.assertFalse(user.profile.phone_verified)
@@ -91,7 +91,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.data['phone'], '555-5555')
+        self.assertEqual(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_changing'])
         user = get_user_model().objects.get(id=user.id)
         self.assertEqual(user.profile.phone, response.data['phone'])
@@ -101,7 +101,7 @@ class TestCaseUserProfile(TestCase):
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        user.profile.phone_changing = '555-5555'
+        user.profile.phone_changing = '5555555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
 
@@ -118,7 +118,7 @@ class TestCaseUserProfile(TestCase):
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        phone_changing = '555-5555'
+        phone_changing = '5555555'
         user.profile.phone_changing = phone_changing
         user.profile.save()
 
