@@ -2,7 +2,7 @@
 Restart the WSGI daemon process in development when files have changed.
 """
 
-import Queue
+import queue
 import atexit
 import os
 import signal
@@ -18,15 +18,15 @@ _times = {}
 _files = []
 
 _running = False
-_queue = Queue.Queue()
+_queue = queue.Queue()
 _lock = threading.Lock()
 
 
 def _restart(path):
     _queue.put(True)
     prefix = 'monitor (pid=%d):' % os.getpid()
-    print >> sys.stderr, '%s Change detected to \'%s\'.' % (prefix, path)
-    print >> sys.stderr, '%s Triggering process restart.' % prefix
+    print('%s Change detected to \'%s\'.' % (prefix, path), file=sys.stderr)
+    print('%s Triggering process restart.' % prefix, file=sys.stderr)
     os.kill(os.getpid(), signal.SIGINT)
 
 
@@ -67,7 +67,7 @@ def _monitor():
     while 1:
         # Check modification times on all files in sys.modules.
 
-        for module in sys.modules.values():
+        for module in list(sys.modules.values()):
             if not hasattr(module, '__file__'):
                 continue
             path = getattr(module, '__file__')
@@ -121,7 +121,7 @@ def start(interval=0.5):
     global _running
     _lock.acquire()
     if not _running:
-        print 'Monitoring codebase for changes: (pid=%d)' % os.getpid()
+        print('Monitoring codebase for changes: (pid=%d)' % os.getpid())
         _running = True
         _thread.start()
     _lock.release()

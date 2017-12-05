@@ -20,10 +20,10 @@ if 'test' not in sys.argv:
     else:
         conf = 'deploy'
 
-    print 'Using conf: conf.configs.{}'.format(conf)
+    print('Using conf: conf.configs.{}'.format(conf))
 
     if conf == 'dev':
-        print 'Loading .env file'
+        print('Loading .env file')
 
         import dotenv
         dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -32,7 +32,7 @@ if 'test' not in sys.argv:
     conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), 'helium')
 # If we're running tests, run a streamlined settings file for efficiency
 else:
-    print 'Loading .env file'
+    print('Loading .env file')
 
     import dotenv
     dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -58,4 +58,4 @@ if conf_module.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     from django.db import connection
 
     connection.cursor()
-    connection.connection.text_factory = lambda x: unicode(x, "utf-8", "ignore")
+    connection.connection.text_factory = lambda x: str(x, "utf-8", "ignore")

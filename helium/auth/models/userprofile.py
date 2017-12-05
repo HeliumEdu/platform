@@ -36,4 +36,4 @@ class UserProfile(BaseModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
 
     def __unicode__(self):
-        return unicode('{} ({})'.format(self.pk, self.user.get_username()))
+        return str('{} ({})'.format(self.pk, self.user.get_username()))

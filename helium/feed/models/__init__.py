@@ -1,1 +1,1 @@
-from externalcalendar import ExternalCalendar
+from .externalcalendar import ExternalCalendar

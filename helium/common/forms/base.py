@@ -13,7 +13,7 @@ class BaseForm(forms.BaseForm):
     def __init__(self, *args, **kwargs):
         super(BaseForm, self).__init__(*args, **kwargs)
 
-        for field in self.fields.values():
+        for field in list(self.fields.values()):
                 field.widget.attrs['placeholder'] = field.label
 
     class Meta:

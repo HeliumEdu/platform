@@ -50,4 +50,4 @@ class UserSettings(BaseModel):
         verbose_name_plural = 'User settings'
 
     def __unicode__(self):
-        return unicode('{} ({})'.format(self.pk, self.user.get_username()))
+        return str('{} ({})'.format(self.pk, self.user.get_username()))

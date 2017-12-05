@@ -5,7 +5,7 @@ Settings for a development environment when using Django's `runserver` command.
 import os
 import warnings
 
-import deploy
+from . import deploy
 from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'

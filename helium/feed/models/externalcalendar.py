@@ -28,4 +28,4 @@ class ExternalCalendar(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars')
 
     def __unicode__(self):
-        return unicode('{} ({})'.format(self.title, self.user.get_username()))
+        return str('{} ({})'.format(self.title, self.user.get_username()))
