@@ -36,13 +36,13 @@ class TestCaseUser(TestCase):
 
         # THEN
         self.assertNotIn('verification_code', response.data)
-        self.assertEquals(user.username, response.data['username'])
-        self.assertEquals(user.email, response.data['email'])
+        self.assertEqual(user.username, response.data['username'])
+        self.assertEqual(user.email, response.data['email'])
 
     def test_username_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertEquals(user.email, 'test@heliumedu.com')
+        self.assertEqual(user.email, 'test@heliumedu.com')
         self.assertIsNone(user.email_changing)
 
         # WHEN
@@ -54,19 +54,19 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.data['username'], 'new_username')
-        self.assertEquals(response.data['email'], 'test@heliumedu.com')
+        self.assertEqual(response.data['username'], 'new_username')
+        self.assertEqual(response.data['email'], 'test@heliumedu.com')
         user = get_user_model().objects.get(id=user.id)
-        self.assertEquals(user.username, response.data['username'])
-        self.assertEquals(user.email, response.data['email'])
+        self.assertEqual(user.username, response.data['username'])
+        self.assertEqual(user.email, response.data['email'])
         self.assertIsNone(user.email_changing)
 
     def test_email_changing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertEquals(user.email, 'test@heliumedu.com')
+        self.assertEqual(user.email, 'test@heliumedu.com')
         self.assertIsNone(user.email_changing)
-        self.assertEquals(user.username, 'test_user')
+        self.assertEqual(user.username, 'test_user')
 
         # WHEN
         data = {
@@ -77,13 +77,13 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.data['username'], user.username)
-        self.assertEquals(response.data['email'], user.email)
-        self.assertEquals(response.data['email_changing'], 'new@email.com')
+        self.assertEqual(response.data['username'], user.username)
+        self.assertEqual(response.data['email'], user.email)
+        self.assertEqual(response.data['email_changing'], 'new@email.com')
         user = get_user_model().objects.get(id=user.id)
-        self.assertEquals(user.email, response.data['email'])
-        self.assertEquals(user.email_changing, response.data['email_changing'])
-        self.assertEquals(user.username, response.data['username'])
+        self.assertEqual(user.email, response.data['email'])
+        self.assertEqual(user.email_changing, response.data['email_changing'])
+        self.assertEqual(user.username, response.data['username'])
 
     def test_email_changes_after_verification(self):
         # GIVEN
@@ -96,7 +96,7 @@ class TestCaseUser(TestCase):
 
         # THEN
         user = get_user_model().objects.get(id=user.id)
-        self.assertEquals(user.email, 'new@email.com')
+        self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
 
     def test_password_change(self):
@@ -112,7 +112,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
         user = get_user_model().objects.get(id=user.id)
         self.assertTrue(user.check_password('new_pass_1!'))
 
@@ -128,7 +128,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('old_password', response.data)
 
     def test_password_change_fails_blank_new_pass(self):
@@ -144,7 +144,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('new_password1', response.data)
 
     def test_password_change_fails_mismatch(self):
@@ -160,7 +160,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('new_password2', response.data)
 
     def test_password_change_fails_to_meet_requirements(self):
@@ -176,7 +176,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('new_password2', response.data)
 
     def test_username_already_exists(self):
@@ -193,7 +193,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('username', response.data)
 
     def test_email_already_exists(self):
@@ -210,7 +210,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('email', response.data)
 
     def test_delete_user(self):
@@ -227,7 +227,7 @@ class TestCaseUser(TestCase):
         response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user__id=user.pk).exists())
         self.assertFalse(UserProfile.objects.filter(user__id=user.pk).exists())
@@ -246,5 +246,5 @@ class TestCaseUser(TestCase):
         response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('password', response.data)

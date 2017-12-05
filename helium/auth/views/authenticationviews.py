@@ -37,7 +37,7 @@ def register(request):
 
             redirect = authservice.process_register(request, user_register_form.instance)
         else:
-            set_request_status(request, 'warning', user_register_form.errors.values()[0][0])
+            set_request_status(request, 'warning', list(user_register_form.errors.values())[0][0])
     else:
         user_register_form = UserRegisterForm()
 
@@ -94,7 +94,7 @@ def login(request):
                 if authservice.is_anonymous_or_non_staff(request.user):
                     statsd.incr('platform.action.user-logged-in')
             else:
-                set_request_status(request, 'warning', user_login_form.errors.values()[0][0])
+                set_request_status(request, 'warning', list(user_login_form.errors.values())[0][0])
 
         status = get_request_status(request, None)
 

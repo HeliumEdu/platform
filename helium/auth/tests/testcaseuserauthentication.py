@@ -98,6 +98,6 @@ class TestCaseUserAuthentication(TestCase):
         user = get_user_model().objects.get(email='test@heliumedu.com')
         self.assertEqual(response.status_code, 302)
         userhelper.verify_user_logged_in(self)
-        self.assertEquals(get_user_model().objects.count(), 1)
-        self.assertEquals(user.get_username(), 'test_user')
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(user.get_username(), 'test_user')
         self.assertTrue(user.is_active)

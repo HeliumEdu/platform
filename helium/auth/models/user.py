@@ -51,7 +51,7 @@ class User(AbstractBaseUser, BaseModel):
     REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
-        return unicode(self.get_username())
+        return str(self.get_username())
 
     def get_full_name(self):
         """

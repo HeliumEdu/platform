@@ -1,7 +1,11 @@
 """
 Helper functions for use in extending the base functional of templates.
 """
-from urllib import urlencode
+from future.standard_library import install_aliases
+
+install_aliases()
+
+from urllib.parse import urlencode
 
 from django import template
 

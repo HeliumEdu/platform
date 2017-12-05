@@ -43,7 +43,7 @@ class UserApiView(APIView):
 
                 logger.info('Password updated for {}'.format(request.user.get_username()))
             else:
-                errors.update(form.errors.items())
+                errors.update(list(form.errors.items()))
 
         # Process remaining attributes (if any) using serializers
         if 'username' in request.data and 'email' in request.data:
@@ -73,4 +73,4 @@ class UserApiView(APIView):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return Response(dict(form.errors.items()), status=status.HTTP_400_BAD_REQUEST)
+        return Response(dict(list(form.errors.items())), status=status.HTTP_400_BAD_REQUEST)

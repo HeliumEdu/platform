@@ -42,7 +42,7 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.get(reverse('api_feed_externalcalendar_list'))
 
         # THEN
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_post_externalcalendar(self):
         # GIVEN
@@ -58,14 +58,14 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 201)
-        self.assertEquals(ExternalCalendar.objects.count(), 1)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ExternalCalendar.objects.count(), 1)
         externalcalendar = ExternalCalendar.objects.get(pk=response.data['id'])
-        self.assertEquals(externalcalendar.title, 'some title')
-        self.assertEquals(externalcalendar.url, 'http://go.com')
-        self.assertEquals(externalcalendar.color, '#f552')
-        self.assertEquals(externalcalendar.shown_on_calendar, False)
-        self.assertEquals(externalcalendar.user.pk, user.pk)
+        self.assertEqual(externalcalendar.title, 'some title')
+        self.assertEqual(externalcalendar.url, 'http://go.com')
+        self.assertEqual(externalcalendar.color, '#f552')
+        self.assertEqual(externalcalendar.shown_on_calendar, False)
+        self.assertEqual(externalcalendar.user.pk, user.pk)
 
     def test_get_externalcalendar_by_id(self):
         # GIVEN
@@ -77,17 +77,17 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
 
         # THEN
-        self.assertEquals(externalcalendar.title, response.data['title'])
-        self.assertEquals(externalcalendar.url, response.data['url'])
-        self.assertEquals(externalcalendar.color, response.data['color'])
-        self.assertEquals(externalcalendar.shown_on_calendar, response.data['shown_on_calendar'])
-        self.assertEquals(externalcalendar.user.pk, response.data['user'])
+        self.assertEqual(externalcalendar.title, response.data['title'])
+        self.assertEqual(externalcalendar.url, response.data['url'])
+        self.assertEqual(externalcalendar.color, response.data['color'])
+        self.assertEqual(externalcalendar.shown_on_calendar, response.data['shown_on_calendar'])
+        self.assertEqual(externalcalendar.user.pk, response.data['user'])
 
     def test_put_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         externalcalendar = externalcalendarhelper.given_external_calendar(user)
-        self.assertEquals(externalcalendar.title, '')
+        self.assertEqual(externalcalendar.title, '')
         self.assertTrue(externalcalendar.shown_on_calendar)
 
         # WHEN
@@ -101,11 +101,11 @@ class TestCaseUserAuthentication(TestCase):
                                    content_type='application/json')
 
         # THEN
-        self.assertEquals(response.data['title'], 'new title')
-        self.assertEquals(response.data['url'], externalcalendar.url)
+        self.assertEqual(response.data['title'], 'new title')
+        self.assertEqual(response.data['url'], externalcalendar.url)
         self.assertFalse(response.data['shown_on_calendar'])
         externalcalendar = ExternalCalendar.objects.get(id=externalcalendar.id)
-        self.assertEquals(externalcalendar.title, response.data['title'])
+        self.assertEqual(externalcalendar.title, response.data['title'])
         self.assertFalse(externalcalendar.shown_on_calendar, response.data['shown_on_calendar'])
 
     def test_delete_externalcalendar_by_id(self):
@@ -119,7 +119,7 @@ class TestCaseUserAuthentication(TestCase):
 
         # THEN
         self.assertFalse(ExternalCalendar.objects.filter(pk=externalcalendar.pk).exists())
-        self.assertEquals(ExternalCalendar.objects.count(), 1)
+        self.assertEqual(ExternalCalendar.objects.count(), 1)
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
@@ -131,6 +131,6 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': externalcalendar.pk}))
 
         # THEN
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
         self.assertTrue(ExternalCalendar.objects.filter(pk=externalcalendar.pk).exists())
-        self.assertEquals(ExternalCalendar.objects.count(), 1)
+        self.assertEqual(ExternalCalendar.objects.count(), 1)

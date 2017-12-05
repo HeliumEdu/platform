@@ -37,9 +37,9 @@ class TestCaseUserProfile(TestCase):
 
         # THEN
         self.assertNotIn('phone_verification_code', response.data)
-        self.assertEquals(user.profile.phone, response.data['phone'])
-        self.assertEquals(user.profile.phone_carrier, response.data['phone_carrier'])
-        self.assertEquals(user.profile.user.pk, response.data['user'])
+        self.assertEqual(user.profile.phone, response.data['phone'])
+        self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
+        self.assertEqual(user.profile.user.pk, response.data['user'])
 
     def test_put_bad_data_fails(self):
         # GIVEN
@@ -53,7 +53,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('phone_carrier', response.data)
 
     def test_put_user_profile(self):
@@ -71,10 +71,10 @@ class TestCaseUserProfile(TestCase):
 
         # THEN
         self.assertIsNone(response.data['phone'])
-        self.assertEquals(response.data['phone_changing'], '555-5555')
+        self.assertEqual(response.data['phone_changing'], '555-5555')
         user = get_user_model().objects.get(id=user.id)
         self.assertIsNone(user.profile.phone)
-        self.assertEquals(user.profile.phone_changing, response.data['phone_changing'])
+        self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
 
     def test_phone_changes_after_verification(self):
         # GIVEN
@@ -91,10 +91,10 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.data['phone'], '555-5555')
+        self.assertEqual(response.data['phone'], '555-5555')
         self.assertIsNone(response.data['phone_changing'])
         user = get_user_model().objects.get(id=user.id)
-        self.assertEquals(user.profile.phone, response.data['phone'])
+        self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
         self.assertTrue(user.profile.phone_verified)
 
@@ -112,7 +112,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertIn('phone_verification_code', response.data)
 
     def test_put_read_only_field_does_nothing(self):
@@ -130,5 +130,5 @@ class TestCaseUserProfile(TestCase):
 
         # THEN
         user = get_user_model().objects.get(id=user.id)
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(user.profile.phone_changing, phone_changing)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(user.profile.phone_changing, phone_changing)
