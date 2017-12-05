@@ -4,6 +4,7 @@ Entry point for building settings and other configuration parameters.
 
 import os
 import sys
+from builtins import str
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -58,4 +59,4 @@ if conf_module.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     from django.db import connection
 
     connection.cursor()
-    connection.connection.text_factory = lambda x: str(x, "utf-8", "ignore")
+    connection.connection.text_factory = lambda x: str(x)

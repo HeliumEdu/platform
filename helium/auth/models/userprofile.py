@@ -4,12 +4,13 @@ UserProfile model.
 
 import logging
 
+from builtins import str
 from django.conf import settings
 from django.db import models
 
+from helium.auth.utils.userutils import generate_phone_verification_code
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.auth.utils.userutils import generate_phone_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

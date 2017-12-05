@@ -69,6 +69,8 @@ class UserApiView(APIView):
         form = UserDeleteForm(user=request.user, data=request.data)
 
         if form.is_valid():
+            logger.info('User {} deleted'.format(request.user.get_username()))
+
             form.user.delete()
 
             return Response(status=status.HTTP_204_NO_CONTENT)

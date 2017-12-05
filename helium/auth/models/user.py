@@ -5,12 +5,13 @@ User model.
 import logging
 import uuid
 
+from builtins import str
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
 
-from helium.common.models import BaseModel
 from helium.auth.managers.usermanager import UserManager
+from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

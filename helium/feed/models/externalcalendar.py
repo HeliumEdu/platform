@@ -3,6 +3,7 @@ ExternalCalendar model.
 """
 import logging
 
+from builtins import str
 from django.conf import settings
 from django.db import models
 
