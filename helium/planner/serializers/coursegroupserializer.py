@@ -5,7 +5,7 @@ import logging
 
 from rest_framework import serializers
 
-from helium.feed.models import ExternalCalendar
+from helium.planner.models import CourseGroup
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2015, Helium Edu'
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class CourseGroupSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ExternalCalendar
+        model = CourseGroup
         fields = ('id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'average_grade', 'trend', 'private_slug', 'user',)
         read_only_fields = ('average_grade', 'trend', 'private_slug', 'user',)
 

@@ -35,9 +35,9 @@ class TestCaseExternalCalendar(TestCase):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
-        externalcalendarhelper.given_external_calendar(user1)
-        externalcalendarhelper.given_external_calendar(user2)
-        externalcalendarhelper.given_external_calendar(user2)
+        externalcalendarhelper.given_external_calendar_exists(user1)
+        externalcalendarhelper.given_external_calendar_exists(user2)
+        externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
         response = self.client.get(reverse('api_feed_externalcalendar_list'))
@@ -72,8 +72,8 @@ class TestCaseExternalCalendar(TestCase):
     def test_get_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        external_calendar = externalcalendarhelper.given_external_calendar(user)
-        externalcalendarhelper.given_external_calendar(user)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
         response = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
@@ -88,7 +88,7 @@ class TestCaseExternalCalendar(TestCase):
     def test_put_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        external_calendar = externalcalendarhelper.given_external_calendar(user)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         self.assertEqual(external_calendar.title, '')
         self.assertTrue(external_calendar.shown_on_calendar)
 
@@ -114,8 +114,8 @@ class TestCaseExternalCalendar(TestCase):
     def test_delete_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        external_calendar = externalcalendarhelper.given_external_calendar(user)
-        externalcalendarhelper.given_external_calendar(user)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
         self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
@@ -128,7 +128,7 @@ class TestCaseExternalCalendar(TestCase):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
-        external_calendar = externalcalendarhelper.given_external_calendar(user1)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
         # WHEN
         response = self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
