@@ -26,5 +26,5 @@ urlpatterns = [
     # Authenticated API URLs
     url(r'^api/planner/coursegroups/$', CourseGroupApiListView.as_view(), name='api_planner_coursegroup_list'),
     url(r'^api/planner/coursegroup/(?P<pk>[0-9]+)/$', CourseGroupApiDetailView.as_view(),
-        name='api_feed_coursegroup_detail'),
+        name='api_planner_coursegroup_detail'),
 ]
