@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 @app.task
-def recalculate_course_group_grade(self, course_group):
+def recalculate_course_group_grade(course_group):
+    # TODO: not yet implemented
+    pass
+
+
+@app.task
+def recalculate_course_grade(course):
+    # TODO: not yet implemented
+    pass
+
+
+@app.task
+def recalculate_category_grade(category):
     # TODO: not yet implemented
     pass
