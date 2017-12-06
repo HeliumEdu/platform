@@ -1,1 +1,1 @@
-from coursegroup import CourseGroup
+from .coursegroup import CourseGroup
