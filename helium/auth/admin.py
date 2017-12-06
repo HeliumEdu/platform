@@ -67,7 +67,6 @@ class UserAdmin(admin.UserAdmin, ModelAdmin):
 
 
 class UserSettingsAdmin(ModelAdmin):
-    model = UserSettings
     list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     ordering = ('user__username',)
@@ -87,7 +86,6 @@ class UserSettingsAdmin(ModelAdmin):
 
 
 class UserProfileAdmin(ModelAdmin):
-    model = UserProfile
     list_display = ['get_user', 'phone_carrier']
     list_filter = ('phone_carrier',)
     ordering = ('user__username',)

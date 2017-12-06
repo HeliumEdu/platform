@@ -1,6 +1,7 @@
 """
 Helper for ExternalCalendar models in testing.
 """
+
 from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'

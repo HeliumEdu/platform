@@ -15,7 +15,7 @@ urlpatterns = [
     # Unauthenticated external feed URLs (rely on private slugs for authentication)
     url(r'^feed/([a-zA-Z0-9]+)\.ics$', feed_ical, name='feed_ical'),
 
-    # Authenticated internal feed URLs
+    # Authenticated feed API URLs
     url(r'^api/feed/externalcalendars/$', ExternalCalendarApiListView.as_view(), name='api_feed_externalcalendar_list'),
     url(r'^api/feed/externalcalendar/(?P<pk>[0-9]+)/$', ExternalCalendarApiDetailView.as_view(),
         name='api_feed_externalcalendar_detail'),

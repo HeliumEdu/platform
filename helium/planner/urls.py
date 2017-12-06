@@ -5,6 +5,8 @@ Planner URLs.
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
+from helium.planner.views.apis.coursegroupview import CourseGroupApiDetailView
+from helium.planner.views.apis.coursegroupview import CourseGroupApiListView
 from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
@@ -20,4 +22,9 @@ urlpatterns = [
     url(r'^planner/classes', classes, name='classes'),
     url(r'^planner/materials', materials, name='materials'),
     url(r'^planner/grades', grades, name='grades'),
+
+    # Authenticated API URLs
+    url(r'^api/planner/coursegroups/$', CourseGroupApiListView.as_view(), name='api_planner_coursegroup_list'),
+    url(r'^api/planner/coursegroup/(?P<pk>[0-9]+)/$', CourseGroupApiDetailView.as_view(),
+        name='api_feed_coursegroup_detail'),
 ]
