@@ -2,8 +2,6 @@
 Asynchronous tasks to be performed.
 """
 
-
-
 import logging
 
 from django.conf import settings
@@ -41,7 +39,8 @@ def send_verification_email(email, username, verification_code, platform_host):
 def send_verification_text(phone, phone_carrier, phone_verification_code):
     logger.info('Sending verification code to {}@{}'.format(phone, phone_carrier))
 
-    send_mail('Verify Your Phone', 'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code), settings.DEFAULT_FROM_EMAIL,
+    send_mail('Verify Your Phone', 'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code),
+              settings.DEFAULT_FROM_EMAIL,
               ['{}@{}'.format(phone, phone_carrier)])
 
 

@@ -55,15 +55,15 @@ class ExternalCalendarApiDetailView(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        externalcalendar = self.get_object(request, pk)
-        serializer = ExternalCalendarSerializer(externalcalendar)
+        external_calendar = self.get_object(request, pk)
+        serializer = ExternalCalendarSerializer(external_calendar)
 
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        externalcalendar = self.get_object(request, pk)
+        external_calendar = self.get_object(request, pk)
 
-        serializer = ExternalCalendarSerializer(externalcalendar, data=request.data)
+        serializer = ExternalCalendarSerializer(external_calendar, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -76,11 +76,11 @@ class ExternalCalendarApiDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        externalcalendar = self.get_object(request, pk)
+        external_calendar = self.get_object(request, pk)
 
-        logger.info('ExternalCalendar {} deleted for user {}'.format(externalcalendar.pk,
+        logger.info('ExternalCalendar {} deleted for user {}'.format(external_calendar.pk,
                                                                      request.user.get_username()))
 
-        externalcalendar.delete()
+        external_calendar.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
