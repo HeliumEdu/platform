@@ -73,7 +73,7 @@ class TestCaseExternalCalendar(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        externalcalendarhelper.given_external_calendar_exists(user)
+        externalcalendarhelper.given_external_calendar_exists(user, 'test2')
 
         # WHEN
         response = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))

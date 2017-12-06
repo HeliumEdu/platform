@@ -1,9 +1,9 @@
 """
 CourseGroup model.
 """
+
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 
 from helium.common.models import BaseModel
 
@@ -15,9 +15,9 @@ __version__ = '1.0.0'
 class CourseGroup(BaseModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
-    start_date = models.DateField(default=timezone.now)
+    start_date = models.DateField()
 
-    end_date = models.DateField(default=timezone.now)
+    end_date = models.DateField()
 
     shown_on_calendar = models.BooleanField(default=True)
 
