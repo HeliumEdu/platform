@@ -8,7 +8,7 @@ build: _env
 	python manage.py collectstatic --noinput
 
 build-migrations: _env
-	python manage.py makemigrations users feed planner
+	python manage.py makemigrations
 
 migrate: _env
 	python manage.py migrate

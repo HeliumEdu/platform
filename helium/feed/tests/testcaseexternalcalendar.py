@@ -28,7 +28,8 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(response1.status_code, 302)
         self.assertRedirects(response1, '/login?next={}'.format(reverse('api_feed_externalcalendar_list')))
         self.assertEqual(response2.status_code, 302)
-        self.assertRedirects(response2, '/login?next={}'.format(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1})))
+        self.assertRedirects(response2,
+                             '/login?next={}'.format(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1})))
 
     def test_get_externalcalendars(self):
         # GIVEN
@@ -55,7 +56,8 @@ class TestCaseExternalCalendar(TestCase):
             'color': '#f552',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data), content_type='application/json')
+        response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, 201)
@@ -97,7 +99,8 @@ class TestCaseExternalCalendar(TestCase):
             # Intentionally NOT changing this value
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}),
+                                   json.dumps(data),
                                    content_type='application/json')
 
         # THEN
