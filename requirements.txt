@@ -12,7 +12,7 @@ boto==2.45.0
 pycrypto==2.6.1
 requests[security]
 django-pipeline==1.6.13
-celery==3.1.25
+celery==4.1.0
 celery[redis]
 Pillow==2.5.3
 Pygments==1.6
