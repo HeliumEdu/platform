@@ -8,6 +8,7 @@ import uuid
 from dateutil import parser
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import CourseGroup
@@ -62,7 +63,7 @@ class TestCaseCourseGroup(TestCase):
         response = self.client.post(reverse('api_planner_coursegroup_list'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CourseGroup.objects.count(), 1)
         course_group = CourseGroup.objects.get(pk=response.data['id'])
         self.assertEqual(course_group.title, 'some title')
@@ -141,7 +142,7 @@ class TestCaseCourseGroup(TestCase):
         response = self.client.delete(reverse('api_planner_coursegroup_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(CourseGroup.objects.count(), 1)
 
@@ -161,5 +162,5 @@ class TestCaseCourseGroup(TestCase):
 
         # THEN
         course_group = CourseGroup.objects.get(id=user.id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(course_group.private_slug, private_slug)

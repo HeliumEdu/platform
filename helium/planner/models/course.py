@@ -1,13 +1,12 @@
 """
 Course model.
 """
-
+from django.core import validators
 from django.db import models
 from django.utils import timezone
 
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.common.utils.commonutils import generate_random_color
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -36,12 +35,17 @@ class Course(BaseModel):
     # TODO: teacher details will be abstracted into a Teacher model after the open source migration is finished
     teacher_name = models.CharField(max_length=255, default='', blank=True, null=True)
 
-    teacher_email = models.CharField(max_length=255, default='', blank=True, null=True)
+    teacher_email = models.EmailField(default='', blank=True, null=True)
 
     # TODO: these fields will be abstracted into a CourseSchedule model after the open source migration is finished
     start_date = models.DateField()
     end_date = models.DateField()
-    days_of_week = models.CharField(max_length=7, default='0000000')
+    days_of_week = models.CharField(max_length=7, default='0000000', validators=[
+        validators.RegexValidator(r'^[0-1]+$',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'invalid'),
+        validators.MinLengthValidator(7,
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
     sun_start_time = models.DateTimeField(default=timezone.now)
     sun_end_time = models.DateTimeField(default=timezone.now)
     mon_start_time = models.DateTimeField(default=timezone.now)
@@ -56,7 +60,12 @@ class Course(BaseModel):
     fri_end_time = models.DateTimeField(default=timezone.now)
     sat_start_time = models.DateTimeField(default=timezone.now)
     sat_end_time = models.DateTimeField(default=timezone.now)
-    days_of_week_alt = models.CharField(max_length=7, default='0000000')
+    days_of_week_alt = models.CharField(max_length=7, default='0000000', validators=[
+        validators.RegexValidator(r'^[0-1]+$',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'invalid'),
+        validators.MinLengthValidator(7,
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
     sun_start_time_alt = models.DateTimeField(default=timezone.now)
     sun_end_time_alt = models.DateTimeField(default=timezone.now)
     mon_start_time_alt = models.DateTimeField(default=timezone.now)

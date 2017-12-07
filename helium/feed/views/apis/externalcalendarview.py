@@ -31,12 +31,10 @@ class ExternalCalendarApiListView(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        data = {'user': request.user.pk}
-        data.update(request.data)
-        serializer = ExternalCalendarSerializer(data=request.data, context={'request': request})
+        serializer = ExternalCalendarSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
 
             logger.info('ExternalCalendar {} created for user {}'.format(serializer.instance.pk,
                                                                          request.user.get_username()))
@@ -48,20 +46,29 @@ class ExternalCalendarApiListView(APIView):
 
 @method_decorator(login_required, name='dispatch')
 class ExternalCalendarApiDetailView(APIView):
+    def check_object_permissions(self, request, external_calendar):
+        super(ExternalCalendarApiDetailView, self).check_object_permissions(request, external_calendar)
+
+        if request.user.pk != external_calendar.user_id:
+            self.permission_denied(request, 'You do not have permissions to access this object.')
+
     def get_object(self, request, pk):
         try:
-            return ExternalCalendar.objects.get(pk=pk, user_id=request.user.pk)
+            return ExternalCalendar.objects.get(pk=pk)
         except ExternalCalendar.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
         external_calendar = self.get_object(request, pk)
+        self.check_object_permissions(request, external_calendar)
+
         serializer = ExternalCalendarSerializer(external_calendar)
 
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
         external_calendar = self.get_object(request, pk)
+        self.check_object_permissions(request, external_calendar)
 
         serializer = ExternalCalendarSerializer(external_calendar, data=request.data)
 
@@ -77,6 +84,7 @@ class ExternalCalendarApiDetailView(APIView):
 
     def delete(self, request, pk, format=None):
         external_calendar = self.get_object(request, pk)
+        self.check_object_permissions(request, external_calendar)
 
         logger.info('ExternalCalendar {} deleted for user {}'.format(external_calendar.pk,
                                                                      request.user.get_username()))

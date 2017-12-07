@@ -5,6 +5,7 @@ import json
 
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
@@ -53,19 +54,19 @@ class TestCaseExternalCalendar(TestCase):
         data = {
             'title': 'some title',
             'url': 'http://go.com',
-            'color': '#f552',
+            'color': '#7bd148',
             'shown_on_calendar': False,
         }
         response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ExternalCalendar.objects.count(), 1)
         external_calendar = ExternalCalendar.objects.get(pk=response.data['id'])
         self.assertEqual(external_calendar.title, 'some title')
         self.assertEqual(external_calendar.url, 'http://go.com')
-        self.assertEqual(external_calendar.color, '#f552')
+        self.assertEqual(external_calendar.color, '#7bd148')
         self.assertEqual(external_calendar.shown_on_calendar, False)
         self.assertEqual(external_calendar.user.pk, user.pk)
 
@@ -134,6 +135,6 @@ class TestCaseExternalCalendar(TestCase):
         response = self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(ExternalCalendar.objects.filter(pk=external_calendar.pk).exists())
         self.assertEqual(ExternalCalendar.objects.count(), 1)

@@ -7,6 +7,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.auth.utils.userutils import generate_phone_verification_code
@@ -25,7 +26,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.get(reverse('api_user_profile'))
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertRedirects(response, '/login?next={}'.format(reverse('api_user_profile')))
 
     def test_get_user_profile(self):
@@ -53,7 +54,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('phone_carrier', response.data)
 
     def test_put_user_profile(self):
@@ -112,7 +113,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('phone_verification_code', response.data)
 
     def test_put_read_only_field_does_nothing(self):
@@ -130,5 +131,5 @@ class TestCaseUserProfile(TestCase):
 
         # THEN
         user = get_user_model().objects.get(id=user.id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.profile.phone_changing, phone_changing)

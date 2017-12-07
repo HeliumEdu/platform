@@ -7,6 +7,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 
@@ -24,7 +25,7 @@ class TestCaseUserSettings(TestCase):
         response = self.client.get(reverse('api_user_settings'))
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertRedirects(response, '/login?next={}'.format(reverse('api_user_settings')))
 
     def test_get_user_settings(self):
@@ -79,7 +80,7 @@ class TestCaseUserSettings(TestCase):
         response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('time_zone', response.data)
 
     def test_put_read_only_field_does_nothing(self):
@@ -97,7 +98,7 @@ class TestCaseUserSettings(TestCase):
 
         # THEN
         user = get_user_model().objects.get(id=user.id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.settings.private_slug, private_slug)
 
     def test_unsubscribe_admin_emails(self):

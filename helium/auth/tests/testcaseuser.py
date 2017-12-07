@@ -6,6 +6,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.models import UserSettings, UserProfile
 from helium.auth.tests.helpers import userhelper
@@ -24,7 +25,7 @@ class TestCaseUser(TestCase):
         response = self.client.get(reverse('api_user'))
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertRedirects(response, '/login?next={}'.format(reverse('api_user')))
 
     def test_get_user(self):
@@ -112,7 +113,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user = get_user_model().objects.get(id=user.id)
         self.assertTrue(user.check_password('new_pass_1!'))
 
@@ -128,7 +129,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('old_password', response.data)
 
     def test_password_change_fails_blank_new_pass(self):
@@ -144,7 +145,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('new_password1', response.data)
 
     def test_password_change_fails_mismatch(self):
@@ -160,7 +161,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('new_password2', response.data)
 
     def test_password_change_fails_to_meet_requirements(self):
@@ -176,7 +177,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('new_password2', response.data)
 
     def test_username_already_exists(self):
@@ -193,7 +194,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('username', response.data)
 
     def test_email_already_exists(self):
@@ -210,7 +211,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
 
     def test_delete_user(self):
@@ -227,7 +228,7 @@ class TestCaseUser(TestCase):
         response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user__id=user.pk).exists())
         self.assertFalse(UserProfile.objects.filter(user__id=user.pk).exists())
@@ -246,5 +247,5 @@ class TestCaseUser(TestCase):
         response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('password', response.data)
