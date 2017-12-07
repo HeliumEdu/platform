@@ -25,8 +25,7 @@ class TestCaseUser(TestCase):
         response = self.client.get(reverse('api_user'))
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertRedirects(response, '/login?next={}'.format(reverse('api_user')))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_user(self):
         # GIVEN

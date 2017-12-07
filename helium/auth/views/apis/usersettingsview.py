@@ -7,6 +7,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,8 +20,9 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(login_required, name='dispatch')
 class UserSettingsApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, format=None):
         serializer = UserSettingsSerializer(request.user.settings)
 

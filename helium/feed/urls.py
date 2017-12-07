@@ -4,7 +4,7 @@ Feed URLs.
 
 from django.conf.urls import url
 
-from helium.feed.views.apis.externalcalendarview import ExternalCalendarApiListView, ExternalCalendarApiDetailView
+from helium.feed.views.apis.externalcalendarview import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.feeds import feed_ical
 
 __author__ = 'Alex Laird'
@@ -16,7 +16,7 @@ urlpatterns = [
     url(r'^feed/([a-zA-Z0-9]+)\.ics$', feed_ical, name='feed_ical'),
 
     # Authenticated feed API URLs
-    url(r'^api/feed/externalcalendars/$', ExternalCalendarApiListView.as_view(), name='api_feed_externalcalendar_list'),
-    url(r'^api/feed/externalcalendar/(?P<pk>[0-9]+)/$', ExternalCalendarApiDetailView.as_view(),
-        name='api_feed_externalcalendar_detail'),
+    url(r'^api/feed/externalcalendars/$', ExternalCalendarsApiListView.as_view(), name='api_feed_externalcalendars_list'),
+    url(r'^api/feed/externalcalendars/(?P<pk>[0-9]+)/$', ExternalCalendarsApiDetailView.as_view(),
+        name='api_feed_externalcalendars_detail'),
 ]

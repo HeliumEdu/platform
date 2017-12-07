@@ -8,10 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helium.planner.models import CourseGroup
+from helium.planner.permissions import IsOwner
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = 'Alex Laird'
@@ -21,8 +23,9 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(login_required, name='dispatch')
-class CourseGroupApiListView(APIView):
+class CourseGroupsApiListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, format=None):
         course_groups = CourseGroup.objects.filter(user__id=request.user.pk)
 
@@ -44,13 +47,8 @@ class CourseGroupApiListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@method_decorator(login_required, name='dispatch')
-class CourseGroupApiDetailView(APIView):
-    def check_object_permissions(self, request, course_group):
-        super(CourseGroupApiDetailView, self).check_object_permissions(request, course_group)
-
-        if request.user.pk != course_group.user_id:
-            self.permission_denied(request, 'You do not have permissions to access this object.')
+class CourseGroupsApiDetailView(APIView):
+    permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_object(self, request, pk):
         try:
