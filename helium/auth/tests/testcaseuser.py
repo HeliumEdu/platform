@@ -35,6 +35,7 @@ class TestCaseUser(TestCase):
         response = self.client.get(reverse('api_user'))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('verification_code', response.data)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
@@ -54,6 +55,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'new_username')
         self.assertEqual(response.data['email'], 'test@heliumedu.com')
         user = get_user_model().objects.get(id=user.id)
@@ -77,6 +79,7 @@ class TestCaseUser(TestCase):
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], user.username)
         self.assertEqual(response.data['email'], user.email)
         self.assertEqual(response.data['email_changing'], 'new@email.com')
@@ -92,9 +95,11 @@ class TestCaseUser(TestCase):
         user.verification_code = 'moo-moo-moo'
         user.save()
 
-        self.client.get(reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
+        response = self.client.get(
+            reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         user = get_user_model().objects.get(id=user.id)
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)

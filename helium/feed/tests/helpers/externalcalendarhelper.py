@@ -17,3 +17,11 @@ def given_external_calendar_exists(user, title='', url='http://test.com', color=
                                                         user=user)
 
     return external_calendar
+
+
+def verify_externalcalendar_matches_data(test_case, external_calendar, data):
+    test_case.assertEqual(external_calendar.title, data['title'])
+    test_case.assertEqual(external_calendar.url, data['url'])
+    test_case.assertEqual(external_calendar.color, data['color'])
+    test_case.assertEqual(external_calendar.shown_on_calendar, data['shown_on_calendar'])
+    test_case.assertEqual(external_calendar.user.pk, data['user'])
