@@ -5,6 +5,7 @@ Tests for authentication.
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
 
 from helium.auth.models import UserProfile, UserSettings
 from helium.auth.tests.helpers import userhelper
@@ -24,7 +25,7 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
 
     def test_logout_success(self):
@@ -36,7 +37,7 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.post('/logout')
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_not_logged_in(self)
 
     def test_login_failure_wrong_password(self):
@@ -48,14 +49,14 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'wrong_pass'})
 
         # THEN
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         userhelper.verify_user_not_logged_in(self)
 
     def test_password_reset(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         response = self.client.post(reverse('forgot'), {'email': user.email})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertRedirects(response, '/login')
         temp_pass = response.context['password']
 
@@ -63,7 +64,7 @@ class TestCaseUserAuthentication(TestCase):
         response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': temp_pass})
 
         # THEN
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
 
     def test_registration_success(self):
@@ -80,7 +81,7 @@ class TestCaseUserAuthentication(TestCase):
         self.assertFalse(user.is_active)
         self.assertEqual(user.username, 'my_test_user')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertIn('verify your email address', str(response.cookies['status_msg']))
 
         self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
@@ -96,7 +97,7 @@ class TestCaseUserAuthentication(TestCase):
 
         # THEN
         user = get_user_model().objects.get(email='test@heliumedu.com')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(user.get_username(), 'test_user')

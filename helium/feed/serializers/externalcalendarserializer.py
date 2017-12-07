@@ -7,6 +7,7 @@ install_aliases()
 import logging
 from urllib.request import urlopen
 from rest_framework import serializers
+from rest_framework import status
 
 from helium.feed.models import ExternalCalendar
 
@@ -30,14 +31,9 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         :param url: the URL to validate
         :return: the validated URL
         """
-        if urlopen(url).getcode() != 200:
+        if urlopen(url).getcode() != status.HTTP_200_OK:
             serializers.ValidationError("The URL is not reachable.")
 
         # TODO: parse the URL to validate it is, in fact, an valid ICAL feed
 
         return url
-
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-
-        return super(ExternalCalendarSerializer, self).create(validated_data)
