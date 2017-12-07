@@ -4,8 +4,6 @@ Authenticated views for UserProfile interaction.
 
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response

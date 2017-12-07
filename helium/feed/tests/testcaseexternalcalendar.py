@@ -22,7 +22,7 @@ class TestCaseExternalCalendar(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_feed_externalcalendars_list'))
+        response1 = self.client.get(reverse('api_feed_externalcalendars_lc'))
         response2 = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': 1}))
 
         # THEN
@@ -38,7 +38,7 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_list'))
+        response = self.client.get(reverse('api_feed_externalcalendars_lc'))
 
         # THEN
         self.assertEqual(len(response.data), 2)
@@ -54,7 +54,7 @@ class TestCaseExternalCalendar(TestCase):
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
+        response = self.client.post(reverse('api_feed_externalcalendars_lc'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN

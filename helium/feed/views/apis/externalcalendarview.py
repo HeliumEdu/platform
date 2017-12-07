@@ -4,13 +4,10 @@ Authenticated views for ExternalCalendar interaction.
 
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.utils.decorators import method_decorator
-from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, RetrieveModelMixin, \
+    DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from helium.feed.models import ExternalCalendar
 from helium.feed.permissions import IsOwner
@@ -23,70 +20,34 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarsApiListView(APIView):
+class ExternalCalendarsApiLCView(GenericAPIView, ListModelMixin, CreateModelMixin):
+    serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, format=None):
-        external_calendars = ExternalCalendar.objects.filter(user__id=request.user.pk)
+    def get_queryset(self):
+        user = self.request.user
+        return user.external_calendars.all()
 
-        serializer = ExternalCalendarSerializer(external_calendars, many=True)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
-        return Response(serializer.data)
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
-    def post(self, request, format=None):
-        serializer = ExternalCalendarSerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-
-            logger.info('ExternalCalendar {} created for user {}'.format(serializer.instance.pk,
-                                                                         request.user.get_username()))
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
 
-class ExternalCalendarsApiDetailView(APIView):
+class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    queryset = ExternalCalendar.objects.all()
+    serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
-    def get_object(self, request, pk):
-        try:
-            return ExternalCalendar.objects.get(pk=pk)
-        except ExternalCalendar.DoesNotExist:
-            raise Http404
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
-    def get(self, request, pk, format=None):
-        external_calendar = self.get_object(request, pk)
-        self.check_object_permissions(request, external_calendar)
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
-        serializer = ExternalCalendarSerializer(external_calendar)
-
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        external_calendar = self.get_object(request, pk)
-        self.check_object_permissions(request, external_calendar)
-
-        serializer = ExternalCalendarSerializer(external_calendar, data=request.data)
-
-        if serializer.is_valid():
-            serializer.save()
-
-            logger.info('ExternalCalendar {} updated for user {}'.format(serializer.instance.pk,
-                                                                         request.user.get_username()))
-
-            return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        external_calendar = self.get_object(request, pk)
-        self.check_object_permissions(request, external_calendar)
-
-        logger.info('ExternalCalendar {} deleted for user {}'.format(external_calendar.pk,
-                                                                     request.user.get_username()))
-
-        external_calendar.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)

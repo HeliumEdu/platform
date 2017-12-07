@@ -16,10 +16,6 @@ class IsOwner(permissions.BasePermission):
     """
     This permission can be used if "user" is a base element of this object.
     """
-    def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
 
-
-class IsCourseOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj.course_group.user == request.user
+        return obj.get_user() == request.user

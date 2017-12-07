@@ -25,7 +25,7 @@ class TestCaseCourseGroup(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_coursegroups_list'))
+        response1 = self.client.get(reverse('api_planner_coursegroups_lc'))
         response2 = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': 1}))
 
         # THEN
@@ -41,7 +41,7 @@ class TestCaseCourseGroup(TestCase):
         coursegrouphelper.given_course_group_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_list'))
+        response = self.client.get(reverse('api_planner_coursegroups_lc'))
 
         # THEN
         self.assertEqual(len(response.data), 2)
@@ -57,7 +57,7 @@ class TestCaseCourseGroup(TestCase):
             'end_date': '2015-07-09',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_planner_coursegroups_list'), json.dumps(data),
+        response = self.client.post(reverse('api_planner_coursegroups_lc'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
