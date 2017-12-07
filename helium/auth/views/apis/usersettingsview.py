@@ -4,8 +4,6 @@ Authenticated views for UserSettings interaction.
 
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -20,7 +18,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserSettingsApiView(APIView):
+class UserSettingsApiLUView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):

@@ -6,14 +6,14 @@ from django.db import models
 from django.utils import timezone
 
 from helium.common import enums
-from helium.common.models import BaseModel
+from helium.planner.models.base import BasePlannerModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class Course(BaseModel):
+class Course(BasePlannerModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
     room = models.CharField(max_length=255, default='', blank=True, null=True)
@@ -84,4 +84,7 @@ class Course(BaseModel):
     course_group = models.ForeignKey('CourseGroup', related_name='courses', on_delete=models.CASCADE)
 
     def __unicode__(self):
-        return str('{} ({})'.format(self.title, self.user.get_username()))
+        return str('{} ({})'.format(self.title, self.get_user().get_username()))
+
+    def get_user(self):
+        return self.course_group.get_user()

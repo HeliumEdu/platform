@@ -40,7 +40,7 @@ class CourseAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return self.readonly_fields + ('user', 'created_at', 'updated_at',)
+            return self.readonly_fields + ('created_at', 'updated_at',)
 
         return self.readonly_fields
 
@@ -51,13 +51,13 @@ class CourseAdmin(ModelAdmin):
     get_course_group.admin_order_field = 'course_group__title'
 
     def get_user(self, obj):
-        if obj.user:
-            return obj.user.get_username()
+        if obj.course_group.user:
+            return obj.course_group.user.get_username()
         else:
             return ''
 
     get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
+    get_user.admin_order_field = 'course_group__user__username'
 
 
 # Register the models in the Admin

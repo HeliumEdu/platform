@@ -5,14 +5,14 @@ CourseGroup model.
 from django.conf import settings
 from django.db import models
 
-from helium.common.models import BaseModel
+from helium.planner.models.base import BasePlannerModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class CourseGroup(BaseModel):
+class CourseGroup(BasePlannerModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
     start_date = models.DateField()
@@ -30,4 +30,7 @@ class CourseGroup(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
 
     def __unicode__(self):
-        return str('{} ({})'.format(self.title, self.user.get_username()))
+        return str('{} ({})'.format(self.title, self.get_user().get_username()))
+
+    def get_user(self):
+        return self.user
