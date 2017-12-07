@@ -22,15 +22,12 @@ class TestCaseExternalCalendar(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_feed_externalcalendar_list'))
-        response2 = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1}))
+        response1 = self.client.get(reverse('api_feed_externalcalendars_list'))
+        response2 = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': 1}))
 
         # THEN
-        self.assertEqual(response1.status_code, 302)
-        self.assertRedirects(response1, '/login?next={}'.format(reverse('api_feed_externalcalendar_list')))
-        self.assertEqual(response2.status_code, 302)
-        self.assertRedirects(response2,
-                             '/login?next={}'.format(reverse('api_feed_externalcalendar_detail', kwargs={'pk': 1})))
+        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_externalcalendars(self):
         # GIVEN
@@ -41,7 +38,7 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendar_list'))
+        response = self.client.get(reverse('api_feed_externalcalendars_list'))
 
         # THEN
         self.assertEqual(len(response.data), 2)
@@ -57,7 +54,7 @@ class TestCaseExternalCalendar(TestCase):
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendar_list'), json.dumps(data),
+        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -77,7 +74,7 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user, 'test2')
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(external_calendar.title, response.data['title'])
@@ -100,7 +97,7 @@ class TestCaseExternalCalendar(TestCase):
             # Intentionally NOT changing this value
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
 
@@ -119,7 +116,7 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
+        self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertFalse(ExternalCalendar.objects.filter(pk=external_calendar.pk).exists())
@@ -132,7 +129,7 @@ class TestCaseExternalCalendar(TestCase):
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
         # WHEN
-        response = self.client.delete(reverse('api_feed_externalcalendar_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

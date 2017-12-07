@@ -8,10 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helium.feed.models import ExternalCalendar
+from helium.feed.permissions import IsOwner
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
 __author__ = 'Alex Laird'
@@ -21,8 +23,9 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(login_required, name='dispatch')
-class ExternalCalendarApiListView(APIView):
+class ExternalCalendarsApiListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, format=None):
         external_calendars = ExternalCalendar.objects.filter(user__id=request.user.pk)
 
@@ -44,13 +47,8 @@ class ExternalCalendarApiListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@method_decorator(login_required, name='dispatch')
-class ExternalCalendarApiDetailView(APIView):
-    def check_object_permissions(self, request, external_calendar):
-        super(ExternalCalendarApiDetailView, self).check_object_permissions(request, external_calendar)
-
-        if request.user.pk != external_calendar.user_id:
-            self.permission_denied(request, 'You do not have permissions to access this object.')
+class ExternalCalendarsApiDetailView(APIView):
+    permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_object(self, request, pk):
         try:
