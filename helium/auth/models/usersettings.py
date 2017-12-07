@@ -10,7 +10,6 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.common.utils.commonutils import generate_random_color
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -30,7 +29,7 @@ class UserSettings(BaseModel):
 
     show_getting_started = models.BooleanField(default=True)
 
-    events_color = models.CharField(max_length=7, default=generate_random_color)
+    events_color = models.CharField(max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     default_reminder_offset = models.PositiveIntegerField(default=30)
 
