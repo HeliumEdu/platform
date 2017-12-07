@@ -6,6 +6,7 @@ import logging
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
 from statsd.defaults.django import statsd
 
 from helium.auth.forms.userloginform import UserLoginForm
@@ -104,9 +105,9 @@ def login(request):
 
         return redirect
     else:
-        http_status = 200
+        http_status = HTTP_200_OK
         if request.method == 'POST':
-            http_status = 401
+            http_status = HTTP_401_UNAUTHORIZED
 
         data = {
             'user_login_form': user_login_form,
