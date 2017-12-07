@@ -41,9 +41,11 @@ class TestCaseExternalCalendar(TestCase):
         response = self.client.get(reverse('api_feed_externalcalendars_lc'))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ExternalCalendar.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    def test_post_externalcalendar(self):
+    def test_create_externalcalendar(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
@@ -61,29 +63,22 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ExternalCalendar.objects.count(), 1)
         external_calendar = ExternalCalendar.objects.get(pk=response.data['id'])
-        self.assertEqual(external_calendar.title, 'some title')
-        self.assertEqual(external_calendar.url, 'http://go.com')
-        self.assertEqual(external_calendar.color, '#7bd148')
-        self.assertEqual(external_calendar.shown_on_calendar, False)
-        self.assertEqual(external_calendar.user.pk, user.pk)
+        data.update({'user': user.pk})
+        externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
     def test_get_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        externalcalendarhelper.given_external_calendar_exists(user, 'test2')
 
         # WHEN
         response = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
-        self.assertEqual(external_calendar.title, response.data['title'])
-        self.assertEqual(external_calendar.url, response.data['url'])
-        self.assertEqual(external_calendar.color, response.data['color'])
-        self.assertEqual(external_calendar.shown_on_calendar, response.data['shown_on_calendar'])
-        self.assertEqual(external_calendar.user.pk, response.data['user'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
-    def test_put_externalcalendar_by_id(self):
+    def test_update_externalcalendar_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
@@ -102,12 +97,12 @@ class TestCaseExternalCalendar(TestCase):
                                    content_type='application/json')
 
         # THEN
-        self.assertEqual(response.data['title'], 'new title')
-        self.assertEqual(response.data['url'], external_calendar.url)
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], data['title'])
+        self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
         external_calendar = ExternalCalendar.objects.get(id=external_calendar.id)
-        self.assertEqual(external_calendar.title, response.data['title'])
-        self.assertFalse(external_calendar.shown_on_calendar, response.data['shown_on_calendar'])
+        self.assertEqual(external_calendar.title, data['title'])
+        self.assertEqual(external_calendar.shown_on_calendar, data['shown_on_calendar'])
 
     def test_delete_externalcalendar_by_id(self):
         # GIVEN
@@ -116,9 +111,10 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(ExternalCalendar.objects.filter(pk=external_calendar.pk).exists())
         self.assertEqual(ExternalCalendar.objects.count(), 1)
 

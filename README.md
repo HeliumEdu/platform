@@ -3,7 +3,7 @@
 # Platform Project
 
 ## Prerequisites
-* Python (>= 2.7)
+* Python (>= 2.7, >= 3.6)
 * Pip (>= 9.0)
 * MySQL (>= 5.7)
 * Redis (>= 3.2)

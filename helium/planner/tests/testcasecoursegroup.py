@@ -1,11 +1,9 @@
 """
 Tests for CourseGroup interaction.
 """
-import datetime
 import json
 import uuid
 
-from dateutil import parser
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -44,9 +42,11 @@ class TestCaseCourseGroup(TestCase):
         response = self.client.get(reverse('api_planner_coursegroups_lc'))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(CourseGroup.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    def test_post_coursegroup(self):
+    def test_create_coursegroup(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
@@ -64,11 +64,8 @@ class TestCaseCourseGroup(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CourseGroup.objects.count(), 1)
         course_group = CourseGroup.objects.get(pk=response.data['id'])
-        self.assertEqual(course_group.title, 'some title')
-        self.assertEqual(course_group.start_date, datetime.date(2015, 3, 5))
-        self.assertEqual(course_group.end_date, datetime.date(2015, 7, 9))
-        self.assertEqual(course_group.shown_on_calendar, False)
-        self.assertEqual(course_group.user.pk, user.pk)
+        data.update({'user': user.pk})
+        coursegrouphelper.verify_course_group_matches_data(self, course_group, data)
 
     def test_get_coursegroup_by_id(self):
         # GIVEN
@@ -77,21 +74,15 @@ class TestCaseCourseGroup(TestCase):
         course_group.average_grade = 87.66
         course_group.trend = 0.65
         course_group.save()
-        coursegrouphelper.given_course_group_exists(user, 'test2')
 
         # WHEN
         response = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
-        self.assertEqual(course_group.title, response.data['title'])
-        self.assertEqual(course_group.start_date, parser.parse(response.data['start_date']).date())
-        self.assertEqual(course_group.end_date, parser.parse(response.data['end_date']).date())
-        self.assertEqual(course_group.shown_on_calendar, response.data['shown_on_calendar'])
-        self.assertEqual(course_group.average_grade, float(response.data['average_grade']))
-        self.assertEqual(course_group.trend, response.data['trend'])
-        self.assertEqual(course_group.user.pk, response.data['user'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
 
-    def test_put_coursegroup_by_id(self):
+    def test_update_coursegroup_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -111,24 +102,25 @@ class TestCaseCourseGroup(TestCase):
                                    content_type='application/json')
 
         # THEN
-        self.assertEqual(response.data['title'], 'new title')
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], data['title'])
+        self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
         course_group = CourseGroup.objects.get(pk=course_group.pk)
-        self.assertEqual(course_group.title, response.data['title'])
-        self.assertFalse(course_group.shown_on_calendar, response.data['shown_on_calendar'])
+        self.assertEqual(course_group.title, data['title'])
+        self.assertEqual(course_group.shown_on_calendar, data['shown_on_calendar'])
 
     def test_delete_coursegroup_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        coursegrouphelper.given_course_group_exists(user)
 
         # WHEN
-        self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response = self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(CourseGroup.objects.filter(pk=course_group.pk).exists())
-        self.assertEqual(CourseGroup.objects.count(), 1)
+        self.assertEqual(CourseGroup.objects.count(), 0)
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
@@ -144,7 +136,7 @@ class TestCaseCourseGroup(TestCase):
         self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(CourseGroup.objects.count(), 1)
 
-    def test_put_read_only_field_does_nothing(self):
+    def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -159,6 +151,6 @@ class TestCaseCourseGroup(TestCase):
         response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
 
         # THEN
-        course_group = CourseGroup.objects.get(id=user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_group = CourseGroup.objects.get(id=user.id)
         self.assertEqual(course_group.private_slug, private_slug)

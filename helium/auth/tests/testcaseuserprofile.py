@@ -2,7 +2,6 @@
 Tests for UserProfile interaction.
 """
 import json
-import uuid
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -10,7 +9,6 @@ from django.urls import reverse
 from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
-from helium.auth.utils.userutils import generate_phone_verification_code
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -36,6 +34,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.get(reverse('api_user_profile'))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('phone_verification_code', response.data)
         self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
@@ -70,6 +69,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
         self.assertEqual(response.data['phone_changing'], '5555555')
         user = get_user_model().objects.get(id=user.id)
@@ -91,6 +91,7 @@ class TestCaseUserProfile(TestCase):
         response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_changing'])
         user = get_user_model().objects.get(id=user.id)

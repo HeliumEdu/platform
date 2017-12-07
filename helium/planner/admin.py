@@ -51,8 +51,8 @@ class CourseAdmin(ModelAdmin):
     get_course_group.admin_order_field = 'course_group__title'
 
     def get_user(self, obj):
-        if obj.course_group.user:
-            return obj.course_group.user.get_username()
+        if obj.get_user():
+            return obj.get_user().get_username()
         else:
             return ''
 

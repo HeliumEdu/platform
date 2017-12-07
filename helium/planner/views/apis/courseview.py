@@ -53,7 +53,7 @@ class CourseGroupCoursesApiLCView(APIView):
         serializer = CourseSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save(course_group=course_group_id)
+            serializer.save(course_group_id=course_group_id)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
