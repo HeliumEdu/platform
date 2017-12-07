@@ -29,7 +29,7 @@ class User(AbstractBaseUser, BaseModel):
 
     email = models.EmailField(unique=True, error_messages={'unique': "Sorry, that email is already in use."})
 
-    email_changing = models.EmailField(max_length=255, blank=True, null=True)
+    email_changing = models.EmailField(blank=True, null=True)
 
     is_active = models.BooleanField(default=False)
 
