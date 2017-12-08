@@ -94,7 +94,6 @@ class TestCaseCourse(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Course.objects.count(), 1)
         course = Course.objects.get(pk=response.data['id'])
-        data.update({'course_group': course_group.pk})
         coursehelper.verify_course_matches_data(self, course, response.data)
 
     def test_get_course_by_id(self):
@@ -252,7 +251,7 @@ class TestCaseCourse(TestCase):
             'trend': 1.5,
             'private_slug': 'new_slug',
             'course_group': course_group1.pk,
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'credits': course.credits,
             'start_date': course.start_date.isoformat(),
             'end_date': course.end_date.isoformat()

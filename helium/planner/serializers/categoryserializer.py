@@ -19,4 +19,4 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = (
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',)
-        read_only_fields = ('average_grade', 'trend', 'course',)
+        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course',)

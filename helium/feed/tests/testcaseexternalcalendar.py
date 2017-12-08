@@ -89,7 +89,7 @@ class TestCaseExternalCalendar(TestCase):
         data = {
             'title': 'new title',
             'shown_on_calendar': False,
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'url': external_calendar.url
         }
         response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
@@ -146,7 +146,7 @@ class TestCaseExternalCalendar(TestCase):
         # WHEN
         data = {
             'user': user1.pk,
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'url': external_calendar.url
         }
         response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),

@@ -92,7 +92,7 @@ class TestCaseCourseGroup(TestCase):
         data = {
             'title': 'new title',
             'shown_on_calendar': False,
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
         }
@@ -154,7 +154,7 @@ class TestCaseCourseGroup(TestCase):
             'trend': 1.5,
             'private_slug': 'new_slug',
             'user': user1.pk,
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
         }
