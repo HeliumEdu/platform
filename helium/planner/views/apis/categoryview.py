@@ -48,7 +48,7 @@ class CourseGroupCourseCategoriesApiLCView(APIView):
     def check_course_permission(self, request, course_id):
         if not Course.objects.filter(pk=course_id).exists():
             raise NotFound('Course not found.')
-        if not Course.objects.filter(pk=course_id, user_id=request.user.pk).exists():
+        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
             self.permission_denied(request, 'You do not have permission to perform this action.')
 
     def get(self, request, course_group_id, course_id, format=None):

@@ -49,7 +49,7 @@ class TestCaseUser(TestCase):
         # WHEN
         data = {
             'username': 'new_username',
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'email': user.email
         }
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
@@ -73,7 +73,7 @@ class TestCaseUser(TestCase):
         # WHEN
         data = {
             'email': 'new@email.com',
-            # Intentionally NOT changing this value
+            # Intentionally NOT changing these value
             'username': user.username
         }
         response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
