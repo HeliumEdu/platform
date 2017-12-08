@@ -236,8 +236,8 @@ class TestCaseUser(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
-        self.assertFalse(UserSettings.objects.filter(user__id=user.pk).exists())
-        self.assertFalse(UserProfile.objects.filter(user__id=user.pk).exists())
+        self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
+        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_fails_bad_request(self):
         # GIVEN

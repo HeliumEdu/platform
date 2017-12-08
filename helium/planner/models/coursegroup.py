@@ -29,6 +29,9 @@ class CourseGroup(BasePlannerModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ('start_date',)
+
     def __unicode__(self):
         return str('{} ({})'.format(self.title, self.get_user().get_username()))
 

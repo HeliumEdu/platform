@@ -5,6 +5,8 @@ Planner URLs.
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
+from helium.planner.views.apis.categoryview import UserCategoriesApiListView, CourseGroupCourseCategoriesApiLCView, \
+    CourseGroupCourseCategoriesApiDetailView
 from helium.planner.views.apis.coursegroupview import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupview import CourseGroupsApiLCView
 from helium.planner.views.apis.courseview import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiLCView, \
@@ -33,7 +35,14 @@ urlpatterns = [
     url(r'^api/planner/courses/$', UserCoursesApiListView.as_view(), name='api_planner_courses_list'),
     url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/$', CourseGroupCoursesApiLCView.as_view(),
         name='api_planner_coursegroups_courses_lc'),
-    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<pk>[0-9]+)/$',
-        CourseGroupCoursesApiDetailView.as_view(),
+    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<pk>[0-9]+)/$', CourseGroupCoursesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_detail'),
+
+    url(r'^api/planner/categories/$', UserCategoriesApiListView.as_view(), name='api_planner_categories_list'),
+    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/$',
+        CourseGroupCourseCategoriesApiLCView.as_view(),
+        name='api_planner_coursegroups_courses_categories_lc'),
+    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)$',
+        CourseGroupCourseCategoriesApiDetailView.as_view(),
+        name='api_planner_coursegroups_courses_categories_detail'),
 ]

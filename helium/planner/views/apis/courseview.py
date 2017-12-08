@@ -30,7 +30,7 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group__user__id=user.pk)
+        return Course.objects.filter(course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

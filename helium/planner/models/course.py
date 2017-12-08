@@ -84,6 +84,9 @@ class Course(BasePlannerModel):
 
     course_group = models.ForeignKey('CourseGroup', related_name='courses', on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ('start_date',)
+
     def __unicode__(self):
         return str('{} ({})'.format(self.title, self.get_user().get_username()))
 
