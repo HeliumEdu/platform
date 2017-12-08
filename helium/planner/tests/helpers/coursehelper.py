@@ -45,60 +45,34 @@ def verify_course_matches_data(test_case, course, data):
     test_case.assertEqual(course.teacher_email, data['teacher_email'])
     test_case.assertEqual(course.start_date, parser.parse(data['start_date']).date())
     test_case.assertEqual(course.end_date, parser.parse(data['end_date']).date())
-    test_case.assertEqual(course.sun_start_time,
-                          parser.parse(data['sun_start_time']).time() if data['sun_start_time'] else None)
-    test_case.assertEqual(course.sun_end_time,
-                          parser.parse(data['sun_end_time']).time() if data['sun_end_time'] else None)
-    test_case.assertEqual(course.mon_start_time,
-                          parser.parse(data['mon_start_time']).time() if data['mon_start_time'] else None)
-    test_case.assertEqual(course.mon_end_time,
-                          parser.parse(data['mon_end_time']).time() if data['mon_end_time'] else None)
-    test_case.assertEqual(course.tue_start_time,
-                          parser.parse(data['tue_start_time']).time() if data['tue_start_time'] else None)
-    test_case.assertEqual(course.tue_end_time,
-                          parser.parse(data['tue_end_time']).time() if data['tue_end_time'] else None)
-    test_case.assertEqual(course.wed_start_time,
-                          parser.parse(data['wed_start_time']).time() if data['wed_start_time'] else None)
-    test_case.assertEqual(course.wed_end_time,
-                          parser.parse(data['wed_end_time']).time() if data['wed_end_time'] else None)
-    test_case.assertEqual(course.thu_start_time,
-                          parser.parse(data['thu_start_time']).time() if data['thu_start_time'] else None)
-    test_case.assertEqual(course.thu_end_time,
-                          parser.parse(data['thu_end_time']).time() if data['thu_end_time'] else None)
-    test_case.assertEqual(course.fri_start_time,
-                          parser.parse(data['fri_start_time']).time() if data['fri_start_time'] else None)
-    test_case.assertEqual(course.fri_end_time,
-                          parser.parse(data['fri_end_time']).time() if data['fri_end_time'] else None)
-    test_case.assertEqual(course.sat_start_time,
-                          parser.parse(data['sat_start_time']).time() if data['sat_start_time'] else None)
-    test_case.assertEqual(course.sat_end_time,
-                          parser.parse(data['sat_end_time']).time() if data['sat_end_time'] else None)
-    test_case.assertEqual(course.sun_start_time_alt,
-                          parser.parse(data['sun_start_time_alt']).time() if data['sun_start_time_alt'] else None)
-    test_case.assertEqual(course.sun_end_time_alt,
-                          parser.parse(data['sun_end_time_alt']).time() if data['sun_end_time_alt'] else None)
-    test_case.assertEqual(course.mon_start_time_alt,
-                          parser.parse(data['mon_start_time_alt']).time() if data['mon_start_time_alt'] else None)
-    test_case.assertEqual(course.mon_end_time_alt,
-                          parser.parse(data['mon_end_time_alt']).time() if data['mon_end_time_alt'] else None)
-    test_case.assertEqual(course.tue_start_time_alt,
-                          parser.parse(data['tue_start_time_alt']).time() if data['tue_start_time_alt'] else None)
-    test_case.assertEqual(course.tue_end_time_alt,
-                          parser.parse(data['tue_end_time_alt']).time() if data['tue_end_time_alt'] else None)
-    test_case.assertEqual(course.wed_start_time_alt,
-                          parser.parse(data['wed_start_time_alt']).time() if data['wed_start_time_alt'] else None)
-    test_case.assertEqual(course.wed_end_time_alt,
-                          parser.parse(data['wed_end_time_alt']).time() if data['wed_end_time_alt'] else None)
-    test_case.assertEqual(course.thu_start_time_alt,
-                          parser.parse(data['thu_start_time_alt']).time() if data['thu_start_time_alt'] else None)
-    test_case.assertEqual(course.thu_end_time_alt,
-                          parser.parse(data['thu_end_time_alt']).time() if data['thu_end_time_alt'] else None)
-    test_case.assertEqual(course.fri_start_time_alt,
-                          parser.parse(data['fri_start_time_alt']).time() if data['fri_start_time_alt'] else None)
-    test_case.assertEqual(course.fri_end_time_alt,
-                          parser.parse(data['fri_end_time_alt']).time() if data['fri_end_time_alt'] else None)
-    test_case.assertEqual(course.sat_start_time_alt,
-                          parser.parse(data['sat_start_time_alt']).time() if data['sat_start_time_alt'] else None)
-    test_case.assertEqual(course.sat_end_time_alt,
-                          parser.parse(data['sat_end_time_alt']).time() if data['sat_end_time_alt'] else None)
+    test_case.assertEqual(course.days_of_week, data['days_of_week'])
+    test_case.assertEqual(course.sun_start_time, parser.parse(data['sun_start_time']).time())
+    test_case.assertEqual(course.sun_end_time, parser.parse(data['sun_end_time']).time())
+    test_case.assertEqual(course.mon_start_time, parser.parse(data['mon_start_time']).time())
+    test_case.assertEqual(course.mon_end_time, parser.parse(data['mon_end_time']).time())
+    test_case.assertEqual(course.tue_start_time, parser.parse(data['tue_start_time']).time())
+    test_case.assertEqual(course.tue_end_time, parser.parse(data['tue_end_time']).time())
+    test_case.assertEqual(course.wed_start_time, parser.parse(data['wed_start_time']).time())
+    test_case.assertEqual(course.wed_end_time, parser.parse(data['wed_end_time']).time())
+    test_case.assertEqual(course.thu_start_time, parser.parse(data['thu_start_time']).time())
+    test_case.assertEqual(course.thu_end_time, parser.parse(data['thu_end_time']).time())
+    test_case.assertEqual(course.fri_start_time, parser.parse(data['fri_start_time']).time())
+    test_case.assertEqual(course.fri_end_time, parser.parse(data['fri_end_time']).time())
+    test_case.assertEqual(course.sat_start_time, parser.parse(data['sat_start_time']).time())
+    test_case.assertEqual(course.sat_end_time, parser.parse(data['sat_end_time']).time())
+    test_case.assertEqual(course.days_of_week_alt, data['days_of_week_alt'])
+    test_case.assertEqual(course.sun_start_time_alt, parser.parse(data['sun_start_time_alt']).time())
+    test_case.assertEqual(course.sun_end_time_alt,parser.parse(data['sun_end_time_alt']).time())
+    test_case.assertEqual(course.mon_start_time_alt, parser.parse(data['mon_start_time_alt']).time())
+    test_case.assertEqual(course.mon_end_time_alt, parser.parse(data['mon_end_time_alt']).time())
+    test_case.assertEqual(course.tue_start_time_alt, parser.parse(data['tue_start_time_alt']).time())
+    test_case.assertEqual(course.tue_end_time_alt, parser.parse(data['tue_end_time_alt']).time())
+    test_case.assertEqual(course.wed_start_time_alt, parser.parse(data['wed_start_time_alt']).time())
+    test_case.assertEqual(course.wed_end_time_alt, parser.parse(data['wed_end_time_alt']).time())
+    test_case.assertEqual(course.thu_start_time_alt, parser.parse(data['thu_start_time_alt']).time())
+    test_case.assertEqual(course.thu_end_time_alt, parser.parse(data['thu_end_time_alt']).time())
+    test_case.assertEqual(course.fri_start_time_alt, parser.parse(data['fri_start_time_alt']).time())
+    test_case.assertEqual(course.fri_end_time_alt, parser.parse(data['fri_end_time_alt']).time())
+    test_case.assertEqual(course.sat_start_time_alt, parser.parse(data['sat_start_time_alt']).time())
+    test_case.assertEqual(course.sat_end_time_alt, parser.parse(data['sat_end_time_alt']).time())
     test_case.assertEqual(course.course_group.pk, int(data['course_group']))
