@@ -1,9 +1,9 @@
 """
 Course model.
 """
+import datetime
 from django.core import validators
 from django.db import models
-from django.utils import timezone
 
 from helium.common import enums
 from helium.planner.models.base import BasePlannerModel
@@ -40,35 +40,47 @@ class Course(BasePlannerModel):
     # TODO: these fields will be abstracted into a CourseSchedule model after the open source migration is finished
     start_date = models.DateField()
     end_date = models.DateField()
-    sun_start_time = models.TimeField(blank=True, null=True)
-    sun_end_time = models.TimeField(blank=True, null=True)
-    mon_start_time = models.TimeField(blank=True, null=True)
-    mon_end_time = models.TimeField(blank=True, null=True)
-    tue_start_time = models.TimeField(blank=True, null=True)
-    tue_end_time = models.TimeField(blank=True, null=True)
-    wed_start_time = models.TimeField(blank=True, null=True)
-    wed_end_time = models.TimeField(blank=True, null=True)
-    thu_start_time = models.TimeField(blank=True, null=True)
-    thu_end_time = models.TimeField(blank=True, null=True)
-    fri_start_time = models.TimeField(blank=True, null=True)
-    fri_end_time = models.TimeField(blank=True, null=True)
-    sat_start_time = models.TimeField(blank=True, null=True)
-    sat_end_time = models.TimeField(blank=True, null=True)
+    days_of_week = models.CharField(max_length=7, default='0000000', validators=[
+        validators.RegexValidator(r'^[0-1]+$',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'invalid'),
+        validators.MinLengthValidator(7,
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
+    sun_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    sun_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    mon_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    mon_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    tue_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    tue_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    wed_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    wed_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    thu_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    thu_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    fri_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    fri_end_time = models.TimeField(default=datetime.time(12, 0, 0))
+    sat_start_time = models.TimeField(default=datetime.time(12, 0, 0))
+    sat_end_time = models.TimeField(default=datetime.time(12, 0, 0))
     # TODO: when CourseSchedule is created, it should simply be a foreign key relationship so "_alt" is no longer needed and any number of alt schedules can exist
-    sun_start_time_alt = models.TimeField(blank=True, null=True)
-    sun_end_time_alt = models.TimeField(blank=True, null=True)
-    mon_start_time_alt = models.TimeField(blank=True, null=True)
-    mon_end_time_alt = models.TimeField(blank=True, null=True)
-    tue_start_time_alt = models.TimeField(blank=True, null=True)
-    tue_end_time_alt = models.TimeField(blank=True, null=True)
-    wed_start_time_alt = models.TimeField(blank=True, null=True)
-    wed_end_time_alt = models.TimeField(blank=True, null=True)
-    thu_start_time_alt = models.TimeField(blank=True, null=True)
-    thu_end_time_alt = models.TimeField(blank=True, null=True)
-    fri_start_time_alt = models.TimeField(blank=True, null=True)
-    fri_end_time_alt = models.TimeField(blank=True, null=True)
-    sat_start_time_alt = models.TimeField(blank=True, null=True)
-    sat_end_time_alt = models.TimeField(blank=True, null=True)
+    days_of_week_alt = models.CharField(max_length=7, default='0000000', validators=[
+        validators.RegexValidator(r'^[0-1]+$',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'invalid'),
+        validators.MinLengthValidator(7,
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
+    sun_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    sun_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    mon_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    mon_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    tue_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    tue_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    wed_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    wed_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    thu_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    thu_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    fri_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    fri_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    sat_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
+    sat_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
 
     course_group = models.ForeignKey('CourseGroup', related_name='courses', on_delete=models.CASCADE)
 

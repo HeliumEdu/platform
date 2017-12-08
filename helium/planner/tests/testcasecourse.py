@@ -74,12 +74,14 @@ class TestCaseCourse(TestCase):
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
             'end_date': '2015-07-09',
+            'days_of_week': '0101010',
             'mon_start_time': '14:30:00',
             'mon_end_time': '15:30:00',
             'wed_start_time': '14:30:00',
             'wed_end_time': '15:30:00',
             'fri_start_time': '14:30:00',
             'fri_end_time': '15:30:00',
+            'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
             'wed_end_time_alt': '19:30:00'
         }
@@ -130,12 +132,14 @@ class TestCaseCourse(TestCase):
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
             'end_date': '2015-07-09',
+            'days_of_week': '0101010',
             'mon_start_time': '14:30:00',
             'mon_end_time': '15:30:00',
             'wed_start_time': '14:30:00',
             'wed_end_time': '15:30:00',
             'fri_start_time': '14:30:00',
             'fri_end_time': '15:30:00',
+            'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
             'wed_end_time_alt': '19:30:00'
         }
@@ -157,12 +161,14 @@ class TestCaseCourse(TestCase):
         self.assertEqual(response.data['teacher_email'], data['teacher_email'])
         self.assertEqual(response.data['start_date'], data['start_date'])
         self.assertEqual(response.data['end_date'], data['end_date'])
+        self.assertEqual(response.data['days_of_week'], data['days_of_week'])
         self.assertEqual(response.data['mon_start_time'], data['mon_start_time'])
         self.assertEqual(response.data['mon_end_time'], data['mon_end_time'])
         self.assertEqual(response.data['wed_start_time'], data['wed_start_time'])
         self.assertEqual(response.data['wed_end_time'], data['wed_end_time'])
         self.assertEqual(response.data['fri_start_time'], data['fri_start_time'])
         self.assertEqual(response.data['fri_end_time'], data['fri_end_time'])
+        self.assertEqual(response.data['days_of_week_alt'], data['days_of_week_alt'])
         self.assertEqual(response.data['wed_start_time_alt'], data['wed_start_time_alt'])
         self.assertEqual(response.data['wed_end_time_alt'], data['wed_end_time_alt'])
         course_group = Course.objects.get(pk=course.pk)
@@ -176,12 +182,14 @@ class TestCaseCourse(TestCase):
         self.assertEqual(course_group.teacher_email, response.data['teacher_email'])
         self.assertEqual(course_group.start_date, parser.parse(response.data['start_date']).date())
         self.assertEqual(course_group.end_date, parser.parse(response.data['end_date']).date())
+        self.assertEqual(course_group.days_of_week, response.data['days_of_week'])
         self.assertEqual(course_group.mon_start_time, parser.parse(response.data['mon_start_time']).time())
         self.assertEqual(course_group.mon_end_time, parser.parse(response.data['mon_end_time']).time())
         self.assertEqual(course_group.wed_start_time, parser.parse(response.data['wed_start_time']).time())
         self.assertEqual(course_group.wed_end_time, parser.parse(response.data['wed_end_time']).time())
         self.assertEqual(course_group.fri_start_time, parser.parse(response.data['fri_start_time']).time())
         self.assertEqual(course_group.fri_end_time, parser.parse(response.data['fri_end_time']).time())
+        self.assertEqual(course_group.days_of_week_alt, response.data['days_of_week_alt'])
         self.assertEqual(course_group.wed_start_time_alt, parser.parse(response.data['wed_start_time_alt']).time())
         self.assertEqual(course_group.wed_end_time_alt, parser.parse(response.data['wed_end_time_alt']).time())
 
