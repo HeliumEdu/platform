@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
 
-# Platform Project
+# Helium Platform Project
 
 ## Prerequisites
 * Python (>= 2.7, >= 3.6)
@@ -28,7 +28,7 @@ source .venv/bin/activate
 ```
 
 ## Getting Started
-The Platform is developed on [Django](https://www.djangoproject.com/). To run the Python/Django Platform build, execute:
+The Platform is developed on [Django](https://www.djangoproject.com/). To setup the Python/Django Platform build environment, execute:
 
 ```
 make build
@@ -40,18 +40,22 @@ To ensure the database is in sync with the latest schema, database migrations ar
 make migrate
 ```
 
-Once migrations have been run, you can create an admin user.
+Once migrations have been run, you can create a super user, which is a standard user that also has access to the /admin site.
 
 ```
 python manage.py createsuperuser
 ```
 
-Before commits are made, be sure to run tests. Tests can be run using the first command below, and code coverage can be analyzed using the
-second.
+Before commits are made, be sure to run tests.
  
 ```
-python manage.py test
-coverage run --source='.' manage.py test && coverage report
+make test
+```
+
+To check code coverage, wrap the above command like so:
+
+```
+make test-coverage
 ```
 
 ### Fixtures
