@@ -2,7 +2,6 @@
 Tests for CourseGroup interaction.
 """
 import json
-import uuid
 
 from django.test import TestCase
 from django.urls import reverse
@@ -129,10 +128,14 @@ class TestCaseCourseGroup(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user1)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response1 = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response2 = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response3 = self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(CourseGroup.objects.count(), 1)
 
@@ -140,17 +143,25 @@ class TestCaseCourseGroup(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        private_slug = str(uuid.uuid4())
-        course_group.private_slug = private_slug
-        course_group.save()
+        average_grade = course_group.average_grade
+        trend = course_group.trend
+        private_slug = course_group.private_slug
 
         # WHEN
         data = {
-            'private_slug': 'new_slug'
+            'average_grade': 23,
+            'trend': 1.5,
+            'private_slug': 'new_slug',
+            # Intentionally NOT changing this value
+            'start_date': course_group.start_date.isoformat(),
+            'end_date': course_group.end_date.isoformat()
         }
-        response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
+                                   json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         course_group = CourseGroup.objects.get(id=user.id)
+        self.assertEqual(course_group.average_grade, average_grade)
+        self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)

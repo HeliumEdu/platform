@@ -77,6 +77,7 @@ class TestCaseUserAuthentication(TestCase):
                                      'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
 
         # THEN
+        userhelper.verify_user_not_logged_in(self)
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
         self.assertEqual(user.username, 'my_test_user')
