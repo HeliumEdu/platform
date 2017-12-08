@@ -220,8 +220,8 @@ class TestCaseCourse(TestCase):
                                                kwargs={'course_group_id': course_group.pk, 'pk': course.pk}))
 
         # THEN
-        self.assertEqual(len(response1.data), 0)
-        self.assertEqual(response2.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response4.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response5.status_code, status.HTTP_403_FORBIDDEN)
@@ -231,8 +231,9 @@ class TestCaseCourse(TestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
+        course_group1 = coursegrouphelper.given_course_group_exists(user)
+        course_group2 = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group2)
         current_grade = course.current_grade
         trend = course.trend
         private_slug = course.private_slug
@@ -242,18 +243,20 @@ class TestCaseCourse(TestCase):
             'current_grade': 23,
             'trend': 1.5,
             'private_slug': 'new_slug',
+            'course_group': course_group1.pk,
             # Intentionally NOT changing this value
             'credits': course.credits,
             'start_date': course.start_date.isoformat(),
             'end_date': course.end_date.isoformat()
         }
         response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
-                                           kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
+                                           kwargs={'course_group_id': course_group2.pk, 'pk': course.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course_group = Course.objects.get(id=user.id)
-        self.assertEqual(course_group.current_grade, current_grade)
-        self.assertEqual(course_group.trend, trend)
-        self.assertEqual(course_group.private_slug, private_slug)
+        course = Course.objects.get(id=course.id)
+        self.assertEqual(course.current_grade, current_grade)
+        self.assertEqual(course.trend, trend)
+        self.assertEqual(course.private_slug, private_slug)
+        self.assertEqual(course.course_group.pk, course_group2.pk)
