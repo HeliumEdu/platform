@@ -39,7 +39,15 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
 class CourseGroupCoursesApiLCView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def check_course_group_permission(self, request, course_group_id):
+        if not CourseGroup.objects.filter(pk=course_group_id).exists():
+            raise NotFound('CourseGroup not found.')
+        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
+            self.permission_denied(request, 'You do not have permission to perform this action.')
+
     def get(self, request, course_group_id, format=None):
+        self.check_course_group_permission(request, course_group_id)
+
         courses = Course.objects.filter(course_group_id=course_group_id, course_group__user_id=request.user.pk)
 
         serializer = CourseSerializer(courses, many=True)
@@ -47,8 +55,7 @@ class CourseGroupCoursesApiLCView(APIView):
         return Response(serializer.data)
 
     def post(self, request, course_group_id, format=None):
-        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
-            raise NotFound('CourseGroup not found.')
+        self.check_course_group_permission(request, course_group_id)
 
         serializer = CourseSerializer(data=request.data)
 

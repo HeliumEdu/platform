@@ -127,7 +127,8 @@ class TestCaseExternalCalendar(TestCase):
         # WHEN
         response1 = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
         response2 = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
-        response3 = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response3 = self.client.delete(
+            reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
@@ -135,3 +136,22 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(ExternalCalendar.objects.filter(pk=external_calendar.pk).exists())
         self.assertEqual(ExternalCalendar.objects.count(), 1)
+
+    def test_update_read_only_field_does_nothing(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists(username='user1')
+        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user2)
+
+        # WHEN
+        data = {
+            'user': user1.pk,
+            # Intentionally NOT changing this value
+            'url': external_calendar.url
+        }
+        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+                                   json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(external_calendar.user.pk, user2.pk)

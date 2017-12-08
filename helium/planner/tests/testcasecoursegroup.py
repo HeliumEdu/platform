@@ -141,8 +141,9 @@ class TestCaseCourseGroup(TestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
+        user1 = userhelper.given_a_user_exists(username='user1')
+        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user2)
         average_grade = course_group.average_grade
         trend = course_group.trend
         private_slug = course_group.private_slug
@@ -152,6 +153,7 @@ class TestCaseCourseGroup(TestCase):
             'average_grade': 23,
             'trend': 1.5,
             'private_slug': 'new_slug',
+            'user': user1.pk,
             # Intentionally NOT changing this value
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
@@ -161,7 +163,8 @@ class TestCaseCourseGroup(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course_group = CourseGroup.objects.get(id=user.id)
+        course_group = CourseGroup.objects.get(id=course_group.id)
         self.assertEqual(course_group.average_grade, average_grade)
         self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)
+        self.assertEqual(course_group.get_user().pk, user2.pk)
