@@ -100,6 +100,7 @@ class TestCaseUser(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        userhelper.verify_user_logged_in(self)
         user = get_user_model().objects.get(id=user.id)
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
@@ -119,6 +120,7 @@ class TestCaseUser(TestCase):
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user = get_user_model().objects.get(id=user.id)
+        userhelper.verify_user_logged_in(self)
         self.assertTrue(user.check_password('new_pass_1!'))
 
     def test_password_change_fails_missing_old_new_pass(self):

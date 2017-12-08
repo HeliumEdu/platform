@@ -4,7 +4,7 @@ Service for processing authentication-related requests.
 
 import logging
 
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.core.urlresolvers import reverse
 from statsd.defaults.django import statsd
 
@@ -61,12 +61,10 @@ def process_verification(request, username, verification_code):
             tasks.send_registration_email.delay(user.email, request.get_host())
 
             # Now that the user is registered, log them it automatically and redirect them to the authenticated landing page
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            user.backend = 'django.contrib.auth.backends.AllowAllUsersModelBackend'
             login(request, user)
 
-            # FIXME: tests are passing, but when going through this workflow in the app, login is not done at this step
-
-            logger.info('Auto-logged in user {}'.format(username))
+            logger.info('Completed registration and verification for user {}'.format(username))
 
             redirect = reverse('planner')
         elif user.email_changing:
@@ -74,7 +72,11 @@ def process_verification(request, username, verification_code):
             user.email_changing = None
             user.save()
 
-            logger.info('Reverified email for user {}'.format(username))
+            logger.info('Verified new email for user {}'.format(username))
+
+            # Now that the email is verified, log the user is automatically and redirect them to the settings page
+            user.backend = 'django.contrib.auth.backends.AllowAllUsersModelBackend'
+            login(request, user)
 
             redirect = reverse('settings')
         else:

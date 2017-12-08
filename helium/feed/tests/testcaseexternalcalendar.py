@@ -125,9 +125,13 @@ class TestCaseExternalCalendar(TestCase):
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
         # WHEN
-        response = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response1 = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response2 = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response3 = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(ExternalCalendar.objects.filter(pk=external_calendar.pk).exists())
         self.assertEqual(ExternalCalendar.objects.count(), 1)
