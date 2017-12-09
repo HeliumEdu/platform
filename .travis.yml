@@ -4,5 +4,6 @@ python:
   - "3.6"
 install:
   - easy_install distribute
-  - make install
+  - make env
+  - pip install -r requirements.txt
 script: make test
