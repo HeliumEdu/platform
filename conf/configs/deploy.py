@@ -189,7 +189,7 @@ else:
 
     MEDIA_URL = "https://{}/media/".format(AWS_S3_CUSTOM_DOMAIN)
 
-    # Pipelines
+    # Storages
     INSTALLED_APPS += (
         'storages',
     )

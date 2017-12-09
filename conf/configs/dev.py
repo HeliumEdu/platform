@@ -86,25 +86,14 @@ LOGGING = {
 warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", RuntimeWarning,
                         r'django\.db\.models\.fields')
 
-# Cache
-
-if os.environ.get('USE_IN_MEMORY_CACHE', 'True') != 'True':
-    SESSION_ENGINE = deploy.SESSION_ENGINE
-    SESSION_CACHE_ALIAS = deploy.SESSION_CACHE_ALIAS
-
-    CACHES = deploy.CACHES
-
 # Database
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-else:
-    DATABASES = deploy.DATABASES
+}
 
 # Static
 
@@ -124,8 +113,5 @@ PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
-if os.environ.get('USE_IN_MEMORY_CACHE', 'True') != 'True':
-    CELERY_BROKER_URL = deploy.CELERY_BROKER_URL
-else:
-    CELERY_TASK_ALWAYS_EAGER = True
-    CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
