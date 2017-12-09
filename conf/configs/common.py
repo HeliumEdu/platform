@@ -124,6 +124,8 @@ USE_TZ = True
 
 # Email settings
 
+PROJECT_DISABLE_EMAILS = os.environ.get('PROJECT_DISABLE_EMAILS', 'False') == 'True'
+
 ADMIN_EMAIL_ADDRESS = os.environ.get('PROJECT_ADMIN_EMAIL')
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True

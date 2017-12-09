@@ -108,24 +108,19 @@ else:
 
 # Static
 
-if os.environ.get('USE_LOCAL_STATIC', 'True') == 'True':
-    STATIC_URL = '/static/'
-    STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
 
-    # Pipelines
+# Media
 
-    PIPELINE['CSS_COMPRESSOR'] = None
-    PIPELINE['JS_COMPRESSOR'] = None
-else:
-    INSTALLED_APPS += (
-        'storages',
-    )
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-    AWS_S3_CALLING_FORMAT = deploy.AWS_S3_CALLING_FORMAT
-    AWS_STORAGE_BUCKET_NAME = deploy.AWS_STORAGE_BUCKET_NAME
-    AWS_S3_CUSTOM_DOMAIN = deploy.AWS_S3_CUSTOM_DOMAIN
-    STATIC_URL = deploy.STATIC_URL
-    STATICFILES_STORAGE = deploy.STATICFILES_STORAGE
+# Pipelines
+
+PIPELINE['CSS_COMPRESSOR'] = None
+PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
