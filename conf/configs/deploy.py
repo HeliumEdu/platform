@@ -7,8 +7,8 @@ import os
 
 from boto.s3.connection import OrdinaryCallingFormat
 
-from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, \
-    PROJECT_NAME, ADMIN_EMAIL_ADDRESS, DEBUG
+from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PROJECT_NAME, ADMIN_EMAIL_ADDRESS, \
+    DEBUG, PIPELINE
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -19,9 +19,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 # Application definition
 
-INSTALLED_APPS = DEFAULT_INSTALLED_APPS + (
-    'storages',
-)
+INSTALLED_APPS = DEFAULT_INSTALLED_APPS
 
 MIDDLEWARE = DEFAULT_MIDDLEWARE
 
@@ -35,6 +33,10 @@ if DEBUG:
 #############################
 # Django configuration
 #############################
+
+# Project configuration
+
+PROJECT_SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 # Application configuration
 
@@ -158,14 +160,39 @@ DATABASES = {
     }
 }
 
-# Static
+if PROJECT_SERVE_LOCAL:
+    # Static
 
-STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
-AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
-AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
-AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
-STATIC_URL = "https://{}/static/".format(AWS_S3_CUSTOM_DOMAIN)
-MEDIA_URL = "https://{}/media/".format(AWS_S3_CUSTOM_DOMAIN)
+    STATIC_URL = '/static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
+
+    # Media
+
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+    # Pipelines
+
+    PIPELINE['CSS_COMPRESSOR'] = None
+    PIPELINE['JS_COMPRESSOR'] = None
+else:
+    # Static
+
+    STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
+    AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
+    AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
+    STATIC_URL = "https://{}/static/".format(AWS_S3_CUSTOM_DOMAIN)
+
+    # Media
+
+    MEDIA_URL = "https://{}/media/".format(AWS_S3_CUSTOM_DOMAIN)
+
+    # Pipelines
+    INSTALLED_APPS += (
+        'storages',
+    )
 
 # Celery
 

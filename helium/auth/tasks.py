@@ -32,16 +32,24 @@ def send_verification_email(email, username, verification_code, platform_host):
     msg = EmailMultiAlternatives('Verify Your Email Address with Helium', text_content,
                                  settings.DEFAULT_FROM_EMAIL, [email])
     msg.attach_alternative(html_content, "text/html")
-    msg.send()
+
+    if not settings.PROJECT_DISABLE_EMAILS:
+        msg.send()
+    else:
+        logger.warn('Emails disabled. Verification code: {}'.format(verification_code))
 
 
 @app.task
 def send_verification_text(phone, phone_carrier, phone_verification_code):
     logger.info('Sending verification code to {}@{}'.format(phone, phone_carrier))
 
-    send_mail('Verify Your Phone', 'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code),
-              settings.DEFAULT_FROM_EMAIL,
-              ['{}@{}'.format(phone, phone_carrier)])
+    if not settings.PROJECT_DISABLE_EMAILS:
+        send_mail('Verify Your Phone',
+                  'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code),
+                  settings.DEFAULT_FROM_EMAIL,
+                  ['{}@{}'.format(phone, phone_carrier)])
+    else:
+        logger.warn('Emails disabled. Verification code: {}'.format(phone_verification_code))
 
 
 @app.task
@@ -56,7 +64,11 @@ def send_registration_email(email, platform_host):
     msg = EmailMultiAlternatives('Welcome to Helium', text_content,
                                  settings.DEFAULT_FROM_EMAIL, [email], bcc=[settings.ADMIN_EMAIL_ADDRESS])
     msg.attach_alternative(html_content, "text/html")
-    msg.send()
+
+    if not settings.PROJECT_DISABLE_EMAILS:
+        msg.send()
+    else:
+        logger.warn('Emails disabled. Welcome email not sent.')
 
 
 @app.task
@@ -71,4 +83,8 @@ def send_password_reset_email(email, temp_password, platform_host):
     msg = EmailMultiAlternatives('Your Helium Password Has Been Reset', text_content,
                                  settings.DEFAULT_FROM_EMAIL, [email])
     msg.attach_alternative(html_content, "text/html")
-    msg.send()
+
+    if not settings.PROJECT_DISABLE_EMAILS:
+        msg.send()
+    else:
+        logger.warn('Emails disabled. Reset password: {}'.format(temp_password))
