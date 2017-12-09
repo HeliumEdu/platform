@@ -31,7 +31,7 @@ source .venv/bin/activate
 The Platform is developed on [Django](https://www.djangoproject.com/). To setup the Python/Django Platform build environment, execute:
 
 ```
-make build
+make install
 ```
 
 To ensure the database is in sync with the latest schema, database migrations are generated and run with Django. To run migrations, execute:
@@ -75,9 +75,9 @@ prefix.
 * planner
 
 ### Vagrant Development
-To emulate a prod-like environment, use the Vagrant box. It is available and it's setup is described more thoroughly in the 
-[deploy](https://github.com/HeliumEdu/deploy) project. This is the recommended way to develop and test for production as this environment is
-provisioned in the same way other prod-like environments are deployed and interacts with related projects as necessary.
+To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy)
+project. This is the recommended way to develop and test for production as this environment is provisioned in the same way other prod-like
+environments are deployed and interacts with related projects as necessary.
 
 As the Vagrant environment does take a bit more time to setup (even though the setup is largely automated) and can consume more developer
 and system resources, the local development environment described below is the quickest and easiest way to get up and running.
