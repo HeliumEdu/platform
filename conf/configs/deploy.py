@@ -66,7 +66,7 @@ LOGGING = {
         'django_log': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/django.log'.format(PROJECT_NAME.lower()),
+            'filename': '/var/log/helium/django.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -79,7 +79,7 @@ LOGGING = {
         'platform_common_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_common.log'.format(PROJECT_NAME.lower()),
+            'filename': '/var/log/helium/platform_common.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -87,7 +87,7 @@ LOGGING = {
         'platform_auth_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_auth.log'.format(PROJECT_NAME.lower()),
+            'filename': '/var/log/helium/platform_auth.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -95,7 +95,7 @@ LOGGING = {
         'platform_planner_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_planner.log'.format(PROJECT_NAME.lower()),
+            'filename': '/var/log/helium/platform_planner.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -103,7 +103,7 @@ LOGGING = {
         'platform_feed_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_feed.log'.format(PROJECT_NAME.lower()),
+            'filename': '/var/log/helium/platform_feed.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -164,8 +164,8 @@ STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
 AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
 AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
 AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
-STATIC_URL = "https://{}/static".format(AWS_S3_CUSTOM_DOMAIN)
-MEDIA_URL = "https://{}/media".format(AWS_S3_CUSTOM_DOMAIN)
+STATIC_URL = "https://{}/static/".format(AWS_S3_CUSTOM_DOMAIN)
+MEDIA_URL = "https://{}/media/".format(AWS_S3_CUSTOM_DOMAIN)
 
 # Celery
 

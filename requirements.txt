@@ -9,6 +9,7 @@ django-storages==1.5.1
 statsd==3.2.1
 django-dotenv==1.4.1
 boto==2.45.0
+pyOpenSSL==16.2.0
 pycrypto==2.6.1
 requests[security]
 django-pipeline==1.6.13
