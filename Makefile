@@ -6,7 +6,7 @@ env:
 	cp -n .env.example .env | true
 
 install: env
-	pip install -r requirements.txt --user
+	python -m pip install -r requirements.txt --user
 
 build:
 	python manage.py collectstatic --noinput
@@ -21,4 +21,4 @@ test:
 	python manage.py test
 
 test-coverage:
-	coverage run --source='.' manage.py test && coverage report
+	python -m coverage run --source='.' manage.py test && python -m coverage report
