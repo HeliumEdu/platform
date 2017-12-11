@@ -1,6 +1,6 @@
 .PHONY: all env install build build-migrations migrate test test-coverage
 
-all: install build migrate test
+all: env install build migrate test
 
 env:
 	cp -n .env.example .env | true
