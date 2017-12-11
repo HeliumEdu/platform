@@ -9,4 +9,6 @@ This module serves to provide functionality to render and interact with the modu
 supplies, and grades.
 
 ## Configuration Variables
-No variables must be defined in the parent project's configuration for this module.
+The following variables must be defined in the parent project's configuration:
+
+* EMAIL_ADDRESS

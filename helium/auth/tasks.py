@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def send_verification_email(email, username, verification_code, platform_host):
-    if settings.PROJECT_DISABLE_EMAILS:
+    if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Verification code: {}'.format(verification_code))
         return
 
@@ -41,7 +41,7 @@ def send_verification_email(email, username, verification_code, platform_host):
 
 @app.task
 def send_verification_text(phone, phone_carrier, phone_verification_code):
-    if settings.PROJECT_DISABLE_EMAILS:
+    if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Verification code: {}'.format(phone_verification_code))
         return
 
@@ -55,7 +55,7 @@ def send_verification_text(phone, phone_carrier, phone_verification_code):
 
 @app.task
 def send_registration_email(email, platform_host):
-    if settings.PROJECT_DISABLE_EMAILS:
+    if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Welcome email not sent.')
         return
 
@@ -74,7 +74,7 @@ def send_registration_email(email, platform_host):
 
 @app.task
 def send_password_reset_email(email, temp_password, platform_host):
-    if settings.PROJECT_DISABLE_EMAILS:
+    if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Reset password: {}'.format(temp_password))
         return
 

@@ -10,4 +10,4 @@ This module serves to feed external dependencies (for instance, calendars) into 
 available outside of the Platform.
 
 ## Configuration Variables
-No variables must be defined in the parent project's configuration for this module.
+No project variables must be defined in the parent project's configuration for this module to function.

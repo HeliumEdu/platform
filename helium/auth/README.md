@@ -8,4 +8,9 @@ This module defines the User model for the Platform, supporting authentication a
 interact with user details.
 
 ## Configuration Variables
-No variables must be defined in the parent project's configuration for this module.
+The following project variables must be defined in the parent project's configuration for this module to function.
+
+PROJECT_NAME
+PROJECT_EMAIL
+ADMIN_EMAIL_ADDRESS
+DISABLE_EMAILS
