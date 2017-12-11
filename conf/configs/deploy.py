@@ -36,7 +36,7 @@ if DEBUG:
 
 # Project configuration
 
-PROJECT_SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
+SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 # Application configuration
 
@@ -160,7 +160,7 @@ DATABASES = {
     }
 }
 
-if PROJECT_SERVE_LOCAL:
+if SERVE_LOCAL:
     # Static
 
     STATIC_URL = '/static/'
