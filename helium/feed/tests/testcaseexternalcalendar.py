@@ -3,6 +3,7 @@ Tests for ExternalCalendar interaction.
 """
 import json
 
+import mock
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -45,9 +46,13 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    def test_create_externalcalendar(self):
+    @mock.patch('helium.feed.serializers.externalcalendarserializer.urlopen')
+    def test_create_externalcalendar(self, urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        mock_urlopen = mock.MagicMock()
+        mock_urlopen.getcode.return_value = status.HTTP_200_OK
+        urlopen.return_value = mock_urlopen
 
         # WHEN
         data = {

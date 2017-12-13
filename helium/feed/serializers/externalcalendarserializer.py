@@ -31,8 +31,11 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         :param url: the URL to validate
         :return: the validated URL
         """
+        if self.instance and url == self.instance.url:
+            return url
+
         if urlopen(url).getcode() != status.HTTP_200_OK:
-            serializers.ValidationError("The URL is not reachable.")
+            raise serializers.ValidationError("The URL is not reachable.")
 
         # TODO: parse the URL to validate it is, in fact, an valid ICAL feed
 
