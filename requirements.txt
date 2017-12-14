@@ -1,6 +1,7 @@
 six==1.11.0
 future==0.16.0
 coverage==4.4.2
+codecov==2.0.10
 django==1.10.8
 django-dotenv==1.4.2
 django-debug-toolbar==1.9
