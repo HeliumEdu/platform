@@ -1,15 +1,15 @@
 """
 Tests for error views.
 """
-from unittest import skip
 
 import mock
+from django.conf import settings
 from django.core.exceptions import SuspiciousOperation, PermissionDenied, ViewDoesNotExist
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from maintenance_mode import settings as maintenance_mode_settings
+from maintenance_mode.core import set_maintenance_mode
 from rest_framework import status
-
-from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -63,15 +63,21 @@ class TestCaseErrorViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertTemplateUsed(response, 'errors/500.html')
 
-    @skip('Middleware is being ignored, need to debug')
+    @override_settings(MAINTENANCE_MODE_IGNORE_TESTS=False)
     def test_maintenance_mode(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        set_maintenance_mode(True)
+        # This is needed as the django-maintenance-mode package does not support dynamic settings
+        maintenance_mode_settings.MAINTENANCE_MODE_IGNORE_TESTS = settings.MAINTENANCE_MODE_IGNORE_TESTS
 
-        with self.settings(MAINTENANCE_MODE_IGNORE_TESTS=False, MAINTENANCE_MODE=True):
-            # WHEN
-            response = self.client.get(reverse('settings'))
+        # WHEN
+        response = self.client.get(reverse('login'))
 
-            # THEN
-            self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-            self.assertTemplateUsed(response, 'errors/maintenance.html')
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertTemplateUsed(response, maintenance_mode_settings.MAINTENANCE_MODE_TEMPLATE)
+
+        # CLEANUP
+        set_maintenance_mode(False)
+        # This is needed as the django-maintenance-mode package does not support dynamic settings
+        maintenance_mode_settings.MAINTENANCE_MODE_IGNORE_TESTS = not settings.MAINTENANCE_MODE_IGNORE_TESTS
