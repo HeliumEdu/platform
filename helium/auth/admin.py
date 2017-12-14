@@ -7,10 +7,10 @@ from django.contrib.auth import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
-from helium.common.admin import admin_site
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.utils.userutils import validate_password
+from helium.common.admin import admin_site
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

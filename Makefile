@@ -1,4 +1,4 @@
-.PHONY: all env install build build-migrations migrate test test-coverage
+.PHONY: all env install build build-migrations migrate test
 
 all: env install build migrate test
 
@@ -18,7 +18,4 @@ migrate:
 	python manage.py migrate
 
 test:
-	python manage.py test
-
-test-coverage:
-	python -m coverage run --source='.' manage.py test && python -m coverage report
+	python -m coverage run --source='.' manage.py test && python -m coverage html

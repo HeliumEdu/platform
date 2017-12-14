@@ -7,10 +7,9 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from statsd.defaults.django import statsd
 
-from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.services import authservice, subscriptionservice
+from helium.auth.services import subscriptionservice
+from helium.common.utils import metricutils
 from helium.common.utils.viewutils import set_request_status, get_request_status
 
 __author__ = 'Alex Laird'
@@ -40,7 +39,6 @@ def unsubscribe(request):
 
 @login_required
 def settings(request):
-    if authservice.is_anonymous_or_non_staff(request.user):
-        statsd.incr('platform.view.settings')
+    metricutils.increment(request, 'view.settings')
 
     return render(request, "settings/main.html")

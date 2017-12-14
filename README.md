@@ -46,16 +46,10 @@ Once migrations have been run, you can create a super user, which is a standard 
 python manage.py createsuperuser
 ```
 
-Before commits are made, be sure to run tests.
- 
+Before commits are made, be sure to run tests and check the generated coverage report
+
 ```
 make test
-```
-
-To check code coverage, wrap the above command like so:
-
-```
-make test-coverage
 ```
 
 ### Fixtures

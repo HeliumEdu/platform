@@ -6,8 +6,8 @@ from django.conf import settings as config
 from django.conf.urls import include, url
 from django.contrib.sitemaps.views import sitemap
 
-import helium.common.urls
 import helium.auth.urls
+import helium.common.urls
 import helium.feed.urls
 import helium.planner.urls
 from conf.sitemaps import StaticViewSitemap
@@ -21,7 +21,7 @@ handler401 = 'helium.common.views.errorviews.unauthorized'
 handler403 = 'helium.common.views.errorviews.forbidden'
 handler404 = 'helium.common.views.errorviews.not_found'
 handler500 = 'helium.common.views.errorviews.internal_server_error'
-handler503 = 'helium.common.views.errorviews.website_unavailable'
+handler503 = 'helium.common.views.errorviews.service_unavailable'
 
 sitemaps = {
     'static': StaticViewSitemap,

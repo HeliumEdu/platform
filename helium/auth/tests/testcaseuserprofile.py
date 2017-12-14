@@ -80,6 +80,7 @@ class TestCaseUserProfile(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.profile.phone_changing = '5555555'
+        user.profile.phone_carrier_changing = 'txt.att.net'
         user.profile.phone_verification_code = 123456
         user.profile.save()
         self.assertFalse(user.profile.phone_verified)
@@ -94,10 +95,36 @@ class TestCaseUserProfile(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_changing'])
+        self.assertEqual(response.data['phone_carrier'], 'txt.att.net')
+        self.assertIsNone(response.data['phone_carrier_changing'])
         user = get_user_model().objects.get(id=user.id)
         self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
+        self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
+        self.assertIsNone(user.profile.phone_carrier_changing)
         self.assertTrue(user.profile.phone_verified)
+
+    def test_remove_phone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user.profile.phone = '5555555'
+        user.profile.phone_carrier = 'txt.att.net'
+        user.profile.save()
+
+        # WHEN
+        data = {
+            'phone': '',
+            'phone_carrier': '',
+        }
+        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data['phone'], '5555555')
+        self.assertIsNone(response.data['phone_carrier'])
+        user = get_user_model().objects.get(id=user.id)
+        self.assertIsNone(user.profile.phone)
+        self.assertIsNone(user.profile.phone_carrier)
 
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN

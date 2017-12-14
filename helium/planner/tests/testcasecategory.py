@@ -23,9 +23,11 @@ class TestCaseCategory(TestCase):
 
         # WHEN
         response1 = self.client.get(reverse('api_planner_categories_list'))
-        response2 = self.client.get(reverse('api_planner_coursegroups_courses_categories_lc', kwargs={'course_group_id': 1, 'course_id': 1}))
+        response2 = self.client.get(
+            reverse('api_planner_coursegroups_courses_categories_lc', kwargs={'course_group_id': 1, 'course_id': 1}))
         response3 = self.client.get(
-                reverse('api_planner_coursegroups_courses_categories_detail', kwargs={'course_group_id': 1, 'course_id': 1, 'pk': 1}))
+            reverse('api_planner_coursegroups_courses_categories_detail',
+                    kwargs={'course_group_id': 1, 'course_id': 1, 'pk': 1}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
@@ -49,7 +51,8 @@ class TestCaseCategory(TestCase):
         # WHEN
         response1 = self.client.get(reverse('api_planner_categories_list'))
         response2 = self.client.get(
-                reverse('api_planner_coursegroups_courses_categories_lc', kwargs={'course_group_id': course_group2.pk, 'course_id': course3.pk}))
+            reverse('api_planner_coursegroups_courses_categories_lc',
+                    kwargs={'course_group_id': course_group2.pk, 'course_id': course3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -71,14 +74,31 @@ class TestCaseCategory(TestCase):
             'color': '#7bd148'
         }
         response = self.client.post(
-                reverse('api_planner_coursegroups_courses_categories_lc', kwargs={'course_group_id': course_group.pk, 'course_id': course.pk}),
-                json.dumps(data),
-                content_type='application/json')
+            reverse('api_planner_coursegroups_courses_categories_lc',
+                    kwargs={'course_group_id': course_group.pk, 'course_id': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Category.objects.count(), 1)
         category = Category.objects.get(pk=response.data['id'])
+        categoryhelper.verify_category_matches_data(self, category, response.data)
+
+    def test_get_category_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
+                                           kwargs={'course_group_id': course_group.pk, 'course_id': course.pk,
+                                                   'pk': category.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
     def test_update_category_by_id(self):
@@ -95,10 +115,10 @@ class TestCaseCategory(TestCase):
             'color': '#7bd148'
         }
         response = self.client.put(
-                reverse('api_planner_coursegroups_courses_categories_detail',
-                        kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': course.pk}),
-                json.dumps(data),
-                content_type='application/json')
+            reverse('api_planner_coursegroups_courses_categories_detail',
+                    kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -119,7 +139,8 @@ class TestCaseCategory(TestCase):
 
         # WHEN
         response = self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
-                                              kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': course.pk}))
+                                              kwargs={'course_group_id': course_group.pk, 'course_id': course.pk,
+                                                      'pk': course.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -140,11 +161,14 @@ class TestCaseCategory(TestCase):
         response2 = self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
                                              kwargs={'course_group_id': course_group.pk, 'course_id': course.pk}))
         response3 = self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
-                                            kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': category.pk}))
+                                            kwargs={'course_group_id': course_group.pk, 'course_id': course.pk,
+                                                    'pk': category.pk}))
         response4 = self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
-                                            kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': category.pk}))
+                                            kwargs={'course_group_id': course_group.pk, 'course_id': course.pk,
+                                                    'pk': category.pk}))
         response5 = self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
-                                               kwargs={'course_group_id': course_group.pk, 'course_id': course.pk, 'pk': category.pk}))
+                                               kwargs={'course_group_id': course_group.pk, 'course_id': course.pk,
+                                                       'pk': category.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
@@ -178,7 +202,8 @@ class TestCaseCategory(TestCase):
             'color': category.color
         }
         response = self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
-                                           kwargs={'course_group_id': course_group.pk, 'course_id': course2.pk, 'pk': category.pk}),
+                                           kwargs={'course_group_id': course_group.pk, 'course_id': course2.pk,
+                                                   'pk': category.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN

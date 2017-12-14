@@ -5,9 +5,9 @@ Form for user registration.
 from django import forms
 from django.contrib.auth import get_user_model
 
+from helium.auth.utils.userutils import validate_password
 from helium.common import enums
 from helium.common.forms.base import BaseForm
-from helium.auth.utils.userutils import validate_password
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

@@ -45,7 +45,7 @@ def internal_server_error(request):
                               status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def website_unavailable(request):
+def service_unavailable(request):
     return render_to_response("errors/503.html",
                               context=RequestContext(request),
                               status=status.HTTP_503_SERVICE_UNAVAILABLE)

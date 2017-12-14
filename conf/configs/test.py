@@ -34,7 +34,6 @@ CSRF_MIDDLEWARE_SECRET = None
 # Logging
 
 DEBUG = False
-TEMPLATE_DEBUG = False
 
 if os.environ.get('TEST_DEBUG', 'False') == 'True':
     LOGGING = {
