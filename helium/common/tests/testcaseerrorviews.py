@@ -76,7 +76,7 @@ class TestCaseErrorViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertTemplateUsed(response, maintenance_mode_settings.MAINTENANCE_MODE_TEMPLATE)
+        self.assertTemplateUsed(response, settings.MAINTENANCE_MODE_TEMPLATE)
 
         # CLEANUP
         set_maintenance_mode(False)
