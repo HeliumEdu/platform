@@ -33,3 +33,11 @@ def validate_password(password1, password2):
         first_isalpha = password2[0].isalpha()
         if all(c.isalpha() == first_isalpha for c in password2):
             return "Your password must be at least 8 characters long and contain one letter and one number."
+
+
+def is_staff(user):
+    return user.is_staff
+
+
+def is_anonymous(user):
+    return not user.is_authenticated()

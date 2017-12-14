@@ -6,4 +6,6 @@ omit =
     conf/monitor.py
     conf/s3storages.py
     conf/wsgi.py
+    helium/*/tests/**
+    helium/*/admin.py
     helium/*/apps.py

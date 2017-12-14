@@ -4,6 +4,7 @@ Entry point for building settings and other configuration parameters.
 
 import os
 import sys
+
 from builtins import str
 
 __author__ = 'Alex Laird'

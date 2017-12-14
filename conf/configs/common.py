@@ -100,6 +100,8 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
+SUPPORT_REDIRECT_URL = 'https://heliumedu.uservoice.com'
+
 # Maintenance mode
 
 MAINTENANCE_MODE_IGNORE_STAFF = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_STAFF', 'False') == 'True'

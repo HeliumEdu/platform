@@ -7,11 +7,11 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
-from statsd.defaults.django import statsd
 
 from helium.auth.forms.userloginform import UserLoginForm
 from helium.auth.forms.userregisterform import UserRegisterForm
 from helium.auth.services import authservice
+from helium.common.utils import metricutils
 from helium.common.utils.viewutils import set_request_status, get_request_status, set_response_status, \
     clear_response_status
 
@@ -53,8 +53,7 @@ def register(request):
 
         return response
     else:
-        if authservice.is_anonymous_or_non_staff(request.user):
-            statsd.incr('platform.view.register')
+        metricutils.increment(request, 'view.register')
 
         data = {
             'user_register_form': user_register_form,
@@ -92,8 +91,7 @@ def login(request):
 
                 redirect = authservice.process_login(request, username, password)
 
-                if authservice.is_anonymous_or_non_staff(request.user):
-                    statsd.incr('platform.action.user-logged-in')
+                metricutils.increment(request, 'action.user-logged-in')
             else:
                 set_request_status(request, 'warning', list(user_login_form.errors.values())[0][0])
 
@@ -139,8 +137,7 @@ def forgot(request):
         status = get_request_status(request)
 
     if not redirect:
-        if authservice.is_anonymous_or_non_staff(request.user):
-            statsd.incr('platform.view.forgotpassword')
+        metricutils.increment(request, 'view.forgotpassword')
 
         data = {
             'status': status

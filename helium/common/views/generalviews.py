@@ -4,10 +4,10 @@ Unauthenticated landing views.
 
 import logging
 
+from django.conf import settings
 from django.shortcuts import render, redirect
-from statsd.defaults.django import statsd
 
-from helium.auth.services import authservice
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -17,43 +17,42 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
-    if authservice.is_anonymous_or_non_staff(request.user):
-        statsd.incr('platform.view.home')
+    metricutils.increment(request, 'view.home')
 
     return render(request, "home.html")
 
 
 def support(request):
-    statsd.incr('platform.view.support')
+    metricutils.increment(request, 'view.support')
 
-    return redirect('https://heliumedu.uservoice.com')
+    return redirect(settings.SUPPORT_REDIRECT_URL)
 
 
 def terms(request):
-    statsd.incr('platform.view.terms')
+    metricutils.increment(request, 'view.terms')
 
     return render(request, "terms.html")
 
 
 def privacy(request):
-    statsd.incr('platform.view.privacy')
+    metricutils.increment(request, 'view.privacy')
 
     return render(request, "privacy.html")
 
 
 def press(request):
-    statsd.incr('platform.view.press')
+    metricutils.increment(request, 'view.press')
 
     return render(request, "press.html")
 
 
 def about(request):
-    statsd.incr('platform.view.about')
+    metricutils.increment(request, 'view.about')
 
     return render(request, "about.html")
 
 
 def contact(request):
-    statsd.incr('platform.view.contact')
+    metricutils.increment(request, 'view.contact')
 
     return render(request, "contact.html")

@@ -4,11 +4,11 @@ Service for processing authentication-related requests.
 
 import logging
 
-from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.urlresolvers import reverse
-from statsd.defaults.django import statsd
 
 from helium.auth import tasks
+from helium.common.utils import metricutils
 from helium.common.utils.viewutils import set_request_status
 
 __author__ = 'Alex Laird'
@@ -56,7 +56,7 @@ def process_verification(request, username, verification_code):
             user.save()
 
             if not user.email.endswith('@heliumedu.com'):
-                statsd.incr('platform.vol.user-added')
+                metricutils.increment(request, 'platform.vol.user-added')
 
             tasks.send_registration_email.delay(user.email, request.get_host())
 
@@ -152,10 +152,3 @@ def process_forgot_password(request):
 
     return redirect
 
-
-def is_staff(user):
-    return user.is_staff
-
-
-def is_anonymous_or_non_staff(user):
-    return not user.is_authenticated() or not is_staff(user)
