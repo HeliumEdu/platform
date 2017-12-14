@@ -8,7 +8,7 @@ django-debug-toolbar==1.9
 django-widget-tweaks==1.4.1
 django-storages==1.6.5
 djangorestframework==3.7.3
-django-maintenance-mode==0.6.6
+git+git://github.com/alexdlaird/django-maintenance-mode.git@0.6.7#egg=django-maintenance-mode
 django-pipeline==1.6.13
 celery==4.1.0
 celery[redis]
