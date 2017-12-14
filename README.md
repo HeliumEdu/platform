@@ -10,12 +10,15 @@
 * MySQL (>= 5.7)
 * Redis (>= 3.2)
 
-## Virtualenv
-Virtualenv creates isolated Python development environments so your development environment(s play
-nicely with each other in regards to dependencies, permissions, and a myriad of other ways. While this is not necessary for development, it
-is highly recommended.
- 
-This project is configured to expect a Virtualenv in the `.venv` folder, and it can be setup like this:
+## Getting Started
+The Platform is developed using Python and [Django](https://www.djangoproject.com/).
+
+### Environment Setup
+Virtualenv creates isolated Python environments so your development area(ss play nicely with each other in regards to
+dependencies, permissions, and a myriad of other ways. While this is not necessary for development, it is highly
+recommended.
+
+This project is configured to work with a Virtualenv in the `.venv` folder, and it can be setup like this:
 
 ```
 pip install virtualenv
@@ -29,8 +32,8 @@ above one time. After that point, you only need to execute the following command
 source .venv/bin/activate
 ```
 
-## Getting Started
-The Platform is developed on [Django](https://www.djangoproject.com/). To setup the Python/Django Platform build environment, execute:
+### Project Setup
+To setup the Python/Django Platform build environment, execute:
 
 ```
 make install
@@ -53,10 +56,6 @@ Before commits are made, be sure to run tests and check the generated coverage r
 ```
 make test
 ```
-
-### Fixtures
-Fixtures are an easy way to load data from a JSON blob into a database, as we just did above. However, these should never be loaded into
-non-dev environments. 
 
 ## Development
 ### Modules
