@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
+[![codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
+
 
 # Helium Platform Project
 
