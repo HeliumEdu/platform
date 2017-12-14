@@ -9,3 +9,4 @@ db.test.sqlite3
 *.log
 .env
 .venv
+htmlcov

@@ -21,12 +21,14 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
 
     class Meta:
         model = get_user_model()
-        fields = ['email', 'username']
+        fields = ['username', 'email']
 
-    def clean_password2(self):
+    def clean(self):
         """
         Check the password meets the validation criteria.
         """
+        super(UserRegisterForm, self).clean()
+
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
@@ -34,8 +36,6 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
 
         if error:
             raise forms.ValidationError(error)
-
-        return password2
 
     def save(self, commit=True):
         """
