@@ -17,14 +17,6 @@ __version__ = '1.0.0'
 
 
 class TestCaseErrorViews(TestCase):
-    def test_not_found(self):
-        # WHEN
-        response = self.client.get('/not-a-real-url')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertTemplateUsed(response, 'errors/404.html')
-
     @mock.patch('helium.common.views.generalviews.metricutils')
     def test_internal_server_error(self, metricutils):
         # GIVEN
@@ -41,7 +33,6 @@ class TestCaseErrorViews(TestCase):
     def test_internal_forbidden(self, metricutils):
         # GIVEN
         metricutils.increment.side_effect = PermissionDenied("Forbidden.")
-        self.client.store_exc_info = lambda *args, **kwargs: True
 
         # WHEN
         response = self.client.get(reverse('home'))
@@ -50,10 +41,20 @@ class TestCaseErrorViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTemplateUsed(response, 'errors/403.html')
 
+    def test_not_found(self):
+        # WHEN
+        response = self.client.get('/not-a-real-url')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTemplateUsed(response, 'errors/404.html')
+
     @mock.patch('helium.common.views.generalviews.metricutils')
     def test_internal_server_error(self, metricutils):
         # GIVEN
         metricutils.increment.side_effect = ViewDoesNotExist("Internal server error.")
+        # By default, the test client will re-raise an exception when testing (instead of rendering the 500 page), so
+        # we want to override that setting
         self.client.store_exc_info = lambda *args, **kwargs: True
 
         # WHEN
