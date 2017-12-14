@@ -68,8 +68,6 @@ class TestCaseErrorViews(TestCase):
     def test_maintenance_mode(self):
         # GIVEN
         set_maintenance_mode(True)
-        # This is needed as the django-maintenance-mode package does not support dynamic settings
-        maintenance_mode_settings.MAINTENANCE_MODE_IGNORE_TESTS = settings.MAINTENANCE_MODE_IGNORE_TESTS
 
         # WHEN
         response = self.client.get(reverse('login'))
@@ -80,5 +78,3 @@ class TestCaseErrorViews(TestCase):
 
         # CLEANUP
         set_maintenance_mode(False)
-        # This is needed as the django-maintenance-mode package does not support dynamic settings
-        maintenance_mode_settings.MAINTENANCE_MODE_IGNORE_TESTS = not settings.MAINTENANCE_MODE_IGNORE_TESTS
