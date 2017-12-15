@@ -15,15 +15,15 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserProfile(TestCase):
+class TestCaseUserProfileViews(TestCase):
     def test_user_profile_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user_profile')),
-            self.client.put(reverse('api_user_profile'))
+            self.client.get(reverse('api_user_profile_list')),
+            self.client.put(reverse('api_user_profile_list'))
         ]
 
         # THEN
@@ -35,7 +35,7 @@ class TestCaseUserProfile(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        response = self.client.get(reverse('api_user_profile'))
+        response = self.client.get(reverse('api_user_profile_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -53,7 +53,7 @@ class TestCaseUserProfile(TestCase):
             'phone': '555-5555',
             'phone_carrier': 'invalid'
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -70,7 +70,7 @@ class TestCaseUserProfile(TestCase):
             'phone': '555-5555',
             'phone_carrier': 'tmomail.net'
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -93,7 +93,7 @@ class TestCaseUserProfile(TestCase):
         data = {
             'phone_verification_code': user.profile.phone_verification_code,
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -120,7 +120,7 @@ class TestCaseUserProfile(TestCase):
             'phone': '',
             'phone_carrier': '',
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -141,7 +141,7 @@ class TestCaseUserProfile(TestCase):
         data = {
             'phone_verification_code': 000000,
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -158,7 +158,7 @@ class TestCaseUserProfile(TestCase):
         data = {
             'phone_changing': '444-4444'
         }
-        response = self.client.put(reverse('api_user_profile'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         user = get_user_model().objects.get(id=user.id)

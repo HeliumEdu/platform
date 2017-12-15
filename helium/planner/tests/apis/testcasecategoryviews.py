@@ -16,7 +16,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseCategory(TestCase):
+class TestCaseAPICategoryViews(TestCase):
     def test_course_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -25,9 +25,9 @@ class TestCaseCategory(TestCase):
         responses = [
             self.client.get(reverse('api_planner_categories_list')),
             self.client.post(reverse('api_planner_categories_list')),
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                      kwargs={'course_group_id': '9999', 'course_id': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group_id': '9999', 'course_id': '9999', 'pk': '9999'})),
@@ -58,7 +58,7 @@ class TestCaseCategory(TestCase):
         # WHEN
         response1 = self.client.get(reverse('api_planner_categories_list'))
         response2 = self.client.get(
-            reverse('api_planner_coursegroups_courses_categories_lc',
+            reverse('api_planner_coursegroups_courses_categories_list',
                     kwargs={'course_group_id': course_group2.pk, 'course_id': course3.pk}))
 
         # THEN
@@ -81,7 +81,7 @@ class TestCaseCategory(TestCase):
             'color': '#7bd148'
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_categories_lc',
+            reverse('api_planner_coursegroups_courses_categories_list',
                     kwargs={'course_group_id': course_group.pk, 'course_id': course.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -133,9 +133,7 @@ class TestCaseCategory(TestCase):
         self.assertEqual(float(response.data['weight']), data['weight'])
         self.assertEqual(response.data['color'], data['color'])
         category = Category.objects.get(pk=category.pk)
-        self.assertEqual(category.title, response.data['title'])
-        self.assertEqual(category.weight, float(response.data['weight']))
-        self.assertEqual(category.color, response.data['color'])
+        categoryhelper.verify_category_matches_data(self, category, response.data)
 
     def test_delete_category_by_id(self):
         # GIVEN
@@ -166,11 +164,11 @@ class TestCaseCategory(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': course_group1.pk, 'course_id': course1.pk})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                      kwargs={'course_group_id': course_group1.pk, 'course_id': course1.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': course_group2.pk, 'course_id': course1.pk})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group_id': course_group1.pk, 'course_id': course1.pk,
@@ -234,7 +232,7 @@ class TestCaseCategory(TestCase):
             'color': 'invalid-hex',
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_categories_lc',
+            reverse('api_planner_coursegroups_courses_categories_list',
                     kwargs={'course_group_id': course_group.pk, 'course_id': course.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -277,19 +275,19 @@ class TestCaseCategory(TestCase):
         category = categoryhelper.given_category_exists(course)
 
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                      kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                      kwargs={'course_group_id': '9999', 'course_id': course.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': course.pk})),
-            self.client.post(reverse('api_planner_coursegroups_courses_categories_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': course.pk})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999', 'pk': '9999'})),

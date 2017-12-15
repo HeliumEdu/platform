@@ -21,7 +21,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserApiView(APIView):
+class UserApiListView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
