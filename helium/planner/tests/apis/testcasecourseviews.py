@@ -25,7 +25,6 @@ class TestCaseAPICourseViews(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_courses_list')),
-            self.client.post(reverse('api_planner_courses_list')),
             self.client.get(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
             self.client.post(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
             self.client.get(

@@ -32,7 +32,8 @@ def process_register(request, user):
     tasks.send_verification_email.delay(user.email, user.username, user.verification_code, request.get_host())
 
     set_request_status(request, 'info',
-                       'You\'re almost there! The last step is to verify your email address. Click the link in the email we just sent you and your registration will be complete!')
+                       'You\'re almost there! The last step is to verify your email address. Click the link in the '
+                       'email we just sent you and your registration will be complete!')
 
     return reverse('login')
 
@@ -60,7 +61,8 @@ def process_verification(request, username, verification_code):
 
             tasks.send_registration_email.delay(user.email, request.get_host())
 
-            # Now that the user is registered, log them it automatically and redirect them to the authenticated landing page
+            # Now that the user is registered, log them it automatically and redirect them to the authenticated
+            # landing page
             user.backend = 'django.contrib.auth.backends.AllowAllUsersModelBackend'
             login(request, user)
 
@@ -109,13 +111,15 @@ def process_login(request, username, password):
             logger.info('Inactive user {} attempted login'.format(username))
 
             set_request_status(request, 'warning',
-                               'Sorry, your account is not active. Check your email for a verification email if you recently registered, otherwise <a href="{}">contact us</a> and we\'ll help you sort this out!'.format(
-                                   reverse('contact')))
+                               'Sorry, your account is not active. Check your email for a verification email if you '
+                               'recently registered, otherwise <a href="{}">contact us</a> and we\'ll help you sort '
+                               'this out!'.format(reverse('contact')))
     else:
         logger.info('Non-existent user {} attempted login'.format(username))
 
         set_request_status(request, 'warning',
-                           'Oops! We don\'t recognize that account. Check to make sure you entered your credentials properly.')
+                           'Oops! We don\'t recognize that account. Check to make sure you entered your '
+                           'credentials properly.')
 
     return redirect
 
@@ -148,7 +152,7 @@ def process_forgot_password(request):
         logger.info('A visitor tried to reset the password for an unknown email address of {}'.format(email))
 
     set_request_status(request, 'info',
-                       'You\'ve been emailed a temporary password. Login to your account immediately using the temporary password, then change your password.')
+                       'You\'ve been emailed a temporary password. Login to your account immediately using the '
+                       'temporary password, then change your password.')
 
     return redirect
-

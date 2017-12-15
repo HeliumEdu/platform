@@ -43,10 +43,12 @@ class Course(BasePlannerModel):
     end_date = models.DateField()
     days_of_week = models.CharField(max_length=7, default='0000000', validators=[
         validators.RegexValidator(r'^[0-1]+$',
-                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week '
+                                  'starts on Sunday).',
                                   'invalid'),
         validators.MinLengthValidator(7,
-                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on '
+                                      '(week starts on Sunday).')])
     sun_start_time = models.TimeField(default=datetime.time(12, 0, 0))
     sun_end_time = models.TimeField(default=datetime.time(12, 0, 0))
     mon_start_time = models.TimeField(default=datetime.time(12, 0, 0))
@@ -61,13 +63,16 @@ class Course(BasePlannerModel):
     fri_end_time = models.TimeField(default=datetime.time(12, 0, 0))
     sat_start_time = models.TimeField(default=datetime.time(12, 0, 0))
     sat_end_time = models.TimeField(default=datetime.time(12, 0, 0))
-    # TODO: when CourseSchedule is created, it should simply be a foreign key relationship so "_alt" is no longer needed and any number of alt schedules can exist
+    # TODO: when CourseSchedule is created, it should simply be a foreign key relationship so "_alt" is no longer
+    # needed and any number of alt schedules can exist
     days_of_week_alt = models.CharField(max_length=7, default='0000000', validators=[
         validators.RegexValidator(r'^[0-1]+$',
-                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                  'Seven booleans (0 or 1) indicating which days of the week the course is on (week '
+                                  'starts on Sunday).',
                                   'invalid'),
         validators.MinLengthValidator(7,
-                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on '
+                                      '(week starts on Sunday).')])
     sun_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
     sun_end_time_alt = models.TimeField(default=datetime.time(12, 0, 0))
     mon_start_time_alt = models.TimeField(default=datetime.time(12, 0, 0))

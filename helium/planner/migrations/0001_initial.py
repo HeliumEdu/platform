@@ -11,7 +11,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -27,7 +26,16 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('title', models.CharField(db_index=True, default=b'', max_length=255)),
                 ('weight', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('color', models.CharField(choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'), (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'), (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'), (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'), (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'), (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'), (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'), (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')], default=b'#4986e7', max_length=7)),
+                ('color', models.CharField(
+                    choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'),
+                             (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'),
+                             (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'),
+                             (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'),
+                             (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'),
+                             (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'),
+                             (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'),
+                             (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')],
+                    default=b'#4986e7', max_length=7)),
                 ('average_grade', models.DecimalField(decimal_places=4, default=-1, max_digits=7)),
                 ('grade_by_weight', models.DecimalField(decimal_places=4, default=0, max_digits=7)),
                 ('trend', models.FloatField(blank=True, default=None, null=True)),
@@ -46,7 +54,16 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(db_index=True, default=b'', max_length=255)),
                 ('room', models.CharField(blank=True, default=b'', max_length=255, null=True)),
                 ('credits', models.DecimalField(decimal_places=2, max_digits=4)),
-                ('color', models.CharField(choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'), (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'), (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'), (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'), (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'), (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'), (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'), (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')], default=b'#4986e7', max_length=7)),
+                ('color', models.CharField(
+                    choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'),
+                             (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'),
+                             (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'),
+                             (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'),
+                             (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'),
+                             (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'),
+                             (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'),
+                             (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')],
+                    default=b'#4986e7', max_length=7)),
                 ('website', models.URLField(blank=True, max_length=3000, null=True)),
                 ('is_online', models.BooleanField(default=False)),
                 ('current_grade', models.DecimalField(decimal_places=4, default=-1, max_digits=7)),
@@ -56,7 +73,11 @@ class Migration(migrations.Migration):
                 ('teacher_email', models.EmailField(blank=True, default=b'', max_length=254, null=True)),
                 ('start_date', models.DateField()),
                 ('end_date', models.DateField()),
-                ('days_of_week', models.CharField(default=b'0000000', max_length=7, validators=[django.core.validators.RegexValidator(b'^[0-1]+$', b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).', b'invalid'), django.core.validators.MinLengthValidator(7, b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])),
+                ('days_of_week', models.CharField(default=b'0000000', max_length=7, validators=[
+                    django.core.validators.RegexValidator(b'^[0-1]+$',
+                                                          b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                                          b'invalid'), django.core.validators.MinLengthValidator(7,
+                                                                                                                 b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])),
                 ('sun_start_time', models.TimeField(default=datetime.time(12, 0))),
                 ('sun_end_time', models.TimeField(default=datetime.time(12, 0))),
                 ('mon_start_time', models.TimeField(default=datetime.time(12, 0))),
@@ -71,7 +92,11 @@ class Migration(migrations.Migration):
                 ('fri_end_time', models.TimeField(default=datetime.time(12, 0))),
                 ('sat_start_time', models.TimeField(default=datetime.time(12, 0))),
                 ('sat_end_time', models.TimeField(default=datetime.time(12, 0))),
-                ('days_of_week_alt', models.CharField(default=b'0000000', max_length=7, validators=[django.core.validators.RegexValidator(b'^[0-1]+$', b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).', b'invalid'), django.core.validators.MinLengthValidator(7, b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])),
+                ('days_of_week_alt', models.CharField(default=b'0000000', max_length=7, validators=[
+                    django.core.validators.RegexValidator(b'^[0-1]+$',
+                                                          b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).',
+                                                          b'invalid'), django.core.validators.MinLengthValidator(7,
+                                                                                                                 b'Seven booleans (0 or 1) indicating which days of the week the course is on (week starts on Sunday).')])),
                 ('sun_start_time_alt', models.TimeField(default=datetime.time(12, 0))),
                 ('sun_end_time_alt', models.TimeField(default=datetime.time(12, 0))),
                 ('mon_start_time_alt', models.TimeField(default=datetime.time(12, 0))),
@@ -104,7 +129,8 @@ class Migration(migrations.Migration):
                 ('average_grade', models.DecimalField(decimal_places=4, default=-1, max_digits=7)),
                 ('trend', models.FloatField(blank=True, default=None, null=True)),
                 ('private_slug', models.SlugField(blank=True, null=True, unique=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_groups', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_groups',
+                                           to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ('start_date',),
@@ -113,11 +139,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='course',
             name='course_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='courses', to='planner.CourseGroup'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='courses',
+                                    to='planner.CourseGroup'),
         ),
         migrations.AddField(
             model_name='category',
             name='course',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='categories', to='planner.Course'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='categories',
+                                    to='planner.Course'),
         ),
     ]

@@ -24,7 +24,6 @@ class TestCaseAPICategoryViews(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_categories_list')),
-            self.client.post(reverse('api_planner_categories_list')),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': '9999'})),
             self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
@@ -284,11 +283,11 @@ class TestCaseAPICategoryViews(TestCase):
             self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
             self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
-                                    kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
+                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_list',
                                     kwargs={'course_group_id': '9999', 'course_id': course.pk})),
             self.client.post(reverse('api_planner_coursegroups_courses_categories_list',
-                                    kwargs={'course_group_id': '9999', 'course_id': course.pk})),
+                                     kwargs={'course_group_id': '9999', 'course_id': course.pk})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group_id': course_group.pk, 'course_id': '9999', 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
