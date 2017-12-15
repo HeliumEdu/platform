@@ -25,8 +25,15 @@ class TestCaseCourse(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_courses_list')),
-            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': 1})),
-            self.client.get(reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': 1, 'pk': 1}))
+            self.client.post(reverse('api_planner_courses_list')),
+            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.post(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.get(
+                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': '9999', 'pk': '9999'})),
+            self.client.put(
+                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': '9999', 'pk': '9999'})),
+            self.client.delete(
+                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': '9999', 'pk': '9999'}))
         ]
 
         # THEN
@@ -316,12 +323,20 @@ class TestCaseCourse(TestCase):
 
         responses = [
             self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.post(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': '9999', 'pk': '9999'})),
+            self.client.put(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group_id': '9999', 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group_id': course_group.pk, 'pk': '9999'})),
+            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': course_group.pk, 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
-                                    kwargs={'course_group_id': '9999', 'pk': course.pk}))]
+                                    kwargs={'course_group_id': '9999', 'pk': course.pk})),
+            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': '9999', 'pk': course.pk}))
+        ]
 
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

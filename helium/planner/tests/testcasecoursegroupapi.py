@@ -24,7 +24,10 @@ class TestCaseCourseGroup(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_coursegroups_lc')),
-            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': 1}))
+            self.client.post(reverse('api_planner_coursegroups_lc')),
+            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -170,3 +173,15 @@ class TestCaseCourseGroup(TestCase):
         self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)
         self.assertEqual(course_group.get_user().pk, user2.pk)
+
+    def test_not_found(self):
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        responses = [
+            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'}))
+        ]
+
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            self.assertIn('not found', response.data['detail'].lower())
