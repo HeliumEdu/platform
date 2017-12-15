@@ -40,6 +40,6 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
 
             return url
         except ICalError as ex:
-            logger.info("Unable to validate external ICAL URL {}: {}".format(url, ex.message))
+            logger.info("Unable to validate external ICAL URL {}: {}".format(url, ex))
 
-            raise serializers.ValidationError(ex.message)
+            raise serializers.ValidationError(ex)

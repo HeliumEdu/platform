@@ -28,10 +28,10 @@ def validate_url(url):
 
         Calendar.from_ical(response.read())
     except URLError as ex:
-        logger.info("The URL is not reachable: {}".format(ex.message))
+        logger.info("The URL is not reachable: {}".format(ex))
 
         raise ICalError("The URL is not reachable.")
     except ValueError as ex:
-        logger.info("The URL did not return a valid ICAL feed: {}".format(ex.message))
+        logger.info("The URL did not return a valid ICAL feed: {}".format(ex))
 
         raise ICalError("The URL did not return a valid ICAL feed.")
