@@ -16,15 +16,15 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseCourseGroup(TestCase):
+class TestCaseAPICourseGroupViews(TestCase):
     def test_coursegroup_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_lc')),
-            self.client.post(reverse('api_planner_coursegroups_lc')),
+            self.client.get(reverse('api_planner_coursegroups_list')),
+            self.client.post(reverse('api_planner_coursegroups_list')),
             self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'}))
@@ -43,7 +43,7 @@ class TestCaseCourseGroup(TestCase):
         coursegrouphelper.given_course_group_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_lc'))
+        response = self.client.get(reverse('api_planner_coursegroups_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -61,7 +61,7 @@ class TestCaseCourseGroup(TestCase):
             'end_date': '2015-07-09',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_planner_coursegroups_lc'), json.dumps(data),
+        response = self.client.post(reverse('api_planner_coursegroups_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -110,8 +110,7 @@ class TestCaseCourseGroup(TestCase):
         self.assertEqual(response.data['title'], data['title'])
         self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
         course_group = CourseGroup.objects.get(pk=course_group.pk)
-        self.assertEqual(course_group.title, data['title'])
-        self.assertEqual(course_group.shown_on_calendar, data['shown_on_calendar'])
+        coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
 
     def test_delete_coursegroup_by_id(self):
         # GIVEN

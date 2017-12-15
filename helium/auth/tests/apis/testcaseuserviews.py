@@ -16,15 +16,15 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUser(TestCase):
+class TestCaseUserViews(TestCase):
     def test_user_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user')),
-            self.client.put(reverse('api_user'))
+            self.client.get(reverse('api_user_list')),
+            self.client.put(reverse('api_user_list'))
         ]
 
         # THEN
@@ -36,7 +36,7 @@ class TestCaseUser(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        response = self.client.get(reverse('api_user'))
+        response = self.client.get(reverse('api_user_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -56,7 +56,7 @@ class TestCaseUser(TestCase):
             # Intentionally NOT changing these value
             'email': user.email
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -80,7 +80,7 @@ class TestCaseUser(TestCase):
             # Intentionally NOT changing these value
             'username': user.username
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -119,7 +119,7 @@ class TestCaseUser(TestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!'
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -136,7 +136,7 @@ class TestCaseUser(TestCase):
             'old_password': '',
             'new_password1': 'new_pass_1!',
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -152,7 +152,7 @@ class TestCaseUser(TestCase):
             'new_password1': '',
             'new_password2': '',
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -168,7 +168,7 @@ class TestCaseUser(TestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!oops',
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -184,7 +184,7 @@ class TestCaseUser(TestCase):
             'new_password1': 'blerg',
             'new_password2': 'blerg',
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -201,7 +201,7 @@ class TestCaseUser(TestCase):
             'username': user1.username,
             'email': user2.email
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -218,7 +218,7 @@ class TestCaseUser(TestCase):
             'email': user1.email,
             'username': user2.username
         }
-        response = self.client.put(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -235,7 +235,7 @@ class TestCaseUser(TestCase):
             'username': user.username,
             'password': 'test_pass_1!'
         }
-        response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.delete(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -254,7 +254,7 @@ class TestCaseUser(TestCase):
             'username': user.username,
             'password': 'wrong_pass'
         }
-        response = self.client.delete(reverse('api_user'), json.dumps(data), content_type='application/json')
+        response = self.client.delete(reverse('api_user_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

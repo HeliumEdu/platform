@@ -1,17 +1,17 @@
 """
-Authenticated views for ExternalCalendar interaction.
+Authenticated views for CourseGroup interaction.
 """
 
 import logging
 
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, RetrieveModelMixin, \
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
-from helium.feed.models import ExternalCalendar
-from helium.feed.permissions import IsOwner
-from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.planner.models import CourseGroup
+from helium.planner.permissions import IsOwner
+from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -20,13 +20,13 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarsApiLCView(GenericAPIView, ListModelMixin, CreateModelMixin):
-    serializer_class = ExternalCalendarSerializer
+class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+    serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         user = self.request.user
-        return user.external_calendars.all()
+        return user.course_groups.all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -38,9 +38,9 @@ class ExternalCalendarsApiLCView(GenericAPIView, ListModelMixin, CreateModelMixi
         return self.create(request, *args, **kwargs)
 
 
-class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    queryset = ExternalCalendar.objects.all()
-    serializer_class = ExternalCalendarSerializer
+class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    queryset = CourseGroup.objects.all()
+    serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get(self, request, *args, **kwargs):

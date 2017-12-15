@@ -16,15 +16,15 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserSettings(TestCase):
+class TestCaseUserSettingsViews(TestCase):
     def test_user_settings_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user_settings')),
-            self.client.put(reverse('api_user_settings'))
+            self.client.get(reverse('api_user_settings_list')),
+            self.client.put(reverse('api_user_settings_list'))
         ]
 
         # THEN
@@ -36,7 +36,7 @@ class TestCaseUserSettings(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        response = self.client.get(reverse('api_user_settings'))
+        response = self.client.get(reverse('api_user_settings_list'))
 
         # THEN
         self.assertEqual(user.settings.default_view, response.data['default_view'])
@@ -63,7 +63,7 @@ class TestCaseUserSettings(TestCase):
             'show_getting_started': False,
             'time_zone': 'America/Chicago'
         }
-        response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertFalse(response.data['show_getting_started'])
@@ -80,7 +80,7 @@ class TestCaseUserSettings(TestCase):
         data = {
             'time_zone': 'invalid'
         }
-        response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -97,7 +97,7 @@ class TestCaseUserSettings(TestCase):
         data = {
             'private_slug': 'new_slug'
         }
-        response = self.client.put(reverse('api_user_settings'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
 
         # THEN
         user = get_user_model().objects.get(id=user.id)

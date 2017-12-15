@@ -36,7 +36,7 @@ class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
         return self.list(request, *args, **kwargs)
 
 
-class CourseGroupCourseCategoriesApiLCView(APIView):
+class CourseGroupCourseCategoriesApiListView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def check_course_group_permission(self, request, course_group_id):

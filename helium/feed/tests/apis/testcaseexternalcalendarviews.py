@@ -18,15 +18,15 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseExternalCalendar(TestCase):
+class TestCaseAPIExternalCalendarViews(TestCase):
     def test_externalcalendar_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_lc')),
-            self.client.post(reverse('api_feed_externalcalendars_lc')),
+            self.client.get(reverse('api_feed_externalcalendars_list')),
+            self.client.post(reverse('api_feed_externalcalendars_list')),
             self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
             self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
@@ -45,7 +45,7 @@ class TestCaseExternalCalendar(TestCase):
         externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_lc'))
+        response = self.client.get(reverse('api_feed_externalcalendars_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -65,7 +65,7 @@ class TestCaseExternalCalendar(TestCase):
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_lc'), json.dumps(data),
+        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -110,8 +110,7 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(response.data['title'], data['title'])
         self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
         external_calendar = ExternalCalendar.objects.get(id=external_calendar.id)
-        self.assertEqual(external_calendar.title, data['title'])
-        self.assertEqual(external_calendar.shown_on_calendar, data['shown_on_calendar'])
+        externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
     def test_delete_externalcalendar_by_id(self):
         # GIVEN
@@ -173,7 +172,7 @@ class TestCaseExternalCalendar(TestCase):
         data = {
             'url': 'http://www.not-a-valid-ical-url.com/nope'
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_lc'), json.dumps(data),
+        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN

@@ -17,7 +17,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseCourse(TestCase):
+class TestCaseAPICourseViews(TestCase):
     def test_course_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -26,8 +26,8 @@ class TestCaseCourse(TestCase):
         responses = [
             self.client.get(reverse('api_planner_courses_list')),
             self.client.post(reverse('api_planner_courses_list')),
-            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.get(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
+            self.client.post(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
             self.client.get(
                 reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': '9999', 'pk': '9999'})),
             self.client.put(
@@ -55,7 +55,7 @@ class TestCaseCourse(TestCase):
         # WHEN
         response1 = self.client.get(reverse('api_planner_courses_list'))
         response2 = self.client.get(
-            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group3.pk}))
+            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -93,7 +93,7 @@ class TestCaseCourse(TestCase):
             'wed_end_time_alt': '19:30:00'
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group.pk}),
+            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -177,27 +177,8 @@ class TestCaseCourse(TestCase):
         self.assertEqual(response.data['days_of_week_alt'], data['days_of_week_alt'])
         self.assertEqual(response.data['wed_start_time_alt'], data['wed_start_time_alt'])
         self.assertEqual(response.data['wed_end_time_alt'], data['wed_end_time_alt'])
-        course_group = Course.objects.get(pk=course.pk)
-        self.assertEqual(course_group.title, response.data['title'])
-        self.assertEqual(course_group.room, response.data['room'])
-        self.assertEqual(course_group.credits, float(response.data['credits']))
-        self.assertEqual(course_group.color, response.data['color'])
-        self.assertEqual(course_group.website, response.data['website'])
-        self.assertEqual(course_group.is_online, response.data['is_online'])
-        self.assertEqual(course_group.teacher_name, response.data['teacher_name'])
-        self.assertEqual(course_group.teacher_email, response.data['teacher_email'])
-        self.assertEqual(course_group.start_date, parser.parse(response.data['start_date']).date())
-        self.assertEqual(course_group.end_date, parser.parse(response.data['end_date']).date())
-        self.assertEqual(course_group.days_of_week, response.data['days_of_week'])
-        self.assertEqual(course_group.mon_start_time, parser.parse(response.data['mon_start_time']).time())
-        self.assertEqual(course_group.mon_end_time, parser.parse(response.data['mon_end_time']).time())
-        self.assertEqual(course_group.wed_start_time, parser.parse(response.data['wed_start_time']).time())
-        self.assertEqual(course_group.wed_end_time, parser.parse(response.data['wed_end_time']).time())
-        self.assertEqual(course_group.fri_start_time, parser.parse(response.data['fri_start_time']).time())
-        self.assertEqual(course_group.fri_end_time, parser.parse(response.data['fri_end_time']).time())
-        self.assertEqual(course_group.days_of_week_alt, response.data['days_of_week_alt'])
-        self.assertEqual(course_group.wed_start_time_alt, parser.parse(response.data['wed_start_time_alt']).time())
-        self.assertEqual(course_group.wed_end_time_alt, parser.parse(response.data['wed_end_time_alt']).time())
+        course = Course.objects.get(pk=course.pk)
+        coursehelper.verify_course_matches_data(self, course, response.data)
 
     def test_delete_course_by_id(self):
         # GIVEN
@@ -223,9 +204,9 @@ class TestCaseCourse(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_lc',
+            self.client.get(reverse('api_planner_coursegroups_courses_list',
                                     kwargs={'course_group_id': course_group.pk})),
-            self.client.post(reverse('api_planner_coursegroups_courses_lc',
+            self.client.post(reverse('api_planner_coursegroups_courses_list',
                                      kwargs={'course_group_id': course_group.pk})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group_id': course_group.pk, 'pk': course.pk})),
@@ -283,7 +264,7 @@ class TestCaseCourse(TestCase):
             'start_date': 'not-a-valid-date',
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group.pk}),
+            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -322,8 +303,8 @@ class TestCaseCourse(TestCase):
         course = coursehelper.given_course_exists(course_group)
 
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.get(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
+            self.client.post(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group_id': '9999', 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_detail',
