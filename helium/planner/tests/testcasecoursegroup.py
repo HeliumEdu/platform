@@ -22,12 +22,14 @@ class TestCaseCourseGroup(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_coursegroups_lc'))
-        response2 = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': 1}))
+        responses = [
+            self.client.get(reverse('api_planner_coursegroups_lc')),
+            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': 1}))
+        ]
 
         # THEN
-        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_coursegroups(self):
         # GIVEN
@@ -128,16 +130,16 @@ class TestCaseCourseGroup(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user1)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
-        response2 = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
-        response3 = self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        responses = [
+            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
+            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
+            self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        ]
 
         # THEN
-        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk).exists())
-        self.assertEqual(CourseGroup.objects.count(), 1)
+        self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk, user_id=user1.pk).exists())
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN

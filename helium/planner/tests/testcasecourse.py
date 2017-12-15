@@ -23,15 +23,15 @@ class TestCaseCourse(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_courses_list'))
-        response2 = self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': 1}))
-        response3 = self.client.get(
-                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': 1, 'pk': 1}))
+        responses = [
+            self.client.get(reverse('api_planner_courses_list')),
+            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': 1})),
+            self.client.get(reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group_id': 1, 'pk': 1}))
+        ]
 
         # THEN
-        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_courses(self):
         # GIVEN
@@ -48,7 +48,7 @@ class TestCaseCourse(TestCase):
         # WHEN
         response1 = self.client.get(reverse('api_planner_courses_list'))
         response2 = self.client.get(
-                reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group3.pk}))
+            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -86,9 +86,9 @@ class TestCaseCourse(TestCase):
             'wed_end_time_alt': '19:30:00'
         }
         response = self.client.post(
-                reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group.pk}),
-                json.dumps(data),
-                content_type='application/json')
+            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -143,10 +143,10 @@ class TestCaseCourse(TestCase):
             'wed_end_time_alt': '19:30:00'
         }
         response = self.client.put(
-                reverse('api_planner_coursegroups_courses_detail',
-                        kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
-                json.dumps(data),
-                content_type='application/json')
+            reverse('api_planner_coursegroups_courses_detail',
+                    kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -215,25 +215,23 @@ class TestCaseCourse(TestCase):
         course = coursehelper.given_course_exists(course_group)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_coursegroups_courses_lc',
-                                            kwargs={'course_group_id': course_group.pk}))
-        response2 = self.client.post(reverse('api_planner_coursegroups_courses_lc',
-                                             kwargs={'course_group_id': course_group.pk}))
-        response3 = self.client.get(reverse('api_planner_coursegroups_courses_detail',
-                                            kwargs={'course_group_id': course_group.pk, 'pk': course.pk}))
-        response4 = self.client.put(reverse('api_planner_coursegroups_courses_detail',
-                                            kwargs={'course_group_id': course_group.pk, 'pk': course.pk}))
-        response5 = self.client.delete(reverse('api_planner_coursegroups_courses_detail',
-                                               kwargs={'course_group_id': course_group.pk, 'pk': course.pk}))
+        responses = [
+            self.client.get(reverse('api_planner_coursegroups_courses_lc',
+                                    kwargs={'course_group_id': course_group.pk})),
+            self.client.post(reverse('api_planner_coursegroups_courses_lc',
+                                     kwargs={'course_group_id': course_group.pk})),
+            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': course_group.pk, 'pk': course.pk})),
+            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': course_group.pk, 'pk': course.pk})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+                                       kwargs={'course_group_id': course_group.pk, 'pk': course.pk}))
+        ]
 
         # THEN
-        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response4.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response5.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertTrue(Course.objects.filter(pk=course.pk).exists())
-        self.assertEqual(Course.objects.count(), 1)
+        self.assertTrue(Course.objects.filter(pk=course.pk, course_group__user_id=user1.pk).exists())
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -267,3 +265,64 @@ class TestCaseCourse(TestCase):
         self.assertEqual(course.trend, trend)
         self.assertEqual(course.private_slug, private_slug)
         self.assertEqual(course.course_group.pk, course_group2.pk)
+
+    def test_create_bad_data(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        data = {
+            'start_date': 'not-a-valid-date',
+        }
+        response = self.client.post(
+            reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': course_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data)
+        self.assertEqual(Course.objects.count(), 0)
+
+    def test_update_bad_data(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        start_date = course.start_date
+
+        # WHEN
+        data = {
+            'start_date': 'not-a-valid-date',
+            # Intentionally NOT changing these value
+            'credits': course.credits,
+            'end_date': course.end_date.isoformat()
+        }
+        response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
+                                           kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
+                                   json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data)
+        course = Course.objects.get(id=course.id)
+        self.assertEqual(course.start_date, start_date)
+
+    def test_not_found(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        responses = [
+            self.client.get(reverse('api_planner_coursegroups_courses_lc', kwargs={'course_group_id': '9999'})),
+            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': '9999', 'pk': '9999'})),
+            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': course_group.pk, 'pk': '9999'})),
+            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+                                    kwargs={'course_group_id': '9999', 'pk': course.pk}))]
+
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            self.assertIn('not found', response.data['detail'].lower())

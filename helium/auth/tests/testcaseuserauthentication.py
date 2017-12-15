@@ -40,17 +40,22 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_not_logged_in(self)
 
-    def test_login_failure_wrong_password(self):
+    def test_login_invalid_user(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'wrong_pass'})
+        responses = [
+            self.client.post(reverse('login'), {'username': 'not-a-user', 'password': 'test_pass_1!'}),
+            self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'wrong_pass'})
+        ]
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         userhelper.verify_user_not_logged_in(self)
+        for response in responses:
+            self.assertContains(response, 'Check to make sure you entered your credentials properly',
+                                status_code=status.HTTP_401_UNAUTHORIZED)
 
     def test_password_reset(self):
         # GIVEN
@@ -88,13 +93,29 @@ class TestCaseUserAuthentication(TestCase):
         self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())
 
+    def test_registration_bad_data(self):
+        # GIVEN
+        userhelper.verify_user_not_logged_in(self)
+
+        # WHEN
+        response = self.client.post(reverse('register'),
+                                    {'email': 'test@not-a-valid-email', 'username': 'my_test_user',
+                                     'password1': 'test_pass_1!', 'password2': 'test_pass_1!',
+                                     'time_zone': 'America/Chicago'})
+
+        # THEN
+        userhelper.verify_user_not_logged_in(self)
+        self.assertFalse(get_user_model().objects.filter(username='my_test_user').exists())
+        self.assertContains(response, 'Enter a valid email address.')
+
     def test_verification_success(self):
         # GIVEN
         user = userhelper.given_an_inactive_user_exists()
         user.save()
 
         # WHEN
-        response = self.client.get(reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
+        response = self.client.get(
+            reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
 
         # THEN
         user = get_user_model().objects.get(email='test@heliumedu.com')

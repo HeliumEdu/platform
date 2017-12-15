@@ -5,7 +5,7 @@ from future.standard_library import install_aliases
 
 install_aliases()
 import logging
-from urllib.request import urlopen
+from urllib.request import urlopen, URLError
 from rest_framework import serializers
 from rest_framework import status
 
@@ -34,9 +34,12 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         if self.instance and url == self.instance.url:
             return url
 
-        if urlopen(url).getcode() != status.HTTP_200_OK:
+        try:
+            if urlopen(url).getcode() != status.HTTP_200_OK:
+                raise serializers.ValidationError("The URL did not return a valid response.")
+
+            # TODO: parse the URL to validate it is, in fact, an valid ICAL feed
+
+            return url
+        except URLError:
             raise serializers.ValidationError("The URL is not reachable.")
-
-        # TODO: parse the URL to validate it is, in fact, an valid ICAL feed
-
-        return url

@@ -81,7 +81,7 @@ class CourseGroupCourseCategoriesApiDetailView(APIView):
     def get_object(self, request, course_group_id, course_id, pk):
         try:
             return Category.objects.get(course__course_group_id=course_group_id, course_id=course_id, pk=pk)
-        except Course.DoesNotExist:
+        except Category.DoesNotExist:
             raise Http404
 
     def get(self, request, course_group_id, course_id, pk, format=None):
