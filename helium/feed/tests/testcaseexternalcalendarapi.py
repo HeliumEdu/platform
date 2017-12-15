@@ -26,7 +26,10 @@ class TestCaseExternalCalendar(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_feed_externalcalendars_lc')),
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': 1}))
+            self.client.post(reverse('api_feed_externalcalendars_lc')),
+            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -203,10 +206,13 @@ class TestCaseExternalCalendar(TestCase):
         self.assertEqual(external_calendar.url, url)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        externalcalendarhelper.given_external_calendar_exists(user)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
-        response = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+        responses = [
+            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+        ]
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn('not found', response.data['detail'].lower())
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            self.assertIn('not found', response.data['detail'].lower())

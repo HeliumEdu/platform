@@ -22,10 +22,14 @@ class TestCaseUserSettings(TestCase):
         userhelper.given_a_user_exists()
 
         # WHEN
-        response = self.client.get(reverse('api_user_settings'))
+        responses = [
+            self.client.get(reverse('api_user_settings')),
+            self.client.put(reverse('api_user_settings'))
+        ]
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_user_settings(self):
         # GIVEN
