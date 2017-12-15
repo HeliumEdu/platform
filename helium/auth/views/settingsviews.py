@@ -25,6 +25,8 @@ def unsubscribe(request):
         unsubsribed = subscriptionservice.process_unsubscribe(request.GET['username'], request.GET['code'])
 
     if unsubsribed:
+        metricutils.increment(request, 'action.unsubscribe')
+
         set_request_status(request, 'warning',
                            'Sorry we bothered you! You won\'t receive emails from The Helium Team in the future.')
 

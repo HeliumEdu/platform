@@ -8,8 +8,8 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from helium.common.tests.helpers import commonhelper
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 
@@ -52,16 +52,15 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    @mock.patch('helium.feed.serializers.externalcalendarserializer.urlopen')
-    def test_create_externalcalendar(self, mock_urlopen):
+    @mock.patch('helium.feed.services.icalservice.validate_url')
+    def test_create_externalcalendar(self, mock_validate_url):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        commonhelper.given_urlopen_response_value(status.HTTP_200_OK, mock_urlopen)
 
         # WHEN
         data = {
             'title': 'some title',
-            'url': 'http://go.com',
+            'url': 'http://go.com/valid-ical-feed',
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
@@ -163,8 +162,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
-    @mock.patch('helium.feed.serializers.externalcalendarserializer.urlopen')
-    def test_create_bad_data(self, mock_urlopen):
+    def test_create_bad_data(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
@@ -180,7 +178,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertIn('url', response.data)
         self.assertEqual(ExternalCalendar.objects.count(), 0)
 
-    @mock.patch('helium.feed.serializers.externalcalendarserializer.urlopen')
+    @mock.patch('helium.feed.services.icalservice.urlopen')
     def test_update_bad_data(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)

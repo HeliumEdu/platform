@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.forms.userpasswordchangeform import UserPasswordChangeForm
 from helium.auth.serializers.userserializer import UserSerializer
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -61,6 +62,8 @@ class UserApiListView(APIView):
         if len(errors) > 0:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         elif len(data) > 0:
+            metricutils.increment(request, 'action.user.updated')
+
             return Response(data)
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -70,6 +73,8 @@ class UserApiListView(APIView):
 
         if form.is_valid():
             logger.info('User {} deleted'.format(request.user.get_username()))
+
+            metricutils.increment(request, 'action.user.deleted')
 
             form.user.delete()
 

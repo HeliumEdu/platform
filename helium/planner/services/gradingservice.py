@@ -1,5 +1,5 @@
 """
-Service for calculating grades..
+Service for calculating grades.
 """
 
 import logging
