@@ -3,11 +3,12 @@ ExternalCalendar serializer.
 """
 from future.standard_library import install_aliases
 
+from helium.feed.services import icalservice
+from helium.feed.services.icalservice import ICalError
+
 install_aliases()
 import logging
-from urllib.request import urlopen, URLError
 from rest_framework import serializers
-from rest_framework import status
 
 from helium.feed.models import ExternalCalendar
 
@@ -35,11 +36,10 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             return url
 
         try:
-            if urlopen(url).getcode() != status.HTTP_200_OK:
-                raise serializers.ValidationError("The URL did not return a valid response.")
-
-            # TODO: parse the URL to validate it is, in fact, an valid ICAL feed
+            icalservice.validate_url(url)
 
             return url
-        except URLError:
-            raise serializers.ValidationError("The URL is not reachable.")
+        except ICalError as ex:
+            logger.info("Unable to validate external ICAL URL {}: {}".format(url, ex.message))
+
+            raise serializers.ValidationError(ex.message)

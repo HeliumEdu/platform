@@ -6,7 +6,6 @@ import logging
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
-from django.template import Context
 from django.template.loader import get_template
 
 from conf.celery import app
@@ -26,10 +25,12 @@ def send_verification_email(email, username, verification_code, platform_host):
 
     plaintext = get_template('email/verification.txt')
     html = get_template('email/verification.html')
-    c = Context({'PROJECT_NAME': settings.PROJECT_NAME,
-                 'username': username,
-                 'verification_code': verification_code,
-                 'site_url': 'http://{}'.format(platform_host)})
+    c = {
+        'PROJECT_NAME': settings.PROJECT_NAME,
+        'username': username,
+        'verification_code': verification_code,
+        'site_url': 'http://{}'.format(platform_host)
+    }
     text_content = plaintext.render(c)
     html_content = html.render(c)
 
@@ -61,8 +62,10 @@ def send_registration_email(email, platform_host):
 
     plaintext = get_template('email/register.txt')
     html = get_template('email/register.html')
-    c = Context({'PROJECT_NAME': settings.PROJECT_NAME,
-                 'site_url': 'http://{}'.format(platform_host)})
+    c = {
+        'PROJECT_NAME': settings.PROJECT_NAME,
+        'site_url': 'http://{}'.format(platform_host)
+    }
     text_content = plaintext.render(c)
     html_content = html.render(c)
 
@@ -80,8 +83,10 @@ def send_password_reset_email(email, temp_password, platform_host):
 
     plaintext = get_template('email/forgot.txt')
     html = get_template('email/forgot.html')
-    c = Context({'password': temp_password,
-                 'site_url': 'http://{}'.format(platform_host)})
+    c = {
+        'password': temp_password,
+        'site_url': 'http://{}'.format(platform_host)
+    }
     text_content = plaintext.render(c)
     html_content = html.render(c)
 

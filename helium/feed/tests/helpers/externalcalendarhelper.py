@@ -9,7 +9,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-def given_external_calendar_exists(user, title='', url='http://test.com', color='#4442', shown_on_calendar=True):
+def given_external_calendar_exists(user, title='', url='http://go.com/valid-ical-feed', color='#4442', shown_on_calendar=True):
     external_calendar = ExternalCalendar.objects.create(title=title,
                                                         url=url,
                                                         color=color,

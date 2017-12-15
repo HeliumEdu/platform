@@ -9,6 +9,7 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup
 from helium.planner.permissions import IsOwner
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
@@ -35,7 +36,13 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        response = self.create(request, *args, **kwargs)
+
+        logger.info('CourseGroup {} created for user {}'.format(response.data['id'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.coursegroup.created')
+
+        return response
 
 
 class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
@@ -47,7 +54,19 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        response = self.update(request, *args, **kwargs)
+
+        logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.coursegroup.updated')
+
+        return response
 
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        response = self.destroy(request, *args, **kwargs)
+
+        logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.coursegroup.deleted')
+
+        return response

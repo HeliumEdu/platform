@@ -1,5 +1,5 @@
 """
-Tests to ensuring grading service accurately calculates grades.
+Tests to ensuring ICAL service properly validates, parses, and builds ICAL files.
 """
 from django.test import TestCase
 
@@ -8,6 +8,6 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseGradingService(TestCase):
+class TestCaseICALService(TestCase):
     # TODO: not yet implemented
     pass

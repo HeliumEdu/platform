@@ -8,6 +8,6 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseReminder(TestCase):
+class TestCaseReminderService(TestCase):
     # TODO: not yet implemented
     pass

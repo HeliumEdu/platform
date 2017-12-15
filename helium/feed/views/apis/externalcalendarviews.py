@@ -9,6 +9,7 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelM
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.feed.permissions import IsOwner
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
@@ -35,7 +36,14 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        response = self.create(request, *args, **kwargs)
+
+        logger.info(
+            'ExternalCalendar {} created for user {}'.format(response.data['id'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.externalcalendar.created')
+
+        return response
 
 
 class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
@@ -47,7 +55,21 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        response = self.update(request, *args, **kwargs)
+
+        logger.info(
+            'ExternalCalendar {} update for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.externalcalendar.updated')
+
+        return response
 
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        response = self.destroy(request, *args, **kwargs)
+
+        logger.info(
+            'ExternalCalendar {} deleted for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.externalcalendar.deleted')
+
+        return response

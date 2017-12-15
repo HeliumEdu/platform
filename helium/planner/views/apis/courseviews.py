@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course
 from helium.planner.permissions import IsOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
@@ -62,6 +63,12 @@ class CourseGroupCoursesApiListView(APIView):
         if serializer.is_valid():
             serializer.save(course_group_id=course_group_id)
 
+            logger.info(
+                'Course {} created in CourseGroup {} for user {}'.format(serializer.instance.pk, course_group_id,
+                                                                         self.request.user.get_username()))
+
+            metricutils.increment(request, 'action.course.created')
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -93,6 +100,10 @@ class CourseGroupCoursesApiDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+            logger.info('Course {} updated for user {}'.format(pk, self.request.user.get_username()))
+
+            metricutils.increment(request, 'action.course.updated')
+
             return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -102,5 +113,10 @@ class CourseGroupCoursesApiDetailView(APIView):
         self.check_object_permissions(request, course)
 
         course.delete()
+
+        logger.info('Course {} deleted from CourseGroup {} for user {}'.format(pk, course_group_id,
+                                                                               self.request.user.get_username()))
+
+        metricutils.increment(request, 'action.course.deleted')
 
         return Response(status=status.HTTP_204_NO_CONTENT)

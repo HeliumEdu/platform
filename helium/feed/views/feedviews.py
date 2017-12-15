@@ -12,5 +12,5 @@ logger = logging.getLogger(__name__)
 
 
 def feed_ical(request, id):
-    # TODO: not yet implemented, as the slugs rely on not-yet-implemented models in the "planner" app
+    # TODO: not yet implemented
     pass
