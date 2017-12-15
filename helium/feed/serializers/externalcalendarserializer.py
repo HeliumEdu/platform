@@ -27,7 +27,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
 
     def validate_url(self, url):
         """
-        Ensure a valid Google Calendar URL is given.
+        Ensure a valid ICAL URL is given.
 
         :param url: the URL to validate
         :return: the validated URL
