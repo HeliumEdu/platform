@@ -62,7 +62,7 @@ def verify_course_matches_data(test_case, course, data):
     test_case.assertEqual(course.sat_end_time, parser.parse(data['sat_end_time']).time())
     test_case.assertEqual(course.days_of_week_alt, data['days_of_week_alt'])
     test_case.assertEqual(course.sun_start_time_alt, parser.parse(data['sun_start_time_alt']).time())
-    test_case.assertEqual(course.sun_end_time_alt,parser.parse(data['sun_end_time_alt']).time())
+    test_case.assertEqual(course.sun_end_time_alt, parser.parse(data['sun_end_time_alt']).time())
     test_case.assertEqual(course.mon_start_time_alt, parser.parse(data['mon_start_time_alt']).time())
     test_case.assertEqual(course.mon_end_time_alt, parser.parse(data['mon_end_time_alt']).time())
     test_case.assertEqual(course.tue_start_time_alt, parser.parse(data['tue_start_time_alt']).time())

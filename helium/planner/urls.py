@@ -35,14 +35,16 @@ urlpatterns = [
     url(r'^api/planner/courses/$', UserCoursesApiListView.as_view(), name='api_planner_courses_list'),
     url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/$', CourseGroupCoursesApiListView.as_view(),
         name='api_planner_coursegroups_courses_list'),
-    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<pk>[0-9]+)/$', CourseGroupCoursesApiDetailView.as_view(),
+    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<pk>[0-9]+)/$',
+        CourseGroupCoursesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_detail'),
 
     url(r'^api/planner/categories/$', UserCategoriesApiListView.as_view(), name='api_planner_categories_list'),
     url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/$',
         CourseGroupCourseCategoriesApiListView.as_view(),
         name='api_planner_coursegroups_courses_categories_list'),
-    url(r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)$',
+    url(
+        r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)$',
         CourseGroupCourseCategoriesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_categories_detail'),
 ]

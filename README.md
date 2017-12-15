@@ -11,7 +11,7 @@
 * Redis (>= 3.2)
 
 ## Getting Started
-The Platform is developed using Python and [Django](https://www.djangoproject.com/).
+The Platform is developed using Python and [Django](https://www.djangoproject.com).
 
 ### Environment Setup
 Virtualenv creates isolated Python environments so your development area(ss play nicely with each other in regards to
@@ -25,7 +25,7 @@ pip install virtualenv
 virtualenv .venv
 ```
 
-If you're unfamiliar with how works, [read up on it](https://virtualenv.pypa.io/en/stable/). The short version is, you only need to run the
+If you're unfamiliar with how works, [read up on it](https://virtualenv.pypa.io/en/stable). The short version is, you only need to run the
 above one time. After that point, you only need to execute the following command to active and use the isolated environment when developing:
 
 ```

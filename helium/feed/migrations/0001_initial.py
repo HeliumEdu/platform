@@ -8,7 +8,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -24,9 +23,20 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('title', models.CharField(db_index=True, default=b'', max_length=255)),
                 ('url', models.URLField(max_length=255)),
-                ('color', models.CharField(choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'), (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'), (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'), (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'), (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'), (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'), (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'), (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')], default=b'#4986e7', max_length=7)),
+                ('color', models.CharField(
+                    choices=[(b'#ac725e', b'#ac725e'), (b'#d06b64', b'#d06b64'), (b'#f83a22', b'#f83a22'),
+                             (b'#fa573c', b'#fa573c'), (b'#ff7537', b'#ff7537'), (b'#ffad46', b'#ffad46'),
+                             (b'#42d692', b'#42d692'), (b'#16a765', b'#16a765'), (b'#7bd148', b'#7bd148'),
+                             (b'#b3dc6c', b'#b3dc6c'), (b'#fad165', b'#fad165'), (b'#92e1c0', b'#92e1c0'),
+                             (b'#9fe1e7', b'#9fe1e7'), (b'#9fc6e7', b'#9fc6e7'), (b'#4986e7', b'#4986e7'),
+                             (b'#9a9cff', b'#9a9cff'), (b'#b99aff', b'#b99aff'), (b'#c2c2c2', b'#c2c2c2'),
+                             (b'#cabdbf', b'#cabdbf'), (b'#cca6ac', b'#cca6ac'), (b'#f691b2', b'#f691b2'),
+                             (b'#cd74e6', b'#cd74e6'), (b'#a47ae2', b'#a47ae2'), (b'#555', b'#555')],
+                    default=b'#4986e7', max_length=7)),
                 ('shown_on_calendar', models.BooleanField(default=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='external_calendars', to=settings.AUTH_USER_MODEL)),
+                ('user',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='external_calendars',
+                                   to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'abstract': False,

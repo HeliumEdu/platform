@@ -7,7 +7,6 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousOperation, PermissionDenied, ViewDoesNotExist
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from maintenance_mode import settings as maintenance_mode_settings
 from maintenance_mode.core import set_maintenance_mode
 from rest_framework import status
 

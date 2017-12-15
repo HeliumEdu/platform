@@ -51,8 +51,8 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
         if commit:
             user.save()
 
-            # On registration, the user's time zone is also provided; now that the user is created, it's dependent models
-            # have also been created, so save it to the user's settings
+            # On registration, the user's time zone is also provided; now that the user is created, it's dependent
+            # models have also been created, so save it to the user's settings
             user.settings.time_zone = self.cleaned_data.get("time_zone")
             user.settings.save()
 
