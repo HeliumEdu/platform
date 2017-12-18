@@ -10,8 +10,7 @@ django-storages==1.6.5
 djangorestframework==3.7.3
 django-maintenance-mode==0.7.0
 django-pipeline==1.6.13
-celery==4.1.0
-celery[redis]
+celery[redis]==4.1.0
 django-redis==4.8.0
 statsd==3.2.1
 boto==2.48.0
