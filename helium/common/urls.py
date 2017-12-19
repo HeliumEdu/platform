@@ -46,10 +46,3 @@ urlpatterns = [
     url(r'^materials', RedirectView.as_view(pattern_name='materials', permanent=True)),
     url(r'^grades', RedirectView.as_view(pattern_name='grades', permanent=True)),
 ]
-
-if config.DEBUG:
-    import debug_toolbar
-
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
