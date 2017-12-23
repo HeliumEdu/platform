@@ -1,0 +1,35 @@
+/**
+ * Copyright (c) 2017 Helium Edu.
+ *
+ * Stylesheet for the /planner/classes pages.
+ *
+ * @author Alex Laird
+ * @version 1.0.0
+ */
+
+.course-panel-header {
+    margin-top: -20px;
+    padding: 0 0 10px 10px;
+}
+
+.datepicker {
+    z-index: 1151 !important;
+}
+
+#categories-table {
+    width:100%;
+    table-layout:fixed;
+}
+
+#categories-table td {
+    overflow:hidden;
+    white-space:nowrap;
+}
+
+a.course-title-with-link {
+    color: #fff;
+}
+
+a.course-title-with-link:hover {
+    color: #fff;
+}

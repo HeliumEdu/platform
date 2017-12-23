@@ -205,6 +205,24 @@ PIPELINE = {
             ),
             'output_filename': 'css/helium_settings_{}.min.css'.format(PROJECT_VERSION),
         },
+        'classes_pre': {
+            'source_filenames': (
+                'css/vendors/bootstrap-editable.css',
+                'css/vendors/typeahead.js-bootstrap.css',
+                'css/vendors/datepicker.css',
+                'css/vendors/bootstrap-timepicker.css',
+                'css/vendors/jquery.simplecolorpicker.css',
+                'css/vendors/jquery.simplecolorpicker-glyphicons.css',
+                'css/vendors/dropzone.css',
+            ),
+            'output_filename': 'css/helium_classes_pre_{}.min.css'.format(PROJECT_VERSION),
+        },
+        'classes': {
+            'source_filenames': (
+                'css/classes.css',
+            ),
+            'output_filename': 'css/helium_classes_{}.min.css'.format(PROJECT_VERSION),
+        },
     },
     'JAVASCRIPT': {
         'base': {
@@ -249,6 +267,24 @@ PIPELINE = {
                 'js/settings.js',
             ),
             'output_filename': 'js/helium_settings_{}.min.js'.format(PROJECT_VERSION),
+        },
+        'classes': {
+            'source_filenames': (
+                'js/vendors/moment.js',
+                'js/vendors/bootstrap-datepicker.js',
+                'js/vendors/bootstrap-timepicker.js',
+                'js/vendors/bootstrap-editable.js',
+                'js/vendors/typeahead.js',
+                'js/vendors/typeaheadjs.js',
+                'js/vendors/bootbox.js',
+                'js/vendors/jquery.dataTables.js',
+                'js/vendors/jquery.dataTables.bootstrap.js',
+                'js/vendors/jquery.simplecolorpicker.js',
+                'js/vendors/dropzone.min.js',
+                'js/classes/main.js',
+                'js/classes/triggers.js',
+            ),
+            'output_filename': 'js/helium_classes_{}.min.js'.format(PROJECT_VERSION),
         },
     }
 }
