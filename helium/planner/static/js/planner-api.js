@@ -85,7 +85,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -107,7 +112,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -120,25 +130,30 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_course_groups_by_user_id = function (callback, id, async, use_cache) {
+    this.get_course_groups = function (callback, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.course_groups_by_user_id.hasOwnProperty(id)) {
-            ret_val = callback(self.course_groups_by_user_id[id]);
+        if (use_cache && self.course_groups_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.course_groups_by_user_id[helium.USER_PREFS.id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/course_groups_by_user_id/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups",
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.course_groups_by_user_id[id] = data;
-                    callback(self.course_groups_by_user_id[id]);
+                    self.course_groups_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.course_groups_by_user_id[helium.USER_PREFS.id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -163,8 +178,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.course_group[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/course_group/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -172,7 +187,12 @@ function HeliumPlannerAPI() {
                     callback(self.course_group[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -198,7 +218,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -216,14 +241,19 @@ function HeliumPlannerAPI() {
         delete self.course_group[id];
         self.course_groups_by_user_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/course_group/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/coursegroups/" + id,
             async: async,
             data: data,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -240,13 +270,18 @@ function HeliumPlannerAPI() {
         delete self.course_group[id];
         self.course_groups_by_user_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/course_group/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/coursegroups/" + id,
             async: async,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -269,7 +304,7 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.courses_around_date[date]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
+                type: "GET",
                 url: "/planner/courses_around_date/" + date,
                 async: async,
                 dataType: "json",
@@ -278,7 +313,12 @@ function HeliumPlannerAPI() {
                     callback(self.courses_around_date[date]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -290,7 +330,7 @@ function HeliumPlannerAPI() {
      * Compile all Courses for the given CourseGroup ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param ids the ID of the CourseGroup with which to associate
+     * @param id the ID of the CourseGroup with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
@@ -303,8 +343,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.courses_by_course_group_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/courses_by_course_group_id/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + id + "/courses",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -312,7 +352,12 @@ function HeliumPlannerAPI() {
                     callback(self.courses_by_course_group_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -328,25 +373,30 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_all_courses_by_user_id = function (callback, id, async, use_cache) {
+    this.get_all_courses_by_user_id = function (callback, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.courses_by_user_id.hasOwnProperty(id)) {
-            ret_val = callback(self.courses_by_user_id[id]);
+        if (use_cache && self.courses_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.courses_by_user_id[helium.USER_PREFS.id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/all_courses_by_user_id/" + id,
+                type: "GET",
+                url: "/api/planner/courses",
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.courses_by_user_id[id] = data;
-                    callback(self.courses_by_user_id[id]);
+                    self.courses_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.courses_by_user_id[helium.USER_PREFS.id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -362,25 +412,30 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_courses_by_user_id = function (callback, id, async, use_cache) {
+    this.get_courses = function (callback, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.courses_by_user_id.hasOwnProperty(id)) {
-            ret_val = callback(self.courses_by_user_id[id]);
+        if (use_cache && self.courses_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.courses_by_user_id[helium.USER_PREFS.id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/courses_by_user_id/" + id,
+                type: "GET",
+                url: "/api/planner/courses",
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.courses_by_user_id[id] = data;
-                    callback(self.courses_by_user_id[id]);
+                    self.courses_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.courses_by_user_id[helium.USER_PREFS.id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -392,11 +447,12 @@ function HeliumPlannerAPI() {
      * Compile the Course for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
      * @param id the ID of the Course
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_course = function (callback, id, async, use_cache) {
+    this.get_course = function (callback, course_group_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -405,8 +461,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.course[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/course/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -414,7 +470,12 @@ function HeliumPlannerAPI() {
                     callback(self.course[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -426,10 +487,11 @@ function HeliumPlannerAPI() {
      * Create a new Course and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
      * @param data the array of values to set for the new Course
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.add_course = function (callback, data, async) {
+    this.add_course = function (callback, course_group_id, data, async) {
         async = typeof async === "undefined" ? true : async;
         self.courses_around_date = {};
         self.courses_by_course_group_id = {};
@@ -438,13 +500,18 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/course/add",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses",
             async: async,
             data: data,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -453,11 +520,12 @@ function HeliumPlannerAPI() {
      * Edit the Course for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
      * @param id the ID of the Course
      * @param data the array of values to update for the Course
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_course = function (callback, id, data, async) {
+    this.edit_course = function (callback, course_group_id, id, data, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.course[id];
         self.courses_around_date = {};
@@ -466,14 +534,19 @@ function HeliumPlannerAPI() {
         self.category_names = null;
         self.categories_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/course/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses" + id,
             async: async,
             data: data,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -482,10 +555,11 @@ function HeliumPlannerAPI() {
      * Delete the Course for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
      * @param id the ID of the Course
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_course = function (callback, id, async) {
+    this.delete_course = function (callback, course_group_id, id, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.course[id];
         self.courses_around_date = {};
@@ -494,13 +568,18 @@ function HeliumPlannerAPI() {
         self.category_names = null;
         self.categories_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/course/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id,
             async: async,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -531,7 +610,12 @@ function HeliumPlannerAPI() {
                     callback(self.material_group[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -557,7 +641,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -582,7 +671,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -604,7 +698,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -635,7 +734,12 @@ function HeliumPlannerAPI() {
                     callback(self.materials_by_course_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -669,7 +773,12 @@ function HeliumPlannerAPI() {
                     callback(self.material[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -703,7 +812,12 @@ function HeliumPlannerAPI() {
                     callback(self.materials_by_material_group_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -729,7 +843,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -754,7 +873,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -777,7 +901,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -807,7 +936,12 @@ function HeliumPlannerAPI() {
                     callback(self.category_names);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -819,11 +953,12 @@ function HeliumPlannerAPI() {
      * Compile all Categories for the given Course ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup with which to associate
      * @param id the ID of the Course with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_categories_by_course_id = function (callback, id, async, use_cache) {
+    this.get_categories_by_course_id = function (callback, course_group_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -832,8 +967,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.categories_by_course_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/categories_by_course_id/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/categories",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -841,7 +976,12 @@ function HeliumPlannerAPI() {
                     callback(self.categories_by_course_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -853,11 +993,13 @@ function HeliumPlannerAPI() {
      * Compile the Category for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Category
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_category = function (callback, id, async, use_cache) {
+    this.get_category = function (callback, course_group_id, course_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -866,8 +1008,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.category[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/category/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -875,7 +1017,12 @@ function HeliumPlannerAPI() {
                     callback(self.category[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -887,22 +1034,29 @@ function HeliumPlannerAPI() {
      * Create a new Category and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param data the array of values to set for the new Category
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.add_category = function (callback, data, async) {
+    this.add_category = function (callback, course_group_id, course_id, data, async) {
         async = typeof async === "undefined" ? true : async;
         self.category_names = null;
         self.categories_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/category/add",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories",
             async: async,
             data: data,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -911,24 +1065,31 @@ function HeliumPlannerAPI() {
      * Edit the Category for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Category
      * @param data the array of values to update for the Category
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_category = function (callback, id, data, async) {
+    this.edit_category = function (callback, course_group_id, course_id, id, data, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.category[id];
         self.category_names = null;
         self.categories_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/category/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
             async: async,
             data: data,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -937,22 +1098,29 @@ function HeliumPlannerAPI() {
      * Delete the Category for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Category
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_category = function (callback, id, async) {
+    this.delete_category = function (callback, course_group_id, course_id, id, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.category[id];
         self.category_names = null;
         self.categories_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/category/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
             async: async,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -983,7 +1151,12 @@ function HeliumPlannerAPI() {
                     callback(self.homework_by_course_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1017,7 +1190,12 @@ function HeliumPlannerAPI() {
                     callback(self.homework[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1043,7 +1221,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1065,7 +1248,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1091,7 +1279,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1114,7 +1307,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1145,7 +1343,12 @@ function HeliumPlannerAPI() {
                     callback(self.events_by_user_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1179,7 +1382,12 @@ function HeliumPlannerAPI() {
                     callback(self.event[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1205,7 +1413,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1227,7 +1440,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1253,7 +1471,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1276,7 +1499,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1289,7 +1517,7 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_external_calendars_by_user_id = function (callback, id, async, use_cache) {
+    this.get_external_calendars = function (callback, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1298,8 +1526,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.external_calendars_by_user_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/external_calendars_by_user_id/" + id,
+                type: "GET",
+                url: "/api/feed/externalcalendars",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1307,7 +1535,12 @@ function HeliumPlannerAPI() {
                     callback(self.external_calendars_by_user_id[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1343,7 +1576,12 @@ function HeliumPlannerAPI() {
                     callback(self.reminders_by_calendar_item[id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
                 }
             });
         }
@@ -1370,7 +1608,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1393,7 +1636,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1407,7 +1655,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
@@ -1421,7 +1674,12 @@ function HeliumPlannerAPI() {
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
-                callback([{'err_msg': self.GENERIC_ERROR_MESSAGE, 'jqXHR': jqXHR, 'textStatus': textStatus, 'errorThrown': errorThrown}]);
+                callback([{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }]);
             }
         });
     };
