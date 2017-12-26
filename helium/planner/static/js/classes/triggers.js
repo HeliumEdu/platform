@@ -59,11 +59,11 @@
                         }
                         $("#course-group-error").parent().show("fast");
                     } else {
-                        var course_group = data[0].fields;
-                        $('a[href="#course-group-' + data[0].pk + '"]').html("<i class=\"icon-book r-110\"></i> <span class=\"hidden-xs\">" + course_group.title + (!course_group.shown_on_calendar ? " (H)" : "") + "</span>");
-                        $("#course-group-title-" + data[0].pk).html(course_group.title + (!course_group.shown_on_calendar ? " (Hidden)" : ""));
-                        $("#course-group-" + data[0].pk + "-start-date").html(moment(course_group.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
-                        $("#course-group-" + data[0].pk + "-end-date").html(" to " + moment(course_group.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
+                        var course_group = data;
+                        $('a[href="#course-group-' + course_group.id + '"]').html("<i class=\"icon-book r-110\"></i> <span class=\"hidden-xs\">" + course_group.title + (!course_group.shown_on_calendar ? " (H)" : "") + "</span>");
+                        $("#course-group-title-" + course_group.id).html(course_group.title + (!course_group.shown_on_calendar ? " (Hidden)" : ""));
+                        $("#course-group-" + course_group.id + "-start-date").html(moment(course_group.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
+                        $("#course-group-" + course_group.id + "-end-date").html(" to " + moment(course_group.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
 
                         helium.classes.refresh_course_groups();
                         helium.classes.resort_course_groups();
@@ -151,9 +151,9 @@
                 } else {
                     var courses_added = [];
                     $.each(data, function (i, course) {
-                        if ($.inArray(course.pk, courses_added) === -1) {
-                            if (!helium.classes.edit || course.pk !== helium.classes.edit_id) {
-                                courses_added.push(course.pk);
+                        if ($.inArray(course.id, courses_added) === -1) {
+                            if (!helium.classes.edit || course.id !== helium.classes.edit_id) {
+                                courses_added.push(course.id);
                             }
                         }
                     });

@@ -44,7 +44,7 @@ urlpatterns = [
         CourseGroupCourseCategoriesApiListView.as_view(),
         name='api_planner_coursegroups_courses_categories_list'),
     url(
-        r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)$',
+        r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)/$',
         CourseGroupCourseCategoriesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_categories_detail'),
 ]
