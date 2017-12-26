@@ -971,6 +971,7 @@ function HeliumClasses() {
         });
     };
 
+    // FIXME: these course-related functions should be prototyped off a Course object after the open source migration is finished
     this.on_day_of_week = function (course, day) {
         return course.days_of_week.substring(day, day + 1) == '1';
     };
@@ -1534,12 +1535,13 @@ function HeliumClasses() {
                                 });
 
                                 $.each(helium.classes.categories_to_delete, function (i, category_id) {
-                                    helium.planner_api.delete_category(function () {
-                                    }, self.course_group_id, self.edit_id, category_id, false);
+                                    helium.classes.ajax_calls.push(helium.planner_api.delete_category(function () {
+                                    }, self.course_group_id, self.edit_id, category_id));
                                 });
-                                helium.classes.categories_to_delete = [];
 
                                 $.when.apply(this, helium.classes.ajax_calls).done(function () {
+                                    helium.classes.categories_to_delete = [];
+
                                     var row_div = $("#course-" + data.id);
                                     self.course_group_table[data.course_group.toString()].cell(row_div, 0).data("<span class=\"label label-sm\" style=\"background-color: " + data.color + " !important\">" + (data.website !== "" ? "<a target=\"_blank\" href=\"" + data.website + "\" class=\"course-title-with-link\">" + data.title + " <i class=\"icon-external-link bigger-110\"></i></a>" : data.title) + "</span>");
                                     self.course_group_table[data.course_group.toString()].cell(row_div, 1).data(moment(data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + " to " + moment(data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
@@ -1591,12 +1593,13 @@ function HeliumClasses() {
                                 });
 
                                 $.each(helium.classes.categories_to_delete, function (i, category_id) {
-                                    helium.planner_api.delete_category(function () {
-                                    }, data.course_group, data.id, category_id, false);
+                                    helium.classes.ajax_calls.push(helium.planner_api.delete_category(function () {
+                                    }, data.course_group, data.id, category_id));
                                 });
-                                helium.classes.categories_to_delete = [];
 
                                 $.when.apply(this, helium.classes.ajax_calls).done(function () {
+                                    helium.classes.categories_to_delete = [];
+
                                     self.add_course_to_groups(data, self.course_group_table[data.course_group.toString()]);
                                     self.course_group_table[data.course_group.toString()].draw();
 
