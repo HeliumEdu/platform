@@ -171,12 +171,12 @@
                                             </a>
                                         </li>
 
-                                        <li class="col-xs-12 col-sm-reset">
-                                            <a data-toggle="tab" href="#course-panel-tab-4">
-                                                <i class="orange icon-paperclip bigger-120 hidden-xs"></i>
-                                                Attachments
-                                            </a>
-                                        </li>
+{#                                        <li class="col-xs-12 col-sm-reset">#}
+{#                                            <a data-toggle="tab" href="#course-panel-tab-4">#}
+{#                                                <i class="orange icon-paperclip bigger-120 hidden-xs"></i>#}
+{#                                                Attachments#}
+{#                                            </a>#}
+{#                                        </li>#}
                                     </ul>
 
                                     <div class="tab-content no-border padding-24 no-padding-bottom">
@@ -751,34 +751,34 @@
                                             </table>
                                         </div>
 
-                                        <div id="course-panel-tab-4" class="tab-pane fade">
-                                            <div id="dropzone">
-                                                <form action="/planner/attachment/add" id="dropzone-form"
-                                                      class="dropzone" method="POST">
-                                                    <div class="fallback">
-                                                        <input name="attachment" type="file" multiple=""/>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            <div class="space-12"></div>
-                                            <table id="attachments-table"
-                                                   class="table table-striped table-bordered table-hover">
-                                                <thead>
-                                                <tr>
-                                                    <th width="70%">Name</th>
-                                                    <th width="15%">Size</th>
-                                                    <th width="40px"></th>
-                                                </tr>
-                                                </thead>
-
-                                                <tbody id="attachments-table-body">
-                                                <tr id="no-attachments">
-                                                    <td colspan="4"
-                                                        class="text-center">No attachments! Get started by adding dropping an attachment above.</td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+{#                                        <div id="course-panel-tab-4" class="tab-pane fade">#}
+{#                                            <div id="dropzone">#}
+{#                                                <form action="/planner/attachment/add" id="dropzone-form"#}
+{#                                                      class="dropzone" method="POST">#}
+{#                                                    <div class="fallback">#}
+{#                                                        <input name="attachment" type="file" multiple=""/>#}
+{#                                                    </div>#}
+{#                                                </form>#}
+{#                                            </div>#}
+{#                                            <div class="space-12"></div>#}
+{#                                            <table id="attachments-table"#}
+{#                                                   class="table table-striped table-bordered table-hover">#}
+{#                                                <thead>#}
+{#                                                <tr>#}
+{#                                                    <th width="70%">Name</th>#}
+{#                                                    <th width="15%">Size</th>#}
+{#                                                    <th width="40px"></th>#}
+{#                                                </tr>#}
+{#                                                </thead>#}
+{##}
+{#                                                <tbody id="attachments-table-body">#}
+{#                                                <tr id="no-attachments">#}
+{#                                                    <td colspan="4"#}
+{#                                                        class="text-center">No attachments! Get started by adding dropping an attachment above.</td>#}
+{#                                                </tr>#}
+{#                                                </tbody>#}
+{#                                            </table>#}
+{#                                        </div>#}
 
                                     </div>
                                     <div class="row to-hide">

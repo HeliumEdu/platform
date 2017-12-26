@@ -212,7 +212,7 @@ function HeliumPlannerAPI() {
         self.course_groups_by_user_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/course_group/add",
+            url: "/api/planner/coursegroups/",
             async: async,
             data: data,
             dataType: "json",
@@ -242,7 +242,7 @@ function HeliumPlannerAPI() {
         self.course_groups_by_user_id = {};
         return $.ajax({
             type: "PUT",
-            url: "/api/planner/coursegroups/" + id,
+            url: "/api/planner/coursegroups/" + id + "/",
             async: async,
             data: data,
             dataType: "json",
@@ -500,7 +500,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/",
             async: async,
             data: data,
             dataType: "json",
@@ -535,7 +535,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "PUT",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses" + id,
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
             async: async,
             data: data,
             dataType: "json",
@@ -1031,7 +1031,7 @@ function HeliumPlannerAPI() {
     };
 
     /**
-     * Create a new Category and pass the returned values to the given callback function in JSON format.
+     * Create new Categories and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
      * @param course_group_id the ID of the CourseGroup
@@ -1045,7 +1045,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/",
             async: async,
             data: data,
             dataType: "json",
@@ -1078,7 +1078,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "PUT",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id + "/",
             async: async,
             data: data,
             dataType: "json",
