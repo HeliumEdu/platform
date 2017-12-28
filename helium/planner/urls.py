@@ -11,6 +11,8 @@ from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
+from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
+from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
 from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
@@ -47,4 +49,8 @@ urlpatterns = [
         r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)/$',
         CourseGroupCourseCategoriesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_categories_detail'),
+
+    url(r'^api/planner/materialgroups/$', MaterialGroupsApiListView.as_view(), name='api_planner_materialgroups_list'),
+    url(r'^api/planner/materialgroups/(?P<pk>[0-9]+)/$', MaterialGroupsApiDetailView.as_view(),
+        name='api_planner_materialgroups_detail'),
 ]

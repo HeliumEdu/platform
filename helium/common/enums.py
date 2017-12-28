@@ -340,3 +340,39 @@ ALLOWED_COLORS = (
     ('#a47ae2', '#a47ae2'),
     ('#555', '#555')
 )
+
+OWNED = 0
+RENTED = 1
+ORDERED = 2
+TO_SELL = 6
+SHIPPED = 3
+NEED = 4
+RECEIVED = 5
+MATERIAL_STATUS_CHOICES = (
+    (OWNED, 'Owned'),
+    (RENTED, 'Rented'),
+    (ORDERED, 'Ordered'),
+    (SHIPPED, 'Shipped'),
+    (NEED, 'Need'),
+    (RECEIVED, 'Received'),
+    (TO_SELL, 'To Sell')
+)
+
+BRAND_NEW = 0
+REFURBISHED = 1
+USED_LIKE_NEW = 2
+USED_VERY_GOOD = 3
+USED_GOOD = 4
+USED_ACCEPTABLE = 5
+USED_POOR = 6
+BROKEN = 7
+CONDITION_CHOICES = (
+    (BRAND_NEW, 'Brand New'),
+    (REFURBISHED, 'Refurbished'),
+    (USED_LIKE_NEW, 'Used - Like New'),
+    (USED_VERY_GOOD, 'Used - Very Good'),
+    (USED_GOOD, 'Used - Good'),
+    (USED_ACCEPTABLE, 'Used - Acceptable'),
+    (USED_POOR, 'Used - Poor'),
+    (BROKEN, 'Broken')
+)
