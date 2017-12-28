@@ -23,10 +23,12 @@ class Material(BasePlannerModel):
 
     website = models.URLField(max_length=255, blank=True, null=True)
 
+    # TODO: refactor to use a DecimalField instead of CharField
     price = models.CharField(max_length=255, blank=True, null=True)
 
     details = models.TextField(default='', blank=True)
 
+    # TODO: consider eliminating and just consolidating into 'details' depending on usage
     seller_details = models.TextField(default='', blank=True)
 
     material_group = models.ForeignKey('MaterialGroup', related_name='materials', on_delete=models.CASCADE)
