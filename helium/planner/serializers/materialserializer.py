@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class MaterialSerializer(serializers.ModelSerializer):
-    courses = serializers.PrimaryKeyRelatedField(many=True, queryset=Course.objects.all())
+    courses = serializers.PrimaryKeyRelatedField(many=True, queryset=Course.objects.all(), required=False)
 
     class Meta:
         model = Material

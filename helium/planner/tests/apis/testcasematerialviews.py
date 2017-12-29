@@ -84,7 +84,7 @@ class TestCaseAPIMaterialViews(TestCase):
             'details': 'N/A',
             'seller_details': 'Email: carl@email.com',
             'material_group': material_group.pk,
-            'courses': course.pk
+            'courses': '[{}]'.format(course.pk)
         }
         response = self.client.post(
             reverse('api_planner_materialgroups_materials_list', kwargs={'material_group_id': material_group.pk}),
@@ -131,7 +131,7 @@ class TestCaseAPIMaterialViews(TestCase):
             'details': 'N/A',
             'seller_details': 'Email: carl@email.com',
             'material_group': material_group2.pk,
-            'courses': course2.pk
+            'courses': '[{}]'.format(course2.pk)
         }
         response = self.client.put(
             reverse('api_planner_materialgroups_materials_detail',
@@ -143,7 +143,7 @@ class TestCaseAPIMaterialViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], data['title'])
         self.assertEqual(response.data['material_group'], data['material_group'])
-        self.assertEqual(response.data['courses'], [data['courses']])
+        self.assertEqual(response.data['courses'], json.loads(data['courses']))
         material = Material.objects.get(pk=material.pk)
         materialhelper.verify_material_matches_data(self, material, response.data)
 
@@ -158,7 +158,7 @@ class TestCaseAPIMaterialViews(TestCase):
 
         # WHEN
         data = {
-            'courses': ','.join([str(course1.pk), str(course2.pk)]),
+            'courses': '[{},{}]'.format(course1.pk, course2.pk),
             # Intentionally NOT changing these value
             'material_group': material.material_group.pk
         }
@@ -169,11 +169,8 @@ class TestCaseAPIMaterialViews(TestCase):
             content_type='application/json')
 
         # THEN
-        course_ids = data['courses'].split(',')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(response.data['courses']), len(course_ids))
-        for i, course_id in enumerate(response.data['courses']):
-            self.assertEqual(course_id, int(course_ids[i]))
+        self.assertEqual(response.data['courses'], json.loads(data['courses']))
         material = Material.objects.get(pk=material.pk)
         materialhelper.verify_material_matches_data(self, material, response.data)
 
@@ -216,7 +213,7 @@ class TestCaseAPIMaterialViews(TestCase):
                     'price': 500.27,
                     'details': 'N/A',
                     'seller_details': 'Email: carl@email.com',
-                    'courses': course2.pk
+                    'courses': '[{}]'.format(course2.pk)
                 }),
                 content_type='application/json'),
             self.client.post(
@@ -236,7 +233,7 @@ class TestCaseAPIMaterialViews(TestCase):
                         kwargs={'material_group_id': material_group1.pk, 'pk': material.pk}),
                 json.dumps(
                     {
-                        'courses': course2.pk,
+                        'courses': '[{}]'.format(course2.pk),
                         # Intentionally NOT changing these value
                         'material_group': material.material_group.pk
                     }),
