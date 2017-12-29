@@ -48,15 +48,11 @@
             };
             if (helium.materials.edit) {
                 helium.planner_api.edit_material_group(function (data) {
-                    if (helium.is_data_invalid(data)) {
+                    if (helium.data_has_err_msg(data)) {
                         helium.ajax_error_occurred = true;
                         $("#loading-material-group-modal").spin(false);
 
-                        if (helium.data_has_err_msg(data)) {
-                            $("#material-group-error").html(data[0].err_msg);
-                        } else {
-                            $("#material-group-error").html("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                        }
+                        $("#material-group-error").html(data[0].err_msg);
                         $("#material-group-error").parent().show("fast");
                     } else {
                         var material_group = data;
@@ -158,15 +154,11 @@
                     }
                     if (helium.materials.edit) {
                         helium.planner_api.edit_material(function (data) {
-                            if (helium.is_data_invalid(data)) {
+                            if (helium.data_has_err_msg(data)) {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-material-modal").spin(false);
 
-                                if (helium.data_has_err_msg(data)) {
-                                    $("#material-error").html(data.err_msg);
-                                } else {
-                                    $("#material-error").html("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                                }
+                                $("#material-error").html(data[0].err_msg);
                                 $("#material-error").parent().show("fast");
                             } else {
                                 var row_div = $("#material-" + data.id);
@@ -195,15 +187,12 @@
                         }, data["material_group"], helium.materials.edit_id, data);
                     } else {
                         helium.planner_api.add_material(function (data) {
-                            if (helium.is_data_invalid(data)) {
+                            if (helium.data_has_err_msg(data)) {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-material-modal").spin(false);
 
-                                if (helium.data_has_err_msg(data)) {
-                                    bootbox.alert(data[0].err_msg);
-                                } else {
-                                    bootbox.alert("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                                }
+                                $("#material-error").html(data[0].err_msg);
+                                $("#material-error").parent().show("fast");
                             } else {
                                 // Do not close the modal dialog until database saving is complete
                                 $.when.apply(this, helium.materials.ajax_calls).done(function () {
