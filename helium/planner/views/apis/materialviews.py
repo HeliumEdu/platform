@@ -63,7 +63,7 @@ class MaterialGroupMaterialsApiListView(APIView):
         return Response(serializer.data)
 
     def post(self, request, material_group_id, format=None):
-        data = dict(request.data)
+        data = request.data.copy()
 
         self.check_material_group_permission(request, material_group_id)
         if 'courses' in data:
@@ -121,7 +121,7 @@ class MaterialGroupMaterialsApiDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, material_group_id, pk, format=None):
-        data = dict(request.data)
+        data = request.data.copy()
 
         material = self.get_object(request, material_group_id, pk)
         self.check_object_permissions(request, material)

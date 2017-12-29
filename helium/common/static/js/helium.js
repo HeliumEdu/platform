@@ -191,18 +191,6 @@ function Helium() {
      *
      * @param data the returned data object
      */
-    this.is_data_invalid = function (data) {
-        return (data == undefined || (data.length === 1 && (data[0].hasOwnProperty("err_msg"))));
-    };
-
-    /**
-     * Checks if data from the return of an Ajax call contains a single err_msg field.
-     *
-     * Note that value comparisons in this function are intentionally fuzzy, as they returned data type may not
-     * necessarily be know.
-     *
-     * @param data the returned data object
-     */
     this.data_has_err_msg = function (data) {
         return data != undefined && data.length === 1 && data[0].hasOwnProperty("err_msg");
     };
@@ -253,14 +241,10 @@ function Helium() {
 
         var id = $(this).parent().attr("id").split("reminder-popup-")[1], data = {'sent': true}, reminder_div = $(this).parent();
         helium.planner_api.edit_reminder(function (data) {
-            if (helium.is_data_invalid(data)) {
+            if (helium.data_has_err_msg(data)) {
                 helium.ajax_error_occurred = true;
 
-                if (helium.data_has_err_msg(data)) {
-                    bootbox.alert(data[0].err_msg);
-                } else {
-                    bootbox.alert("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                }
+                bootbox.alert(data[0].err_msg);
             } else {
                 var new_count = parseInt($("#reminder-bell-count").text()) - 1;
                 reminder_div.hide();

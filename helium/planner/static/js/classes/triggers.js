@@ -49,15 +49,11 @@
             };
             if (helium.classes.edit) {
                 helium.planner_api.edit_course_group(function (data) {
-                    if (helium.is_data_invalid(data)) {
+                    if (helium.data_has_err_msg(data)) {
                         helium.ajax_error_occurred = true;
                         $("#loading-course-group-modal").spin(false);
 
-                        if (helium.data_has_err_msg(data)) {
-                            $("#course-group-error").html(data[0].err_msg);
-                        } else {
-                            $("#course-group-error").html("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                        }
+                        $("#course-group-error").html(data[0].err_msg);
                         $("#course-group-error").parent().show("fast");
                     } else {
                         var course_group = data;
@@ -139,15 +135,11 @@
             $("#loading-course-modal").spin(helium.SMALL_LOADING_OPTS);
 
             helium.planner_api.get_courses_by_course_group_id(function (data) {
-                if (helium.is_data_invalid(data)) {
+                if (helium.data_has_err_msg(data)) {
                     helium.ajax_error_occurred = true;
                     $("#loading-course-modal").spin(false);
 
-                    if (helium.data_has_err_msg(data)) {
-                        $("#course-error").html(data[0].err_msg);
-                    } else {
-                        $("#course-error").html("Oops, an unknown error has occurred. If the error persists, <a href=\"/support\">contact support</a>.");
-                    }
+                    $("#course-error").html(data[0].err_msg);
                     $("#course-error").parent().show("fast");
                 } else {
                     var courses_added = [];
