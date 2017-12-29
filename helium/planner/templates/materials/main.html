@@ -1,20 +1,247 @@
 {% extends "base.html" %}
 {% load staticfiles %}
+{% load pipeline %}
 
 {% block title %}{{ PROJECT_NAME }} | Materials{% endblock %}
 
 {% block body_class_attrs %}navbar-fixed{% endblock %}
 
+{% block page_header_css %}
+    {% stylesheet 'materials_pre' %}
+{% endblock %}
+
+{% block page_header %}
+    {% stylesheet 'materials' %}
+{% endblock %}
+
 {% block content %}
-<div class="main-container">
-    <div class="container">
-        <div class="page-content">
-            <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    Nothing to do here yet ...
+    <div class="main-container">
+        <div class="container">
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>
+                        Materials
+                        <small class="hidden-print">
+                            <i class="icon-double-angle-right"></i>
+                            &nbsp;manage books and materials for your classes
+                            <div id="materials-loading" class="loading-mini" style="padding-left: 25px;">
+                                <div id="loading-materials"></div>
+                            </div>
+                        </small>
+                    </h1>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="tabbable tabs-left">
+                            <ul class="nav nav-tabs hidden-print hidden-xs" id="material-group-tabs">
+                                <li id="create-material-group-li" class="hidden-xs">
+                                    <a href="#" id="create-material-group" class="green">
+                                        <i class="icon-plus-sign-alt green bigger-110"></i>
+                                        Group
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="material-group-tab-content">
+                                <div id="no-materials-tab" class="tab-pane">
+                                    <div class="helper-container">
+                                        <div class="well">
+                                            <h1 class="grey lighter smaller">
+                                                <img src="{% static 'img/logo_square.png' %}" width="50" height="50"
+                                                     class="logo-icon"/>
+                                                Add Your Materials to Get Started
+                                            </h1>
+
+                                            <hr>
+                                            <h3 class="lighter smaller">You haven't created any materials yet! No big
+                                                deal. Click anywhere in this box to create your first material!</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="material-group-modal" tabindex="-1" role="dialog"
+                 aria-labelledby="material-group-modal-label"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="material-group-modal-label">Add Group</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal" role="form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-group-title">Title</label>
+
+                                    <div class="col-sm-7">
+                                        <input id="material-group-title" class="form-control" maxlength="255"
+                                               placeholder="Textbooks" autocomplete="off" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="left-buffer-70 right-buffer-30">
+                                        <input id="material-group-shown-on-calendar" class="ace" type="checkbox"/>
+                                        <span class="lbl"> Hide materials in this group on the Calendar</span>
+                                    </label>
+                                </div>
+                                <div class="row to-hide">
+                                    <div id="material-group-error"
+                                         class="col-sm-8 col-sm-offset-2 alert alert-danger"></div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <div id="material-group-modal-loading" class="loading-mini">
+                                <div id="loading-material-group-modal"></div>
+                            </div>
+                            <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+                                <i class="icon-remove"></i>
+                                Cancel
+                            </button>
+                            <button id="save-material-group" type="button" class="btn btn-primary btn-sm">
+                                <i class="icon-check"></i>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="material-modal" tabindex="-1" role="dialog"
+                 aria-labelledby="material-modal-label"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="material-modal-label">Add Material</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal" role="form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-title">Title</label>
+
+                                    <div class="col-sm-7">
+                                        <input id="material-title" class="form-control" maxlength="255"
+                                               placeholder="Uncle Tom's Cabin (Dover Thrift Editions)"
+                                               autocomplete="off"
+                                               type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group hidden" id="material-group-form-group">
+                                    <input id="material-group" type="text"/>
+                                </div>
+                                <div class="form-group to-hide" id="material-courses-form-group">
+                                    <label class="col-sm-3 control-label" for="material-courses">Classes</label>
+
+                                    <div class="col-sm-7">
+                                        <select class="chosen-select tag-input-style" id="material-courses"
+                                                multiple="multiple"
+                                                data-placeholder=" ">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-status">Status</label>
+
+                                    <div class="col-sm-7">
+                                        <select id="material-status" name="material-status">
+                                            <option value="0">Owned</option>
+                                            <option value="1">Rented</option>
+                                            <option value="2">Ordered</option>
+                                            <option value="3">Shipped</option>
+                                            <option value="4">Need</option>
+                                            <option value="5">Received</option>
+                                            <option value="6">To Sell</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-condition">Condition</label>
+
+                                    <div class="col-sm-7">
+                                        <select id="material-condition" name="material-condition">
+                                            <option value="0">Brand New</option>
+                                            <option value="1">Refurbished</option>
+                                            <option value="2">Used - Like New</option>
+                                            <option value="3">Used - Very Good</option>
+                                            <option value="4">Used - Good</option>
+                                            <option value="5">Used - Acceptable</option>
+                                            <option value="6">Used - Poor</option>
+                                            <option value="7">Broken</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-website">Website</label>
+
+                                    <div class="col-sm-7">
+                                        <input id="material-website" class="form-control" maxlength="255"
+                                               autocomplete="off" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-price">Price</label>
+
+                                    <div class="col-sm-7">
+                                        <input id="material-price" class="form-control" maxlength="255"
+                                               autocomplete="off" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-details">Other Details</label>
+
+                                    <div class="col-sm-7">
+                                        <div id="material-details" class="wysiwyg-editor comment-editor"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"
+                                           for="material-seller-details">Seller Details</label>
+
+                                    <div class="col-sm-7">
+                                        <div id="material-seller-details" class="wysiwyg-editor comment-editor"></div>
+                                    </div>
+                                </div>
+                                <div class="row to-hide">
+                                    <div id="material-error"
+                                         class="col-sm-8 col-sm-offset-2 alert alert-danger"></div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <div id="material-modal-loading" class="loading-mini">
+                                <div id="loading-material-modal"></div>
+                            </div>
+                            <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+                                <i class="icon-remove"></i>
+                                Cancel
+                            </button>
+                            <button id="save-material" type="button" class="btn btn-primary btn-sm">
+                                <i class="icon-check"></i>
+                                Save
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
+
+{% block page_footer %}
+    {% javascript 'materials' %}
 {% endblock %}

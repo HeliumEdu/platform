@@ -41,11 +41,12 @@
         if (/\S/.test(course_group_title) && course_group_start_date !== "" && course_group_end_date !== "") {
             $("#loading-course-group-modal").spin(helium.SMALL_LOADING_OPTS);
 
-            data = {"title": course_group_title,
+            data = {
+                "title": course_group_title,
                 "start_date": moment(course_group_start_date, helium.HE_DATE_STRING_CLIENT).format(helium.HE_DATE_STRING_SERVER),
                 "end_date": moment(course_group_end_date, helium.HE_DATE_STRING_CLIENT).format(helium.HE_DATE_STRING_SERVER),
-                "shown_on_calendar": !$("#course-group-shown-on-calendar").prop("checked"),
-                "user": helium.USER_PREFS.id};
+                "shown_on_calendar": !$("#course-group-shown-on-calendar").prop("checked")
+            };
             if (helium.classes.edit) {
                 helium.planner_api.edit_course_group(function (data) {
                     if (helium.is_data_invalid(data)) {

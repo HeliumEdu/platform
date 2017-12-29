@@ -77,6 +77,12 @@ class CourseGroupCoursesApiListView(APIView):
 class CourseGroupCoursesApiDetailView(APIView):
     permission_classes = (IsAuthenticated, IsOwner,)
 
+    def check_course_group_permission(self, request, course_group_id):
+        if not CourseGroup.objects.filter(pk=course_group_id).exists():
+            raise NotFound('CourseGroup not found.')
+        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
+            self.permission_denied(request, 'You do not have permission to perform this action.')
+
     def get_object(self, request, course_group_id, pk):
         try:
             return Course.objects.get(course_group_id=course_group_id, pk=pk)
@@ -94,6 +100,8 @@ class CourseGroupCoursesApiDetailView(APIView):
     def put(self, request, course_group_id, pk, format=None):
         course = self.get_object(request, course_group_id, pk)
         self.check_object_permissions(request, course)
+        if 'course_group' in request.data:
+            self.check_course_group_permission(request, request.data['course_group'])
 
         serializer = CourseSerializer(course, data=request.data)
 

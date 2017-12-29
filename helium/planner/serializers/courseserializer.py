@@ -26,4 +26,4 @@ class CourseSerializer(serializers.ModelSerializer):
             'tue_start_time_alt', 'tue_end_time_alt', 'wed_start_time_alt', 'wed_end_time_alt', 'thu_start_time_alt',
             'thu_end_time_alt', 'fri_start_time_alt', 'fri_end_time_alt', 'sat_start_time_alt', 'sat_end_time_alt',
             'course_group')
-        read_only_fields = ('current_grade', 'trend', 'private_slug', 'course_group',)
+        read_only_fields = ('current_grade', 'trend', 'private_slug',)
