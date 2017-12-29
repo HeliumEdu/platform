@@ -1,7 +1,7 @@
 """
 Authenticated views for Material interaction.
 """
-
+import json
 import logging
 
 from django.http import Http404
@@ -67,18 +67,17 @@ class MaterialGroupMaterialsApiListView(APIView):
 
         self.check_material_group_permission(request, material_group_id)
         if 'courses' in data:
-            course_ids = str(data['courses']).split(',')
-            data['courses'] = []
-            for course_id in course_ids:
-                data['courses'].append(course_id)
+            courses = json.loads(data['courses'])
+            for course_id in courses:
                 self.check_course_permission(request, course_id)
+            data.pop('courses')
         else:
-            data['courses'] = []
+            courses = []
 
         serializer = MaterialSerializer(data=data)
 
         if serializer.is_valid():
-            serializer.save(material_group_id=material_group_id)
+            serializer.save(material_group_id=material_group_id, courses=courses)
 
             logger.info(
                 'Material {} created in MaterialGroup {} for user {}'.format(serializer.instance.pk, material_group_id,
@@ -128,18 +127,17 @@ class MaterialGroupMaterialsApiDetailView(APIView):
         if 'material_group' in data:
             self.check_material_group_permission(request, data['material_group'])
         if 'courses' in data:
-            course_ids = str(data['courses']).split(',')
-            data['courses'] = []
-            for course_id in course_ids:
-                data['courses'].append(course_id)
+            courses = json.loads(data['courses'])
+            for course_id in courses:
                 self.check_course_permission(request, course_id)
+            data.pop('courses')
         else:
-            data['courses'] = []
+            courses = []
 
         serializer = MaterialSerializer(material, data=data)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(courses=courses)
 
             logger.info('Material {} updated for user {}'.format(pk, self.request.user.get_username()))
 
