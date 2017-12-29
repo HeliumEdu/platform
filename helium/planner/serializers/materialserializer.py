@@ -5,7 +5,7 @@ import logging
 
 from rest_framework import serializers
 
-from helium.planner.models import Material
+from helium.planner.models import Material, Course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2015, Helium Edu'
@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    courses = serializers.PrimaryKeyRelatedField(many=True, queryset=Course.objects.all())
+
     class Meta:
         model = Material
         fields = (

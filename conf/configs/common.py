@@ -223,6 +223,18 @@ PIPELINE = {
             ),
             'output_filename': 'css/helium_classes_{}.min.css'.format(PROJECT_VERSION),
         },
+        'materials_pre': {
+            'source_filenames': (
+                'css/vendors/bootstrap-editable.css',
+            ),
+            'output_filename': 'css/helium_materials_pre_{}.min.css'.format(PROJECT_VERSION),
+        },
+        'materials': {
+            'source_filenames': (
+                'css/materials.css',
+            ),
+            'output_filename': 'css/helium_materials_{}.min.css'.format(PROJECT_VERSION),
+        },
     },
     'JAVASCRIPT': {
         'base': {
@@ -285,6 +297,19 @@ PIPELINE = {
                 'js/classes/triggers.js',
             ),
             'output_filename': 'js/helium_classes_{}.min.js'.format(PROJECT_VERSION),
+        },
+        'materials': {
+            'source_filenames': (
+                'js/vendors/bootstrap-editable.js',
+                'js/vendors/bootbox.js',
+                'js/vendors/jquery.dataTables.js',
+                'js/vendors/jquery.dataTables.bootstrap.js',
+                'js/vendors/jquery.hotkeys.js',
+                'js/vendors/bootstrap-wysiwyg.js',
+                'js/materials/main.js',
+                'js/materials/triggers.js',
+            ),
+            'output_filename': 'js/helium_materials_{}.min.js'.format(PROJECT_VERSION),
         },
     }
 }

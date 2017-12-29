@@ -89,7 +89,8 @@ class TestCaseAPICourseViews(TestCase):
             'fri_end_time': '15:30:00',
             'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
-            'wed_end_time_alt': '19:30:00'
+            'wed_end_time_alt': '19:30:00',
+            'course_group': course_group.pk
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group.pk}),
@@ -122,8 +123,9 @@ class TestCaseAPICourseViews(TestCase):
     def test_update_course_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
+        course_group1 = coursegrouphelper.given_course_group_exists(user)
+        course_group2 = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group1)
 
         # WHEN
         data = {
@@ -146,11 +148,12 @@ class TestCaseAPICourseViews(TestCase):
             'fri_end_time': '15:30:00',
             'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
-            'wed_end_time_alt': '19:30:00'
+            'wed_end_time_alt': '19:30:00',
+            'course_group': course_group2.pk
         }
         response = self.client.put(
             reverse('api_planner_coursegroups_courses_detail',
-                    kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
+                    kwargs={'course_group_id': course_group1.pk, 'pk': course.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -194,6 +197,38 @@ class TestCaseAPICourseViews(TestCase):
         self.assertFalse(Course.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(Course.objects.count(), 0)
 
+    def test_ownership_another_user_forbidden(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        course_group1 = coursegrouphelper.given_course_group_exists(user1)
+        course_group2 = coursegrouphelper.given_course_group_exists(user2)
+        course = coursehelper.given_course_exists(course_group1)
+
+        # WHEN
+        responses = [
+            self.client.post(
+                reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group2.pk}),
+                json.dumps({}),
+                content_type='application/json'),
+            self.client.put(
+                reverse('api_planner_coursegroups_courses_detail',
+                        kwargs={'course_group_id': course_group1.pk, 'pk': course.pk}),
+                json.dumps(
+                    {
+                        'course_group': course_group2.pk,
+                        # Intentionally NOT changing these value
+                        'credits': course.credits,
+                        'start_date': course.start_date.isoformat(),
+                        'end_date': course.end_date.isoformat(),
+                    }),
+                content_type='application/json')
+        ]
+
+        # THEN
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
@@ -223,9 +258,8 @@ class TestCaseAPICourseViews(TestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        course_group1 = coursegrouphelper.given_course_group_exists(user)
-        course_group2 = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group2)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
         current_grade = course.current_grade
         trend = course.trend
         private_slug = course.private_slug
@@ -235,14 +269,14 @@ class TestCaseAPICourseViews(TestCase):
             'current_grade': 23,
             'trend': 1.5,
             'private_slug': 'new_slug',
-            'course_group': course_group1.pk,
             # Intentionally NOT changing these value
             'credits': course.credits,
             'start_date': course.start_date.isoformat(),
-            'end_date': course.end_date.isoformat()
+            'end_date': course.end_date.isoformat(),
+            'course_group': course.course_group.pk
         }
         response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
-                                           kwargs={'course_group_id': course_group2.pk, 'pk': course.pk}),
+                                           kwargs={'course_group_id': course_group.pk, 'pk': course.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -251,7 +285,6 @@ class TestCaseAPICourseViews(TestCase):
         self.assertEqual(course.current_grade, current_grade)
         self.assertEqual(course.trend, trend)
         self.assertEqual(course.private_slug, private_slug)
-        self.assertEqual(course.course_group.pk, course_group2.pk)
 
     def test_create_bad_data(self):
         # GIVEN

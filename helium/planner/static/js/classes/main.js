@@ -1169,9 +1169,6 @@ function HeliumClasses() {
     this.initialize_datetime = function () {
         var start_date, end_date, start_time, end_time;
 
-        bootbox.setDefaults({
-            locale: 'en'
-        });
         $(".date-picker").datepicker({
             autoclose: true,
             language: 'en',
@@ -1432,7 +1429,6 @@ function HeliumClasses() {
                     "start_date": start_date,
                     "end_date": end_date,
                     "shown_on_calendar": true,
-                    "user": helium.USER_PREFS.id,
                     "average_grade": -1
                 };
 
@@ -1514,7 +1510,7 @@ function HeliumClasses() {
                         "is_online": $("#course-online").is(":checked"),
                         "teacher_name": $("#course-teacher-name").val(),
                         "teacher_email": $("#course-teacher-email").val(),
-                        "course_group": $("#course-group").val(),
+                        "course_group": $("#course-group").val()
                     };
                     if (self.edit) {
                         helium.planner_api.edit_course(function (data) {
@@ -1572,7 +1568,7 @@ function HeliumClasses() {
                                     }
                                 });
                             }
-                        }, self.course_group_id, self.edit_id, data);
+                        }, data["course_group"], self.edit_id, data);
                     } else {
                         data.current_grade = -1;
 
@@ -1613,7 +1609,7 @@ function HeliumClasses() {
                                     }
                                 });
                             }
-                        }, data.course_group, data);
+                        }, data["course_group"], data);
                     }
                 }
             });
@@ -1672,7 +1668,12 @@ $(document).ready(function () {
     /*******************************************
      * Initialize component libraries
      ******************************************/
+    bootbox.setDefaults({
+        locale: 'en'
+    });
+
     helium.classes.initialize_datetime();
+
     $(".spinner").spinner({
         min: 0.0,
         step: 0.25,

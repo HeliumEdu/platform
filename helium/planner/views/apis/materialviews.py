@@ -63,12 +63,19 @@ class MaterialGroupMaterialsApiListView(APIView):
         return Response(serializer.data)
 
     def post(self, request, material_group_id, format=None):
-        self.check_material_group_permission(request, material_group_id)
-        if 'courses' in request.data:
-            for course_id in request.data['courses']:
-                self.check_course_permission(request, course_id)
+        data = dict(request.data)
 
-        serializer = MaterialSerializer(data=request.data)
+        self.check_material_group_permission(request, material_group_id)
+        if 'courses' in data:
+            course_ids = str(data['courses']).split(',')
+            data['courses'] = []
+            for course_id in course_ids:
+                data['courses'].append(course_id)
+                self.check_course_permission(request, course_id)
+        else:
+            data['courses'] = []
+
+        serializer = MaterialSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save(material_group_id=material_group_id)
@@ -114,15 +121,22 @@ class MaterialGroupMaterialsApiDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, material_group_id, pk, format=None):
+        data = dict(request.data)
+
         material = self.get_object(request, material_group_id, pk)
         self.check_object_permissions(request, material)
-        if 'material_group' in request.data:
-            self.check_material_group_permission(request, request.data['material_group'])
-        if 'courses' in request.data:
-            for course_id in request.data['courses']:
+        if 'material_group' in data:
+            self.check_material_group_permission(request, data['material_group'])
+        if 'courses' in data:
+            course_ids = str(data['courses']).split(',')
+            data['courses'] = []
+            for course_id in course_ids:
+                data['courses'].append(course_id)
                 self.check_course_permission(request, course_id)
+        else:
+            data['courses'] = []
 
-        serializer = MaterialSerializer(material, data=request.data)
+        serializer = MaterialSerializer(material, data=data)
 
         if serializer.is_valid():
             serializer.save()

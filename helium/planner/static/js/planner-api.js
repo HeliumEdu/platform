@@ -25,6 +25,7 @@ function HeliumPlannerAPI() {
     this.courses_by_course_group_id = {};
     this.courses_by_user_id = {};
     this.course = {};
+    this.material_groups_by_user_id = {};
     this.material_group = {};
     this.materials_by_material_group_id = {};
     this.materials_by_course_id = {};
@@ -126,7 +127,6 @@ function HeliumPlannerAPI() {
      * Compile the CourseGroups for the given User ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the User ID with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
@@ -369,7 +369,6 @@ function HeliumPlannerAPI() {
      * Compile all Courses for the given User Profile ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the User Profile with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
@@ -585,6 +584,44 @@ function HeliumPlannerAPI() {
     };
 
     /**
+     * Compile the MaterialGroups for the given User ID and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_material_groups = function (callback, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.material_groups_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.material_groups_by_user_id[helium.USER_PREFS.id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/materialgroups",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.material_groups_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.material_groups_by_user_id[helium.USER_PREFS.id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    callback([{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }]);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
      * Compile the MaterialGroup for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
@@ -601,8 +638,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.material_group[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/material_group/" + id,
+                type: "GET",
+                url: "/api/planner/materialgroups/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -635,7 +672,7 @@ function HeliumPlannerAPI() {
         self.material_group = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/material_group/add",
+            url: "/api/planner/materialgroups/",
             async: async,
             data: data,
             dataType: "json",
@@ -664,8 +701,8 @@ function HeliumPlannerAPI() {
         delete self.material_group[id];
         self.material_group = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/material_group/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/materialgroups/" + id + "/",
             async: async,
             data: data,
             dataType: "json",
@@ -692,8 +729,8 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         delete self.material_group[id];
         return $.ajax({
-            type: "POST",
-            url: "/planner/material_group/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/materialgroups/" + id,
             async: async,
             dataType: "json",
             success: callback,
@@ -751,11 +788,12 @@ function HeliumPlannerAPI() {
      * Compile the Material for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param material_group_id the ID of the MaterialGroup
      * @param id the ID of the Material
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_material = function (callback, id, async, use_cache) {
+    this.get_material = function (callback, material_group_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -764,8 +802,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.material[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/material/" + id,
+                type: "GET",
+                url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -803,8 +841,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.materials_by_material_group_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/materials_by_material_group_id/" + id,
+                type: "GET",
+                url: "/api/planner/materialgroups/" + id + "/materials",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -829,15 +867,16 @@ function HeliumPlannerAPI() {
      * Create a new Material and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param material_group_id the ID of the MaterialGroup
      * @param data the array of values to set for the new Material
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.add_material = function (callback, data, async) {
+    this.add_material = function (callback, material_group_id, data, async) {
         async = typeof async === "undefined" ? true : async;
         self.materials_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/material/add",
+            url: "/api/planner/materialgroups/" + material_group_id + "/materials/",
             async: async,
             data: data,
             dataType: "json",
@@ -857,17 +896,18 @@ function HeliumPlannerAPI() {
      * Edit the Material for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param material_group_id the ID of the MaterialGroup
      * @param id the ID of the Material
      * @param data the array of values to update for the Material
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_material = function (callback, id, data, async) {
+    this.edit_material = function (callback, material_group_id, id, data, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.material[id];
         self.materials_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/material/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id + "/",
             async: async,
             data: data,
             dataType: "json",
@@ -887,16 +927,17 @@ function HeliumPlannerAPI() {
      * Delete the Material for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param material_group_id the ID of the MaterialGroup
      * @param id the ID of the Material
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_material = function (callback, id, async) {
+    this.delete_material = function (callback, material_group_id, id, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.material[id];
         self.materials_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/material/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id,
             async: async,
             dataType: "json",
             success: callback,
