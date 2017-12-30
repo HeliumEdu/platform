@@ -108,7 +108,7 @@ class CourseGroupCoursesApiDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
 
-            logger.info('Course {} updated for user {}'.format(pk, self.request.user.get_username()))
+            logger.info('Course {} updated for user {}'.format(pk, request.user.get_username()))
 
             metricutils.increment(request, 'action.course.updated')
 
@@ -123,7 +123,7 @@ class CourseGroupCoursesApiDetailView(APIView):
         course.delete()
 
         logger.info('Course {} deleted from CourseGroup {} for user {}'.format(pk, course_group_id,
-                                                                               self.request.user.get_username()))
+                                                                               request.user.get_username()))
 
         metricutils.increment(request, 'action.course.deleted')
 

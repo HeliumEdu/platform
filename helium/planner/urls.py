@@ -5,6 +5,8 @@ Planner URLs.
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
+from helium.planner.views.apis.attachmentviews import UserAttachmentsApiListView, AttachmentsApiDetailView, \
+    CourseAttachmentsApiListView
 from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, CourseGroupCourseCategoriesApiListView, \
     CourseGroupCourseCategoriesApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
@@ -56,6 +58,13 @@ urlpatterns = [
         r'^api/planner/coursegroups/(?P<course_group_id>[0-9]+)/courses/(?P<course_id>[0-9]+)/categories/(?P<pk>[0-9]+)/$',
         CourseGroupCourseCategoriesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_categories_detail'),
+
+    # Attachment
+    url(r'^api/planner/courses/(?P<course_id>[0-9]+)/attachments/$', CourseAttachmentsApiListView.as_view(),
+        name='api_planner_courses_attachments_list'),
+    url(r'^api/planner/attachments/$', UserAttachmentsApiListView.as_view(), name='api_planner_attachments_list'),
+    url(r'^api/planner/attachments/(?P<pk>[0-9]+)/$', AttachmentsApiDetailView.as_view(),
+        name='api_planner_attachments_detail'),
 
     # MaterialGroup
     url(r'^api/planner/materialgroups/$', MaterialGroupsApiListView.as_view(), name='api_planner_materialgroups_list'),

@@ -1,5 +1,5 @@
 """
-Common utility function.
+Metric utility function.
 """
 
 from statsd.defaults.django import statsd

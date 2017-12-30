@@ -81,7 +81,7 @@ class MaterialGroupMaterialsApiListView(APIView):
 
             logger.info(
                 'Material {} created in MaterialGroup {} for user {}'.format(serializer.instance.pk, material_group_id,
-                                                                             self.request.user.get_username()))
+                                                                             request.user.get_username()))
 
             metricutils.increment(request, 'action.material.created')
 
@@ -139,7 +139,7 @@ class MaterialGroupMaterialsApiDetailView(APIView):
         if serializer.is_valid():
             serializer.save(courses=courses)
 
-            logger.info('Material {} updated for user {}'.format(pk, self.request.user.get_username()))
+            logger.info('Material {} updated for user {}'.format(pk, request.user.get_username()))
 
             metricutils.increment(request, 'action.material.updated')
 
@@ -154,7 +154,7 @@ class MaterialGroupMaterialsApiDetailView(APIView):
         material.delete()
 
         logger.info('Material {} deleted from MaterialGroup {} for user {}'.format(pk, material_group_id,
-                                                                                   self.request.user.get_username()))
+                                                                                   request.user.get_username()))
 
         metricutils.increment(request, 'action.material.deleted')
 

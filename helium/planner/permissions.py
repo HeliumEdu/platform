@@ -12,9 +12,11 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
+# TODO: refactor CourseGroup and Course permissions (for example, see categoryviews.py and others) to utilize this permissions system
+
 class IsOwner(permissions.BasePermission):
     """
-    This permission can be used if "user" is a base element of this object.
+    This permission can be for any model that implements get_user() to retrieve the owning User of the object.
     """
 
     def has_object_permission(self, request, view, obj):

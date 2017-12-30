@@ -4,8 +4,7 @@ Planner admin site.
 from django.contrib.admin import ModelAdmin
 
 from helium.common.admin import admin_site
-from helium.planner.models import CourseGroup, Course, MaterialGroup, Material
-from helium.planner.models.category import Category
+from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -91,6 +90,24 @@ class CategoryAdmin(ModelAdmin):
     get_user.admin_order_field = 'course__course_group__user__username'
 
 
+class AttachmentAdmin(ModelAdmin):
+    list_display = ('attachment', 'size', 'created_at', 'updated_at', 'get_user',)
+    search_fields = ('user__username',)
+    ordering = ('-updated_at',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ('created_at', 'updated_at',)
+
+        return self.readonly_fields
+
+    def get_user(self, obj):
+        return obj.get_user().username
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
+
 class MaterialGroupAdmin(ModelAdmin):
     list_display = ('title', 'created_at', 'updated_at', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
@@ -144,5 +161,6 @@ class MaterialAdmin(ModelAdmin):
 admin_site.register(CourseGroup, CourseGroupAdmin)
 admin_site.register(Course, CourseAdmin)
 admin_site.register(Category, CategoryAdmin)
+admin_site.register(Attachment, AttachmentAdmin)
 admin_site.register(MaterialGroup, MaterialGroupAdmin)
 admin_site.register(Material, MaterialAdmin)

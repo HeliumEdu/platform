@@ -72,6 +72,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 1)
         external_calendar = ExternalCalendar.objects.get(pk=response.data['id'])
         data.update({'user': user.pk})
+        externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, data)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
     def test_get_externalcalendar_by_id(self):
@@ -108,7 +109,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], data['title'])
         self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
-        external_calendar = ExternalCalendar.objects.get(id=external_calendar.id)
+        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
     def test_delete_externalcalendar_by_id(self):
@@ -199,7 +200,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('url', response.data)
-        external_calendar = ExternalCalendar.objects.get(id=external_calendar.id)
+        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
         self.assertEqual(external_calendar.url, url)
 
     def test_not_found(self):

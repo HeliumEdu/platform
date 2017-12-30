@@ -189,7 +189,7 @@ class TestCaseAPIMaterialViews(TestCase):
         self.assertFalse(Material.objects.filter(pk=material_group.pk).exists())
         self.assertEqual(Material.objects.count(), 0)
 
-    def test_ownership_another_user_forbidden(self):
+    def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
@@ -244,7 +244,7 @@ class TestCaseAPIMaterialViews(TestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_error_on_object_owned_by_another_user(self):
+    def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
@@ -307,7 +307,7 @@ class TestCaseAPIMaterialViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('status', response.data)
-        material = Material.objects.get(id=material.id)
+        material = Material.objects.get(pk=material.id)
         self.assertEqual(material.status, material_status)
 
     def test_not_found(self):

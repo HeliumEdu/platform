@@ -90,7 +90,32 @@ class TestCaseAPICourseViews(TestCase):
             'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
             'wed_end_time_alt': '19:30:00',
-            'course_group': course_group.pk
+            'course_group': course_group.pk,
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'tue_start_time': '12:00:00',
+            'tue_end_time': '12:00:00',
+            'thu_start_time': '12:00:00',
+            'thu_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+            'sun_start_time_alt': '12:00:00',
+            'sun_end_time_alt': '12:00:00',
+            'mon_start_time_alt': '12:00:00',
+            'mon_end_time_alt': '12:00:00',
+            'tue_start_time_alt': '12:00:00',
+            'tue_end_time_alt': '12:00:00',
+            'thu_start_time_alt': '12:00:00',
+            'thu_end_time_alt': '12:00:00',
+            'fri_start_time_alt': '12:00:00',
+            'fri_end_time_alt': '12:00:00',
+            'sat_start_time_alt': '12:00:00',
+            'sat_end_time_alt': '12:00:00',
+            # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'current_grade': -1,
+            'trend': None,
+            'private_slug': None,
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_list', kwargs={'course_group_id': course_group.pk}),
@@ -101,6 +126,7 @@ class TestCaseAPICourseViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Course.objects.count(), 1)
         course = Course.objects.get(pk=response.data['id'])
+        coursehelper.verify_course_matches_data(self, course, data)
         coursehelper.verify_course_matches_data(self, course, response.data)
 
     def test_get_course_by_id(self):
@@ -197,7 +223,7 @@ class TestCaseAPICourseViews(TestCase):
         self.assertFalse(Course.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(Course.objects.count(), 0)
 
-    def test_ownership_another_user_forbidden(self):
+    def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
@@ -229,7 +255,7 @@ class TestCaseAPICourseViews(TestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_error_on_object_owned_by_another_user(self):
+    def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists(username='user1')
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
@@ -281,7 +307,7 @@ class TestCaseAPICourseViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course = Course.objects.get(id=course.id)
+        course = Course.objects.get(pk=course.id)
         self.assertEqual(course.current_grade, current_grade)
         self.assertEqual(course.trend, trend)
         self.assertEqual(course.private_slug, private_slug)
@@ -326,7 +352,7 @@ class TestCaseAPICourseViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start_date', response.data)
-        course = Course.objects.get(id=course.id)
+        course = Course.objects.get(pk=course.id)
         self.assertEqual(course.start_date, start_date)
 
     def test_not_found(self):

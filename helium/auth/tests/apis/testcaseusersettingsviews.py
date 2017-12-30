@@ -68,7 +68,7 @@ class TestCaseUserSettingsViews(TestCase):
         # THEN
         self.assertFalse(response.data['show_getting_started'])
         self.assertEqual(response.data['time_zone'], 'America/Chicago')
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertFalse(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
 
@@ -100,7 +100,7 @@ class TestCaseUserSettingsViews(TestCase):
         response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
 
         # THEN
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.settings.private_slug, private_slug)
 
@@ -112,5 +112,5 @@ class TestCaseUserSettingsViews(TestCase):
         self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username, user.verification_code))
 
         # THEN
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertFalse(user.settings.receive_emails_from_admin)

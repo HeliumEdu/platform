@@ -20,4 +20,10 @@ class BasePlannerModel(BaseModel):
 
     @abstractmethod
     def get_user(self):
+        """
+        Returns the User that owns this model. Note that not all models necessarily have a direct reference to the User,
+        so calling this function may indirectly query for user details.
+
+        :return: The User with ownership of this model.
+        """
         pass

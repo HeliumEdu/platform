@@ -33,7 +33,7 @@ class UserApiListView(APIView):
     def put(self, request, format=None):
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
-        data = {}
+        response_data = {}
         errors = {}
         if 'old_password' in request.data or 'new_password1' in request.data or 'new_password2' in request.data:
             form = UserPasswordChangeForm(user=request.user, data=request.data)
@@ -55,16 +55,16 @@ class UserApiListView(APIView):
 
                 logger.info('Details updated for user {}'.format(request.user.get_username()))
 
-                data.update(serializer.data)
+                response_data.update(serializer.data)
             else:
                 errors.update(serializer.errors)
 
         if len(errors) > 0:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-        elif len(data) > 0:
+        elif len(response_data) > 0:
             metricutils.increment(request, 'action.user.updated')
 
-            return Response(data)
+            return Response(response_data)
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
