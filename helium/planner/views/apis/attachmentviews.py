@@ -48,10 +48,6 @@ class UserAttachmentsApiListView(APIView):
     # TODO: in the future, refactor this (and the frontend) to only use the FileUploadParser
     parser_classes = (FormParser, MultiPartParser,)
 
-    def get_queryset(self):
-        user = self.request.user
-        return Attachment.objects.filter(user_id=user.pk)
-
     def check_course_permission(self, request, course_id):
         if not Course.objects.filter(pk=course_id).exists():
             raise NotFound('Course not found.')
