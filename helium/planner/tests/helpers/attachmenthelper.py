@@ -14,14 +14,14 @@ __version__ = '1.0.0'
 
 def given_file_exists():
     tmp_file = NamedTemporaryFile(delete=False)
-    tmp_file.write("Attachment File")
+    tmp_file.write("Attachment File".encode())
     tmp_file.close()
 
     return tmp_file
 
 
 def given_attachment_exists(user, course=None):
-    uploaded_file = SimpleUploadedFile('myfile.txt', 'Attachment File')
+    uploaded_file = SimpleUploadedFile('myfile.txt', 'Attachment File'.encode())
 
     attachment = Attachment.objects.create(title=uploaded_file.name,
                                            attachment=uploaded_file,
