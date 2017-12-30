@@ -9,6 +9,7 @@ from builtins import str
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
+from six import python_2_unicode_compatible
 
 from helium.auth.managers.usermanager import UserManager
 from helium.common.models import BaseModel
@@ -27,7 +28,7 @@ class User(AbstractBaseUser, BaseModel):
                                                                       '30 characters consisting of letters, numbers, '
                                                                       'or these symbols: @+-_.',
                                                                       'invalid'), ],
-                                error_messages={'unique': "Sorry, that username is already in use.", })
+                                error_messages={'unique': "Sorry, that username is already in use.",})
 
     email = models.EmailField(unique=True, error_messages={'unique': "Sorry, that email is already in use."})
 
@@ -45,9 +46,6 @@ class User(AbstractBaseUser, BaseModel):
     # Fields required to define the abstracted Django user
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
-
-    def __unicode__(self):
-        return str(self.get_username())
 
     def get_full_name(self):
         """

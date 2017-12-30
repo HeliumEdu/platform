@@ -5,6 +5,7 @@ import datetime
 
 from django.core import validators
 from django.db import models
+from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.planner.models.base import BasePlannerModel
@@ -14,6 +15,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
+@python_2_unicode_compatible
 class Course(BasePlannerModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
@@ -93,7 +95,7 @@ class Course(BasePlannerModel):
     class Meta:
         ordering = ('start_date',)
 
-    def __unicode__(self):
+    def __str__(self):
         return str('{} ({})'.format(self.title, self.get_user().get_username()))
 
     def get_user(self):

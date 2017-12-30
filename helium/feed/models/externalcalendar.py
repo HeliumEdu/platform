@@ -6,6 +6,7 @@ import logging
 from builtins import str
 from django.conf import settings
 from django.db import models
+from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.planner.models.base import BasePlannerModel
@@ -17,6 +18,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class ExternalCalendar(BasePlannerModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
@@ -28,8 +30,8 @@ class ExternalCalendar(BasePlannerModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars')
 
-    def __unicode__(self):
-        return str('{} ({})'.format(self.title, self.get_user().get_username()))
+    def __str__(self):
+        return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):
         return self.user
