@@ -36,6 +36,7 @@ function HeliumClasses() {
     this.unnamed_category_index = 1;
     this.dropzone = null;
     this.categories_to_delete = [];
+    this.attachments_to_delete = [];
 
     var self = this;
 
@@ -723,6 +724,11 @@ function HeliumClasses() {
      * Delete an attachment from the list of attachments.
      */
     this.delete_attachment = function (data) {
+        var dom_id = $(this).attr("id");
+        var id = dom_id.split("-");
+        id = id[id.length - 1];
+        helium.classes.attachments_to_delete.push(id);
+
         if ($("#attachments-table-body").children().length === 1) {
             $("#no-attachments").show();
         }
@@ -893,23 +899,6 @@ function HeliumClasses() {
                     $("#course-schedule-has-different-times").prop("checked", !self.same_time(course)).trigger("change");
                     $("#course-schedule-has-alt-week").prop("checked", self.has_alt_week(course)).trigger("change");
 
-                    // TODO: this section is partially commented out until attachments are migrated
-                    $("tr[id^='attachment-']").remove();
-                    // if (course.attachments.length === 0) {
-                    $("#no-attachments").show();
-                    // } else {
-                    //     $("#no-attachments").hide();
-                    // }
-                    if (self.dropzone !== null) {
-                        self.dropzone.removeAllFiles();
-                    }
-                    //
-                    // for (i = 0; i < course.attachments.length; i += 1) {
-                    //         $("#attachments-table-body").append("<tr id=\"attachment-" + course.attachments[i].id + "\"><td>" + course.attachments[i].title + "</td><td>" + helium.bytes_to_size(parseInt(course.attachments[i].size)) + "</td><td><div class=\"btn-group\"><a target=\"_blank\" class=\"btn btn-xs btn-success\" href=\"/planner/attachment/" + course.attachments[i].id + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + course.attachments[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
-                    //         $("#delete-attachment-" + course.attachments[i].id).on("click", self.delete_attachment);
-                    //     }
-                    // }
-
                     $("tr[id^='category-']").remove();
                     $("#no-categories").show();
 
@@ -922,6 +911,22 @@ function HeliumClasses() {
                     }, self.course_group_id, self.edit_id, false);
 
                     self.update_total_category_weights(total_weights);
+
+                    $("tr[id^='attachment-']").remove();
+                    $("#no-attachments").show();
+                    if (self.dropzone !== null) {
+                        self.dropzone.removeAllFiles();
+                    }
+
+                    helium.planner_api.get_attachments_by_course_id(function (data) {
+                        self.attachment_unsaved_pk = data.length + 1;
+                        for (i = 0; i < data.length; i += 1) {
+                            $("#no-attachments").hide();
+
+                            $("#attachments-table-body").append("<tr id=\"attachment-" + data[i].id + "\"><td>" + data[i].title + "</td><td>" + helium.bytes_to_size(parseInt(data[i].size)) + "</td><td><div class=\"btn-group\"><a target=\"_blank\" class=\"btn btn-xs btn-success\" href=\"" + data[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + data[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
+                            $("#delete-attachment-" + data[0].id).on("click", self.delete_attachment);
+                        }
+                    }, self.course_group_id, self.edit_id, false);
 
                     $("#loading-course-modal").spin(false);
                     $("#loading-courses").spin(false);
@@ -1553,9 +1558,26 @@ function HeliumClasses() {
                                     });
                                 }
 
+                                if (!helium.ajax_error_occurred) {
+                                    $.each(helium.classes.attachments_to_delete, function (i, attachment_id) {
+                                        helium.classes.ajax_calls.push(helium.planner_api.delete_attachment(function () {
+                                            if (helium.data_has_err_msg(data)) {
+                                                helium.ajax_error_occurred = true;
+                                                $("#loading-courses").spin(false);
+
+                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").parent().show("fast");
+
+                                                return false;
+                                            }
+                                        }, attachment_id));
+                                    });
+                                }
+
                                 $.when.apply(this, helium.classes.ajax_calls).done(function () {
                                     if (!helium.ajax_error_occurred) {
                                         helium.classes.categories_to_delete = [];
+                                        helium.classes.attachments_to_delete = [];
 
                                         var row_div = $("#course-" + data.id);
                                         self.course_group_table[data.course_group.toString()].cell(row_div, 0).data("<span class=\"label label-sm\" style=\"background-color: " + data.color + " !important\">" + (data.website !== "" ? "<a target=\"_blank\" href=\"" + data.website + "\" class=\"course-title-with-link\">" + data.title + " <i class=\"icon-external-link bigger-110\"></i></a>" : data.title) + "</span>");
@@ -1630,9 +1652,26 @@ function HeliumClasses() {
                                     });
                                 }
 
+                                if (!helium.ajax_error_occurred) {
+                                    $.each(helium.classes.attachments_to_delete, function (i, attachment_id) {
+                                        helium.classes.ajax_calls.push(helium.planner_api.delete_attachment(function () {
+                                            if (helium.data_has_err_msg(data)) {
+                                                helium.ajax_error_occurred = true;
+                                                $("#loading-courses").spin(false);
+
+                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").parent().show("fast");
+
+                                                return false;
+                                            }
+                                        }, attachment_id));
+                                    });
+                                }
+
                                 $.when.apply(this, helium.classes.ajax_calls).done(function () {
                                     if (!helium.ajax_error_occurred) {
                                         helium.classes.categories_to_delete = [];
+                                        helium.classes.attachments_to_delete = [];
 
                                         self.add_course_to_groups(data, self.course_group_table[data.course_group.toString()]);
                                         self.course_group_table[data.course_group.toString()].draw();

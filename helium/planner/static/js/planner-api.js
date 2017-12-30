@@ -33,6 +33,8 @@ function HeliumPlannerAPI() {
     this.category_names = null;
     this.categories_by_course_id = {};
     this.category = {};
+    this.attachment = {};
+    this.attachments_by_course_id = {};
     this.homework_by_course_id = {};
     this.homework = {};
     this.event = {};
@@ -1366,6 +1368,88 @@ function HeliumPlannerAPI() {
         return $.ajax({
             type: "DELETE",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
+            async: async,
+            dataType: "json",
+            success: callback,
+            error: function (jqXHR, textStatus, errorThrown) {
+                var data = [{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }];
+                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                    var name = Object.keys(jqXHR.responseJSON)[0];
+                    if (jqXHR.responseJSON[name].length > 0) {
+                        data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                    }
+                }
+                callback(data);
+            }
+        });
+    };
+
+    /**
+     * Compile all Attachments for the given Course ID and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup with which to associate
+     * @param id the ID of the Course with which to associate
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_attachments_by_course_id = function (callback, course_group_id, id, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.attachments_by_course_id.hasOwnProperty(id)) {
+            ret_val = callback(self.attachments_by_course_id[id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/courses/" + id + "/attachments",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.categories_by_course_id[id] = data;
+                    callback(self.categories_by_course_id[id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var data = [{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }];
+                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                        var name = Object.keys(jqXHR.responseJSON)[0];
+                        if (jqXHR.responseJSON[name].length > 0) {
+                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                        }
+                    }
+                    callback(data);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
+     * Delete the Attachment for the given ID and pass the returned values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param id the ID of the Attachment
+     * @param async true if call should be async, false otherwise (default is true)
+     */
+    this.delete_attachment = function (callback, id, async) {
+        async = typeof async === "undefined" ? true : async;
+        delete self.attachment[id];
+        self.attachments_by_course_id = {};
+        return $.ajax({
+            type: "DELETE",
+            url: "/api/planner/attachments/" + id,
             async: async,
             dataType: "json",
             success: callback,

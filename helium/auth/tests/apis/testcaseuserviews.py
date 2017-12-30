@@ -62,7 +62,7 @@ class TestCaseUserViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'new_username')
         self.assertEqual(response.data['email'], 'test@heliumedu.com')
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
         self.assertIsNone(user.email_changing)
@@ -87,7 +87,7 @@ class TestCaseUserViews(TestCase):
         self.assertEqual(response.data['username'], user.username)
         self.assertEqual(response.data['email'], user.email)
         self.assertEqual(response.data['email_changing'], 'new@email.com')
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.email, response.data['email'])
         self.assertEqual(user.email_changing, response.data['email_changing'])
         self.assertEqual(user.username, response.data['username'])
@@ -105,7 +105,7 @@ class TestCaseUserViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
 
@@ -123,7 +123,7 @@ class TestCaseUserViews(TestCase):
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         userhelper.verify_user_logged_in(self)
         self.assertTrue(user.check_password('new_pass_1!'))
 

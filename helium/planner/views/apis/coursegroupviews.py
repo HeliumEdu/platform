@@ -38,7 +38,7 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} created for user {}'.format(response.data['id'], self.request.user.get_username()))
+        logger.info('CourseGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
         metricutils.increment(request, 'action.coursegroup.created')
 
@@ -56,7 +56,7 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+        logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment(request, 'action.coursegroup.updated')
 
@@ -65,7 +65,7 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+        logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment(request, 'action.coursegroup.deleted')
 

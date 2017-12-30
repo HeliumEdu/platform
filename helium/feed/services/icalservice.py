@@ -8,6 +8,8 @@ from icalendar import Calendar
 from rest_framework import status
 from urllib.request import urlopen, URLError
 
+from helium.common.utils.commonutils import HeliumError
+
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
@@ -15,7 +17,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class ICalError(Exception):
+class ICalError(HeliumError):
     pass
 
 

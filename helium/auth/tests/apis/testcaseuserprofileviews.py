@@ -76,7 +76,7 @@ class TestCaseUserProfileViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
         self.assertEqual(response.data['phone_changing'], '5555555')
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertIsNone(user.profile.phone)
         self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
 
@@ -101,7 +101,7 @@ class TestCaseUserProfileViews(TestCase):
         self.assertIsNone(response.data['phone_changing'])
         self.assertEqual(response.data['phone_carrier'], 'txt.att.net')
         self.assertIsNone(response.data['phone_carrier_changing'])
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
         self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
@@ -126,7 +126,7 @@ class TestCaseUserProfileViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_carrier'])
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertIsNone(user.profile.phone)
         self.assertIsNone(user.profile.phone_carrier)
 
@@ -161,6 +161,6 @@ class TestCaseUserProfileViews(TestCase):
         response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
 
         # THEN
-        user = get_user_model().objects.get(id=user.id)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.profile.phone_changing, phone_changing)

@@ -70,6 +70,7 @@ class TestCaseAPICourseGroupViews(TestCase):
         course_group = CourseGroup.objects.get(pk=response.data['id'])
         data.update({'user': user.pk})
         coursegrouphelper.verify_course_group_matches_data(self, course_group, data)
+        coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
 
     def test_get_coursegroup_by_id(self):
         # GIVEN
@@ -167,7 +168,7 @@ class TestCaseAPICourseGroupViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course_group = CourseGroup.objects.get(id=course_group.id)
+        course_group = CourseGroup.objects.get(pk=course_group.id)
         self.assertEqual(course_group.average_grade, average_grade)
         self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)

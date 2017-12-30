@@ -68,6 +68,7 @@ class TestCaseAPIMaterialGroupViews(TestCase):
         material_group = MaterialGroup.objects.get(pk=response.data['id'])
         data.update({'user': user.pk})
         materialgrouphelper.verify_material_group_matches_data(self, material_group, data)
+        materialgrouphelper.verify_material_group_matches_data(self, material_group, response.data)
 
     def test_get_materialgroup_by_id(self):
         # GIVEN
@@ -150,7 +151,7 @@ class TestCaseAPIMaterialGroupViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        material_group = MaterialGroup.objects.get(id=material_group.id)
+        material_group = MaterialGroup.objects.get(pk=material_group.id)
         self.assertEqual(material_group.get_user().pk, user2.pk)
 
     def test_not_found(self):

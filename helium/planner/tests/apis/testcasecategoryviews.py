@@ -17,7 +17,7 @@ __version__ = '1.0.0'
 
 
 class TestCaseAPICategoryViews(TestCase):
-    def test_course_login_required(self):
+    def test_category_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
@@ -77,7 +77,11 @@ class TestCaseAPICategoryViews(TestCase):
         data = {
             'title': 'some title',
             'weight': 25,
-            'color': '#7bd148'
+            'color': '#7bd148',
+            # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'average_grade': -1,
+            'grade_by_weight': 0,
+            'trend': None
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_categories_list',
@@ -89,6 +93,7 @@ class TestCaseAPICategoryViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Category.objects.count(), 1)
         category = Category.objects.get(pk=response.data['id'])
+        categoryhelper.verify_category_matches_data(self, category, data)
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
     def test_get_category_by_id(self):
@@ -214,7 +219,7 @@ class TestCaseAPICategoryViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        category = Category.objects.get(id=category.id)
+        category = Category.objects.get(pk=category.id)
         self.assertEqual(category.average_grade, average_grade)
         self.assertEqual(category.grade_by_weight, grade_by_weight)
         self.assertEqual(category.trend, trend)
@@ -264,7 +269,7 @@ class TestCaseAPICategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('color', response.data)
-        category = Category.objects.get(id=category.id)
+        category = Category.objects.get(pk=category.id)
         self.assertEqual(category.color, color)
 
     def test_not_found(self):

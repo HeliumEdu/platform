@@ -38,7 +38,7 @@ class MaterialGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} created for user {}'.format(response.data['id'], self.request.user.get_username()))
+        logger.info('MaterialGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
         metricutils.increment(request, 'action.materialgroup.created')
 
@@ -56,7 +56,7 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} updated for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+        logger.info('MaterialGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment(request, 'action.materialgroup.updated')
 
@@ -65,7 +65,7 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} deleted for user {}'.format(kwargs['pk'], self.request.user.get_username()))
+        logger.info('MaterialGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment(request, 'action.materialgroup.deleted')
 

@@ -1,10 +1,11 @@
 """
 Base URLs.
 """
-
+import sys
 from django.conf import settings as config
 from django.conf.urls import include, url
 from django.contrib.sitemaps.views import sitemap
+from django.views import static
 
 import helium.auth.urls
 import helium.common.urls
@@ -42,4 +43,11 @@ if config.DEBUG:
 
     urlpatterns += [
         url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
+
+if config.DEBUG or 'test' in sys.argv:
+    # Ensure media files are shown properly when using a dev server
+    urlpatterns += [
+        url(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
+            'document_root': config.MEDIA_ROOT})
     ]
