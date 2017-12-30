@@ -7,6 +7,7 @@ import logging
 from builtins import str
 from django.conf import settings
 from django.db import models
+from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
@@ -18,6 +19,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class UserSettings(BaseModel):
     time_zone = models.CharField(default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
@@ -49,5 +51,5 @@ class UserSettings(BaseModel):
     class Meta:
         verbose_name_plural = 'User settings'
 
-    def __unicode__(self):
-        return str('{} ({})'.format(self.pk, self.user.get_username()))
+    def __str__(self):
+        return '{} ({})'.format(self.pk, self.user.get_username())

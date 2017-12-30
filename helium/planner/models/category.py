@@ -3,6 +3,7 @@ Category model.
 """
 
 from django.db import models
+from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.planner.models.base import BasePlannerModel
@@ -12,6 +13,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
+@python_2_unicode_compatible
 class Category(BasePlannerModel):
     title = models.CharField(max_length=255, db_index=True, default='')
 
@@ -31,8 +33,8 @@ class Category(BasePlannerModel):
         verbose_name_plural = 'Categories'
         ordering = ('title',)
 
-    def __unicode__(self):
-        return str('{} ({})'.format(self.title, self.get_user().get_username()))
+    def __str__(self):
+        return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):
         return self.course.course_group.get_user()
