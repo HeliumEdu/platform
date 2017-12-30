@@ -130,7 +130,7 @@ function HeliumSettings() {
                     context: form,
                     data: data,
                     type: 'PUT',
-                    url: '/api/feed/externalcalendar/' + id + '/',
+                    url: '/api/feed/externalcalendars/' + id + '/',
                     error: function (xhr) {
                         $("#status_preferences").html('Oops, an error occurred while saving changes to external calendars. Was the URL valid?').addClass("alert-warning").removeClass("hidden");
                     }
@@ -166,7 +166,7 @@ function HeliumSettings() {
                     async: false,
                     context: form,
                     type: 'DELETE',
-                    url: '/api/feed/externalcalendar/' + id + '/',
+                    url: '/api/feed/externalcalendars/' + id + '/',
                     error: function (xhr) {
                         // TODO: show errors
                     }
