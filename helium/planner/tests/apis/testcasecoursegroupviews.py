@@ -139,7 +139,7 @@ class TestCaseAPICourseGroupViews(TestCase):
         # THEN
         self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk, user_id=user1.pk).exists())
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -181,5 +181,8 @@ class TestCaseAPICourseGroupViews(TestCase):
         ]
 
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-            self.assertIn('not found', response.data['detail'].lower())
+            if isinstance(response.data, list):
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+                self.assertIn('not found', response.data['detail'].lower())

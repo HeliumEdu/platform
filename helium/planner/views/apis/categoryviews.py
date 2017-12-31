@@ -1,16 +1,14 @@
 import logging
 
-from django.http import Http404
-from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ListModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
+    CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
+from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course, Category
-from helium.planner.permissions import IsOwner
 from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = 'Alex Laird'
@@ -36,7 +34,7 @@ class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
         return self.list(request, *args, **kwargs)
 
 
-class CourseGroupCourseCategoriesApiListView(GenericAPIView):
+class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all category instances for the given course.
@@ -47,48 +45,44 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        user = self.request.user
+        return Category.objects.filter(course_id=self.kwargs['course_id'], course__course_group__user_id=user.pk)
+
     def check_course_group_permission(self, request, course_group_id):
-        if not CourseGroup.objects.filter(pk=course_group_id).exists():
-            raise NotFound('CourseGroup not found.')
         if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+            raise NotFound('CourseGroup not found.')
 
     def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id).exists():
-            raise NotFound('Course not found.')
         if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+            raise NotFound('Course not found.')
 
-    def get(self, request, course_group_id, course_id, format=None):
-        self.check_course_group_permission(request, course_group_id)
-        self.check_course_permission(request, course_id)
+    def get(self, request, *args, **kwargs):
+        self.check_course_group_permission(request, kwargs['course_group_id'])
+        self.check_course_permission(request, kwargs['course_id'])
 
-        categories = Category.objects.filter(course_id=course_id)
+        response = self.list(request, *args, **kwargs)
 
-        serializer = self.get_serializer(categories, many=True)
+        return response
 
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        serializer.save(course_id=self.kwargs['course_id'])
 
-    def post(self, request, course_group_id, course_id, format=None):
-        self.check_course_group_permission(request, course_group_id)
-        self.check_course_permission(request, course_id)
+    def post(self, request, *args, **kwargs):
+        self.check_course_group_permission(request, kwargs['course_group_id'])
+        self.check_course_permission(request, kwargs['course_id'])
 
-        serializer = self.get_serializer(data=request.data)
+        response = self.create(request, *args, **kwargs)
 
-        if serializer.is_valid():
-            serializer.save(course_id=course_id)
+        logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course_id'],
+                                                                          request.user.get_username()))
 
-            logger.info('Category {} created in Course {} for user {}'.format(serializer.instance.pk, course_id,
-                                                                              request.user.get_username()))
+        metricutils.increment(request, 'action.category.created')
 
-            metricutils.increment(request, 'action.category.created')
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return response
 
 
-class CourseGroupCourseCategoriesApiDetailView(GenericAPIView):
+class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given category instance.
@@ -102,46 +96,31 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
-    def get_object(self, request, course_group_id, course_id, pk):
-        try:
-            return Category.objects.get(course__course_group_id=course_group_id, course_id=course_id, pk=pk)
-        except Category.DoesNotExist:
-            raise Http404
+    def get_queryset(self):
+        user = self.request.user
+        return Category.objects.filter(course__course_group_id=self.kwargs['course_group_id'],
+                                       course_id=self.kwargs['course_id'],
+                                       course__course_group__user_id=user.pk)
 
-    def get(self, request, course_group_id, course_id, pk, format=None):
-        category = self.get_object(request, course_group_id, course_id, pk)
-        self.check_object_permissions(request, category)
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
-        serializer = self.get_serializer(category)
+    def put(self, request, *args, **kwargs):
+        response = self.update(request, *args, **kwargs)
 
-        return Response(serializer.data)
+        logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-    def put(self, request, course_group_id, course_id, pk, format=None):
-        category = self.get_object(request, course_group_id, course_id, pk)
-        self.check_object_permissions(request, category)
+        metricutils.increment(request, 'action.category.updated')
 
-        serializer = self.get_serializer(category, data=request.data)
+        return response
 
-        if serializer.is_valid():
-            serializer.save()
-
-            logger.info('Category {} updated for user {}'.format(pk, request.user.get_username()))
-
-            metricutils.increment(request, 'action.category.updated')
-
-            return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, course_group_id, course_id, pk, format=None):
-        category = self.get_object(request, course_group_id, course_id, pk)
-        self.check_object_permissions(request, category)
-
-        category.delete()
+    def delete(self, request, *args, **kwargs):
+        response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'Category {} deleted from Course {} for user {}'.format(pk, course_id, request.user.get_username()))
+            'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course_id'],
+                                                                    request.user.get_username()))
 
         metricutils.increment(request, 'action.category.deleted')
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response

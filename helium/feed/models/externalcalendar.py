@@ -5,7 +5,7 @@ from django.db import models
 from six import python_2_unicode_compatible
 
 from helium.common import enums
-from helium.planner.models.base import BasePlannerModel
+from helium.common.models.base import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
-class ExternalCalendar(BasePlannerModel):
+class ExternalCalendar(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 

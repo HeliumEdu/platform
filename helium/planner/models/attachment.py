@@ -3,8 +3,8 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
-from helium.planner.models.base import BasePlannerModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -15,7 +15,7 @@ class AttachmentError(HeliumError):
     pass
 
 
-class Attachment(BasePlannerModel):
+class Attachment(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 

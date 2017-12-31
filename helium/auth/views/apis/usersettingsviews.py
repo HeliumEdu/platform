@@ -1,11 +1,13 @@
 import logging
 
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -20,12 +22,13 @@ class UserSettingsApiDetailView(GenericAPIView):
 
     Update the given (and authenticated) user's settings.
     """
+    queryset = get_user_model().objects.all()
     serializer_class = UserSettingsSerializer
     permission_classes = (IsAuthenticated,)
 
     def put(self, request, pk, format=None):
-        if int(pk) != request.user.pk:
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+        # This call gets the object and checks permissions
+        self.get_object()
 
         serializer = self.get_serializer(request.user.settings, data=request.data)
 
@@ -33,6 +36,8 @@ class UserSettingsApiDetailView(GenericAPIView):
             serializer.save()
 
             logger.info('Settings updated for user {}'.format(request.user.get_username()))
+
+            metricutils.increment(request, 'action.user-settings.updated')
 
             return Response(serializer.data)
 

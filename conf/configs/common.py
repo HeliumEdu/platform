@@ -115,6 +115,19 @@ MAINTENANCE_MODE_IGNORE_URLS = (
 
 MAINTENANCE_MODE_TEMPLATE = os.environ.get('PLATFORM_MAINTENANCE_MODE_TEMPLATE', 'errors/maintenance.html')
 
+# API configuration
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/min',
+        'user': '1000/min'
+    }
+}
+
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'

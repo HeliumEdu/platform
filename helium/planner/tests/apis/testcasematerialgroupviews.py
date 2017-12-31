@@ -131,7 +131,7 @@ class TestCaseAPIMaterialGroupViews(TestCase):
         # THEN
         self.assertTrue(MaterialGroup.objects.filter(pk=material_group.pk, user_id=user1.pk).exists())
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -162,5 +162,8 @@ class TestCaseAPIMaterialGroupViews(TestCase):
         ]
 
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-            self.assertIn('not found', response.data['detail'].lower())
+            if isinstance(response.data, list):
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+                self.assertIn('not found', response.data['detail'].lower())
