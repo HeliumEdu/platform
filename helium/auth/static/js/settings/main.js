@@ -154,10 +154,10 @@ function HeliumSettings() {
 
         $.ajax().always(function () {
             var form = $("#preferences-form"), data = form.serializeArray();
-            data.push({"name": "show_getting_started", "value": helium.USER_PREFS.show_getting_started});
-            data.push({"name": "receive_emails_from_admin", "value": helium.USER_PREFS.receive_emails_from_admin});
-            data.push({"name": "events_private_slug", "value": helium.USER_PREFS.events_private_slug});
-            data.push({"name": "private_slug", "value": helium.USER_PREFS.private_slug});
+            data.push({"name": "show_getting_started", "value": helium.USER_PREFS.settings.show_getting_started});
+            data.push({"name": "receive_emails_from_admin", "value": helium.USER_PREFS.settings.receive_emails_from_admin});
+            data.push({"name": "events_private_slug", "value": helium.USER_PREFS.settings.events_private_slug});
+            data.push({"name": "private_slug", "value": helium.USER_PREFS.settings.private_slug});
 
             self.save_externalcalendars(form);
 
@@ -181,7 +181,7 @@ function HeliumSettings() {
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user/settings/',
+                url: '/api/auth/users/' + helium.USER_PREFS.id + '/settings/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error(key, value);
@@ -213,7 +213,7 @@ function HeliumSettings() {
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user/profile/',
+                url: '/api/auth/users/' + helium.USER_PREFS.id + '/profile/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error(key, value);
@@ -293,7 +293,7 @@ function HeliumSettings() {
                 context: form,
                 data: data,
                 type: 'PUT',
-                url: '/api/user/',
+                url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error(key, value);
@@ -340,7 +340,7 @@ function HeliumSettings() {
                             async: false,
                             data: data,
                             type: 'DELETE',
-                            url: '/api/user',
+                            url: '/api/auth/user',
                             error: function () {
                                 $("#status_account").html('Sorry, an unknown error occurred while trying to delete your account. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
 
@@ -383,29 +383,19 @@ $(document).ready(function () {
         });
     }
 
-    $.ajax({
-        type: "GET",
-        url: "/api/user/profile",
-        async: false,
-        dataType: "json",
-        success: function (data) {
-            $.extend(helium.USER_PREFS, data);
-        }
-    });
-
     helium.settings.populate_externalcalendars();
 
-    $("#id_default_view").val(helium.USER_PREFS.default_view);
-    $("#id_week_starts_on").val(helium.USER_PREFS.week_starts_on);
-    $("#id_time_zone").val(helium.USER_PREFS.time_zone);
+    $("#id_default_view").val(helium.USER_PREFS.settings.default_view);
+    $("#id_week_starts_on").val(helium.USER_PREFS.settings.week_starts_on);
+    $("#id_time_zone").val(helium.USER_PREFS.settings.time_zone);
     $("#id_time_zone").trigger("change");
     $("#id_time_zone").trigger("chosen:updated");
-    $("#id_events_color").simplecolorpicker("selectColor", helium.USER_PREFS.events_color);
-    $("#id_default_reminder_type").val(helium.USER_PREFS.default_reminder_type);
-    $("#id_default_reminder_offset").val(helium.USER_PREFS.default_reminder_offset);
-    $("#id_default_reminder_offset_type").val(helium.USER_PREFS.default_reminder_offset_type);
-    $("#id_phone").val(helium.USER_PREFS.phone);
-    $("#id_phone_carrier").val(helium.USER_PREFS.phone_carrier);
+    $("#id_events_color").simplecolorpicker("selectColor", helium.USER_PREFS.settings.events_color);
+    $("#id_default_reminder_type").val(helium.USER_PREFS.settings.default_reminder_type);
+    $("#id_default_reminder_offset").val(helium.USER_PREFS.settings.default_reminder_offset);
+    $("#id_default_reminder_offset_type").val(helium.USER_PREFS.settings.default_reminder_offset_type);
+    $("#id_phone").val(helium.USER_PREFS.profile.phone);
+    $("#id_phone_carrier").val(helium.USER_PREFS.profile.phone_carrier);
     $("#id_phone_carrier").trigger("change");
     $("#id_phone_carrier").trigger("chosen:updated");
     $("#id_username").val(helium.USER_PREFS.username);
@@ -417,10 +407,10 @@ $(document).ready(function () {
         helium.settings.email_pending(helium.USER_PREFS.email_changing);
     }
 
-    if ((helium.USER_PREFS.phone_changing !== null && helium.USER_PREFS.phone_changing !== '') ||
-        (helium.USER_PREFS.phone_carrier_changing !== null && helium.USER_PREFS.phone_carrier_changing !== '')) {
-        helium.settings.phone_pending(helium.USER_PREFS.phone_changing);
-    } else if (helium.USER_PREFS.phone_verified) {
+    if ((helium.USER_PREFS.profile.phone_changing !== null && helium.USER_PREFS.profile.phone_changing !== '') ||
+        (helium.USER_PREFS.profile.phone_carrier_changing !== null && helium.USER_PREFS.profile.phone_carrier_changing !== '')) {
+        helium.settings.phone_pending(helium.USER_PREFS.profile.phone_changing);
+    } else if (helium.USER_PREFS.profile.phone_verified) {
         ($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
     }
 });
