@@ -1,6 +1,3 @@
-"""
-Tests for User interaction.
-"""
 import json
 
 from django.contrib.auth import get_user_model
@@ -19,12 +16,12 @@ __version__ = '1.0.0'
 class TestCaseUserViews(TestCase):
     def test_user_login_required(self):
         # GIVEN
-        userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user_list')),
-            self.client.put(reverse('api_user_list'))
+            self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk})),
+            self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
         ]
 
         # THEN
@@ -36,13 +33,31 @@ class TestCaseUserViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        response = self.client.get(reverse('api_user_list'))
+        response = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('verification_code', response.data)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
+        self.assertNotIn('phone_verification_code', response.data['profile'])
+        self.assertEqual(user.profile.phone, response.data['profile']['phone'])
+        self.assertEqual(user.profile.phone_carrier, response.data['profile']['phone_carrier'])
+        self.assertEqual(user.profile.user.pk, response.data['profile']['user'])
+        self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
+        self.assertEqual(user.settings.week_starts_on, response.data['settings']['week_starts_on'])
+        self.assertEqual(user.settings.all_day_offset, response.data['settings']['all_day_offset'])
+        self.assertEqual(user.settings.show_getting_started, response.data['settings']['show_getting_started'])
+        self.assertEqual(user.settings.events_color, response.data['settings']['events_color'])
+        self.assertEqual(user.settings.default_reminder_offset, response.data['settings']['default_reminder_offset'])
+        self.assertEqual(user.settings.default_reminder_offset_type,
+                         response.data['settings']['default_reminder_offset_type'])
+        self.assertEqual(user.settings.default_reminder_type, response.data['settings']['default_reminder_type'])
+        self.assertEqual(user.settings.receive_emails_from_admin,
+                         response.data['settings']['receive_emails_from_admin'])
+        self.assertEqual(user.settings.events_private_slug, response.data['settings']['events_private_slug'])
+        self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
+        self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
     def test_username_changes(self):
         # GIVEN
@@ -56,7 +71,8 @@ class TestCaseUserViews(TestCase):
             # Intentionally NOT changing these value
             'email': user.email
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -80,7 +96,8 @@ class TestCaseUserViews(TestCase):
             # Intentionally NOT changing these value
             'username': user.username
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -100,7 +117,8 @@ class TestCaseUserViews(TestCase):
         user.save()
 
         response = self.client.get(
-            reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
+            reverse('verify') + '?username={}&code={}'.format(user.username,
+                                                              user.verification_code))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -119,7 +137,8 @@ class TestCaseUserViews(TestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!'
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -129,14 +148,15 @@ class TestCaseUserViews(TestCase):
 
     def test_password_change_fails_missing_old_new_pass(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
             'old_password': '',
             'new_password1': 'new_pass_1!',
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -144,7 +164,7 @@ class TestCaseUserViews(TestCase):
 
     def test_password_change_fails_blank_new_pass(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -152,7 +172,8 @@ class TestCaseUserViews(TestCase):
             'new_password1': '',
             'new_password2': '',
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -160,7 +181,7 @@ class TestCaseUserViews(TestCase):
 
     def test_password_change_fails_mismatch(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -168,7 +189,8 @@ class TestCaseUserViews(TestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!oops',
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -176,7 +198,7 @@ class TestCaseUserViews(TestCase):
 
     def test_password_change_fails_to_meet_requirements(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -184,7 +206,8 @@ class TestCaseUserViews(TestCase):
             'new_password1': 'blerg',
             'new_password2': 'blerg',
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -201,7 +224,8 @@ class TestCaseUserViews(TestCase):
             'username': user1.username,
             'email': user2.email
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user2.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -218,7 +242,8 @@ class TestCaseUserViews(TestCase):
             'email': user1.email,
             'username': user2.username
         }
-        response = self.client.put(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user2.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -235,7 +260,8 @@ class TestCaseUserViews(TestCase):
             'username': user.username,
             'password': 'test_pass_1!'
         }
-        response = self.client.delete(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.delete(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                      content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -254,7 +280,8 @@ class TestCaseUserViews(TestCase):
             'username': user.username,
             'password': 'wrong_pass'
         }
-        response = self.client.delete(reverse('api_user_list'), json.dumps(data), content_type='application/json')
+        response = self.client.delete(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                      content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,3 @@
-"""
-Form for user password modification.
-"""
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from django.forms import BaseForm
@@ -14,9 +11,6 @@ __version__ = '1.0.0'
 
 class UserPasswordChangeForm(PasswordChangeForm, BaseForm):
     def clean_new_password2(self):
-        """
-        Check the password meets the validation criteria.
-        """
         password1 = self.cleaned_data.get("new_password1")
         password2 = self.cleaned_data.get("new_password2")
 

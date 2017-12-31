@@ -1,7 +1,3 @@
-"""
-Authenticated views for MaterialGroup interaction.
-"""
-
 import logging
 
 from rest_framework.generics import GenericAPIView
@@ -22,6 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class MaterialGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+    """
+    get:
+    Return a list of all material group instances for the authenticated user.
+
+    post:
+    Create a new material group instance for the authenticated user.
+    """
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -46,6 +49,16 @@ class MaterialGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin
 
 
 class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    """
+    get:
+    Return the given material group instance.
+
+    put:
+    Update the given material group instance.
+
+    delete:
+    Delete the given material group instance.
+    """
     queryset = MaterialGroup.objects.all()
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

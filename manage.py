@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-"""
-Management script for Django environment.
-"""
 
 import os
 import sys

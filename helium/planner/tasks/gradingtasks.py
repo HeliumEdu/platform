@@ -1,7 +1,3 @@
-"""
-Asynchronous grading tasks to be performed.
-"""
-
 import logging
 
 from conf.celery import app

@@ -1,6 +1,5 @@
 """
-Settings for a stable, prod-ready environment. Data is loaded from environment variables, so no sensitive information is
-stored in this file.
+Settings specific to prod-like deployable code, reading values from system environment variables.
 """
 
 import os

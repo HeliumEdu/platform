@@ -1,15 +1,9 @@
-"""
-User model.
-"""
-
 import logging
 import uuid
 
-from builtins import str
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.auth.managers.usermanager import UserManager
 from helium.common.models import BaseModel
@@ -22,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, BaseModel):
-    username = models.CharField(max_length=255, unique=True,
+    username = models.CharField(help_text='A unique name used to login to the system.',
+                                max_length=255, unique=True,
                                 validators=[validators.RegexValidator(r'^[\w.@+-]+$',
                                                                       'Enter a valid username, which means less than '
                                                                       '30 characters consisting of letters, numbers, '
@@ -30,13 +25,16 @@ class User(AbstractBaseUser, BaseModel):
                                                                       'invalid'), ],
                                 error_messages={'unique': "Sorry, that username is already in use.",})
 
-    email = models.EmailField(unique=True, error_messages={'unique': "Sorry, that email is already in use."})
+    email = models.EmailField(help_text='A valid email address.',
+                              unique=True, error_messages={'unique': "Sorry, that email is already in use."})
 
     email_changing = models.EmailField(blank=True, null=True)
 
     is_active = models.BooleanField(default=False)
 
-    verification_code = models.SlugField(default=uuid.uuid4, unique=True)
+    verification_code = models.SlugField(
+        help_text='The code sent to `email` when registering or changing an email address',
+        default=uuid.uuid4, unique=True)
 
     is_superuser = models.BooleanField(default=False)
 

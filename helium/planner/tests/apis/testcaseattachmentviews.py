@@ -1,7 +1,3 @@
-"""
-Tests for Attachment interaction.
-"""
-import json
 import os
 
 from django.test import TestCase

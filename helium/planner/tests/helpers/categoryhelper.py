@@ -1,7 +1,3 @@
-"""
-Helper for Category models in testing.
-"""
-
 from helium.planner.models import Category
 
 __author__ = 'Alex Laird'

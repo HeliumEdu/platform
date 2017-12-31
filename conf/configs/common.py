@@ -1,5 +1,5 @@
 """
-Common settings for all environments.
+Settings common to all deployment methods.
 """
 
 import os
@@ -276,7 +276,7 @@ PIPELINE = {
                 'js/vendors/bootstrap-editable.js',
                 'js/vendors/jquery.simplecolorpicker.js',
                 'js/vendors/bootbox.js',
-                'js/settings.js',
+                'js/settings/main.js',
             ),
             'output_filename': 'js/helium_settings_{}.min.js'.format(PROJECT_VERSION),
         },

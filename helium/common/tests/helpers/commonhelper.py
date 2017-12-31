@@ -1,6 +1,3 @@
-"""
-Common helpers for testing.
-"""
 from mock import mock
 
 __author__ = 'Alex Laird'

@@ -1,6 +1,3 @@
-"""
-Helper for Attachment models (and associated files) in testing.
-"""
 from tempfile import NamedTemporaryFile
 
 from django.core.files.uploadedfile import SimpleUploadedFile

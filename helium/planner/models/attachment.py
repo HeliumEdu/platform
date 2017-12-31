@@ -1,7 +1,3 @@
-"""
-Attachment model.
-"""
-import boto
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete
@@ -20,13 +16,16 @@ class AttachmentError(HeliumError):
 
 
 class Attachment(BasePlannerModel):
-    title = models.CharField(max_length=255, db_index=True, default='')
+    title = models.CharField(help_text='A display name.',
+                             max_length=255, db_index=True)
 
-    attachment = models.FileField(upload_to='attachments', blank=True, null=True)
+    attachment = models.FileField(help_text='The file to be uploaded.',
+                                  upload_to='attachments', blank=True, null=True)
 
     size = models.PositiveIntegerField(default=0)
 
-    course = models.ForeignKey('Course', related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', help_text='The course with which to associate.',
+                               related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
     # TODO: uncomment (and rerun `make migrations`) when these models have been implemented
     # event = models.ForeignKey('Event', related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)

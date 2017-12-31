@@ -1,7 +1,3 @@
-"""
-Authenticated views for ExternalCalendar interaction.
-"""
-
 import logging
 
 from rest_framework.generics import GenericAPIView
@@ -22,6 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+    """
+    get:
+    Return a list of all external calendar instances for the authenticated user.
+
+    post:
+    Create a new external calendar instance for the authenticated user.
+    """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -47,6 +50,16 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
 
 
 class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    """
+    get:
+    Return the given external calendar instance.
+
+    put:
+    Update the given external calendar instance.
+
+    delete:
+    Delete the given external calendar instance.
+    """
     queryset = ExternalCalendar.objects.all()
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

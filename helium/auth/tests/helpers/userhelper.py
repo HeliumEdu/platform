@@ -1,7 +1,3 @@
-"""
-Helper for User models in testing.
-"""
-
 from django.contrib.auth import get_user_model
 
 __author__ = 'Alex Laird'

@@ -1,5 +1,5 @@
 """
-Celery configuration.
+Initialize Celery with Django configuration.
 """
 from __future__ import absolute_import
 

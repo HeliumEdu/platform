@@ -1,7 +1,3 @@
-"""
-Form for user registration.
-"""
-
 from django import forms
 
 from helium.common.forms.base import BaseForm

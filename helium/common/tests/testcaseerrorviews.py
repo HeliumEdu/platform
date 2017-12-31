@@ -1,7 +1,3 @@
-"""
-Tests for error views.
-"""
-
 import mock
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation, PermissionDenied, ViewDoesNotExist

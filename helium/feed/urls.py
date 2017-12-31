@@ -1,7 +1,3 @@
-"""
-Feed URLs.
-"""
-
 from django.conf.urls import url
 
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView

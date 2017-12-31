@@ -1,7 +1,3 @@
-"""
-Metric utility function.
-"""
-
 from statsd.defaults.django import statsd
 
 from helium.auth.utils import userutils

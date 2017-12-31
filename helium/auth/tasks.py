@@ -1,7 +1,3 @@
-"""
-Asynchronous tasks to be performed.
-"""
-
 import logging
 
 from django.conf import settings

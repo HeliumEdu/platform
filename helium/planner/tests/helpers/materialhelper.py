@@ -1,6 +1,3 @@
-"""
-Helper for Material models in testing.
-"""
 from helium.common import enums
 from helium.planner.models import Material
 

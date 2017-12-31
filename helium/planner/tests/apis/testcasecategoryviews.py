@@ -1,6 +1,3 @@
-"""
-Tests for Category interaction.
-"""
 import json
 
 from django.test import TestCase

@@ -1,7 +1,3 @@
-"""
-MaterialGroup model.
-"""
-
 from django.conf import settings
 from django.db import models
 from six import python_2_unicode_compatible
@@ -15,9 +11,11 @@ __version__ = '1.0.0'
 
 @python_2_unicode_compatible
 class MaterialGroup(BasePlannerModel):
-    title = models.CharField(max_length=255, db_index=True, default='')
+    title = models.CharField(help_text='A display name.',
+                             max_length=255, db_index=True)
 
-    shown_on_calendar = models.BooleanField(default=True)
+    shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
+                                            default=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='material_groups', on_delete=models.CASCADE)
 

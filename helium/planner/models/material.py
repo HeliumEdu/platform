@@ -1,9 +1,3 @@
-"""
-Material model.
-"""
-import datetime
-
-from django.core import validators
 from django.db import models
 from six import python_2_unicode_compatible
 
@@ -17,25 +11,34 @@ __version__ = '1.0.0'
 
 @python_2_unicode_compatible
 class Material(BasePlannerModel):
-    title = models.CharField(max_length=255, db_index=True, default='')
+    title = models.CharField(help_text='A display name.',
+                             max_length=255, db_index=True)
 
-    status = models.PositiveIntegerField(choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
+    status = models.PositiveIntegerField(help_text='A valid material status.',
+                                         choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
 
-    condition = models.PositiveIntegerField(choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
+    condition = models.PositiveIntegerField(help_text='A valid material condition.',
+                                            choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
 
-    website = models.URLField(max_length=255, blank=True, null=True)
+    website = models.URLField(help_text='A valid URL.',
+                              max_length=255, blank=True, null=True)
 
     # TODO: refactor to use a DecimalField instead of CharField
-    price = models.CharField(max_length=255, blank=True, null=True)
+    price = models.CharField(help_text='A price string.',
+                             max_length=255, blank=True, null=True)
 
-    details = models.TextField(default='', blank=True)
+    details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
+                               default='', blank=True)
 
     # TODO: consider eliminating and just consolidating into 'details' depending on usage
-    seller_details = models.TextField(default='', blank=True)
+    seller_details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
+                                      default='', blank=True)
 
-    material_group = models.ForeignKey('MaterialGroup', related_name='materials', on_delete=models.CASCADE)
+    material_group = models.ForeignKey('MaterialGroup', help_text='The material group with which to associate.',
+                                       related_name='materials', on_delete=models.CASCADE)
 
-    courses = models.ManyToManyField('Course', related_name='materials', blank=True, default=None)
+    courses = models.ManyToManyField('Course', help_text='A list of courses with which to associate.',
+                                     related_name='materials', blank=True, default=None)
 
     class Meta:
         ordering = ('title',)

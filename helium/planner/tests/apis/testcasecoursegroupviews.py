@@ -1,6 +1,3 @@
-"""
-Tests for CourseGroup interaction.
-"""
 import json
 
 from django.test import TestCase
@@ -160,6 +157,7 @@ class TestCaseAPICourseGroupViews(TestCase):
             'private_slug': 'new_slug',
             'user': user1.pk,
             # Intentionally NOT changing these value
+            'title': course_group.title,
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
         }

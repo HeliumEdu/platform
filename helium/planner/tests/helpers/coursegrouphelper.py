@@ -1,6 +1,3 @@
-"""
-Helper for CourseGroup models in testing.
-"""
 import datetime
 
 from dateutil import parser

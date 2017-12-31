@@ -1,7 +1,3 @@
-"""
-Authenticated views for CourseGroup interaction.
-"""
-
 import logging
 
 from rest_framework.generics import GenericAPIView
@@ -22,6 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+    """
+    get:
+    Return a list of all course group instances for the authenticated user.
+
+    post:
+    Create a new course group instance for the authenticated user.
+    """
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -46,6 +49,16 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
 
 class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    """
+    get:
+    Return the given course group instance.
+
+    put:
+    Update the given course group instance.
+
+    delete:
+    Delete the given course group instance.
+    """
     queryset = CourseGroup.objects.all()
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

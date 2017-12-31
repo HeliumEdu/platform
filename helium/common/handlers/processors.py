@@ -1,7 +1,3 @@
-"""
-Context processors defining attributes that will be passed to all templates.
-"""
-
 from django.conf import settings
 
 from helium.planner.services import reminderservice

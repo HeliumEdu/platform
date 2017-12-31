@@ -1,5 +1,5 @@
 """
-Streamlined Django settings for running test cases.
+Settings specific to running tests, reading values from `.env`.
 """
 
 import logging

@@ -1,6 +1,3 @@
-"""
-Form for user deletion validation.
-"""
 from django import forms
 
 __author__ = 'Alex Laird'

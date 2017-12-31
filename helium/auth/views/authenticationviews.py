@@ -1,6 +1,3 @@
-"""
-Unauthenticated views for user authentication.
-"""
 import logging
 
 from django.core.urlresolvers import reverse

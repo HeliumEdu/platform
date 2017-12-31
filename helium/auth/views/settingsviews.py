@@ -1,7 +1,3 @@
-"""
-Views for interacting with user details.
-"""
-
 import logging
 
 from django.contrib.auth.decorators import login_required

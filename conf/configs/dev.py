@@ -1,5 +1,5 @@
 """
-Settings for a development environment when using Django's `runserver` command.
+Settings specific to a development environemnt using Django's `runserver` command, reading values from `.env`.
 """
 
 import os

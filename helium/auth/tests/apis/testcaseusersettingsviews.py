@@ -1,6 +1,3 @@
-"""
-Tests for UserSettings interaction.
-"""
 import json
 import uuid
 
@@ -19,38 +16,17 @@ __version__ = '1.0.0'
 class TestCaseUserSettingsViews(TestCase):
     def test_user_settings_login_required(self):
         # GIVEN
-        userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user_settings_list')),
-            self.client.put(reverse('api_user_settings_list'))
+            self.client.get(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk})),
+            self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}))
         ]
 
         # THEN
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_get_user_settings(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-
-        # WHEN
-        response = self.client.get(reverse('api_user_settings_list'))
-
-        # THEN
-        self.assertEqual(user.settings.default_view, response.data['default_view'])
-        self.assertEqual(user.settings.week_starts_on, response.data['week_starts_on'])
-        self.assertEqual(user.settings.all_day_offset, response.data['all_day_offset'])
-        self.assertEqual(user.settings.show_getting_started, response.data['show_getting_started'])
-        self.assertEqual(user.settings.events_color, response.data['events_color'])
-        self.assertEqual(user.settings.default_reminder_offset, response.data['default_reminder_offset'])
-        self.assertEqual(user.settings.default_reminder_offset_type, response.data['default_reminder_offset_type'])
-        self.assertEqual(user.settings.default_reminder_type, response.data['default_reminder_type'])
-        self.assertEqual(user.settings.receive_emails_from_admin, response.data['receive_emails_from_admin'])
-        self.assertEqual(user.settings.events_private_slug, response.data['events_private_slug'])
-        self.assertEqual(user.settings.private_slug, response.data['private_slug'])
-        self.assertEqual(user.settings.user.pk, response.data['user'])
 
     def test_put_user_setting(self):
         # GIVEN
@@ -63,7 +39,8 @@ class TestCaseUserSettingsViews(TestCase):
             'show_getting_started': False,
             'time_zone': 'America/Chicago'
         }
-        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertFalse(response.data['show_getting_started'])
@@ -74,13 +51,14 @@ class TestCaseUserSettingsViews(TestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
         data = {
             'time_zone': 'invalid'
         }
-        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -97,7 +75,8 @@ class TestCaseUserSettingsViews(TestCase):
         data = {
             'private_slug': 'new_slug'
         }
-        response = self.client.put(reverse('api_user_settings_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         user = get_user_model().objects.get(pk=user.id)
@@ -109,7 +88,8 @@ class TestCaseUserSettingsViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         self.assertTrue(user.settings.receive_emails_from_admin)
 
-        self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username, user.verification_code))
+        self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username,
+                                                                               user.verification_code))
 
         # THEN
         user = get_user_model().objects.get(pk=user.id)

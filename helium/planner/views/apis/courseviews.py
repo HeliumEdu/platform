@@ -1,7 +1,3 @@
-"""
-Authenticated views for Course interaction.
-"""
-
 import logging
 
 from django.http import Http404
@@ -11,7 +7,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course
@@ -26,6 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 class UserCoursesApiListView(GenericAPIView, ListModelMixin):
+    """
+    get:
+    Return a list of all course instances for the authenticated user.
+    """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -37,7 +36,15 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
         return self.list(request, *args, **kwargs)
 
 
-class CourseGroupCoursesApiListView(APIView):
+class CourseGroupCoursesApiListView(GenericAPIView):
+    """
+    get:
+    Return a list of all course instances for the given course group.
+
+    post:
+    Create a new course instance for the given course group.
+    """
+    serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
 
     def check_course_group_permission(self, request, course_group_id):
@@ -51,14 +58,14 @@ class CourseGroupCoursesApiListView(APIView):
 
         courses = Course.objects.filter(course_group_id=course_group_id, course_group__user_id=request.user.pk)
 
-        serializer = CourseSerializer(courses, many=True)
+        serializer = self.get_serializer(courses, many=True)
 
         return Response(serializer.data)
 
     def post(self, request, course_group_id, format=None):
         self.check_course_group_permission(request, course_group_id)
 
-        serializer = CourseSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save(course_group_id=course_group_id)
@@ -74,7 +81,18 @@ class CourseGroupCoursesApiListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CourseGroupCoursesApiDetailView(APIView):
+class CourseGroupCoursesApiDetailView(GenericAPIView):
+    """
+    get:
+    Return the given course instance.
+
+    put:
+    Update the given course instance.
+
+    delete:
+    Delete the given course instance.
+    """
+    serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def check_course_group_permission(self, request, course_group_id):
@@ -93,7 +111,7 @@ class CourseGroupCoursesApiDetailView(APIView):
         course = self.get_object(request, course_group_id, pk)
         self.check_object_permissions(request, course)
 
-        serializer = CourseSerializer(course)
+        serializer = self.get_serializer(course)
 
         return Response(serializer.data)
 
@@ -103,7 +121,7 @@ class CourseGroupCoursesApiDetailView(APIView):
         if 'course_group' in request.data:
             self.check_course_group_permission(request, request.data['course_group'])
 
-        serializer = CourseSerializer(course, data=request.data)
+        serializer = self.get_serializer(course, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
