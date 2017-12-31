@@ -1,7 +1,3 @@
-"""
-Base attributes from which all other Planner models should derive.
-"""
-
 import logging
 from abc import abstractmethod
 

@@ -1,6 +1,3 @@
-"""
-Tests to ensuring grading service accurately calculates grades.
-"""
 from django.test import TestCase
 
 __author__ = 'Alex Laird'

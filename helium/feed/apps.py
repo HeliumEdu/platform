@@ -1,7 +1,3 @@
-"""
-App config.
-"""
-
 from django.apps import AppConfig
 
 __author__ = 'Alex Laird'

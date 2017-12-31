@@ -1,7 +1,3 @@
-"""
-Form for user registration.
-"""
-
 from django import forms
 from django.contrib.auth import get_user_model
 
@@ -24,9 +20,6 @@ class UserRegisterForm(forms.ModelForm, BaseForm):
         fields = ['username', 'email']
 
     def clean(self):
-        """
-        Check the password meets the validation criteria.
-        """
         super(UserRegisterForm, self).clean()
 
         password1 = self.cleaned_data.get("password1")

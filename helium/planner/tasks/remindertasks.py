@@ -1,7 +1,3 @@
-"""
-Asynchronous reminder tasks to be performed.
-"""
-
 import logging
 
 from celery.schedules import crontab

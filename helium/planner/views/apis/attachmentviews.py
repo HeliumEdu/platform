@@ -1,16 +1,12 @@
-"""
-Authenticated views for Attachment interaction.
-"""
-
 import logging
 
 from django.http import Http404
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from rest_framework.generics import GenericAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from helium.common.utils import metricutils
 from helium.planner.models import Course, Attachment
@@ -24,7 +20,12 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class CourseAttachmentsApiListView(APIView):
+class CourseAttachmentsApiListView(GenericAPIView):
+    """
+    get:
+    Return a list of all attachment instances for the given course.
+    """
+    serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
 
     def check_course_permission(self, request, course_id):
@@ -38,12 +39,20 @@ class CourseAttachmentsApiListView(APIView):
 
         attachments = Attachment.objects.filter(course_id=course_id)
 
-        serializer = AttachmentSerializer(attachments, many=True)
+        serializer = self.get_serializer(attachments, many=True)
 
         return Response(serializer.data)
 
 
-class UserAttachmentsApiListView(APIView):
+class UserAttachmentsApiListView(GenericAPIView):
+    """
+    get:
+    Return a list of all attachment instances for the authenticated user.
+
+    post:
+    Create a new attachment instance for the authenticated user.
+    """
+    serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
     # TODO: in the future, refactor this (and the frontend) to only use the FileUploadParser
     parser_classes = (FormParser, MultiPartParser,)
@@ -62,7 +71,7 @@ class UserAttachmentsApiListView(APIView):
     def get(self, request, *args, **kwargs):
         attachments = Attachment.objects.filter(user_id=request.user.pk)
 
-        serializer = AttachmentSerializer(attachments, many=True)
+        serializer = self.get_serializer(attachments, many=True)
 
         return Response(serializer.data)
 
@@ -79,7 +88,7 @@ class UserAttachmentsApiListView(APIView):
             course_id = data['course'] if 'course' in data else None
             data.pop('course')
 
-            serializer = AttachmentSerializer(data=data)
+            serializer = self.get_serializer(data=data)
 
             if serializer.is_valid():
                 serializer.save(
@@ -107,7 +116,15 @@ class UserAttachmentsApiListView(APIView):
             return Response({'details': 'An unknown error occurred.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AttachmentsApiDetailView(APIView):
+class AttachmentsApiDetailView(GenericAPIView):
+    """
+    get:
+    Return the given attachment instance.
+
+    delete:
+    Delete the given attachment instance.
+    """
+    serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_object(self, request, pk):
@@ -120,7 +137,7 @@ class AttachmentsApiDetailView(APIView):
         attachment = self.get_object(request, pk)
         self.check_object_permissions(request, attachment)
 
-        serializer = AttachmentSerializer(attachment)
+        serializer = self.get_serializer(attachment)
 
         return Response(serializer.data)
 

@@ -1,7 +1,3 @@
-"""
-Base attributes from which all other forms should derive.
-"""
-
 from django import forms
 
 __author__ = 'Alex Laird'

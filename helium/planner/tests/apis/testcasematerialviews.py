@@ -1,6 +1,3 @@
-"""
-Tests for Material interaction.
-"""
 import json
 
 from django.test import TestCase
@@ -160,6 +157,7 @@ class TestCaseAPIMaterialViews(TestCase):
         data = {
             'courses': '[{},{}]'.format(course1.pk, course2.pk),
             # Intentionally NOT changing these value
+            'title': material.title,
             'material_group': material.material_group.pk
         }
         response = self.client.put(

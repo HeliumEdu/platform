@@ -1,6 +1,3 @@
-"""
-User admin site.
-"""
 from django import forms
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin
@@ -19,9 +16,6 @@ __version__ = '1.0.0'
 
 class AdminUserCreationForm(UserCreationForm):
     def clean_password2(self):
-        """
-        Check the password meets the validation criteria
-        """
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 

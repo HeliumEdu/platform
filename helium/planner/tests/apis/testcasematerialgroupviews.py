@@ -1,6 +1,3 @@
-"""
-Tests for MaterialGroup interaction.
-"""
 import json
 
 from django.test import TestCase
@@ -144,7 +141,9 @@ class TestCaseAPIMaterialGroupViews(TestCase):
 
         # WHEN
         data = {
-            'user': user1.pk
+            'user': user1.pk,
+            # Intentionally NOT changing these value
+            'title': material_group.title,
         }
         response = self.client.put(reverse('api_planner_materialgroups_detail', kwargs={'pk': material_group.pk}),
                                    json.dumps(data), content_type='application/json')

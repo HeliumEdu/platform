@@ -1,6 +1,3 @@
-"""
-Helper for Course models in testing.
-"""
 import datetime
 
 from dateutil import parser

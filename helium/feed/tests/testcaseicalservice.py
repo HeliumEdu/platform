@@ -1,6 +1,3 @@
-"""
-Tests to ensuring ICAL service properly validates, parses, and builds ICAL files.
-"""
 from django.test import TestCase
 
 __author__ = 'Alex Laird'

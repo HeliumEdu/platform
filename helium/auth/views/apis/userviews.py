@@ -1,14 +1,10 @@
-"""
-Authenticated views for User interaction.
-"""
-
 import logging
 
 from django.contrib.auth import update_session_auth_hash
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.forms.userpasswordchangeform import UserPasswordChangeForm
@@ -22,15 +18,32 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserApiListView(APIView):
+class UserApiDetailView(GenericAPIView):
+    """
+    get:
+    Return the given (and authenticated) user instance, including profile and settings details.
+
+    put:
+    Update the given (and authenticated) user instance.
+
+    delete:
+    Delete the given (and authenticated) user instance.
+    """
+    serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, format=None):
-        serializer = UserSerializer(request.user)
+    def get(self, request, pk, format=None):
+        if int(pk) != request.user.pk:
+            self.permission_denied(request, 'You do not have permission to perform this action.')
+
+        serializer = self.get_serializer(request.user)
 
         return Response(serializer.data)
 
-    def put(self, request, format=None):
+    def put(self, request, pk, format=None):
+        if int(pk) != request.user.pk:
+            self.permission_denied(request, 'You do not have permission to perform this action.')
+
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
         response_data = {}
@@ -48,7 +61,7 @@ class UserApiListView(APIView):
 
         # Process remaining attributes (if any) using serializers
         if 'username' in request.data and 'email' in request.data:
-            serializer = UserSerializer(request.user, data=request.data, context={'request': request})
+            serializer = self.get_serializer(request.user, data=request.data, context={'request': request})
 
             if serializer.is_valid():
                 serializer.save()
@@ -68,7 +81,10 @@ class UserApiListView(APIView):
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def delete(self, request, format=None):
+    def delete(self, request, pk, format=None):
+        if int(pk) != request.user.pk:
+            self.permission_denied(request, 'You do not have permission to perform this action.')
+
         form = UserDeleteForm(user=request.user, data=request.data)
 
         if form.is_valid():

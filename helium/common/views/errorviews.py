@@ -1,7 +1,3 @@
-"""
-Unauthenticated error views.
-"""
-
 import logging
 
 from django.shortcuts import render

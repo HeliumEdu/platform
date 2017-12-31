@@ -1,7 +1,3 @@
-"""
-Service for interacting with reminders.
-"""
-
 import logging
 
 __author__ = 'Alex Laird'

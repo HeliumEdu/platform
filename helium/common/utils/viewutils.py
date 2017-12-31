@@ -1,6 +1,3 @@
-"""
-Utility functions for view data.
-"""
 from future.standard_library import install_aliases
 
 install_aliases()

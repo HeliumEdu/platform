@@ -1,7 +1,3 @@
-"""
-Sitemap configurations.
-"""
-
 from django.contrib import sitemaps
 from django.core.urlresolvers import reverse
 

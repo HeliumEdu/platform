@@ -1,7 +1,3 @@
-"""
-WSGI configuration for Django environment.
-"""
-
 import os
 
 from django.conf import settings

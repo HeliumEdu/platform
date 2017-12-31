@@ -1,7 +1,3 @@
-"""
-Service for processing authentication-related requests.
-"""
-
 import logging
 
 from django.contrib.auth import authenticate, login, logout, get_user_model

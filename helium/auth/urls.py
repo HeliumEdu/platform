@@ -1,12 +1,8 @@
-"""
-Users URLs.
-"""
-
 from django.conf.urls import url
 
-from helium.auth.views.apis.userprofileviews import UserProfileApiListView
-from helium.auth.views.apis.usersettingsviews import UserSettingsApiListView
-from helium.auth.views.apis.userviews import UserApiListView
+from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
+from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
+from helium.auth.views.apis.userviews import UserApiDetailView
 from helium.auth.views.authenticationviews import *
 from helium.auth.views.settingsviews import *
 
@@ -27,7 +23,9 @@ urlpatterns = [
     url(r'^settings', settings, name='settings'),
 
     # API URLs
-    url(r'^api/user/$', UserApiListView.as_view(), name='api_user_list'),
-    url(r'^api/user/profile', UserProfileApiListView.as_view(), name='api_user_profile_list'),
-    url(r'^api/user/settings', UserSettingsApiListView.as_view(), name='api_user_settings_list'),
+    url(r'^api/auth/users/(?P<pk>[0-9]+)/$', UserApiDetailView.as_view(), name='api_auth_users_detail'),
+    url(r'^api/auth/users/(?P<pk>[0-9]+)/profile', UserProfileApiDetailView.as_view(),
+        name='api_auth_users_profile_detail'),
+    url(r'^api/auth/users/(?P<pk>[0-9]+)/settings', UserSettingsApiDetailView.as_view(),
+        name='api_auth_users_settings_detail'),
 ]

@@ -1,7 +1,3 @@
-"""
-Service for processing subscription-based requests.
-"""
-
 import logging
 
 from django.contrib.auth import get_user_model

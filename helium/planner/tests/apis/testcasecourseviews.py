@@ -1,9 +1,5 @@
-"""
-Tests for Course interaction.
-"""
 import json
 
-from dateutil import parser
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -296,6 +292,7 @@ class TestCaseAPICourseViews(TestCase):
             'trend': 1.5,
             'private_slug': 'new_slug',
             # Intentionally NOT changing these value
+            'title': course.title,
             'credits': course.credits,
             'start_date': course.start_date.isoformat(),
             'end_date': course.end_date.isoformat(),

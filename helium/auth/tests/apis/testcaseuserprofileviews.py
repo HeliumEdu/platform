@@ -1,6 +1,3 @@
-"""
-Tests for UserProfile interaction.
-"""
 import json
 
 from django.contrib.auth import get_user_model
@@ -18,42 +15,29 @@ __version__ = '1.0.0'
 class TestCaseUserProfileViews(TestCase):
     def test_user_profile_login_required(self):
         # GIVEN
-        userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_user_profile_list')),
-            self.client.put(reverse('api_user_profile_list'))
+            self.client.get(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk})),
+            self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}))
         ]
 
         # THEN
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get_user_profile(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-
-        # WHEN
-        response = self.client.get(reverse('api_user_profile_list'))
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotIn('phone_verification_code', response.data)
-        self.assertEqual(user.profile.phone, response.data['phone'])
-        self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
-        self.assertEqual(user.profile.user.pk, response.data['user'])
-
     def test_put_bad_data_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
         data = {
             'phone': '555-5555',
             'phone_carrier': 'invalid'
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -70,7 +54,8 @@ class TestCaseUserProfileViews(TestCase):
             'phone': '555-5555',
             'phone_carrier': 'tmomail.net'
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -93,7 +78,8 @@ class TestCaseUserProfileViews(TestCase):
         data = {
             'phone_verification_code': user.profile.phone_verification_code,
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -120,7 +106,8 @@ class TestCaseUserProfileViews(TestCase):
             'phone': '',
             'phone_carrier': '',
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -141,7 +128,8 @@ class TestCaseUserProfileViews(TestCase):
         data = {
             'phone_verification_code': 000000,
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -158,7 +146,8 @@ class TestCaseUserProfileViews(TestCase):
         data = {
             'phone_changing': '444-4444'
         }
-        response = self.client.put(reverse('api_user_profile_list'), json.dumps(data), content_type='application/json')
+        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+                                   content_type='application/json')
 
         # THEN
         user = get_user_model().objects.get(pk=user.id)

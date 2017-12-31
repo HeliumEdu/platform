@@ -1,7 +1,3 @@
-"""
-Helper for MaterialGroup models in testing.
-"""
-
 from helium.planner.models import MaterialGroup
 
 __author__ = 'Alex Laird'

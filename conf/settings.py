@@ -1,5 +1,13 @@
 """
-Entry point for building settings and other configuration parameters.
+This generic settings builder reads the appropriate configuration file for different methods of deployment.
+
+Note that the system environment variable ENVIRONMENT should be set to a slug that matches the deployed environment.
+
+* If ENVIRONMENT is set to `dev`, `dev.py` will be used for configuration, using values from `.env`
+* If any other ENVIRONMENT is set, `deploy.py` will be used for configuration, using values from system environment variables
+* If `test` is passed as an argument, the ENVIRONMENT flag is ignore and `test.py` is used for configuration, using values from `.env`
+
+All configuration files first read `common.py` before applying deployment-specific configurations.
 """
 
 import os

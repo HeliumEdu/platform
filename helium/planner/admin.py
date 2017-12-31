@@ -1,6 +1,3 @@
-"""
-Planner admin site.
-"""
 from django.contrib.admin import ModelAdmin
 
 from helium.common.admin import admin_site

@@ -1,12 +1,8 @@
-"""
-Service for validating, parsing, and building ICAL files.
-"""
-
 import logging
+from urllib.request import urlopen, URLError
 
 from icalendar import Calendar
 from rest_framework import status
-from urllib.request import urlopen, URLError
 
 from helium.common.utils.commonutils import HeliumError
 

@@ -1,7 +1,3 @@
-"""
-Service for calculating grades.
-"""
-
 import logging
 
 __author__ = 'Alex Laird'

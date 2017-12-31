@@ -1,10 +1,5 @@
-"""
-UserProfile model.
-"""
-
 import logging
 
-from builtins import str
 from django.conf import settings
 from django.db import models
 from six import python_2_unicode_compatible
@@ -22,17 +17,21 @@ logger = logging.getLogger(__name__)
 
 @python_2_unicode_compatible
 class UserProfile(BaseModel):
-    phone = models.CharField(max_length=255, blank=True, null=True)
+    phone = models.CharField(help_text='A valid phone number.',
+                             max_length=255, blank=True, null=True)
 
     phone_changing = models.CharField(max_length=15, blank=True, null=True)
 
-    phone_carrier = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,
+    phone_carrier = models.CharField(help_text='A valid phone carrier.',
+                                     max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,
                                      null=True)
 
     phone_carrier_changing = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None,
                                               blank=True, null=True)
 
-    phone_verification_code = models.PositiveIntegerField(default=generate_phone_verification_code)
+    phone_verification_code = models.PositiveIntegerField(
+        help_text='The code sent to `phone` when registering or changing an email address',
+        default=generate_phone_verification_code)
 
     phone_verified = models.BooleanField(default=False)
 

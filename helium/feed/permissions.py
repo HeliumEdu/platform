@@ -1,6 +1,3 @@
-"""
-Permissions for interacting with the REST API.
-"""
 import logging
 
 from rest_framework import permissions

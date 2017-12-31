@@ -1,6 +1,3 @@
-"""
-Tests for Reminder interaction.
-"""
 from django.test import TestCase
 
 __author__ = 'Alex Laird'

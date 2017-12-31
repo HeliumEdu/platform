@@ -1,7 +1,3 @@
-"""
-Base configuration for the admin site.
-"""
-
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 

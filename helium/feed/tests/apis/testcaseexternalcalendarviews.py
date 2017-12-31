@@ -1,6 +1,3 @@
-"""
-Tests for ExternalCalendar interaction.
-"""
 import json
 
 import mock
@@ -91,7 +88,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        self.assertEqual(external_calendar.title, '')
+        self.assertEqual(external_calendar.title, 'My Calendar')
         self.assertTrue(external_calendar.shown_on_calendar)
 
         # WHEN
@@ -154,6 +151,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         data = {
             'user': user1.pk,
             # Intentionally NOT changing these value
+            'title': external_calendar.title,
             'url': external_calendar.url
         }
         response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
@@ -163,9 +161,11 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
-    def test_create_bad_data(self):
+    @mock.patch('helium.feed.services.icalservice.urlopen')
+    def test_create_bad_data(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
 
         # WHEN
         data = {

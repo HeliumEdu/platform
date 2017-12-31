@@ -1,7 +1,3 @@
-"""
-Unauthenticated feed URLs (which rely on the private slug in the URL as their authentication.
-"""
-
 import logging
 
 __author__ = 'Alex Laird'

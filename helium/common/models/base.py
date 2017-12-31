@@ -1,7 +1,3 @@
-"""
-Base attributes from which all other models should derive.
-"""
-
 import logging
 
 from django.db import models

@@ -1179,7 +1179,7 @@ function HeliumClasses() {
         $(".date-picker").datepicker({
             autoclose: true,
             language: 'en',
-            weekStart: helium.USER_PREFS.week_starts_on
+            weekStart: helium.USER_PREFS.settings.week_starts_on
         }).next().on("click", function () {
             $(this).prev().focus();
         });

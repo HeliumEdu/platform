@@ -1,13 +1,9 @@
-"""
-Authenticated views for UserProfile interaction.
-"""
-
 import logging
 
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 
@@ -18,16 +14,20 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserProfileApiListView(APIView):
+class UserProfileApiDetailView(GenericAPIView):
+    """
+    put:
+
+    Update the given (and authenticated) user's profile.
+    """
+    serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, format=None):
-        serializer = UserProfileSerializer(request.user.profile)
+    def put(self, request, pk, format=None):
+        if int(pk) != request.user.pk:
+            self.permission_denied(request, 'You do not have permission to perform this action.')
 
-        return Response(serializer.data)
-
-    def put(self, request, format=None):
-        serializer = UserProfileSerializer(request.user.profile, data=request.data)
+        serializer = self.get_serializer(request.user.profile, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
