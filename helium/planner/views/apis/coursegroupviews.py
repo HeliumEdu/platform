@@ -5,9 +5,8 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.models import CourseGroup
-from helium.planner.permissions import IsOwner
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = 'Alex Laird'
@@ -32,11 +31,11 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         user = self.request.user
         return user.course_groups.all()
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
@@ -59,9 +58,12 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
     delete:
     Delete the given course group instance.
     """
-    queryset = CourseGroup.objects.all()
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.course_groups.all()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

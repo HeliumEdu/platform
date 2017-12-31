@@ -5,9 +5,8 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelM
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.feed.models import ExternalCalendar
-from helium.feed.permissions import IsOwner
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
 __author__ = 'Alex Laird'
@@ -32,11 +31,13 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
         user = self.request.user
         return user.external_calendars.all()
 
+    def get(self, request, *args, **kwargs):
+        response = self.list(request, *args, **kwargs)
+
+        return response
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
@@ -60,12 +61,17 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
     delete:
     Delete the given external calendar instance.
     """
-    queryset = ExternalCalendar.objects.all()
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
+    def get_queryset(self):
+        user = self.request.user
+        return user.external_calendars.all()
+
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)

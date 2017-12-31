@@ -185,7 +185,7 @@ class TestCaseAPIAttachmentViews(TestCase):
                 data)
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
@@ -205,7 +205,10 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            if isinstance(response.data, list):
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_bad_data(self):
         # GIVEN
@@ -245,5 +248,8 @@ class TestCaseAPIAttachmentViews(TestCase):
             ]
 
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-            self.assertIn('not found', response.data['detail'].lower())
+            if isinstance(response.data, list):
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+                self.assertIn('not found', response.data['detail'].lower())

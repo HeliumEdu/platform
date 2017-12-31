@@ -5,7 +5,7 @@ from django.db import models
 from six import python_2_unicode_compatible
 
 from helium.common import enums
-from helium.planner.models.base import BasePlannerModel
+from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -13,7 +13,7 @@ __version__ = '1.0.0'
 
 
 @python_2_unicode_compatible
-class Course(BasePlannerModel):
+class Course(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 

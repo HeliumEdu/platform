@@ -1,14 +1,16 @@
 import logging
 
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash, get_user_model
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.forms.userpasswordchangeform import UserPasswordChangeForm
 from helium.auth.serializers.userserializer import UserSerializer
+from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
@@ -18,7 +20,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class UserApiDetailView(GenericAPIView):
+class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
     """
     get:
     Return the given (and authenticated) user instance, including profile and settings details.
@@ -29,20 +31,18 @@ class UserApiDetailView(GenericAPIView):
     delete:
     Delete the given (and authenticated) user instance.
     """
+    queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsOwner)
 
-    def get(self, request, pk, format=None):
-        if int(pk) != request.user.pk:
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+    def get(self, request, *args, **kwargs):
+        response = self.retrieve(request, *args, **kwargs)
 
-        serializer = self.get_serializer(request.user)
-
-        return Response(serializer.data)
+        return response
 
     def put(self, request, pk, format=None):
-        if int(pk) != request.user.pk:
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+        # This call gets the object and checks permissions
+        self.get_object()
 
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
@@ -82,8 +82,8 @@ class UserApiDetailView(GenericAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     def delete(self, request, pk, format=None):
-        if int(pk) != request.user.pk:
-            self.permission_denied(request, 'You do not have permission to perform this action.')
+        # This call gets the object and checks permissions
+        self.get_object()
 
         form = UserDeleteForm(user=request.user, data=request.data)
 
