@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -61,8 +60,6 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
-    # TODO: in the future, refactor this (and the frontend) to only use the FileUploadParser
-    parser_classes = (FormParser, MultiPartParser,)
     schema = AttachmentListSchema()
 
     def get_queryset(self):
