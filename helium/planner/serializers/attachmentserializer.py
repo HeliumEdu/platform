@@ -17,3 +17,9 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'attachment', 'size', 'course',)
         read_only_fields = ('size',)
+
+    def validate(self, attrs):
+        if 'course' not in attrs and 'event' not in attrs and 'homework' not in attrs:
+            raise serializers.ValidationError("At least one of `course`, `event`, or `homework` must be given.")
+
+        return attrs
