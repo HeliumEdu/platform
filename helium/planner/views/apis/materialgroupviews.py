@@ -8,6 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
+from helium.planner.views.apis.schemas.coursegroupschemas import CourseGroupIDSchema
+from helium.planner.views.apis.schemas.materialgroupschemas import MaterialGroupIDSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -60,6 +62,7 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
     """
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = MaterialGroupIDSchema()
 
     def get_queryset(self):
         user = self.request.user
