@@ -88,7 +88,7 @@ Now you're all set! To start the development server, execute:
 python manage.py runserver
 ```
 
-A development server will be started at http://localhost:8000.
+A development server will be started at http://localhost:8000. API documentation can now also be viewed at http://localhost:8000/docs.
 
 Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
 before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
