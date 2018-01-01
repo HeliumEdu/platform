@@ -12,6 +12,8 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
+from helium.planner.views.apis.schemas.attachmentschemas import AttachmentIDSchema, AttachmentListSchema
+from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -27,10 +29,11 @@ class CourseAttachmentsApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
+    schema = SubCourseListSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return user.attachments.filter(course_id=self.kwargs['course_id'])
+        return user.attachments.filter(course_id=self.kwargs['course'])
 
     def check_course_permission(self, request, course_id):
         if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
@@ -48,12 +51,16 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     Return a list of all attachment instances for the authenticated user.
 
     post:
-    Create a new attachment instance for the authenticated user.
+    Create a new attachment instance for the authenticated user. If multiple files are given in `file[]`, multiple files
+    will be created. The `title` attribute is set dynamically by the `filename` field passed when uploading.
+
+    At least one of `course`, `event`, or `homework` must be given.
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
     # TODO: in the future, refactor this (and the frontend) to only use the FileUploadParser
     parser_classes = (FormParser, MultiPartParser,)
+    schema = AttachmentListSchema()
 
     def get_queryset(self):
         user = self.request.user
@@ -91,7 +98,7 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
             if serializer.is_valid():
                 serializer.save(
                     course=self.get_course(course_id) if course_id else None,
-                    # TODO: uncomment and create functionswhen these models exist
+                    # TODO: uncomment and create functions when these models exist
                     # event=self.get_event(data['event']) if 'event' in data else None,
                     # homework=self.get_homework(data['homework']) if 'homework' in data else None,
                     user=request.user,
@@ -124,6 +131,7 @@ class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelM
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = AttachmentIDSchema()
 
     def get_queryset(self):
         user = self.request.user

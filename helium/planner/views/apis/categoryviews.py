@@ -10,6 +10,8 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course, Category
 from helium.planner.serializers.categoryserializer import CategorySerializer
+from helium.planner.views.apis.schemas.categoryschemas import CategoryIDSchema
+from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -25,6 +27,7 @@ class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
+    schema = SubCourseListSchema()
 
     def get_queryset(self):
         user = self.request.user
@@ -44,10 +47,11 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
+    schema = SubCourseListSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return Category.objects.filter(course_id=self.kwargs['course_id'], course__course_group__user_id=user.pk)
+        return Category.objects.filter(course_id=self.kwargs['course'], course__course_group__user_id=user.pk)
 
     def check_course_group_permission(self, request, course_group_id):
         if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
@@ -58,23 +62,23 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
             raise NotFound('Course not found.')
 
     def get(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group_id'])
-        self.check_course_permission(request, kwargs['course_id'])
+        self.check_course_group_permission(request, kwargs['course_group'])
+        self.check_course_permission(request, kwargs['course'])
 
         response = self.list(request, *args, **kwargs)
 
         return response
 
     def perform_create(self, serializer):
-        serializer.save(course_id=self.kwargs['course_id'])
+        serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group_id'])
-        self.check_course_permission(request, kwargs['course_id'])
+        self.check_course_group_permission(request, kwargs['course_group'])
+        self.check_course_permission(request, kwargs['course'])
 
         response = self.create(request, *args, **kwargs)
 
-        logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course_id'],
+        logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                           request.user.get_username()))
 
         metricutils.increment(request, 'action.category.created')
@@ -95,11 +99,12 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = CategoryIDSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return Category.objects.filter(course__course_group_id=self.kwargs['course_group_id'],
-                                       course_id=self.kwargs['course_id'],
+        return Category.objects.filter(course__course_group_id=self.kwargs['course_group'],
+                                       course_id=self.kwargs['course'],
                                        course__course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
@@ -118,7 +123,7 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course_id'],
+            'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
                                                                     request.user.get_username()))
 
         metricutils.increment(request, 'action.category.deleted')

@@ -20,7 +20,8 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_courses_attachments_list', kwargs={'course_id': '9999'})),
+            self.client.get(
+                reverse('api_planner_courses_attachments_list', kwargs={'course_group': '9999', 'course': '9999'})),
             self.client.get(reverse('api_planner_attachments_list')),
             self.client.post(reverse('api_planner_attachments_list')),
             self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
@@ -47,7 +48,8 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # WHEN
         response1 = self.client.get(reverse('api_planner_attachments_list'))
-        response2 = self.client.get(reverse('api_planner_courses_attachments_list', kwargs={'course_id': course3.pk}))
+        response2 = self.client.get(reverse('api_planner_courses_attachments_list',
+                                            kwargs={'course_group': course_group2.pk, 'course': course3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -199,7 +201,8 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_courses_attachments_list', kwargs={'course_id': course1.pk})),
+            self.client.get(reverse('api_planner_courses_attachments_list',
+                                    kwargs={'course_group': course_group1.pk, 'course': course1.pk})),
             self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': attachment.pk}))
         ]
 
@@ -232,7 +235,7 @@ class TestCaseAPIAttachmentViews(TestCase):
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        coursehelper.given_course_exists(course_group)
+        course = coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()
 
         # WHEN
@@ -243,7 +246,14 @@ class TestCaseAPIAttachmentViews(TestCase):
             }
             responses = [
                 self.client.post(reverse('api_planner_attachments_list'), data),
-                self.client.get(reverse('api_planner_courses_attachments_list', kwargs={'course_id': '9999'})),
+                self.client.get(
+                    reverse('api_planner_courses_attachments_list', kwargs={'course_group': '9999', 'course': '9999'})),
+                self.client.get(
+                    reverse('api_planner_courses_attachments_list',
+                            kwargs={'course_group': course_group.pk, 'course': '9999'})),
+                self.client.get(
+                    reverse('api_planner_courses_attachments_list',
+                            kwargs={'course_group': '9999', 'course': course.pk})),
                 self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
             ]
 

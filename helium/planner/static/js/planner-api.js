@@ -1408,7 +1408,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/courses/" + id + "/attachments",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/attachments",
                 async: async,
                 dataType: "json",
                 success: function (data) {

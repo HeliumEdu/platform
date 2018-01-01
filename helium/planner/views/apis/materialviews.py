@@ -12,6 +12,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import MaterialGroup, Material, Course
 from helium.planner.serializers.materialserializer import MaterialSerializer
+from helium.planner.views.apis.schemas.materialschemas import MaterialIDSchema, MaterialListSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -46,10 +47,11 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated,)
+    schema = MaterialListSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.filter(material_group_id=self.kwargs['material_group_id'],
+        return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
     def check_material_group_permission(self, request, material_group_id):
@@ -63,10 +65,12 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, ListModelMixin):
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-    def post(self, request, material_group_id, format=None):
+    def post(self, request, material_group, format=None):
         data = request.data.copy()
 
-        self.check_material_group_permission(request, material_group_id)
+        self.check_material_group_permission(request, material_group)
+        # If Django Rest Framework adds better support for properly getting the `help_text` of related fields,
+        # this can be removed
         if 'courses' in data:
             courses = json.loads(data['courses'])
             for course_id in courses:
@@ -78,10 +82,10 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, ListModelMixin):
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid():
-            serializer.save(material_group_id=material_group_id, courses=courses)
+            serializer.save(material_group_id=material_group, courses=courses)
 
             logger.info(
-                'Material {} created in MaterialGroup {} for user {}'.format(serializer.instance.pk, material_group_id,
+                'Material {} created in MaterialGroup {} for user {}'.format(serializer.instance.pk, material_group,
                                                                              request.user.get_username()))
 
             metricutils.increment(request, 'action.material.created')
@@ -104,10 +108,11 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, De
     """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = MaterialIDSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.filter(material_group_id=self.kwargs['material_group_id'],
+        return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
     def check_material_group_permission(self, request, material_group_id):
@@ -121,12 +126,14 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, De
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
-    def put(self, request, material_group_id, pk, format=None):
+    def put(self, request, material_group, pk, format=None):
         data = request.data.copy()
 
         material = self.get_object()
         if 'material_group' in data:
             self.check_material_group_permission(request, data['material_group'])
+        # If Django Rest Framework adds better support for properly getting the `help_text` of related fields,
+        # this can be removed
         if 'courses' in data:
             courses = json.loads(data['courses'])
             for course_id in courses:
@@ -152,7 +159,7 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, De
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'Material {} deleted from MaterialGroup {} for user {}'.format(kwargs['pk'], kwargs['material_group_id'],
+            'Material {} deleted from MaterialGroup {} for user {}'.format(kwargs['pk'], kwargs['material_group'],
                                                                            request.user.get_username()))
 
         metricutils.increment(request, 'action.material.deleted')

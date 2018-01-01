@@ -10,6 +10,8 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course
 from helium.planner.serializers.courseserializer import CourseSerializer
+from helium.planner.views.apis.schemas.coursegroupschemas import SubCourseGroupListSchema
+from helium.planner.views.apis.schemas.courseschemas import CourseIDSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -44,10 +46,11 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
+    schema = SubCourseGroupListSchema()
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group_id=self.kwargs['course_group_id'],
+        return Course.objects.filter(course_group_id=self.kwargs['course_group'],
                                      course_group__user_id=user.pk)
 
     def check_course_group_permission(self, request, course_group_id):
@@ -58,12 +61,12 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group_id'])
+        self.check_course_group_permission(request, kwargs['course_group'])
 
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group_id'],
+            'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group'],
                                                                      self.request.user.get_username()))
 
         metricutils.increment(request, 'action.course.created')
@@ -84,6 +87,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = CourseIDSchema()
 
     def check_course_group_permission(self, request, course_group_id):
         if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
@@ -91,7 +95,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group_id=self.kwargs['course_group_id'], course_group__user_id=user.pk)
+        return Course.objects.filter(course_group_id=self.kwargs['course_group'], course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -111,7 +115,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group_id'],
+        logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],
                                                                                request.user.get_username()))
 
         metricutils.increment(request, 'action.course.deleted')

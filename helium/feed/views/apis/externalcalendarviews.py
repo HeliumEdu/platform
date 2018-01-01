@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.feed.views.apis.schemas.externalcalendarschemas import ExternalCalendarIDSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -63,6 +64,7 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
     """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    schema = ExternalCalendarIDSchema()
 
     def get_queryset(self):
         user = self.request.user
