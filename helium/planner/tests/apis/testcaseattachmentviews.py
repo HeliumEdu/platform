@@ -14,6 +14,13 @@ __version__ = '1.0.0'
 
 
 class TestCaseAPIAttachmentViews(TestCase):
+
+    def setUp(self):
+        self.tmp_files = []
+
+    def tearDown(self):
+        attachmenthelper.cleanup_attachments()
+
     def test_attachment_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -137,6 +144,24 @@ class TestCaseAPIAttachmentViews(TestCase):
     #     attachment = Attachment.objects.get(pk=response.data['id'])
     #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data)
 
+    def test_create_orphaned_attachment_fails(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        tmp_file = attachmenthelper.given_file_exists()
+
+        # WHEN
+        with open(tmp_file.name) as fp:
+            data = {
+                'file[]': [fp]
+            }
+            response = self.client.post(
+                reverse('api_planner_attachments_list'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('one of', response.data['non_field_errors'][0])
+
     def test_get_attachment_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -257,6 +282,7 @@ class TestCaseAPIAttachmentViews(TestCase):
                 self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
             ]
 
+        # THEN
         for response in responses:
             if isinstance(response.data, list):
                 self.assertEqual(len(response.data), 0)

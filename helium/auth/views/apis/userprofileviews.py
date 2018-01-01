@@ -25,7 +25,7 @@ class UserProfileApiDetailView(GenericAPIView):
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = (IsAuthenticated,IsOwner)
+    permission_classes = (IsAuthenticated, IsOwner)
 
     def put(self, request, pk, format=None):
         user = self.get_object()

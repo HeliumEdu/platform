@@ -1,3 +1,4 @@
+import os
 from tempfile import NamedTemporaryFile
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -8,11 +9,17 @@ __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
+tmp_files = []
+
 
 def given_file_exists():
+    global tmp_files
+
     tmp_file = NamedTemporaryFile(delete=False)
     tmp_file.write("Attachment File".encode())
     tmp_file.close()
+
+    tmp_files.append(tmp_file)
 
     return tmp_file
 
@@ -39,3 +46,15 @@ def verify_attachment_matches_data(test_case, attachment, data):
         test_case.assertEqual(attachment.homework.pk, data['homework'])
     if 'user' in data:
         test_case.assertEqual(attachment.user.pk, data['user'])
+
+
+def cleanup_attachments():
+    global tmp_files
+
+    for tmp_file in tmp_files:
+        os.remove(tmp_file.name)
+
+    tmp_files = []
+
+    for attachment in Attachment.objects.all():
+        attachment.delete()

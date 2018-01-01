@@ -73,10 +73,17 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
             raise NotFound('Course not found.')
 
-    def get_course(self, course_id):
-        self.check_course_permission(self.request, course_id)
+    def check_event_permission(self, request, course_id):
+        pass
+        # TODO: uncomment and when these models exist
+        # if not Event.objects.filter(pk=course_id, user_id=request.user.pk).exists():
+        #     raise NotFound('Event not found.')
 
-        return Course.objects.get(course_group__user_id=self.request.user.pk, id=course_id)
+    def check_homework_permission(self, request, course_id):
+        pass
+        # TODO: uncomment and when these models exist
+        # if not Homework.objects.filter(pk=course_id, course__course_group__user_id=request.user.pk).exists():
+        #     raise NotFound('Homework not found.')
 
     def options(self, request, *args, **kwargs):
         """
@@ -114,20 +121,17 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
             data['title'] = upload.name
             data['attachment'] = upload
 
-            # We're popping it off so the serializer doesn't validate it, as it will be validated later
-            course_id = data['course'] if 'course' in data else None
-            data.pop('course')
+            if 'course' in data:
+                self.check_course_permission(request, data['course'])
+            if 'event' in data:
+                self.check_event_permission(request, data['event'])
+            if 'homework' in data:
+                self.check_homework_permission(request, data['homework'])
 
             serializer = self.get_serializer(data=data)
 
             if serializer.is_valid():
-                serializer.save(
-                    course=self.get_course(course_id) if course_id else None,
-                    # TODO: uncomment and create functions when these models exist
-                    # event=self.get_event(data['event']) if 'event' in data else None,
-                    # homework=self.get_homework(data['homework']) if 'homework' in data else None,
-                    user=request.user,
-                )
+                serializer.save(user=request.user)
 
                 logger.info(
                     'Attachment {} created for user {}'.format(serializer.instance.pk, request.user.get_username()))
