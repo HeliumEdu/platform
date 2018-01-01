@@ -93,6 +93,32 @@ class TestCaseAPICategoryViews(TestCase):
         categoryhelper.verify_category_matches_data(self, category, data)
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
+    def test_create_category_exceeds_weight_course_100_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, weight=25)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'weight': 0.0000000001,
+            'color': '#7bd148'
+        }
+        response = self.client.post(
+            reverse('api_planner_coursegroups_courses_categories_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('weight', response.data)
+
     def test_get_category_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -124,7 +150,7 @@ class TestCaseAPICategoryViews(TestCase):
         }
         response = self.client.put(
             reverse('api_planner_coursegroups_courses_categories_detail',
-                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course.pk}),
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': category.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -136,6 +162,32 @@ class TestCaseAPICategoryViews(TestCase):
         category = Category.objects.get(pk=category.pk)
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
+    def test_update_category_exceeds_weight_course_100_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, weight=25)
+        category = categoryhelper.given_category_exists(course, weight=25)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'weight': 25.0000000001,
+            'color': '#7bd148'
+        }
+        response = self.client.put(
+            reverse('api_planner_coursegroups_courses_categories_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': category.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('weight', response.data)
+
     def test_delete_category_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -146,7 +198,7 @@ class TestCaseAPICategoryViews(TestCase):
         # WHEN
         response = self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                      'pk': course.pk}))
+                                                      'pk': category.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
