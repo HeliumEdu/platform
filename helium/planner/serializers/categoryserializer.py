@@ -17,3 +17,22 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',)
         read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course',)
+
+    def validate_weight(self, weight):
+        """
+        Validate the weight of the incoming Category, ensuring it doesn't cause the parent course's cumulative
+        weights to exceed 100.
+
+        :param weight: the weight to be validated
+        """
+        course_id = self.context['request'].parser_context['kwargs']['course']
+
+        weight_total = 0
+        for category in Category.objects.filter(course_id=course_id).iterator():
+            weight_total += category.weight
+
+        if weight_total + weight > 100:
+            raise serializers.ValidationError(
+                "The cumulative weights of all categories associated with a course cannot exceed 100.")
+
+        return weight
