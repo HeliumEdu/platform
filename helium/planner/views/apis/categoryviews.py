@@ -44,6 +44,8 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
 
     post:
     Create a new category instance for the given course.
+
+    Note that all weights associated with a single course cannot exceed a value of 100.
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)

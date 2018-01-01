@@ -8,7 +8,6 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
-from helium.planner.views.apis.schemas.coursegroupschemas import CourseGroupIDSchema
 from helium.planner.views.apis.schemas.materialgroupschemas import MaterialGroupIDSchema
 
 __author__ = 'Alex Laird'
