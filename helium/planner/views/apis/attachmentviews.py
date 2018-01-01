@@ -48,11 +48,14 @@ class CourseAttachmentsApiListView(GenericAPIView, ListModelMixin):
 class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     """
     get:
-    Return a list of all attachment instances for the authenticated user.
+    Return a list of all attachment instances for the authenticated user. To download the attachment, follow the link
+    contained in the `attachment` field of an instance, which will direct you to attached media URL.
 
     post:
-    Create a new attachment instance for the authenticated user. If multiple files are given in `file[]`, multiple files
-    will be created. The `title` attribute is set dynamically by the `filename` field passed when uploading.
+    Create a new attachment instance and upload the associated file for the authenticated user. If multiple files are
+    given in `file[]`, multiple files will be created.
+
+    The `title` attribute is set dynamically by the `filename` field passed for each file to be uploaded.
 
     At least one of `course`, `event`, or `homework` must be given.
     """
@@ -74,6 +77,28 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         self.check_course_permission(self.request, course_id)
 
         return Course.objects.get(course_group__user_id=self.request.user.pk, id=course_id)
+
+    def options(self, request, *args, **kwargs):
+        """
+        Manually specifying the POST parameters to show when OPTIONS is called, as they don't directly map to the
+        serializer (which is used for GET and other operations).
+        """
+        response = super(UserAttachmentsApiListView, self).options(request, args, kwargs)
+
+        response.data['actions']['POST'].pop('id')
+        response.data['actions']['POST'].pop('title')
+        response.data['actions']['POST'].pop('attachment')
+        response.data['actions']['POST'].pop('size')
+
+        response.data['actions']['POST']['file[]'] = {
+            "type": "file upload",
+            "required": True,
+            "read_only": False,
+            "label": "Files",
+            "help_text": "A multipart list of files to upload."
+        }
+
+        return response
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -124,7 +149,8 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
 class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given attachment instance.
+    Return the given attachment instance. To download the attachment, follow the link contained in the `attachment`
+    field of an instance, which will direct you to attached media URL.
 
     delete:
     Delete the given attachment instance.
