@@ -64,7 +64,7 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         user = self.request.user
         return user.attachments.all()
 
-    def options(self, request, *args, **kwargs):
+    def options(self, request, *args, **kwargs):  # pragma: no cover
         """
         Manually specifying the POST parameters to show when OPTIONS is called, as they don't directly map to the
         serializer (which is used for GET and other operations).

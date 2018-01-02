@@ -1,13 +1,25 @@
-# .coveragerc to control coverage.py
 [run]
+branch = True
+source =
+    helium
 omit =
-    conf/configs/deploy.py
-    conf/configs/dev.py
-    conf/monitor.py
-    conf/s3storages.py
-    conf/wsgi.py
-    conf/urls.py
-    helium/*/tests/**
-    helium/*/admin.py
-    helium/*/apps.py
-    helium/*/views/apis/schemas/**.py
+    */admin.py
+    */apps.py
+    */tests/**
+    */views/apis/schemas/**
+
+[report]
+fail_under = 90
+precision = 2
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self\.debug
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+
+[html]
+title = Helium Platform Coverage Report

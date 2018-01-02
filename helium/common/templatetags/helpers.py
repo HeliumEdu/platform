@@ -2,8 +2,6 @@ from future.standard_library import install_aliases
 
 install_aliases()
 
-from urllib.parse import urlencode
-
 from django import template
 
 __author__ = 'Alex Laird'
@@ -21,15 +19,3 @@ def active(request, pattern):
     except:
         pass
     return ''
-
-
-@register.simple_tag(takes_context=True)
-def url_replace(context, **kwargs):
-    query = context['request'].GET.dict()
-    query.update(kwargs)
-    return urlencode(query)
-
-
-@register.filter
-def multiply(value, arg):
-    return value * arg

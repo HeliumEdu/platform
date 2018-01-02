@@ -26,4 +26,4 @@ class BaseModel(models.Model):
 
         :return: The User with ownership of this model.
         """
-        pass
+        raise NotImplementedError
