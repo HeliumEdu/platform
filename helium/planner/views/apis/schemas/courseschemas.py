@@ -32,6 +32,6 @@ class SubCourseListSchema(SubCourseGroupListSchema):
         super(SubCourseListSchema, self).__init__(manual_fields=manual_fields)
 
 
-class CourseIDSchema(BaseIDSchema, SubCourseGroupListSchema):
+class CourseDetailSchema(BaseIDSchema, SubCourseGroupListSchema):
     def __init__(self):
-        super(CourseIDSchema, self).__init__('course')
+        super(CourseDetailSchema, self).__init__('course')

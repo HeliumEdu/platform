@@ -19,6 +19,7 @@ class SubCourseGroupListSchema(AutoSchema):
     If Django Rest Framework adds better support for properly getting the `help_text` of related fields,
     this can be removed
     """
+
     def __init__(self, manual_fields=None):
         if manual_fields is None:
             manual_fields = []
@@ -36,6 +37,6 @@ class SubCourseGroupListSchema(AutoSchema):
         super(SubCourseGroupListSchema, self).__init__(manual_fields=manual_fields)
 
 
-class CourseGroupIDSchema(BaseIDSchema):
+class CourseGroupDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(CourseGroupIDSchema, self).__init__('course group')
+        super(CourseGroupDetailSchema, self).__init__('course group')

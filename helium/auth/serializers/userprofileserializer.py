@@ -69,7 +69,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
             instance.phone_verified = True
         elif ('phone' in validated_data and not validated_data.get('phone')) or (
-                'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
+                        'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
             # The user is trying to clear out their phone details
             instance.phone = None
             instance.phone_changing = None

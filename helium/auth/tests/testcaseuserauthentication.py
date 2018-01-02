@@ -18,10 +18,12 @@ class TestCaseUserAuthentication(TestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
+        response = self.client.post(reverse('login') + '?next=' + reverse('settings'),
+                                    {'username': user.get_username(), 'password': 'test_pass_1!',
+                                     'remember-me': 'remember-me'})
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertRedirects(response, reverse('settings'))
         userhelper.verify_user_logged_in(self)
 
     def test_logout_success(self):
@@ -68,6 +70,20 @@ class TestCaseUserAuthentication(TestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
 
+    def test_password_reset_real_fake_user_same_response(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # WHEN
+        response1 = self.client.post(reverse('forgot'), {'email': user.email})
+        status1 = response1.cookies['status_msg'].value
+        response2 = self.client.post(reverse('forgot'), {'email': 'fake@fake.com'})
+        status2 = response2.cookies['status_msg'].value
+
+        # WHEN
+        self.assertIn('been emailed a temporary password', status1)
+        self.assertEqual(status1, status2)
+
     def test_registration_success(self):
         # GIVEN
         userhelper.verify_user_not_logged_in(self)
@@ -110,12 +126,14 @@ class TestCaseUserAuthentication(TestCase):
         user.save()
 
         # WHEN
-        response = self.client.get(
+        response1 = self.client.post(reverse('login'), {'username': user.get_username(), 'password': 'test_pass_1!'})
+        response2 = self.client.get(
             reverse('verify') + '?username={}&code={}'.format(user.username, user.verification_code))
 
         # THEN
-        user = get_user_model().objects.get(email='test@heliumedu.com')
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertContains(response1, 'your account is not active', status_code=status.HTTP_401_UNAUTHORIZED)
+        user = get_user_model().objects.get(email=user.email)
+        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
         userhelper.verify_user_logged_in(self)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(user.get_username(), 'test_user')

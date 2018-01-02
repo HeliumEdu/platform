@@ -61,7 +61,21 @@ class AttachmentListSchema(AutoSchema):
 
         return link
 
+    def modify_options_response(self, response):
+        response.data['actions']['POST'].pop('id')
+        response.data['actions']['POST'].pop('title')
+        response.data['actions']['POST'].pop('attachment')
+        response.data['actions']['POST'].pop('size')
 
-class AttachmentIDSchema(BaseIDSchema):
+        response.data['actions']['POST']['file[]'] = {
+            "type": "file upload",
+            "required": True,
+            "read_only": False,
+            "label": "Files",
+            "help_text": "A multipart list of files to upload."
+        }
+
+
+class AttachmentDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(AttachmentIDSchema, self).__init__('attachment')
+        super(AttachmentDetailSchema, self).__init__('attachment')

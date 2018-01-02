@@ -43,7 +43,7 @@ class Material(BaseModel):
     class Meta:
         ordering = ('title',)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):

@@ -30,7 +30,7 @@ class ExternalCalendar(BaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars')
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):

@@ -14,7 +14,6 @@ __version__ = '1.0.0'
 
 
 class TestCaseAPIAttachmentViews(TestCase):
-
     def setUp(self):
         self.tmp_files = []
 

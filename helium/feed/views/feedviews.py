@@ -9,4 +9,4 @@ logger = logging.getLogger(__name__)
 
 def feed_ical(request, id):
     # TODO: not yet implemented
-    pass
+    raise NotImplementedError

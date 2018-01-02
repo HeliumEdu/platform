@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 @app.task
 def email_reminders():
     # TODO: not yet implemented
-    pass
+    raise NotImplementedError
 
 
 @app.task
 def text_reminders():
     # TODO: not yet implemented
-    pass
+    raise NotImplementedError
 
 
 @app.on_after_configure.connect

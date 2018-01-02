@@ -6368,7 +6368,7 @@ input[type=checkbox].ace.ace-switch + .lbl::before {
     font-weight: bold;
     font-size: 11px;
     line-height: 18px;
-    line-height: 21 px\9;
+    line-height: 21px \9;
     /*ie9*/
 
     height: 20px;
@@ -6383,7 +6383,7 @@ input[type=checkbox].ace.ace-switch + .lbl::before {
     padding: 0;
     width: 52px;
     text-indent: -19px;
-    text-indent: -21 px\9;
+    text-indent: -21px \9;
     margin-right: 0;
     -webkit-transition: text-indent .4s ease;
     transition: text-indent .4s ease;
@@ -6450,14 +6450,14 @@ input[type=checkbox].ace.ace-switch.ace-switch-5 + .lbl::before {
     line-height: 23px;
     height: 24px;
     overflow: hidden;
-    line-height: 25 px\9;
+    line-height: 25px \9;
     border-radius: 12px;
     background-color: #8b9aa3;
     border: 1px solid #8b9aa3;
     color: #FFF;
     width: 56px;
     text-indent: -25px;
-    text-indent: -28 px\9;
+    text-indent: -28px \9;
     display: inline-block;
     position: relative;
     box-shadow: none;
@@ -13190,9 +13190,9 @@ ul.attachment-list > li {
 }
 
 .ace-spinner input[type=text].spinner-input.form-control {
-    width: auto\0/ !important;
+    width: auto \0/ !important;
     line-height: 1 \0/ !important;
-    padding-bottom: 4 px\0/ !important;
+    padding-bottom: 4px \0/ !important;
 }
 
 /* touch spinner buttons */

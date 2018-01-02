@@ -128,7 +128,6 @@ def process_logout(request):
 
 def process_forgot_password(request):
     email = request.POST['email']
-    redirect = None
     try:
         user = get_user_model().objects.get(email=email)
 
@@ -142,8 +141,6 @@ def process_forgot_password(request):
         tasks.send_password_reset_email.delay(user.email, password, request.get_host())
 
         request.session.modified = True
-
-        redirect = reverse('login')
     except get_user_model().DoesNotExist:
         logger.info('A visitor tried to reset the password for an unknown email address of {}'.format(email))
 
@@ -151,4 +148,4 @@ def process_forgot_password(request):
                        'You\'ve been emailed a temporary password. Login to your account immediately using the '
                        'temporary password, then change your password.')
 
-    return redirect
+    return reverse('login')

@@ -10,7 +10,7 @@ from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.models import Category
 from helium.planner.serializers.categoryserializer import CategorySerializer
-from helium.planner.views.apis.schemas.categoryschemas import CategoryIDSchema
+from helium.planner.views.apis.schemas.categoryschemas import CategoryDetailSchema
 from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
 
 __author__ = 'Alex Laird'
@@ -93,7 +93,7 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = CategoryIDSchema()
+    schema = CategoryDetailSchema()
 
     def get_queryset(self):
         user = self.request.user
