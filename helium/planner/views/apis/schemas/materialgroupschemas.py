@@ -32,6 +32,6 @@ class SubMaterialGroupListSchema(AutoSchema):
         super(SubMaterialGroupListSchema, self).__init__(manual_fields=manual_fields)
 
 
-class MaterialGroupIDSchema(BaseIDSchema):
+class MaterialGroupDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(MaterialGroupIDSchema, self).__init__('material group')
+        super(MaterialGroupDetailSchema, self).__init__('material group')

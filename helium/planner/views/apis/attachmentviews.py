@@ -10,7 +10,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
-from helium.planner.views.apis.schemas.attachmentschemas import AttachmentIDSchema, AttachmentListSchema
+from helium.planner.views.apis.schemas.attachmentschemas import AttachmentDetailSchema, AttachmentListSchema
 from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
 
 __author__ = 'Alex Laird'
@@ -71,18 +71,7 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         """
         response = super(UserAttachmentsApiListView, self).options(request, args, kwargs)
 
-        response.data['actions']['POST'].pop('id')
-        response.data['actions']['POST'].pop('title')
-        response.data['actions']['POST'].pop('attachment')
-        response.data['actions']['POST'].pop('size')
-
-        response.data['actions']['POST']['file[]'] = {
-            "type": "file upload",
-            "required": True,
-            "read_only": False,
-            "label": "Files",
-            "help_text": "A multipart list of files to upload."
-        }
+        self.schema.modify_options_response(response)
 
         return response
 
@@ -96,6 +85,7 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
 
         response_data = {}
         errors = {}
+        # TODO: this logic should be moved into the serializer to get it out of the view (which would also give us better error responses
         for upload in request.data.getlist('file[]'):
             data['title'] = upload.name
             data['attachment'] = upload
@@ -140,7 +130,7 @@ class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelM
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = AttachmentIDSchema()
+    schema = AttachmentDetailSchema()
 
     def get_queryset(self):
         user = self.request.user

@@ -133,7 +133,7 @@ class Course(BaseModel):
     class Meta:
         ordering = ('start_date',)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return str('{} ({})'.format(self.title, self.get_user().get_username()))
 
     def get_user(self):

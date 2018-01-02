@@ -57,5 +57,5 @@ class UserSettings(BaseModel):
     class Meta:
         verbose_name_plural = 'User settings'
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.pk, self.user.get_username())

@@ -62,7 +62,7 @@ class TestCaseUserViews(TestCase):
     def test_username_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertEqual(user.email, 'test@heliumedu.com')
+        self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
 
         # WHEN
@@ -76,8 +76,8 @@ class TestCaseUserViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], 'new_username')
-        self.assertEqual(response.data['email'], 'test@heliumedu.com')
+        self.assertEqual(response.data['username'], data['username'])
+        self.assertEqual(response.data['email'], user.email)
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
@@ -86,7 +86,7 @@ class TestCaseUserViews(TestCase):
     def test_email_changing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertEqual(user.email, 'test@heliumedu.com')
+        self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
         self.assertEqual(user.username, 'test_user')
 

@@ -11,7 +11,7 @@ from helium.planner import permissions
 from helium.planner.models import Course
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.views.apis.schemas.coursegroupschemas import SubCourseGroupListSchema
-from helium.planner.views.apis.schemas.courseschemas import CourseIDSchema
+from helium.planner.views.apis.schemas.courseschemas import CourseDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -57,6 +57,10 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data['course_group'] = kwargs['course_group']
+        request.POST._mutable = False
+
         permissions.check_course_group_permission(request, kwargs['course_group'])
 
         response = self.create(request, *args, **kwargs)
@@ -83,7 +87,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = CourseIDSchema()
+    schema = CourseDetailSchema()
 
     def get_queryset(self):
         user = self.request.user

@@ -7,6 +7,7 @@ omit =
     */apps.py
     */tests/**
     */views/apis/schemas/**
+    helium/common/utils/metricutils.py
 
 [report]
 fail_under = 90
@@ -16,6 +17,7 @@ exclude_lines =
     def __repr__
     if self\.debug
     if settings.DEBUG
+    if settings.DISABLE_EMAILS
     raise AssertionError
     raise NotImplementedError
     if 0:

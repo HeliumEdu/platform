@@ -86,7 +86,6 @@ class TestCaseAPICourseViews(TestCase):
             'days_of_week_alt': '0001000',
             'wed_start_time_alt': '18:30:00',
             'wed_end_time_alt': '19:30:00',
-            'course_group': course_group.pk,
             # These fields are set to their defaults
             'sun_start_time': '12:00:00',
             'sun_end_time': '12:00:00',
@@ -112,6 +111,7 @@ class TestCaseAPICourseViews(TestCase):
             'current_grade': -1,
             'trend': None,
             'private_slug': None,
+            'course_group': course_group.pk
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),

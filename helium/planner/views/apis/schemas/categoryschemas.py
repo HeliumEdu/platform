@@ -10,6 +10,6 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class CategoryIDSchema(BaseIDSchema, SubCourseListSchema):
+class CategoryDetailSchema(BaseIDSchema, SubCourseListSchema):
     def __init__(self):
-        super(CategoryIDSchema, self).__init__('category')
+        super(CategoryDetailSchema, self).__init__('category')

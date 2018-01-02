@@ -243,7 +243,9 @@ span.twitter-typeahead > input.form-control.input-sm.tt-query {
 }
 
 #version-badge {
-    position: absolute; left: 103px; top: 7px;
+    position: absolute;
+    left: 103px;
+    top: 7px;
 }
 
 .input-group-addon i {

@@ -30,5 +30,5 @@ def internal_server_error(request):
     return render(request, "errors/500.html", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def service_unavailable(request):
+def service_unavailable(request):  # pragma: no cover
     return render(request, "errors/503.html", status=status.HTTP_503_SERVICE_UNAVAILABLE)

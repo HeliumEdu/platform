@@ -17,8 +17,10 @@ def process_unsubscribe(username, code):
 
         user.settings.save()
 
+        logger.info('Unsubscribed user {}'.format(username))
+
         return True
     except get_user_model().DoesNotExist:
-        pass
+        logger.info('Unsubscribed request for non-existent user {}'.format(username))
 
     return False
