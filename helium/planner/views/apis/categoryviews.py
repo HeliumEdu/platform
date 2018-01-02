@@ -1,6 +1,5 @@
 import logging
 
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
@@ -8,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.models import CourseGroup, Course, Category
+from helium.planner import permissions
+from helium.planner.models import Category
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.views.apis.schemas.categoryschemas import CategoryIDSchema
 from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
@@ -55,17 +55,9 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         user = self.request.user
         return Category.objects.filter(course_id=self.kwargs['course'], course__course_group__user_id=user.pk)
 
-    def check_course_group_permission(self, request, course_group_id):
-        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
-            raise NotFound('CourseGroup not found.')
-
-    def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            raise NotFound('Course not found.')
-
     def get(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group'])
-        self.check_course_permission(request, kwargs['course'])
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
 
         response = self.list(request, *args, **kwargs)
 
@@ -75,8 +67,8 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group'])
-        self.check_course_permission(request, kwargs['course'])
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
 
         response = self.create(request, *args, **kwargs)
 

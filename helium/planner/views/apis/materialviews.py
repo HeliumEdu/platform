@@ -2,7 +2,6 @@ import json
 import logging
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -10,7 +9,8 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.models import MaterialGroup, Material, Course
+from helium.planner import permissions
+from helium.planner.models import Material
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.views.apis.schemas.materialschemas import MaterialIDSchema, MaterialListSchema
 
@@ -54,27 +54,19 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, ListModelMixin):
         return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
-    def check_material_group_permission(self, request, material_group_id):
-        if not MaterialGroup.objects.filter(pk=material_group_id, user_id=request.user.pk).exists():
-            raise NotFound('MaterialGroup not found.')
-
-    def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            raise NotFound('Course not found.')
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, material_group, format=None):
         data = request.data.copy()
 
-        self.check_material_group_permission(request, material_group)
+        permissions.check_material_group_permission(request, material_group)
         # If Django Rest Framework adds better support for properly getting the `help_text` of related fields,
         # this can be removed
         if 'courses' in data:
             courses = json.loads(data['courses'])
             for course_id in courses:
-                self.check_course_permission(request, course_id)
+                permissions.check_course_permission(request, course_id)
             data.pop('courses')
         else:
             courses = []
@@ -115,14 +107,6 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, De
         return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
-    def check_material_group_permission(self, request, material_group_id):
-        if not MaterialGroup.objects.filter(pk=material_group_id, user_id=request.user.pk).exists():
-            raise NotFound('MaterialGroup not found.')
-
-    def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            raise NotFound('Course not found.')
-
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
@@ -131,13 +115,13 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, De
 
         material = self.get_object()
         if 'material_group' in data:
-            self.check_material_group_permission(request, data['material_group'])
+            permissions.check_material_group_permission(request, data['material_group'])
         # If Django Rest Framework adds better support for properly getting the `help_text` of related fields,
         # this can be removed
         if 'courses' in data:
             courses = json.loads(data['courses'])
             for course_id in courses:
-                self.check_course_permission(request, course_id)
+                permissions.check_course_permission(request, course_id)
             data.pop('courses')
         else:
             courses = []
