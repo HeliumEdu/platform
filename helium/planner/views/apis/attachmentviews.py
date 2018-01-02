@@ -1,7 +1,6 @@
 import logging
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.models import Course
+from helium.planner import permissions
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.views.apis.schemas.attachmentschemas import AttachmentIDSchema, AttachmentListSchema
 from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
@@ -34,11 +33,10 @@ class CourseAttachmentsApiListView(GenericAPIView, ListModelMixin):
         user = self.request.user
         return user.attachments.filter(course_id=self.kwargs['course'])
 
-    def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            raise NotFound('Course not found.')
-
     def get(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -65,22 +63,6 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     def get_queryset(self):
         user = self.request.user
         return user.attachments.all()
-
-    def check_course_permission(self, request, course_id):
-        if not Course.objects.filter(pk=course_id, course_group__user_id=request.user.pk).exists():
-            raise NotFound('Course not found.')
-
-    def check_event_permission(self, request, course_id):
-        pass
-        # TODO: uncomment and when these models exist
-        # if not Event.objects.filter(pk=course_id, user_id=request.user.pk).exists():
-        #     raise NotFound('Event not found.')
-
-    def check_homework_permission(self, request, course_id):
-        pass
-        # TODO: uncomment and when these models exist
-        # if not Homework.objects.filter(pk=course_id, course__course_group__user_id=request.user.pk).exists():
-        #     raise NotFound('Homework not found.')
 
     def options(self, request, *args, **kwargs):
         """
@@ -119,11 +101,11 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
             data['attachment'] = upload
 
             if 'course' in data:
-                self.check_course_permission(request, data['course'])
+                permissions.check_course_permission(request, data['course'])
             if 'event' in data:
-                self.check_event_permission(request, data['event'])
+                permissions.check_event_permission(request, data['event'])
             if 'homework' in data:
-                self.check_homework_permission(request, data['homework'])
+                permissions.check_homework_permission(request, data['homework'])
 
             serializer = self.get_serializer(data=data)
 

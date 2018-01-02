@@ -1,6 +1,5 @@
 import logging
 
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
@@ -8,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.models import CourseGroup, Course
+from helium.planner import permissions
+from helium.planner.models import Course
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.views.apis.schemas.coursegroupschemas import SubCourseGroupListSchema
 from helium.planner.views.apis.schemas.courseschemas import CourseIDSchema
@@ -53,15 +53,11 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
         return Course.objects.filter(course_group_id=self.kwargs['course_group'],
                                      course_group__user_id=user.pk)
 
-    def check_course_group_permission(self, request, course_group_id):
-        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
-            raise NotFound('CourseGroup not found.')
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_group_permission(request, kwargs['course_group'])
 
         response = self.create(request, *args, **kwargs)
 
@@ -89,10 +85,6 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     permission_classes = (IsAuthenticated, IsOwner,)
     schema = CourseIDSchema()
 
-    def check_course_group_permission(self, request, course_group_id):
-        if not CourseGroup.objects.filter(pk=course_group_id, user_id=request.user.pk).exists():
-            raise NotFound('CourseGroup not found.')
-
     def get_queryset(self):
         user = self.request.user
         return Course.objects.filter(course_group_id=self.kwargs['course_group'], course_group__user_id=user.pk)
@@ -102,7 +94,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
     def put(self, request, *args, **kwargs):
         if 'course_group' in request.data:
-            self.check_course_group_permission(request, request.data['course_group'])
+            permissions.check_course_group_permission(request, request.data['course_group'])
 
         response = self.update(request, *args, **kwargs)
 
