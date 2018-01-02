@@ -23,7 +23,7 @@ class UserManager(BaseUserManager):
         UserProfile.objects.create(user=user)
         UserSettings.objects.create(user=user)
 
-    def create_user(self, username, email, password=None):
+    def create_user(self, username, email, password=None):  # pragma: no cover
         """
         Create a new user with the given username, password, and email.
 
@@ -46,7 +46,7 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, email, username, password):
+    def create_superuser(self, email, username, password):  # pragma: no cover
         """
         Create a new super user with admin privileges.
 

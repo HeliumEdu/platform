@@ -27,14 +27,14 @@ def check_course_group_permission(request, course_group_id):
 
 
 def check_event_permission(request, event_id):
-    pass
+    raise NotImplementedError
     # TODO: uncomment and when these models exist
     # if not Event.objects.filter(pk=event_id, user_id=request.user.pk).exists():
     #     raise NotFound('Event not found.')
 
 
 def check_homework_permission(request, homework_id):
-    pass
+    raise NotImplementedError
     # TODO: uncomment and when these models exist
     # if not Homework.objects.filter(pk=homework_id, course__course_group__user_id=request.user.pk).exists():
     #     raise NotFound('Homework not found.')

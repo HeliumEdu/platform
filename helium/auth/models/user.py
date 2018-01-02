@@ -48,7 +48,7 @@ class User(AbstractBaseUser, BaseModel):
     def get_user(self):
         return self
 
-    def get_full_name(self):
+    def get_full_name(self):  # pragma: no cover
         """
         Retrieve the long name for the user.
 
@@ -56,7 +56,7 @@ class User(AbstractBaseUser, BaseModel):
         """
         return self.email
 
-    def get_short_name(self):
+    def get_short_name(self):  # pragma: no cover
         """
         Retrieve the short name for the user.
 
@@ -64,7 +64,7 @@ class User(AbstractBaseUser, BaseModel):
         """
         return self.email
 
-    def has_perm(self, perm, obj=None):
+    def has_perm(self, perm, obj=None):  # pragma: no cover
         """
         Check if this user has the given permission.
 
@@ -74,7 +74,7 @@ class User(AbstractBaseUser, BaseModel):
         """
         return True
 
-    def has_module_perms(self, app_label):
+    def has_module_perms(self, app_label):  # pragma: no cover
         """
         Check if the user has privileges to the given app
 
