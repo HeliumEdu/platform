@@ -88,6 +88,10 @@ DEFAULT_TEMPLATES = [{
 # Django configuration
 #############################
 
+# Project configuration
+
+SERVE_LOCAL = False
+
 # Application definition
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

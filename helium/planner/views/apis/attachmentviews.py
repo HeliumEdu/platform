@@ -83,19 +83,18 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
 
+        if 'course' in request.data:
+            permissions.check_course_permission(request, request.data['course'])
+        if 'event' in request.data:
+            permissions.check_event_permission(request, request.data['event'])
+        if 'homework' in request.data:
+            permissions.check_homework_permission(request, request.data['homework'])
+
         response_data = {}
         errors = {}
-        # TODO: this logic should be moved into the serializer to get it out of the view (which would also give us better error responses
         for upload in request.data.getlist('file[]'):
             data['title'] = upload.name
             data['attachment'] = upload
-
-            if 'course' in data:
-                permissions.check_course_permission(request, data['course'])
-            if 'event' in data:
-                permissions.check_event_permission(request, data['event'])
-            if 'homework' in data:
-                permissions.check_homework_permission(request, data['homework'])
 
             serializer = self.get_serializer(data=data)
 

@@ -1,4 +1,3 @@
-import json
 import logging
 
 from rest_framework.generics import GenericAPIView
@@ -49,36 +48,20 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
     permission_classes = (IsAuthenticated,)
     schema = SubMaterialGroupListSchema()
 
-    courses = []
-
     def get_queryset(self):
         user = self.request.user
         return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
-    def get_serializer(self, *args, **kwargs):
-        serializer = super(MaterialGroupMaterialsApiListView, self).get_serializer(*args, **kwargs)
-
-        if isinstance(serializer, MaterialSerializer):
-            serializer.set_course_id_values(self.courses)
-
-        return serializer
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        request.POST._mutable = True
-        request.data['material_group'] = kwargs['material_group']
-        # If Django Rest Framework adds better support for properly setting ManyToMany relationships, this can be
-        # removed
-        if 'courses' in request.data:
-            self.courses = json.loads(request.data['courses'])
-            request.data.pop('courses')
-        request.POST._mutable = False
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(material_group_id=self.kwargs['material_group'])
 
-        permissions.check_material_group_permission(request, request.data['material_group'])
-        for course_id in self.courses:
+    def post(self, request, *args, **kwargs):
+        permissions.check_material_group_permission(request, kwargs['material_group'])
+        for course_id in request.data.get('courses', []):
             permissions.check_course_permission(request, course_id)
 
         response = self.create(request, *args, **kwargs)
@@ -108,36 +91,18 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
     permission_classes = (IsAuthenticated, IsOwner,)
     schema = MaterialDetailSchema()
 
-    courses = []
-
     def get_queryset(self):
         user = self.request.user
         return Material.objects.filter(material_group_id=self.kwargs['material_group'],
                                        material_group__user_id=user.pk)
 
-    def get_serializer(self, *args, **kwargs):
-        serializer = super(MaterialGroupMaterialsApiDetailView, self).get_serializer(*args, **kwargs)
-
-        if isinstance(serializer, MaterialSerializer):
-            serializer.set_course_id_values(self.courses)
-
-        return serializer
-
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        request.POST._mutable = True
-        # If Django Rest Framework adds better support for properly setting ManyToMany relationships, this can be
-        # removed
-        if 'courses' in request.data:
-            self.courses = json.loads(request.data['courses'])
-            request.data.pop('courses')
-        request.POST._mutable = False
-
         if 'material_group' in request.data:
             permissions.check_material_group_permission(request, request.data['material_group'])
-        for course_id in self.courses:
+        for course_id in request.data.get('courses', []):
             permissions.check_course_permission(request, course_id)
 
         response = self.update(request, *args, **kwargs)
