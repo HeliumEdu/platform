@@ -24,6 +24,8 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
 
     post:
     Create a new external calendar instance for the authenticated user.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)

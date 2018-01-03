@@ -14,10 +14,10 @@ class Material(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 
-    status = models.PositiveIntegerField(help_text='A valid material status.',
+    status = models.PositiveIntegerField(help_text='A valid material status choice.',
                                          choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
 
-    condition = models.PositiveIntegerField(help_text='A valid material condition.',
+    condition = models.PositiveIntegerField(help_text='A valid material condition choice.',
                                             choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
 
     website = models.URLField(help_text='A valid URL.',

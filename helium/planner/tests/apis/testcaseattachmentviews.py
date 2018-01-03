@@ -83,12 +83,13 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['title'], os.path.basename(tmp_file.name))
-        self.assertEqual(response.data['size'], os.path.getsize(tmp_file.name))
-        self.assertEqual(response.data['course'], data['course'])
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+        self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+        self.assertEqual(response.data[0]['course'], data['course'])
         self.assertEqual(Attachment.objects.count(), 1)
-        attachment = Attachment.objects.get(pk=response.data['id'])
-        attachmenthelper.verify_attachment_matches_data(self, attachment, response.data)
+        attachment = Attachment.objects.get(pk=response.data[0]['id'])
+        attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
 
     # TODO: uncomment when these models have been implemented
     # def test_create_event_attachment(self):
@@ -109,12 +110,13 @@ class TestCaseAPIAttachmentViews(TestCase):
     #
     #     # THEN
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response.data['title'], os.path.basename(tmp_file.name))
-    #     self.assertEqual(response.data['size'], os.path.getsize(tmp_file.name))
-    #     self.assertEqual(response.data['event'], data['event'])
+    #     self.assertEqual(len(response.data), 1)
+    #     self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+    #     self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+    #     self.assertEqual(response.data[0]['event'], data['event'])
     #     self.assertEqual(Attachment.objects.count(), 1)
-    #     attachment = Attachment.objects.get(pk=response.data['id'])
-    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data)
+    #     attachment = Attachment.objects.get(pk=response.data[0]['id'])
+    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
     #
     # def test_create_homework_attachment(self):
     #     # GIVEN
@@ -136,12 +138,13 @@ class TestCaseAPIAttachmentViews(TestCase):
     #
     #     # THEN
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response.data['title'], os.path.basename(tmp_file.name))
-    #     self.assertEqual(response.data['size'], os.path.getsize(tmp_file.name))
-    #     self.assertEqual(response.data['homework'], data['homework'])
+    #     self.assertEqual(len(response.data), 1)
+    #     self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+    #     self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+    #     self.assertEqual(response.data[0]['homework'], data['homework'])
     #     self.assertEqual(Attachment.objects.count(), 1)
-    #     attachment = Attachment.objects.get(pk=response.data['id'])
-    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data)
+    #     attachment = Attachment.objects.get(pk=response.data[0]['id'])
+    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
 
     def test_create_orphaned_attachment_fails(self):
         # GIVEN
@@ -159,7 +162,7 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('one of', response.data['non_field_errors'][0])
+        self.assertIn('one of', response.data[0]['non_field_errors'][0])
 
     def test_get_attachment_by_id(self):
         # GIVEN

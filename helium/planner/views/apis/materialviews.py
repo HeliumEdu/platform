@@ -43,6 +43,8 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
 
     post:
     Create a new material instance for the given material group.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated,)

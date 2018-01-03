@@ -49,12 +49,15 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
     contained in the `attachment` field of an instance, which will direct you to attached media URL.
 
     post:
-    Create a new attachment instance and upload the associated file for the authenticated user. If multiple files are
-    given in `file[]`, multiple files will be created.
+    Create new attachment instances and upload the associated files for the authenticated user. Multiple files can be
+    passed in the `file[]` field, but note that even if only one file is created, the response will still contain a
+    list.
 
     The `title` attribute is set dynamically by the `filename` field passed for each file to be uploaded.
 
     At least one of `course`, `event`, or `homework` must be given.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
@@ -90,8 +93,8 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         if 'homework' in request.data:
             permissions.check_homework_permission(request, request.data['homework'])
 
-        response_data = {}
-        errors = {}
+        response_data = []
+        errors = []
         for upload in request.data.getlist('file[]'):
             data['title'] = upload.name
             data['attachment'] = upload
@@ -106,9 +109,9 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
 
                 metricutils.increment(request, 'action.attachment.created')
 
-                response_data.update(serializer.data)
+                response_data.append(serializer.data)
             else:
-                errors.update(serializer.errors)
+                errors.append(serializer.errors)
 
         if len(errors) > 0:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
