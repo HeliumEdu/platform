@@ -328,6 +328,8 @@ function HeliumClasses() {
         var i = 0, data;
 
         self.edit = false;
+        self.categories_to_delete = [];
+        self.attachments_to_delete = [];
 
         // First, ensure we have a material group to add the new material to
         $("#course-group").val($("#course-group-tabs li.active a").attr("href") ? $("#course-group-tabs li.active a").attr("href").split("course-group-")[1] : "");
@@ -640,7 +642,9 @@ function HeliumClasses() {
         var course_group, start_date, end_date;
         if (!self.edit) {
             $("#loading-courses").spin(helium.SMALL_LOADING_OPTS);
+
             self.edit = true;
+
             $("#course-group-modal-label").html("Edit Group");
             // Initialize dialog attributes for editing
             self.edit_id = parseInt(selector.attr("id").split("edit-course-group-")[1]);
@@ -752,7 +756,11 @@ function HeliumClasses() {
         var start_date, end_date, i = 0, course, total_weights = 0;
         if (!self.edit) {
             $("#loading-courses").spin(helium.SMALL_LOADING_OPTS);
+
             self.edit = true;
+            self.categories_to_delete = [];
+            self.attachments_to_delete = [];
+
             $("#course-modal-label").html("Edit Class");
 
             // Initialize dialog attributes for editing
@@ -924,7 +932,7 @@ function HeliumClasses() {
                             $("#no-attachments").hide();
 
                             $("#attachments-table-body").append("<tr id=\"attachment-" + data[i].id + "\"><td>" + data[i].title + "</td><td>" + helium.bytes_to_size(parseInt(data[i].size)) + "</td><td><div class=\"btn-group\"><a target=\"_blank\" class=\"btn btn-xs btn-success\" href=\"" + data[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + data[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
-                            $("#delete-attachment-" + data[0].id).on("click", self.delete_attachment);
+                            $("#delete-attachment-" + data[i].id).on("click", self.delete_attachment);
                         }
                     }, self.course_group_id, self.edit_id, false);
 

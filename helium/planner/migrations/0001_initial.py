@@ -9,6 +9,8 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
+import helium.planner.utils.attachmentutils
+
 
 class Migration(migrations.Migration):
 
@@ -26,7 +28,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('title', models.CharField(db_index=True, help_text=b'A display name.', max_length=255)),
-                ('attachment', models.FileField(blank=True, help_text=b'The file to be uploaded.', null=True, upload_to=b'attachments')),
+                ('attachment', models.FileField(blank=True, help_text=b'The file to be uploaded.', null=True, upload_to=helium.planner.utils.attachmentutils.get_path_for_attachment)),
                 ('size', models.PositiveIntegerField(default=0)),
             ],
             options={
