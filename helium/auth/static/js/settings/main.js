@@ -164,7 +164,6 @@ function HeliumSettings() {
             $.each(self.to_delete, function (index, id) {
                 $.ajax({
                     async: false,
-                    context: form,
                     type: 'DELETE',
                     url: '/api/feed/externalcalendars/' + id + '/',
                     error: function (xhr) {
@@ -179,7 +178,8 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: JSON.stringify(data),
+                data: data,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/settings/',
                 error: function (xhr) {
@@ -211,7 +211,8 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: JSON.stringify(data),
+                data: data,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/profile/',
                 error: function (xhr) {
@@ -291,7 +292,8 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: JSON.stringify(data),
+                data: data,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
                 error: function (xhr) {

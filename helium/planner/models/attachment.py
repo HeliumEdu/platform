@@ -5,6 +5,7 @@ from django.dispatch import receiver
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
+from helium.planner.utils.attachmentutils import get_path_for_attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -20,7 +21,7 @@ class Attachment(BaseModel):
                              max_length=255, db_index=True)
 
     attachment = models.FileField(help_text='The file to be uploaded.',
-                                  upload_to='attachments', blank=True, null=True)
+                                  upload_to=get_path_for_attachment, blank=True, null=True)
 
     size = models.PositiveIntegerField(default=0)
 
