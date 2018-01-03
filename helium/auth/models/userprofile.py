@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 @python_2_unicode_compatible
 class UserProfile(BaseModel):
     phone = models.CharField(help_text='A valid phone number.',
-                             max_length=255, blank=True, null=True)
+                             max_length=50, blank=True, null=True)
 
-    phone_changing = models.CharField(max_length=15, blank=True, null=True)
+    phone_changing = models.CharField(max_length=50, blank=True, null=True)
 
     phone_carrier = models.CharField(help_text='A valid phone carrier choice.',
                                      max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,

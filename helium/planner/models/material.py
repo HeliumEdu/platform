@@ -21,18 +21,14 @@ class Material(BaseModel):
                                             choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
 
     website = models.URLField(help_text='A valid URL.',
-                              max_length=255, blank=True, null=True)
+                              max_length=3000, blank=True, null=True)
 
     # TODO: refactor to use a DecimalField instead of CharField
     price = models.CharField(help_text='A price string.',
-                             max_length=255, blank=True, null=True)
+                             max_length=255, blank=True)
 
     details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                               default='', blank=True)
-
-    # TODO: consider eliminating and just consolidating into 'details' depending on usage
-    seller_details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                                      default='', blank=True)
+                               blank=True)
 
     material_group = models.ForeignKey('MaterialGroup', help_text='The material group with which to associate.',
                                        related_name='materials', on_delete=models.CASCADE)
