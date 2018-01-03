@@ -141,7 +141,7 @@ function HeliumMaterials() {
 
             table_div = div.find("#material-group-table-" + data.id).dataTable({
                 aoColumns: [
-                    null, {sClass: "hidden-xs"}, {sClass: "hidden-xs"}, {sClass: "hidden-xs"}, null, null, {
+                    null, {sClass: "hidden-xs"}, {sClass: "hidden-xs"}, {sClass: "hidden-xs"}, null, {
                         bSortable: false,
                         bSearchable: false,
                         sClass: "hidden-xs",
