@@ -80,89 +80,89 @@
 
             <div class="collapse navbar-collapse">
                 {% if request.user.is_authenticated %}
-                <ul class="nav navbar-nav">
-                    <li class="{% active request '/planner/calendar' %}">
-                        <a href="{% url 'calendar' %}">
-                            <i class="icon-calendar"></i>
-                            Calendar
-                        </a>
-                    </li>
-                    <li class="{% active request '/planner/classes' %}">
-                        <a href="{% url 'classes' %}">
-                            <i class="icon-book"></i>
-                            Classes
-                        </a>
-                    </li>
-                    <li class="{% active request '/planner/materials' %}">
-                        <a href="{% url 'materials' %}">
-                            <i class="icon-briefcase"></i>
-                            Materials
-                        </a>
-                    </li>
-                    <li class="{% active request '/planner/grades' %}">
-                        <a href="{% url 'grades' %}">
-                            <i class="icon-bar-chart"></i>
-                            Grades
-                        </a>
-                    </li>
-                </ul>
+                    <ul class="nav navbar-nav">
+                        <li class="{% active request '/planner/calendar' %}">
+                            <a href="{% url 'calendar' %}">
+                                <i class="icon-calendar"></i>
+                                Calendar
+                            </a>
+                        </li>
+                        <li class="{% active request '/planner/classes' %}">
+                            <a href="{% url 'classes' %}">
+                                <i class="icon-book"></i>
+                                Classes
+                            </a>
+                        </li>
+                        <li class="{% active request '/planner/materials' %}">
+                            <a href="{% url 'materials' %}">
+                                <i class="icon-briefcase"></i>
+                                Materials
+                            </a>
+                        </li>
+                        <li class="{% active request '/planner/grades' %}">
+                            <a href="{% url 'grades' %}">
+                                <i class="icon-bar-chart"></i>
+                                Grades
+                            </a>
+                        </li>
+                    </ul>
                 {% endif %}
 
                 <ul class="nav navbar-nav navbar-right">
                     {% if request.user.is_authenticated %}
-                    <li class="green hidden-xs">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <i class="icon-bell-alt"></i>
+                        <li class="green hidden-xs">
+                            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                                <i class="icon-bell-alt"></i>
                             <span id="reminder-bell-alt-count" class="badge badge-success">{% if REMINDERS_COUNT %}
                                 {{ REMINDERS_COUNT }}{% endif %}</span>
-                        </a>
+                            </a>
 
-                        <ul class="pull-right dropdown-navbar dropdown-menu dropdown-caret dropdown-close">
-                            <li class="dropdown-header">
-                                <i class="icon-bell"></i>
+                            <ul class="pull-right dropdown-navbar dropdown-menu dropdown-caret dropdown-close">
+                                <li class="dropdown-header">
+                                    <i class="icon-bell"></i>
                                 <span id="reminder-bell-count">{% if REMINDERS_COUNT %}{{ REMINDERS_COUNT }}{% else %}
                                     0{% endif %}</span> Reminders
-                            </li>
+                                </li>
 
-                            {{ reminders|safe }}
+                                {{ reminders|safe }}
 
-                            <li></li>
-                        </ul>
-                    </li>
-                    <li class="{% active request '/settings' %} dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            <i class="icon-tasks"></i>
-                            Account <b class="caret"></b>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="{% url 'settings' %}">
-                                    <i class="icon-cog"></i>
-                                    Settings
-                                </a>
-                            </li>
-                            <li class="divider"></li>
-                            <li>
-                                <a href="{% url 'logout' %}">
-                                    <i class="icon-signout"></i>
-                                    Logout
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                                <li></li>
+                            </ul>
+                        </li>
+                        <li class="{% active request '/settings' %} dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="icon-tasks"></i>
+                                Account <b class="caret"></b>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="{% url 'settings' %}">
+                                        <i class="icon-cog"></i>
+                                        Settings
+                                    </a>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                    <a href="{% url 'logout' %}">
+                                        <i class="icon-signout"></i>
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li class="{% active request '/register' %}">
-                        <a href="{% url 'register' %}">
-                            <i class="icon-user"></i>
-                            Register
-                        </a>
-                    </li>
-                    <li class="{% active request '/login' %}">
-                        <a href="{% url 'login' %}">
-                            <i class="icon-signin"></i>
-                            Login
-                        </a>
-                    </li>
+                        <li class="{% active request '/register' %}">
+                            <a href="{% url 'register' %}">
+                                <i class="icon-user"></i>
+                                Register
+                            </a>
+                        </li>
+                        <li class="{% active request '/login' %}">
+                            <a href="{% url 'login' %}">
+                                <i class="icon-signin"></i>
+                                Login
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
@@ -210,9 +210,11 @@
 <script type="application/javascript" src="//code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
 <script type="application/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
-<script type="application/javascript">
-    var USER_ID = {{ request.user.pk }};
-</script>
+{% if request.user.is_authenticated %}
+    <script type="application/javascript">
+        var USER_ID = {{ request.user.pk }};
+    </script>
+{% endif %}
 
 {% javascript 'base' %}
 
@@ -225,7 +227,7 @@
 </script>
 {% block page_footer %}{% endblock %}
 {% block user_voice_footer %}
-{% include "snippets/uservoice-js.html" %}
+    {% include "snippets/uservoice-js.html" %}
 {% endblock %}
 
 </body>

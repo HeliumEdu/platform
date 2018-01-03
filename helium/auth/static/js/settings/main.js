@@ -117,7 +117,7 @@ function HeliumSettings() {
                 $.ajax({
                     async: false,
                     context: form,
-                    data: data,
+                    data: JSON.stringify(data),
                     type: 'POST',
                     url: '/api/feed/externalcalendars/',
                     error: function (xhr) {
@@ -128,7 +128,7 @@ function HeliumSettings() {
                 $.ajax({
                     async: false,
                     context: form,
-                    data: data,
+                    data: JSON.stringify(data),
                     type: 'PUT',
                     url: '/api/feed/externalcalendars/' + id + '/',
                     error: function (xhr) {
@@ -179,7 +179,7 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: data,
+                data: JSON.stringify(data),
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/settings/',
                 error: function (xhr) {
@@ -211,7 +211,7 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: data,
+                data: JSON.stringify(data),
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/profile/',
                 error: function (xhr) {
@@ -291,7 +291,7 @@ function HeliumSettings() {
             $.ajax({
                 async: false,
                 context: form,
-                data: data,
+                data: JSON.stringify(data),
                 type: 'PUT',
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
                 error: function (xhr) {
@@ -338,7 +338,7 @@ function HeliumSettings() {
 
                         $.ajax({
                             async: false,
-                            data: data,
+                            data: JSON.stringify(data),
                             type: 'DELETE',
                             url: '/api/auth/user',
                             error: function () {

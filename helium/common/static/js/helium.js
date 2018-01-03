@@ -28,7 +28,8 @@ $.ajaxSetup({
             // Using the CSRFToken value acquired earlier
             xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
         }
-    }
+    },
+    contentType: "application/json; charset=UTF-8"
 });
 
 /**
@@ -261,12 +262,14 @@ function Helium() {
 // Initialize the Helium object
 var helium = new Helium();
 
-$.ajax({
-    type: "GET",
-    url: "/api/auth/users/" + USER_ID,
-    async: false,
-    dataType: "json",
-    success: function (data) {
-        $.extend(helium.USER_PREFS, data);
-    }
-});
+if (typeof USER_ID !== 'undefined') {
+    $.ajax({
+        type: "GET",
+        url: "/api/auth/users/" + USER_ID,
+        async: false,
+        dataType: "json",
+        success: function (data) {
+            $.extend(helium.USER_PREFS, data);
+        }
+    });
+}

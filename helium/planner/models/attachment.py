@@ -52,8 +52,6 @@ class Attachment(BaseModel):
 
         super(Attachment, self).save(*args, **kwargs)
 
-        # TODO: if uploaded to S3, code must be implemented here to make the file private by default
-
 
 @receiver(post_delete, sender=Attachment)
 def delete_attachment(sender, instance, **kwargs):

@@ -56,11 +56,10 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        request.POST._mutable = True
-        request.data['course_group'] = kwargs['course_group']
-        request.POST._mutable = False
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(course_group_id=self.kwargs['course_group'])
 
+    def post(self, request, *args, **kwargs):
         permissions.check_course_group_permission(request, kwargs['course_group'])
 
         response = self.create(request, *args, **kwargs)

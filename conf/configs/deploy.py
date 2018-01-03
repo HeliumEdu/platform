@@ -37,7 +37,7 @@ if DEBUG:
 
 SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
-# Application configuration
+# Application definition
 
 PREPEND_WWW = os.environ.get('PLATFORM_PREPEND_WWW', 'False') == 'True'
 
@@ -176,22 +176,25 @@ if SERVE_LOCAL:
     PIPELINE['CSS_COMPRESSOR'] = None
     PIPELINE['JS_COMPRESSOR'] = None
 else:
-    # Static
-
-    STATICFILES_STORAGE = 'conf.s3storages.S3PipelineManifestStorage'
-    AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
-    AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
-    STATIC_URL = "https://{}/static/".format(AWS_S3_CUSTOM_DOMAIN)
-
-    # Media
-
-    MEDIA_URL = "https://{}/media/".format(AWS_S3_CUSTOM_DOMAIN)
-
     # Storages
     INSTALLED_APPS += (
         'storages',
     )
+
+    # Static
+
+    STATICFILES_STORAGE = 'conf.s3storages.S3StaticPipelineStorage'
+    AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
+    AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
+    STATIC_URL = "https://{}/".format(AWS_S3_CUSTOM_DOMAIN)
+
+    # Media
+
+    DEFAULT_FILE_STORAGE = 'conf.s3storages.S3MediaPipelineStorage'
+    AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
+    AWS_S3_MEDIA_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
+    MEDIA_URL = "https://{}/".format(AWS_S3_MEDIA_DOMAIN)
 
 # Celery
 

@@ -150,7 +150,7 @@
                         "material_group": $("#material-group").val()
                     };
                     if ($("#material-courses").val()) {
-                        data["courses"] = "[" + $("#material-courses").val().toString() + "]";
+                        data["courses"] = $("#material-courses").val();
                     }
                     if (helium.materials.edit) {
                         helium.planner_api.edit_material(function (data) {

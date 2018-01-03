@@ -84,7 +84,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/helium/update_user_details/" + user_id,
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -244,7 +244,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/api/planner/coursegroups/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -281,7 +281,7 @@ function HeliumPlannerAPI() {
             type: "PUT",
             url: "/api/planner/coursegroups/" + id + "/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -587,7 +587,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -629,7 +629,7 @@ function HeliumPlannerAPI() {
             type: "PUT",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -792,7 +792,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/api/planner/materialgroups/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -829,7 +829,7 @@ function HeliumPlannerAPI() {
             type: "PUT",
             url: "/api/planner/materialgroups/" + id + "/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1038,7 +1038,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/api/planner/materialgroups/" + material_group_id + "/materials/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1076,7 +1076,7 @@ function HeliumPlannerAPI() {
             type: "PUT",
             url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id + "/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1290,7 +1290,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1330,7 +1330,7 @@ function HeliumPlannerAPI() {
             type: "PUT",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id + "/",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1577,7 +1577,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/planner/homework/add",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1649,7 +1649,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/planner/homework/edit/" + id,
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1811,7 +1811,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/planner/event/add",
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1883,7 +1883,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/planner/event/edit/" + id.substr(6),
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -2048,7 +2048,7 @@ function HeliumPlannerAPI() {
             type: "POST",
             url: "/planner/reminder/edit/" + id,
             async: async,
-            data: data,
+            data: JSON.stringify(data),
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
