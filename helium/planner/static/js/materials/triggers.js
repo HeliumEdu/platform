@@ -146,7 +146,6 @@
                         "website": $("#material-website").val(),
                         "price": $("#material-price").val(),
                         "details": $("#material-details").html(),
-                        "seller_details": $("#material-seller-details").html(),
                         "material_group": $("#material-group").val()
                     };
                     if ($("#material-courses").val()) {
@@ -167,7 +166,6 @@
                                 helium.materials.material_group_table[data.material_group].cell(row_div, 2).data(helium.MATERIAL_STATUS_CHOICES[data.status]);
                                 helium.materials.material_group_table[data.material_group].cell(row_div, 3).data(helium.materials.get_course_names(data.courses));
                                 helium.materials.material_group_table[data.material_group].cell(row_div, 4).data(helium.get_comments_with_link(data.details));
-                                helium.materials.material_group_table[data.material_group].cell(row_div, 5).data(helium.get_comments_with_link(data.seller_details));
                                 helium.materials.material_group_table[data.material_group].draw();
                                 // Bind clickable attributes to their respective handlers
                                 row_div.on("click", function () {

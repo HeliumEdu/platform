@@ -93,7 +93,6 @@ function HeliumMaterials() {
         $("#material-website").val("");
         $("#material-price").val("");
         $("#material-details").html("");
-        $("#material-seller-details").html("");
 
         $("#loading-material-modal").spin(false);
         $("#material-modal").modal("show");
@@ -126,7 +125,7 @@ function HeliumMaterials() {
                 input_tab = $("#create-material-group-li");
             }
             input_tab.before("<li><a data-toggle=\"tab\" href=\"#material-group-" + data.id + "\"><i class=\"icon-briefcase r-110\"></i> " + data.title + (!data.shown_on_calendar ? " (H)" : "") + "</a></li>");
-            material_group_div = "<div id=\"material-group-" + data.id + "\" class=\"tab-pane\"><div class=\"col-sm-12\"><div class=\"table-header\"><span id=\"material-group-title-" + data.id + "\">" + data.title + (!data.shown_on_calendar ? " (Hidden)" : "") + "</span></span><label class=\"pull-right inline action-buttons\" style=\"padding-right: 10px\"><a class=\"cursor-hover\" id=\"create-material-for-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-plus-sign-alt bigger-120 hidden-print\"></i></span></a>&nbsp;<a class=\"cursor-hover\" id=\"edit-material-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-edit bigger-120 hidden-print\"></i></span>&nbsp;</a><a class=\"cursor-hover\" id=\"delete-material-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-trash bigger-120 hidden-print\"></i></span></a></label></div><div class=\"table-responsive\"><table id=\"material-group-table-" + data.id + "\" class=\"table table-striped table-bordered table-hover\"><thead><tr><th>Title</th><th class=\"hidden-xs\">Price</th><th class=\"hidden-xs\">Status</th><th class=\"hidden-xs\">Classes</th><th>Details</th><th>Seller Details</th><th class=\"hidden-xs\"></th></tr></thead><tbody id=\"material-group-table-body-" + data.id + "\"></tbody></table></div></div></div>";
+            material_group_div = "<div id=\"material-group-" + data.id + "\" class=\"tab-pane\"><div class=\"col-sm-12\"><div class=\"table-header\"><span id=\"material-group-title-" + data.id + "\">" + data.title + (!data.shown_on_calendar ? " (Hidden)" : "") + "</span></span><label class=\"pull-right inline action-buttons\" style=\"padding-right: 10px\"><a class=\"cursor-hover\" id=\"create-material-for-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-plus-sign-alt bigger-120 hidden-print\"></i></span></a>&nbsp;<a class=\"cursor-hover\" id=\"edit-material-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-edit bigger-120 hidden-print\"></i></span>&nbsp;</a><a class=\"cursor-hover\" id=\"delete-material-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-trash bigger-120 hidden-print\"></i></span></a></label></div><div class=\"table-responsive\"><table id=\"material-group-table-" + data.id + "\" class=\"table table-striped table-bordered table-hover\"><thead><tr><th>Title</th><th class=\"hidden-xs\">Price</th><th class=\"hidden-xs\">Status</th><th class=\"hidden-xs\">Classes</th><th>Details</th><th class=\"hidden-xs\"></th></tr></thead><tbody id=\"material-group-table-body-" + data.id + "\"></tbody></table></div></div></div>";
             // Determine the placement for this tab
             div = $("#material-group-tab-content").append(material_group_div);
             // Bind clickable attributes to their respective handlers
@@ -298,7 +297,6 @@ function HeliumMaterials() {
                     $("#material-website").val(material.website);
                     $("#material-price").val(material.price);
                     $("#material-details").html(material.details);
-                    $("#material-seller-details").html(material.seller_details);
 
                     $("#loading-material-modal").spin(false);
                     $("#loading-materials").spin(false);
@@ -357,7 +355,7 @@ function HeliumMaterials() {
      * @param table the material group table in which to add the material
      */
     this.add_material_to_group = function (material_data, table) {
-        var row = table.row.add([material_data.website !== "" ? "<a target=\"_blank\" class=\"material-with-link\" href=\"" + material_data.website + "\">" + material_data.title + "</a>" : material_data.title, material_data.price, helium.MATERIAL_STATUS_CHOICES[material_data.status], self.get_course_names(material_data.courses), helium.get_comments_with_link(material_data.details), helium.get_comments_with_link(material_data.seller_details), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-material-" + material_data.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-material-" + material_data.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node(), row_div = $(row).attr("id", "material-" + material_data.id);
+        var row = table.row.add([material_data.website !== "" ? "<a target=\"_blank\" class=\"material-with-link\" href=\"" + material_data.website + "\">" + material_data.title + "</a>" : material_data.title, material_data.price, helium.MATERIAL_STATUS_CHOICES[material_data.status], self.get_course_names(material_data.courses), helium.get_comments_with_link(material_data.details), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-material-" + material_data.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-material-" + material_data.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node(), row_div = $(row).attr("id", "material-" + material_data.id);
         row_div.find(".material-with-link").on("click", function (e) {
             e.stopImmediatePropagation();
         });

@@ -79,7 +79,6 @@ class TestCaseAPIMaterialViews(TestCase):
             'website': 'http://www.some-material.com',
             'price': '500.27',
             'details': 'N/A',
-            'seller_details': 'Email: carl@email.com',
             'material_group': material_group.pk,
             'courses': [course.pk]
         }
@@ -126,7 +125,6 @@ class TestCaseAPIMaterialViews(TestCase):
             'website': 'http://www.some-material.com',
             'price': 500.27,
             'details': 'N/A',
-            'seller_details': 'Email: carl@email.com',
             'material_group': material_group2.pk,
             'courses': [course2.pk]
         }
@@ -210,7 +208,6 @@ class TestCaseAPIMaterialViews(TestCase):
                     'website': 'http://www.some-material.com',
                     'price': 500.27,
                     'details': 'N/A',
-                    'seller_details': 'Email: carl@email.com',
                     'courses': [course2.pk]
                 }),
                 content_type='application/json'),
