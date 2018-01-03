@@ -23,8 +23,9 @@ class Course(BaseModel):
     credits = models.DecimalField(help_text='A decimal corresponding to credit hours.',
                                   max_digits=4, decimal_places=2)
 
-    color = models.CharField(help_text='A hex color code to determine the color events will be shown on the calendar',
-                             max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+    color = models.CharField(
+        help_text='A valid hex color code choice to determine the color events will be shown on the calendar',
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     website = models.URLField(help_text='A valid URL.', max_length=3000, blank=True, null=True)
 

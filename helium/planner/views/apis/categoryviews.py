@@ -46,6 +46,8 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
     Create a new category instance for the given course.
 
     Note that all weights associated with a single course cannot exceed a value of 100.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)

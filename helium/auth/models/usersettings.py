@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 @python_2_unicode_compatible
 class UserSettings(BaseModel):
-    time_zone = models.CharField(help_text='A valid time zone slug.',
+    time_zone = models.CharField(help_text='A valid time zone choice.',
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
-    default_view = models.PositiveIntegerField(help_text='The default calendar view.',
+    default_view = models.PositiveIntegerField(help_text='A valid default calendar view choice.',
                                                choices=enums.VIEW_CHOICES, default=enums.MONTH)
 
-    week_starts_on = models.PositiveIntegerField(help_text='The day on wich the week starts.',
+    week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
 
     all_day_offset = models.PositiveIntegerField(help_text='', default=30)
@@ -31,18 +31,20 @@ class UserSettings(BaseModel):
                                                default=True)
 
     events_color = models.CharField(
-        help_text='A hex color code to determine the color events will be shown on the calendar',
+        help_text='A valid hex color code choice to determine the color events will be shown on the calendar',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
     default_reminder_offset_type = models.PositiveIntegerField(
-        help_text='The default type of time offset when creating a new reminder.',
+        help_text='A valid default type of time offset choice when creating a new reminder.',
         default=enums.MINUTES,
         choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
 
-    default_reminder_type = models.PositiveIntegerField(default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
+    default_reminder_type = models.PositiveIntegerField(
+        help_text='A valid default type of reminder choice when creating a new reminder.',
+        default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
 
     receive_emails_from_admin = models.BooleanField(
         help_text='Whether or not the `email` on file should receive bulletin emails.',

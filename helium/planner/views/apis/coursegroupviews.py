@@ -24,6 +24,8 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
     post:
     Create a new course group instance for the authenticated user.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)

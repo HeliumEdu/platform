@@ -19,8 +19,9 @@ logger = logging.getLogger(__name__)
 class UserSettingsApiDetailView(GenericAPIView):
     """
     put:
-
     Update the given (and authenticated) user's settings.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserSettingsSerializer

@@ -22,8 +22,9 @@ class ExternalCalendar(BaseModel):
     url = models.URLField(help_text='A public-facing URL to a valid ICAL feed.',
                           max_length=255)
 
-    color = models.CharField(help_text='A hex color code to determine the color items will be shown on the calendar',
-                             max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+    color = models.CharField(
+        help_text='A valid hex color code choice to determine the color items will be shown on the calendar',
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
                                             default=True)

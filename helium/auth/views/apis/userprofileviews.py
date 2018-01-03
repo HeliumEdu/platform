@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 class UserProfileApiDetailView(GenericAPIView):
     """
     put:
-
     Update the given (and authenticated) user's profile.
+
+    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserProfileSerializer

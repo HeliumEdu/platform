@@ -22,7 +22,7 @@ class UserProfile(BaseModel):
 
     phone_changing = models.CharField(max_length=15, blank=True, null=True)
 
-    phone_carrier = models.CharField(help_text='A valid phone carrier.',
+    phone_carrier = models.CharField(help_text='A valid phone carrier choice.',
                                      max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,
                                      null=True)
 
