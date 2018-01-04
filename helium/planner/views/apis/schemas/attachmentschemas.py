@@ -34,21 +34,20 @@ class AttachmentListSchema(AutoSchema):
                     schema=coreschema.Integer(title='course',
                                               description=Attachment._meta.get_field('course').help_text)
                 ),
-                # TODO: uncomment when these models exist
-                # coreapi.Field(
-                #     "event",
-                #     required=False,
-                #     location="form",
-                #     schema=coreschema.Integer(title='event',
-                #                               description=Attachment._meta.get_field('event').help_text)
-                # ),
-                # coreapi.Field(
-                #     "homework",
-                #     required=False,
-                #     location="form",
-                #     schema=coreschema.Integer(title='homework',
-                #                               description=Attachment._meta.get_field('homework').help_text)
-                # )
+                coreapi.Field(
+                    "event",
+                    required=False,
+                    location="form",
+                    schema=coreschema.Integer(title='event',
+                                              description=Attachment._meta.get_field('event').help_text)
+                ),
+                coreapi.Field(
+                    "homework",
+                    required=False,
+                    location="form",
+                    schema=coreschema.Integer(title='homework',
+                                              description=Attachment._meta.get_field('homework').help_text)
+                )
             ]
 
             return coreapi.Link(
