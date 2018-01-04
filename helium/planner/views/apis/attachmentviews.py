@@ -42,7 +42,7 @@ class CourseAttachmentsApiListView(GenericAPIView, ListModelMixin):
         return response
 
 
-class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
+class AttachmentsApiListView(GenericAPIView, ListModelMixin):
     """
     get:
     Return a list of all attachment instances for the authenticated user. To download the attachment, follow the link
@@ -72,7 +72,7 @@ class UserAttachmentsApiListView(GenericAPIView, ListModelMixin):
         Manually specifying the POST parameters to show when OPTIONS is called, as they don't directly map to the
         serializer (which is used for GET and other operations).
         """
-        response = super(UserAttachmentsApiListView, self).options(request, args, kwargs)
+        response = super(AttachmentsApiListView, self).options(request, args, kwargs)
 
         self.schema.modify_options_response(response)
 

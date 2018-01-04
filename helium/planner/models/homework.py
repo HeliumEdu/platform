@@ -20,7 +20,7 @@ class Homework(BaseCalendar):
                                                      choices=enums.CALENDAR_ITEM_TYPE_CHOICES)
 
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
-                               related_name='homework', blank=True, null=True, on_delete=models.CASCADE)
+                               related_name='homework', on_delete=models.CASCADE)
 
     category = models.ForeignKey('Category', help_text='The category with which to associate.',
                                  related_name='homework', blank=True, null=True, default=None,

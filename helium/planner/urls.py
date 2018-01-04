@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
-from helium.planner.views.apis.attachmentviews import UserAttachmentsApiListView, AttachmentsApiDetailView, \
+from helium.planner.views.apis.attachmentviews import AttachmentsApiListView, AttachmentsApiDetailView, \
     CourseAttachmentsApiListView
 from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, CourseGroupCourseCategoriesApiListView, \
     CourseGroupCourseCategoriesApiDetailView
@@ -9,10 +9,15 @@ from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
+from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView
+from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
+    CourseGroupCourseHomeworkApiDetailView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
     MaterialGroupMaterialsApiListView
+from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView, \
+    CourseGroupCourseHomeworkRemindersApiListView, EventRemindersApiListView
 from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
@@ -59,7 +64,7 @@ urlpatterns = [
     url(r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/attachments/$',
         CourseAttachmentsApiListView.as_view(),
         name='api_planner_courses_attachments_list'),
-    url(r'^api/planner/attachments/$', UserAttachmentsApiListView.as_view(), name='api_planner_attachments_list'),
+    url(r'^api/planner/attachments/$', AttachmentsApiListView.as_view(), name='api_planner_attachments_list'),
     url(r'^api/planner/attachments/(?P<pk>[0-9]+)/$', AttachmentsApiDetailView.as_view(),
         name='api_planner_attachments_detail'),
 
@@ -76,4 +81,29 @@ urlpatterns = [
     url(r'^api/planner/materialgroups/(?P<material_group>[0-9]+)/materials/(?P<pk>[0-9]+)/$',
         MaterialGroupMaterialsApiDetailView.as_view(),
         name='api_planner_materialgroups_materials_detail'),
+
+    # Event
+    url(r'^api/planner/events/$', EventsApiListView.as_view(), name='api_planner_events_list'),
+    url(r'^api/planner/events/(?P<pk>[0-9]+)/$', EventsApiDetailView.as_view(), name='api_planner_events_detail'),
+
+    # Homework
+    url(r'^api/planner/homework/$', UserHomeworkApiListView.as_view(), name='api_planner_homework_list'),
+    url(r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/$',
+        CourseGroupCourseHomeworkApiListView.as_view(),
+        name='api_planner_coursegroups_courses_homework_list'),
+    url(
+        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/(?P<pk>[0-9]+)/$',
+        CourseGroupCourseHomeworkApiDetailView.as_view(),
+        name='api_planner_coursegroups_courses_homework_detail'),
+
+    # Reminder
+    url(r'^api/planner/reminders/$', RemindersApiListView.as_view(), name='api_planner_reminders_list'),
+    url(r'^api/planner/reminders/(?P<pk>[0-9]+)/$', RemindersApiDetailView.as_view(),
+        name='api_planner_reminders_detail'),
+    url(r'^api/planner/events/(?P<event>[0-9]+)/reminders/$', EventRemindersApiListView.as_view(),
+        name='api_planner_events_reminders_list'),
+    url(
+        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/(?P<homework>[0-9]+)/reminders/$',
+        CourseGroupCourseHomeworkRemindersApiListView.as_view(),
+        name='api_planner_coursegroups_courses_homework_reminders_list'),
 ]
