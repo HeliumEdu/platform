@@ -87,8 +87,7 @@ class Course(BaseModel):
                                       default=datetime.time(12, 0, 0))
     sat_end_time = models.TimeField(help_text='An ISO-8601 time.',
                                     default=datetime.time(12, 0, 0))
-    # TODO: when CourseSchedule is created, it should simply be a foreign key relationship so "_alt" is no longer
-    # needed and any number of alt schedules can exist
+    # TODO: when CourseSchedule is created, it should simply be a foreign key relationship so "_alt" is no longer needed and any number of alt schedules can exist
     days_of_week_alt = models.CharField(help_text='Seven booleans (0 or 1) indicating which days of the week the '
                                                   'course is on (week starts on Sunday).',
                                         max_length=7, default='0000000', validators=[

@@ -28,12 +28,16 @@ class Attachment(BaseModel):
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
                                related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    # TODO: uncomment (and rerun `make migrations`) when these models have been implemented
-    # event = models.ForeignKey('Event', related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
+    event = models.ForeignKey('Event', help_text='The event with which to associate.',
+                              related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    # homework = models.ForeignKey('Homework', related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
+    homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
+                                 related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attachments', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('title',)
 
     def get_user(self):
         if self.course:

@@ -318,3 +318,12 @@ CONDITION_CHOICES = (
     (USED_POOR, 'Used - Poor'),
     (BROKEN, 'Broken')
 )
+
+EVENT = 0
+HOMEWORK = 1
+COURSE = 2
+CALENDAR_ITEM_TYPE_CHOICES = (
+    (EVENT, 'Event'),
+    (HOMEWORK, 'Homework'),
+    (COURSE, 'Class')
+)
