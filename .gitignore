@@ -11,3 +11,6 @@ db.test.sqlite3
 .env
 .venv
 htmlcov
+docs/_build
+docs/_static
+docs/_templates
