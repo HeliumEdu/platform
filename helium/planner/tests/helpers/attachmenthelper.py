@@ -24,12 +24,14 @@ def given_file_exists():
     return tmp_file
 
 
-def given_attachment_exists(user, course=None):
+def given_attachment_exists(user, course=None, event=None, homework=None):
     uploaded_file = SimpleUploadedFile('myfile.txt', 'Attachment File'.encode())
 
     attachment = Attachment.objects.create(title=uploaded_file.name,
                                            attachment=uploaded_file,
                                            course=course,
+                                           event=event,
+                                           homework=homework,
                                            user=user)
 
     return attachment
@@ -38,14 +40,13 @@ def given_attachment_exists(user, course=None):
 def verify_attachment_matches_data(test_case, attachment, data):
     test_case.assertEqual(attachment.title, data['title'])
     test_case.assertEqual(attachment.size, data['size'])
-    if 'course' in data:
+    if 'course' in data and data['course']:
         test_case.assertEqual(attachment.course.pk, data['course'])
-    if 'event' in data:
+    if 'event' in data and data['event']:
         test_case.assertEqual(attachment.event.pk, data['event'])
-    if 'homework' in data:
+    if 'homework' in data and data['homework']:
         test_case.assertEqual(attachment.homework.pk, data['homework'])
-    if 'user' in data:
-        test_case.assertEqual(attachment.user.pk, data['user'])
+    test_case.assertEqual(attachment.user.pk, data['user'])
 
 
 def cleanup_attachments():

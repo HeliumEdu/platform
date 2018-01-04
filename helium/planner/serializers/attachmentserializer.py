@@ -15,8 +15,8 @@ class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = (
-            'id', 'title', 'attachment', 'size', 'course',)
-        read_only_fields = ('size',)
+            'id', 'title', 'attachment', 'size', 'course', 'event', 'homework', 'user',)
+        read_only_fields = ('size', 'user',)
 
     def validate(self, attrs):
         if 'course' not in attrs and 'event' not in attrs and 'homework' not in attrs:
