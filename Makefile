@@ -18,4 +18,4 @@ migrate:
 	python manage.py migrate
 
 test:
-	python -m coverage run manage.py test && python -m coverage html
+	python -m coverage run --source='.' manage.py test && python -m coverage html
