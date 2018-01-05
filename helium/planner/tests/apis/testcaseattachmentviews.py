@@ -6,7 +6,7 @@ from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Attachment
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper, eventhelper, homeworkhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -91,60 +91,59 @@ class TestCaseAPIAttachmentViews(TestCase):
         attachment = Attachment.objects.get(pk=response.data[0]['id'])
         attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
 
-    # TODO: uncomment when these models have been implemented
-    # def test_create_event_attachment(self):
-    #     # GIVEN
-    #     user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-    #     event = eventhelper.given_event_exists(user)
-    #     tmp_file = attachmenthelper.given_file_exists()
-    #
-    #     # WHEN
-    #     with open(tmp_file.name) as fp:
-    #         data = {
-    #             'event': event.pk,
-    #             'file[]': [fp]
-    #         }
-    #         response = self.client.post(
-    #             reverse('api_planner_attachments_list'),
-    #             data)
-    #
-    #     # THEN
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
-    #     self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
-    #     self.assertEqual(response.data[0]['event'], data['event'])
-    #     self.assertEqual(Attachment.objects.count(), 1)
-    #     attachment = Attachment.objects.get(pk=response.data[0]['id'])
-    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
-    #
-    # def test_create_homework_attachment(self):
-    #     # GIVEN
-    #     user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-    #     course_group = coursegrouphelper.given_course_group_exists(user)
-    #     course = coursehelper.given_course_exists(course_group)
-    #     homework = homeworkhelper.given_homework_exists(user)
-    #     tmp_file = attachmenthelper.given_file_exists()
-    #
-    #     # WHEN
-    #     with open(tmp_file.name) as fp:
-    #         data = {
-    #             'homework': homework.pk,
-    #             'file[]': [fp]
-    #         }
-    #         response = self.client.post(
-    #             reverse('api_planner_attachments_list'),
-    #             data)
-    #
-    #     # THEN
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
-    #     self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
-    #     self.assertEqual(response.data[0]['homework'], data['homework'])
-    #     self.assertEqual(Attachment.objects.count(), 1)
-    #     attachment = Attachment.objects.get(pk=response.data[0]['id'])
-    #     attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
+    def test_create_event_attachment(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        event = eventhelper.given_event_exists(user)
+        tmp_file = attachmenthelper.given_file_exists()
+
+        # WHEN
+        with open(tmp_file.name) as fp:
+            data = {
+                'event': event.pk,
+                'file[]': [fp]
+            }
+            response = self.client.post(
+                reverse('api_planner_attachments_list'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+        self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+        self.assertEqual(response.data[0]['event'], data['event'])
+        self.assertEqual(Attachment.objects.count(), 1)
+        attachment = Attachment.objects.get(pk=response.data[0]['id'])
+        attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
+
+    def test_create_homework_attachment(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        tmp_file = attachmenthelper.given_file_exists()
+
+        # WHEN
+        with open(tmp_file.name) as fp:
+            data = {
+                'homework': homework.pk,
+                'file[]': [fp]
+            }
+            response = self.client.post(
+                reverse('api_planner_attachments_list'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+        self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+        self.assertEqual(response.data[0]['homework'], data['homework'])
+        self.assertEqual(Attachment.objects.count(), 1)
+        attachment = Attachment.objects.get(pk=response.data[0]['id'])
+        attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
 
     def test_create_orphaned_attachment_fails(self):
         # GIVEN
@@ -205,13 +204,7 @@ class TestCaseAPIAttachmentViews(TestCase):
 
         # WHEN
         with open(tmp_file.name) as fp:
-            data = {
-                'course': course1.pk,
-                'file[]': [fp]
-            }
-            response = self.client.post(
-                reverse('api_planner_attachments_list'),
-                data)
+            response = self.client.post(reverse('api_planner_attachments_list'), {'course': course1.pk})
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -281,7 +274,8 @@ class TestCaseAPIAttachmentViews(TestCase):
                 self.client.get(
                     reverse('api_planner_courses_attachments_list',
                             kwargs={'course_group': '9999', 'course': course.pk})),
-                self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
+                self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
+                self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
             ]
 
         # THEN

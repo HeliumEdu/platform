@@ -102,6 +102,7 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        permissions.check_material_group_permission(request, kwargs['material_group'])
         if 'material_group' in request.data:
             permissions.check_material_group_permission(request, request.data['material_group'])
         for course_id in request.data.get('courses', []):
@@ -116,6 +117,8 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
         return response
 
     def delete(self, request, *args, **kwargs):
+        permissions.check_material_group_permission(request, kwargs['material_group'])
+
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

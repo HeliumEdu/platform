@@ -3,10 +3,12 @@
 from __future__ import unicode_literals
 
 import datetime
-from django.conf import settings
+
 import django.core.validators
-from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
 import helium.common.utils.commonutils
 import helium.planner.utils.attachmentutils
 
@@ -218,7 +220,7 @@ class Migration(migrations.Migration):
                 ('from_admin', models.BooleanField(default=False)),
                 ('event', models.ForeignKey(blank=True, help_text=b'The event with which to associate.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='planner.Event')),
                 ('homework', models.ForeignKey(blank=True, help_text=b'The homework with which to associate.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='planner.Homework')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ('title',),

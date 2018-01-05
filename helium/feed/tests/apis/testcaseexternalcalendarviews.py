@@ -104,8 +104,7 @@ class TestCaseAPIExternalCalendarViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], data['title'])
-        self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
+        self.assertDictContainsSubset(data, response.data)
         external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
@@ -185,14 +184,10 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
-        url = external_calendar.url
 
         # WHEN
         data = {
-            'url': 'http://www.not-a-valid-ical-url.com/nope',
-            # Intentionally NOT changing these value
-            'title': external_calendar.title,
-            'shown_on_calendar': external_calendar.shown_on_calendar
+            'url': 'http://www.not-a-valid-ical-url.com/nope'
         }
         response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
@@ -200,8 +195,6 @@ class TestCaseAPIExternalCalendarViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('url', response.data)
-        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
-        self.assertEqual(external_calendar.url, url)
 
     def test_not_found(self):
         userhelper.given_a_user_exists_and_is_logged_in(self.client)

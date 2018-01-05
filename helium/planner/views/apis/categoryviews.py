@@ -55,7 +55,8 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
 
     def get_queryset(self):
         user = self.request.user
-        return Category.objects.filter(course_id=self.kwargs['course'], course__course_group__user_id=user.pk)
+        return Category.objects.filter(course_id=self.kwargs['course'],
+                                       course__course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
         permissions.check_course_group_permission(request, kwargs['course_group'])
@@ -99,14 +100,19 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
 
     def get_queryset(self):
         user = self.request.user
-        return Category.objects.filter(course__course_group_id=self.kwargs['course_group'],
-                                       course_id=self.kwargs['course'],
+        return Category.objects.filter(course_id=self.kwargs['course'],
                                        course__course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         response = self.update(request, *args, **kwargs)
 
         logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
@@ -116,6 +122,9 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         return response
 
     def delete(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

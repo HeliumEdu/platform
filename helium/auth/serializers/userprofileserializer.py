@@ -58,42 +58,56 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return phone_verification_code
 
     def update(self, instance, validated_data):
+        # Manually process fields that require shuffling before relying on the serializer's internals to save the rest
         if 'phone_verification_code' in validated_data and validated_data.get('phone_verification_code'):
-            if instance.phone_changing:
-                instance.phone = instance.phone_changing
-                instance.phone_changing = None
-
-            if instance.phone_carrier_changing:
-                instance.phone_carrier = instance.phone_carrier_changing
-                instance.phone_carrier_changing = None
-
-            instance.phone_verified = True
+            self.__process_phone_verification_code(instance, validated_data)
         elif ('phone' in validated_data and not validated_data.get('phone')) or (
                         'phone_carrier' in validated_data and not validated_data.get('phone_carrier')):
-            # The user is trying to clear out their phone details
-            instance.phone = None
-            instance.phone_changing = None
-            instance.phone_carrier = None
-            instance.phone_carrier_changing = None
-            instance.phone_verified = False
+            self.__clear_phone_fields(instance, validated_data)
         else:
-            # The user is trying to change their phone or carrier, so revalidate
-            phone = instance.phone
-            phone_carrier = instance.phone_carrier
+            self.__process_phone_changing(instance, validated_data)
 
-            if 'phone' in validated_data and instance.phone != validated_data.get('phone'):
-                instance.phone_changing = validated_data.get('phone')
-                phone = instance.phone_changing
-            if 'phone_carrier' in validated_data and instance.phone_carrier != validated_data.get('phone_carrier'):
-                instance.phone_carrier_changing = validated_data.get('phone_carrier')
-                phone_carrier = instance.phone_carrier_changing
-
-            if (instance.phone != phone or instance.phone_carrier != instance.phone_carrier) \
-                    and phone and phone_carrier:
-                instance.phone_verification_code = generate_phone_verification_code()
-
-                tasks.send_verification_text.delay(phone, phone_carrier, instance.phone_verification_code)
-
-        instance.save()
+        super(UserProfileSerializer, self).update(instance, validated_data)
 
         return instance
+
+    def __process_phone_verification_code(self, instance, validated_data):
+        if instance.phone_changing:
+            instance.phone = instance.phone_changing
+            instance.phone_changing = None
+
+        if instance.phone_carrier_changing:
+            instance.phone_carrier = instance.phone_carrier_changing
+            instance.phone_carrier_changing = None
+
+        instance.phone_verified = True
+
+        validated_data.pop('phone', None)
+        validated_data.pop('phone_carrier', None)
+
+    def __clear_phone_fields(self, instance, validated_data):
+        instance.phone = None
+        instance.phone_changing = None
+        instance.phone_carrier = None
+        instance.phone_carrier_changing = None
+        instance.phone_verified = False
+
+        validated_data.pop('phone', None)
+        validated_data.pop('phone_carrier', None)
+
+    def __process_phone_changing(self, instance, validated_data):
+        phone = instance.phone
+        phone_carrier = instance.phone_carrier
+
+        if 'phone' in validated_data and instance.phone != validated_data.get('phone'):
+            instance.phone_changing = validated_data.pop('phone')
+            phone = instance.phone_changing
+        if 'phone_carrier' in validated_data and instance.phone_carrier != validated_data.get('phone_carrier'):
+            instance.phone_carrier_changing = validated_data.pop('phone_carrier')
+            phone_carrier = instance.phone_carrier_changing
+
+        if (instance.phone != phone or instance.phone_carrier != instance.phone_carrier) \
+                and phone and phone_carrier:
+            instance.phone_verification_code = generate_phone_verification_code()
+
+            tasks.send_verification_text.delay(phone, phone_carrier, instance.phone_verification_code)

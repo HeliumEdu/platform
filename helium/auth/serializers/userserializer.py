@@ -40,16 +40,15 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
     def update(self, instance, validated_data):
-        instance.username = validated_data.get('username')
-
+        # Manually process fields that require shuffling before relying on the serializer's internals to save the rest
         if 'email' in validated_data and instance.email != validated_data.get('email'):
-            instance.email_changing = validated_data.get('email')
+            instance.email_changing = validated_data.pop('email')
 
             instance.verification_code = uuid.uuid4()
 
             tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code,
                                                 self.context['request'].get_host())
 
-        instance.save()
+        instance = super(UserSerializer, self).update(instance, validated_data)
 
         return instance

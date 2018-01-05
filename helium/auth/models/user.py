@@ -4,6 +4,8 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from helium.auth.managers.usermanager import UserManager
 from helium.common.models import BaseModel
@@ -92,16 +94,12 @@ class User(AbstractBaseUser, BaseModel):
         """
         return self.is_superuser
 
-    def get_username(self):
-        return getattr(self, self.USERNAME_FIELD)
 
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            new_instance = True
-        else:
-            new_instance = False
-
-        super(User, self).save(*args, **kwargs)
-
-        if new_instance:
-            UserManager.create_references(self)
+@receiver(post_save, sender=User)
+def post_save_user(sender, instance, created, **kwargs):
+    """
+    After a user is created, one-to-one references to profile and settings models must be created to finish
+    provisioning the new user.
+    """
+    if created:
+        UserManager.create_references(instance)

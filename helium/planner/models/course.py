@@ -2,10 +2,13 @@ import datetime
 
 from django.core import validators
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -138,3 +141,11 @@ class Course(BaseModel):
 
     def get_user(self):
         return self.course_group.get_user()
+
+
+@receiver(post_delete, sender=Course)
+def delete_course(sender, instance, **kwargs):
+    """
+    Recalculate grades of related fields.
+    """
+    gradingtasks.recalculate_course_group_grade.delay(instance.course_group)

@@ -10,6 +10,7 @@ __version__ = '1.0.0'
 
 
 class Event(BaseCalendar):
+    # TODO: this value is constant and unnecessary to the database model type, so in the future it should be abstracted out to only be a serializer field
     calendar_item_type = models.PositiveIntegerField(help_text='A valid calendar item choice.',
                                                      default=enums.EVENT, choices=enums.CALENDAR_ITEM_TYPE_CHOICES)
 
