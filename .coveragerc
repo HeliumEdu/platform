@@ -1,8 +1,7 @@
 [run]
 branch = True
-source =
-    helium
 omit =
+    conf/**
     */admin.py
     */apps.py
     */tests/**
