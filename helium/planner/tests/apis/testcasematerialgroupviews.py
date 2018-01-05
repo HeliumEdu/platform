@@ -97,8 +97,7 @@ class TestCaseAPIMaterialGroupViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], data['title'])
-        self.assertEqual(response.data['shown_on_calendar'], data['shown_on_calendar'])
+        self.assertDictContainsSubset(data, response.data)
         material_group = MaterialGroup.objects.get(pk=material_group.pk)
         materialgrouphelper.verify_material_group_matches_data(self, material_group, response.data)
 
@@ -158,7 +157,8 @@ class TestCaseAPIMaterialGroupViews(TestCase):
 
         responses = [
             self.client.get(reverse('api_planner_materialgroups_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_materialgroups_detail', kwargs={'pk': '9999'}))
+            self.client.put(reverse('api_planner_materialgroups_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('api_planner_materialgroups_detail', kwargs={'pk': '9999'}))
         ]
 
         for response in responses:

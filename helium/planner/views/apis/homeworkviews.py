@@ -55,7 +55,8 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
 
     def get_queryset(self):
         user = self.request.user
-        return Homework.objects.filter(course__course_group__user_id=user.pk)
+        return Homework.objects.filter(course_id=self.kwargs['course'],
+                                       course__course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
         permissions.check_course_group_permission(request, kwargs['course_group'])
@@ -72,7 +73,7 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         permissions.check_course_group_permission(request, kwargs['course_group'])
         permissions.check_course_permission(request, kwargs['course'])
         if 'category' in request.data:
-            permissions.check_category_permission(request, kwargs['category'])
+            permissions.check_category_permission(request, request.data['category'])
         for material_id in request.data.get('materials', []):
             permissions.check_material_permission(request, material_id)
 
@@ -103,9 +104,13 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
     def get_queryset(self):
         user = self.request.user
-        return Homework.objects.filter(course__course_group__user_id=user.pk)
+        return Homework.objects.filter(course_id=self.kwargs['course'],
+                                       course__course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
@@ -127,6 +132,9 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
         return response
 
     def delete(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+        permissions.check_course_permission(request, kwargs['course'])
+
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Homework {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))

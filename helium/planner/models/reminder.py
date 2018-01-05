@@ -39,7 +39,7 @@ class Reminder(BaseModel):
     event = models.ForeignKey('Event', help_text='The event with which to associate.',
                               related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', db_index=True)
 
     class Meta:
         ordering = ('title',)

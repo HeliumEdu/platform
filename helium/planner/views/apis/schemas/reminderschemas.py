@@ -1,11 +1,6 @@
 import logging
 
-import coreapi
-import coreschema
-from rest_framework.schemas import AutoSchema
-
 from helium.common.views.apis.schemas.baseschemas import BaseIDSchema
-from helium.planner.models import Attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

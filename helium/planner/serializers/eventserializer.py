@@ -15,5 +15,5 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',)
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments', 'user',)
         read_only_fields = ('calendar_item_type', 'user',)

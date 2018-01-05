@@ -92,12 +92,16 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group_id=self.kwargs['course_group'], course_group__user_id=user.pk)
+        return Course.objects.filter(course_group_id=self.kwargs['course_group'],
+                                     course_group__user_id=user.pk)
 
     def get(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
         if 'course_group' in request.data:
             permissions.check_course_group_permission(request, request.data['course_group'])
 
@@ -110,6 +114,8 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
         return response
 
     def delete(self, request, *args, **kwargs):
+        permissions.check_course_group_permission(request, kwargs['course_group'])
+
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],

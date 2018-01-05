@@ -12,16 +12,18 @@ logger = logging.getLogger(__name__)
 @app.task
 def recalculate_course_group_grade(course_group):
     # TODO: not yet implemented
-    raise NotImplementedError
+    pass
 
 
 @app.task
 def recalculate_course_grade(course):
     # TODO: not yet implemented
-    raise NotImplementedError
+    # recalculate_course_group_grade.delay(instance.course_group)
+    pass
 
 
 @app.task
 def recalculate_category_grade(category):
     # TODO: not yet implemented
-    raise NotImplementedError
+    # recalculate_course_grade.delay(instance.course)
+    pass

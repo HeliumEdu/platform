@@ -123,7 +123,7 @@ class TestCaseAPIMaterialViews(TestCase):
             'status': enums.TO_SELL,
             'condition': enums.USED_POOR,
             'website': 'http://www.some-material.com',
-            'price': 500.27,
+            'price': '500.27',
             'details': 'N/A',
             'material_group': material_group2.pk,
             'courses': [course2.pk]
@@ -136,9 +136,7 @@ class TestCaseAPIMaterialViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], data['title'])
-        self.assertEqual(response.data['material_group'], data['material_group'])
-        self.assertEqual(response.data['courses'], data['courses'])
+        self.assertDictContainsSubset(data, response.data)
         material = Material.objects.get(pk=material.pk)
         materialhelper.verify_material_matches_data(self, material, response.data)
 
@@ -201,15 +199,7 @@ class TestCaseAPIMaterialViews(TestCase):
         responses = [
             self.client.post(
                 reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group1.pk}),
-                json.dumps({
-                    'title': 'some title',
-                    'status': enums.TO_SELL,
-                    'condition': enums.USED_POOR,
-                    'website': 'http://www.some-material.com',
-                    'price': 500.27,
-                    'details': 'N/A',
-                    'courses': [course2.pk]
-                }),
+                json.dumps({'courses': [course2.pk]}),
                 content_type='application/json'),
             self.client.post(
                 reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group2.pk}),
@@ -218,20 +208,12 @@ class TestCaseAPIMaterialViews(TestCase):
             self.client.put(
                 reverse('api_planner_materialgroups_materials_detail',
                         kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
-                json.dumps(
-                    {
-                        'material_group': material_group2.pk
-                    }),
+                json.dumps({'material_group': material_group2.pk}),
                 content_type='application/json'),
             self.client.put(
                 reverse('api_planner_materialgroups_materials_detail',
                         kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
-                json.dumps(
-                    {
-                        'courses': [course2.pk],
-                        # Intentionally NOT changing these value
-                        'material_group': material.material_group.pk
-                    }),
+                json.dumps({'courses': [course2.pk]}),
                 content_type='application/json')
         ]
 
@@ -276,7 +258,7 @@ class TestCaseAPIMaterialViews(TestCase):
 
         # WHEN
         data = {
-            'status': 'not-a-valid-status',
+            'status': 'not-a-valid-status'
         }
         response = self.client.post(
             reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group.pk}),
@@ -293,11 +275,10 @@ class TestCaseAPIMaterialViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
-        material_status = material.status
 
         # WHEN
         data = {
-            'status': 'not-a-valid-status',
+            'status': 'not-a-valid-status'
         }
         response = self.client.put(reverse('api_planner_materialgroups_materials_detail',
                                            kwargs={'material_group': material_group.pk, 'pk': material.pk}),
@@ -306,8 +287,6 @@ class TestCaseAPIMaterialViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('status', response.data)
-        material = Material.objects.get(pk=material.id)
-        self.assertEqual(material.status, material_status)
 
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -323,14 +302,20 @@ class TestCaseAPIMaterialViews(TestCase):
                                     kwargs={'material_group': '9999', 'pk': '9999'})),
             self.client.put(reverse('api_planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+                                       kwargs={'material_group': '9999', 'pk': '9999'})),
             self.client.get(reverse('api_planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': '9999'})),
             self.client.put(reverse('api_planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+                                       kwargs={'material_group': material_group.pk, 'pk': '9999'})),
             self.client.get(reverse('api_planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': material.pk})),
             self.client.put(reverse('api_planner_materialgroups_materials_detail',
-                                    kwargs={'material_group': '9999', 'pk': material.pk}))
+                                    kwargs={'material_group': '9999', 'pk': material.pk})),
+            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+                                       kwargs={'material_group': '9999', 'pk': material.pk}))
         ]
 
         for response in responses:

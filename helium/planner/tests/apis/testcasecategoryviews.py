@@ -118,6 +118,7 @@ class TestCaseAPICategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('weight', response.data)
+        self.assertEqual(Category.objects.count(), 4)
 
     def test_get_category_by_id(self):
         # GIVEN
@@ -145,7 +146,7 @@ class TestCaseAPICategoryViews(TestCase):
         # WHEN
         data = {
             'title': 'some title',
-            'weight': 25,
+            'weight': '25.00',
             'color': '#7bd148'
         }
         response = self.client.put(
@@ -156,9 +157,7 @@ class TestCaseAPICategoryViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], data['title'])
-        self.assertEqual(float(response.data['weight']), data['weight'])
-        self.assertEqual(response.data['color'], data['color'])
+        self.assertDictContainsSubset(data, response.data)
         category = Category.objects.get(pk=category.pk)
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
@@ -301,14 +300,10 @@ class TestCaseAPICategoryViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
-        color = category.color
 
         # WHEN
         data = {
-            'color': 'invalid-hex',
-            # Intentionally NOT changing these value
-            'title': category.title,
-            'weight': category.weight,
+            'color': 'invalid-hex'
         }
         response = self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
@@ -318,8 +313,6 @@ class TestCaseAPICategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('color', response.data)
-        category = Category.objects.get(pk=category.id)
-        self.assertEqual(category.color, color)
 
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -346,14 +339,20 @@ class TestCaseAPICategoryViews(TestCase):
                                     kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
+                                       kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
+                                       kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': category.pk})),
             self.client.put(reverse('api_planner_coursegroups_courses_categories_detail',
-                                    kwargs={'course_group': '9999', 'course': '9999', 'pk': category.pk}))
+                                    kwargs={'course_group': '9999', 'course': '9999', 'pk': category.pk})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_categories_detail',
+                                       kwargs={'course_group': '9999', 'course': '9999', 'pk': category.pk}))
         ]
 
         for response in responses:

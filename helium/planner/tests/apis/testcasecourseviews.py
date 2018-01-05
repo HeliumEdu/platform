@@ -107,11 +107,11 @@ class TestCaseAPICourseViews(TestCase):
             'fri_end_time_alt': '12:00:00',
             'sat_start_time_alt': '12:00:00',
             'sat_end_time_alt': '12:00:00',
+            'course_group': course_group.pk,
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'current_grade': -1,
             'trend': None,
             'private_slug': None,
-            'course_group': course_group.pk
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
@@ -153,7 +153,7 @@ class TestCaseAPICourseViews(TestCase):
         data = {
             'title': 'some title',
             'room': 'my room',
-            'credits': 3,
+            'credits': '3.00',
             'color': '#7bd148',
             'website': 'http://www.mywebsite.com',
             'is_online': True,
@@ -181,26 +181,7 @@ class TestCaseAPICourseViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], data['title'])
-        self.assertEqual(response.data['room'], data['room'])
-        self.assertEqual(float(response.data['credits']), data['credits'])
-        self.assertEqual(response.data['color'], data['color'])
-        self.assertEqual(response.data['website'], data['website'])
-        self.assertEqual(response.data['is_online'], data['is_online'])
-        self.assertEqual(response.data['teacher_name'], data['teacher_name'])
-        self.assertEqual(response.data['teacher_email'], data['teacher_email'])
-        self.assertEqual(response.data['start_date'], data['start_date'])
-        self.assertEqual(response.data['end_date'], data['end_date'])
-        self.assertEqual(response.data['days_of_week'], data['days_of_week'])
-        self.assertEqual(response.data['mon_start_time'], data['mon_start_time'])
-        self.assertEqual(response.data['mon_end_time'], data['mon_end_time'])
-        self.assertEqual(response.data['wed_start_time'], data['wed_start_time'])
-        self.assertEqual(response.data['wed_end_time'], data['wed_end_time'])
-        self.assertEqual(response.data['fri_start_time'], data['fri_start_time'])
-        self.assertEqual(response.data['fri_end_time'], data['fri_end_time'])
-        self.assertEqual(response.data['days_of_week_alt'], data['days_of_week_alt'])
-        self.assertEqual(response.data['wed_start_time_alt'], data['wed_start_time_alt'])
-        self.assertEqual(response.data['wed_end_time_alt'], data['wed_end_time_alt'])
+        self.assertDictContainsSubset(data, response.data)
         course = Course.objects.get(pk=course.pk)
         coursehelper.verify_course_matches_data(self, course, response.data)
 
@@ -236,14 +217,7 @@ class TestCaseAPICourseViews(TestCase):
             self.client.put(
                 reverse('api_planner_coursegroups_courses_detail',
                         kwargs={'course_group': course_group1.pk, 'pk': course.pk}),
-                json.dumps(
-                    {
-                        'course_group': course_group2.pk,
-                        # Intentionally NOT changing these value
-                        'credits': course.credits,
-                        'start_date': course.start_date.isoformat(),
-                        'end_date': course.end_date.isoformat(),
-                    }),
+                json.dumps({'course_group': course_group2.pk}),
                 content_type='application/json')
         ]
 
@@ -336,14 +310,10 @@ class TestCaseAPICourseViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        start_date = course.start_date
 
         # WHEN
         data = {
-            'start_date': 'not-a-valid-date',
-            # Intentionally NOT changing these value
-            'credits': course.credits,
-            'end_date': course.end_date.isoformat()
+            'start_date': 'not-a-valid-date'
         }
         response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
                                            kwargs={'course_group': course_group.pk, 'pk': course.pk}),
@@ -352,8 +322,6 @@ class TestCaseAPICourseViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start_date', response.data)
-        course = Course.objects.get(pk=course.id)
-        self.assertEqual(course.start_date, start_date)
 
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -367,14 +335,20 @@ class TestCaseAPICourseViews(TestCase):
                                     kwargs={'course_group': '9999', 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+                                       kwargs={'course_group': '9999', 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': '9999'})),
             self.client.put(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': '9999'})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+                                       kwargs={'course_group': course_group.pk, 'pk': '9999'})),
             self.client.get(reverse('api_planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': course.pk})),
             self.client.put(reverse('api_planner_coursegroups_courses_detail',
-                                    kwargs={'course_group': '9999', 'pk': course.pk}))
+                                    kwargs={'course_group': '9999', 'pk': course.pk})),
+            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+                                       kwargs={'course_group': '9999', 'pk': course.pk}))
         ]
 
         for response in responses:

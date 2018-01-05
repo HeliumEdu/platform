@@ -16,7 +16,7 @@ class UserManager(BaseUserManager):
     @staticmethod
     def create_references(user):
         """
-        Create necessary dependency models for a user.
+        Create necessary one-to-one references to profile and settings models for a user.
 
         :param user: the user to create the dependencies for
         """

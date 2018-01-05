@@ -91,9 +91,9 @@ class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
     def post(self, request, *args, **kwargs):
         if 'event' in request.data:
-            permissions.check_event_permission(request, kwargs['event'])
+            permissions.check_event_permission(request, request.data['event'])
         if 'homework' in request.data:
-            permissions.check_homework_permission(request, kwargs['homework'])
+            permissions.check_homework_permission(request, request.data['homework'])
 
         response = self.create(request, *args, **kwargs)
 
@@ -128,9 +128,9 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
     def put(self, request, *args, **kwargs):
         if 'event' in request.data:
-            permissions.check_event_permission(request, kwargs['event'])
+            permissions.check_event_permission(request, request.data['event'])
         if 'homework' in request.data:
-            permissions.check_homework_permission(request, kwargs['homework'])
+            permissions.check_homework_permission(request, request.data['homework'])
 
         response = self.update(request, *args, **kwargs)
 
