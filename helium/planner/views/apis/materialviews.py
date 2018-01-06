@@ -30,7 +30,7 @@ class UserMaterialsApiListView(GenericAPIView, ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.filter(material_group__user_id=user.pk)
+        return Material.objects.for_user(user.pk)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -52,8 +52,7 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.filter(material_group_id=self.kwargs['material_group'],
-                                       material_group__user_id=user.pk)
+        return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -95,8 +94,7 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.filter(material_group_id=self.kwargs['material_group'],
-                                       material_group__user_id=user.pk)
+        return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

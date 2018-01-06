@@ -5,6 +5,7 @@ from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.planner.managers.categorymanager import CategoryManager
 from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
@@ -34,6 +35,8 @@ class Category(BaseModel):
 
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
                                related_name='categories', on_delete=models.CASCADE)
+
+    objects = CategoryManager()
 
     class Meta:
         verbose_name_plural = 'Categories'

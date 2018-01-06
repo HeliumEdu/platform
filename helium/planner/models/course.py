@@ -8,6 +8,7 @@ from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.planner.managers.coursemanager import CourseManager
 from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
@@ -132,6 +133,8 @@ class Course(BaseModel):
 
     course_group = models.ForeignKey('CourseGroup', help_text='The course group with which to associate.',
                                      related_name='courses', on_delete=models.CASCADE)
+
+    objects = CourseManager()
 
     class Meta:
         ordering = ('start_date',)

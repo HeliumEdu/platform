@@ -3,6 +3,7 @@ from django.db import models
 from six import python_2_unicode_compatible
 
 from helium.common.models import BaseModel
+from helium.planner.managers.materialgroupmanager import MaterialGroupManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -18,6 +19,8 @@ class MaterialGroup(BaseModel):
                                             default=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='material_groups', on_delete=models.CASCADE)
+
+    objects = MaterialGroupManager()
 
     class Meta:
         ordering = ('title',)

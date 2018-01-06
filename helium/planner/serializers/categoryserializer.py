@@ -28,7 +28,7 @@ class CategorySerializer(serializers.ModelSerializer):
         course_id = self.context['request'].parser_context['kwargs']['course']
 
         weight_total = 0
-        for category in Category.objects.filter(course_id=course_id).iterator():
+        for category in Category.objects.for_course(course_id).iterator():
             weight_total += category.weight
 
         if weight_total + weight > 100:
