@@ -1,7 +1,5 @@
 from django.conf import settings
 
-from helium.planner.services import reminderservice
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
@@ -10,7 +8,7 @@ __version__ = '1.0.0'
 def template(request):
     reminders_count = 0
     if hasattr(request, 'user') and request.user.is_authenticated():
-        reminders_count = reminderservice.find_by_user(request.user)
+        reminders_count = request.user.reminders.count()
 
     context = {
         'PROJECT_NAME': settings.PROJECT_NAME,

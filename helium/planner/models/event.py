@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 from helium.common import enums
+from helium.planner.managers.eventmanager import EventManager
 from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
@@ -15,6 +16,8 @@ class Event(BaseCalendar):
                                                      default=enums.EVENT, choices=enums.CALENDAR_ITEM_TYPE_CHOICES)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
+
+    objects = EventManager()
 
     def get_user(self):
         return self.user

@@ -3,6 +3,7 @@ from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.planner.managers.materialmanager import MaterialManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -35,6 +36,8 @@ class Material(BaseModel):
 
     courses = models.ManyToManyField('Course', help_text='A list of courses with which to associate.',
                                      related_name='materials', blank=True, default=None)
+
+    objects = MaterialManager()
 
     class Meta:
         ordering = ('title',)

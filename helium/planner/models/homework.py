@@ -4,6 +4,7 @@ from django.dispatch import receiver
 
 from helium.common import enums
 from helium.common.utils.commonutils import fraction_validator
+from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar
 from helium.planner.tasks import gradingtasks
@@ -33,6 +34,8 @@ class Homework(BaseCalendar):
 
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
                                related_name='homework', on_delete=models.CASCADE)
+
+    objects = HomeworkManager()
 
     def get_user(self):
         return self.course.get_user()

@@ -33,8 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         :param email: the new email address
         """
-        if self.instance.email != email and get_user_model().objects.filter(email_changing=email).exclude(
-                pk=self.instance.pk).exists():
+        if self.instance.email != email and get_user_model().objects.email_used(self.instance.pk, email):
             raise serializers.ValidationError("Sorry, that email is already in use.")
 
         return email

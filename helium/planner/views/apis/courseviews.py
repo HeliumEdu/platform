@@ -30,7 +30,7 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group__user_id=user.pk)
+        return Course.objects.for_user(user.pk)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -52,8 +52,7 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group_id=self.kwargs['course_group'],
-                                     course_group__user_id=user.pk)
+        return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -92,8 +91,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
     def get_queryset(self):
         user = self.request.user
-        return Course.objects.filter(course_group_id=self.kwargs['course_group'],
-                                     course_group__user_id=user.pk)
+        return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
 
     def get(self, request, *args, **kwargs):
         permissions.check_course_group_permission(request, kwargs['course_group'])

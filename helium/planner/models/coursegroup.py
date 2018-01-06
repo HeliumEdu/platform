@@ -3,6 +3,7 @@ from django.db import models
 from six import python_2_unicode_compatible
 
 from helium.common.models import BaseModel
+from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -28,6 +29,8 @@ class CourseGroup(BaseModel):
     private_slug = models.SlugField(unique=True, blank=True, null=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
+
+    objects = CourseGroupManager()
 
     class Meta:
         ordering = ('start_date',)
