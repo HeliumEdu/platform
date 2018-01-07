@@ -9,8 +9,6 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.serializers.reminderserializer import ReminderSerializer
-from helium.planner.views.apis.schemas.eventschemas import SubEventListSchema
-from helium.planner.views.apis.schemas.homeworkschemas import SubHomeworkListSchema
 from helium.planner.views.apis.schemas.reminderschemas import ReminderDetailSchema
 
 __author__ = 'Alex Laird'
@@ -18,50 +16,6 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 logger = logging.getLogger(__name__)
-
-
-class EventRemindersApiListView(GenericAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all reminder instances for the given course.
-    """
-    serializer_class = ReminderSerializer
-    permission_classes = (IsAuthenticated,)
-    schema = SubEventListSchema()
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.reminders.filter(event_id=self.kwargs['event'])
-
-    def get(self, request, *args, **kwargs):
-        permissions.check_event_permission(request, kwargs['event'])
-
-        response = self.list(request, *args, **kwargs)
-
-        return response
-
-
-class CourseGroupCourseHomeworkRemindersApiListView(GenericAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all reminder instances for the given course.
-    """
-    serializer_class = ReminderSerializer
-    permission_classes = (IsAuthenticated,)
-    schema = SubHomeworkListSchema()
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.reminders.filter(homework_id=self.kwargs['homework'])
-
-    def get(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-        permissions.check_homework_permission(request, kwargs['homework'])
-
-        response = self.list(request, *args, **kwargs)
-
-        return response
 
 
 class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
@@ -76,6 +30,7 @@ class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
+    filter_fields = ('event', 'homework',)
 
     def get_queryset(self):
         user = self.request.user
@@ -91,9 +46,9 @@ class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
     def post(self, request, *args, **kwargs):
         if 'event' in request.data:
-            permissions.check_event_permission(request, request.data['event'])
+            permissions.check_event_permission(request.user.pk, request.data['event'])
         if 'homework' in request.data:
-            permissions.check_homework_permission(request, request.data['homework'])
+            permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
         response = self.create(request, *args, **kwargs)
 
@@ -128,9 +83,9 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
     def put(self, request, *args, **kwargs):
         if 'event' in request.data:
-            permissions.check_event_permission(request, request.data['event'])
+            permissions.check_event_permission(request.user.pk, request.data['event'])
         if 'homework' in request.data:
-            permissions.check_homework_permission(request, request.data['homework'])
+            permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
         response = self.update(request, *args, **kwargs)
 

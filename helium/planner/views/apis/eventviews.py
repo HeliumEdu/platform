@@ -1,5 +1,7 @@
 import logging
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -29,6 +31,10 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
+    filter_fields = ('start', 'end',)
+    search_fields = ('title',)
+    order_fields = ('title', 'start', 'priority',)
 
     def get_queryset(self):
         user = self.request.user

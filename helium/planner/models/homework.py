@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.utils.commonutils import fraction_validator
@@ -14,7 +15,9 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
+@python_2_unicode_compatible
 class Homework(BaseCalendar):
+    # TODO: add a field for the grade's computed value so we can sort by it (this raw CharField must be kept for weight precision)
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[fraction_validator])
 
@@ -36,6 +39,13 @@ class Homework(BaseCalendar):
                                related_name='homework', on_delete=models.CASCADE)
 
     objects = HomeworkManager()
+
+    class Meta:
+        verbose_name_plural = 'Homework'
+        ordering = ('start',)
+
+    def __str__(self):  # pragma: no cover
+        return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):
         return self.course.get_user()

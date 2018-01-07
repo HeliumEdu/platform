@@ -15,7 +15,7 @@ class TestCaseGeneralViews(TestCase):
             response = self.client.get(reverse(url))
 
             self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-            self.assertRedirects(response, reverse('login') + '?next=' + reverse(url))
+            self.assertRedirects(response, reverse('login') + '?next={}'.format(reverse(url)))
 
     def test_general_views_authenticated(self):
         # GIVEN

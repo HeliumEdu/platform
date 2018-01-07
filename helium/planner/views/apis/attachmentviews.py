@@ -11,35 +11,12 @@ from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.views.apis.schemas.attachmentschemas import AttachmentDetailSchema, AttachmentListSchema
-from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 logger = logging.getLogger(__name__)
-
-
-class CourseAttachmentsApiListView(GenericAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all attachment instances for the given course.
-    """
-    serializer_class = AttachmentSerializer
-    permission_classes = (IsAuthenticated,)
-    schema = SubCourseListSchema()
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.attachments.filter(course_id=self.kwargs['course'])
-
-    def get(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
-        response = self.list(request, *args, **kwargs)
-
-        return response
 
 
 class AttachmentsApiListView(GenericAPIView, ListModelMixin):
@@ -61,6 +38,7 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
+    filter_fields = ('course', 'event', 'homework',)
     schema = AttachmentListSchema()
 
     def get_queryset(self):
@@ -87,11 +65,11 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
         data = request.data.copy()
 
         if 'course' in request.data:
-            permissions.check_course_permission(request, request.data['course'])
+            permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'event' in request.data:
-            permissions.check_event_permission(request, request.data['event'])
+            permissions.check_event_permission(request.user.pk, request.data['event'])
         if 'homework' in request.data:
-            permissions.check_homework_permission(request, request.data['homework'])
+            permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
         response_data = []
         errors = []

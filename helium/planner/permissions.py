@@ -1,5 +1,6 @@
 import logging
 
+from rest_framework import permissions
 from rest_framework.exceptions import NotFound
 
 from helium.planner.models import Course, CourseGroup, MaterialGroup, Event, Homework, Category, Material
@@ -11,37 +12,57 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-# TODO: as these have now be generified, they can all be abstracted out into proper Permissions classes that implement check_object_permissions
-def check_course_permission(request, course_id):
-    if not Course.objects.exists_for_user(course_id, request.user.pk):
-        raise NotFound('Course not found.')
+class IsCourseGroupOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        check_course_group_permission(request.user.pk, view.kwargs['course_group'])
+
+        return True
 
 
-def check_material_group_permission(request, material_group_id):
-    if not MaterialGroup.objects.exists_for_user(material_group_id, request.user.pk):
-        raise NotFound('MaterialGroup not found.')
+class IsCourseOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        check_course_permission(request.user.pk, view.kwargs['course'])
+
+        return True
 
 
-def check_course_group_permission(request, course_group_id):
-    if not CourseGroup.objects.exists_for_user(course_group_id, request.user.pk):
+class IsMaterialGroupOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        check_material_group_permission(request.user.pk, view.kwargs['material_group'])
+
+        return True
+
+
+def check_course_group_permission(user_id, course_group_id):
+    if not CourseGroup.objects.exists_for_user(course_group_id, user_id):
         raise NotFound('CourseGroup not found.')
 
 
-def check_event_permission(request, event_id):
-    if not Event.objects.exists_for_user(event_id, request.user.pk):
+def check_course_permission(user_id, course_id):
+    if not Course.objects.exists_for_user(course_id, user_id):
+        raise NotFound('Course not found.')
+
+
+def check_material_group_permission(user_id, material_group_id):
+    if not MaterialGroup.objects.exists_for_user(material_group_id, user_id):
+        raise NotFound('MaterialGroup not found.')
+
+
+def check_event_permission(user_id, event_id):
+    if not Event.objects.exists_for_user(event_id, user_id):
         raise NotFound('Event not found.')
 
 
-def check_homework_permission(request, homework_id):
-    if not Homework.objects.exists_for_user(homework_id, request.user.pk):
+def check_homework_permission(user_id, homework_id):
+    if not Homework.objects.exists_for_user(homework_id, user_id):
         raise NotFound('Homework not found.')
 
 
-def check_category_permission(request, category_id):
-    if not Category.objects.exists_for_user(category_id, request.user.pk):
+def check_category_permission(user_id, category_id):
+    if not Category.objects.exists_for_user(category_id, user_id):
         raise NotFound('Category not found.')
 
 
-def check_material_permission(request, material_id):
-    if not Material.objects.exists_for_user(material_id, request.user.pk):
+def check_material_permission(user_id, material_id):
+    if not Material.objects.exists_for_user(material_id, user_id):
         raise NotFound('Material not found.')

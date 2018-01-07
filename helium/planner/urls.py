@@ -1,8 +1,7 @@
 from django.conf.urls import url
 from django.views.generic import RedirectView
 
-from helium.planner.views.apis.attachmentviews import AttachmentsApiListView, AttachmentsApiDetailView, \
-    CourseAttachmentsApiListView
+from helium.planner.views.apis.attachmentviews import AttachmentsApiListView, AttachmentsApiDetailView
 from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, CourseGroupCourseCategoriesApiListView, \
     CourseGroupCourseCategoriesApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
@@ -16,8 +15,7 @@ from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetail
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
     MaterialGroupMaterialsApiListView
-from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView, \
-    CourseGroupCourseHomeworkRemindersApiListView, EventRemindersApiListView
+from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView
 from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
@@ -61,9 +59,6 @@ urlpatterns = [
         name='api_planner_coursegroups_courses_categories_detail'),
 
     # Attachment
-    url(r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/attachments/$',
-        CourseAttachmentsApiListView.as_view(),
-        name='api_planner_courses_attachments_list'),
     url(r'^api/planner/attachments/$', AttachmentsApiListView.as_view(), name='api_planner_attachments_list'),
     url(r'^api/planner/attachments/(?P<pk>[0-9]+)/$', AttachmentsApiDetailView.as_view(),
         name='api_planner_attachments_detail'),
@@ -100,10 +95,4 @@ urlpatterns = [
     url(r'^api/planner/reminders/$', RemindersApiListView.as_view(), name='api_planner_reminders_list'),
     url(r'^api/planner/reminders/(?P<pk>[0-9]+)/$', RemindersApiDetailView.as_view(),
         name='api_planner_reminders_detail'),
-    url(r'^api/planner/events/(?P<event>[0-9]+)/reminders/$', EventRemindersApiListView.as_view(),
-        name='api_planner_events_reminders_list'),
-    url(
-        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/(?P<homework>[0-9]+)/reminders/$',
-        CourseGroupCourseHomeworkRemindersApiListView.as_view(),
-        name='api_planner_coursegroups_courses_homework_reminders_list'),
 ]

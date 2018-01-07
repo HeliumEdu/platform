@@ -29,6 +29,7 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
     """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
+    filter_fields = ('shown_on_calendar',)
 
     def get_queryset(self):
         user = self.request.user
