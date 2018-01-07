@@ -1,5 +1,8 @@
+import datetime
 import json
+from urllib.parse import quote
 
+from django.utils import timezone
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -195,3 +198,36 @@ class TestCaseEventViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_range_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        eventhelper.given_event_exists(user,
+                                       start=datetime.datetime(2014, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2014, 5, 8, 17, 0, 0, tzinfo=timezone.utc))
+        event2 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime(2014, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2014, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
+        event3 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime(2014, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2014, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
+        eventhelper.given_event_exists(user,
+                                       start=datetime.datetime(2014, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2014, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+
+        response = self.client.get(
+            reverse('api_planner_events_list') + '?start={}&end={}'.format(quote(event2.start.isoformat()),
+                                                                          quote(event3.end.isoformat())))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_title_search_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        event = eventhelper.given_event_exists(user, title='test1')
+        eventhelper.given_event_exists(user, title='test2')
+
+        response = self.client.get(reverse('api_planner_events_list') + '?search=test1')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], event.title)

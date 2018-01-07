@@ -23,24 +23,22 @@ def remove_exponent(d):
 
 def fraction_validator(value):
     """
-    Ensure the given value is a valid fraction (1235/1235) with valid numbers on either side of the ratio. Raise a
-    validation error if the value is invalid.
-
-    :param value: the value to validate
+    Ensure the given value is a valid fraction (1235/1235) with valid numbers on either side of the ratio. If not,
+    raise a validation error.
     """
     split = value.split('/')
     if len(split) != 2:
-        raise ValidationError('Enter a valid fraction of the format \'x/x\'.')
+        raise ValidationError('Enter a valid fraction of the format \'x/y\'.')
 
     try:
-        n = Decimal(split[0])
+        n = Decimal(split[0].strip())
     except:
-        raise ValidationError('Both numerator and denominator must be valid integers.')
+        raise ValidationError('The numerator is not a valid integer.')
 
     try:
-        d = Decimal(split[1])
+        d = Decimal(split[1].strip())
     except:
-        raise ValidationError('Both numerator and denominator must be valid integers.')
+        raise ValidationError('The denominator is not a valid integer.')
 
     if n > 2147483647 or d > 2147483647:
         raise ValidationError('Values must be less than or equal to 2147483647.')
