@@ -9,6 +9,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.models import Category
+from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.views.apis.schemas.categoryschemas import CategoryDetailSchema
 from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
@@ -50,7 +51,7 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     schema = SubCourseListSchema()
 
     def get_queryset(self):
@@ -58,9 +59,6 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
 
     def get(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -69,9 +67,6 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
         response = self.create(request, *args, **kwargs)
 
         logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
@@ -94,7 +89,7 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
     Delete the given category instance.
     """
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
     schema = CategoryDetailSchema()
 
     def get_queryset(self):
@@ -102,15 +97,9 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
 
     def get(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
         response = self.update(request, *args, **kwargs)
 
         logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
@@ -120,9 +109,6 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         return response
 
     def delete(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-        permissions.check_course_permission(request, kwargs['course'])
-
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

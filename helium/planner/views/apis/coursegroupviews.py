@@ -29,6 +29,7 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
+    filter_fields = ('start_date', 'end_date', 'shown_on_calendar',)
 
     def get_queryset(self):
         user = self.request.user

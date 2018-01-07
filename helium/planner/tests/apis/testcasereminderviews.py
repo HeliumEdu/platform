@@ -21,9 +21,6 @@ class TestCaseAPIReminderViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_reminders_list', kwargs={'event': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': '9999', 'course': '9999', 'homework': '9999'})),
             self.client.get(reverse('api_planner_reminders_list')),
             self.client.post(reverse('api_planner_reminders_list')),
             self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
@@ -60,12 +57,8 @@ class TestCaseAPIReminderViews(TestCase):
 
         # WHEN
         response1 = self.client.get(reverse('api_planner_reminders_list'))
-        response2 = self.client.get(
-            reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                    kwargs={'course_group': course_group2.pk, 'course': course3.pk, 'homework': homework4.pk}))
-        response3 = self.client.get(
-            reverse('api_planner_events_reminders_list',
-                    kwargs={'event': event2.pk}))
+        response2 = self.client.get(reverse('api_planner_reminders_list') + '?homework={}'.format(homework4.pk))
+        response3 = self.client.get(reverse('api_planner_reminders_list') + '?event={}'.format(event2.pk))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -264,10 +257,8 @@ class TestCaseAPIReminderViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_reminders_list', kwargs={'event': event.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                            'homework': homework.pk})),
+            self.client.get(reverse('api_planner_reminders_list') + '?event={}'.format(event.pk)),
+            self.client.get(reverse('api_planner_reminders_list') + '?homework={}'.format(homework.pk)),
             self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
             self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
             self.client.delete(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk}))
@@ -350,15 +341,6 @@ class TestCaseAPIReminderViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_reminders_list', kwargs={'event': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': '9999', 'course': '9999', 'homework': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': course_group.pk, 'course': '9999', 'homework': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': '9999', 'course': course.pk, 'homework': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_reminders_list',
-                                    kwargs={'course_group': '9999', 'course': '9999', 'homework': homework.pk})),
             self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
             self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'}))

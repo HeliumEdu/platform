@@ -49,6 +49,7 @@ DEFAULT_INSTALLED_APPS = (
     'widget_tweaks',
     'pipeline',
     'rest_framework',
+    'django_filters',
     # Project modules
     'helium.common',
     'helium.auth',
@@ -129,7 +130,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/min',
         'user': '1000/min'
-    }
+    },
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 # Internationalization

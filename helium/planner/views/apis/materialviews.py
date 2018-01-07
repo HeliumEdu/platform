@@ -9,6 +9,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.models import Material
+from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.views.apis.schemas.materialgroupschemas import SubMaterialGroupListSchema
 from helium.planner.views.apis.schemas.materialschemas import MaterialDetailSchema
@@ -47,7 +48,7 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = MaterialSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsMaterialGroupOwner)
     schema = SubMaterialGroupListSchema()
 
     def get_queryset(self):
@@ -61,9 +62,8 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
         serializer.save(material_group_id=self.kwargs['material_group'])
 
     def post(self, request, *args, **kwargs):
-        permissions.check_material_group_permission(request, kwargs['material_group'])
         for course_id in request.data.get('courses', []):
-            permissions.check_course_permission(request, course_id)
+            permissions.check_course_permission(request.user.pk, course_id)
 
         response = self.create(request, *args, **kwargs)
 
@@ -89,7 +89,7 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
     Delete the given material instance.
     """
     serializer_class = MaterialSerializer
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
     schema = MaterialDetailSchema()
 
     def get_queryset(self):
@@ -100,11 +100,10 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        permissions.check_material_group_permission(request, kwargs['material_group'])
         if 'material_group' in request.data:
-            permissions.check_material_group_permission(request, request.data['material_group'])
+            permissions.check_material_group_permission(request.user.pk, request.data['material_group'])
         for course_id in request.data.get('courses', []):
-            permissions.check_course_permission(request, course_id)
+            permissions.check_course_permission(request.user.pk, course_id)
 
         response = self.update(request, *args, **kwargs)
 
@@ -115,8 +114,6 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
         return response
 
     def delete(self, request, *args, **kwargs):
-        permissions.check_material_group_permission(request, kwargs['material_group'])
-
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

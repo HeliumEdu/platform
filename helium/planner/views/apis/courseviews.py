@@ -9,6 +9,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.models import Course
+from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.views.apis.schemas.coursegroupschemas import SubCourseGroupListSchema
 from helium.planner.views.apis.schemas.courseschemas import CourseDetailSchema
@@ -27,6 +28,7 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
+    filter_fields = ('start_date', 'end_date',)
 
     def get_queryset(self):
         user = self.request.user
@@ -47,7 +49,7 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsCourseGroupOwner)
     schema = SubCourseGroupListSchema()
 
     def get_queryset(self):
@@ -61,8 +63,6 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
         serializer.save(course_group_id=self.kwargs['course_group'])
 
     def post(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-
         response = self.create(request, *args, **kwargs)
 
         logger.info(
@@ -86,7 +86,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     Delete the given course instance.
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
     schema = CourseDetailSchema()
 
     def get_queryset(self):
@@ -94,14 +94,11 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
         return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
 
     def get(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
         if 'course_group' in request.data:
-            permissions.check_course_group_permission(request, request.data['course_group'])
+            permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
 
         response = self.update(request, *args, **kwargs)
 
@@ -112,8 +109,6 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
         return response
 
     def delete(self, request, *args, **kwargs):
-        permissions.check_course_group_permission(request, kwargs['course_group'])
-
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],

@@ -18,7 +18,7 @@ class TestCaseUserAuthentication(TestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('login') + '?next=' + reverse('settings'),
+        response = self.client.post(reverse('login') + '?next={}'.format(reverse('settings')),
                                     {'username': user.get_username(), 'password': 'test_pass_1!',
                                      'remember-me': 'remember-me'})
 
