@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
+from helium.planner.filters import CourseFilter
 from helium.planner.models import Course
 from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
@@ -27,7 +28,7 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('start_date', 'end_date',)
+    filter_class = CourseFilter
 
     def get_queryset(self):
         user = self.request.user
@@ -49,6 +50,7 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner)
+    filter_class = CourseFilter
     schema = SubCourseGroupListSchema()
 
     def get_queryset(self):

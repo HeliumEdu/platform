@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.test import TestCase
@@ -186,3 +187,26 @@ class TestCaseCourseGroupViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_range_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        coursegrouphelper.given_course_group_exists(user,
+                                                    start_date=datetime.date(2014, 5, 8),
+                                                    end_date=datetime.date(2014, 8, 15))
+        course_group2 = coursegrouphelper.given_course_group_exists(user,
+                                                                    start_date=datetime.date(2014, 8, 15),
+                                                                    end_date=datetime.date(2014, 11, 20))
+        course_group3 = coursegrouphelper.given_course_group_exists(user,
+                                                                    start_date=datetime.date(2015, 1, 8),
+                                                                    end_date=datetime.date(2015, 3, 25))
+        coursegrouphelper.given_course_group_exists(user,
+                                                    start_date=datetime.date(2015, 3, 25),
+                                                    end_date=datetime.date(2015, 8, 15))
+
+        response = self.client.get(
+            reverse('api_planner_coursegroups_list') + '?start_date={}&end_date={}'.format(
+                course_group2.start_date.isoformat(),
+                course_group3.end_date.isoformat()))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)

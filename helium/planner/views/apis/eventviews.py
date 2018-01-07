@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
+from helium.planner.filters import BaseCalendarFilter
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.schemas import EventDetailSchema
 
@@ -32,7 +33,7 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('start', 'end',)
+    filter_class = BaseCalendarFilter
     search_fields = ('title',)
     order_fields = ('title', 'start', 'priority',)
 

@@ -1,5 +1,9 @@
 import json
 
+import datetime
+from urllib.parse import quote
+
+from django.utils import timezone
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -325,3 +329,76 @@ class TestCaseHomeworkViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_range_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course,
+                                             start=datetime.datetime(2014, 5, 8, 16, 0, 0,
+                                                                     tzinfo=timezone.utc),
+                                             end=datetime.datetime(2014, 5, 8, 17, 0, 0,
+                                                                   tzinfo=timezone.utc))
+        homework2 = homeworkhelper.given_homework_exists(course,
+                                                         start=datetime.datetime(2014, 5, 8, 17, 0, 0,
+                                                                                 tzinfo=timezone.utc),
+                                                         end=datetime.datetime(2014, 5, 8, 18, 0, 0,
+                                                                               tzinfo=timezone.utc))
+        homework3 = homeworkhelper.given_homework_exists(course,
+                                                         start=datetime.datetime(2014, 5, 8, 18, 30, 0,
+                                                                                 tzinfo=timezone.utc),
+                                                         end=datetime.datetime(2014, 5, 8, 19, 0, 0,
+                                                                               tzinfo=timezone.utc))
+        homeworkhelper.given_homework_exists(course,
+                                             start=datetime.datetime(2014, 5, 8, 19, 30, 0,
+                                                                     tzinfo=timezone.utc),
+                                             end=datetime.datetime(2014, 5, 8, 21, 0, 0,
+                                                                   tzinfo=timezone.utc))
+
+        response = self.client.get(
+            reverse('api_planner_homework_list') + '?start={}&end={}'.format(quote(homework2.start.isoformat()),
+                                                                             quote(homework3.end.isoformat())))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_title_search_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course, title='test1')
+        homeworkhelper.given_homework_exists(course, title='test2')
+
+        response = self.client.get(reverse('api_planner_homework_list') + '?search=test1')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], homework.title)
+
+    def test_course_search_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group, title='testcourse')
+        course2 = coursehelper.given_course_exists(course_group, title='othercourse')
+        homework = homeworkhelper.given_homework_exists(course1, title='test1')
+        homeworkhelper.given_homework_exists(course2, title='test2')
+
+        response = self.client.get(reverse('api_planner_homework_list') + '?search=testcourse')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], homework.title)
+
+    def test_category_search_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course, title='testcategory')
+        homework = homeworkhelper.given_homework_exists(course, title='test1', category=category)
+        homeworkhelper.given_homework_exists(course, title='test2')
+
+        response = self.client.get(reverse('api_planner_homework_list') + '?search=testcategory')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], homework.title)
