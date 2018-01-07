@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
-from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.schemas import ReminderDetailSchema
+from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -54,7 +54,7 @@ class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
         logger.info('Reminder {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.reminder.created')
+        metricutils.increment('action.reminder.created', request)
 
         return response
 
@@ -91,7 +91,7 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.reminder.updated')
+        metricutils.increment('action.reminder.updated', request)
 
         return response
 
@@ -100,6 +100,6 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
         logger.info('Reminder {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.reminder.deleted')
+        metricutils.increment('action.reminder.deleted', request)
 
         return response

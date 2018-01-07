@@ -3,9 +3,9 @@ import re
 
 from rest_framework import serializers
 
-from helium.auth import tasks
 from helium.auth.models import UserProfile
 from helium.auth.utils.userutils import generate_phone_verification_code
+from helium.common import tasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -110,4 +110,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 and phone and phone_carrier:
             instance.phone_verification_code = generate_phone_verification_code()
 
-            tasks.send_verification_text.delay(phone, phone_carrier, instance.phone_verification_code)
+            tasks.send_text.delay(phone, phone_carrier, 'Verify Your Phone',
+                                  'Enter this verification code on Helium\'s "Settings" page: {}'.format(
+                                      instance.phone_verification_code))

@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.filters import CourseGroupFilter
-from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.schemas import CourseGroupDetailSchema
+from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -47,7 +47,7 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
         logger.info('CourseGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.coursegroup.created')
+        metricutils.increment('action.coursegroup.created', request)
 
         return response
 
@@ -79,7 +79,7 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
 
         logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.coursegroup.updated')
+        metricutils.increment('action.coursegroup.updated', request)
 
         return response
 
@@ -88,6 +88,6 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
 
         logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.coursegroup.deleted')
+        metricutils.increment('action.coursegroup.deleted', request)
 
         return response

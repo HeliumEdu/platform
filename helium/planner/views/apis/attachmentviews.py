@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
-from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
+from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -85,7 +85,7 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
                 logger.info(
                     'Attachment {} created for user {}'.format(serializer.instance.pk, request.user.get_username()))
 
-                metricutils.increment(request, 'action.attachment.created')
+                metricutils.increment('action.attachment.created', request)
 
                 response_data.append(serializer.data)
             else:
@@ -124,6 +124,6 @@ class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelM
 
         logger.info('Attachment {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.attachment.deleted')
+        metricutils.increment('action.attachment.deleted', request)
 
         return response

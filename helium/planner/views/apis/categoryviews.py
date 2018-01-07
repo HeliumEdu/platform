@@ -9,8 +9,8 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.models import Category
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
-from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.schemas import CategoryDetailSchema, SubCourseListSchema
+from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -70,7 +70,7 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                           request.user.get_username()))
 
-        metricutils.increment(request, 'action.category.created')
+        metricutils.increment('action.category.created', request)
 
         return response
 
@@ -102,7 +102,7 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
 
         logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.category.updated')
+        metricutils.increment('action.category.updated', request)
 
         return response
 
@@ -113,6 +113,6 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
             'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
                                                                     request.user.get_username()))
 
-        metricutils.increment(request, 'action.category.deleted')
+        metricutils.increment('action.category.deleted', request)
 
         return response

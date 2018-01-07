@@ -39,7 +39,7 @@ class UserProfileApiDetailView(GenericAPIView):
 
             logger.info('Profile updated for user {}'.format(request.user.get_username()))
 
-            metricutils.increment(request, 'action.user-profile.updated')
+            metricutils.increment('action.user-profile.updated', request)
 
             return Response(serializer.data)
 

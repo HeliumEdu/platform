@@ -38,7 +38,7 @@ class UserSettingsApiDetailView(GenericAPIView):
 
             logger.info('Settings updated for user {}'.format(request.user.get_username()))
 
-            metricutils.increment(request, 'action.user-settings.updated')
+            metricutils.increment('action.user-settings.updated', request)
 
             return Response(serializer.data)
 

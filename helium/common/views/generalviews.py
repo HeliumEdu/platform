@@ -13,42 +13,42 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
-    metricutils.increment(request, 'view.home')
+    metricutils.increment('view.home', request)
 
     return render(request, "home.html")
 
 
 def support(request):
-    metricutils.increment(request, 'view.support')
+    metricutils.increment('view.support', request)
 
     return redirect(settings.SUPPORT_REDIRECT_URL)
 
 
 def terms(request):
-    metricutils.increment(request, 'view.terms')
+    metricutils.increment('view.terms', request)
 
     return render(request, "terms.html")
 
 
 def privacy(request):
-    metricutils.increment(request, 'view.privacy')
+    metricutils.increment('view.privacy', request)
 
     return render(request, "privacy.html")
 
 
 def press(request):
-    metricutils.increment(request, 'view.press')
+    metricutils.increment('view.press', request)
 
     return render(request, "press.html")
 
 
 def about(request):
-    metricutils.increment(request, 'view.about')
+    metricutils.increment('view.about', request)
 
     return render(request, "about.html")
 
 
 def contact(request):
-    metricutils.increment(request, 'view.contact')
+    metricutils.increment('view.contact', request)
 
     return render(request, "contact.html")

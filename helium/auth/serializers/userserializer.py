@@ -45,8 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
 
             instance.verification_code = uuid.uuid4()
 
-            tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code,
-                                                self.context['request'].get_host())
+            tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
 
         instance = super(UserSerializer, self).update(instance, validated_data)
 

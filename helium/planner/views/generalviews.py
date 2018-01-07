@@ -14,27 +14,27 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def calendar(request):
-    metricutils.increment(request, 'view.calendar')
+    metricutils.increment('view.calendar', request)
 
     return render(request, "calendar/main.html")
 
 
 @login_required
 def classes(request):
-    metricutils.increment(request, 'view.classes')
+    metricutils.increment('view.classes', request)
 
     return render(request, "classes/main.html")
 
 
 @login_required
 def materials(request):
-    metricutils.increment(request, 'view.materials')
+    metricutils.increment('view.materials', request)
 
     return render(request, "materials/main.html")
 
 
 @login_required
 def grades(request):
-    metricutils.increment(request, 'view.grades')
+    metricutils.increment('view.grades', request)
 
     return render(request, "grades/main.html")
