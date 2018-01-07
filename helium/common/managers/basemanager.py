@@ -1,12 +1,8 @@
 import logging
 from abc import abstractmethod
 
-from django.db import models
 from django.contrib.auth.models import BaseUserManager
-from django.db.models import Q
-
-from helium.auth.models.userprofile import UserProfile
-from helium.auth.models.usersettings import UserSettings
+from django.db import models
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

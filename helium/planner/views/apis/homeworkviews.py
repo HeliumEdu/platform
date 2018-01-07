@@ -13,8 +13,7 @@ from helium.planner import permissions
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
-from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
-from helium.planner.views.apis.schemas.homeworkschemas import HomeworkDetailSchema
+from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

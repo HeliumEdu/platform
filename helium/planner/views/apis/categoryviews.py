@@ -7,12 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner import permissions
 from helium.planner.models import Category
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.categoryserializer import CategorySerializer
-from helium.planner.views.apis.schemas.categoryschemas import CategoryDetailSchema
-from helium.planner.views.apis.schemas.courseschemas import SubCourseListSchema
+from helium.planner.schemas import CategoryDetailSchema, SubCourseListSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

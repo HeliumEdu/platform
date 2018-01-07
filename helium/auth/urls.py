@@ -4,7 +4,7 @@ from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
 from helium.auth.views.apis.userviews import UserApiDetailView
 from helium.auth.views.authenticationviews import *
-from helium.auth.views.settingsviews import *
+from helium.auth.views.generalviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

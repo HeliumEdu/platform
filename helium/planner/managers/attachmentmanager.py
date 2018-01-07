@@ -2,8 +2,6 @@ import logging
 
 from django.db import models
 
-from helium.common.managers.base import BaseManager, BaseQuerySet
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'

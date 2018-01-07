@@ -1,6 +1,6 @@
 from django import forms
 
-from helium.common.forms.base import BaseForm
+from helium.common.forms.baseform import BaseForm
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

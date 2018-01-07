@@ -9,7 +9,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.serializers.reminderserializer import ReminderSerializer
-from helium.planner.views.apis.schemas.reminderschemas import ReminderDetailSchema
+from helium.planner.schemas import ReminderDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

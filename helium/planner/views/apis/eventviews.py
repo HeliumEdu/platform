@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.serializers.eventserializer import EventSerializer
-from helium.planner.views.apis.schemas.eventschemas import EventDetailSchema
+from helium.planner.schemas import EventDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
