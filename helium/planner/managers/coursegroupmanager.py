@@ -1,5 +1,6 @@
 import logging
-from helium.common.managers.base import BaseQuerySet, BaseManager
+
+from helium.common.managers.basemanager import BaseQuerySet, BaseManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

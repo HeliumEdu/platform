@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
+from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.feed.views.apis.schemas.externalcalendarschemas import ExternalCalendarIDSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

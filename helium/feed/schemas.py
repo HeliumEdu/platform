@@ -1,6 +1,6 @@
 import logging
 
-from helium.common.views.apis.schemas.baseschemas import BaseIDSchema
+from helium.common.schemas import BaseIDSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

@@ -11,8 +11,7 @@ from helium.planner import permissions
 from helium.planner.models import Course
 from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
-from helium.planner.views.apis.schemas.coursegroupschemas import SubCourseGroupListSchema
-from helium.planner.views.apis.schemas.courseschemas import CourseDetailSchema
+from helium.planner.schemas import SubCourseGroupListSchema, CourseDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

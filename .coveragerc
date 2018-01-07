@@ -4,9 +4,9 @@ omit =
     conf/**
     */admin.py
     */apps.py
+    */schemas.py
     */tests/**
     */migrations/**
-    */views/apis/schemas/**
     helium/common/utils/metricutils.py
 
 [report]

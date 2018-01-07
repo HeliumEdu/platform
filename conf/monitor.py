@@ -4,11 +4,10 @@ Restart the WSGI daemon process in development when files have changed.
 
 import atexit
 import os
+import queue
 import signal
 import sys
 import threading
-
-import queue
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

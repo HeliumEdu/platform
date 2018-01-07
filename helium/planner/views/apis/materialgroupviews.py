@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
-from helium.planner.views.apis.schemas.materialgroupschemas import MaterialGroupDetailSchema
+from helium.planner.schemas import MaterialGroupDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

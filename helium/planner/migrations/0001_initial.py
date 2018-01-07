@@ -3,10 +3,12 @@
 from __future__ import unicode_literals
 
 import datetime
-from django.conf import settings
+
 import django.core.validators
-from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
 import helium.common.utils.commonutils
 import helium.planner.utils.attachmentutils
 

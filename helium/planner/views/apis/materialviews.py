@@ -11,8 +11,7 @@ from helium.planner import permissions
 from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.serializers.materialserializer import MaterialSerializer
-from helium.planner.views.apis.schemas.materialgroupschemas import SubMaterialGroupListSchema
-from helium.planner.views.apis.schemas.materialschemas import MaterialDetailSchema
+from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

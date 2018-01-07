@@ -10,7 +10,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
-from helium.planner.views.apis.schemas.attachmentschemas import AttachmentDetailSchema, AttachmentListSchema
+from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

@@ -11,7 +11,7 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-class TestCaseUserAuthentication(TestCase):
+class TestCaseAuthenticationViews(TestCase):
     def test_login_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
