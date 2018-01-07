@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 from helium.planner.schemas import MaterialGroupDetailSchema
+from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -45,7 +45,7 @@ class MaterialGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin
 
         logger.info('MaterialGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.materialgroup.created')
+        metricutils.increment('action.materialgroup.created', request)
 
         return response
 
@@ -77,7 +77,7 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
 
         logger.info('MaterialGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.materialgroup.updated')
+        metricutils.increment('action.materialgroup.updated', request)
 
         return response
 
@@ -86,6 +86,6 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
 
         logger.info('MaterialGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.materialgroup.deleted')
+        metricutils.increment('action.materialgroup.deleted', request)
 
         return response

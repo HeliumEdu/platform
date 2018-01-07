@@ -10,8 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.filters import BaseCalendarFilter
-from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.schemas import EventDetailSchema
+from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -54,7 +54,7 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
         logger.info('Event {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.event.created')
+        metricutils.increment('action.event.created', request)
 
         return response
 
@@ -86,7 +86,7 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
 
         logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.event.updated')
+        metricutils.increment('action.event.updated', request)
 
         return response
 
@@ -95,6 +95,6 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
 
         logger.info('Event {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.event.deleted')
+        metricutils.increment('action.event.deleted', request)
 
         return response

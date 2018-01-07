@@ -1,10 +1,11 @@
 import logging
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives, send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
 from conf.celery import app
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task
-def send_verification_email(email, username, verification_code, platform_host):
+def send_verification_email(email, username, verification_code):
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Verification code: {}'.format(verification_code))
         return
@@ -25,7 +26,7 @@ def send_verification_email(email, username, verification_code, platform_host):
         'PROJECT_NAME': settings.PROJECT_NAME,
         'username': username,
         'verification_code': verification_code,
-        'site_url': 'http://{}'.format(platform_host)
+        'site_url': settings.PLATFORM_HOST,
     }
     text_content = plaintext.render(c)
     html_content = html.render(c)
@@ -37,21 +38,7 @@ def send_verification_email(email, username, verification_code, platform_host):
 
 
 @app.task
-def send_verification_text(phone, phone_carrier, phone_verification_code):
-    if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Verification code: {}'.format(phone_verification_code))
-        return
-
-    logger.info('Sending verification code to {}@{}'.format(phone, phone_carrier))
-
-    send_mail('Verify Your Phone',
-              'Enter this verification code on Helium\'s "Settings" page: {}'.format(phone_verification_code),
-              settings.DEFAULT_FROM_EMAIL,
-              ['{}@{}'.format(phone, phone_carrier)])
-
-
-@app.task
-def send_registration_email(email, platform_host):
+def send_registration_email(email):
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Welcome email not sent.')
         return
@@ -60,7 +47,7 @@ def send_registration_email(email, platform_host):
     html = get_template('email/register.html')
     c = {
         'PROJECT_NAME': settings.PROJECT_NAME,
-        'site_url': 'http://{}'.format(platform_host)
+        'site_url': settings.PLATFORM_HOST,
     }
     text_content = plaintext.render(c)
     html_content = html.render(c)
@@ -72,7 +59,7 @@ def send_registration_email(email, platform_host):
 
 
 @app.task
-def send_password_reset_email(email, temp_password, platform_host):
+def send_password_reset_email(email, temp_password):
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Reset password: {}'.format(temp_password))
         return
@@ -81,7 +68,7 @@ def send_password_reset_email(email, temp_password, platform_host):
     html = get_template('email/forgot.html')
     c = {
         'password': temp_password,
-        'site_url': 'http://{}'.format(platform_host)
+        'site_url': settings.PLATFORM_HOST,
     }
     text_content = plaintext.render(c)
     html_content = html.render(c)
@@ -90,3 +77,5 @@ def send_password_reset_email(email, temp_password, platform_host):
                                  settings.DEFAULT_FROM_EMAIL, [email])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+    metricutils.increment('task.user.password-reset')

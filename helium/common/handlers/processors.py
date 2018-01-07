@@ -6,15 +6,10 @@ __version__ = '1.0.0'
 
 
 def template(request):
-    reminders_count = 0
-    if hasattr(request, 'user') and request.user.is_authenticated():
-        reminders_count = request.user.reminders.count()
-
     context = {
         'PROJECT_NAME': settings.PROJECT_NAME,
         'PROJECT_TAGLINE': settings.PROJECT_TAGLINE,
         'PROJECT_VERSION': settings.PROJECT_VERSION,
         'PROJECT_EMAIL': settings.EMAIL_ADDRESS,
-        'REMINDERS_COUNT': reminders_count,
     }
     return context

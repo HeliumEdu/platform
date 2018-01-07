@@ -1,0 +1,41 @@
+{% extends "email/base.html" %}
+{% load staticfiles %}
+
+{% block heading %}{% endblock %}
+
+{% block greeting_pre %}<img src="{% static "img/logo_square.png" %}" width="50" height="50"
+                             style="display: inline !important; vertical-align: middle; margin-top: -15px;"/>{% endblock %}
+
+{% block greeting %}{{ subject|safe }}{% endblock %}
+
+{% block body %}
+    <tr>
+        <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; ">
+            <h3>Message: {{ reminder.message }}</h3>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
+            <h3>Details for {{ reminder.title }}</h3>
+
+            <p><em>When</em>: {{ normalized_datetime }}</p>
+
+            {% if reminder.homework and calendar_item.course.title %}<p><em>Class Info</em>: {{ calendar_item.title }}
+                {% if calendar_item.category.title %} for {{ calendar_item.category.title }}{% endif %}
+                {% if calendar_item.course.room %} in {{ calendar_item.course.room }} {% endif %}
+            </p>{% endif %}
+            {% if normalized_materials %}<p><em>Materials</em>: {{ normalized_materials }}</p>{% endif %}
+            {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
+            {% if calendar_item.attachments %}
+                <h4>Attachments</h4>
+                <p>
+                    {% for attachment in calendar_item.attachments %}
+                        <a target="_blank"
+                           href="{{ site_url }}/planner/attachment/{{ attachment.pk|safe }}">{{ attachment.title }}</a>
+                        <br/>
+                    {% endfor %}
+                </p>
+            {% endif %}
+        </td>
+    </tr>
+{% endblock %}

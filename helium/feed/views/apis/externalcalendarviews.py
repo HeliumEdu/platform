@@ -49,7 +49,7 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
         logger.info(
             'ExternalCalendar {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.externalcalendar.created')
+        metricutils.increment('action.externalcalendar.created', request)
 
         return response
 
@@ -84,7 +84,7 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
         logger.info(
             'ExternalCalendar {} update for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.externalcalendar.updated')
+        metricutils.increment('action.externalcalendar.updated', request)
 
         return response
 
@@ -94,6 +94,6 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
         logger.info(
             'ExternalCalendar {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.externalcalendar.deleted')
+        metricutils.increment('action.externalcalendar.deleted', request)
 
         return response

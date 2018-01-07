@@ -50,7 +50,7 @@ def register(request):
 
         return response
     else:
-        metricutils.increment(request, 'view.register')
+        metricutils.increment('view.register', request)
 
         data = {
             'user_register_form': user_register_form,
@@ -88,7 +88,7 @@ def login(request):
 
                 redirect = authservice.process_login(request, username, password)
 
-                metricutils.increment(request, 'action.user-logged-in')
+                metricutils.increment('action.user.logged-in', request)
             else:
                 set_request_status(request, 'warning', list(user_login_form.errors.values())[0][0])
 
@@ -134,7 +134,7 @@ def forgot(request):
         status = get_request_status(request)
 
     if not redirect:
-        metricutils.increment(request, 'view.forgotpassword')
+        metricutils.increment('view.forgot', request)
 
         data = {
             'status': status

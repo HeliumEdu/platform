@@ -25,7 +25,7 @@ def process_register(request, user):
     """
     logger.info('Registered new user with username: {}'.format(user.get_username()))
 
-    tasks.send_verification_email.delay(user.email, user.username, user.verification_code, request.get_host())
+    tasks.send_verification_email.delay(user.email, user.username, user.verification_code)
 
     set_request_status(request, 'info',
                        'You\'re almost there! The last step is to verify your email address. Click the link in the '
@@ -53,9 +53,9 @@ def process_verification(request, username, verification_code):
             user.save()
 
             if not user.email.endswith('@heliumedu.com'):
-                metricutils.increment(request, 'platform.vol.user-added')
+                metricutils.increment('action.user.created', request)
 
-            tasks.send_registration_email.delay(user.email, request.get_host())
+            tasks.send_registration_email.delay(user.email)
 
             # Now that the user is registered, log them it automatically and redirect them to the authenticated
             # landing page
@@ -138,7 +138,7 @@ def process_forgot_password(request):
 
         logger.info('Reset password for user with email {}'.format(email))
 
-        tasks.send_password_reset_email.delay(user.email, password, request.get_host())
+        tasks.send_password_reset_email.delay(user.email, password)
 
         request.session.modified = True
     except get_user_model().DoesNotExist:

@@ -11,8 +11,8 @@ from helium.planner import permissions
 from helium.planner.filters import CourseFilter
 from helium.planner.models import Course
 from helium.planner.permissions import IsCourseGroupOwner
-from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.schemas import SubCourseGroupListSchema, CourseDetailSchema
+from helium.planner.serializers.courseserializer import CourseSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -70,7 +70,7 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
             'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group'],
                                                                      self.request.user.get_username()))
 
-        metricutils.increment(request, 'action.course.created')
+        metricutils.increment('action.course.created', request)
 
         return response
 
@@ -105,7 +105,7 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
         logger.info('Course {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.course.updated')
+        metricutils.increment('action.course.updated', request)
 
         return response
 
@@ -115,6 +115,6 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
         logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],
                                                                                request.user.get_username()))
 
-        metricutils.increment(request, 'action.course.deleted')
+        metricutils.increment('action.course.deleted', request)
 
         return response

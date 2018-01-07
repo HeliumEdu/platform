@@ -75,7 +75,7 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
         if len(errors) > 0:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         elif len(response_data) > 0:
-            metricutils.increment(request, 'action.user.updated')
+            metricutils.increment('action.user.updated', request)
 
             return Response(response_data)
         else:
@@ -90,7 +90,7 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
         if form.is_valid():
             logger.info('User {} deleted'.format(request.user.get_username()))
 
-            metricutils.increment(request, 'action.user.deleted')
+            metricutils.increment('action.user.deleted', request)
 
             form.user.delete()
 

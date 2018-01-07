@@ -13,8 +13,8 @@ from helium.planner import permissions
 from helium.planner.filters import BaseCalendarFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
-from helium.planner.serializers.homeworkserializer import HomeworkSerializer
 from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
+from helium.planner.serializers.homeworkserializer import HomeworkSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -84,7 +84,7 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                           request.user.get_username()))
 
-        metricutils.increment(request, 'action.category.created')
+        metricutils.increment('action.homework.created', request)
 
         return response
 
@@ -123,7 +123,7 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
         logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.homework.updated')
+        metricutils.increment('action.homework.updated', request)
 
         return response
 
@@ -132,6 +132,6 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
         logger.info('Homework {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment(request, 'action.homework.deleted')
+        metricutils.increment('action.homework.deleted', request)
 
         return response

@@ -113,20 +113,16 @@
                         <li class="green hidden-xs">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                                 <i class="icon-bell-alt"></i>
-                            <span id="reminder-bell-alt-count" class="badge badge-success">{% if REMINDERS_COUNT %}
-                                {{ REMINDERS_COUNT }}{% endif %}</span>
+                            <span id="reminder-bell-alt-count" class="badge badge-success"></span>
                             </a>
 
                             <ul class="pull-right dropdown-navbar dropdown-menu dropdown-caret dropdown-close">
                                 <li class="dropdown-header">
                                     <i class="icon-bell"></i>
-                                <span id="reminder-bell-count">{% if REMINDERS_COUNT %}{{ REMINDERS_COUNT }}{% else %}
-                                    0{% endif %}</span> Reminders
+                                <span id="reminder-bell-count"></span> Reminders
                                 </li>
 
-                                {{ reminders|safe }}
-
-                                <li></li>
+                                <div id="reminder-bucket"></div>
                             </ul>
                         </li>
                         <li class="{% active request '/settings' %} dropdown">

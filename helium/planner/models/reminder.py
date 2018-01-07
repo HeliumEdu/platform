@@ -4,6 +4,7 @@ from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -40,6 +41,8 @@ class Reminder(BaseModel):
                               related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', db_index=True)
+
+    objects = ReminderManager()
 
     class Meta:
         ordering = ('title',)

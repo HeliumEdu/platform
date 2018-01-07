@@ -20,6 +20,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 PROJECT_NAME = os.environ.get('PROJECT_NAME')
 PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
+PLATFORM_HOST = os.environ.get('PLATFORM_HOST')
 
 # Version information
 
@@ -142,6 +143,14 @@ USE_I18N = True
 USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
+
+# DateTime sanity
+
+DATE_FORMAT = "%Y-%m-%d"
+TIME_FORMAT = "%H:%M:%S"
+DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
+NORMALIZED_DATE_FORMAT = "%a, %b %d"
+NORMALIZED_DATE_TIME_FORMAT = NORMALIZED_DATE_FORMAT + " at %I:%M %p"
 
 # Email settings
 
