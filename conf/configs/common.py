@@ -146,11 +146,11 @@ USE_TZ = True
 
 # DateTime sanity
 
-DATE_FORMAT = "%Y-%m-%d"
-TIME_FORMAT = "%H:%M:%S"
-DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
-NORMALIZED_DATE_FORMAT = "%a, %b %d"
-NORMALIZED_DATE_TIME_FORMAT = NORMALIZED_DATE_FORMAT + " at %I:%M %p"
+DATE_FORMAT = '%Y-%m-%d'
+TIME_FORMAT = '%H:%M:%S'
+DATE_TIME_FORMAT = '{} {}'.format(DATE_FORMAT, TIME_FORMAT)
+NORMALIZED_DATE_FORMAT = '%a, %b %d'
+NORMALIZED_DATE_TIME_FORMAT = '{} at %I:%M %p'.format(NORMALIZED_DATE_FORMAT)
 
 # Email settings
 
@@ -233,6 +233,25 @@ PIPELINE = {
             ),
             'output_filename': 'css/helium_settings_{}.min.css'.format(PROJECT_VERSION),
         },
+        'calendar_pre': {
+            'source_filenames': (
+                'css/vendors/bootstrap-editable.css',
+                'css/vendors/fullcalendar.css',
+                'css/vendors/datepicker.css',
+                'css/vendors/bootstrap-timepicker.css',
+                'css/vendors/jquery.simplecolorpicker.css',
+                'css/vendors/jquery.simplecolorpicker-glyphicons.css',
+                'css/vendors/dropzone.css',
+                'css/vendors/jquery.qtip.css',
+            ),
+            'output_filename': 'css/helium_calendar_pre_{}.min.css'.format(PROJECT_VERSION),
+        },
+        'calendar': {
+            'source_filenames': (
+                # 'css/calendar.css',
+            ),
+            'output_filename': 'css/helium_calendar_post_{}.min.css'.format(PROJECT_VERSION),
+        },
         'classes_pre': {
             'source_filenames': (
                 'css/vendors/bootstrap-editable.css',
@@ -262,6 +281,12 @@ PIPELINE = {
                 'css/materials.css',
             ),
             'output_filename': 'css/helium_materials_{}.min.css'.format(PROJECT_VERSION),
+        },
+        'grades_pre': {
+            'source_filenames': (
+                # 'css/grades.css',
+            ),
+            'output_filename': 'css/helium_grades_pre_{}.min.css'.format(PROJECT_VERSION),
         },
     },
     'JAVASCRIPT': {
@@ -310,6 +335,26 @@ PIPELINE = {
             ),
             'output_filename': 'js/helium_settings_{}.min.js'.format(PROJECT_VERSION),
         },
+        'calendar': {
+            'source_filenames': (
+                'js/vendors/moment.js',
+                'js/vendors/bootstrap-datepicker.js',
+                'js/vendors/bootstrap-timepicker.js',
+                'js/vendors/bootstrap-editable.js',
+                'js/vendors/bootbox.js',
+                'js/vendors/jquery.dataTables.js',
+                'js/vendors/jquery.dataTables.bootstrap.js',
+                'js/vendors/fullcalendar.js',
+                'js/gcal.js',
+                'js/vendors/dropzone.min.js',
+                'js/vendors/jquery.qtip.js',
+                'js/vendors/jquery.hotkeys.js',
+                'js/vendors/bootstrap-wysiwyg.js',
+                # 'js/calendar/main.js',
+                # 'js/calendar/triggers.js',
+            ),
+            'output_filename': 'js/helium_calendar_{}.min.js'.format(PROJECT_VERSION),
+        },
         'classes': {
             'source_filenames': (
                 'js/vendors/bootstrap-datepicker.js',
@@ -339,6 +384,20 @@ PIPELINE = {
                 'js/materials/triggers.js',
             ),
             'output_filename': 'js/helium_materials_{}.min.js'.format(PROJECT_VERSION),
+        },
+        'grades': {
+            'source_filenames': (
+                'js/vendors/bootbox.js',
+                'js/vendors/moment.js',
+                'js/vendors/jquery.easy-pie-chart.js',
+                'js/vendors/jquery.sparkline.js',
+                'js/vendors/jquery.flot.js',
+                'js/vendors/jquery.flot.pie.js',
+                'js/vendors/jquery.flot.resize.js',
+                'js/vendors/jquery.flot.time.js',
+                # 'js/grades/main.js',
+            ),
+            'output_filename': 'js/helium_grades_{}.min.js'.format(PROJECT_VERSION),
         },
     }
 }
