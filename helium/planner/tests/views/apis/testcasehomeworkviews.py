@@ -70,6 +70,7 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(Homework.objects.count(), 4)
         self.assertEqual(len(response1.data), 3)
+        self.assertIn('course_group', response1.data[0]['course'])
         self.assertEqual(len(response2.data), 2)
 
     def test_create_homework(self):

@@ -29,3 +29,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
             gradingtasks.recalculate_category_grade(old_category)
 
         return instance
+
+
+class HomeworkExtendedSerializer(HomeworkSerializer):
+    class Meta(HomeworkSerializer.Meta):
+        depth = 1

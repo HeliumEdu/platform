@@ -14,7 +14,7 @@ from helium.planner.filters import BaseCalendarFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
-from helium.planner.serializers.homeworkserializer import HomeworkSerializer
+from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -28,7 +28,7 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     get:
     Return a list of all homework instances for the authenticated user.
     """
-    serializer_class = HomeworkSerializer
+    serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_class = BaseCalendarFilter

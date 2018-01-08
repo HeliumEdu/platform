@@ -26,11 +26,6 @@ class ReminderSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ReminderListSerializer(ReminderSerializer):
-    class Meta:
-        model = Reminder
-        fields = (
-            'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'from_admin',
-            'homework', 'event', 'user',)
-        read_only_fields = ('from_admin', 'user',)
+class ReminderExtendedSerializer(ReminderSerializer):
+    class Meta(ReminderSerializer.Meta):
         depth = 2

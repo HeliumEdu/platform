@@ -10,7 +10,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.schemas import ReminderDetailSchema
-from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderListSerializer
+from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -40,7 +40,7 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        serializer_class = ReminderListSerializer
+        serializer_class = ReminderExtendedSerializer
 
         page = self.paginate_queryset(queryset)
         if page is not None:
