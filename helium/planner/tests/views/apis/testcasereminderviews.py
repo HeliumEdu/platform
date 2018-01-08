@@ -282,7 +282,6 @@ class TestCaseReminderViews(TestCase):
 
         # WHEN
         data = {
-            'sent': True,
             'from_admin': True,
             # Intentionally NOT changing these value
             'title': reminder.title,
@@ -296,7 +295,6 @@ class TestCaseReminderViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder = Reminder.objects.get(pk=reminder.id)
-        self.assertEqual(reminder.sent, sent)
         self.assertEqual(reminder.from_admin, from_admin)
 
     def test_create_bad_data(self):

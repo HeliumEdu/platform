@@ -267,6 +267,8 @@ PIPELINE = {
     'JAVASCRIPT': {
         'base': {
             'source_filenames': (
+                'js/vendors/moment.js',
+                'js/vendors/moment-timezone.js',
                 'js/vendors/jquery.cookie.js',
                 'js/vendors/jquery.ui.touch-punch.min.js',
                 'js/vendors/chosen.jquery.js',
@@ -310,7 +312,6 @@ PIPELINE = {
         },
         'classes': {
             'source_filenames': (
-                'js/vendors/moment.js',
                 'js/vendors/bootstrap-datepicker.js',
                 'js/vendors/bootstrap-timepicker.js',
                 'js/vendors/bootstrap-editable.js',

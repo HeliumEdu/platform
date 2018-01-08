@@ -1,3 +1,7 @@
+from future.standard_library import install_aliases
+
+install_aliases()
+
 import json
 
 from django.test import TestCase
@@ -324,3 +328,19 @@ class TestCaseMaterialViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_courses_filter_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        coursehelper.given_course_exists(course_group)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group, courses=[course1, course2])
+
+        response = self.client.get(
+            reverse('api_planner_materials_list') + '?courses={}&courses={}'.format(course1.pk, course2.pk))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['title'], material.title)
