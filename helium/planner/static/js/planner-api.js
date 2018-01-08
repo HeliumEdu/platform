@@ -40,6 +40,7 @@ function HeliumPlannerAPI() {
     this.event = {};
     this.events_by_user_id = {};
     this.external_calendars_by_user_id = {};
+    this.reminders_by_user_id = {};
     this.reminders_by_calendar_item = {};
 
     var self = this;
@@ -112,12 +113,13 @@ function HeliumPlannerAPI() {
      * @param id the User ID with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.get_grades_by_user_id = function (callback, id, async) {
+    this.get_grades_by_user_id = function (callback, async) {
         async = typeof async === "undefined" ? true : async;
 
+        // TODO: needs to be implemented on the backend
         return $.ajax({
-            type: "POST",
-            url: "/planner/grades_by_user_id/" + id,
+            type: "GET",
+            url: "/api/planner/grades",
             async: async,
             dataType: "json",
             success: callback,
@@ -335,53 +337,6 @@ function HeliumPlannerAPI() {
                 callback(data);
             }
         });
-    };
-
-    /**
-     * Compile all Courses that have a start/end date around the given date and pass the values to the given callback
-     * function in JSON format.
-     *
-     * @param callback function to pass response data and call after completion
-     * @param date the date to surround, must be in the format YYYY-MM-DD
-     * @param async true if call should be async, false otherwise (default is true)
-     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
-     */
-    this.get_courses_around_date = function (callback, date, async, use_cache) {
-        async = typeof async === "undefined" ? true : async;
-        use_cache = typeof use_cache === "undefined" ? false : use_cache;
-        var ret_val = null;
-
-        if (use_cache && self.courses_around_date.hasOwnProperty(date)) {
-            ret_val = callback(self.courses_around_date[date]);
-        } else {
-            ret_val = $.ajax({
-                type: "GET",
-                url: "/planner/courses_around_date/" + date,
-                async: async,
-                dataType: "json",
-                success: function (data) {
-                    self.courses_around_date[date] = data;
-                    callback(self.courses_around_date[date]);
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    var data = [{
-                        'err_msg': self.GENERIC_ERROR_MESSAGE,
-                        'jqXHR': jqXHR,
-                        'textStatus': textStatus,
-                        'errorThrown': errorThrown
-                    }];
-                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
-                        var name = Object.keys(jqXHR.responseJSON)[0];
-                        if (jqXHR.responseJSON[name].length > 0) {
-                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
-                        }
-                    }
-                    callback(data);
-                }
-            });
-        }
-
-        return ret_val;
     };
 
     /**
@@ -901,8 +856,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.materials_by_course_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/materials_by_course_id/" + id,
+                type: "GET",
+                url: "/api/planner/materials?course=" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1149,12 +1104,15 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.category_names);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/category_names",
+                type: "GET",
+                url: "/api/planner/categories",
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.category_names = data;
+                    self.category_names = [];
+                    $.each(data, function (category) {
+                        self.category_names.push(category.title);
+                    });
                     callback(self.category_names);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
@@ -1475,11 +1433,12 @@ function HeliumPlannerAPI() {
      * Compile all Homework for the given Course ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup with which to associate
      * @param id the ID of the Course with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_homework_by_course_id = function (callback, id, async, use_cache) {
+    this.get_homework_by_course_id = function (callback, course_group_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1488,8 +1447,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.homework_by_course_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/homework_by_course_id/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/homework",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1521,11 +1480,13 @@ function HeliumPlannerAPI() {
      * Compile the Homework for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Homework
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_homework = function (callback, id, async, use_cache) {
+    this.get_homework = function (callback, course_group_id, course_id, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1534,8 +1495,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.homework[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/homework/" + id,
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1567,51 +1528,19 @@ function HeliumPlannerAPI() {
      * Create a new Homework and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param data the array of values to set for the new Homework
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.add_homework = function (callback, data, async) {
+    this.add_homework = function (callback, course_group_id, course_id, data, async) {
         async = typeof async === "undefined" ? true : async;
         self.homework_by_course_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/homework/add",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/",
             async: async,
             data: JSON.stringify(data),
-            dataType: "json",
-            success: callback,
-            error: function (jqXHR, textStatus, errorThrown) {
-                var data = [{
-                    'err_msg': self.GENERIC_ERROR_MESSAGE,
-                    'jqXHR': jqXHR,
-                    'textStatus': textStatus,
-                    'errorThrown': errorThrown
-                }];
-                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
-                    var name = Object.keys(jqXHR.responseJSON)[0];
-                    if (jqXHR.responseJSON[name].length > 0) {
-                        data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
-                    }
-                }
-                callback(data);
-            }
-        });
-    };
-
-    /**
-     * Clone the given Homework and pass the returned values to the given callback function in JSON format.
-     *
-     * @param callback function to pass response data and call after completion
-     * @param data the array of values to set for the new Homework
-     * @param async true if call should be async, false otherwise (default is true)
-     */
-    this.clone_homework = function (callback, id, async) {
-        async = typeof async === "undefined" ? true : async;
-        self.homework_by_course_id = {};
-        return $.ajax({
-            type: "POST",
-            url: "/planner/homework/clone/" + id,
-            async: async,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1636,18 +1565,20 @@ function HeliumPlannerAPI() {
      * Edit the Homework for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Homework
      * @param data the array of values to update for the Homework
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_homework = function (callback, id, data, async) {
+    this.edit_homework = function (callback, course_group_id, course_id, id, data, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.homework[id];
         self.homework_by_course_id = {};
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/homework/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id + "/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",
@@ -1674,16 +1605,18 @@ function HeliumPlannerAPI() {
      * Delete the Homework for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
      * @param id the ID of the Homework
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_homework = function (callback, id, async) {
+    this.delete_homework = function (callback, course_group_id, course_id, id, async) {
         async = typeof async === "undefined" ? true : async;
         delete self.homework[id];
         self.homework_by_course_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/homework/delete/" + id,
+            type: "DELETE",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -1709,11 +1642,10 @@ function HeliumPlannerAPI() {
      * Compile all Events for the given User ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the User with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_events_by_user_id = function (callback, id, async, use_cache) {
+    this.get_events = function (callback, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1722,8 +1654,8 @@ function HeliumPlannerAPI() {
             ret_val = callback(self.events_by_user_id[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/events_by_user_id/" + id,
+                type: "GET",
+                url: "/api/planner/events",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1755,21 +1687,22 @@ function HeliumPlannerAPI() {
      * Compile the Event for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the Event
+     * @param div_id the div ID of the Event (needs to be parsed first)
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_event = function (callback, id, async, use_cache) {
+    this.get_event = function (callback, div_id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.event.hasOwnProperty(id.substr(6))) {
-            ret_val = callback(self.event[id.substr(6)]);
+        var id = div_id.substr(6);
+        if (use_cache && self.event.hasOwnProperty(id)) {
+            ret_val = callback(self.event[id]);
         } else {
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/event/" + id.substr(6),
+                type: "GET",
+                url: "/api/planner/events/" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1809,43 +1742,9 @@ function HeliumPlannerAPI() {
         self.events_by_user_id = {};
         return $.ajax({
             type: "POST",
-            url: "/planner/event/add",
+            url: "/api/planner/events/",
             async: async,
             data: JSON.stringify(data),
-            dataType: "json",
-            success: callback,
-            error: function (jqXHR, textStatus, errorThrown) {
-                var data = [{
-                    'err_msg': self.GENERIC_ERROR_MESSAGE,
-                    'jqXHR': jqXHR,
-                    'textStatus': textStatus,
-                    'errorThrown': errorThrown
-                }];
-                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
-                    var name = Object.keys(jqXHR.responseJSON)[0];
-                    if (jqXHR.responseJSON[name].length > 0) {
-                        data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
-                    }
-                }
-                callback(data);
-            }
-        });
-    };
-
-    /**
-     * Clone the given Event and pass the returned values to the given callback function in JSON format.
-     *
-     * @param callback function to pass response data and call after completion
-     * @param data the array of values to set for the new Event
-     * @param async true if call should be async, false otherwise (default is true)
-     */
-    this.clone_event = function (callback, id, async) {
-        async = typeof async === "undefined" ? true : async;
-        self.events_by_user_id = {};
-        return $.ajax({
-            type: "POST",
-            url: "/planner/event/clone/" + id.substr(6),
-            async: async,
             dataType: "json",
             success: callback,
             error: function (jqXHR, textStatus, errorThrown) {
@@ -1870,18 +1769,19 @@ function HeliumPlannerAPI() {
      * Edit the Event for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the Event
+     * @param div_id the div ID of the Event (needs to be parsed first)
      * @param data the array of values to update for the Event
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_event = function (callback, id, data, async) {
+    this.edit_event = function (callback, div_id, data, async) {
         async = typeof async === "undefined" ? true : async;
-        delete self.event[id.substr(6)];
+        var id = div_id.substr(6);
+        delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/event/edit/" + id.substr(6),
+            type: "PUT",
+            url: "/api/planner/events/" + id + "/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",
@@ -1908,16 +1808,17 @@ function HeliumPlannerAPI() {
      * Delete the Event for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the Event
+     * @param div_id the div ID of the Event (needs to be parsed first)
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_event = function (callback, id, async) {
+    this.delete_event = function (callback, div_id, async) {
         async = typeof async === "undefined" ? true : async;
+        var id = div_id.substr(6);
         delete self.event[id];
         self.events_by_user_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/event/delete/" + id.substr(6),
+            type: "DELETE",
+            url: "/api/planner/events/" + id,
             async: async,
             dataType: "json",
             success: callback,
@@ -1986,6 +1887,51 @@ function HeliumPlannerAPI() {
     };
 
     /**
+     * Compile all Reminders for the authenticated user.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_reminders = function (callback, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.reminders_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.reminders_by_user_id[helium.USER_PREFS.id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/reminders?sent=false",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.reminders_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.reminders_by_user_id[helium.USER_PREFS.id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var data = [{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }];
+                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                        var name = Object.keys(jqXHR.responseJSON)[0];
+                        if (jqXHR.responseJSON[name].length > 0) {
+                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                        }
+                    }
+                    callback(data);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
      * Compile all Reminders for the given calendar item (Homework or Event) and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
@@ -2002,9 +1948,11 @@ function HeliumPlannerAPI() {
         if (use_cache && self.reminders_by_calendar_item.hasOwnProperty(id)) {
             ret_val = callback(self.reminders_by_calendar_item[id]);
         } else {
+            var query = calendar_item_type === "0" ? "event=" + id.substr(6) : "homework=" + id;
+
             ret_val = $.ajax({
-                type: "POST",
-                url: "/planner/reminders_by_calendar_item/" + (calendar_item_type === "0" ? id.substr(6) : id),
+                type: "GET",
+                url: "/api/planner/reminders?" + query,
                 data: {calendar_item_type: calendar_item_type},
                 async: async,
                 dataType: "json",
@@ -2045,8 +1993,8 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "POST",
-            url: "/planner/reminder/edit/" + id,
+            type: "PUT",
+            url: "/api/planner/reminders/" + id + "/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",
@@ -2079,9 +2027,10 @@ function HeliumPlannerAPI() {
      */
     this.get_attachments_for_calendar_item = function (callback, id, calendar_item_type, async) {
         async = typeof async === "undefined" ? true : async;
+        var query = calendar_item_type === "0" ? "event=" + id.substr(6) : "homework=" + id;
         return $.ajax({
-            type: "POST",
-            url: "/planner/attachments_by_calendar_item/" + (calendar_item_type === "0" ? id.substr(6) : id),
+            type: "GET",
+            url: "/api/planner/attachments?" + query,
             async: async,
             data: {calendar_item_type: calendar_item_type},
             dataType: "json",
@@ -2106,9 +2055,10 @@ function HeliumPlannerAPI() {
 
     this.enable_feed = function (callback, feed_type, id, async) {
         async = typeof async === "undefined" ? true : async;
+        // TODO: needs to be implemented on the backend
         return $.ajax({
-            type: "POST",
-            url: "/planner/enable_feed/" + feed_type + "/" + id,
+            type: "PUT",
+            url: "/api/feeds/" + id + "/enable/",
             async: async,
             dataType: "json",
             success: callback,
@@ -2132,9 +2082,10 @@ function HeliumPlannerAPI() {
 
     this.disable_feed = function (callback, feed_type, id, async) {
         async = typeof async === "undefined" ? true : async;
+        // TODO: needs to be implemented on the backend
         return $.ajax({
-            type: "POST",
-            url: "/planner/disable_feed/" + feed_type + "/" + id,
+            type: "PUT",
+            url: "/api/feeds/" + id + "/disable/",
             async: async,
             dataType: "json",
             success: callback,
@@ -2159,3 +2110,15 @@ function HeliumPlannerAPI() {
 
 // Initialize HeliumPlannerAPI and give a reference to the Helium object
 helium.planner_api = new HeliumPlannerAPI();
+
+if (typeof USER_ID !== 'undefined') {
+    helium.planner_api.get_reminders(function (data) {
+        helium.process_reminders(data);
+    });
+
+    window.setInterval(function () {
+        helium.planner_api.get_reminders(function (data) {
+            helium.process_reminders(data);
+        });
+    }, 60000);
+}

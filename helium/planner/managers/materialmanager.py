@@ -19,6 +19,9 @@ class MaterialQuerySet(BaseQuerySet):
     def for_material_group(self, material_group_id):
         return self.filter(material_group_id=material_group_id)
 
+    def with_courses(self, courses):
+        return self.filter(courses__in=courses)
+
 
 class MaterialManager(BaseManager):
     def get_queryset(self):
@@ -32,3 +35,6 @@ class MaterialManager(BaseManager):
 
     def for_material_group(self, material_group_id):
         return self.get_queryset().for_material_group(material_group_id)
+
+    def with_courses(self, courses):
+        return self.get_queryset().with_courses(courses)

@@ -30,7 +30,11 @@ class UserMaterialsApiListView(GenericAPIView, ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        return Material.objects.for_user(user.pk)
+        materials = Material.objects.for_user(user.pk)
+        # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
+        if 'courses' in self.request.query_params:
+            materials = materials.with_courses(self.request.query_params.getlist('courses'))
+        return materials
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

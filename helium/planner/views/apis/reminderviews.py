@@ -1,15 +1,16 @@
 import logging
 
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
+from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.schemas import ReminderDetailSchema
-from helium.planner.serializers.reminderserializer import ReminderSerializer
+from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderListSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -18,7 +19,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class RemindersApiListView(GenericAPIView, CreateModelMixin):
     """
     get:
     Return a list of all reminder instances for the authenticated user.
@@ -30,16 +31,24 @@ class RemindersApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('event', 'homework',)
+    filter_fields = ('event', 'homework', 'type', 'sent', 'from_admin')
 
     def get_queryset(self):
         user = self.request.user
         return user.reminders.all()
 
     def get(self, request, *args, **kwargs):
-        response = self.list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
 
-        return response
+        serializer_class = ReminderListSerializer
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -87,7 +96,7 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
         if 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
-        response = self.update(request, *args, **kwargs)
+        response = self.partial_update(request, *args, **kwargs)
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 

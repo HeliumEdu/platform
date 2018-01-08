@@ -17,10 +17,20 @@ class ReminderSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'from_admin',
             'homework', 'event', 'user',)
-        read_only_fields = ('sent', 'from_admin', 'user',)
+        read_only_fields = ('from_admin', 'user',)
 
     def validate(self, attrs):
-        if 'event' not in attrs and 'homework' not in attrs:
-            raise serializers.ValidationError("At least one of `event` or `homework` must be given.")
+        if not self.instance and ('event' not in attrs and 'homework' not in attrs):
+                raise serializers.ValidationError("At least one of `event` or `homework` must be given.")
 
         return attrs
+
+
+class ReminderListSerializer(ReminderSerializer):
+    class Meta:
+        model = Reminder
+        fields = (
+            'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'from_admin',
+            'homework', 'event', 'user',)
+        read_only_fields = ('from_admin', 'user',)
+        depth = 2
