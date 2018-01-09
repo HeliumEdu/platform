@@ -2691,6 +2691,8 @@
             // If the course array is empty
             if ($("[id^='calendar-filter-course-']").length === 0) {
                 $("#create-homework").attr("disabled", "disabled");
+            } else {
+                $("#create-homework").removeAttr("disabled");
             }
         }
 

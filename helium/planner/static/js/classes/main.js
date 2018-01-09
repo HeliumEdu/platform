@@ -940,7 +940,7 @@ function HeliumClasses() {
                     $("#loading-courses").spin(false);
                     $("#course-modal").modal("show");
                 }
-            }, self.course_group_id, self.edit_id);
+            }, self.edit_id);
         }
     };
 
@@ -1457,14 +1457,12 @@ function HeliumClasses() {
             // If a course group was created, wait for that call to complete before proceeding
             $.when.apply(this, self.ajax_calls).done(function () {
                 if (!helium.ajax_error_occurred) {
-                    var categories_data = [], attachments_data = [], id, cells;
+                    var categories_data = [], id;
                     different_times = $("#course-schedule-has-different-times").is(":checked");
                     sun_start_time = moment($("#course-sun-start-time").val(), helium.HE_TIME_STRING_CLIENT).format(helium.HE_TIME_STRING_SERVER);
                     sun_end_time = moment($("#course-sun-end-time").val(), helium.HE_TIME_STRING_CLIENT).format(helium.HE_TIME_STRING_SERVER);
                     sun_alt_start_time = moment($("#course-sun-alt-start-time").val(), helium.HE_TIME_STRING_CLIENT).format(helium.HE_TIME_STRING_SERVER);
                     sun_alt_end_time = moment($("#course-sun-alt-end-time").val(), helium.HE_TIME_STRING_CLIENT).format(helium.HE_TIME_STRING_SERVER);
-
-                    // TODO: after attachment implementation is migrated, build attachments here
 
                     // Build a JSONifyable list of category elements
                     $("[id^='category-'][id$='-modified']").each(function () {
