@@ -31,7 +31,7 @@ class UserSettingsApiDetailView(GenericAPIView):
         # This call gets the object and checks permissions
         self.get_object()
 
-        serializer = self.get_serializer(request.user.settings, data=request.data)
+        serializer = self.get_serializer(request.user.settings, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()

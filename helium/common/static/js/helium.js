@@ -40,6 +40,18 @@ $.ajaxSetup({
 function Helium() {
     "use strict";
 
+    this.REMINDER_OFFSET_TYPE_CHOICES = [
+        "minutes",
+        "hours",
+        "days",
+        "weeks"
+    ];
+    this.REMINDER_TYPE_CHOICES = [
+        "Popup",
+        "Email",
+        "Text"
+    ];
+
     // Variables to establish the current request/page the user is accessing
     this.SITE_HOST = location.host + "/";
     this.SITE_URL = location.protocol + "//" + this.SITE_HOST;
