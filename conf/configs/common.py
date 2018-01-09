@@ -248,7 +248,7 @@ PIPELINE = {
         },
         'calendar': {
             'source_filenames': (
-                # 'css/calendar.css',
+                'css/calendar.css',
             ),
             'output_filename': 'css/helium_calendar_post_{}.min.css'.format(PROJECT_VERSION),
         },
@@ -284,7 +284,7 @@ PIPELINE = {
         },
         'grades_pre': {
             'source_filenames': (
-                # 'css/grades.css',
+                'css/grades.css',
             ),
             'output_filename': 'css/helium_grades_pre_{}.min.css'.format(PROJECT_VERSION),
         },
@@ -350,8 +350,8 @@ PIPELINE = {
                 'js/vendors/jquery.qtip.js',
                 'js/vendors/jquery.hotkeys.js',
                 'js/vendors/bootstrap-wysiwyg.js',
-                # 'js/calendar/main.js',
-                # 'js/calendar/triggers.js',
+                'js/calendar/main.js',
+                'js/calendar/triggers.js',
             ),
             'output_filename': 'js/helium_calendar_{}.min.js'.format(PROJECT_VERSION),
         },
@@ -395,7 +395,7 @@ PIPELINE = {
                 'js/vendors/jquery.flot.pie.js',
                 'js/vendors/jquery.flot.resize.js',
                 'js/vendors/jquery.flot.time.js',
-                # 'js/grades/main.js',
+                'js/grades/main.js',
             ),
             'output_filename': 'js/helium_grades_{}.min.js'.format(PROJECT_VERSION),
         },

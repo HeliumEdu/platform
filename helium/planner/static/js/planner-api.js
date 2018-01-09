@@ -82,8 +82,8 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         self.course_groups_by_user_id = {};
         return $.ajax({
-            type: "POST",
-            url: "/helium/update_user_details/" + user_id,
+            type: "PUT",
+            url: "/api/auth/users/" + helium.USER_PREFS.id + "/settings/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",
@@ -110,10 +110,9 @@ function HeliumPlannerAPI() {
      * Compile data for display on the /grades page for the given User ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the User ID with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.get_grades_by_user_id = function (callback, async) {
+    this.get_grades = function (callback, async) {
         async = typeof async === "undefined" ? true : async;
 
         // TODO: needs to be implemented on the backend
@@ -1844,17 +1843,16 @@ function HeliumPlannerAPI() {
      * Compile all Calendar Sources for the given user and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param id the ID of the user with which to associate
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_external_calendars = function (callback, id, async, use_cache) {
+    this.get_external_calendars = function (callback, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.external_calendars_by_user_id.hasOwnProperty(id)) {
-            ret_val = callback(self.external_calendars_by_user_id[id]);
+        if (use_cache && self.external_calendars_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.external_calendars_by_user_id[helium.USER_PREFS.id]);
         } else {
             ret_val = $.ajax({
                 type: "GET",
@@ -1862,8 +1860,8 @@ function HeliumPlannerAPI() {
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.external_calendars_by_user_id[id] = data;
-                    callback(self.external_calendars_by_user_id[id]);
+                    self.external_calendars_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.external_calendars_by_user_id[helium.USER_PREFS.id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     var data = [{
