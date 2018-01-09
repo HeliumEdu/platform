@@ -16,11 +16,376 @@
 
 {% block content %}
     <div class="main-container">
-        <div class="container">
-            <div class="page-content">
-                <div class="row">
-                    <div class="col-sm-10 col-sm-offset-1">
-                        Nothing to do here yet ...
+        <div class="page-content">
+            <div class="row" id="planner-row">
+                <div class="col-xs-12">
+                    <div id="calendar-loading">
+                        <div id="loading-calendar"></div>
+                    </div>
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="homework-modal" tabindex="-1" role="dialog" aria-labelledby="homework-modal-label"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <span class="pull-right"><label style="padding-top: 5px; margin-right: 8px;"><input
+                            id="homework-event-switch" name="homework-event-switch" class="ace ace-switch"
+                            type="checkbox"><span class="lbl"
+                                                  data-lbl="Event&nbsp;&nbsp;&nbsp;&nbsp;Assignment"></span></label><button
+                            type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button></span>
+                        <h4 class="modal-title" id="homework-modal-label">Add Homework</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tabbable">
+                            <ul class="nav nav-tabs padding-18 tab-size-bigger" id="homework-panel-tabs">
+                                <li class="col-xs-12 col-sm-reset active">
+                                    <a data-toggle="tab" href="#homework-panel-tab-1">
+                                        <i class="blue icon-list bigger-120 hidden-xs"></i>
+                                        Details
+                                    </a>
+                                </li>
+
+                                <li class="col-xs-12 col-sm-reset">
+                                    <a data-toggle="tab" href="#homework-panel-tab-2">
+                                        <i class="green icon-time bigger-120 hidden-xs"></i>
+                                        Reminders
+                                    </a>
+                                </li>
+
+                                <li class="col-xs-12 col-sm-reset">
+                                    <a data-toggle="tab" href="#homework-panel-tab-3">
+                                        <i class="orange icon-paperclip bigger-120 hidden-xs"></i>
+                                        Attachments
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content no-border padding-24 no-padding-bottom">
+                                <div id="homework-panel-tab-1" class="tab-pane fade in active">
+                                    <form class="form-horizontal" role="form">
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-title">Title</label>
+
+                                            <div class="col-sm-7">
+                                                <input id="homework-title" class="form-control" maxlength="255"
+                                                       autocomplete="off"
+                                                       placeholder="Project #2" type="text"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group to-hide" id="homework-class-form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-class">Class</label>
+
+                                            <div class="col-sm-7">
+                                                <select class="chosen-select tag-input-style" id="homework-class"
+                                                        data-placeholder=" ">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-xs-12 col-sm-4">
+                                                <label class="left-buffer-50 hidden-xs"></label>
+                                                <label>
+                                                    <input id="homework-all-day" class="ace" type="checkbox"/>
+                                                    <span class="lbl"> All Day</span>
+                                                </label>
+                                            </div>
+
+                                            <div class="col-xs-12 col-sm-5">
+                                                <label>
+                                                    <input id="homework-show-end-time" class="ace" type="checkbox"/>
+                                                    <span class="lbl"> Show End Date and Time</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="homework-date-form-group">
+                                            <label class="col-sm-3 control-label" id="homework-start-date-lbl"
+                                                   for="homework-start-date">Date</label>
+
+                                            <div class="col-sm-4 input-group pull-left no-padding-right">
+                                                <input type="text" name="homework-start-date" id="homework-start-date"
+                                                       class="form-control date-picker" data-date-format="M d, yyyy"/>
+                                    <span class="input-group-addon">
+                                        <i class="icon-calendar"></i>
+                                    </span>
+                                            </div>
+
+                                            <div class="col-sm-4 input-group no-padding-left"
+                                                 id="homework-end-date-form-group">
+                                                <input type="text" name="homework-end-date" id="homework-end-date"
+                                                       class="form-control date-picker" data-date-format="M d, yyyy"/>
+                                    <span class="input-group-addon">
+                                        <i class="icon-calendar"></i>
+                                    </span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="homework-time-form-group">
+                                            <label class="col-sm-3 control-label" id="homework-start-time-lbl"
+                                                   for="homework-start-time">Time</label>
+
+                                            <div class="col-sm-4 input-group input-append bootstrap-timepicker pull-left no-padding-right">
+                                                <input id="homework-start-time" type="text"
+                                                       class="form-control input-small time-picker"/>
+                                    <span class="input-group-addon add-on">
+                                        <i class="icon-time bigger-110"></i>
+                                    </span>
+                                            </div>
+
+                                            <div class="col-sm-4 input-group input-append bootstrap-timepicker pull-left no-padding-left"
+                                                 id="homework-end-time-form-group">
+                                                <input id="homework-end-time" type="text"
+                                                       class="form-control input-small time-picker"/>
+                                    <span class="input-group-addon add-on">
+                                        <i class="icon-time bigger-110"></i>
+                                    </span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="homework-category-form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-category">Category</label>
+
+                                            <div class="col-sm-5">
+                                                <select class="chosen-select tag-input-style" id="homework-category"
+                                                        data-placeholder=" ">
+                                                </select>
+                                            </div>
+
+                                            <button id="edit-categories" type="button"
+                                                    class="btn btn-primary btn-xs col-sm-3 hidden-xs">
+                                                <i class="icon-pencil"></i>
+                                                Edit Categories
+                                            </button>
+                                        </div>
+                                        <div class="form-group" id="homework-materials-form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-materials">Materials</label>
+
+                                            <div class="col-sm-7">
+                                                <select class="chosen-select tag-input-style" id="homework-materials"
+                                                        multiple="multiple" data-placeholder=" ">
+                                                </select>
+                                            </div>
+                                            <div class="col-sm-1">
+                                    <span class="hidden-xs homework-help help-button" data-rel="popover"
+                                          data-trigger="hover" data-container="#homework-modal" data-placement="left"
+                                          data-content="Don't see any materials? You need to have done two things for them to show up in this list:<ul><li>At least one material must exist (you can add these from the Materials page)</li><li>At least one material must be linked to the class for this homework</li></ul>"
+                                          title="Selecting Materials">?</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-start-date">Priority</label>
+
+                                            <div class="col-sm-7 col-xs-12 input-group">
+                                                <div id="homework-priority">
+                                                    <span class="ui-slider-green">50</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="homework-completed-form-group">
+                                            <div class="col-xs-12">
+                                                <label class="left-buffer-50 hidden-xs"></label>
+                                                <label>
+                                                    <input id="homework-completed" class="ace" type="checkbox"/>
+                                                    <span class="lbl"> Completed</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group to-hide" id="homework-grade-form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-grade">Grade</label>
+
+                                            <div class="col-sm-5 col-xs-10">
+                                                <input id="homework-grade" class="form-control" autocomplete="off"/>
+                                            </div>
+                                            <div class="col-sm-2 col-xs-2" id="homework-grade-percent"><span
+                                                    class="badge badge-info"></span></div>
+                                            <div class="col-sm-1">
+                                    <span class="hidden-xs homework-help help-button" data-rel="popover"
+                                          data-trigger="hover" data-container="#homework-modal" data-placement="left"
+                                          data-content="Enter your grade in any of the following formats and we'll take care of the rest:<ul><li>Percent (ex. 84.5%)</li><li>Raw score (ex. 18/20)</li></ul>"
+                                          title="Entering Grades">?</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"
+                                                   for="homework-comments">Comments</label>
+
+                                            <div class="col-sm-7">
+                                                <div id="homework-comments" class="wysiwyg-editor comment-editor"></div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div id="homework-panel-tab-2" class="tab-pane fade in">
+                                    <button class="btn btn-sm btn-primary pull-right bottom-buffer-10"
+                                            id="create-reminder">
+                                        <i class="icon-plus align-top bigger-125"></i>
+                                        Reminders
+                                    </button>
+
+                                    <div class="clearfix"></div>
+
+                                    <table id="reminders-table"
+                                           class="table table-striped table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th width="50%">Message</th>
+                                            <th width="40%">When
+                    <span class="hidden-xs homework-help help-button" data-rel="popover"
+                          data-trigger="hover" data-container="#homework-modal" data-placement="left"
+                          data-content="You will receive a reminder at this point before this item's assigned time"
+                          title="Reminder Time">?</span>
+                                            </th>
+                                            <th width="30px"></th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="reminders-table-body">
+                                        <tr id="no-reminders">
+                                            <td colspan="4"
+                                                class="text-center">No reminders! Get started by adding a reminder.
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="homework-panel-tab-3" class="tab-pane fade in">
+                                    <div id="dropzone">
+                                        <form action="/api/planner/attachments/" id="dropzone-form" class="dropzone"
+                                              method="POST">
+                                            <div class="fallback">
+                                                <input name="file" type="file" multiple=""/>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="space-12"></div>
+                                    <table id="attachments-table"
+                                           class="table table-striped table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th width="70%">Name</th>
+                                            <th width="15%">Size</th>
+                                            <th width="40px"></th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="attachments-table-body">
+                                        <tr id="no-attachments">
+                                            <td colspan="4"
+                                                class="text-center">No attachments! Get started by adding dropping an
+                                                attachment above.
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row to-hide">
+                                    <div id="homework-error" class="col-sm-8 col-sm-offset-2 alert alert-danger"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="pull-left">
+                            <button id="delete-homework" type="button" class="btn btn-danger btn-sm">
+                                <i class="icon-trash"></i>
+                                Delete
+                            </button>
+                            <button id="clone-homework" type="button" class="btn btn-success btn-sm">
+                                <i class="icon-retweet"></i>
+                                Clone
+                            </button>
+                        </div>
+                        <div id="homework-modal-loading" class="loading-mini">
+                            <div id="loading-homework-modal"></div>
+                        </div>
+                        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+                            <i class="icon-remove"></i>
+                            Cancel
+                        </button>
+                        <button id="save-homework" type="button" class="btn btn-primary btn-sm">
+                            <i class="icon-check"></i>
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="getting-started-modal" tabindex="-1" role="dialog"
+             aria-labelledby="getting-started-modal-label"
+             aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="well">
+                            <h1 class="grey lighter smaller">
+                                <img src="{% static 'img/logo_square.png' %}" width="50" height="50" class="inline"
+                                     style="margin-top: -15px;"/>
+                                <span>Welcome to Helium!</span>
+                            </h1>
+
+                            <hr/>
+                            <h3 class="lighter smaller">Start By Adding Classes ...</h3>
+
+                            <p class="bigger-110">Normally you'll land here on the calendar page, but there
+                                is nothing to see here until you have some classes added. Just click the "Start Adding
+                                Classes" button below to get off the ground with Helium.</p>
+
+                            <h3 class="lighter smaller">... Then Add Your Schedule</h3>
+
+                            <p class="bigger-110">Once your classes are in order, come back to this page by
+                                clicking the "Calendar" button at the top of the page. Then you'll be able to add
+                                assignments, projects, concerts, naps, and whatever else you need to block out time
+                                for in your schedule.</p>
+
+                            <p class="bigger-110">
+                                If you need more tips to get started, or if you ever get hung up on something,
+                                <a target="_blank" href="/support">check out our support page</a>.</p>
+
+                            <p class="bigger-110">Ready? Go!</p>
+                        </div>
+
+                        <div class="row" style="margin-right: 5px; margin-top: -10px; margin-bottom: -25px;">
+                            <div class="pull-right">
+                                <a href="http://www.twitter.com/heliumstudents" style="color: #ffffff;" target="_blank">
+                                    <img src="{% static 'img/twitter.png' %}" alt="Twitter" width="38"
+                                         height="38" class="inline"/>
+                                </a>
+                                <a href="http://www.facebook.com/heliumstudents" style="color: #ffffff;"
+                                   target="_blank">
+                                    <img src="{% static 'img/facebook.png' %}" alt="Facebook" width="38"
+                                         height="38" class="inline"/>
+                                </a>
+                                <a href="http://blog.heliumedu.com" style="color: #ffffff;" target="_blank">
+                                    <img src="{% static 'img/tumblr.png' %}" alt="Blog" width="38"
+                                         height="38" class="inline"/>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="form-group" style="margin-bottom: 0px;">
+                            <label class="pull-left">
+                                <input id="show-getting-started" class="ace" type="checkbox"
+                                        {% if not request.user.settings.show_getting_started %}
+                                       checked="checked"{% endif %}/>
+                                <span class="lbl"> Don't show this dialog again</span>
+                            </label>
+                            <button id="close-getting-started" type="button" class="btn btn-primary btn-sm">
+                                Close
+                            </button>
+                            <button id="start-adding-classes" type="button" class="btn btn-primary btn-sm">
+                                Start Adding Classes
+                                <i class="icon-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

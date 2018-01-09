@@ -62,6 +62,7 @@ function HeliumCalendar() {
         self.start = null;
         self.end = null;
         self.current_class_id = -1;
+        self.current_course_group_id = -1;
         self.all_day = null;
         self.show_end_time = null;
         self.current_calendar_item = null;
@@ -279,6 +280,9 @@ function HeliumCalendar() {
         self.init_calendar_item = true;
         self.edit = false;
 
+        self.categories_to_delete = [];
+        self.attachments_to_delete = [];
+
         if ($("[id^='calendar-filter-course-']").length > 0) {
             $("#homework-event-switch").parent().show();
         } else {
@@ -351,6 +355,11 @@ function HeliumCalendar() {
      * Delete an attachment from the list of attachments.
      */
     this.delete_attachment = function () {
+        var dom_id = $(this).attr("id");
+        var id = dom_id.split("-");
+        id = id[id.length - 1];
+        helium.calendar.attachments_to_delete.push(id);
+
         if ($("#attachments-table-body").children().length === 1) {
             $("#no-attachments").show();
         }
@@ -388,6 +397,9 @@ function HeliumCalendar() {
                     self.loading_div.spin(helium.SMALL_LOADING_OPTS);
                     self.init_calendar_item = true;
                     self.edit = true;
+
+                    self.categories_to_delete = [];
+                    self.attachments_to_delete = [];
 
                     $("#homework-event-switch").parent().hide();
                     $("#delete-homework").show();
@@ -863,6 +875,12 @@ function HeliumCalendar() {
             }
         }
 
+        if ($("[id^='calendar-filter-course-']").length === 0) {
+            $("#create-homework").attr("disabled", "disabled");
+        } else {
+            $("#create-homework").removeAttr("disabled");
+        }
+
         if (!helium.ajax_error_occurred) {
             // Initialize category filters
             helium.planner_api.get_category_names(function (data) {
@@ -1080,6 +1098,11 @@ function HeliumCalendar() {
             });
         } else {
             $("#delete-reminder-" + reminder.id).on("click", function () {
+                var dom_id = $(this).attr("id");
+                var id = dom_id.split("-");
+                id = id[id.length - 1];
+                helium.calendar.reminders_to_delete.push(id);
+
                 if ($("#reminders-table-body").children().length === 1) {
                     $("#no-reminders").show();
                 }
@@ -1106,35 +1129,31 @@ function HeliumCalendar() {
         // Validate
         is_category_valid = $("#homework-category").find("option").length === 0 || homework_category !== null || (self.current_calendar_item !== null && self.current_calendar_item.calendar_item_type === 0) || $("#homework-event-switch").is(":checked");
         if (/\S/.test(calendar_item_title) && calendar_item_start_date !== "" && calendar_item_end_date !== "" && is_category_valid) {
-            var reminders_table_rows = {}, attachments_table_rows = {}, id, cells, start, end;
+            var reminders_data = [], id, start, end;
             $("#loading-homework-modal").spin(helium.SMALL_LOADING_OPTS);
 
             completed = $("#homework-completed").is(":checked");
-            // Build a JSONifyable list of attachment elements
-            $("#attachments-table").find("#attachments-table-body tr").each(function () {
-                id = $(this).attr("id");
-                cells = $(this).find("td");
-                attachments_table_rows[id] = [];
 
-                cells.each(function (cell_index) {
-                    // Update the row object with the header/cell combo
-                    attachments_table_rows[id][cell_index] = $(this).text();
-                });
+            // Build a JSONifyable list of category elements
+            $("[id^='reminder-'][id$='-modified']").each(function () {
+                helium.planner_api.edit_reminder(function () {
+                    }, $(this).attr("id").split("category-")[1].split("-reminder")[0],
+                    {
+                        "title": $($(this).children()[0]).text(),
+                        "message": $($(this).children()[0]).text(),
+                        "type": $($(this).children()[0]).find("[id$='-type']").val(),
+                        "offset": $($(this).children()[0]).find("[id$='-offset']").text(),
+                        "offset_type": $($(this).children()[0]).find("[id$='-offset-type']").val()
+                    });
             });
 
-            // Build a JSONifyable list of reminder elements
-            $("#reminders-table").find("#reminders-table-body tr").each(function () {
-                id = $(this).attr("id");
-                cells = $(this).find("td");
-                reminders_table_rows[id] = [];
-
-                cells.each(function (cell_index) {
-                    // Update the row object with the header/cell combo
-                    if (cell_index === 1) {
-                        reminders_table_rows[id][cell_index] = $(this).find("[id$='-type']").val() + "," + $(this).find("[id$='-offset']").text() + "," + $(this).find("[id$='-offset-type']").val();
-                    } else {
-                        reminders_table_rows[id][cell_index] = $(this).text();
-                    }
+            $("[id^='reminder-'][id$='-unsaved']").each(function () {
+                reminders_data.push({
+                    "title": $($(this).children()[0]).text(),
+                    "message": $($(this).children()[0]).text(),
+                    "type": $($(this).children()[0]).find("[id$='-type']").val(),
+                    "offset": $($(this).children()[0]).find("[id$='-offset']").text(),
+                    "offset_type": $($(this).children()[0]).find("[id$='-offset-type']").val()
                 });
             });
 
@@ -1168,9 +1187,7 @@ function HeliumCalendar() {
                 "comments": $("#homework-comments").html(),
                 "course": $("#homework-class").val(),
                 "materials": $("#homework-materials").val() !== null ? $("#homework-materials").val().toString() : "-1",
-                "category": homework_category !== null ? homework_category.toString() : "-1",
-                "reminders": JSON.stringify(reminders_table_rows),
-                "attachments": JSON.stringify(attachments_table_rows)
+                "category": homework_category !== null ? homework_category.toString() : "-1"
             };
             if (self.edit) {
                 callback = function (data) {
@@ -1181,28 +1198,64 @@ function HeliumCalendar() {
                         $("#homework-error").html(data[0].err_msg);
                         $("#homework-error").parent().show("fast");
                     } else {
-                        var calendar_item = data;
-                        calendar_item.start = moment(calendar_item.start);
-                        calendar_item.end = moment(calendar_item.end);
-                        self.update_current_calendar_item(calendar_item);
+                        if (!helium.ajax_error_occurred) {
+                            $.each(helium.calendar.reminders_to_delete, function (i, reminder_id) {
+                                helium.calendar.ajax_calls.push(helium.planner_api.delete_reminder(function () {
+                                    if (helium.data_has_err_msg(data)) {
+                                        helium.ajax_error_occurred = true;
+                                        $("#loading-courses").spin(false);
 
-                        self.last_type_event = $("#homework-event-switch").is(":checked");
-                        self.last_good_date = moment(calendar_item.start);
-                        self.last_good_end_date = moment(calendar_item.end);
+                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").parent().show("fast");
 
-                        if (self.dropzone !== null && self.dropzone.getQueuedFiles().length > 0) {
-                            self.dropzone.processQueue();
-                        } else {
-                            self.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [calendar_item.id])[0];
-                            // Only update the calendar's event if the event is currently rendered on the calendar
-                            if (self.current_calendar_item !== undefined) {
-                                $("#calendar").fullCalendar("updateEvent", self.current_calendar_item);
-                                $("#calendar").fullCalendar("unselect");
-                            }
-
-                            $("#loading-homework-modal").spin(false);
-                            $("#homework-modal").modal("hide");
+                                        return false;
+                                    }
+                                }, reminder_id));
+                            });
                         }
+
+                        if (!helium.ajax_error_occurred) {
+                            $.each(helium.calendar.attachments_to_delete, function (i, attachment_id) {
+                                helium.calendar.ajax_calls.push(helium.planner_api.delete_attachment(function () {
+                                    if (helium.data_has_err_msg(data)) {
+                                        helium.ajax_error_occurred = true;
+                                        $("#loading-courses").spin(false);
+
+                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").parent().show("fast");
+
+                                        return false;
+                                    }
+                                }, attachment_id));
+                            });
+                        }
+
+                        $.when.apply(this, helium.calendar.ajax_calls).done(function () {
+                            if (!helium.ajax_error_occurred) {
+                                var calendar_item = data;
+                                calendar_item.start = moment(calendar_item.start);
+                                calendar_item.end = moment(calendar_item.end);
+                                self.update_current_calendar_item(calendar_item);
+
+                                self.last_type_event = $("#homework-event-switch").is(":checked");
+                                self.last_good_date = moment(calendar_item.start);
+                                self.last_good_end_date = moment(calendar_item.end);
+
+                                if (self.dropzone !== null && self.dropzone.getQueuedFiles().length > 0) {
+                                    self.dropzone.processQueue();
+                                } else {
+                                    self.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [calendar_item.id])[0];
+                                    // Only update the calendar's event if the event is currently rendered on the calendar
+                                    if (self.current_calendar_item !== undefined) {
+                                        $("#calendar").fullCalendar("updateEvent", self.current_calendar_item);
+                                        $("#calendar").fullCalendar("unselect");
+                                    }
+
+                                    $("#loading-homework-modal").spin(false);
+                                    $("#homework-modal").modal("hide");
+                                }
+                            }
+                        });
                     }
                 };
                 if (self.current_calendar_item.calendar_item_type === 0) {
@@ -1247,19 +1300,58 @@ function HeliumCalendar() {
                             }
                         });
 
-                        self.last_type_event = $("#homework-event-switch").is(":checked");
-                        self.last_good_date = moment(calendar_item.start);
-                        self.last_good_end_date = moment(calendar_item.end);
+                        if (!helium.ajax_error_occurred) {
+                            $.each(helium.calendar.reminders_to_delete, function (i, reminder_id) {
+                                helium.calendar.ajax_calls.push(helium.planner_api.delete_reminder(function () {
+                                    if (helium.data_has_err_msg(data)) {
+                                        helium.ajax_error_occurred = true;
+                                        $("#loading-courses").spin(false);
 
-                        if (self.dropzone !== null && self.dropzone.getQueuedFiles().length > 0) {
-                            self.current_calendar_item = $("#calendar").fullCalendar("clientEvents", calendar_item.id)[0];
-                            self.dropzone.processQueue();
-                        } else {
-                            $("#calendar").fullCalendar("unselect");
+                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").parent().show("fast");
 
-                            $("#loading-homework-modal").spin(false);
-                            $("#homework-modal").modal("hide");
+                                        return false;
+                                    }
+                                }, reminder_id));
+                            });
                         }
+
+                        if (!helium.ajax_error_occurred) {
+                            $.each(helium.calendar.attachments_to_delete, function (i, attachment_id) {
+                                helium.calendar.ajax_calls.push(helium.planner_api.delete_attachment(function () {
+                                    if (helium.data_has_err_msg(data)) {
+                                        helium.ajax_error_occurred = true;
+                                        $("#loading-courses").spin(false);
+
+                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").parent().show("fast");
+
+                                        return false;
+                                    }
+                                }, attachment_id));
+                            });
+                        }
+
+                        $.when.apply(this, helium.calendar.ajax_calls).done(function () {
+                            if (!helium.ajax_error_occurred) {
+                                helium.calendar.reminders_to_delete = [];
+                                helium.calendar.attachments_to_delete = [];
+
+                                self.last_type_event = $("#homework-event-switch").is(":checked");
+                                self.last_good_date = moment(calendar_item.start);
+                                self.last_good_end_date = moment(calendar_item.end);
+
+                                if (self.dropzone !== null && self.dropzone.getQueuedFiles().length > 0) {
+                                    self.current_calendar_item = $("#calendar").fullCalendar("clientEvents", calendar_item.id)[0];
+                                    self.dropzone.processQueue();
+                                } else {
+                                    $("#calendar").fullCalendar("unselect");
+
+                                    $("#loading-homework-modal").spin(false);
+                                    $("#homework-modal").modal("hide");
+                                }
+                            }
+                        });
                     }
                 };
                 if ($("#homework-event-switch").is(":checked")) {
