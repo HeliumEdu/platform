@@ -2735,9 +2735,8 @@
                 var latestRow = null, latestBeforeToday = t.start, row = null, event, pageNum, rowIndex;
                 for (evt in events) {
                     event = events[evt];
-                    // We also check for event.fields, because calendar sources (which should not be shown in List View) do not contain this field
-                    if (event && event.fields) {
-                        row = $(t.dataTable.row.add([event.fields.calendar_item_type === 1 ? ("<input id=\"homework-completed-" + event.id + "\" type=\"checkbox\" class=\"ace\"" + (event.fields.completed ? " checked=\"checked\"" : "") + " /><span class=\"lbl\" style=\"margin-top: -5px;\" />") : "", event.title_no_time, formatDate(event.start, "MMM D, YYYY") + (!event.allDay ? formatDate(event.start, " h:mm a") : ""), "<span class=\"label label-sm\" style=\"background-color: " + event.color + " !important\">" + event.fields.course_name + "</span>", event.fields.category_name, event.material_names, "<div class=\"progress progress-mini progress-striped\" style=\"margin-top: 6px; margin-bottom: 0;\"><div class=\"progress-bar progress-bar-success\" style=\"width: " + event.fields.priority + "%;\"><span class=\"hidden\">" + event.fields.priority + "</span></div></div>", (event.fields.completed && event.fields.current_grade != "-1/100" ? "<span class=\"badge badge-info\">" + helium.grade_for_display(event.fields.current_grade) + "</span>" : ""), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-homework-" + event.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-homework-" + event.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node());
+                    if (event) {
+                        row = $(t.dataTable.row.add([event.calendar_item_type === 1 ? ("<input id=\"homework-completed-" + event.id + "\" type=\"checkbox\" class=\"ace\"" + (event.completed ? " checked=\"checked\"" : "") + " /><span class=\"lbl\" style=\"margin-top: -5px;\" />") : "", event.title, formatDate(event.start, "MMM D, YYYY") + (!event.all_day ? formatDate(event.start, " h:mm a") : ""), "<span class=\"label label-sm\" style=\"background-color: " + event.calendar_item_type === 1 ? event.color : helium.USER_PREFS.settings.events_color + " !important\">" + event.course.title + "</span>", event.calendar_item_type === 1 ? (event.category !== null ? event.category.title : "") : "", event.calendar_item_type === 1 ? helium.calendar.get_material_names(event.materials) : "", "<div class=\"progress progress-mini progress-striped\" style=\"margin-top: 6px; margin-bottom: 0;\"><div class=\"progress-bar progress-bar-success\" style=\"width: " + event.priority + "%;\"><span class=\"hidden\">" + event.priority + "</span></div></div>", (event.completed && event.current_grade != "-1/100" ? "<span class=\"badge badge-info\">" + helium.grade_for_display(event.current_grade) + "</span>" : ""), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-homework-" + event.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-homework-" + event.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node());
                         row.attr("id", "homework-table-row-" + event.id);
                         // Bind clickable attributes to their respective handlers
                         eventElementHandlers(event, row);
@@ -2750,8 +2749,8 @@
 
                             helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
 
-                            data = {"completed": !helium.calendar.current_calendar_item.fields.completed};
-                            if (helium.calendar.current_calendar_item.fields.calendar_item_type === 0) {
+                            data = {"completed": !helium.calendar.current_calendar_item.completed};
+                            if (helium.calendar.current_calendar_item.calendar_item_type === 0) {
                                 helium.planner_api.edit_event(function (data) {
                                     if (helium.data_has_err_msg(data)) {
                                         helium.ajax_error_occurred = true;

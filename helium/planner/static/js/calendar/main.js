@@ -843,6 +843,16 @@ function HeliumCalendar() {
         self.update_filter_checkbox($(this));
     };
 
+    this.get_material_names = function (data) {
+        var titles = [];
+
+        $.each(data, function (material) {
+            titles.push(material.title);
+        });
+
+        return titles;
+    };
+
     /**
      * Initialize the filters.
      *
@@ -1600,21 +1610,22 @@ $(document).ready(function () {
         }
     });
 
-    helium.external_sources = [];
-    helium.planner_api.get_external_calendars(function (data) {
-        helium.external_sources.push(
-            {
-                id: "ext_" + data.id,
-                url: data.url,
-                cache: true,
-                color: data.color,
-                error: function () {
-                    helium.ajax_error_occurred = true;
-                    bootbox.alert("Oops, an error occurred while loading some of your external calendars.");
-                }
-            }
-        );
-    }, false);
+    // TODO: we're commenting this out for now, as we need to fully refactor external sources (Google no longer supports the legacy XML API that was previously used)
+    // helium.external_sources = [];
+    // helium.planner_api.get_external_calendars(function (data) {
+    //     helium.external_sources.push(
+    //         {
+    //             id: "ext_" + data.id,
+    //             url: data.url,
+    //             cache: true,
+    //             color: data.color,
+    //             error: function () {
+    //                 helium.ajax_error_occurred = true;
+    //                 bootbox.alert("Oops, an error occurred while loading some of your external calendars.");
+    //             }
+    //         }
+    //     );
+    // }, false);
 });
 
 $(window).resize(function () {
