@@ -35,6 +35,7 @@ function HeliumPlannerAPI() {
     this.category = {};
     this.attachment = {};
     this.attachments_by_course_id = {};
+    this.homework_by_user_id = {};
     this.homework_by_course_id = {};
     this.homework = {};
     this.event = {};
@@ -1430,6 +1431,51 @@ function HeliumPlannerAPI() {
      * Compile all Homework for the given Course ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_homework_by_user = function (callback, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.homework_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.homework_by_user_id[helium.USER_PREFS.id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/homework",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.homework_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.homework_by_user_id[helium.USER_PREFS.id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var data = [{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }];
+                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                        var name = Object.keys(jqXHR.responseJSON)[0];
+                        if (jqXHR.responseJSON[name].length > 0) {
+                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                        }
+                    }
+                    callback(data);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
+     * Compile all Homework for the given Course ID and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
      * @param course_group_id the ID of the CourseGroup with which to associate
      * @param id the ID of the Course with which to associate
      * @param async true if call should be async, false otherwise (default is true)
@@ -1647,8 +1693,8 @@ function HeliumPlannerAPI() {
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        if (use_cache && self.events_by_user_id.hasOwnProperty(id)) {
-            ret_val = callback(self.events_by_user_id[id]);
+        if (use_cache && self.events_by_user_id.hasOwnProperty(helium.USER_PREFS.id)) {
+            ret_val = callback(self.events_by_user_id[helium.USER_PREFS.id]);
         } else {
             ret_val = $.ajax({
                 type: "GET",
@@ -1656,8 +1702,8 @@ function HeliumPlannerAPI() {
                 async: async,
                 dataType: "json",
                 success: function (data) {
-                    self.events_by_user_id[id] = data;
-                    callback(self.events_by_user_id[id]);
+                    self.events_by_user_id[helium.USER_PREFS.id] = data;
+                    callback(self.events_by_user_id[helium.USER_PREFS.id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     var data = [{
