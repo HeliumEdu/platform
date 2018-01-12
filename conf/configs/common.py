@@ -345,7 +345,7 @@ PIPELINE = {
                 'js/vendors/jquery.dataTables.js',
                 'js/vendors/jquery.dataTables.bootstrap.js',
                 'js/vendors/fullcalendar.js',
-                'js/gcal.js',
+                'js/vendors/gcal.js',
                 'js/vendors/dropzone.min.js',
                 'js/vendors/jquery.qtip.js',
                 'js/vendors/jquery.hotkeys.js',
