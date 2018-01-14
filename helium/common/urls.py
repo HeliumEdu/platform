@@ -5,7 +5,7 @@ from django.views.generic import RedirectView, TemplateView
 from rest_framework.documentation import include_docs_urls
 
 from conf.sitemaps import StaticViewSitemap
-from helium.auth.admin import admin_site
+from helium.common.admin import admin_site
 from helium.common.views.generalviews import *
 
 __author__ = 'Alex Laird'
