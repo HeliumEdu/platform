@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(required=False, read_only=True)
+
     settings = UserSettingsSerializer(required=False, read_only=True)
 
     class Meta:

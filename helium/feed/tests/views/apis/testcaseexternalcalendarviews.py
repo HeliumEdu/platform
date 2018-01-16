@@ -1,4 +1,5 @@
 import json
+import os
 
 import mock
 from django.test import TestCase
@@ -6,9 +7,11 @@ from django.urls import reverse
 from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
 from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
+from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -210,16 +213,3 @@ class TestCaseExternalCalendarViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
-
-    def test_get_external_calendar_as_external_events(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        # TODO: add a mock here so the URL returns a valid ICAL test file from memory
-
-        # WHEN
-        response = self.client.get(
-            reverse('api_feed_externalcalendarasexternalevents', kwargs={'pk': external_calendar.pk}))
-
-        # THEN
-        # TODO: implement

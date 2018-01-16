@@ -24,7 +24,7 @@ urlpatterns = [
     # Crawler shortcuts and placeholders
     url(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps}),
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain; charset=utf-8')),
-    url(r'^VzapMXZuAox7zA8HT2CtStqh530\.html', TemplateView.as_view(template_name='VzapMXZuAox7zA8HT2CtStqh530.html')),
+    url(r'^VzapMXZuAox7zA8HT2CtStqh530\.html$', TemplateView.as_view(template_name='VzapMXZuAox7zA8HT2CtStqh530.html')),
     url(r'^favicon\.ico$', RedirectView.as_view(url=config.STATIC_URL + 'favicon.ico', permanent=True)),
     url(r'^favicon\.png$', RedirectView.as_view(url=config.STATIC_URL + 'favicon.png', permanent=True)),
 
