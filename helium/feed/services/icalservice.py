@@ -38,6 +38,7 @@ def validate_url(url):
         if response.getcode() != status.HTTP_200_OK:
             raise ICalError("The URL did not return a valid response.")
 
+        # TODO: responses should, in the future, be cached for at least a few minutes
         return Calendar.from_ical(response.read())
     except URLError as ex:
         logger.info("The URL is not reachable: {}".format(ex))

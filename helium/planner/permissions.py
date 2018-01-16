@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 class IsCourseGroupOwner(permissions.BasePermission):
     def has_permission(self, request, view):
+        if 'course_group' not in view.kwargs:
+            return False
+
         check_course_group_permission(request.user.pk, view.kwargs['course_group'])
 
         return True
@@ -21,6 +24,9 @@ class IsCourseGroupOwner(permissions.BasePermission):
 
 class IsCourseOwner(permissions.BasePermission):
     def has_permission(self, request, view):
+        if 'course' not in view.kwargs:
+            return False
+
         check_course_permission(request.user.pk, view.kwargs['course'])
 
         return True
@@ -28,6 +34,9 @@ class IsCourseOwner(permissions.BasePermission):
 
 class IsMaterialGroupOwner(permissions.BasePermission):
     def has_permission(self, request, view):
+        if 'material_group' not in view.kwargs:
+            return False
+
         check_material_group_permission(request.user.pk, view.kwargs['material_group'])
 
         return True

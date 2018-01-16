@@ -22,7 +22,10 @@ urlpatterns = [
     url(r'^unsubscribe', unsubscribe, name='unsubscribe'),
     url(r'^settings', settings, name='settings'),
 
-    # API URLs
+    ##############################
+    # Authenticated API URLs
+    ##############################
+    # User
     url(r'^api/auth/users/(?P<pk>[0-9]+)/$', UserApiDetailView.as_view(), name='api_auth_users_detail'),
     url(r'^api/auth/users/(?P<pk>[0-9]+)/profile', UserProfileApiDetailView.as_view(),
         name='api_auth_users_profile_detail'),

@@ -117,7 +117,6 @@ function HeliumPlannerAPI() {
     this.get_grades = function (callback, async) {
         async = typeof async === "undefined" ? true : async;
 
-        // TODO: needs to be implemented on the backend
         return $.ajax({
             type: "GET",
             url: "/api/planner/grades",
@@ -2180,7 +2179,6 @@ function HeliumPlannerAPI() {
 
     this.enable_feed = function (callback, feed_type, id, async) {
         async = typeof async === "undefined" ? true : async;
-        // TODO: needs to be implemented on the backend
         return $.ajax({
             type: "PUT",
             url: "/api/feeds/" + id + "/enable/",
@@ -2207,7 +2205,6 @@ function HeliumPlannerAPI() {
 
     this.disable_feed = function (callback, feed_type, id, async) {
         async = typeof async === "undefined" ? true : async;
-        // TODO: needs to be implemented on the backend
         return $.ajax({
             type: "PUT",
             url: "/api/feeds/" + id + "/disable/",

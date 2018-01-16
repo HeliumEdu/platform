@@ -9,6 +9,7 @@ from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
 from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView
+from helium.planner.views.apis.gradeviews import GradesApiListView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
     CourseGroupCourseHomeworkApiDetailView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
@@ -35,6 +36,9 @@ urlpatterns = [
     ##############################
     # Authenticated API URLs
     ##############################
+    # Resource shortcuts
+    url(r'^api/planner/grades', GradesApiListView.as_view(), name='api_planner_resource_grades'),
+
     # CourseGroup
     url(r'^api/planner/coursegroups/$', CourseGroupsApiListView.as_view(), name='api_planner_coursegroups_list'),
     url(r'^api/planner/coursegroups/(?P<pk>[0-9]+)/$', CourseGroupsApiDetailView.as_view(),
