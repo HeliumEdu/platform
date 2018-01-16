@@ -210,3 +210,16 @@ class TestCaseExternalCalendarViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_get_external_calendar_as_external_events(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        # TODO: add a mock here so the URL returns a valid ICAL test file from memory
+
+        # WHEN
+        response = self.client.get(
+            reverse('api_feed_externalcalendarasexternalevents', kwargs={'pk': external_calendar.pk}))
+
+        # THEN
+        # TODO: implement

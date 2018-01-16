@@ -12,7 +12,9 @@ __version__ = '1.0.0'
 
 class UserRegisterForm(forms.ModelForm, BaseForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
+
     password2 = forms.CharField(label='Confirm password', widget=forms.PasswordInput)
+
     time_zone = forms.ChoiceField(label='Time zone', choices=enums.TIME_ZONE_CHOICES)
 
     class Meta:

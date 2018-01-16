@@ -16,9 +16,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Homework
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments', 'current_grade',
-            'completed', 'course', 'category', 'materials')
-        read_only_fields = ('calendar_item_type', 'user',)
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments', 'current_grade',
+            'completed', 'course', 'category', 'materials', 'calendar_item_type',)
+        read_only_fields = ('calendar_item_type',)
 
     def update(self, instance, validated_data):
         old_category = self.instance.category if self.instance.category_id != validated_data['category'] else None

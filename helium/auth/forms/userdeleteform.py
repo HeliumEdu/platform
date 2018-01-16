@@ -7,7 +7,9 @@ __version__ = '1.0.0'
 
 class UserDeleteForm(forms.Form):
     username = forms.CharField()
+
     email = forms.CharField()
+
     password = forms.CharField()
 
     def __init__(self, user, *args, **kwargs):
