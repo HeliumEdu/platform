@@ -246,6 +246,15 @@ PIPELINE = {
             ),
             'output_filename': 'css/helium_calendar_pre_{}.min.css'.format(PROJECT_VERSION),
         },
+        'calendar_print': {
+            'source_filenames': (
+                'css/vendors/fullcalendar.print.css',
+            ),
+            'output_filename': 'css/helium_calendar_print_{}.min.css'.format(PROJECT_VERSION),
+            'extra_context': {
+                'media': 'print',
+            },
+        },
         'calendar': {
             'source_filenames': (
                 'css/calendar.css',
