@@ -321,9 +321,11 @@ CONDITION_CHOICES = (
 
 EVENT = 0
 HOMEWORK = 1
-COURSE = 2
+EXTERNAL = 2
+COURSE = 3
 CALENDAR_ITEM_TYPE_CHOICES = (
     (EVENT, 'Event'),
     (HOMEWORK, 'Homework'),
+    (EXTERNAL, 'External'),
     (COURSE, 'Class')
 )

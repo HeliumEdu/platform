@@ -24,10 +24,6 @@ class Homework(BaseCalendar):
     completed = models.BooleanField(help_text='Whether or not the homework has been completed.',
                                     default=False)
 
-    # TODO: this value is constant and unnecessary to the database model type, so in the future it should be abstracted out to only be a serializer field
-    calendar_item_type = models.PositiveIntegerField(default=enums.HOMEWORK,
-                                                     choices=enums.CALENDAR_ITEM_TYPE_CHOICES)
-
     category = models.ForeignKey('Category', help_text='The category with which to associate.',
                                  related_name='homework', blank=True, null=True, default=None,
                                  on_delete=models.SET_NULL)
@@ -49,6 +45,10 @@ class Homework(BaseCalendar):
 
     def get_user(self):
         return self.course.get_user()
+
+    @property
+    def calendar_item_type(self):
+        return enums.HOMEWORK
 
     def save(self, *args, **kwargs):
         """

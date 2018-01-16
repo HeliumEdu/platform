@@ -26,6 +26,9 @@ class BaseCalendar(BaseModel):
     priority = models.PositiveIntegerField(help_text='A priority integer between 0 and 100.',
                                            default=50)
 
+    url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
+                          blank=True, null=True)
+
     comments = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
                                 blank=True)
 
@@ -35,3 +38,7 @@ class BaseCalendar(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
+
+    @property
+    def calendar_item_type(self):
+        raise NotImplementedError

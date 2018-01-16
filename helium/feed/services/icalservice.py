@@ -1,10 +1,16 @@
+import datetime
 import logging
 from urllib.request import urlopen, URLError
 
+from django.utils import timezone
+import pytz
 from icalendar import Calendar
 from rest_framework import status
 
+from helium.common import enums
 from helium.common.utils.commonutils import HeliumError
+
+from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -18,13 +24,21 @@ class ICalError(HeliumError):
 
 
 def validate_url(url):
+    """
+    Validates that a given URL maps to a valid ICAL feed. Validation includes both simple HTTP validation as well as
+    downloading and parsing the calendar itself to ensure it is valid. As such, since we parse the full calendar to
+    ensure its validity, a Calendar object is also returned if validation is successful.
+
+    :param url: The ICAL URL to validate
+    :return: The validated ICAL feed in a Calendar object
+    """
     try:
         response = urlopen(url)
 
         if response.getcode() != status.HTTP_200_OK:
             raise ICalError("The URL did not return a valid response.")
 
-        Calendar.from_ical(response.read())
+        return Calendar.from_ical(response.read())
     except URLError as ex:
         logger.info("The URL is not reachable: {}".format(ex))
 
@@ -33,3 +47,46 @@ def validate_url(url):
         logger.info("The URL did not return a valid ICAL feed: {}".format(ex))
 
         raise ICalError("The URL did not return a valid ICAL feed.")
+
+
+def calendar_to_external_events(external_calendar, calendar):
+    """
+    For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an external
+    event resources.
+
+    :param external_calendar: The external calendar source that is referenced by the calendar object.
+    :param calendar: The calendar object that is being parsed.
+    :return: A list of external event resources.
+    """
+    external_events = []
+
+    for component in calendar.walk():
+        if component.name == 'VEVENT':
+            start = component.get('dtstart').dt
+            end = component.get('dtend').dt
+            all_day = not isinstance(start, datetime.datetime)
+            show_end_time = isinstance(start, datetime.datetime)
+
+            if isinstance(start, datetime.datetime) and not timezone.is_aware(start):
+                start = timezone.make_aware(start, pytz.utc)
+            else:
+                start = datetime.datetime.combine(start, datetime.time.min)
+
+            if isinstance(end, datetime.datetime) and not timezone.is_aware(end):
+                end = timezone.make_aware(end, pytz.utc)
+            else:
+                end = datetime.datetime.combine(end, datetime.time.min)
+
+            event = Event(title=component.get('summary'),
+                          all_day=all_day,
+                          show_end_time=show_end_time,
+                          start=start,
+                          end=end,
+                          url=component.get('url'),
+                          comments=component.get('description'),
+                          user=external_calendar.get_user(),
+                          calendar_item_type=enums.EXTERNAL)
+
+            external_events.append(event)
+
+    return external_events

@@ -1641,20 +1641,25 @@ $(document).ready(function () {
 
     // TODO: we're commenting this out for now, as we need to fully refactor external sources and rely on our backend to serve up the list of events
     helium.external_sources = [];
-    // helium.planner_api.get_external_calendars(function (data) {
-    //     helium.external_sources.push(
-    //         {
-    //             id: "ext_" + data.id,
-    //             url: data.url,
-    //             cache: true,
-    //             color: data.color,
-    //             error: function () {
-    //                 helium.ajax_error_occurred = true;
-    //                 bootbox.alert("Oops, an error occurred while loading some of your external calendars.");
-    //             }
-    //         }
-    //     );
-    // }, false);
+    helium.planner_api.get_external_calendars(function (data) {
+        helium.planner_api.get_external_calendar_feed(function (data) {
+            var events = [];
+
+            $.each(data, function (i, item) {
+                events.push({
+                    id: item.id,
+                    title: item.title,
+                    start: item.start,
+                    end: item.end,
+                    color: helium.USER_PREFS.settings.events_color
+                });
+            });
+
+            helium.external_sources.push({
+                events: events
+            });
+        }, false);
+    }, false);
 });
 
 $(window).resize(function () {

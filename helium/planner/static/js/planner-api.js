@@ -41,6 +41,7 @@ function HeliumPlannerAPI() {
     this.event = {};
     this.events_by_user_id = {};
     this.external_calendars_by_user_id = {};
+    this.external_calendar_feed = {};
     this.reminders_by_user_id = {};
     this.reminders_by_calendar_item = {};
 
@@ -1927,6 +1928,51 @@ function HeliumPlannerAPI() {
 
         return ret_val;
     };
+
+    /**
+     * Compile all Events for the given External Calendar source and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_external_calendar_feed = function (callback, id, async, use_cache) {
+            async = typeof async === "undefined" ? true : async;
+            use_cache = typeof use_cache === "undefined" ? false : use_cache;
+            var ret_val = null;
+
+            if (use_cache && self.external_calendar_feed.hasOwnProperty(id)) {
+                ret_val = callback(self.external_calendar_feed[id]);
+            } else {
+                ret_val = $.ajax({
+                    type: "GET",
+                    url: "/api/feed/externalcalendars/" + id + "/feed",
+                    async: async,
+                    dataType: "json",
+                    success: function (data) {
+                        self.external_calendar_feed[id] = data;
+                        callback(self.external_calendar_feed[id]);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        var data = [{
+                            'err_msg': self.GENERIC_ERROR_MESSAGE,
+                            'jqXHR': jqXHR,
+                            'textStatus': textStatus,
+                            'errorThrown': errorThrown
+                        }];
+                        if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                            var name = Object.keys(jqXHR.responseJSON)[0];
+                            if (jqXHR.responseJSON[name].length > 0) {
+                                data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                            }
+                        }
+                        callback(data);
+                    }
+                });
+            }
+
+            return ret_val;
+        };
 
     /**
      * Compile all Reminders for the authenticated user.

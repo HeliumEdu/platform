@@ -13,10 +13,6 @@ __version__ = '1.0.0'
 
 @python_2_unicode_compatible
 class Event(BaseCalendar):
-    # TODO: this value is constant and unnecessary to the database model type, so in the future it should be abstracted out to only be a serializer field
-    calendar_item_type = models.PositiveIntegerField(help_text='A valid calendar item choice.',
-                                                     default=enums.EVENT, choices=enums.CALENDAR_ITEM_TYPE_CHOICES)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
     objects = EventManager()
@@ -24,8 +20,18 @@ class Event(BaseCalendar):
     class Meta:
         ordering = ('start',)
 
+    def __init__(self, *args, **kwargs):
+        self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']
+
+        kwargs.pop('calendar_item_type', None)
+        super(Event, self).__init__(*args, **kwargs)
+
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):
         return self.user
+
+    @property
+    def calendar_item_type(self):
+        return self.__calendar_item_type

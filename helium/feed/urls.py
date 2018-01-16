@@ -1,6 +1,7 @@
 from django.conf.urls import url
 
-from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
+from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView, \
+    ExternalCalendarAsExternalEventsView
 from helium.feed.views.feedviews import feed_ical
 
 __author__ = 'Alex Laird'
@@ -16,4 +17,6 @@ urlpatterns = [
         name='api_feed_externalcalendars_list'),
     url(r'^api/feed/externalcalendars/(?P<pk>[0-9]+)/$', ExternalCalendarsApiDetailView.as_view(),
         name='api_feed_externalcalendars_detail'),
+    url(r'^api/feed/externalcalendars/(?P<pk>[0-9]+)/externalevents/$', ExternalCalendarAsExternalEventsView.as_view(),
+        name='api_feed_externalcalendarasexternalevents'),
 ]
