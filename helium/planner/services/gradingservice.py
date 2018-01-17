@@ -1,6 +1,6 @@
 import logging
 
-from helium.planner.models import CourseGroup, Course, Category
+from helium.planner.models import CourseGroup, Course, Category, Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -10,8 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_grade_points_for_course(course_id):
-    # TODO: append a grade point additively based on time series
-    return []
+    grade_points = []
+
+    course_has_weight_grading = Course.objects.has_weighted_grading(course_id)
+
+    for homework in Homework.objects.for_course(course_id).graded().iterator():
+        # TODO: this should actually build a cumulative timeline of grading data, taking weight into account if applicable
+        grade_points.append([homework.start, 0])
+
+    return grade_points
 
 
 def get_grade_data(user_id):
