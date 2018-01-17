@@ -2181,7 +2181,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         return $.ajax({
             type: "PUT",
-            url: "/api/feeds/" + id + "/enable/",
+            url: "/api/feeds/enable-external",
             async: async,
             dataType: "json",
             success: callback,
@@ -2207,7 +2207,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         return $.ajax({
             type: "PUT",
-            url: "/api/feeds/" + id + "/disable/",
+            url: "/api/feeds/disable-external",
             async: async,
             dataType: "json",
             success: callback,

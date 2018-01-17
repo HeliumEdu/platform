@@ -9,7 +9,7 @@ from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
 from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView
-from helium.planner.views.apis.gradeviews import GradesApiListView
+from helium.planner.views.apis.graderesourceviews import GradesApiListView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
     CourseGroupCourseHomeworkApiDetailView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView

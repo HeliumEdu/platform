@@ -1,6 +1,7 @@
 import logging
 
 from helium.common.managers.basemanager import BaseQuerySet, BaseManager
+from helium.planner.models import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -12,6 +13,9 @@ logger = logging.getLogger(__name__)
 class CourseQuerySet(BaseQuerySet):
     def exists_for_user(self, id, user_id):
         return self.filter(pk=id, course_group__user_id=user_id).exists()
+
+    def has_weighted_grading(self, id):
+        return Category.objects.filter(course_id=id, weight__gt=0).exists()
 
     def for_user(self, user_id):
         return self.filter(course_group__user_id=user_id)
@@ -26,6 +30,9 @@ class CourseManager(BaseManager):
 
     def exists_for_user(self, id, user_id):
         return self.get_queryset().exists_for_user(id, user_id)
+
+    def has_weighted_grading(self, id):
+        return self.get_queryset().has_weighted_grading(id)
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
