@@ -1,6 +1,8 @@
 from decimal import Decimal
 
-from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -9,6 +11,26 @@ __version__ = '1.0.0'
 
 class HeliumError(Exception):
     pass
+
+
+def send_multipart_email(template_name, context, subject, to):
+    """
+    Send a multipart text/html email.
+
+    :param template_name: The path to the template (without extension), assuming both a .txt and .html version are present
+    :param context: A dictionary of context elements to pass to the email templates
+    :param subject: The subject of the email
+    :param to: A list of email addresses to which to send
+    :return:
+    """
+    plaintext = get_template('{}.txt'.format(template_name))
+    html = get_template('{}.html'.format(template_name))
+    text_content = plaintext.render(context)
+    html_content = html.render(context)
+
+    msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to)
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
 
 def remove_exponent(d):
@@ -21,29 +43,33 @@ def remove_exponent(d):
     return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 
-def fraction_validator(value):
+def calculate_trend(series_range, series_list):
     """
-    Ensure the given value is a valid fraction (1235/1235) with valid numbers on either side of the ratio. If not,
-    raise a validation error.
+    With the given range and list, calculate the linear regression such that the returned value illustrates if the
+    numbers are trending positive or negative.
+
+    :param series_range: A range of values against which to calculate a linear regression.
+    :param series_list: The list of numbers to calculate the linear regression against.
+    :return: The calculated trend of the range and list, or None if the determinate indicates no trend.
     """
-    split = value.split('/')
-    if len(split) != 2:
-        raise ValidationError('Enter a valid fraction of the format \'x/y\'.')
+    range_count = len(series_range)
+    x = 0
+    y = 0
+    z = 0
+    x_cum = 0
+    y_cum = 0
 
-    try:
-        n = Decimal(split[0].strip())
-    except:
-        raise ValidationError('The numerator is not a valid integer.')
+    for range_item, series_item in zip(series_range, series_list):
+        x = x + range_item
+        y = y + series_item
+        z = z + series_item * series_item
 
-    try:
-        d = Decimal(split[1].strip())
-    except:
-        raise ValidationError('The denominator is not a valid integer.')
+        x_cum += range_count * range_count
+        y_cum += range_count * series_item
 
-    if n > 2147483647 or d > 2147483647:
-        raise ValidationError('Values must be less than or equal to 2147483647.')
+    d = x_cum * range_count - x * x
 
-    try:
-        return '{}/{}'.format(remove_exponent(n.normalize()), remove_exponent(d.normalize()))
-    except:
-        raise ValidationError('An error occurred when validating the fraction.')
+    if d != 0:
+        return (y_cum * range_count - y * x) / d
+    else:
+        return None

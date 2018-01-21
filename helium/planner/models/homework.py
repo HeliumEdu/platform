@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from six import python_2_unicode_compatible
 
 from helium.common import enums
-from helium.common.utils.commonutils import fraction_validator
+from helium.common.utils.validators import fraction_validator
 from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar

@@ -8,6 +8,7 @@ import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
 import helium.common.utils.commonutils
+import helium.common.utils.validators
 import helium.planner.utils.attachmentutils
 
 
@@ -159,7 +160,8 @@ class Migration(migrations.Migration):
                 ('priority', models.PositiveIntegerField(default=50, help_text=b'A priority integer between 0 and 100.')),
                 ('url', models.URLField(blank=True, help_text=b'An optional URL that the calendar item references.', max_length=3000, null=True)),
                 ('comments', models.TextField(blank=True, help_text=b'An arbitrary string (which may contain HTML formatting).')),
-                ('current_grade', models.CharField(help_text=b'The current grade in fraction form (ex. 25/30).', max_length=255, validators=[helium.common.utils.commonutils.fraction_validator])),
+                ('current_grade', models.CharField(help_text=b'The current grade in fraction form (ex. 25/30).', max_length=255, validators=[
+                    helium.common.utils.validators.fraction_validator])),
                 ('completed', models.BooleanField(default=False, help_text=b'Whether or not the homework has been completed.')),
                 ('category', models.ForeignKey(blank=True, default=None, help_text=b'The category with which to associate.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='homework', to='planner.Category')),
                 ('course', models.ForeignKey(help_text=b'The course with which to associate.', on_delete=django.db.models.deletion.CASCADE, related_name='homework', to='planner.Course')),

@@ -19,6 +19,9 @@ class CategoryQuerySet(BaseQuerySet):
     def for_course(self, course_id):
         return self.filter(course_id=course_id)
 
+    def graded(self):
+        return self.filter(average_grade__gt=-1)
+
 
 class CategoryManager(BaseManager):
     def get_queryset(self):
@@ -32,3 +35,6 @@ class CategoryManager(BaseManager):
 
     def for_course(self, course_id):
         return self.get_queryset().for_course(course_id)
+
+    def graded(self):
+        return self.get_queryset().graded()
