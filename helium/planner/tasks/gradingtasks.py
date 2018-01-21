@@ -2,6 +2,7 @@ import logging
 
 from conf.celery import app
 from helium.common.utils import metricutils
+from helium.planner.services import gradingservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -14,14 +15,14 @@ logger = logging.getLogger(__name__)
 def recalculate_course_group_grade(course_group):
     metricutils.increment('task.grading.recalculate.course-group')
 
-    # TODO: not yet implemented
+    gradingservice.recalculate_course_group_grade(course_group)
 
 
 @app.task
 def recalculate_course_grade(course):
     metricutils.increment('task.grading.recalculate.course')
 
-    # TODO: not yet implemented
+    gradingservice.recalculate_course_grade(course)
 
     recalculate_course_group_grade.delay(course.course_group)
 
@@ -30,6 +31,6 @@ def recalculate_course_grade(course):
 def recalculate_category_grade(category):
     metricutils.increment('task.grading.recalculate.category')
 
-    # TODO: not yet implemented
+    gradingservice.recalculate_category_grade(category)
 
     recalculate_course_grade.delay(category.course)

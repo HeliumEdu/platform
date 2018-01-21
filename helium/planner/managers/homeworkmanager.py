@@ -19,6 +19,12 @@ class HomeworkQuerySet(BaseQuerySet):
     def for_course(self, course_id):
         return self.filter(course_id=course_id)
 
+    def for_course_group(self, course_group_id):
+        return self.filter(course__course_group_id=course_group_id)
+
+    def for_category(self, category_id):
+        return self.filter(category_id=category_id)
+
     def graded(self):
         return self.filter(completed=True).exclude(current_grade='-1/100')
 
@@ -33,8 +39,14 @@ class HomeworkManager(BaseManager):
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
 
+    def for_course_group(self, course_group_id):
+        return self.get_queryset().for_course_group(course_group_id)
+
     def for_course(self, course_id):
         return self.get_queryset().for_course(course_id)
+
+    def for_category(self, category_id):
+        return self.get_queryset().for_category(category_id)
 
     def graded(self):
         return self.get_queryset().graded()
