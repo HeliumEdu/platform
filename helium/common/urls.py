@@ -18,7 +18,7 @@ sitemaps = {
 
 urlpatterns = [
     # Top-level URLs
-    url(r'^admin/', include(admin_site.urls), name='admin'),
+    url(r'^admin/', include(admin_site.urls)),
     url(r'^docs/', include_docs_urls(title='Helium API Documentation', public=False)),
 
     # Crawler shortcuts and placeholders
@@ -39,15 +39,9 @@ urlpatterns = [
     url(r'^about', about, name='about'),
     url(r'^contact', contact, name='contact'),
 
-    # Legacy Root URLs
+    # Legacy URLs
     url(r'^tour', RedirectView.as_view(pattern_name='home', permanent=True)),
     url(r'^prodigy', RedirectView.as_view(pattern_name='home', permanent=True)),
     url(r'^plans', RedirectView.as_view(pattern_name='home', permanent=True)),
     url(r'^purchase', RedirectView.as_view(pattern_name='home', permanent=True)),
-
-    # Legacy Planner URLs
-    url(r'^calendar', RedirectView.as_view(pattern_name='calendar', permanent=True)),
-    url(r'^classes', RedirectView.as_view(pattern_name='classes', permanent=True)),
-    url(r'^materials', RedirectView.as_view(pattern_name='materials', permanent=True)),
-    url(r'^grades', RedirectView.as_view(pattern_name='grades', permanent=True)),
 ]
