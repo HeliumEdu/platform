@@ -32,7 +32,11 @@ function HeliumGrades() {
 
     this.pie_hover = function (event, pos, item) {
         if (item) {
-            $("#plot-tooltip").html(Math.round(item.datapoint[0]) + "%").css({top: pos.pageY - 25, left: pos.pageX + 5, "z-index": 100}).fadeIn("fast");
+            $("#plot-tooltip").html(Math.round(item.datapoint[0]) + "%").css({
+                top: pos.pageY - 25,
+                left: pos.pageX + 5,
+                "z-index": 100
+            }).fadeIn("fast");
         } else {
             $("#plot-tooltip").hide();
         }
@@ -69,7 +73,12 @@ $(document).ready(function () {
 
     $(".sparkline").each(function () {
         var $box = $(this).closest(".infobox"), barColor = !$box.hasClass("infobox-dark") ? $box.css("color") : "#FFF";
-        $(this).sparkline("html", {tagValuesAttribute: "data-values", type: "bar", barColor: barColor, chartRangeMin: $(this).data("min") || 0});
+        $(this).sparkline("html", {
+            tagValuesAttribute: "data-values",
+            type: "bar",
+            barColor: barColor,
+            chartRangeMin: $(this).data("min") || 0
+        });
     });
 
     bootbox.setDefaults({
@@ -106,8 +115,8 @@ $(document).ready(function () {
                 var id = $(this).attr("id").split("course-group-container-")[1].split("_")[0], course_div, course_body_div, grade_distribution_string, weight_pie_div, grade_by_weight_pie_div, course_grade, category_table, category_table_body, chart_data_weight, chart_data_grade_by_weight, data_for_plot = [], i = 0, j = 0, course, course_grades, data_for_group = 0, data = [], category, course_list, group_plot_details = {
                     shadowSize: 0,
                     series: {
-                        lines: { show: true },
-                        points: { show: true }
+                        lines: {show: true},
+                        points: {show: true}
                     },
                     xaxis: {
                         tickLength: 0,
@@ -123,7 +132,7 @@ $(document).ready(function () {
                         }
                     },
                     grid: {
-                        backgroundColor: { colors: [ "#fff", "#fff" ] },
+                        backgroundColor: {colors: ["#fff", "#fff"]},
                         borderWidth: 1,
                         borderColor: "#555",
                         hoverable: true
@@ -166,7 +175,7 @@ $(document).ready(function () {
                             }
                         }
 
-                        data_for_plot.push({ label: "&nbsp;" + course.title, data: data, color: course.color });
+                        data_for_plot.push({label: "&nbsp;" + course.title, data: data, color: course.color});
 
                         // Build the course grading details div for this course
                         category_table = $("<table class=\"table table-striped table-bordered table-hover\"><thead><tr><th>Category</th><th class=\"hidden-xs\">Grades Recorded</th><th>Average Grade</th></tr></thead><tbody id=\"category-table-course-" + course.id + "\"></tbody></table>");
@@ -176,9 +185,13 @@ $(document).ready(function () {
                         chart_data_grade_by_weight = [];
                         for (j = 0; j < helium.grades.categories_for_course[course.id].length; j += 1) {
                             category = helium.grades.categories_for_course[course.id][j];
-                            chart_data_weight.push({ label: "", data: category.weight, color: category.color});
+                            chart_data_weight.push({label: "", data: category.weight, color: category.color});
                             if (parseFloat(category.grade_by_weight) !== 0) {
-                                chart_data_grade_by_weight.push({ label: "", data: category.grade_by_weight, color: category.color});
+                                chart_data_grade_by_weight.push({
+                                    label: "",
+                                    data: category.grade_by_weight,
+                                    color: category.color
+                                });
                             }
 
                             category_table_body.append("<tr><td><span class=\"label label-sm\" style=\"background-color: " + category.color + " !important\">" + category.title + "</span></td><td class=\"hidden-xs\">" + category.num_grades_recorded + "</td><td>" + ((parseFloat(category.weight) !== 0 || !course.has_weighted_grading) ? (parseFloat(category.average_grade) !== -1 ? "<span class=\"badge badge-info\">" + Math.round(category.average_grade * 100) / 100 + "%" + helium.grades.get_trend_arrow(category.trend) + "</span>" : "N/A") : "Not Graded") + "</td></tr>");
@@ -211,7 +224,11 @@ $(document).ready(function () {
 
                     $("#course-group-chart-" + id).bind("plothover", function (event, pos, item) {
                         if (item) {
-                            $("#plot-tooltip").html((Math.round(item.datapoint[1] * 100) / 100) + "%").css({top: pos.pageY - 25, left: pos.pageX + 5, "z-index": 100}).fadeIn("fast");
+                            $("#plot-tooltip").html((Math.round(item.datapoint[1] * 100) / 100) + "%").css({
+                                top: pos.pageY - 25,
+                                left: pos.pageX + 5,
+                                "z-index": 100
+                            }).fadeIn("fast");
                         } else {
                             $("#plot-tooltip").hide();
                         }

@@ -2,14 +2,13 @@ import datetime
 import logging
 from urllib.request import urlopen, URLError
 
-from django.utils import timezone
 import pytz
+from django.utils import timezone
 from icalendar import Calendar
 from rest_framework import status
 
 from helium.common import enums
 from helium.common.utils.commonutils import HeliumError
-
 from helium.planner.models import Event
 
 __author__ = 'Alex Laird'

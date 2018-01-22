@@ -1,6 +1,4 @@
 from django.db import models
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 from six import python_2_unicode_compatible
 
 from helium.common import enums
@@ -8,7 +6,6 @@ from helium.common.utils.validators import fraction_validator
 from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar
-from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -66,15 +63,3 @@ class Homework(BaseCalendar):
                                                            defaults={'weight': 0})[0]
 
         super(Homework, self).save(*args, **kwargs)
-
-        if self.category:
-            gradingtasks.recalculate_category_grade.delay(self.category)
-
-
-@receiver(post_delete, sender=Homework)
-def delete_homework(sender, instance, **kwargs):
-    """
-    Recalculate grades of related fields.
-    """
-    if instance.category:
-        gradingtasks.recalculate_category_grade.delay(instance.category)

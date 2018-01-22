@@ -1,5 +1,4 @@
 import json
-import os
 
 import mock
 from django.test import TestCase
@@ -7,11 +6,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
-from helium.common import enums
 from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
-from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'

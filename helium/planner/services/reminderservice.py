@@ -5,9 +5,9 @@ from django.conf import settings
 from django.utils import timezone
 
 from helium.common import enums
+from helium.common import tasks as commontasks
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
-from helium.common import tasks as commontasks
 from helium.planner.tasks import remindertasks
 
 __author__ = 'Alex Laird'

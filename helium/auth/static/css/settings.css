@@ -6,15 +6,15 @@
  * @author Alex Laird
  * @version 1.0.0
  */
- 
+
 #externalcalendars-table {
-    width:100%;
-    table-layout:fixed;
+    width: 100%;
+    table-layout: fixed;
 }
 
 #externalcalendars-table td {
-    overflow:hidden;
-    white-space:nowrap;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .externalcalendars-help {

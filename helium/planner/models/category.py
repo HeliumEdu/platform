@@ -1,12 +1,9 @@
 from django.db import models
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
 from helium.planner.managers.categorymanager import CategoryManager
-from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -47,20 +44,3 @@ class Category(BaseModel):
 
     def get_user(self):
         return self.course.course_group.get_user()
-
-    def save(self, *args, **kwargs):
-        """
-        Saves the current instance. This will also invoke grade recalculation for this category as well as related
-        fields.
-        """
-        super(Category, self).save(*args, **kwargs)
-
-        gradingtasks.recalculate_category_grade.delay(self)
-
-
-@receiver(post_delete, sender=Category)
-def delete_category(sender, instance, **kwargs):
-    """
-    Recalculate grades of related fields.
-    """
-    gradingtasks.recalculate_course_grade.delay(instance.course)

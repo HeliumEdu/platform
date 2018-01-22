@@ -17,13 +17,13 @@
 }
 
 #categories-table {
-    width:100%;
-    table-layout:fixed;
+    width: 100%;
+    table-layout: fixed;
 }
 
 #categories-table td {
-    overflow:hidden;
-    white-space:nowrap;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 a.course-title-with-link {

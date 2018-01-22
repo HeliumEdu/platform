@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
-from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.apis.externalcalendarresourceviews import ExternalCalendarAsExternalEventsView
+from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.feedviews import feed_ical
 
 __author__ = 'Alex Laird'
