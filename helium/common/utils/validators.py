@@ -1,4 +1,5 @@
 import decimal
+import sys
 
 from django.core.exceptions import ValidationError
 
@@ -22,8 +23,8 @@ def fraction_validator(value):
         n = decimal.Decimal(split[0].strip())
         d = decimal.Decimal(split[1].strip())
 
-        if n > 2147483647 or d > 2147483647:
-            raise ValidationError('Values must be less than or equal to 2147483647.')
+        if n > sys.maxsize or d > sys.maxsize:
+            raise ValidationError('Values must be less than or equal to {}.'.format(sys.maxsize))
 
         return '{}/{}'.format(commonutils.remove_exponent(n.normalize()), commonutils.remove_exponent(d.normalize()))
     except:
