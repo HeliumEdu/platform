@@ -7,4 +7,4 @@ __version__ = '1.0.0'
 
 class FeedConfig(AppConfig):
     name = 'helium.feed'
-    verbose_name = "Feed"
+    verbose_name = 'Feed'

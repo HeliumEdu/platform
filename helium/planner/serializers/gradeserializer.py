@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class GradeHolderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
 
-    overall_grade = serializers.DecimalField(7, 4)
+    overall_grade = serializers.DecimalField(7, 4, coerce_to_string=False)
 
     grade_points = serializers.ListField()
 

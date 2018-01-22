@@ -9,6 +9,7 @@ __version__ = '1.0.0'
 
 logger = logging.getLogger(__name__)
 
+
 # TODO: these are preliminary implemntations that still need to be thoroughly unit tested
 
 
@@ -40,7 +41,7 @@ def get_grade_points_for_course(course_id):
             total_earned += float(earned)
             total_possible += float(possible)
 
-        grade_series.append([start, (total_earned / total_possible) * 100])
+        grade_series.append([start, round((total_earned / total_possible * 100), 4)])
 
     return grade_series
 
@@ -144,14 +145,15 @@ def recalculate_course_grade(course):
                 float(category['instance'].weight) / 100)) * 100)
             category_possible += float(category['instance'].weight)
 
-            category['instance'].grade_by_weight = category_earned
+            grade_by_weight = category_earned
         else:
             category_earned += total_earned
             category_possible += total_possible
 
-            category['instance'].grade_by_weight = 0
+            grade_by_weight = 0
 
-        category['instance'].save()
+        # Update the values in the datastore, circumventing signals
+        Category.objects.filter(pk=category['instance'].pk).update(grade_by_weight=grade_by_weight)
 
     if len(grade_series) > 0 and category_possible > 0:
         course.current_grade = (category_earned / category_possible) * 100
@@ -176,11 +178,11 @@ def recalculate_category_grade(category):
 
         grade_series.append(total_earned / total_possible)
 
-    category.average_grade = (total_earned / total_possible) * 100 if len(grade_series) > 0 else -1
+    average_grade = (total_earned / total_possible) * 100 if len(grade_series) > 0 else -1
+    trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
-    category.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
-
-    category.save()
+    # Update the values in the datastore, circumventing signals
+    Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
 
     logger.debug('Category {} average grade recalculated to {} with {} homework'.format(category.pk,
                                                                                         category.average_grade,

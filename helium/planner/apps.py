@@ -7,4 +7,4 @@ __version__ = '1.0.0'
 
 class PlannerConfig(AppConfig):
     name = 'helium.planner'
-    verbose_name = "Planner"
+    verbose_name = 'Planner'
