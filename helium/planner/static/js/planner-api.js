@@ -1932,6 +1932,7 @@ function HeliumPlannerAPI() {
      * Compile all Events for the given External Calendar source and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
+     * @param id The ID of the ExternalCalendar.
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
@@ -1945,7 +1946,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/feed/externalcalendars/" + id + "/feed",
+                url: "/api/feed/externalcalendars/" + id + "/externalevents",
                 async: async,
                 dataType: "json",
                 success: function (data) {

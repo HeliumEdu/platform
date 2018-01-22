@@ -10,7 +10,7 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-# TODO: these are preliminary implemntations that still need to be thoroughly unit tested
+# TODO: these are preliminary implementations that still need to be thoroughly unit tested
 
 
 def get_grade_points_for_course(course_id):

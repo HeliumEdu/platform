@@ -33,6 +33,12 @@ urlpatterns = [
     url(r'^planner/materials', materials, name='materials'),
     url(r'^planner/grades', grades, name='grades'),
 
+    # Legacy URLs
+    url(r'^calendar', RedirectView.as_view(pattern_name='calendar', permanent=True)),
+    url(r'^classes', RedirectView.as_view(pattern_name='classes', permanent=True)),
+    url(r'^materials', RedirectView.as_view(pattern_name='materials', permanent=True)),
+    url(r'^grades', RedirectView.as_view(pattern_name='grades', permanent=True)),
+
     ##############################
     # Authenticated API URLs
     ##############################

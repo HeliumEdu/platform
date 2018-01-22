@@ -690,6 +690,8 @@ function HeliumCalendar() {
                 eventClick: self.edit_calendar_item_btn,
                 eventDrop: self.drop_calendar_item,
                 eventResize: self.resize_calendar_item,
+                nowIndicator: true,
+                themeSystem: 'bootstrap3',
                 eventResizeStart: function () {
                     self.is_resizing_calendar_item = true;
                 },
@@ -1639,26 +1641,27 @@ $(document).ready(function () {
         }
     });
 
-    // TODO: we're commenting this out for now, as we need to fully refactor external sources and rely on our backend to serve up the list of events
     helium.external_sources = [];
-    helium.planner_api.get_external_calendars(function (data) {
-        helium.planner_api.get_external_calendar_feed(function (data) {
-            var events = [];
+    helium.planner_api.get_external_calendars(function (external_calendars) {
+        $.each(external_calendars, function (index, external_calendar) {
+            helium.planner_api.get_external_calendar_feed(function (data) {
+                var events = [];
 
-            $.each(data, function (i, item) {
-                events.push({
-                    id: item.id,
-                    title: item.title,
-                    start: item.start,
-                    end: item.end,
-                    color: helium.USER_PREFS.settings.events_color
+                $.each(data, function (i, item) {
+                    events.push({
+                        id: item.id,
+                        title: item.title,
+                        start: item.start,
+                        end: item.end,
+                        color: helium.USER_PREFS.settings.events_color
+                    });
                 });
-            });
 
-            helium.external_sources.push({
-                events: events
-            });
-        }, false);
+                helium.external_sources.push({
+                    events: events
+                });
+            }, external_calendar.id, false);
+        });
     }, false);
 });
 
