@@ -33,13 +33,13 @@ def get_grade_points_for_course(course_id):
                 category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
 
             category_totals[category.pk]['total_earned'] += earned
-            category_totals[category.pk]['total_possible'] += float(possible)
+            category_totals[category.pk]['total_possible'] += possible
 
             total_earned += (((earned / possible) * (float(category.weight) / 100)) * 100)
             total_possible += float(category.weight)
         else:
-            total_earned += float(earned)
-            total_possible += float(possible)
+            total_earned += earned
+            total_possible += possible
 
         grade_series.append([start, round((total_earned / total_possible * 100), 4)])
 
