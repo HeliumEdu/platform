@@ -9,6 +9,8 @@ __version__ = '1.0.0'
 
 logger = logging.getLogger(__name__)
 
+# TODO: these are preliminary implemntations that still need to be thoroughly unit tested
+
 
 def get_grade_points_for_course(course_id):
     course_has_weighted_grading = Course.objects.has_weighted_grading(course_id)
