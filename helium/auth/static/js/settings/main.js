@@ -155,7 +155,10 @@ function HeliumSettings() {
         $.ajax().always(function () {
             var form = $("#preferences-form"), data = form.serializeArray();
             data.push({"name": "show_getting_started", "value": helium.USER_PREFS.settings.show_getting_started});
-            data.push({"name": "receive_emails_from_admin", "value": helium.USER_PREFS.settings.receive_emails_from_admin});
+            data.push({
+                "name": "receive_emails_from_admin",
+                "value": helium.USER_PREFS.settings.receive_emails_from_admin
+            });
             data.push({"name": "events_private_slug", "value": helium.USER_PREFS.settings.events_private_slug});
             data.push({"name": "private_slug", "value": helium.USER_PREFS.settings.private_slug});
 

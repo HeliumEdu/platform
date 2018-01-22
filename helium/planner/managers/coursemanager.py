@@ -1,7 +1,8 @@
 import logging
 
+from django.apps import apps
+
 from helium.common.managers.basemanager import BaseQuerySet, BaseManager
-from helium.planner.models import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2017, Helium Edu'
@@ -15,6 +16,8 @@ class CourseQuerySet(BaseQuerySet):
         return self.filter(pk=id, course_group__user_id=user_id).exists()
 
     def has_weighted_grading(self, id):
+        Category = apps.get_model('planner', 'Category')
+
         return Category.objects.filter(course_id=id, weight__gt=0).exists()
 
     def for_user(self, user_id):

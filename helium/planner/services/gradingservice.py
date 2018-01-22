@@ -18,17 +18,21 @@ def get_grade_points_for_course(course_id):
     # Maintain grades by category as we iterate over all homework
     category_totals = {}
     grade_series = []
-    for category, start, grade in Homework.objects.for_course(course_id).graded().values_list('category', 'start',
-                                                                                              'current_grade'):
+    for category_id, start, grade in Homework.objects.for_course(course_id).graded().values_list('category_id', 'start',
+                                                                                                 'current_grade'):
+        category = Category.objects.get(pk=category_id)
+
         earned, possible = grade.split('/')
+        earned = float(earned)
+        possible = float(possible)
         if course_has_weighted_grading:
             if category.pk not in category_totals:
                 category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
 
             category_totals[category.pk]['total_earned'] += earned
-            category_totals[category.pk]['total_possible'] += possible
+            category_totals[category.pk]['total_possible'] += float(possible)
 
-            total_earned += (((total_earned / total_possible) * (float(category.weight) / 100)) * 100)
+            total_earned += (((earned / possible) * (float(category.weight) / 100)) * 100)
             total_possible += float(category.weight)
         else:
             total_earned += float(earned)
@@ -72,7 +76,7 @@ def recalculate_course_group_grade(course_group):
     course_grades = Course.objects.for_course_group(course_group.pk).graded().values_list('current_grade', flat=True)
     total = sum(course_grades)
 
-    course_group.average_grade = total / len(course_grades) if len(course_group) > 0 else -1
+    course_group.average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
 
     logger.debug('Course Group {} average grade recalculated to {} with {} courses'.format(course_group.pk,
                                                                                            course_group.average_grade,
@@ -111,34 +115,41 @@ def recalculate_course_grade(course):
     # linear regression; note that this grade series is just for raw grade trend analysis and does not take weight
     # into account
     grade_series = []
-    for category, grade in Homework.objects.for_course(course.pk).graded().values_list('category', 'current_grade'):
+    for category_id, grade in Homework.objects.for_course(course.pk).graded().values_list('category_id',
+                                                                                          'current_grade'):
+        category = Category.objects.get(pk=category_id)
+
         earned, possible = grade.split('/')
-        total_earned += float(earned)
-        total_possible += float(possible)
+        earned = float(earned)
+        possible = float(possible)
+
+        total_earned += earned
+        total_possible += possible
 
         grade_series.append(total_earned / total_possible)
 
         if category.pk not in category_totals:
-            category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
+            category_totals[category.pk] = {'instance': category, 'total_earned': 0, 'total_possible': 0}
 
         category_totals[category.pk]['total_earned'] += earned
         category_totals[category.pk]['total_possible'] += possible
 
     category_earned = 0
     category_possible = 0
-    for category, total_earned, total_possible in category_totals:
+    for category in category_totals.values():
         if course_has_weighted_grading:
-            category_earned += (((total_earned / total_possible) * (float(category.weight) / 100)) * 100)
-            category_possible += float(category.weight)
+            category_earned += (((category['total_earned'] / category['total_possible']) * (
+                float(category['instance'].weight) / 100)) * 100)
+            category_possible += float(category['instance'].weight)
 
-            category.grade_by_weight = category_earned
+            category['instance'].grade_by_weight = category_earned
         else:
             category_earned += total_earned
             category_possible += total_possible
 
-            category.grade_by_weight = 0
+            category['instance'].grade_by_weight = 0
 
-        category.save()
+        category['instance'].save()
 
     if len(grade_series) > 0 and category_possible > 0:
         course.current_grade = (category_earned / category_possible) * 100
