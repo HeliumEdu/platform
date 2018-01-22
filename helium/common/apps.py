@@ -7,4 +7,4 @@ __version__ = '1.0.0'
 
 class CommonConfig(AppConfig):
     name = 'helium.common'
-    verbose_name = "Common"
+    verbose_name = 'Common'

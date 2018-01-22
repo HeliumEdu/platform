@@ -8,4 +8,4 @@ __version__ = '1.0.0'
 class AuthConfig(AppConfig):
     name = 'helium.auth'
     label = 'helium_auth'
-    verbose_name = "Authentication"
+    verbose_name = 'Authentication'

@@ -46,10 +46,10 @@ class TestCaseEventViews(TestCase):
         homework5 = homeworkhelper.given_homework_exists(course2, category=category3, completed=True,
                                                          current_grade='25/30')
         # Incomplete homework are not graded
-        homework6 = homeworkhelper.given_homework_exists(course1, category=category2, current_grade='-1/100')
+        homeworkhelper.given_homework_exists(course1, category=category2, current_grade='-1/100')
         # Completed homework with no grade set are not graded
-        homework7 = homeworkhelper.given_homework_exists(course2, category=category3, completed=True,
-                                                         current_grade='-1/100')
+        homeworkhelper.given_homework_exists(course2, category=category3, completed=True,
+                                             current_grade='-1/100')
 
         # WHEN
         response = self.client.get(reverse('api_planner_resource_grades'))
@@ -60,4 +60,27 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(len(response.data['course_groups'][1]['courses']), 1)
         self.assertEquals(len(response.data['course_groups'][0]['courses'][0]['categories']), 2)
         self.assertEquals(len(response.data['course_groups'][1]['courses'][0]['categories']), 1)
-        # TODO: add grading assertions after grade implementation is complete
+        self.assertEquals(len(response.data['course_groups'][0]['courses'][0]['grade_points']), 3)
+        self.assertEquals(len(response.data['course_groups'][1]['courses'][0]['grade_points']), 2)
+        self.assertEquals(float(response.data['course_groups'][0]['overall_grade']), 83.7302)
+        self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 83.7302)
+        grade_points = response.data['course_groups'][0]['courses'][0]['grade_points']
+        self.assertEquals(grade_points[0][0], homework1.start)
+        self.assertEquals(grade_points[0][1], 83.3333)
+        self.assertEquals(grade_points[1][0], homework2.start)
+        self.assertEquals(grade_points[1][1], 79.1667)
+        self.assertEquals(grade_points[2][0], homework3.start)
+        self.assertEquals(grade_points[2][1], 82.4074)
+        self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
+                          78.5714)
+        self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
+                          88.8889)
+        self.assertEquals(float(response.data['course_groups'][1]['overall_grade']), 83.3333)
+        self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['overall_grade']), 83.3333)
+        grade_points = response.data['course_groups'][1]['courses'][0]['grade_points']
+        self.assertEquals(grade_points[0][0], homework4.start)
+        self.assertEquals(grade_points[0][1], 83.3333)
+        self.assertEquals(grade_points[1][0], homework5.start)
+        self.assertEquals(grade_points[1][1], 83.3333)
+        self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['categories'][0]['overall_grade']),
+                          83.3333)
