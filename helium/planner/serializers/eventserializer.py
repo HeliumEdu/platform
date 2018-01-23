@@ -18,3 +18,5 @@ class EventSerializer(serializers.ModelSerializer):
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments',
             'calendar_item_type', 'attachments', 'reminders', 'user',)
         read_only_fields = ('calendar_item_type', 'attachments', 'reminders', 'user',)
+
+    # TODO: on save, convert timezone-aware timestamps to UTC

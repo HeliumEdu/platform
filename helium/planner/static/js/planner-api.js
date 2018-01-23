@@ -1730,16 +1730,15 @@ function HeliumPlannerAPI() {
      * Compile the Event for the given ID and pass the values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param div_id the div ID of the Event (needs to be parsed first)
+     * @param id the ID of the Event.
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_event = function (callback, div_id, async, use_cache) {
+    this.get_event = function (callback, id, async, use_cache) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
-        var id = div_id.substr(6);
         if (use_cache && self.event.hasOwnProperty(id)) {
             ret_val = callback(self.event[id]);
         } else {
@@ -1812,13 +1811,12 @@ function HeliumPlannerAPI() {
      * Edit the Event for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param div_id the div ID of the Event (needs to be parsed first)
+     * @param id the ID of the Event.
      * @param data the array of values to update for the Event
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.edit_event = function (callback, div_id, data, async) {
+    this.edit_event = function (callback, id, data, async) {
         async = typeof async === "undefined" ? true : async;
-        var id = div_id.substr(6);
         delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
@@ -1851,12 +1849,11 @@ function HeliumPlannerAPI() {
      * Delete the Event for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
-     * @param div_id the div ID of the Event (needs to be parsed first)
+     * @param id the ID of the Event.
      * @param async true if call should be async, false otherwise (default is true)
      */
-    this.delete_event = function (callback, div_id, async) {
+    this.delete_event = function (callback, id, async) {
         async = typeof async === "undefined" ? true : async;
-        var id = div_id.substr(6);
         delete self.event[id];
         self.events_by_user_id = {};
         return $.ajax({
@@ -2036,7 +2033,7 @@ function HeliumPlannerAPI() {
         if (use_cache && self.reminders_by_calendar_item.hasOwnProperty(id)) {
             ret_val = callback(self.reminders_by_calendar_item[id]);
         } else {
-            var query = calendar_item_type === "0" ? "event=" + id.substr(6) : "homework=" + id;
+            var query = calendar_item_type === "0" ? "event=" + id : "homework=" + id;
 
             ret_val = $.ajax({
                 type: "GET",
@@ -2152,7 +2149,7 @@ function HeliumPlannerAPI() {
      */
     this.get_attachments_for_calendar_item = function (callback, id, calendar_item_type, async) {
         async = typeof async === "undefined" ? true : async;
-        var query = calendar_item_type === "0" ? "event=" + id.substr(6) : "homework=" + id;
+        var query = calendar_item_type === "0" ? "event=" + id : "homework=" + id;
         return $.ajax({
             type: "GET",
             url: "/api/planner/attachments?" + query,

@@ -124,6 +124,8 @@ class TestCaseHomeworkViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
+        self.assertEqual(homework.category.title, response.data['category']['title'])
+        self.assertEqual(homework.course.title, response.data['course']['title'])
 
     def test_update_homework_by_id(self):
         # GIVEN
