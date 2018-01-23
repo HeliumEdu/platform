@@ -21,7 +21,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
         read_only_fields = ('calendar_item_type', 'attachments', 'reminders',)
 
     def update(self, instance, validated_data):
-        old_category = self.instance.category if self.instance.category_id != validated_data['category'] else None
+        old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
+                                                                                  validated_data['category'] else None
 
         instance = super(HomeworkSerializer, self).update(instance, validated_data)
 
@@ -29,6 +30,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
             gradingtasks.recalculate_category_grade(old_category)
 
         return instance
+
+    # TODO: on save, convert timezone-aware timestamps to UTC
 
 
 class HomeworkExtendedSerializer(HomeworkSerializer):

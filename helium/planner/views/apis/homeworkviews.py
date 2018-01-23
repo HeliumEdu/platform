@@ -131,7 +131,7 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
         for material_id in request.data.get('materials', []):
             permissions.check_material_permission(request.user.pk, material_id)
 
-        response = self.update(request, *args, **kwargs)
+        response = self.partial_update(request, *args, **kwargs)
 
         logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
