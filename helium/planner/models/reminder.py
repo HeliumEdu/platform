@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from six import python_2_unicode_compatible
@@ -52,3 +54,18 @@ class Reminder(BaseModel):
 
     def get_user(self):
         return self.user
+
+    def save(self, *args, **kwargs):
+        """
+        Updated start_of_range based on the start time for the calendar item.
+        """
+        if self.homework:
+            calendar_item = self.homework
+        else:
+            calendar_item = self.event
+
+        if calendar_item:
+            self.start_of_range = calendar_item.start - timedelta(
+                **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+
+        super(Reminder, self).save(*args, **kwargs)
