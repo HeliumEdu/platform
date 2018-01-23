@@ -48,7 +48,13 @@ def verify_homework_matches_data(test_case, homework, data):
     test_case.assertEqual(homework.current_grade, data['current_grade'])
     test_case.assertEqual(homework.completed, data['completed'])
     if 'category' in data:
-        test_case.assertEqual(homework.category.pk, int(data['category']))
+        if isinstance(data['category'], dict):
+            test_case.assertEqual(homework.category.pk, int(data['category']['id']))
+        else:
+            test_case.assertEqual(homework.category.pk, int(data['category']))
     for material_id in data['materials']:
         test_case.assertTrue(homework.materials.filter(pk=material_id).exists())
-    test_case.assertEqual(homework.course.pk, int(data['course']))
+    if isinstance(data['course'], dict):
+        test_case.assertEqual(homework.course.pk, int(data['course']['id']))
+    else:
+        test_case.assertEqual(homework.course.pk, int(data['course']))

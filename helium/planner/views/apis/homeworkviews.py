@@ -65,6 +65,12 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         user = self.request.user
         return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
 
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return HomeworkExtendedSerializer
+        else:
+            return self.serializer_class
+
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
 
@@ -107,6 +113,12 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     def get_queryset(self):
         user = self.request.user
         return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return HomeworkExtendedSerializer
+        else:
+            return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
