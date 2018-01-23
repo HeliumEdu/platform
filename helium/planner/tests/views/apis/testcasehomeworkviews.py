@@ -7,6 +7,7 @@ import json
 import datetime
 from urllib.parse import quote
 
+from dateutil import parser
 from django.utils import timezone
 from django.test import TestCase
 from rest_framework import status
@@ -109,6 +110,37 @@ class TestCaseHomeworkViews(TestCase):
         homeworkhelper.verify_homework_matches_data(self, homework, data)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
+    def test_create_converts_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2014-05-08T12:00:00-0500',
+            'end': '2014-05-08T14:00:00-0500',
+            'priority': 50,
+            'comments': '',
+            'current_grade': '-1/100',
+            'completed': False,
+            'course': course.pk
+        }
+        response = self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Homework.objects.count(), 1)
+        homework = Homework.objects.get(pk=response.data['id'])
+        self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+
     def test_get_homework_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -165,6 +197,30 @@ class TestCaseHomeworkViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         homework = Homework.objects.get(pk=homework.pk)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
+
+    def test_update_converts_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        data = {
+            'start': '2016-05-08T12:00:00-0500',
+            'end': '2016-05-08T14:00:00-0500',
+        }
+        response = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                   'pk': homework.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        homework = Homework.objects.get(pk=homework.pk)
+        self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
     def test_delete_homework_by_id(self):
         # GIVEN

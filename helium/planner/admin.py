@@ -28,7 +28,7 @@ class AttachmentAdmin(ModelAdmin):
 
 
 class CourseGroupAdmin(ModelAdmin):
-    list_display = ('title', 'created_at', 'updated_at', 'shown_on_calendar', 'get_user',)
+    list_display = ('title', 'created_at', 'start_date', 'end_date', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
     ordering = ('-updated_at',)
@@ -50,7 +50,7 @@ class CourseGroupAdmin(ModelAdmin):
 
 
 class CourseAdmin(ModelAdmin):
-    list_display = ('title', 'get_course_group', 'created_at', 'updated_at', 'get_user',)
+    list_display = ('title', 'get_course_group', 'created_at', 'start_date', 'end_date', 'get_user',)
     search_fields = ('title', 'course_group__user__username',)
     ordering = ('-updated_at',)
 
@@ -77,7 +77,7 @@ class CourseAdmin(ModelAdmin):
 
 
 class CategoryAdmin(ModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'updated_at', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'updated_at', 'weight', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
     ordering = ('-updated_at',)
 
@@ -107,7 +107,7 @@ class CategoryAdmin(ModelAdmin):
 
 
 class EventAdmin(ModelAdmin):
-    list_display = ('title', 'created_at', 'updated_at', 'get_user',)
+    list_display = ('title', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'user__username',)
     ordering = ('-updated_at',)
 
@@ -125,7 +125,7 @@ class EventAdmin(ModelAdmin):
 
 
 class HomeworkAdmin(ModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'updated_at', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
     ordering = ('-updated_at',)
 
