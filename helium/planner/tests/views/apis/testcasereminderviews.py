@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from django.test import TestCase
 from django.urls import reverse
@@ -78,12 +79,12 @@ class TestCaseReminderViews(TestCase):
         data = {
             'title': 'some title',
             'message': 'some message',
-            'start_of_range': '2014-05-08T12:00:00Z',
             'offset': 1,
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
             'event': event.pk,
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'start_of_range': (event.start - timedelta(hours=1)).isoformat(),
             'sent': False,
             'from_admin': False,
             'user': user.pk
@@ -110,12 +111,12 @@ class TestCaseReminderViews(TestCase):
         data = {
             'title': 'some title',
             'message': 'some message',
-            'start_of_range': '2014-05-08T12:00:00Z',
             'offset': 1,
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
             'homework': homework.pk,
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'start_of_range': (homework.start - timedelta(hours=1)).isoformat(),
             'sent': False,
             'from_admin': False,
             'user': user.pk
@@ -176,7 +177,6 @@ class TestCaseReminderViews(TestCase):
         data = {
             'title': 'some title',
             'message': 'some message',
-            'start_of_range': '2014-05-08T12:00:00Z',
             'offset': 1,
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
@@ -305,14 +305,14 @@ class TestCaseReminderViews(TestCase):
 
         # WHEN
         data = {
-            'start_of_range': 'not-a-valid-date'
+            'offset': 'asdf'
         }
         response = self.client.post(reverse('api_planner_reminders_list'),
                                     json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('start_of_range', response.data)
+        self.assertIn('offset', response.data)
 
     def test_update_bad_data(self):
         # GIVEN
@@ -322,20 +322,20 @@ class TestCaseReminderViews(TestCase):
 
         # WHEN
         data = {
-            'start_of_range': 'not-a-valid-date'
+            'offset': 'asdf'
         }
         response = self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('start_of_range', response.data)
+        self.assertIn('offset', response.data)
 
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
+        homeworkhelper.given_homework_exists(course)
 
         # WHEN
         responses = [

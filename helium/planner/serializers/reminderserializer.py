@@ -17,7 +17,7 @@ class ReminderSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'from_admin',
             'homework', 'event', 'user',)
-        read_only_fields = ('from_admin', 'user',)
+        read_only_fields = ('start_of_range', 'from_admin', 'user',)
 
     def validate(self, attrs):
         if not self.instance and ('event' not in attrs and 'homework' not in attrs):

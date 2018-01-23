@@ -245,16 +245,16 @@ function Helium() {
 
     this.add_reminder_to_page = function (data) {
         var type = "system";
-        var start = moment(data.start_of_range).tz(helium.USER_PREFS.settings.time_zone);
+        var start = moment(data.start_of_range).zone(helium.USER_PREFS.settings.time_zone);
         var id_str = "reminder-system-" + data.id;
         if (data.homework !== null) {
             type = "homework";
             id_str = "reminder-for-homework-" + data.homework.id;
-            start = moment(data.homework.start).tz(helium.USER_PREFS.settings.time_zone);
+            start = moment(data.homework.start).zone(helium.USER_PREFS.settings.time_zone);
         } else if (data.event !== null) {
             type = "event";
             id_str = "reminder-for-event-" + data.event.id;
-            start = moment(data.event.start).tz(helium.USER_PREFS.settings.time_zone);
+            start = moment(data.event.start).zone(helium.USER_PREFS.settings.time_zone);
         }
 
         if ($("#" + id_str).length == 0) {
