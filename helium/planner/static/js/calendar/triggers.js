@@ -41,25 +41,22 @@
         var completed = $(this).is(":checked"), homework_id = $(this).attr("id").split("calendar-homework-checkbox-")[1], data;
         helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
-        helium.planner_api.get_homework(function (data) {
-            var course = data.course.id;
-            var course_group = data.course.course_group;
-
+        helium.planner_api.get_homework_by_id(function (h) {
             data = {"completed": completed};
-            helium.planner_api.edit_homework(function (data) {
-                if (helium.data_has_err_msg(data)) {
+            helium.planner_api.edit_homework(function (h_edited) {
+                if (helium.data_has_err_msg(h_edited)) {
                     helium.ajax_error_occurred = true;
                     helium.calendar.loading_div.spin(false);
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(h_edited[0].err_msg);
                 } else {
-                    var homework = data;
-                    helium.calendar.update_current_calendar_item(homework);
+                    h["completed"] = completed;
+                    helium.calendar.update_current_calendar_item(h);
 
                     helium.calendar.loading_div.spin(false);
                 }
-            }, course_group, course, homework_id, data);
-        }, false, true);
+            }, h.course.course_group, h.course.id, homework_id, data);
+        }, homework_id, true);
     });
 
     $("#homework-event-switch").on("change", function () {
@@ -322,7 +319,7 @@
                         if (helium.calendar.preferred_category_name === null) {
                             helium.calendar.preferred_category_name = helium.calendar.get_category_name_by_id(helium.calendar.preferred_category_id);
                             if (helium.calendar.preferred_category_name === null) {
-                                helium.calendar.preferred_category_id = -1;
+                                helium.calendar.preferred_category_id = parseInt($("#homework-category").find("option").first().val());
                             }
                         } else {
                             helium.calendar.preferred_category_id = helium.calendar.get_category_id_by_name(helium.calendar.preferred_category_name);
@@ -455,13 +452,7 @@
         if (helium.calendar.current_calendar_item === undefined) {
             helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
-            var api_call = null;
-            if (id.indexOf("event") !== -1) {
-                api_call = helium.planner_api.get_event;
-            } else {
-                api_call = helium.planner_api.get_homework;
-            }
-            api_call(function (data) {
+            var callback = function (data) {
                 if (helium.data_has_err_msg(data)) {
                     helium.ajax_error_occurred = true;
                     helium.calendar.loading_div.spin(false);
@@ -473,7 +464,14 @@
                     helium.calendar.current_calendar_item = data;
                     helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
                 }
-            }, id, true, true);
+            };
+            if (id.indexOf("event") !== -1) {
+                helium.planner_api.get_event(callback, id, true, true);
+            } else {
+                helium.planner_api.get_homework_by_id(function (data) {
+                    helium.planner_api.get_homework(callback, data.course.course_group, data.course.id, id, true, true);
+                }, id, true);
+            }
         } else {
             helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
         }

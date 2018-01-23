@@ -163,7 +163,7 @@ function HeliumCalendar() {
     this.drop_calendar_item = function (event) {
         helium.ajax_error_occurred = false;
 
-        var start, end, api_call;
+        var start, end;
 
         self.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
@@ -178,8 +178,8 @@ function HeliumCalendar() {
                 // If start does not have a time, this is an all day event
                 if (!self.current_calendar_item.start.hasTime()) {
                     var start_end_days_diff = self.current_calendar_item.end ? self.current_calendar_item.end.diff(self.current_calendar_item.start, "days") : 1;
-                    start = moment(data.start);
-                    end = moment(data.end);
+                    start = moment(data.start).zone(helium.USER_PREFS.settings.time_zone);
+                    end = moment(data.end).zone(helium.USER_PREFS.settings.time_zone);
                     self.start = self.current_calendar_item.start;
                     self.end = self.current_calendar_item.start.hasTime() ? self.current_calendar_item.end : (start_end_days_diff <= 1 ? self.current_calendar_item.start.clone().add("minutes", helium.USER_PREFS.settings.all_day_offset) : self.current_calendar_item.end.clone());
                 } else {
@@ -211,11 +211,11 @@ function HeliumCalendar() {
                     self.loading_div.spin(false);
                 };
                 if (event.calendar_item_type === 0) {
-                    helium.planner_api.edit_event(function(data) {
+                    helium.planner_api.edit_event(function (data) {
                         helium.planner_api.get_event(callback, event.id);
                     }, event.id, data);
                 } else {
-                    helium.planner_api.edit_homework(function(data) {
+                    helium.planner_api.edit_homework(function (data) {
                         helium.planner_api.get_homework(callback, event.course.course_group, event.course.id, event.id);
                     }, event.course.course_group, event.course.id, event.id, data);
                 }
@@ -232,7 +232,7 @@ function HeliumCalendar() {
         self.is_resizing_calendar_item = true;
         helium.ajax_error_occurred = false;
 
-        var data, api_call;
+        var data;
 
         self.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
@@ -385,7 +385,7 @@ function HeliumCalendar() {
      * @param calendar_item the homework or event being edited
      */
     this.edit_calendar_item_btn = function (calendar_item) {
-        var api_call, h_e_str, h_e_id;
+        var h_e_str, h_e_id;
 
         helium.ajax_error_occurred = false;
 
@@ -642,6 +642,17 @@ function HeliumCalendar() {
         });
     };
 
+    this.get_calendar_item_title = function (calendar_item) {
+        if (calendar_item.calendar_item_type === 1) {
+            var title = (calendar_item.completed ? "<strike>" : "") + calendar_item.title + (calendar_item.completed ? "</strike>" : "");
+            title = '<input id="calendar-homework-checkbox-' + calendar_item.id + '" type="checkbox" class="ace calendar-homework-checkbox"' + (calendar_item.completed ? ' checked="checked"' : '') + '"><span class="lbl" style="margin-top: -3px;"></span>' + title;
+
+            return title;
+        } else {
+            return calendar_item.title;
+        }
+    };
+
     /**
      * Initialize the FullCalendar plugin.
      */
@@ -658,7 +669,8 @@ function HeliumCalendar() {
                 events.push({
                     id: calendar_item.id,
                     color: helium.USER_PREFS.settings.events_color,
-                    title: calendar_item.title,
+                    title: helium.calendar.get_calendar_item_title(calendar_item),
+                    title_no_format: calendar_item.title,
                     start: calendar_item.start,
                     end: calendar_item.end,
                     allDay: calendar_item.all_day,
@@ -688,7 +700,8 @@ function HeliumCalendar() {
                 events.push({
                     id: calendar_item.id,
                     color: calendar_item.course.color,
-                    title: calendar_item.title,
+                    title: helium.calendar.get_calendar_item_title(calendar_item),
+                    title_no_format: calendar_item.title,
                     start: calendar_item.start,
                     end: calendar_item.end,
                     allDay: calendar_item.all_day,
@@ -714,6 +727,7 @@ function HeliumCalendar() {
         $("#calendar").fullCalendar({
             defaultTimedEventDuration: moment().hours(0).minutes(helium.USER_PREFS.settings.all_day_offset).seconds(0).format("HH:mm:ss"),
             defaultView: self.DEFAULT_VIEWS[helium.USER_PREFS.settings.default_view],
+            timezone: helium.USER_PREFS.settings.time_zone,
             editable: true,
             eventClick: self.edit_calendar_item_btn,
             eventDrop: self.drop_calendar_item,
@@ -732,16 +746,16 @@ function HeliumCalendar() {
                 if (event.url === undefined) {
                     var start, end = null, course_string;
 
-                    start = moment(event.start).format(helium.HE_REMINDER_DATE_STRING);
+                    start = moment(event.start).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_REMINDER_DATE_STRING);
                     // Construct a pleasant start date/time
                     if (!event.allDay) {
-                        start += (" at " + moment(event.start).format(helium.HE_TIME_STRING_CLIENT));
+                        start += (" at " + moment(event.start).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
                     }
 
                     // Construct a pleasant end date/time
                     if (event.end) {
                         if (event.start.clone().toDate().setHours(0, 0, 0, 0) !== event.end.clone().toDate().setHours(0, 0, 0, 0)) {
-                            end = moment(event.end);
+                            end = moment(event.end).zone(helium.USER_PREFS.settings.time_zone);
                             // If we're adding an all-day event spanning multiple days, correct the end date to be offset by one
                             if (event.allDay && !moment(event.start).isSame(end, "day")) {
                                 end = end.subtract(1, "days");
@@ -752,15 +766,15 @@ function HeliumCalendar() {
                             if (end === null) {
                                 end = "";
                             }
-                            end += (" " + moment(event.end).format(helium.HE_TIME_STRING_CLIENT));
+                            end += (" " + moment(event.end).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
                         }
                     }
 
                     course_string = event.calendar_item_type === 1 ? ((event.course.website.replace(/\s/g, "").length > 0 ? "<a target=\"_blank\" href=\"" + event.course.website + "\">" : "") + event.course.title + (event.course.website.replace(/\s/g, "").length > 0 ? "</a>" : "")) : "";
                     element.qtip({
                         content: {
-                            title: "<strong>" + event.title + "</strong> on " + start,
-                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && event.category.title !== "Uncategorized" ? (event.category.title + " for ") : "") + course_string + (event.course.room.replace(/\s/g, "").length > 0 ? " in " + event.course.room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_material_names(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_material_names(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_material_names(event.attachments) + "</div></div>" : "")
+                            title: "<strong>" + event.title_no_format + "</strong> on " + start,
+                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && event.category.title !== "Uncategorized" ? (event.category.title + " for ") : "") + course_string + (event.course.room.replace(/\s/g, "").length > 0 ? " in " + event.course.room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_titles_from_data(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_titles_from_data(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_titles_from_data(event.attachments) + "</div></div>" : "")
                         },
                         hide: {
                             event: "mousedown mouseup mouseleave",
@@ -904,7 +918,7 @@ function HeliumCalendar() {
         self.update_filter_checkbox($(this));
     };
 
-    this.get_material_names = function (data) {
+    this.get_titles_from_data = function (data) {
         var titles = [];
 
         $.each(data, function (material) {
@@ -1021,8 +1035,6 @@ function HeliumCalendar() {
      * @param event the ID of the homework to clone.
      */
     this.clone_calendar_item = function (event) {
-        var api_call;
-
         helium.ajax_error_occurred = false;
 
         $("#loading-homework-modal").spin(helium.SMALL_LOADING_OPTS);
@@ -1039,7 +1051,8 @@ function HeliumCalendar() {
                 $("#calendar").fullCalendar("renderEvent", {
                     id: calendar_item.id,
                     color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.events_color,
-                    title: calendar_item.title,
+                    title: helium.calendar.get_calendar_item_title(calendar_item),
+                    title_no_format: calendar_item.title,
                     start: calendar_item.start,
                     end: calendar_item.end,
                     allDay: calendar_item.all_day,
@@ -1190,7 +1203,7 @@ function HeliumCalendar() {
     this.save_calendar_item = function () {
         helium.ajax_error_occurred = false;
 
-        var calendar_item_title = $("#homework-title").val(), calendar_item_start_date = $("#homework-start-date").val(), calendar_item_start_time = $("#homework-start-time").val(), moment_end_time = moment(calendar_item_start_time, helium.HE_TIME_STRING_CLIENT), calendar_item_end_time = $("#homework-end-time").is(":visible") ? $("#homework-end-time").val() : moment_end_time.add("minutes", helium.USER_PREFS.settings.all_day_offset).format(helium.HE_TIME_STRING_CLIENT), calendar_item_end_date = $("#homework-show-end-time").is(":checked") ? $("#homework-end-date").val() : calendar_item_start_date, homework_category = $("#homework-category").val(), completed, is_category_valid, data, api_call;
+        var calendar_item_title = $("#homework-title").val(), calendar_item_start_date = $("#homework-start-date").val(), calendar_item_start_time = $("#homework-start-time").val(), moment_end_time = moment(calendar_item_start_time, helium.HE_TIME_STRING_CLIENT), calendar_item_end_time = $("#homework-end-time").is(":visible") ? $("#homework-end-time").val() : moment_end_time.add("minutes", helium.USER_PREFS.settings.all_day_offset).format(helium.HE_TIME_STRING_CLIENT), calendar_item_end_date = $("#homework-show-end-time").is(":checked") ? $("#homework-end-date").val() : calendar_item_start_date, homework_category = $("#homework-category").val(), completed, is_category_valid, data;
 
         self.clear_calendar_item_errors();
 
@@ -1333,7 +1346,7 @@ function HeliumCalendar() {
                 };
                 if (self.current_calendar_item.calendar_item_type === 0) {
                     helium.planner_api.edit_event(function (data) {
-                        helium.planner_api.get_homework(callback, self.current_calendar_item.id);
+                        helium.planner_api.get_event(callback, self.current_calendar_item.id);
                     }, self.current_calendar_item.id, data);
                 } else {
                     helium.planner_api.edit_homework(function (data) {
@@ -1353,7 +1366,8 @@ function HeliumCalendar() {
                         $("#calendar").fullCalendar("renderEvent", {
                             id: calendar_item.id,
                             color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.events_color,
-                            title: calendar_item.title,
+                            title: helium.calendar.get_calendar_item_title(calendar_item),
+                            title_no_format: calendar_item.title,
                             start: calendar_item.start,
                             end: calendar_item.end,
                             allDay: calendar_item.all_day,
@@ -1460,8 +1474,8 @@ function HeliumCalendar() {
      * Set the timing fields with the Calendar's start, end, all_day, and set_end_time values.
      */
     this.set_timing_fields = function () {
-        $("#homework-start-time").timepicker("setTime", helium.calendar.start.format(helium.HE_TIME_STRING_CLIENT));
-        $("#homework-end-time").timepicker("setTime", helium.calendar.end.format(helium.HE_TIME_STRING_CLIENT));
+        $("#homework-start-time").timepicker("setTime", helium.calendar.start.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
+        $("#homework-end-time").timepicker("setTime", helium.calendar.end.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
         $("#homework-all-day").prop("checked", helium.calendar.all_day).trigger("change");
         $("#homework-show-end-time").prop("checked", helium.calendar.show_end_time).trigger("change");
     };
@@ -1473,14 +1487,14 @@ function HeliumCalendar() {
      */
     this.update_current_calendar_item = function (calendar_item) {
         self.current_calendar_item.color = calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.events_color;
-        self.current_calendar_item.title = calendar_item.title;
-        self.current_calendar_item.start = !calendar_item.all_day ? moment(calendar_item.start) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
-        self.current_calendar_item.end = !calendar_item.all_day ? moment(calendar_item.end) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
+        self.current_calendar_item.title = helium.calendar.get_calendar_item_title(calendar_item);
+        self.current_calendar_item.title_no_format = calendar_item.title;
+        self.current_calendar_item.start = !calendar_item.all_day ? moment(calendar_item.start).zone(helium.USER_PREFS.settings.time_zone) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
+        self.current_calendar_item.end = !calendar_item.all_day ? moment(calendar_item.end).zone(helium.USER_PREFS.settings.time_zone) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
         self.current_calendar_item.allDay = calendar_item.all_day;
 
         // The following elements are for list view display accuracy
         self.current_calendar_item.materials = calendar_item.calendar_item_type === 1 ? calendar_item.materials : [];
-        self.current_calendar_item.title = calendar_item.title;
         self.current_calendar_item.show_end_time = calendar_item.show_end_time;
         self.current_calendar_item.course = calendar_item.calendar_item_type === 1 ? calendar_item.course : null;
         self.current_calendar_item.category = calendar_item.calendar_item_type === 1 ? calendar_item.category : null;
@@ -1680,7 +1694,8 @@ $(document).ready(function () {
                     events.push({
                         id: calendar_item.id,
                         color: external_calendar.color,
-                        title: calendar_item.title,
+                        title: helium.calendar.get_calendar_item_title(calendar_item),
+                        title_no_format: calendar_item.title,
                         start: calendar_item.start,
                         end: calendar_item.end,
                         allDay: calendar_item.all_day,

@@ -1567,6 +1567,26 @@ function HeliumPlannerAPI() {
         return ret_val;
     };
 
+    this.get_homework_by_id = function (callback, id, use_cache) {
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.homework.hasOwnProperty(id)) {
+            ret_val = callback(self.homework[id]);
+        } else {
+            ret_val = this.get_homework_by_user(function (data) {
+                $.each(data, function (index, homework) {
+                    if (homework.id == id) {
+                        self.homework[id] = homework;
+                        callback(self.homework[id]);
+                    }
+                });
+            }, false, use_cache);
+        }
+
+        return ret_val;
+    };
+
     /**
      * Create a new Homework and pass the returned values to the given callback function in JSON format.
      *
