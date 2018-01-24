@@ -15,8 +15,8 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments',
-            'calendar_item_type', 'attachments', 'reminders', 'user',)
-        read_only_fields = ('calendar_item_type', 'attachments', 'reminders', 'user',)
-
-    # TODO: on save, convert timezone-aware timestamps to UTC
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments', 'attachments',
+            'reminders', 'user',
+            # Property fields (which should also be declared as read-only)
+            'calendar_item_type',)
+        read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)

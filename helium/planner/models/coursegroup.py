@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.db import models
 from six import python_2_unicode_compatible
@@ -40,3 +42,43 @@ class CourseGroup(BaseModel):
 
     def get_user(self):
         return self.user
+
+    @property
+    def percent_thru(self):
+        num_days = (self.end_date - self.start_date).days
+        days_completed = (datetime.datetime.now().date() - self.start_date).days
+
+        return (float(days_completed) / float(num_days)) * 100 if num_days > 0 \
+            else (0 if self.days_remaining > 0 else 100)
+
+    @property
+    def days_remaining(self):
+        return (self.end_date - datetime.datetime.now().date()).days
+
+    @property
+    def num_items(self):
+        count = 0
+        for course in self.courses.iterator():
+            count += course.num_items
+        return count
+
+    @property
+    def num_complete(self):
+        count = 0
+        for course in self.courses.iterator():
+            count += course.num_complete
+        return count
+
+    @property
+    def num_incomplete(self):
+        count = 0
+        for course in self.courses.iterator():
+            count += course.num_incomplete
+        return count
+
+    @property
+    def num_graded(self):
+        count = 0
+        for course in self.courses.iterator():
+            count += course.num_graded
+        return count

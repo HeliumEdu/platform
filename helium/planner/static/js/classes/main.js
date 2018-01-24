@@ -173,8 +173,7 @@ function HeliumClasses() {
             self.category_unsaved_pk += 1;
         }
 
-        // TODO: the homework_count field needs to be rewired
-        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td>" + "<td class=\"hidden-480\">" + (category.homework_count !== undefined ? category.homework_count : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
+        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td>" + "<td class=\"hidden-480\">" + (category.num_items !== undefined ? category.num_items : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
         $("#categories-table-end-placeholder").before(row);
 
         // Bind attributes within added row
@@ -261,8 +260,7 @@ function HeliumClasses() {
         } else {
             $("#delete-category-" + category.id).on("click", function () {
                 // We can only delete this category if it is not named "Uncategorized", or if the category is empty
-                // TODO: this field needs to be rewired
-                if (category.homework_count > 0) {
+                if (category.num_items > 0) {
                     if (category.title !== "Uncategorized") {
                         bootbox.dialog({
                             message: "After you save the changes to this class, all assignments attached to this category will become uncategorized.",

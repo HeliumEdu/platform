@@ -26,7 +26,10 @@ class HomeworkQuerySet(BaseQuerySet):
         return self.filter(category_id=category_id)
 
     def graded(self):
-        return self.filter(completed=True).exclude(current_grade='-1/100')
+        return self.completed().exclude(current_grade='-1/100')
+
+    def completed(self):
+        return self.filter(completed=True)
 
 
 class HomeworkManager(BaseManager):
@@ -50,3 +53,6 @@ class HomeworkManager(BaseManager):
 
     def graded(self):
         return self.get_queryset().graded()
+
+    def completed(self):
+        return self.get_queryset().completed()

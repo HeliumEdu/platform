@@ -14,7 +14,6 @@ __version__ = '1.0.0'
 
 @python_2_unicode_compatible
 class Homework(BaseCalendar):
-    # TODO: add a field for the grade's computed value so we can sort by it (this raw CharField must be kept for weight precision)
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[fraction_validator])
 
