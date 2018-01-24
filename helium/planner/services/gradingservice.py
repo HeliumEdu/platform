@@ -70,6 +70,7 @@ def get_grade_data(user_id):
 
             course['categories'] = Category.objects.for_user(user_id).for_course(course['id']).values('id',
                                                                                                       'title',
+                                                                                                      'weight',
                                                                                                       'average_grade',
                                                                                                       'grade_by_weight',
                                                                                                       'trend')
