@@ -221,7 +221,7 @@ $(document).ready(function () {
                         course = helium.grades.courses_for_course_group[id][i];
                         course_grades = helium.grades.grade_points_for_course_group[id][course.id];
 
-                        course_div = course_list.append("<div id=\"course-body-" + course.id + "\" class=\"widget-box collapsed\"><div class=\"widget-header widget-header-flat widget-header-small\"><h5><i class=\"icon-signal\"></i> <span>" + course.title + " </span></h5><a class=\"cursor-hover\" data-action=\"collapse\"><div class=\"widget-toolbar\"><span class=\"badge badge-info\">" + (parseFloat(course.current_grade) !== -1 ? Math.round(course.current_grade * 100) / 100 + "%" : "N/A") + helium.grades.get_trend_arrow(course.trend) + "</span> <i class=\"icon-chevron-down\"></i></div></a>");
+                        course_div = course_list.append("<div id=\"course-body-" + course.id + "\" class=\"widget-box collapsed\"><div class=\"widget-header widget-header-flat widget-header-small\"><h5><i class=\"icon-signal\"></i> <span>" + course.title + " </span></h5><a class=\"cursor-hover\" data-action=\"collapse\"><div class=\"widget-toolbar\"><span class=\"badge badge-info\">" + (parseFloat(course.overall_grade) !== -1 ? Math.round(course.overall_grade * 100) / 100 + "%" : "N/A") + helium.grades.get_trend_arrow(course.trend) + "</span> <i class=\"icon-chevron-down\"></i></div></a>");
 
                         data = [];
                         for (course_grade in course_grades) {
@@ -250,7 +250,7 @@ $(document).ready(function () {
                                 });
                             }
 
-                            category_table_body.append("<tr><td><span class=\"label label-sm\" style=\"background-color: " + category.color + " !important\">" + category.title + "</span></td><td class=\"hidden-xs\">" + category.num_grades_recorded + "</td><td>" + ((parseFloat(category.weight) !== 0 || !course.has_weighted_grading) ? (parseFloat(category.average_grade) !== -1 ? "<span class=\"badge badge-info\">" + Math.round(category.average_grade * 100) / 100 + "%" + helium.grades.get_trend_arrow(category.trend) + "</span>" : "N/A") : "Not Graded") + "</td></tr>");
+                            category_table_body.append("<tr><td><span class=\"label label-sm\" style=\"background-color: " + category.color + " !important\">" + category.title + "</span></td><td class=\"hidden-xs\">" + category.num_grades_recorded + "</td><td>" + ((parseFloat(category.weight) !== 0 || !course.has_weighted_grading) ? (parseFloat(category.overall_grade) !== -1 ? "<span class=\"badge badge-info\">" + Math.round(category.overall_grade * 100) / 100 + "%" + helium.grades.get_trend_arrow(category.trend) + "</span>" : "N/A") : "Not Graded") + "</td></tr>");
                         }
 
                         if (helium.grades.categories_for_course[course.id].length > 0) {
