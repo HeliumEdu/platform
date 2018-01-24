@@ -84,6 +84,10 @@ class TestCaseCourseGroupViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
+        self.assertEqual(course_group.num_items, response.data['num_items'])
+        self.assertEqual(course_group.num_complete, response.data['num_complete'])
+        self.assertEqual(course_group.num_incomplete, response.data['num_incomplete'])
+        self.assertEqual(course_group.num_graded, response.data['num_graded'])
 
     def test_update_coursegroup_by_id(self):
         # GIVEN

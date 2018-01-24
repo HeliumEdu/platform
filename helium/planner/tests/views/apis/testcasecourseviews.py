@@ -142,6 +142,10 @@ class TestCaseCourseViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         coursehelper.verify_course_matches_data(self, course, response.data)
+        self.assertEqual(course.num_items, response.data['num_items'])
+        self.assertEqual(course.num_complete, response.data['num_complete'])
+        self.assertEqual(course.num_incomplete, response.data['num_incomplete'])
+        self.assertEqual(course.num_graded, response.data['num_graded'])
 
     def test_update_course_by_id(self):
         # GIVEN
