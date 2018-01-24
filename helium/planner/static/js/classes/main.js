@@ -940,7 +940,7 @@ function HeliumClasses() {
                     $("#loading-courses").spin(false);
                     $("#course-modal").modal("show");
                 }
-            }, self.edit_id);
+            }, self.course_group_id, self.edit_id);
         }
     };
 

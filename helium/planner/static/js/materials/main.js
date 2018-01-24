@@ -507,4 +507,11 @@ $(document).ready(function () {
 
         $("#loading-materials").spin(false);
     });
+
+    $("#material-group-title").on('keydown', function (event) {
+        var x = event.which;
+        if (x === 13) {
+            event.preventDefault();
+        }
+    });
 });
