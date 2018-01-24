@@ -62,8 +62,12 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(len(response.data['course_groups'][1]['courses'][0]['categories']), 1)
         self.assertEquals(len(response.data['course_groups'][0]['courses'][0]['grade_points']), 3)
         self.assertEquals(len(response.data['course_groups'][1]['courses'][0]['grade_points']), 2)
+        self.assertEquals(response.data['course_groups'][0]['title'], course_group1.title)
         self.assertEquals(float(response.data['course_groups'][0]['overall_grade']), 83.7302)
+        self.assertIn('trend', response.data['course_groups'][0])
+        self.assertEquals(response.data['course_groups'][0]['courses'][0]['title'], course1.title)
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 83.7302)
+        self.assertIn('trend', response.data['course_groups'][0]['courses'][0])
         grade_points = response.data['course_groups'][0]['courses'][0]['grade_points']
         self.assertEquals(grade_points[0][0], homework1.start)
         self.assertEquals(grade_points[0][1], 83.3333)
@@ -71,16 +75,27 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(grade_points[1][1], 79.1667)
         self.assertEquals(grade_points[2][0], homework3.start)
         self.assertEquals(grade_points[2][1], 82.4074)
+        self.assertEquals(response.data['course_groups'][0]['courses'][0]['categories'][0]['title'],
+                          category1.title)
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
                           78.5714)
+        self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][0])
+        self.assertEquals(response.data['course_groups'][0]['courses'][0]['categories'][1]['title'],
+                          category2.title)
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
                           88.8889)
+        self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][1])
+        self.assertEquals(response.data['course_groups'][1]['title'], course_group2.title)
         self.assertEquals(float(response.data['course_groups'][1]['overall_grade']), 83.3333)
+        self.assertEquals(response.data['course_groups'][1]['courses'][0]['title'], course2.title)
         self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['overall_grade']), 83.3333)
+        self.assertIn('trend', response.data['course_groups'][1]['courses'][0])
         grade_points = response.data['course_groups'][1]['courses'][0]['grade_points']
         self.assertEquals(grade_points[0][0], homework4.start)
         self.assertEquals(grade_points[0][1], 83.3333)
         self.assertEquals(grade_points[1][0], homework5.start)
         self.assertEquals(grade_points[1][1], 83.3333)
+        self.assertEquals(response.data['course_groups'][1]['courses'][0]['categories'][0]['title'], category3.title)
         self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['categories'][0]['overall_grade']),
                           83.3333)
+        self.assertIn('trend', response.data['course_groups'][1]['courses'][0]['categories'][0])
