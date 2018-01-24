@@ -31,6 +31,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
         weight_total = 0
         for category in Category.objects.for_course(course_id).iterator():
+            if self.instance and category.pk == self.instance.pk:
+                continue
+
             weight_total += category.weight
 
         if weight_total + weight > 100:

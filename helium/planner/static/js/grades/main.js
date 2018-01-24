@@ -84,6 +84,21 @@ $(document).ready(function () {
 
     $("#loading-grades").spin(helium.SMALL_LOADING_OPTS);
 
+    bootbox.setDefaults({
+        locale: 'en'
+    });
+
+    /*******************************************
+     * Other page initialization
+     ******************************************/
+    helium.planner_api.get_course_groups(function (data) {
+        $.each(data, function (i, course_group_data) {
+            helium.grades.add_course_group_to_page(course_group_data);
+        });
+    }, false);
+
+    $($("#course-group-tabs li a").first()).tab("show");
+
     /*******************************************
      * Initialize component libraries
      ******************************************/
@@ -109,21 +124,6 @@ $(document).ready(function () {
             chartRangeMin: $(this).data("min") || 0
         });
     });
-
-    bootbox.setDefaults({
-        locale: 'en'
-    });
-
-    /*******************************************
-     * Other page initialization
-     ******************************************/
-    helium.planner_api.get_course_groups(function (data) {
-        $.each(data, function (i, course_group_data) {
-            helium.grades.add_course_group_to_page(course_group_data);
-        });
-    }, false);
-
-    $($("#course-group-tabs li a").first()).tab("show");
 
     helium.planner_api.get_grades(function (data) {
         helium.ajax_error_occurred = false;
