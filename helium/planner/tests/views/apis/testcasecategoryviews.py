@@ -135,6 +135,8 @@ class TestCaseCategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         categoryhelper.verify_category_matches_data(self, category, response.data)
+        self.assertEqual(category.num_items, response.data['num_items'])
+        self.assertEqual(category.num_graded, response.data['num_graded'])
 
     def test_update_category_by_id(self):
         # GIVEN
