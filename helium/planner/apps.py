@@ -10,4 +10,5 @@ class PlannerConfig(AppConfig):
     verbose_name = 'Planner'
 
     def ready(self):
+        # noinspection PyUnresolvedReferences
         import helium.planner.signals
