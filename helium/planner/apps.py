@@ -8,3 +8,6 @@ __version__ = '1.0.0'
 class PlannerConfig(AppConfig):
     name = 'helium.planner'
     verbose_name = 'Planner'
+
+    def ready(self):
+        import helium.planner.signals
