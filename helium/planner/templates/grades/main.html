@@ -19,7 +19,7 @@
                         Grades
                         <small class="hidden-print">
                             <i class="icon-double-angle-right"></i>
-                            &nbsp;keep track of your progress
+                            &nbsp;track your progress
                             <div id="grades-loading" class="loading-mini" style="padding-left: 25px;">
                                 <div id="loading-grades"></div>
                             </div>
@@ -34,22 +34,20 @@
                             </ul>
 
                             <div class="tab-content" id="course-group-tab-content" style="overflow: hidden;">
-                                <div class="tab-content" id="course-group-tab-content">
-                                    <div id="no-grades-tab" class="tab-pane">
-                                        <div class="helper-container">
-                                            <div class="well">
-                                                <h1 class="grey lighter smaller">
-                                                    <img src="{% static 'img/logo_square.png' %}" width="50" height="50"
-                                                         class="logo-icon"/>
-                                                    Add Your Classes to Get Started
-                                                </h1>
+                                <div id="no-grades-tab" class="tab-pane">
+                                    <div class="helper-container">
+                                        <div class="well">
+                                            <h1 class="grey lighter smaller">
+                                                <img src="{% static 'img/logo_square.png' %}" width="50" height="50"
+                                                     class="logo-icon"/>
+                                                Add Your Classes to Get Started
+                                            </h1>
 
-                                                <hr>
-                                                <h3 class="lighter smaller">We can't calculate any grades for you if you
-                                                    don't have any classes. Head on over to <a
-                                                            href="{% url 'classes' %}">the
-                                                        Classes page</a> to get started!</h3>
-                                            </div>
+                                            <hr>
+                                            <h3 class="lighter smaller">We can't calculate any grades for you if you
+                                                don't have any classes. Head on over to <a
+                                                        href="{% url 'classes' %}">the
+                                                    Classes page</a> to get started!</h3>
                                         </div>
                                     </div>
                                 </div>
