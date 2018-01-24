@@ -141,3 +141,19 @@ class Course(BaseModel):
 
     def get_user(self):
         return self.course_group.get_user()
+
+    @property
+    def num_items(self):
+        return self.homework.count()
+
+    @property
+    def num_complete(self):
+        return self.homework.completed().count()
+
+    @property
+    def num_incomplete(self):
+        return self.homework.completed().count()
+
+    @property
+    def num_graded(self):
+        return self.homework.graded().count()

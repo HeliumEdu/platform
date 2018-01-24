@@ -16,9 +16,15 @@ class GradeHolderSerializer(serializers.Serializer):
 
     overall_grade = serializers.DecimalField(7, 4, coerce_to_string=False)
 
+    grade_by_weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
+
     trend = serializers.FloatField()
 
-    grade_points = serializers.ListField()
+    num_graded = serializers.IntegerField()
+
+    has_weighted_grading = serializers.BooleanField(required=False)
+
+    grade_points = serializers.ListField(required=False)
 
 
 class GradeCourseSerializer(GradeHolderSerializer):

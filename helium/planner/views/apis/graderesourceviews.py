@@ -24,8 +24,8 @@ class GradesApiListView(GenericAPIView):
 
     Each entity contains three fields: `id`, `overall_grade`, and `grade_points`.
 
-    `grade_points` is only populated for courses, and it represents a list of grades accumulating over time. This is a
-    list made up of individual grade points, each a tuple containing two values of the format [time, grade_at_time].
+    `grade_points` represents a list of grades accumulating over time. This is a list made up of individual grade
+    points, each a tuple containing two values of the format [time, grade_at_time].
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = GradeSerializer
