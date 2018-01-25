@@ -82,6 +82,64 @@ class TestCaseEventViews(TestCase):
         eventhelper.verify_event_matches_data(self, event, data)
         eventhelper.verify_event_matches_data(self, event, response.data)
 
+    def test_create_converts_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2014-05-08T12:00:00-0500',
+            'end': '2014-05-08T14:00:00-0500',
+            'priority': 75,
+            'comments': 'some comment',
+            # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'user': user.pk
+        }
+        response = self.client.post(reverse('api_planner_events_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Event.objects.count(), 1)
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+
+    def test_create_converts_naive_datetime_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2014-05-08 12:00:00',
+            'end': '2014-05-08 14:00:00',
+            'priority': 75,
+            'comments': 'some comment',
+            # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'user': user.pk
+        }
+        response = self.client.post(reverse('api_planner_events_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Event.objects.count(), 1)
+        event = Event.objects.get(pk=response.data['id'])
+
+        time_zone = pytz.timezone(user.settings.time_zone)
+        start = timezone.make_aware(parser.parse(data['start']), time_zone)
+        end = timezone.make_aware(parser.parse(data['end']), time_zone)
+        self.assertEquals(event.start.isoformat(), start.astimezone(timezone.utc).isoformat())
+        self.assertEquals(event.end.isoformat(), end.astimezone(timezone.utc).isoformat())
+
     def test_get_event_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -123,6 +181,54 @@ class TestCaseEventViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
+
+    def test_update_converts_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        data = {
+            'start': '2016-05-08T12:00:00-0500',
+            'end': '2016-05-08T14:00:00-0500',
+        }
+        response = self.client.put(reverse('api_planner_events_detail',
+                                           kwargs={'pk': event.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event = Event.objects.get(pk=event.pk)
+        self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+
+    def test_update_converts_naive_datetime_to_utc(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user.settings.time_zone = 'America/New_York'
+        user.settings.save()
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        data = {
+            'start': '2016-05-08 12:00:00',
+            'end': '2016-05-08 14:00:00',
+        }
+        response = self.client.put(reverse('api_planner_events_detail',
+                                           kwargs={'pk': event.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event = Event.objects.get(pk=event.pk)
+
+        time_zone = pytz.timezone(user.settings.time_zone)
+        start = timezone.make_aware(parser.parse(data['start']), time_zone)
+        end = timezone.make_aware(parser.parse(data['end']), time_zone)
+        self.assertEquals(event.start.isoformat(), start.astimezone(timezone.utc).isoformat())
+        self.assertEquals(event.end.isoformat(), end.astimezone(timezone.utc).isoformat())
 
     def test_delete_event_by_id(self):
         # GIVEN

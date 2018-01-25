@@ -1,5 +1,6 @@
 import logging
 
+from django.utils import timezone
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -30,6 +31,8 @@ class ExternalCalendarAsExternalEventsView(GenericAPIView):
         return user.external_calendars.all()
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         external_calendar = self.get_object()
 
         calendar = icalservice.validate_url(external_calendar.url)
