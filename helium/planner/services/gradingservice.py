@@ -130,7 +130,10 @@ def recalculate_course_grade(course):
     grade_series = []
     for category_id, grade in Homework.objects.for_course(course.pk).graded().values_list('category_id',
                                                                                           'current_grade'):
-        category = Category.objects.get(pk=category_id)
+        try:
+            category = Category.objects.get(pk=category_id)
+        except Category.DoesNotExist:
+            continue
 
         earned, possible = grade.split('/')
         earned = float(earned)

@@ -30,8 +30,11 @@ def delete_category(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Homework)
 def delete_homework(sender, instance, **kwargs):
-    if instance.category:
-        gradingtasks.recalculate_category_grade.delay(instance.category)
+    try:
+        if instance.category:
+            gradingtasks.recalculate_category_grade.delay(instance.category)
+    except Category.DoesNotExist:
+        pass
 
 
 @receiver(post_save, sender=Homework)
