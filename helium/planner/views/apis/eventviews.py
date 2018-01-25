@@ -1,5 +1,6 @@
 import logging
 
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.generics import GenericAPIView
@@ -42,6 +43,8 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         return user.events.all()
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -50,6 +53,8 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         serializer.save(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         response = self.create(request, *args, **kwargs)
 
         logger.info('Event {} created for user {}'.format(response.data['id'], request.user.get_username()))
@@ -79,9 +84,13 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
         return user.events.all()
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         response = self.update(request, *args, **kwargs)
 
         logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
