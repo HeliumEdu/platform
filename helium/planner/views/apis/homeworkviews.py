@@ -1,5 +1,6 @@
 import logging
 
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.generics import GenericAPIView
@@ -42,6 +43,8 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         return Homework.objects.for_user(user.pk)
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -72,6 +75,8 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -80,6 +85,8 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         if 'category' in request.data:
             permissions.check_category_permission(request.user.pk, request.data['category'])
         for material_id in request.data.get('materials', []):
@@ -121,9 +128,13 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'category' in request.data:

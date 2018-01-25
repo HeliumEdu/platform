@@ -437,43 +437,4 @@
         };
         helium.calendar.add_reminder_to_table(data, true);
     });
-
-    $('[id^="reminder-for-"]').on("click", function () {
-        var id = $(this).attr("id").split("reminder-for-")[1];
-        if (id.indexOf("event-") !== -1) {
-            id = id.replace("-", "_");
-        } else {
-            id = id.split("-")[1];
-        }
-
-        helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
-        // First resort is to look in the calendar's cache, but if the event isn't found there we'll have to look it
-        // up in the database
-        if (helium.calendar.current_calendar_item === undefined) {
-            helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
-
-            var callback = function (data) {
-                if (helium.data_has_err_msg(data)) {
-                    helium.ajax_error_occurred = true;
-                    helium.calendar.loading_div.spin(false);
-
-                    bootbox.alert(data[0].err_msg);
-                } else {
-                    helium.calendar.loading_div.spin(false);
-
-                    helium.calendar.current_calendar_item = data;
-                    helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
-                }
-            };
-            if (id.indexOf("event") !== -1) {
-                helium.planner_api.get_event(callback, id, true, true);
-            } else {
-                helium.planner_api.get_homework_by_id(function (data) {
-                    helium.planner_api.get_homework(callback, data.course.course_group, data.course.id, id, true, true);
-                }, id, true);
-            }
-        } else {
-            helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
-        }
-    });
 }());

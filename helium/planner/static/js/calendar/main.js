@@ -1478,58 +1478,6 @@ function HeliumCalendar() {
                     }
                 });
             } else {
-                $.each(reminders_data, function (i, reminder_data) {
-                    if (self.current_calendar_item.calendar_item_type === 1) {
-                        reminder_data["homework"] = self.current_calendar_item.id;
-                    } else {
-                        reminder_data["event"] = self.current_calendar_item.id;
-                    }
-
-                    helium.calendar.ajax_calls.push(helium.planner_api.add_reminder(function () {
-                        if (helium.data_has_err_msg(data)) {
-                            helium.ajax_error_occurred = true;
-                            $("#loading-courses").spin(false);
-
-                            $("#course-error").html(data[0].err_msg);
-                            $("#course-error").parent().show("fast");
-
-                            return false;
-                        }
-                    }, reminder_data));
-                });
-
-                if (!helium.ajax_error_occurred) {
-                    $.each(helium.calendar.reminders_to_delete, function (i, reminder_id) {
-                        helium.calendar.ajax_calls.push(helium.planner_api.delete_reminder(function () {
-                            if (helium.data_has_err_msg(data)) {
-                                helium.ajax_error_occurred = true;
-                                $("#loading-courses").spin(false);
-
-                                $("#course-error").html(data[0].err_msg);
-                                $("#course-error").parent().show("fast");
-
-                                return false;
-                            }
-                        }, reminder_id));
-                    });
-                }
-
-                if (!helium.ajax_error_occurred) {
-                    $.each(helium.calendar.attachments_to_delete, function (i, attachment_id) {
-                        helium.calendar.ajax_calls.push(helium.planner_api.delete_attachment(function () {
-                            if (helium.data_has_err_msg(data)) {
-                                helium.ajax_error_occurred = true;
-                                $("#loading-courses").spin(false);
-
-                                $("#course-error").html(data[0].err_msg);
-                                $("#course-error").parent().show("fast");
-
-                                return false;
-                            }
-                        }, attachment_id));
-                    });
-                }
-
                 var callback = function (data) {
                     if (helium.data_has_err_msg(data)) {
                         helium.ajax_error_occurred = true;
@@ -1562,6 +1510,26 @@ function HeliumCalendar() {
                         });
 
                         if (!helium.ajax_error_occurred) {
+                            $.each(reminders_data, function (i, reminder_data) {
+                                if (calendar_item.calendar_item_type === 1) {
+                                    reminder_data["homework"] = calendar_item.id;
+                                } else {
+                                    reminder_data["event"] = calendar_item.id;
+                                }
+
+                                helium.calendar.ajax_calls.push(helium.planner_api.add_reminder(function () {
+                                    if (helium.data_has_err_msg(data)) {
+                                        helium.ajax_error_occurred = true;
+                                        $("#loading-courses").spin(false);
+
+                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").parent().show("fast");
+
+                                        return false;
+                                    }
+                                }, reminder_data));
+                            });
+
                             self.last_type_event = $("#homework-event-switch").is(":checked");
                             self.last_good_date = moment(calendar_item.start);
                             self.last_good_end_date = moment(calendar_item.end);

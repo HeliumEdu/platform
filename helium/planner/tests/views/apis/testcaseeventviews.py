@@ -1,3 +1,5 @@
+import pytz
+from dateutil import parser
 from future.standard_library import install_aliases
 
 install_aliases()
@@ -115,6 +117,9 @@ class TestCaseEventViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data['start'] = parser.parse(data['start']).astimezone(pytz.timezone(user.settings.time_zone)).isoformat()
+        data['end'] = parser.parse(data['end']).astimezone(pytz.timezone(user.settings.time_zone)).isoformat()
+
         self.assertDictContainsSubset(data, response.data)
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
