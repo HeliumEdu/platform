@@ -1344,8 +1344,8 @@ function HeliumCalendar() {
 
             // If the all-day box is checked, set times to midnight
             if ($("#homework-all-day").is(":checked")) {
-                start = moment(calendar_item_start_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT);
-                end = moment(calendar_item_end_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).add(1, "days");
+                start = moment(calendar_item_start_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).zone(helium.USER_PREFS.settings.time_zone);
+                end = moment(calendar_item_end_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).add(1, "days").zone(helium.USER_PREFS.settings.time_zone);
             } else {
                 start = moment(calendar_item_start_date + " " + calendar_item_start_time, helium.HE_DATE_TIME_STRING_CLIENT);
                 end = moment(calendar_item_end_date + " " + calendar_item_end_time, helium.HE_DATE_TIME_STRING_CLIENT);
