@@ -164,8 +164,6 @@ function HeliumCalendar() {
     this.drop_calendar_item = function (event) {
         helium.ajax_error_occurred = false;
 
-        var start, end;
-
         self.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
         self.current_calendar_item = event;
@@ -196,8 +194,8 @@ function HeliumCalendar() {
         $.when.apply(this, self.ajax_calls).done(function () {
             if (!helium.ajax_error_occurred) {
                 var data = {
-                    "start": self.start.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_DATE_TIME_STRING_SERVER),
-                    "end": self.end.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_DATE_TIME_STRING_SERVER),
+                    "start": self.start.format(helium.HE_DATE_TIME_STRING_SERVER),
+                    "end": self.end.format(helium.HE_DATE_TIME_STRING_SERVER),
                     "allDay": !self.start.hasTime(),
                     "all_day": !self.start.hasTime()
                 };
@@ -761,7 +759,7 @@ function HeliumCalendar() {
                     if ($.cookie("filter_categories") && $.inArray(calendar_item.category.id.toString(), $.cookie('filter_categories').split(",")) === -1) {
                         return true;
                     }
-                    if ($.cookie("filter_overdue") !== undefined && (calendar_item.completed || moment().zone('utc').isBefore(moment(calendar_item.start)))) {
+                    if ($.cookie("filter_overdue") !== undefined && (calendar_item.completed || moment().isBefore(moment(calendar_item.start)))) {
                         return true;
                     }
 
@@ -831,16 +829,16 @@ function HeliumCalendar() {
                 if (event.url === undefined) {
                     var start, end = null, course_string;
 
-                    start = moment(event.start).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_REMINDER_DATE_STRING);
+                    start = moment(event.start).format(helium.HE_REMINDER_DATE_STRING);
                     // Construct a pleasant start date/time
                     if (!event.allDay) {
-                        start += (" at " + moment(event.start).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
+                        start += (" at " + moment(event.start).format(helium.HE_TIME_STRING_CLIENT));
                     }
 
                     // Construct a pleasant end date/time
                     if (event.end) {
                         if (event.start.clone().toDate().setHours(0, 0, 0, 0) !== event.end.clone().toDate().setHours(0, 0, 0, 0)) {
-                            end = moment(event.end).zone(helium.USER_PREFS.settings.time_zone);
+                            end = moment(event.end);
                             // If we're adding an all-day event spanning multiple days, correct the end date to be offset by one
                             if (event.allDay && !moment(event.start).isSame(end, "day")) {
                                 end = end.subtract(1, "days");
@@ -851,7 +849,7 @@ function HeliumCalendar() {
                             if (end === null) {
                                 end = "";
                             }
-                            end += (" " + moment(event.end).zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
+                            end += (" " + moment(event.end).format(helium.HE_TIME_STRING_CLIENT));
                         }
                     }
 
@@ -1342,8 +1340,8 @@ function HeliumCalendar() {
 
             // If the all-day box is checked, set times to midnight
             if ($("#homework-all-day").is(":checked")) {
-                start = moment(calendar_item_start_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).zone(helium.USER_PREFS.settings.time_zone);
-                end = moment(calendar_item_end_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).add(1, "days").zone(helium.USER_PREFS.settings.time_zone);
+                start = moment(calendar_item_start_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT);
+                end = moment(calendar_item_end_date + " 12:00 AM", helium.HE_DATE_TIME_STRING_CLIENT).add(1, "days");
             } else {
                 start = moment(calendar_item_start_date + " " + calendar_item_start_time, helium.HE_DATE_TIME_STRING_CLIENT);
                 end = moment(calendar_item_end_date + " " + calendar_item_end_time, helium.HE_DATE_TIME_STRING_CLIENT);
@@ -1622,8 +1620,8 @@ function HeliumCalendar() {
      * Set the timing fields with the Calendar's start, end, all_day, and set_end_time values.
      */
     this.set_timing_fields = function () {
-        $("#homework-start-time").timepicker("setTime", helium.calendar.start.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
-        $("#homework-end-time").timepicker("setTime", helium.calendar.end.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_TIME_STRING_CLIENT));
+        $("#homework-start-time").timepicker("setTime", helium.calendar.start.format(helium.HE_TIME_STRING_CLIENT));
+        $("#homework-end-time").timepicker("setTime", helium.calendar.end.format(helium.HE_TIME_STRING_CLIENT));
         $("#homework-all-day").prop("checked", helium.calendar.all_day).trigger("change");
         $("#homework-show-end-time").prop("checked", helium.calendar.show_end_time).trigger("change");
     };
@@ -1637,8 +1635,8 @@ function HeliumCalendar() {
         self.current_calendar_item.color = calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color;
         self.current_calendar_item.title = helium.calendar.get_calendar_item_title(calendar_item);
         self.current_calendar_item.title_no_format = calendar_item.title;
-        self.current_calendar_item.start = !calendar_item.all_day ? moment(calendar_item.start).zone(helium.USER_PREFS.settings.time_zone) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
-        self.current_calendar_item.end = !calendar_item.all_day ? moment(calendar_item.end).zone(helium.USER_PREFS.settings.time_zone) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
+        self.current_calendar_item.start = !calendar_item.all_day ? moment(calendar_item.start) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
+        self.current_calendar_item.end = !calendar_item.all_day ? moment(calendar_item.end) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
         self.current_calendar_item.allDay = calendar_item.all_day;
 
         // The following elements are for list view display accuracy

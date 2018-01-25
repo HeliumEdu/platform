@@ -302,7 +302,6 @@ PIPELINE = {
         'base': {
             'source_filenames': (
                 'js/vendors/moment.js',
-                'js/vendors/moment-timezone.js',
                 'js/vendors/jquery.cookie.js',
                 'js/vendors/jquery.ui.touch-punch.min.js',
                 'js/vendors/chosen.jquery.js',
