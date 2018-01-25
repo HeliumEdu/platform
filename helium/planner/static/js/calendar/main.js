@@ -179,8 +179,6 @@ function HeliumCalendar() {
                 // If start does not have a time, this is an all day event
                 if (!self.current_calendar_item.start.hasTime()) {
                     var start_end_days_diff = self.current_calendar_item.end ? self.current_calendar_item.end.diff(self.current_calendar_item.start, "days") : 1;
-                    start = moment(data.start).zone(helium.USER_PREFS.settings.time_zone);
-                    end = moment(data.end).zone(helium.USER_PREFS.settings.time_zone);
                     self.start = self.current_calendar_item.start;
                     self.end = self.current_calendar_item.start.hasTime() ? self.current_calendar_item.end : (start_end_days_diff <= 1 ? self.current_calendar_item.start.clone().add("minutes", helium.USER_PREFS.settings.all_day_offset) : self.current_calendar_item.end.clone());
                 } else {
@@ -198,8 +196,8 @@ function HeliumCalendar() {
         $.when.apply(this, self.ajax_calls).done(function () {
             if (!helium.ajax_error_occurred) {
                 var data = {
-                    "start": self.start.format(helium.HE_DATE_TIME_STRING_SERVER),
-                    "end": self.end.format(helium.HE_DATE_TIME_STRING_SERVER),
+                    "start": self.start.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_DATE_TIME_STRING_SERVER),
+                    "end": self.end.zone(helium.USER_PREFS.settings.time_zone).format(helium.HE_DATE_TIME_STRING_SERVER),
                     "allDay": !self.start.hasTime(),
                     "all_day": !self.start.hasTime()
                 };
