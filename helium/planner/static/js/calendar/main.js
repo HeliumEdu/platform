@@ -675,6 +675,7 @@ function HeliumCalendar() {
                                     start: calendar_item.start,
                                     end: calendar_item.end,
                                     allDay: calendar_item.all_day,
+                                    editable: false,
                                     // The following elements are for list view display accuracy
                                     materials: [],
                                     show_end_time: !calendar_item.all_day,

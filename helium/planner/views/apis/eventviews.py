@@ -91,7 +91,7 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
     def put(self, request, *args, **kwargs):
         timezone.activate(request.user.settings.time_zone)
 
-        response = self.update(request, *args, **kwargs)
+        response = self.partial_update(request, *args, **kwargs)
 
         logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 

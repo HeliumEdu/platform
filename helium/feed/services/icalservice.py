@@ -60,22 +60,27 @@ def calendar_to_external_events(external_calendar, calendar):
     """
     external_events = []
 
+    time_zone = pytz.timezone(external_calendar.get_user().settings.time_zone)
     for component in calendar.walk():
-        if component.name == 'VEVENT':
+        if component.name == 'VTIMEZONE':
+            time_zone = pytz.timezone(component.get('TZID'))
+        elif component.name == 'VEVENT':
             start = component.get('dtstart').dt
             end = component.get('dtend').dt
             all_day = not isinstance(start, datetime.datetime)
             show_end_time = isinstance(start, datetime.datetime)
 
-            if isinstance(start, datetime.datetime) and not timezone.is_aware(start):
-                start = timezone.make_aware(start, pytz.utc)
-            else:
+            if all_day:
                 start = datetime.datetime.combine(start, datetime.time.min)
+            if timezone.is_naive(start):
+                start = timezone.make_aware(start, time_zone)
+            start = start.astimezone(pytz.utc)
 
-            if isinstance(end, datetime.datetime) and not timezone.is_aware(end):
-                end = timezone.make_aware(end, pytz.utc)
-            else:
+            if all_day:
                 end = datetime.datetime.combine(end, datetime.time.min)
+            if timezone.is_naive(end):
+                end = timezone.make_aware(end, time_zone)
+            end = end.astimezone(pytz.utc)
 
             event = Event(title=component.get('summary'),
                           all_day=all_day,

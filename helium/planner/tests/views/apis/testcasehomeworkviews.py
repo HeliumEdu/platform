@@ -260,7 +260,6 @@ class TestCaseHomeworkViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homework = Homework.objects.get(pk=homework.pk)
-        print(homework.start)
         self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
