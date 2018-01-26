@@ -422,6 +422,35 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start', response.data)
 
+    def test_update_invalid_fraction_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response1 = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                    'pk': homework.pk}),
+                                    json.dumps({
+                                        'current_grade': 'not-a-fraction'
+                                    }),
+                                    content_type='application/json')
+        response2 = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                    'pk': homework.pk}),
+                                    json.dumps({
+                                        'current_grade': 'invalid/4'
+                                    }),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response1.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('current_grade', response1.data)
+        self.assertIn('current_grade', response2.data)
+
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)

@@ -127,6 +127,8 @@ def recalculate_course_grade(course):
     grade_series = []
     for category_id, grade in Homework.objects.for_course(course.pk).graded().values_list('category_id',
                                                                                           'current_grade'):
+        # The category may no longer exist by the time a recalculation request is processed, in which case we can simply
+        # and safely skip it
         try:
             category = Category.objects.get(pk=category_id)
         except Category.DoesNotExist:

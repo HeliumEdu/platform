@@ -16,9 +16,6 @@ class CourseGroupQuerySet(BaseQuerySet):
     def for_user(self, user_id):
         return self.filter(user_id=user_id)
 
-    def graded(self):
-        return self.filter(average_grade__gt=-1)
-
 
 class CourseGroupManager(BaseManager):
     def get_queryset(self):
@@ -29,6 +26,3 @@ class CourseGroupManager(BaseManager):
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
-
-    def graded(self):
-        return self.get_queryset().graded()
