@@ -151,7 +151,34 @@ class TestCaseReminderViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('one of', response.data['non_field_errors'][0])
+        self.assertIn('One of', response.data['non_field_errors'][0])
+
+    def test_create_reminder_multiple_parents_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'message': 'some message',
+            'start_of_range': '2014-05-08T12:00:00Z',
+            'offset': 1,
+            'offset_type': enums.HOURS,
+            'type': enums.POPUP,
+            'homework': homework.pk,
+            'event': event.pk,
+        }
+        response = self.client.post(
+            reverse('api_planner_reminders_list'),
+            data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Only one of', response.data['non_field_errors'][0])
 
     def test_get_reminder_by_id(self):
         # GIVEN
@@ -179,9 +206,7 @@ class TestCaseReminderViews(TestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
-            # Intentionally NOT changing these value
-            'event': event.pk
+            'type': enums.POPUP
         }
         response = self.client.put(reverse('api_planner_reminders_detail',
                                            kwargs={'pk': reminder.pk}),
@@ -193,6 +218,34 @@ class TestCaseReminderViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         reminder = Reminder.objects.get(pk=reminder.pk)
         reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
+
+    def test_update_reminder_multiple_parents_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'message': 'some message',
+            'offset': 1,
+            'offset_type': enums.HOURS,
+            'type': enums.POPUP,
+            'homework': homework.pk
+        }
+        response = self.client.put(reverse('api_planner_reminders_detail',
+                                           kwargs={'pk': reminder.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Only one of', response.data['non_field_errors'][0])
+
 
     def test_delete_reminder_by_id(self):
         # GIVEN
@@ -282,12 +335,7 @@ class TestCaseReminderViews(TestCase):
 
         # WHEN
         data = {
-            'from_admin': True,
-            # Intentionally NOT changing these value
-            'title': reminder.title,
-            'message': reminder.message,
-            'start_of_range': reminder.start_of_range.isoformat(),
-            'event': reminder.event.pk
+            'from_admin': True
         }
         response = self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                    json.dumps(data), content_type='application/json')

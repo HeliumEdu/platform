@@ -21,7 +21,11 @@ class ReminderSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if not self.instance and ('event' not in attrs and 'homework' not in attrs):
-            raise serializers.ValidationError("At least one of `event` or `homework` must be given.")
+            raise serializers.ValidationError("One of `event` or `homework` must be given.")
+        elif ('event' in attrs and 'homework' in attrs) or (
+                        self.instance and self.instance.event and 'homework' in attrs) or (
+                        self.instance and self.instance.homework and 'event' in attrs):
+            raise serializers.ValidationError("Only one of `event` or `homework` may be given.")
 
         return attrs
 

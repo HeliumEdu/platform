@@ -11,13 +11,11 @@ __copyright__ = 'Copyright 2017, Helium Edu'
 __version__ = '1.0.0'
 
 
-def given_reminder_exists(user, title='Test Reminder', message='You need to do something now.',
-                          start_of_range=datetime.datetime(2014, 5, 8, 10, 0, 0, tzinfo=timezone.utc), offset=15,
+def given_reminder_exists(user, title='Test Reminder', message='You need to do something now.', offset=15,
                           offset_type=enums.MINUTES, type=enums.TEXT, sent=False, from_admin=False, event=None,
                           homework=None):
     reminder = Reminder.objects.create(title=title,
                                        message=message,
-                                       start_of_range=start_of_range,
                                        offset=offset,
                                        offset_type=offset_type,
                                        type=type,
