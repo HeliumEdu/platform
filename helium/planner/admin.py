@@ -40,8 +40,8 @@ class CourseGroupAdmin(ModelAdmin):
         return self.readonly_fields
 
     def get_user(self, obj):
-        if obj.user:
-            return obj.user.get_username()
+        if obj.get_user():
+            return obj.get_user().get_username()
         else:
             return ''
 
@@ -167,8 +167,8 @@ class MaterialGroupAdmin(ModelAdmin):
         return self.readonly_fields
 
     def get_user(self, obj):
-        if obj.user:
-            return obj.user.get_username()
+        if obj.get_user():
+            return obj.get_user().get_username()
         else:
             return ''
 

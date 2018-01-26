@@ -29,7 +29,7 @@
             {% if calendar_item.attachments %}
                 <h4>Attachments</h4>
                 <p>
-                    {% for attachment in calendar_item.attachments %}
+                    {% for attachment in calendar_item.attachments.all %}
                         <a target="_blank"
                            href="{{ site_url }}/planner/attachment/{{ attachment.pk|safe }}">{{ attachment.title }}</a>
                         <br/>
