@@ -9,7 +9,7 @@ from helium.common.utils.commonutils import HeliumError
 from helium.planner.utils.attachmentutils import get_path_for_attachment
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2017, Helium Edu'
+__copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 

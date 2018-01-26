@@ -5,7 +5,7 @@ from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiLis
 from helium.feed.views.feedviews import feed_ical
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2017, Helium Edu'
+__copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 urlpatterns = [

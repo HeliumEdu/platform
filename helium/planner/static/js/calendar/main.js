@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 Helium Edu.
+ * Copyright (c) 2018 Helium Edu.
  *
  * JavaScript functionality for persistence and the HeliumCalendar object on the /planner/calendar page.
  *

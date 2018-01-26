@@ -10,7 +10,7 @@ from helium.planner.models import Course
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2017, Helium Edu'
+__copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
