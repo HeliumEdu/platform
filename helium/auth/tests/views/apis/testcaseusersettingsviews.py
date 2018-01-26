@@ -79,8 +79,8 @@ class TestCaseUserSettingsViews(TestCase):
                                    content_type='application/json')
 
         # THEN
-        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.settings.private_slug, private_slug)
 
     def test_unsubscribe_admin_emails(self):
@@ -88,9 +88,13 @@ class TestCaseUserSettingsViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         self.assertTrue(user.settings.receive_emails_from_admin)
 
-        self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username,
-                                                                               user.verification_code))
+        response1 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username,
+                                                                                           user.verification_code))
+        response2 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format('fake-user',
+                                                                                           'fake-verification'))
 
         # THEN
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
         user = get_user_model().objects.get(pk=user.id)
         self.assertFalse(user.settings.receive_emails_from_admin)
