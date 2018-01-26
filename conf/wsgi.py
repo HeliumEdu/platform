@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2017, Helium Edu'
+__copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")

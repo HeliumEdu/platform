@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 Helium Edu.
+ * Copyright (c) 2018 Helium Edu.
  *
  * Dynamic functionality shared among all pages.
  *

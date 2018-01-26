@@ -3,7 +3,7 @@ import logging
 from rest_framework import permissions
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2017, Helium Edu'
+__copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 logger = logging.getLogger(__name__)
