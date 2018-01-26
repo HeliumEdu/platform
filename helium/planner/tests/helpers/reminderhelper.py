@@ -1,7 +1,4 @@
-import datetime
-
 from dateutil import parser
-from django.utils import timezone
 
 from helium.common import enums
 from helium.planner.models import Reminder
