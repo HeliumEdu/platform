@@ -367,17 +367,17 @@ class TestCaseCourseViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         coursehelper.given_course_exists(course_group,
-                                         start_date=datetime.date(2014, 5, 8),
-                                         end_date=datetime.date(2014, 8, 15))
+                                         start_date=datetime.date(2016, 5, 8),
+                                         end_date=datetime.date(2016, 8, 15))
         course2 = coursehelper.given_course_exists(course_group,
-                                                   start_date=datetime.date(2014, 8, 15),
-                                                   end_date=datetime.date(2014, 11, 20))
+                                                   start_date=datetime.date(2016, 8, 15),
+                                                   end_date=datetime.date(2016, 11, 20))
         course3 = coursehelper.given_course_exists(course_group,
-                                                   start_date=datetime.date(2015, 1, 8),
-                                                   end_date=datetime.date(2015, 3, 25))
+                                                   start_date=datetime.date(2017, 1, 8),
+                                                   end_date=datetime.date(2017, 3, 25))
         coursehelper.given_course_exists(course_group,
-                                         start_date=datetime.date(2015, 3, 25),
-                                         end_date=datetime.date(2015, 8, 15))
+                                         start_date=datetime.date(2017, 3, 25),
+                                         end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
             reverse('api_planner_coursegroups_courses_list',
