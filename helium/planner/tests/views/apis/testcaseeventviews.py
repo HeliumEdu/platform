@@ -317,17 +317,17 @@ class TestCaseEventViews(TestCase):
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2014, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2014, 5, 8, 17, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc))
         event2 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2014, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2014, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
+                                                start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
         event3 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2014, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2014, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
+                                                start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2014, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2014, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         response = self.client.get(
             reverse('api_planner_events_list') + '?start={}&end={}'.format(quote(event2.start.isoformat()),

@@ -11,8 +11,8 @@ __version__ = '1.0.0'
 
 def given_course_exists(course_group, title='Test Course', room='DNC 201', credits=5, color='#4986e7',
                         website='http://mycourse.com', is_online=False, teacher_name='My Teacher',
-                        teacher_email='teacher@email.com', start_date=datetime.date(2014, 1, 6),
-                        end_date=datetime.date(2014, 5, 8)):
+                        teacher_email='teacher@email.com', start_date=datetime.date(2017, 1, 6),
+                        end_date=datetime.date(2017, 5, 8)):
     course = Course.objects.create(title=title,
                                    room=room,
                                    credits=credits,

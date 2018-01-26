@@ -55,21 +55,21 @@ def calculate_trend(series_range, series_list):
     range_count = len(series_range)
     x = 0
     y = 0
-    z = 0
-    x_cum = 0
-    y_cum = 0
+    xx = 0
+    yy = 0
+    sx = 0
 
-    for range_item, series_item in zip(series_range, series_list):
-        x = x + range_item
-        y = y + series_item
-        z = z + series_item * series_item
+    for range_item, list_item in zip(series_range, series_list):
+        x += range_item
+        y += list_item
+        xx += range_item * range_item
 
-        x_cum += range_count * range_count
-        y_cum += range_count * series_item
+        yy += list_item * list_item
+        sx += range_item * list_item
 
-    d = x_cum * range_count - x * x
+    d = xx * range_count - x * x
 
     if d != 0:
-        return (y_cum * range_count - y * x) / d
+        return (sx * range_count - y * x) / d
     else:
         return None

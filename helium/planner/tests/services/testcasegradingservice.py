@@ -1,8 +1,11 @@
+import datetime
+
+import pytz
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.services import gradingservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
+from helium.planner.models import CourseGroup, Course, Category
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -10,86 +13,136 @@ __version__ = '1.0.0'
 
 
 class TestCaseGradingService(TestCase):
-    pass
+    def test_trend_positive(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
 
-    # TODO: course group current grade
+        # WHEN
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='0/100')
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='200/100')
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='400/100')
 
-    # TODO: course group trending positive/negative
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category.pk)
+        self.assertEqual(float(course_group.trend), 1)
+        self.assertEqual(float(course.trend), 1)
+        self.assertEqual(float(category.trend), 1)
 
-    # TODO: course current grade
+    def test_trend_negative(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
 
-    # TODO: course non weight examples
-    # (25 + 75) / 2
+        # WHEN
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='400/100')
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='200/100')
+        homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             current_grade='0/100')
 
-    # (25 + 75 + 25 + 75) / 4
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category.pk)
+        self.assertEqual(float(course_group.trend), -1)
+        self.assertEqual(float(course.trend), -1)
+        self.assertEqual(float(category.trend), -1)
 
-    # (25 + 75 + 25 + 75 + 100) / 5
+        # TODO: course group current grade
 
-    # (25 + 75 + 25 + 75 + 100 + 25 + 25) / 7
+        # TODO: course current grade
 
-    # (80 + 90 + 25 + 75 + 100 + 25 + 25) / 7
+        # TODO: course non weight examples
+        # (25 + 75) / 2
 
-    # (80 + 90 + 80 + 90 + 100 + 25 + 25) / 7
+        # (25 + 75 + 25 + 75) / 4
 
-    # (80 + 90 + 100 + 25 + 25) / 5
+        # (25 + 75 + 25 + 75 + 100) / 5
 
-    # TODO: course weighted examples
-    # (((.5 * .3) + (0 * .6) + (0 * .1)) / .3) * 100
+        # (25 + 75 + 25 + 75 + 100 + 25 + 25) / 7
 
-    # (((.5 * .3) + (.35 * .6) + (0 * .1)) / .9) * 100
+        # (80 + 90 + 25 + 75 + 100 + 25 + 25) / 7
 
-    # ((.5 * .3) + (.35 * .6) + (.9 * .1)) * 100
+        # (80 + 90 + 80 + 90 + 100 + 25 + 25) / 7
 
-    # ((.5625 * .3) + (.6 * .6) + (.675 * .1)) * 100
+        # (80 + 90 + 100 + 25 + 25) / 5
 
-    # ((.5625 * .3) + (.825 * .6) + (.85 * .1)) * 100
+        # TODO: course weighted examples
+        # (((.5 * .3) + (0 * .6) + (0 * .1)) / .3) * 100
 
-    # ((.75 * .3) + (.825 * .6) + (.85 * .1)) * 100
+        # (((.5 * .3) + (.35 * .6) + (0 * .1)) / .9) * 100
 
-    # TODO: course differing grade bases
-    # Grade of 10/10 (100%)
+        # ((.5 * .3) + (.35 * .6) + (.9 * .1)) * 100
 
-    # Grade of 50/100 (50%)
+        # ((.5625 * .3) + (.6 * .6) + (.675 * .1)) * 100
 
-    # Grade of 40/50 (100%)
+        # ((.5625 * .3) + (.825 * .6) + (.85 * .1)) * 100
 
-    # Grade of 60/100 (50%)
+        # ((.75 * .3) + (.825 * .6) + (.85 * .1)) * 100
 
-    # Grade of 200/200 (100%)
+        # TODO: course differing grade bases
+        # Grade of 10/10 (100%)
 
-    # This course has a total of 110 points (60.303030303030305)
+        # Grade of 50/100 (50%)
 
-    # TODO: course non weight grade points examples
-    # ((25 * 30)) / 30
+        # Grade of 40/50 (100%)
 
-    # ((25 * 30) + (75 * 50)) / 80
+        # Grade of 60/100 (50%)
 
-    # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
+        # Grade of 200/200 (100%)
 
-    # TODO: course weighted grade points examples
-    # (25) / 1
+        # This course has a total of 110 points (60.303030303030305)
 
-    # (25 + 75) / 2
+        # TODO: course non weight grade points examples
+        # ((25 * 30)) / 30
 
-    # (25 + 75 + 50) / 3
+        # ((25 * 30) + (75 * 50)) / 80
 
-    # TODO: course trending positive/negative
+        # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
 
-    # TODO: category current grade
+        # TODO: course weighted grade points examples
+        # (25) / 1
 
-    # TODO: category differing grade bases
-    # Grade of 10/10 (100%)
+        # (25 + 75) / 2
 
-    # Grade of 50/100 (50%)
+        # (25 + 75 + 50) / 3
 
-    # Grade of 40/50 (100%)
+        # TODO: category current grade
 
-    # Grade of 60/100 (50%)
+        # TODO: category differing grade bases
+        # Grade of 10/10 (100%)
 
-    # Grade of 200/200 (100%)
+        # Grade of 50/100 (50%)
 
-    # This category has a total of 110 points (54.54545454545454)
+        # Grade of 40/50 (100%)
 
-    # This category has a total of 150 points (66.66666666666666)
+        # Grade of 60/100 (50%)
 
-    # TODO: category trending positive/negative
+        # Grade of 200/200 (100%)
+
+        # This category has a total of 110 points (54.54545454545454)
+
+        # This category has a total of 150 points (66.66666666666666)

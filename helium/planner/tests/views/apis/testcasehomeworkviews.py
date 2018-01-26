@@ -498,24 +498,24 @@ class TestCaseHomeworkViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course,
-                                             start=datetime.datetime(2014, 5, 8, 16, 0, 0,
+                                             start=datetime.datetime(2017, 5, 8, 16, 0, 0,
                                                                      tzinfo=timezone.utc),
-                                             end=datetime.datetime(2014, 5, 8, 17, 0, 0,
+                                             end=datetime.datetime(2017, 5, 8, 17, 0, 0,
                                                                    tzinfo=timezone.utc))
         homework2 = homeworkhelper.given_homework_exists(course,
-                                                         start=datetime.datetime(2014, 5, 8, 17, 0, 0,
+                                                         start=datetime.datetime(2017, 5, 8, 17, 0, 0,
                                                                                  tzinfo=timezone.utc),
-                                                         end=datetime.datetime(2014, 5, 8, 18, 0, 0,
+                                                         end=datetime.datetime(2017, 5, 8, 18, 0, 0,
                                                                                tzinfo=timezone.utc))
         homework3 = homeworkhelper.given_homework_exists(course,
-                                                         start=datetime.datetime(2014, 5, 8, 18, 30, 0,
+                                                         start=datetime.datetime(2017, 5, 8, 18, 30, 0,
                                                                                  tzinfo=timezone.utc),
-                                                         end=datetime.datetime(2014, 5, 8, 19, 0, 0,
+                                                         end=datetime.datetime(2017, 5, 8, 19, 0, 0,
                                                                                tzinfo=timezone.utc))
         homeworkhelper.given_homework_exists(course,
-                                             start=datetime.datetime(2014, 5, 8, 19, 30, 0,
+                                             start=datetime.datetime(2017, 5, 8, 19, 30, 0,
                                                                      tzinfo=timezone.utc),
-                                             end=datetime.datetime(2014, 5, 8, 21, 0, 0,
+                                             end=datetime.datetime(2017, 5, 8, 21, 0, 0,
                                                                    tzinfo=timezone.utc))
 
         response = self.client.get(

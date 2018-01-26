@@ -11,8 +11,8 @@ __version__ = '1.0.0'
 
 
 def given_event_exists(user, title='Test Event', all_day=False, show_end_time=True,
-                       start=datetime.datetime(2014, 5, 8, 12, 0, 0, tzinfo=timezone.utc),
-                       end=datetime.datetime(2014, 5, 8, 14, 0, 0, tzinfo=timezone.utc),
+                       start=datetime.datetime(2017, 5, 8, 12, 0, 0, tzinfo=timezone.utc),
+                       end=datetime.datetime(2017, 5, 8, 14, 0, 0, tzinfo=timezone.utc),
                        priority=75, comments='A comment on an event.'):
     event = Event.objects.create(title=title,
                                  all_day=all_day,

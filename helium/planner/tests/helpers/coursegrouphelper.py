@@ -9,8 +9,8 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
-def given_course_group_exists(user, title='Test Course Group', start_date=datetime.date(2014, 1, 6),
-                              end_date=datetime.date(2014, 5, 8),
+def given_course_group_exists(user, title='Test Course Group', start_date=datetime.date(2017, 1, 6),
+                              end_date=datetime.date(2017, 5, 8),
                               shown_on_calendar=True):
     course_group = CourseGroup.objects.create(title=title,
                                               start_date=start_date,

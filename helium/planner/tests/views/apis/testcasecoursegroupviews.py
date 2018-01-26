@@ -195,17 +195,17 @@ class TestCaseCourseGroupViews(TestCase):
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         coursegrouphelper.given_course_group_exists(user,
-                                                    start_date=datetime.date(2014, 5, 8),
-                                                    end_date=datetime.date(2014, 8, 15))
+                                                    start_date=datetime.date(2016, 5, 8),
+                                                    end_date=datetime.date(2016, 8, 15))
         course_group2 = coursegrouphelper.given_course_group_exists(user,
-                                                                    start_date=datetime.date(2014, 8, 15),
-                                                                    end_date=datetime.date(2014, 11, 20))
+                                                                    start_date=datetime.date(2016, 8, 15),
+                                                                    end_date=datetime.date(2016, 11, 20))
         course_group3 = coursegrouphelper.given_course_group_exists(user,
-                                                                    start_date=datetime.date(2015, 1, 8),
-                                                                    end_date=datetime.date(2015, 3, 25))
+                                                                    start_date=datetime.date(2017, 1, 8),
+                                                                    end_date=datetime.date(2017, 3, 25))
         coursegrouphelper.given_course_group_exists(user,
-                                                    start_date=datetime.date(2015, 3, 25),
-                                                    end_date=datetime.date(2015, 8, 15))
+                                                    start_date=datetime.date(2017, 3, 25),
+                                                    end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
             reverse('api_planner_coursegroups_list') + '?start_date={}&end_date={}'.format(
