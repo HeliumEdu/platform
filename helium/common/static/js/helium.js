@@ -373,7 +373,7 @@ var helium = new Helium();
 if (typeof USER_ID !== 'undefined') {
     $.ajax({
         type: "GET",
-        url: "/api/auth/users/" + USER_ID,
+        url: "/api/auth/users/" + USER_ID + "/",
         async: false,
         dataType: "json",
         success: function (data) {
