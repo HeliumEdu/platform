@@ -118,7 +118,7 @@ function HeliumPlannerAPI() {
 
         return $.ajax({
             type: "GET",
-            url: "/api/planner/grades",
+            url: "/api/planner/grades/",
             async: async,
             dataType: "json",
             success: callback,
@@ -157,7 +157,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups",
+                url: "/api/planner/coursegroups/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -203,7 +203,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + id,
+                url: "/api/planner/coursegroups/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -316,7 +316,7 @@ function HeliumPlannerAPI() {
         self.course_groups_by_user_id = {};
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/coursegroups/" + id,
+            url: "/api/planner/coursegroups/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -356,7 +356,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + id + "/courses",
+                url: "/api/planner/coursegroups/" + id + "/courses/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -401,7 +401,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/courses",
+                url: "/api/planner/courses/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -446,7 +446,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/courses",
+                url: "/api/planner/courses/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -493,7 +493,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id,
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -618,7 +618,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id,
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -657,7 +657,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materialgroups",
+                url: "/api/planner/materialgroups/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -703,7 +703,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materialgroups/" + id,
+                url: "/api/planner/materialgroups/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -815,7 +815,7 @@ function HeliumPlannerAPI() {
         delete self.material_group[id];
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/materialgroups/" + id,
+            url: "/api/planner/materialgroups/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -855,7 +855,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materials?course=" + id,
+                url: "/api/planner/materials/?course=" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -902,7 +902,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id,
+                url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -948,7 +948,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materialgroups/" + id + "/materials",
+                url: "/api/planner/materialgroups/" + id + "/materials/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1064,7 +1064,7 @@ function HeliumPlannerAPI() {
         self.materials_by_course_id = {};
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id,
+            url: "/api/planner/materialgroups/" + material_group_id + "/materials/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -1103,7 +1103,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/categories",
+                url: "/api/planner/categories/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1153,7 +1153,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/categories",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/categories/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1201,7 +1201,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1323,7 +1323,7 @@ function HeliumPlannerAPI() {
         self.categories_by_course_id = {};
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id,
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/categories/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -1363,7 +1363,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/attachments?course=" + id,
+                url: "/api/planner/attachments/?course=" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1443,7 +1443,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/homework",
+                url: "/api/planner/homework/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1490,7 +1490,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/homework",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/homework/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1538,7 +1538,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id,
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1717,7 +1717,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/events",
+                url: "/api/planner/events/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1763,7 +1763,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/events/" + id,
+                url: "/api/planner/events/" + id + "/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1877,7 +1877,7 @@ function HeliumPlannerAPI() {
         self.events_by_user_id = {};
         return $.ajax({
             type: "DELETE",
-            url: "/api/planner/events/" + id,
+            url: "/api/planner/events/" + id + "/",
             async: async,
             dataType: "json",
             success: callback,
@@ -1916,7 +1916,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/feed/externalcalendars",
+                url: "/api/feed/externalcalendars/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1962,7 +1962,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/feed/externalcalendars/" + id + "/externalevents",
+                url: "/api/feed/externalcalendars/" + id + "/externalevents/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -2007,7 +2007,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/reminders?sent=false",
+                url: "/api/planner/reminders/?sent=false",
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -2056,7 +2056,7 @@ function HeliumPlannerAPI() {
 
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/reminders?" + query,
+                url: "/api/planner/reminders/?" + query,
                 data: {calendar_item_type: calendar_item_type},
                 async: async,
                 dataType: "json",
@@ -2206,7 +2206,7 @@ function HeliumPlannerAPI() {
         var query = calendar_item_type === "0" ? "event=" + id : "homework=" + id;
         return $.ajax({
             type: "GET",
-            url: "/api/planner/attachments?" + query,
+            url: "/api/planner/attachments/?" + query,
             async: async,
             data: {calendar_item_type: calendar_item_type},
             dataType: "json",
@@ -2233,7 +2233,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         return $.ajax({
             type: "PUT",
-            url: "/api/feeds/enable-external",
+            url: "/api/feeds/enable-external/",
             async: async,
             dataType: "json",
             success: callback,
@@ -2259,7 +2259,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         return $.ajax({
             type: "PUT",
-            url: "/api/feeds/disable-external",
+            url: "/api/feeds/disable-external/",
             async: async,
             dataType: "json",
             success: callback,
