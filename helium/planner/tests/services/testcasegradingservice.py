@@ -71,9 +71,190 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(float(course.trend), -1)
         self.assertEqual(float(category.trend), -1)
 
-        # TODO: course group current grade
+    def test_unweighted_grade_unchanged(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
 
-        # TODO: course current grade
+        # WHEN
+        homeworkhelper.given_homework_exists(course, category=category, current_grade='-1/100')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category.pk)
+        self.assertEqual(course_group.average_grade, -1)
+        self.assertEqual(course.current_grade, -1)
+        self.assertEqual(category.average_grade, -1)
+
+    def test_unweighted_grade_changes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course_group_ungraded = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        course_ungraded = coursehelper.given_course_exists(course_group_ungraded)
+        category1 = categoryhelper.given_category_exists(course1)
+        category2 = categoryhelper.given_category_exists(course2)
+        category_ungraded = categoryhelper.given_category_exists(course_ungraded)
+
+        # WHEN
+        homework1 = homeworkhelper.given_homework_exists(course1, category=category1, completed=True,
+                                                         current_grade='100/100')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
+        course1 = Course.objects.get(pk=course1.pk)
+        course2 = Course.objects.get(pk=course2.pk)
+        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
+        category1 = Category.objects.get(pk=category1.pk)
+        category2 = Category.objects.get(pk=category2.pk)
+        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        self.assertEqual(float(course_group.average_grade), 100)
+        self.assertEqual(course_group_ungraded.average_grade, -1)
+        self.assertEqual(course1.current_grade, 100)
+        self.assertEqual(course2.current_grade, -1)
+        self.assertEqual(course_ungraded.current_grade, -1)
+        self.assertEqual(float(category1.average_grade), 100)
+        self.assertEqual(category2.average_grade, -1)
+        self.assertEqual(category_ungraded.average_grade, -1)
+
+        # WHEN
+        homeworkhelper.given_homework_exists(course2, category=category2, completed=True, current_grade='50/100')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
+        course1 = Course.objects.get(pk=course1.pk)
+        course2 = Course.objects.get(pk=course2.pk)
+        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
+        category1 = Category.objects.get(pk=category1.pk)
+        category2 = Category.objects.get(pk=category2.pk)
+        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        self.assertEqual(float(course_group.average_grade), 75)
+        self.assertEqual(course_group_ungraded.average_grade, -1)
+        self.assertEqual(course1.current_grade, 100)
+        self.assertEqual(course2.current_grade, 50)
+        self.assertEqual(course_ungraded.current_grade, -1)
+        self.assertEqual(float(category1.average_grade), 100)
+        self.assertEqual(category2.average_grade, 50)
+        self.assertEqual(category_ungraded.average_grade, -1)
+
+        # WHEN
+        homeworkhelper.given_homework_exists(course1, category=category1, completed=True, current_grade='80/100')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course1 = Course.objects.get(pk=course1.pk)
+        course2 = Course.objects.get(pk=course2.pk)
+        category1 = Category.objects.get(pk=category1.pk)
+        category2 = Category.objects.get(pk=category2.pk)
+        self.assertEqual(float(course_group.average_grade), 70)
+        self.assertEqual(course1.current_grade, 90)
+        self.assertEqual(course2.current_grade, 50)
+        self.assertEqual(float(category1.average_grade), 90)
+        self.assertEqual(category2.average_grade, 50)
+
+        # WHEN
+        homework1.delete()
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
+        course1 = Course.objects.get(pk=course1.pk)
+        course2 = Course.objects.get(pk=course2.pk)
+        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
+        category1 = Category.objects.get(pk=category1.pk)
+        category2 = Category.objects.get(pk=category2.pk)
+        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        self.assertEqual(float(course_group.average_grade), 65)
+        self.assertEqual(course_group_ungraded.average_grade, -1)
+        self.assertEqual(course1.current_grade, 80)
+        self.assertEqual(course2.current_grade, 50)
+        self.assertEqual(course_ungraded.current_grade, -1)
+        self.assertEqual(float(category1.average_grade), 80)
+        self.assertEqual(category2.average_grade, 50)
+        self.assertEqual(category_ungraded.average_grade, -1)
+
+    def test_weighted_grade_imbalanced(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course)
+        category3 = categoryhelper.given_category_exists(course)
+
+        # WHEN
+        homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='10/10')
+        homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='50/100')
+        homeworkhelper.given_homework_exists(course, category=category2, completed=True, current_grade='40/50')
+        homeworkhelper.given_homework_exists(course, category=category2, completed=True, current_grade='60/100')
+        homeworkhelper.given_homework_exists(course, category=category3, completed=True, current_grade='200/200')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category1 = Category.objects.get(pk=category1.pk)
+        category2 = Category.objects.get(pk=category2.pk)
+        category3 = Category.objects.get(pk=category3.pk)
+        # 360/460 total points
+        self.assertEqual(float(course_group.average_grade), 78.2609)
+        self.assertEqual(float(course.current_grade), 78.2609)
+        # 60/110 total points
+        self.assertEqual(float(category1.average_grade), 54.5455)
+        # 100/150 total points
+        self.assertEqual(float(category2.average_grade), 66.6667)
+        # 200/200 total points
+        self.assertEqual(float(category3.average_grade), 100)
+
+    def test_incomplete_not_graded(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course)
+        categoryhelper.given_category_exists(course)
+
+        # WHEN
+        homework1 = homeworkhelper.given_homework_exists(course, category=category1, current_grade='50/100')
+        homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='100/100')
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category1.pk)
+        self.assertEqual(float(course_group.average_grade), 100)
+        self.assertEqual(float(course.current_grade), 100)
+        self.assertEqual(float(category.average_grade), 100)
+
+        # WHEN
+        homework1.completed = True
+        homework1.save()
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category1.pk)
+        self.assertEqual(float(course_group.average_grade), 75)
+        self.assertEqual(float(course.current_grade), 75)
+        self.assertEqual(float(category.average_grade), 75)
+
+        # WHEN
+        homework1.completed = False
+        homework1.save()
+
+        # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
+        category = Category.objects.get(pk=category1.pk)
+        self.assertEqual(float(course_group.average_grade), 100)
+        self.assertEqual(float(course.current_grade), 100)
+        self.assertEqual(float(category.average_grade), 100)
 
         # TODO: course non weight examples
         # (25 + 75) / 2
@@ -130,19 +311,4 @@ class TestCaseGradingService(TestCase):
 
         # (25 + 75 + 50) / 3
 
-        # TODO: category current grade
-
-        # TODO: category differing grade bases
-        # Grade of 10/10 (100%)
-
-        # Grade of 50/100 (50%)
-
-        # Grade of 40/50 (100%)
-
-        # Grade of 60/100 (50%)
-
-        # Grade of 200/200 (100%)
-
-        # This category has a total of 110 points (54.54545454545454)
-
-        # This category has a total of 150 points (66.66666666666666)
+        # TODO: tests for course grade point series
