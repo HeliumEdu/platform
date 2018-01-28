@@ -435,9 +435,9 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(grade_points[1], [homework2.start, 50])
         # (25 + 75 + 50) / 3
         self.assertEqual(grade_points[2], [homework3.start, 50])
-        # (25 + 75 + 50 + (60/80) / 4
+        # (25 + 75 + 50 + (60/80)) / 4
         self.assertEqual(grade_points[3], [homework4.start, 55.2632])
-        # (25 + 75 + 50 + (60/80) + (4/5) / 5
+        # (25 + 75 + 50 + (60/80) + (4/5)) / 5
         self.assertEqual(grade_points[4], [homework5.start, 55.5844])
 
     def test_weight_graded_points(self):
@@ -485,7 +485,7 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(grade_points[1], [homework2.start, 56.25])
         # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
         self.assertEqual(grade_points[2], [homework3.start, 55])
-        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) / 100
+        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30)) / 100
         self.assertEqual(grade_points[3], [homework4.start, 59.6154])
-        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 10) / 100
+        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 10)) / 100
         self.assertEqual(grade_points[4], [homework5.start, 62.3333])
