@@ -121,8 +121,10 @@ def send_email_reminder(email, subject, reminder_id, calendar_item):
                                      subject, [email])
 
 
-# Add schedule for email reminders every minute
-app.add_periodic_task(crontab(), email_reminders.s())
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # Add schedule for email reminders every minute
+    sender.add_periodic_task(crontab(), email_reminders.s())
 
-# Add schedule for text reminders every minute
-app.add_periodic_task(crontab(), text_reminders.s())
+    # Add schedule for text reminders every minute
+    sender.add_periodic_task(crontab(), text_reminders.s())
