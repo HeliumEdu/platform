@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.urlresolvers import reverse
 
-from helium.auth import tasks
+from helium.auth.tasks import send_verification_email, send_registration_email, send_password_reset_email
 from helium.common.utils import metricutils
 from helium.common.utils.viewutils import set_request_status
 
@@ -25,7 +25,7 @@ def process_register(request, user):
     """
     logger.info('Registered new user with username: {}'.format(user.get_username()))
 
-    tasks.send_verification_email.delay(user.email, user.username, user.verification_code)
+    send_verification_email.delay(user.email, user.username, user.verification_code)
 
     set_request_status(request, 'info',
                        'You\'re almost there! The last step is to verify your email address. Click the link in the '
@@ -55,7 +55,7 @@ def process_verification(request, username, verification_code):
             if not user.email.endswith('@heliumedu.com'):
                 metricutils.increment('action.user.created', request)
 
-            tasks.send_registration_email.delay(user.email)
+            send_registration_email.delay(user.email)
 
             # Now that the user is registered, log them it automatically and redirect them to the authenticated
             # landing page
@@ -138,7 +138,7 @@ def process_forgot_password(request):
 
         logger.info('Reset password for user with email {}'.format(email))
 
-        tasks.send_password_reset_email.delay(user.email, password)
+        send_password_reset_email.delay(user.email, password)
 
         request.session.modified = True
     except get_user_model().DoesNotExist:

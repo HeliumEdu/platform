@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from helium.common import enums
-from helium.common import tasks as commontasks
+from helium.common.tasks import send_text
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
 
@@ -34,7 +34,7 @@ def get_subject(reminder):
 
 
 def process_email_reminders():
-    from helium.planner.tasks import remindertasks
+    from helium.planner.tasks import send_email_reminder
 
     for reminder in Reminder.objects.with_type(enums.EMAIL).unsent().for_today().iterator():
         if reminder.get_user().email and reminder.get_user().is_active:
@@ -49,14 +49,14 @@ def process_email_reminders():
 
                 metricutils.increment('task.reminder.queue.email')
 
-                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event)
+                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event)
             elif reminder.homework:
                 logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
 
                 metricutils.increment('task.reminder.queue.email')
 
-                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk,
-                                                        reminder.homework)
+                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk,
+                                          reminder.homework)
 
             reminder.sent = True
             reminder.save()
@@ -82,10 +82,10 @@ def process_text_reminders():
 
                 metricutils.increment('task.reminder.queue.text')
 
-                commontasks.send_text.delay(reminder.get_user().profile.phone,
-                                            reminder.get_user().profile.phone_carrier,
-                                            'Helium Reminder',
-                                            message)
+                send_text.delay(reminder.get_user().profile.phone,
+                                reminder.get_user().profile.phone_carrier,
+                                'Helium Reminder',
+                                message)
             elif reminder.homework:
                 subject = get_subject(reminder)
                 message = '({}) {}'.format(subject, reminder.message)
@@ -98,10 +98,10 @@ def process_text_reminders():
 
                 metricutils.increment('task.reminder.queue.text')
 
-                commontasks.send_text.delay(reminder.get_user().profile.phone,
-                                            reminder.get_user().profile.phone_carrier,
-                                            'Helium Reminder',
-                                            message)
+                send_text.delay(reminder.get_user().profile.phone,
+                                reminder.get_user().profile.phone_carrier,
+                                'Helium Reminder',
+                                message)
 
             reminder.sent = True
             reminder.save()

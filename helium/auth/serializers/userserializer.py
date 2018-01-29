@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from helium.auth import tasks
+from helium.auth.tasks import send_verification_email
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 
@@ -46,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
 
             instance.verification_code = uuid.uuid4()
 
-            tasks.send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
+            send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
 
         instance = super(UserSerializer, self).update(instance, validated_data)
 
