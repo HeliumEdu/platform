@@ -14,5 +14,4 @@ htmlcov
 docs/_build
 docs/_static
 docs/_templates
-celerybeat.pid
-celerybeat-schedule
+celerybeat*
