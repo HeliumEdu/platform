@@ -34,4 +34,7 @@ def verify_event_matches_data(test_case, event, data):
     test_case.assertEqual(event.end, parser.parse(data['end']))
     test_case.assertEqual(event.priority, data['priority'])
     test_case.assertEqual(event.comments, data['comments'])
-    test_case.assertEqual(event.user.pk, data['user'])
+    if isinstance(data['user'], dict):
+        test_case.assertEqual(event.user.pk, int(data['user']['id']))
+    else:
+        test_case.assertEqual(event.user.pk, int(data['user']))
