@@ -20,3 +20,8 @@ class EventSerializer(serializers.ModelSerializer):
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)
+
+
+class EventExtendedSerializer(EventSerializer):
+    class Meta(EventSerializer.Meta):
+        depth = 1

@@ -12,7 +12,7 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.filters import BaseCalendarFilter
 from helium.planner.schemas import EventDetailSchema
-from helium.planner.serializers.eventserializer import EventSerializer
+from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -31,7 +31,7 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
-    serializer_class = EventSerializer
+    serializer_class = EventExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_class = BaseCalendarFilter
@@ -82,6 +82,12 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
     def get_queryset(self):
         user = self.request.user
         return user.events.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return EventExtendedSerializer
+        else:
+            return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         timezone.activate(request.user.settings.time_zone)

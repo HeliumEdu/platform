@@ -2012,7 +2012,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/reminders/?sent=false",
+                url: "/api/planner/reminders/?sent=false&type=0",
                 async: async,
                 dataType: "json",
                 success: function (data) {

@@ -1319,7 +1319,7 @@ function HeliumCalendar() {
             // Build a JSONifyable list of reminder elements
             $("[id^='reminder-'][id$='-modified']").each(function () {
                 helium.planner_api.edit_reminder(function () {
-                    }, $(this).attr("id").split("category-")[1].split("-reminder")[0],
+                    }, $(this).attr("id").split("reminder-")[1].split("-modified")[0],
                     {
                         "title": $($(this).children()[0]).text(),
                         "message": $($(this).children()[0]).text(),
@@ -1373,10 +1373,13 @@ function HeliumCalendar() {
             if ($("#homework-materials").val()) {
                 data["materials"] = $("#homework-materials").val();
             }
-            helium.planner_api.get_courses(function (courses) {
-                data["course_group"] = helium.calendar.get_course_from_list_by_pk(courses, data["course"]).course_group;
-            }, false, true);
             if (self.edit) {
+                if (self.current_calendar_item.calendar_item_type === 1) {
+                    helium.planner_api.get_courses(function (courses) {
+                        data["course_group"] = helium.calendar.get_course_from_list_by_pk(courses, data["course"]).course_group;
+                    }, false, true);
+                }
+
                 $.each(reminders_data, function (i, reminder_data) {
                     if (self.current_calendar_item.calendar_item_type === 1) {
                         reminder_data["homework"] = self.current_calendar_item.id;
@@ -1479,6 +1482,12 @@ function HeliumCalendar() {
                     }
                 });
             } else {
+                if (!$("#homework-event-switch").is(":checked")) {
+                    helium.planner_api.get_courses(function (courses) {
+                        data["course_group"] = helium.calendar.get_course_from_list_by_pk(courses, data["course"]).course_group;
+                    }, false, true);
+                }
+
                 var callback = function (data) {
                     if (helium.data_has_err_msg(data)) {
                         helium.ajax_error_occurred = true;
