@@ -49,13 +49,14 @@ def process_email_reminders():
 
                 metricutils.increment('task.reminder.queue.email')
 
-                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder, reminder.event)
+                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event)
             elif reminder.homework:
                 logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
 
                 metricutils.increment('task.reminder.queue.email')
 
-                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder, reminder.homework)
+                remindertasks.send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk,
+                                                        reminder.homework)
 
             reminder.sent = True
             reminder.save()

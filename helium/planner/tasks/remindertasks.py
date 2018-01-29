@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from conf.celery import app
 from helium.common.utils import commonutils
+from helium.planner.models import Reminder
 from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
@@ -35,7 +36,14 @@ def text_reminders():
 
 
 @app.task
-def send_email_reminder(email, subject, reminder, calendar_item):
+def send_email_reminder(email, subject, reminder_id, calendar_item):
+    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
+    # skip it
+    try:
+        reminder = Reminder.objects.get(pk=reminder_id)
+    except Reminder.DoesNotExist:
+        return
+
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Reminder {} not being sent.'.format(reminder.pk))
         return
