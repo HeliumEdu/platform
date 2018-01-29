@@ -1,0 +1,27 @@
+[run]
+branch = True
+omit =
+    conf/**
+    */admin.py
+    */apps.py
+    */schemas.py
+    */tests/**
+    */migrations/**
+    helium/common/utils/metricutils.py
+
+[report]
+fail_under = 90
+precision = 2
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self\.debug
+    if settings.DEBUG
+    if settings.DISABLE_EMAILS
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+
+[html]
+title = Helium Platform Coverage Report

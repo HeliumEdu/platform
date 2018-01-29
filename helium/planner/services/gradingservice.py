@@ -1,0 +1,201 @@
+import logging
+
+from helium.common.utils import commonutils
+from helium.planner.models import CourseGroup, Course, Category, Homework
+
+__author__ = 'Alex Laird'
+__copyright__ = 'Copyright 2018, Helium Edu'
+__version__ = '1.0.0'
+
+logger = logging.getLogger(__name__)
+
+
+def get_grade_points_for_course(course_id):
+    course_has_weighted_grading = Course.objects.has_weighted_grading(course_id)
+
+    total_earned = 0
+    total_possible = 0
+    # Maintain grades by category as we iterate over all homework
+    category_totals = {}
+    grade_series = []
+    for category_id, start, grade in Homework.objects.for_course(course_id).graded().values_list('category_id', 'start',
+                                                                                                 'current_grade'):
+        category = Category.objects.get(pk=category_id)
+
+        earned, possible = grade.split('/')
+        earned = float(earned)
+        possible = float(possible)
+        if course_has_weighted_grading:
+            if category.pk not in category_totals:
+                category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
+
+            category_totals[category.pk]['total_earned'] += earned
+            category_totals[category.pk]['total_possible'] += possible
+
+            total_earned += (((earned / possible) * (float(category.weight) / 100)) * 100)
+            total_possible += float(category.weight)
+        else:
+            total_earned += earned
+            total_possible += possible
+
+        grade_series.append([start, round((total_earned / total_possible * 100), 4)])
+
+    return grade_series
+
+
+def get_grade_data(user_id):
+    # TODO: refactor how num_graded is acquired here, as it could be more efficient
+
+    course_groups = CourseGroup.objects.for_user(user_id).values('id', 'title', 'average_grade', 'trend')
+
+    for course_group in course_groups:
+        course_group['overall_grade'] = course_group['average_grade']
+        course_group['num_graded'] = CourseGroup.objects.get(pk=course_group['id']).num_graded
+        course_group.pop('average_grade')
+
+        course_group['courses'] = Course.objects.for_user(user_id).for_course_group(course_group['id']).values('id',
+                                                                                                               'title',
+                                                                                                               'current_grade',
+                                                                                                               'trend')
+
+        for course in course_group['courses']:
+            course['overall_grade'] = course['current_grade']
+            course['num_graded'] = Course.objects.get(pk=course['id']).num_graded
+            course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
+            course.pop('current_grade')
+            course['grade_points'] = get_grade_points_for_course(course['id'])
+
+            course['categories'] = Category.objects.for_user(user_id).for_course(course['id']).values('id',
+                                                                                                      'title',
+                                                                                                      'weight',
+                                                                                                      'average_grade',
+                                                                                                      'grade_by_weight',
+                                                                                                      'trend')
+
+            for category in course['categories']:
+                category['overall_grade'] = category['average_grade']
+                category['num_graded'] = Category.objects.get(pk=category['id']).num_graded
+                category.pop('average_grade')
+
+    return {
+        'course_groups': course_groups
+    }
+
+
+def recalculate_course_group_grade(course_group):
+    course_grades = Course.objects.for_course_group(course_group.pk).graded().values_list('current_grade', flat=True)
+    total = sum(course_grades)
+
+    course_group.average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
+
+    logger.debug('Course Group {} average grade recalculated to {} with {} courses'.format(course_group.pk,
+                                                                                           course_group.average_grade,
+                                                                                           len(course_grades)))
+
+    homework_grades = Homework.objects.for_course_group(course_group.pk).graded().values_list('current_grade',
+                                                                                              flat=True)
+
+    total_earned = 0
+    total_possible = 0
+    # We could more simply sum this value, but we're maintaining a list so we can use it later to calculate the
+    # linear regression
+    grade_series = []
+    for grade in homework_grades:
+        earned, possible = grade.split('/')
+        total_earned += float(earned)
+        total_possible += float(possible)
+
+        grade_series.append(total_earned / total_possible)
+
+    course_group.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+
+    logger.debug('Course Group {} trend recalculated to {}'.format(course_group.pk, course_group.trend))
+
+    course_group.save()
+
+
+def recalculate_course_grade(course):
+    course_has_weighted_grading = Course.objects.has_weighted_grading(course.pk)
+
+    total_earned = 0
+    total_possible = 0
+    # Maintain grades by category as we iterate over all homework
+    category_totals = {}
+    # We could more simply sum this value, but we're maintaining a list so we can use it later to calculate the
+    # linear regression; note that this grade series is just for raw grade trend analysis and does not take weight
+    # into account
+    grade_series = []
+    for category_id, grade in Homework.objects.for_course(course.pk).graded().values_list('category_id',
+                                                                                          'current_grade'):
+        # The category may no longer exist by the time a recalculation request is processed, in which case we can simply
+        # and safely skip it
+        try:
+            category = Category.objects.get(pk=category_id)
+        except Category.DoesNotExist:
+            continue
+
+        earned, possible = grade.split('/')
+        earned = float(earned)
+        possible = float(possible)
+
+        total_earned += earned
+        total_possible += possible
+
+        grade_series.append(total_earned / total_possible)
+
+        if category.pk not in category_totals:
+            category_totals[category.pk] = {'instance': category, 'total_earned': 0, 'total_possible': 0}
+
+        category_totals[category.pk]['total_earned'] += earned
+        category_totals[category.pk]['total_possible'] += possible
+
+    category_earned = 0
+    category_possible = 0
+    for category in category_totals.values():
+        if course_has_weighted_grading:
+            category_earned += (((category['total_earned'] / category['total_possible']) * (
+                float(category['instance'].weight) / 100)) * 100)
+            category_possible += float(category['instance'].weight)
+
+            grade_by_weight = category_earned
+        else:
+            category_earned += total_earned
+            category_possible += total_possible
+
+            grade_by_weight = 0
+
+        # Update the values in the datastore, circumventing signals
+        Category.objects.filter(pk=category['instance'].pk).update(grade_by_weight=grade_by_weight)
+
+    if len(grade_series) > 0 and category_possible > 0:
+        course.current_grade = (category_earned / category_possible) * 100
+    else:
+        course.current_grade = -1
+
+    course.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+
+    course.save()
+
+
+def recalculate_category_grade(category):
+    total_earned = 0
+    total_possible = 0
+    # We could more simply sum this value, but we're maintaining a list so we can use it later to calculate the
+    # linear regression
+    grade_series = []
+    for grade in Homework.objects.for_category(category.pk).graded().values_list('current_grade', flat=True):
+        earned, possible = grade.split('/')
+        total_earned += float(earned)
+        total_possible += float(possible)
+
+        grade_series.append(total_earned / total_possible)
+
+    average_grade = (total_earned / total_possible) * 100 if len(grade_series) > 0 else -1
+    trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+
+    # Update the values in the datastore, circumventing signals
+    Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
+
+    logger.debug('Category {} average grade recalculated to {} with {} homework'.format(category.pk,
+                                                                                        category.average_grade,
+                                                                                        len(grade_series)))

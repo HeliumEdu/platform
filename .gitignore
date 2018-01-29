@@ -1,0 +1,17 @@
+.DS_Store
+*.pyc
+.idea/
+*.iml
+/static
+/media
+db.sqlite3
+db.test.sqlite3
+.coverage
+*.log
+.env
+.venv
+htmlcov
+docs/_build
+docs/_static
+docs/_templates
+celerybeat*
