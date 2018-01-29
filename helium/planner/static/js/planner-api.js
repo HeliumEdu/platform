@@ -1598,6 +1598,7 @@ function HeliumPlannerAPI() {
     this.add_homework = function (callback, course_group_id, course_id, data, async) {
         async = typeof async === "undefined" ? true : async;
         self.homework_by_course_id = {};
+        self.homework_by_user_id = {};
         return $.ajax({
             type: "POST",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/",
@@ -1637,6 +1638,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         delete self.homework[id];
         self.homework_by_course_id = {};
+        self.homework_by_user_id = {};
         self.reminders_by_calendar_item = {};
         return $.ajax({
             type: "PUT",
@@ -1676,6 +1678,8 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         delete self.homework[id];
         self.homework_by_course_id = {};
+        self.homework_by_user_id = {};
+        self.reminders_by_calendar_item = {};
         return $.ajax({
             type: "DELETE",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id + "/",
@@ -1875,6 +1879,7 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         delete self.event[id];
         self.events_by_user_id = {};
+        self.reminders_by_calendar_item = {};
         return $.ajax({
             type: "DELETE",
             url: "/api/planner/events/" + id + "/",

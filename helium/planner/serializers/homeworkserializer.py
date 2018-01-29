@@ -29,7 +29,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         instance = super(HomeworkSerializer, self).update(instance, validated_data)
 
         if old_category:
-            gradingtasks.recalculate_category_grade(old_category)
+            gradingtasks.recalculate_category_grade(old_category.pk)
 
         return instance
 

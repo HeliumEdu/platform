@@ -44,6 +44,9 @@
         helium.planner_api.get_homework_by_id(function (h) {
             data = {"completed": completed};
             helium.planner_api.edit_homework(function (h_edited) {
+                self.homework_by_course_id = {};
+                self.homework_by_user_id = {};
+
                 if (helium.data_has_err_msg(h_edited)) {
                     helium.ajax_error_occurred = true;
                     helium.calendar.loading_div.spin(false);
