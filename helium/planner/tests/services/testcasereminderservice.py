@@ -16,7 +16,7 @@ __version__ = '1.0.0'
 
 
 class TestCaseReminderService(TestCase):
-    @mock.patch('helium.planner.tasks.remindertasks.commonutils.send_multipart_email')
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_process_email_reminders(self, send_multipart_email):
         # GIVEN
         user = userhelper.given_a_user_exists()

@@ -2,8 +2,8 @@ import logging
 
 from rest_framework import serializers
 
+from helium.planner.tasks import recalculate_category_grade
 from helium.planner.models import Homework
-from helium.planner.tasks import gradingtasks
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -29,7 +29,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         instance = super(HomeworkSerializer, self).update(instance, validated_data)
 
         if old_category:
-            gradingtasks.recalculate_category_grade(old_category.pk)
+            recalculate_category_grade(old_category.pk)
 
         return instance
 
