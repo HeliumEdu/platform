@@ -283,11 +283,6 @@ function Helium() {
                 var put_data = {
                     'sent': true
                 }, reminder_div = $(this).parent();
-                if (type === "homework") {
-                    put_data['homework'] = data.homework.id;
-                } else if (type === "event") {
-                    put_data['event'] = data.event.id;
-                }
                 helium.planner_api.edit_reminder(function (data) {
                     if (helium.data_has_err_msg(data)) {
                         helium.ajax_error_occurred = true;
@@ -303,7 +298,7 @@ function Helium() {
                             $("#reminder-bell-alt-count").hide("fast");
                         }
                     }
-                }, data.id, put_data);
+                }, data.id, put_data, true, true);
             });
             if (location.href.indexOf('/planner/calendar') !== -1) {
                 list_item.find('[id^="reminder-for-"]').on("click", function () {

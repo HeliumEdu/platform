@@ -210,11 +210,11 @@ function HeliumCalendar() {
                 if (event.calendar_item_type === 0) {
                     helium.planner_api.edit_event(function (data) {
                         helium.planner_api.get_event(callback, event.id);
-                    }, event.id, data);
+                    }, event.id, data, true, true);
                 } else {
                     helium.planner_api.edit_homework(function (data) {
                         helium.planner_api.get_homework(callback, event.course.course_group, event.course.id, event.id);
-                    }, event.course.course_group, event.course.id, event.id, data);
+                    }, event.course.course_group, event.course.id, event.id, data, true, true);
                 }
             }
         });
@@ -261,11 +261,11 @@ function HeliumCalendar() {
         if (event.calendar_item_type === 0) {
             helium.planner_api.edit_event(function (data) {
                 helium.planner_api.get_event(callback, event.id);
-            }, event.id, data);
+            }, event.id, data, true, true);
         } else {
             helium.planner_api.edit_homework(function (data) {
                 helium.planner_api.get_homework(callback, event.course.course_group, event.course.id, event.id);
-            }, event.course.course_group, event.course.id, event.id, data);
+            }, event.course.course_group, event.course.id, event.id, data, true, true);
         }
     };
 

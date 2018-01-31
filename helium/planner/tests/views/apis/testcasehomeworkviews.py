@@ -239,7 +239,7 @@ class TestCaseHomeworkViews(TestCase):
         homework = Homework.objects.get(pk=homework.pk)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
-    def test_update_converts_to_utc(self):
+    def test_patch_converts_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -251,11 +251,11 @@ class TestCaseHomeworkViews(TestCase):
             'start': '2016-05-08T12:00:00-0500',
             'end': '2016-05-08T14:00:00-0500',
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
-                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                   'pk': homework.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                             kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                     'pk': homework.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -263,7 +263,7 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
-    def test_update_converts_naive_datetime_to_utc(self):
+    def test_patch_converts_naive_datetime_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -277,11 +277,11 @@ class TestCaseHomeworkViews(TestCase):
             'start': '2016-05-08 12:00:00',
             'end': '2016-05-08 14:00:00',
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
-                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                   'pk': homework.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                             kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                     'pk': homework.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -337,12 +337,12 @@ class TestCaseHomeworkViews(TestCase):
                                      kwargs={'course_group': course_group1.pk, 'course': course1.pk}),
                              json.dumps({'materials': [material2.pk]}),
                              content_type='application/json'),
-            self.client.put(
+            self.client.patch(
                 reverse('api_planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
                 json.dumps({'course': course2.pk}),
                 content_type='application/json'),
-            self.client.put(
+            self.client.patch(
                 reverse('api_planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
                 json.dumps({'materials': [material2.pk]}),
@@ -402,7 +402,7 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start', response.data)
 
-    def test_update_bad_data(self):
+    def test_patch_bad_data(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -413,10 +413,10 @@ class TestCaseHomeworkViews(TestCase):
         data = {
             'start': 'not-a-valid-date'
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
-                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                   'pk': homework.pk}),
-                                   json.dumps(data), content_type='application/json')
+        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                             kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                     'pk': homework.pk}),
+                                     json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -430,20 +430,20 @@ class TestCaseHomeworkViews(TestCase):
         homework = homeworkhelper.given_homework_exists(course)
 
         # WHEN
-        response1 = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
-                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                    'pk': homework.pk}),
-                                    json.dumps({
-                                        'current_grade': 'not-a-fraction'
-                                    }),
-                                    content_type='application/json')
-        response2 = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
-                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                    'pk': homework.pk}),
-                                    json.dumps({
-                                        'current_grade': 'invalid/4'
-                                    }),
-                                    content_type='application/json')
+        response1 = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                      'pk': homework.pk}),
+                                      json.dumps({
+                                          'current_grade': 'not-a-fraction'
+                                      }),
+                                      content_type='application/json')
+        response2 = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                      'pk': homework.pk}),
+                                      json.dumps({
+                                          'current_grade': 'invalid/4'
+                                      }),
+                                      content_type='application/json')
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_400_BAD_REQUEST)
