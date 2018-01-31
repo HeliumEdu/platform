@@ -1424,12 +1424,16 @@ function HeliumCalendar() {
                                 return false;
                             } else {
                                 var new_count = parseInt($("#reminder-bell-count").text()) - 1;
-                                $("#reminder-popup-" + reminder_id).hide();
+                                var popup = $("#reminder-popup-" + reminder_id);
 
-                                $("#reminder-bell-count").html(new_count + " Reminder" + (new_count > 1 ? "s" : ""));
-                                $("#reminder-bell-alt-count").html(new_count);
-                                if (new_count === 0) {
-                                    $("#reminder-bell-alt-count").hide("fast");
+                                if (popup.length > 0) {
+                                    popup.hide();
+
+                                    $("#reminder-bell-count").html(new_count + " Reminder" + (new_count > 1 ? "s" : ""));
+                                    $("#reminder-bell-alt-count").html(new_count);
+                                    if (new_count === 0) {
+                                        $("#reminder-bell-alt-count").hide("fast");
+                                    }
                                 }
                             }
                         }, reminder_id));
