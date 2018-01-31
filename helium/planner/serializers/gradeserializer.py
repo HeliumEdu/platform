@@ -18,6 +18,8 @@ class GradeHolderSerializer(serializers.Serializer):
 
     weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
 
+    color = serializers.CharField(required=False)
+
     grade_by_weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
 
     trend = serializers.FloatField()

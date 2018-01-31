@@ -88,6 +88,7 @@ class TestCaseEventViews(TestCase):
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('num_graded', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
+        self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][1])
@@ -96,6 +97,7 @@ class TestCaseEventViews(TestCase):
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('num_graded', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
+        self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
 
         self.assertIn('title', response.data['course_groups'][1])
@@ -121,4 +123,5 @@ class TestCaseEventViews(TestCase):
         self.assertIn('trend', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('num_graded', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('weight', response.data['course_groups'][1]['courses'][0]['categories'][0])
+        self.assertIn('color', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('grade_by_weight', response.data['course_groups'][1]['courses'][0]['categories'][0])

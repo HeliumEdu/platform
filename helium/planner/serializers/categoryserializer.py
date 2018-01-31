@@ -1,7 +1,10 @@
 import logging
+import random
 
 from rest_framework import serializers
 
+from helium.common import enums
+from helium.common.utils import commonutils
 from helium.planner.models.category import Category
 
 __author__ = 'Alex Laird'
@@ -41,3 +44,9 @@ class CategorySerializer(serializers.ModelSerializer):
                 "The cumulative weights of all categories associated with a course cannot exceed 100.")
 
         return weight
+
+    def create(self, validated_data):
+        if 'color' not in validated_data:
+            validated_data['color'] = random.choice(enums.ALLOWED_COLORS)[0]
+
+        return super(CategorySerializer, self).create(validated_data)

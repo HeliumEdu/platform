@@ -24,6 +24,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'thu_end_time_alt', 'fri_start_time_alt', 'fri_end_time_alt', 'sat_start_time_alt', 'sat_end_time_alt',
             'course_group',
             # Property fields (which should also be declared as read-only)
-            'num_items', 'num_complete', 'num_incomplete', 'num_graded',)
+            'has_weighted_grading', 'num_items', 'num_complete', 'num_incomplete', 'num_graded',)
         read_only_fields = (
-            'current_grade', 'trend', 'private_slug', 'num_items', 'num_complete', 'num_incomplete', 'num_graded',)
+            'current_grade', 'trend', 'private_slug', 'has_weighted_grading', 'num_items', 'num_complete',
+            'num_incomplete', 'num_graded',)
