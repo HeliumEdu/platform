@@ -2760,6 +2760,11 @@
                                     } else {
                                         helium.planner_api.get_homework(function (data) {
                                             calendar_item = data;
+
+                                            if (calendar_item.calendar_item_type === 0) {
+                                                calendar_item.id = "event_" + calendar_item.id;
+                                            }
+
                                             helium.calendar.update_current_calendar_item(calendar_item);
 
                                             helium.calendar.loading_div.spin(false);
