@@ -53,7 +53,9 @@ class CourseGroup(BaseModel):
 
     @property
     def days_remaining(self):
-        return (self.end_date - datetime.datetime.now().date()).days
+        days_remaining = (self.end_date - datetime.datetime.now().date()).days
+
+        return days_remaining if days_remaining > 0 else 0
 
     @property
     def num_items(self):

@@ -386,6 +386,46 @@ function HeliumCalendar() {
         });
     };
 
+    this.same_time = function (course) {
+        return (
+            (course.sun_start_time == course.mon_start_time &&
+            course.sun_start_time == course.tue_start_time &&
+            course.sun_start_time == course.wed_start_time &&
+            course.sun_start_time == course.thu_start_time &&
+            course.sun_start_time == course.fri_start_time &&
+            course.sun_start_time == course.sat_start_time)
+            &&
+            (course.sun_end_time == course.mon_end_time &&
+            course.sun_end_time == course.tue_end_time &&
+            course.sun_end_time == course.wed_end_time &&
+            course.sun_end_time == course.thu_end_time &&
+            course.sun_end_time == course.fri_end_time &&
+            course.sun_end_time == course.sat_end_time)
+        )
+    };
+
+    this.same_time_alt = function (course) {
+        return (
+            (course.sun_start_time_alt == course.mon_start_time_alt &&
+            course.sun_start_time_alt == course.tue_start_time_alt &&
+            course.sun_start_time_alt == course.wed_start_time_alt &&
+            course.sun_start_time_alt == course.thu_start_time_alt &&
+            course.sun_start_time_alt == course.fri_start_time_alt &&
+            course.sun_start_time_alt == course.sat_start_time_alt)
+            &&
+            (course.sun_end_time_alt == course.mon_end_time_alt &&
+            course.sun_end_time_alt == course.tue_end_time_alt &&
+            course.sun_end_time_alt == course.wed_end_time_alt &&
+            course.sun_end_time_alt == course.thu_end_time_alt &&
+            course.sun_end_time_alt == course.fri_end_time_alt &&
+            course.sun_end_time_alt == course.sat_end_time_alt)
+        )
+    };
+
+    this.has_schedule = function (course) {
+        return course.days_of_week != '0000000' || course.days_of_week_alt != '0000000' || !self.same_time(course) || !self.same_time_alt(course);
+    };
+
     /**
      * Clicking on a calendar item on the calendar triggers an event being edited, which will bring up the Homework modal.
      *

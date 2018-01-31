@@ -143,6 +143,10 @@ class Course(BaseModel):
         return self.course_group.get_user()
 
     @property
+    def has_weighted_grading(self):
+        return Course.objects.has_weighted_grading(self.pk)
+
+    @property
     def num_items(self):
         return self.homework.count()
 
