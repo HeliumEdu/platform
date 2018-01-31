@@ -201,6 +201,11 @@ function HeliumCalendar() {
                 };
                 var callback = function (data) {
                     var calendar_item = data;
+
+                    if (calendar_item.calendar_item_type === 0) {
+                        calendar_item.id = "event_" + calendar_item.id;
+                    }
+
                     self.update_current_calendar_item(calendar_item);
 
                     self.nullify_calendar_item_persistence();
@@ -249,6 +254,11 @@ function HeliumCalendar() {
                 bootbox.alert(data[0].err_msg);
             } else {
                 var calendar_item = data;
+
+                if (calendar_item.calendar_item_type === 0) {
+                    calendar_item.id = "event_" + calendar_item.id;
+                }
+
                 self.update_current_calendar_item(calendar_item);
 
                 self.nullify_calendar_item_persistence();
@@ -393,7 +403,7 @@ function HeliumCalendar() {
             ret_val = false;
         } else {
             h_e_str = calendar_item.calendar_item_type === 0 ? "event" : (calendar_item.calendar_item_type === 1 ? "homework" : "external");
-            h_e_id = calendar_item.id;
+            h_e_id = calendar_item.calendar_item_type === 0 ? calendar_item.id.substr(6) : calendar_item.id;
 
             if (($("#calendar").fullCalendar("getView").name === "list" || $("#calendar-" + h_e_str + "-checkbox-" + h_e_id).is(":checked") === calendar_item.completed || calendar_item.completed === undefined)) {
                 // If the checkbox and homework field for "completed" match, the homework was clicked, so open the modal
@@ -668,7 +678,7 @@ function HeliumCalendar() {
                         $.each(data, function (i, calendar_item) {
                             if ($.cookie("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1) {
                                 events.push({
-                                    id: calendar_item.id,
+                                    id: "ext_" + calendar_item.id,
                                     color: external_calendar.color,
                                     title: helium.calendar.get_calendar_item_title(calendar_item),
                                     title_no_format: calendar_item.title,
@@ -709,7 +719,7 @@ function HeliumCalendar() {
                         calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1 ||
                         calendar_item.comments.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1) {
                         events.push({
-                            id: calendar_item.id,
+                            id: "event_" + calendar_item.id,
                             color: helium.USER_PREFS.settings.events_color,
                             title: helium.calendar.get_calendar_item_title(calendar_item),
                             title_no_format: calendar_item.title,
@@ -1136,6 +1146,7 @@ function HeliumCalendar() {
                 $("#homework-error").parent().show("fast");
             } else {
                 var calendar_item = data, event;
+                calendar_item.id = calendar_item.calendar_item_type === 0 ? "event_" + calendar_item.id : calendar_item.id;
                 $("#calendar").fullCalendar("renderEvent", {
                     id: calendar_item.id,
                     color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color,
@@ -1179,7 +1190,7 @@ function HeliumCalendar() {
 
         if (event.calendar_item_type === 0) {
             helium.planner_api.add_event(function (data) {
-                helium.planner_api.get_event(callback, data.id);
+                helium.planner_api.get_event(callback, "event_" + data.id);
             }, cloned);
         } else {
             helium.planner_api.add_homework(function (data) {
@@ -1451,6 +1462,11 @@ function HeliumCalendar() {
                     } else {
                         if (!helium.ajax_error_occurred) {
                             var calendar_item = data;
+
+                            if (calendar_item.calendar_item_type === 0) {
+                                calendar_item.id = "event_" + calendar_item.id;
+                            }
+
                             calendar_item.start = moment(calendar_item.start);
                             calendar_item.end = moment(calendar_item.end);
                             self.update_current_calendar_item(calendar_item);
@@ -1506,6 +1522,7 @@ function HeliumCalendar() {
                         $("#homework-error").parent().show("fast");
                     } else {
                         var calendar_item = data;
+                        calendar_item.id = calendar_item.calendar_item_type === 0 ? "event_" + calendar_item.id : calendar_item.id;
                         $("#calendar").fullCalendar("renderEvent", {
                             id: calendar_item.id,
                             color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color,
@@ -1572,7 +1589,7 @@ function HeliumCalendar() {
 
                     if ($("#homework-event-switch").is(":checked")) {
                         helium.planner_api.add_event(function (event) {
-                            helium.planner_api.get_event(callback, event.id, false);
+                            helium.planner_api.get_event(callback, "event_" + event.id, false);
                         }, data);
                     } else {
                         helium.planner_api.add_homework(function (homework) {
@@ -1766,7 +1783,7 @@ $(document).ready(function () {
                     this.on("sendingmultiple", function (na, xhr, form_data) {
                         xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
                         if (helium.calendar.current_calendar_item.calendar_item_type === 0) {
-                            form_data.append("event", helium.calendar.current_calendar_item.id);
+                            form_data.append("event", helium.calendar.current_calendar_item.id.substr(6));
                         } else {
                             form_data.append("homework", helium.calendar.current_calendar_item.id);
                         }

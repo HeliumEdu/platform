@@ -1764,6 +1764,10 @@ function HeliumPlannerAPI() {
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
 
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
         if (use_cache && self.event.hasOwnProperty(id)) {
             ret_val = callback(self.event[id]);
         } else {
@@ -1844,6 +1848,11 @@ function HeliumPlannerAPI() {
     this.edit_event = function (callback, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
         patch = typeof patch === "undefined" ? true : patch;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
         delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
@@ -1881,6 +1890,11 @@ function HeliumPlannerAPI() {
      */
     this.delete_event = function (callback, id, async) {
         async = typeof async === "undefined" ? true : async;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
         delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
