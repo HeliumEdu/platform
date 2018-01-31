@@ -2750,23 +2750,7 @@
                             helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
 
                             data = {"completed": !helium.calendar.current_calendar_item.completed};
-                            if (helium.calendar.current_calendar_item.calendar_item_type === 0) {
-                                helium.planner_api.edit_event(function (data) {
-                                    if (helium.data_has_err_msg(data)) {
-                                        helium.ajax_error_occurred = true;
-                                        helium.calendar.loading_div.spin(false);
-
-                                        bootbox.alert(data[0].err_msg);
-                                    } else {
-                                        helium.planner_api.get_event(function (data) {
-                                            calendar_item = data;
-                                            helium.calendar.update_current_calendar_item(calendar_item);
-
-                                            helium.calendar.loading_div.spin(false);
-                                        }, id);
-                                    }
-                                }, id, data);
-                            } else {
+                            if (helium.calendar.current_calendar_item.calendar_item_type === 1) {
                                 helium.planner_api.edit_homework(function (data) {
                                     if (helium.data_has_err_msg(data)) {
                                         helium.ajax_error_occurred = true;
@@ -2781,7 +2765,7 @@
                                             helium.calendar.loading_div.spin(false);
                                         }, helium.calendar.current_calendar_item.course.course_group, helium.calendar.current_calendar_item.course.id, id);
                                     }
-                                }, helium.calendar.current_calendar_item.course.course_group, helium.calendar.current_calendar_item.course.id, id, data);
+                                }, helium.calendar.current_calendar_item.course.course_group, helium.calendar.current_calendar_item.course.id, id, data, true, true);
                             }
                         });
                         row.find("#edit-homework-" + event.id).on("click", function () {

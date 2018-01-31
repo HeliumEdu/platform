@@ -182,7 +182,7 @@ class TestCaseEventViews(TestCase):
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
 
-    def test_update_converts_to_utc(self):
+    def test_patch_converts_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         event = eventhelper.given_event_exists(user)
@@ -192,10 +192,10 @@ class TestCaseEventViews(TestCase):
             'start': '2016-05-08T12:00:00-0500',
             'end': '2016-05-08T14:00:00-0500',
         }
-        response = self.client.put(reverse('api_planner_events_detail',
-                                           kwargs={'pk': event.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_events_detail',
+                                             kwargs={'pk': event.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -203,7 +203,7 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
-    def test_update_converts_naive_datetime_to_utc(self):
+    def test_patch_converts_naive_datetime_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -215,10 +215,10 @@ class TestCaseEventViews(TestCase):
             'start': '2016-05-08 12:00:00',
             'end': '2016-05-08 14:00:00',
         }
-        response = self.client.put(reverse('api_planner_events_detail',
-                                           kwargs={'pk': event.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_events_detail',
+                                             kwargs={'pk': event.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -58,7 +58,7 @@
 
                     helium.calendar.loading_div.spin(false);
                 }
-            }, h.course.course_group, h.course.id, homework_id, data);
+            }, h.course.course_group, h.course.id, homework_id, data, true, true);
         }, homework_id, true);
     });
 

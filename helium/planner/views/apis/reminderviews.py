@@ -76,6 +76,9 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     put:
     Update the given reminder instance.
 
+    patch:
+    Update only the given attributes of the given reminder instance.
+
     delete:
     Delete the given reminder instance.
     """
@@ -93,9 +96,18 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     def put(self, request, *args, **kwargs):
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
-        if 'homework' in request.data:
+        elif 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+
+        metricutils.increment('action.reminder.updated', request)
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))

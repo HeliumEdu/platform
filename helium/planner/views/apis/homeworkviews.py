@@ -110,6 +110,9 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     put:
     Update the given homework instance.
 
+    patch:
+    Update only the given attributes of the given homework instance.
+
     delete:
     Delete the given homework instance.
     """
@@ -135,6 +138,23 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     def put(self, request, *args, **kwargs):
         timezone.activate(request.user.settings.time_zone)
 
+        permissions.check_course_permission(request.user.pk, request.data['course'])
+        if 'category' in request.data:
+            permissions.check_category_permission(request.user.pk, request.data['category'])
+        for material_id in request.data.get('materials', []):
+            permissions.check_material_permission(request.user.pk, material_id)
+
+        response = self.update(request, *args, **kwargs)
+
+        logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+
+        metricutils.increment('action.homework.updated', request)
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'category' in request.data:
@@ -144,7 +164,7 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info('Homework {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment('action.homework.updated', request)
 
