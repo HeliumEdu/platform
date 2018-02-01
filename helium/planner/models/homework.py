@@ -12,7 +12,6 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
-@python_2_unicode_compatible
 class Homework(BaseCalendar):
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[fraction_validator])

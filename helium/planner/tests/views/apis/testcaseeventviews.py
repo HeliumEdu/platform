@@ -1,14 +1,14 @@
-from urllib.parse import quote
-
-import pytz
-from dateutil import parser
 from future.standard_library import install_aliases
 
 install_aliases()
 
+import pytz
+from dateutil import parser
+
 import datetime
 import json
 
+from urllib.parse import quote
 from django.utils import timezone
 from django.test import TestCase
 from django.urls import reverse

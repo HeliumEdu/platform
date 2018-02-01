@@ -11,7 +11,6 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
-@python_2_unicode_compatible
 class Event(BaseCalendar):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
