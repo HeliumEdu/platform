@@ -1,9 +1,17 @@
+from future.standard_library import install_aliases
+
+install_aliases()
+
+from urllib.parse import quote
+
 import json
+import datetime
 from datetime import timedelta
 
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
@@ -12,7 +20,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 class TestCaseReminderViews(TestCase):
@@ -391,3 +399,24 @@ class TestCaseReminderViews(TestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_range_query(self):
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework1 = homeworkhelper.given_homework_exists(course,
+                                                         start=datetime.datetime(2017, 5, 8, 16, 0, 0,
+                                                                                 tzinfo=timezone.utc),
+                                                         end=datetime.datetime(2017, 5, 8, 17, 0, 0,
+                                                                               tzinfo=timezone.utc))
+        homework2 = homeworkhelper.given_homework_exists(course,
+                                                         start=timezone.now() + timedelta(days=1),
+                                                         end=timezone.now() + timedelta(days=1, minutes=30))
+        reminderhelper.given_reminder_exists(user, homework=homework1)
+        reminderhelper.given_reminder_exists(user, homework=homework2)
+
+        response = self.client.get(
+            reverse('api_planner_reminders_list') + '?start_of_range__lte={}'.format(quote(timezone.now().isoformat())))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)

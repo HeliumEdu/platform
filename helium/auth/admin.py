@@ -10,7 +10,7 @@ from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 class AdminUserCreationForm(UserCreationForm):
