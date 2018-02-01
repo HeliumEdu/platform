@@ -31,7 +31,7 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('event', 'homework', 'type', 'sent', 'from_admin')
+    filter_fields = ('event', 'homework', 'type', 'sent')
 
     def get_queryset(self):
         user = self.request.user

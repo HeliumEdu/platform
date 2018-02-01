@@ -267,8 +267,6 @@ function Helium() {
             msg_body.append('<span class="msg-title"><span class="blue">(' + data.homework.course.title + ') ' + data.homework.title + '</span> ' + data.message + '</span>');
         } else if (type === "event") {
             msg_body.append('<span class="msg-title"><span class="blue">(Event) ' + data.event.title + '</span> ' + data.message + '</span>');
-        } else if (data.from_admin) {
-            msg_body.append('<span class="msg-title"><span class="blue">(The Helium Team) </span> ' + data.message + '</span>');
         }
 
         var msg_time = $('<span class="msg-time">');

@@ -174,7 +174,7 @@ class TestCaseAttachmentViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('one of', response.data[0]['non_field_errors'][0])
+        self.assertIn('One of', response.data[0]['non_field_errors'][0])
 
     def test_get_attachment_by_id(self):
         # GIVEN

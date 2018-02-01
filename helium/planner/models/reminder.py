@@ -34,8 +34,6 @@ class Reminder(BaseModel):
 
     sent = models.BooleanField(default=False)
 
-    from_admin = models.BooleanField(default=False)
-
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 

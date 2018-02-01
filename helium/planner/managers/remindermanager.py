@@ -18,10 +18,9 @@ class ReminderQuerySet(models.query.QuerySet):
     def unsent(self):
         return self.filter(sent=False)
 
-    def for_today(self, from_admin=False):
+    def for_today(self):
         today = timezone.now()
-        return self.filter(start_of_range__lte=today).filter(
-            Q(homework__isnull=False) | Q(event__isnull=False) | Q(from_admin=from_admin))
+        return self.filter(start_of_range__lte=today).filter(Q(homework__isnull=False) | Q(event__isnull=False))
 
 
 class ReminderManager(models.Manager):
@@ -34,5 +33,5 @@ class ReminderManager(models.Manager):
     def unsent(self):
         return self.get_queryset().unsent()
 
-    def for_today(self, from_admin=False):
-        return self.get_queryset().for_today(from_admin)
+    def for_today(self):
+        return self.get_queryset().for_today()
