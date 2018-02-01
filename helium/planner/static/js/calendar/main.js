@@ -710,7 +710,7 @@ function HeliumCalendar() {
         // for greatly improved efficiency
 
         if ($.cookie("filter_show_external") === undefined || $.cookie("filter_show_external") === "true") {
-            helium.planner_api.get_external_calendars(function (external_calendars) {
+            helium.calendar.ajax_calls.push(helium.planner_api.get_external_calendars(function (external_calendars) {
                 $.each(external_calendars, function (index, external_calendar) {
                     helium.planner_api.get_external_calendar_feed(function (data) {
                         var events = [];
@@ -747,11 +747,11 @@ function HeliumCalendar() {
                         });
                     }, external_calendar.id, false);
                 });
-            }, false);
+            }, true, true));
         }
 
         if ($.cookie("filter_show_events") === undefined || $.cookie("filter_show_events") === "true") {
-            helium.planner_api.get_events(function (data) {
+            helium.calendar.ajax_calls.push(helium.planner_api.get_events(function (data) {
                 var events = [];
 
                 $.each(data, function (i, calendar_item) {
@@ -785,11 +785,11 @@ function HeliumCalendar() {
                 helium.external_sources.push({
                     events: events
                 });
-            }, false);
+            }, true, true));
         }
 
         if ($.cookie("filter_show_homework") === undefined || $.cookie("filter_show_homework") === "true") {
-            helium.planner_api.get_homework_by_user(function (data) {
+            helium.calendar.ajax_calls.push(helium.planner_api.get_homework_by_user(function (data) {
                 var events = [];
 
                 $.each(data, function (i, calendar_item) {
@@ -840,14 +840,16 @@ function HeliumCalendar() {
                 helium.external_sources.push({
                     events: events
                 });
-            }, false);
+            }, true, true));
         }
 
-        $.each(helium.external_sources, function (i, external_source) {
-            $("#calendar").fullCalendar("addEventSource", external_source);
-        });
+        $.when.apply(this, helium.calendar.ajax_calls).done(function () {
+            $.each(helium.external_sources, function (i, external_source) {
+                $("#calendar").fullCalendar("addEventSource", external_source);
+            });
 
-        self.loading_div.spin(false);
+            self.loading_div.spin(false);
+        });
     };
 
     /**
@@ -969,8 +971,6 @@ function HeliumCalendar() {
 
         self.refresh_calendar_items();
 
-        self.loading_div.spin(helium.SMALL_LOADING_OPTS);
-
         self.ajax_calls.push(helium.planner_api.get_courses(function (data) {
             if (helium.data_has_err_msg(data)) {
                 helium.ajax_error_occurred = true;
@@ -1018,8 +1018,6 @@ function HeliumCalendar() {
                         e.stopPropagation();
                     }
                 });
-
-                self.loading_div.spin(false);
             }
         }, true, true));
     };
@@ -1802,6 +1800,8 @@ $(document).ready(function () {
 
         $.when.apply(this, helium.calendar.ajax_calls).done(function () {
             $(".homework-help").popover({html: true}).data("bs.popover").tip().css("z-index", 1060);
+
+            helium.calendar.loading_div.spin(false);
         });
 
         $(".wysiwyg-editor").ace_wysiwyg({
