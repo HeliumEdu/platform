@@ -208,7 +208,7 @@ class TestCaseCourseGroupViews(TestCase):
                                                     end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
-            reverse('api_planner_coursegroups_list') + '?start_date={}&end_date={}'.format(
+            reverse('api_planner_coursegroups_list') + '?start_date__gte={}&end_date__lte={}'.format(
                 course_group2.start_date.isoformat(),
                 course_group3.end_date.isoformat()))
 

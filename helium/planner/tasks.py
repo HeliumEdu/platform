@@ -65,6 +65,15 @@ def recalculate_category_grade(category_id):
 
 
 @app.task
+def adjust_reminder_times(calendar_item_id, calendar_item_type):
+    for reminder in Reminder.objects.for_calendar_item(calendar_item_id, calendar_item_type).iterator():
+        logger.info('Adjusting start_of_range for reminder {}.'.format(reminder.pk))
+
+        # Forcing a reminder to save will recalculate its start_of_range, if necessary
+        reminder.save()
+
+
+@app.task
 def email_reminders():
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Email reminders not being sent.')

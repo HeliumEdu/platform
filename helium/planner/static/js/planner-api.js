@@ -2030,7 +2030,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/reminders/?sent=false&type=0",
+                url: "/api/planner/reminders/?sent=false&type=0&start_of_range__lte=" + moment().toISOString(),
                 async: async,
                 dataType: "json",
                 success: function (data) {

@@ -1,6 +1,4 @@
-from django.contrib.admin import ModelAdmin
-
-from helium.common.admin import admin_site
+from helium.common.admin import admin_site, BaseModelAdmin
 from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'
@@ -8,16 +6,11 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
-class ExternalCalendarAdmin(ModelAdmin):
+class ExternalCalendarAdmin(BaseModelAdmin):
     list_display = ['title', 'url', 'color', 'shown_on_calendar', 'get_user', ]
     list_filter = ['shown_on_calendar']
     ordering = ('user__username',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('user', 'created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         if obj.get_user():

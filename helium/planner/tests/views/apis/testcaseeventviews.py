@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 import pytz
 from dateutil import parser
 from future.standard_library import install_aliases
@@ -6,7 +8,6 @@ install_aliases()
 
 import datetime
 import json
-from urllib.parse import quote
 
 from django.utils import timezone
 from django.test import TestCase
@@ -330,8 +331,8 @@ class TestCaseEventViews(TestCase):
                                        end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_events_list') + '?start={}&end={}'.format(quote(event2.start.isoformat()),
-                                                                           quote(event3.end.isoformat())))
+            reverse('api_planner_events_list') + '?start__gte={}&end__lte={}'.format(quote(event2.start.isoformat()),
+                                                                                     quote(event3.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

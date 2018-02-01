@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
+from helium.planner.filters import ReminderFilter
 from helium.planner.schemas import ReminderDetailSchema
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
@@ -31,7 +32,7 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('event', 'homework', 'type', 'sent')
+    filter_class = ReminderFilter
 
     def get_queryset(self):
         user = self.request.user

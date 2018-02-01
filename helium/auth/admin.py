@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
@@ -7,7 +6,7 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.utils.userutils import validate_password
-from helium.common.admin import admin_site
+from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -36,7 +35,7 @@ class AdminUserCreationForm(UserCreationForm):
         return self.instance
 
 
-class UserAdmin(admin.UserAdmin, ModelAdmin):
+class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
@@ -60,7 +59,7 @@ class UserAdmin(admin.UserAdmin, ModelAdmin):
         return self.readonly_fields
 
 
-class UserSettingsAdmin(ModelAdmin):
+class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     ordering = ('user__username',)
@@ -79,7 +78,7 @@ class UserSettingsAdmin(ModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class UserProfileAdmin(ModelAdmin):
+class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone_carrier']
     list_filter = ('phone_carrier',)
     ordering = ('user__username',)

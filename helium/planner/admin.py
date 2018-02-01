@@ -1,6 +1,4 @@
-from django.contrib.admin import ModelAdmin
-
-from helium.common.admin import admin_site
+from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder
 
@@ -9,16 +7,16 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.0.0'
 
 
-class AttachmentAdmin(ModelAdmin):
-    list_display = ('attachment', 'size', 'created_at', 'updated_at', 'get_user',)
+class AttachmentAdmin(BaseModelAdmin):
+    list_display = ('title', 'get_attachment', 'size', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('user__username',)
-    ordering = ('-updated_at',)
+    readonly_fields = ('course', 'event', 'homework', 'user',)
 
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
+    def get_attachment(self, obj):
+        return obj.attachment
 
-        return self.readonly_fields
+    get_attachment.short_description = 'Attachment'
+    get_attachment.admin_order_field = 'attachment'
 
     def get_user(self, obj):
         return obj.get_user().username
@@ -27,17 +25,11 @@ class AttachmentAdmin(ModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class CourseGroupAdmin(ModelAdmin):
+class CourseGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'start_date', 'end_date', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('user', 'created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         if obj.get_user():
@@ -49,16 +41,10 @@ class CourseGroupAdmin(ModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class CourseAdmin(ModelAdmin):
+class CourseAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'created_at', 'start_date', 'end_date', 'get_user',)
     search_fields = ('title', 'course_group__user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('course_group',)
 
     def get_course_group(self, obj):
         return obj.course_group.title
@@ -76,16 +62,10 @@ class CourseAdmin(ModelAdmin):
     get_user.admin_order_field = 'course_group__user__username'
 
 
-class CategoryAdmin(ModelAdmin):
+class CategoryAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'updated_at', 'weight', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('course',)
 
     def get_course(self, obj):
         return obj.course.title
@@ -106,16 +86,10 @@ class CategoryAdmin(ModelAdmin):
     get_user.admin_order_field = 'course__course_group__user__username'
 
 
-class EventAdmin(ModelAdmin):
+class EventAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         return obj.get_user().username
@@ -124,16 +98,10 @@ class EventAdmin(ModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class HomeworkAdmin(ModelAdmin):
+class HomeworkAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('category', 'materials', 'course',)
 
     def get_course(self, obj):
         return obj.course.title
@@ -154,17 +122,11 @@ class HomeworkAdmin(ModelAdmin):
     get_user.admin_order_field = 'course__course_group__user__username'
 
 
-class MaterialGroupAdmin(ModelAdmin):
+class MaterialGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'updated_at', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('user', 'created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         if obj.get_user():
@@ -176,16 +138,10 @@ class MaterialGroupAdmin(ModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class MaterialAdmin(ModelAdmin):
+class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('title', 'material_group__user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('material_group', 'courses',)
 
     def get_material_group(self, obj):
         return obj.material_group.title
@@ -203,16 +159,10 @@ class MaterialAdmin(ModelAdmin):
     get_user.admin_order_field = 'material_group__user__username'
 
 
-class ReminderAdmin(ModelAdmin):
+class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('title', 'user__username',)
-    ordering = ('-updated_at',)
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('created_at', 'updated_at',)
-
-        return self.readonly_fields
+    readonly_fields = ('event', 'homework', 'user',)
 
     def get_user(self, obj):
         return obj.get_user().username

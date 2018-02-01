@@ -26,9 +26,6 @@ class Event(BaseCalendar):
         kwargs.pop('calendar_item_type', None)
         super(Event, self).__init__(*args, **kwargs)
 
-    def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
-
     def get_user(self):
         return self.user
 
