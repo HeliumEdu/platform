@@ -66,12 +66,12 @@ class TestCaseEventViews(TestCase):
         self.assertIn('title', response.data['course_groups'][0])
         self.assertEquals(float(response.data['course_groups'][0]['overall_grade']), 62.5)
         self.assertIn('trend', response.data['course_groups'][0])
-        self.assertIn('num_graded', response.data['course_groups'][0])
+        self.assertIn('num_homework_graded', response.data['course_groups'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0])
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 62.5)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0])
-        self.assertIn('num_graded', response.data['course_groups'][0]['courses'][0])
+        self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0])
         self.assertIn('has_weighted_grading', response.data['course_groups'][0]['courses'][0])
 
         grade_points = response.data['course_groups'][0]['courses'][0]['grade_points']
@@ -86,7 +86,7 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
                           75.0)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][0])
-        self.assertIn('num_graded', response.data['course_groups'][0]['courses'][0]['categories'][0])
+        self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
@@ -95,7 +95,7 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
                           50.0)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][1])
-        self.assertIn('num_graded', response.data['course_groups'][0]['courses'][0]['categories'][1])
+        self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
@@ -103,12 +103,12 @@ class TestCaseEventViews(TestCase):
         self.assertIn('title', response.data['course_groups'][1])
         self.assertEquals(float(response.data['course_groups'][1]['overall_grade']), 75.0)
         self.assertIn('trend', response.data['course_groups'][1])
-        self.assertIn('num_graded', response.data['course_groups'][1])
+        self.assertIn('num_homework_graded', response.data['course_groups'][1])
 
         self.assertIn('title', response.data['course_groups'][1]['courses'][0])
         self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['overall_grade']), 75.0)
         self.assertIn('trend', response.data['course_groups'][1]['courses'][0])
-        self.assertIn('num_graded', response.data['course_groups'][1]['courses'][0])
+        self.assertIn('num_homework_graded', response.data['course_groups'][1]['courses'][0])
         self.assertIn('has_weighted_grading', response.data['course_groups'][1]['courses'][0])
 
         grade_points = response.data['course_groups'][1]['courses'][0]['grade_points']
@@ -121,7 +121,7 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(float(response.data['course_groups'][1]['courses'][0]['categories'][0]['overall_grade']),
                           75.0)
         self.assertIn('trend', response.data['course_groups'][1]['courses'][0]['categories'][0])
-        self.assertIn('num_graded', response.data['course_groups'][1]['courses'][0]['categories'][0])
+        self.assertIn('num_homework_graded', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('weight', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('color', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertIn('grade_by_weight', response.data['course_groups'][1]['courses'][0]['categories'][0])
