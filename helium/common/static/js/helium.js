@@ -353,6 +353,8 @@ function Helium() {
             $("#reminder-bell-alt-count").html(data.length);
             if (data.length > 0) {
                 $("#reminder-bell-alt-count").show("fast");
+            } else {
+                $("#reminder-bell-alt-count").hide("fast");
             }
         }
     };

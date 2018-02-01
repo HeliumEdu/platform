@@ -36,9 +36,6 @@ class Homework(BaseCalendar):
         verbose_name_plural = 'Homework'
         ordering = ('start',)
 
-    def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
-
     def get_user(self):
         return self.course.get_user()
 

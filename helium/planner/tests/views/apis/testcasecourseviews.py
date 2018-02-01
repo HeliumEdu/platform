@@ -381,7 +381,7 @@ class TestCaseCourseViews(TestCase):
 
         response = self.client.get(
             reverse('api_planner_coursegroups_courses_list',
-                    kwargs={'course_group': course_group.pk}) + '?start_date={}&end_date={}'.format(
+                    kwargs={'course_group': course_group.pk}) + '?start_date__gte={}&end_date__lte={}'.format(
                 course2.start_date.isoformat(),
                 course3.end_date.isoformat()))
 

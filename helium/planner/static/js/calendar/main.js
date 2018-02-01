@@ -1433,7 +1433,7 @@ function HeliumCalendar() {
                     if (self.current_calendar_item.calendar_item_type === 1) {
                         reminder_data["homework"] = self.current_calendar_item.id;
                     } else {
-                        reminder_data["event"] = self.current_calendar_item.id;
+                        reminder_data["event"] = self.current_calendar_item.id.substr(6);
                     }
 
                     helium.calendar.ajax_calls.push(helium.planner_api.add_reminder(function () {
@@ -1592,7 +1592,7 @@ function HeliumCalendar() {
                                 if (calendar_item.calendar_item_type === 1) {
                                     reminder_data["homework"] = calendar_item.id;
                                 } else {
-                                    reminder_data["event"] = calendar_item.id;
+                                    reminder_data["event"] = calendar_item.id.substr(6);
                                 }
 
                                 helium.calendar.ajax_calls.push(helium.planner_api.add_reminder(function () {
@@ -1854,10 +1854,15 @@ $(document).ready(function () {
                     this.on("errormultiple", function () {
                         $("#loading-homework-modal").spin(false);
 
-                        if (helium.calendar.current_calendar_item.calendar_item_type === 0) {
-                            $("#homework-error").html("The event is saved, but an error occurred while uploading attachments. If the error persists, <a href=\"/support\">contact support</a>.");
-                        } else {
-                            $("#homework-error").html("The assignment is saved, but an error occurred while uploading attachments. If the error persists, <a href=\"/support\">contact support</a>.");
+                        if (helium.calendar.edit) {
+                            if (helium.calendar.current_calendar_item.calendar_item_type === 0) {
+                                $("#homework-error").html("The event is saved, but an error occurred while uploading attachments. If the error persists, <a href=\"/support\">contact support</a>.");
+                            } else {
+                                $("#homework-error").html("The assignment is saved, but an error occurred while uploading attachments. If the error persists, <a href=\"/support\">contact support</a>.");
+                            }
+                        }
+                        else {
+                            $("#homework-error").html("An unknown error occurred with attachments. If the error persists, <a href=\"/support\">contact support</a>.");
                         }
                         $("#homework-error").parent().show("fast");
 

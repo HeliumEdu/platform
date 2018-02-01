@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
-from helium.planner.filters import BaseCalendarFilter
+from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
@@ -32,8 +32,7 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = BaseCalendarFilter
-    filter_fields = ['start', 'end', 'completed', 'category', ]
+    filter_class = HomeworkFilter
     search_fields = ('title', 'comments', 'category__title', 'course__title',)
     order_fields = ('title', 'start', 'completed', 'priority', 'category__title', 'course__title',)
     schema = SubCourseListSchema()
@@ -62,6 +61,7 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
     """
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
+    filter_class = HomeworkFilter
     schema = SubCourseListSchema()
 
     def get_queryset(self):

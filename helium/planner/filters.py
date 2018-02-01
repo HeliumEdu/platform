@@ -2,8 +2,7 @@ import logging
 
 from django_filters import rest_framework as filters
 
-from helium.planner.models import CourseGroup, Course
-from helium.planner.models.basecalendar import BaseCalendar
+from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -12,28 +11,52 @@ __version__ = '1.0.0'
 logger = logging.getLogger(__name__)
 
 
-class BaseCalendarFilter(filters.FilterSet):
-    start = filters.IsoDateTimeFilter(name="start", lookup_expr='gte')
-    end = filters.IsoDateTimeFilter(name="end", lookup_expr='lte')
-
+class EventFilter(filters.FilterSet):
     class Meta:
-        model = BaseCalendar
-        fields = ['start', 'end', ]
+        model = Event
+        fields = {
+            'start': ['exact', 'gte'],
+            'end': ['exact', 'lte']
+        }
+
+
+class HomeworkFilter(filters.FilterSet):
+    class Meta:
+        model = Homework
+        fields = {
+            'start': ['exact', 'gte'],
+            'end': ['exact', 'lte'],
+            'completed': ['exact'],
+            'category': ['exact'],
+        }
 
 
 class CourseGroupFilter(filters.FilterSet):
-    start_date = filters.DateFilter(name="start_date", lookup_expr='gte')
-    end_date = filters.DateFilter(name="end_date", lookup_expr='lte')
-
     class Meta:
         model = CourseGroup
-        fields = ['start_date', 'end_date', 'shown_on_calendar', ]
+        fields = {
+            'shown_on_calendar': ['exact'],
+            'start_date': ['exact', 'gte'],
+            'end_date': ['exact', 'lte'],
+        }
 
 
 class CourseFilter(filters.FilterSet):
-    start_date = filters.DateFilter(name="start_date", lookup_expr='gte')
-    end_date = filters.DateFilter(name="end_date", lookup_expr='lte')
-
     class Meta:
         model = Course
-        fields = ['start_date', 'end_date', ]
+        fields = {
+            'start_date': ['exact', 'gte'],
+            'end_date': ['exact', 'lte'],
+        }
+
+
+class ReminderFilter(filters.FilterSet):
+    class Meta:
+        model = Reminder
+        fields = {
+            'event': ['exact'],
+            'homework': ['exact'],
+            'type': ['exact'],
+            'sent': ['exact'],
+            'start_of_range': ['lte'],
+        }
