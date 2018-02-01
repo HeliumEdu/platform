@@ -7,7 +7,7 @@ from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Course
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -131,9 +131,9 @@ class TestCaseCourseViews(TestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        course.current_grade = 87.66
-        course.trend = 0.65
-        course.save()
+        homeworkhelper.given_homework_exists(course)
+        homeworkhelper.given_homework_exists(course, completed=True)
+        homeworkhelper.given_homework_exists(course, completed=True, current_grade='25/30')
 
         # WHEN
         response = self.client.get(reverse('api_planner_coursegroups_courses_detail',
@@ -141,11 +141,11 @@ class TestCaseCourseViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course = Course.objects.get(pk=course.pk)
         coursehelper.verify_course_matches_data(self, course, response.data)
-        self.assertEqual(course.num_items, response.data['num_items'])
-        self.assertEqual(course.num_complete, response.data['num_complete'])
-        self.assertEqual(course.num_incomplete, response.data['num_incomplete'])
-        self.assertEqual(course.num_graded, response.data['num_graded'])
+        self.assertEqual(response.data['num_homework'], 3)
+        self.assertEqual(response.data['num_homework_completed'], 2)
+        self.assertEqual(response.data['num_homework_graded'], 1)
 
     def test_update_course_by_id(self):
         # GIVEN

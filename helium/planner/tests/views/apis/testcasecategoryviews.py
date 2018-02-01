@@ -6,7 +6,7 @@ from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Category
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -126,6 +126,9 @@ class TestCaseCategoryViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
+        homeworkhelper.given_homework_exists(course, category=category)
+        homeworkhelper.given_homework_exists(course, completed=True, category=category)
+        homeworkhelper.given_homework_exists(course, completed=True, current_grade='25/30', category=category)
 
         # WHEN
         response = self.client.get(reverse('api_planner_coursegroups_courses_categories_detail',
@@ -134,9 +137,10 @@ class TestCaseCategoryViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        category = Category.objects.get(pk=category.pk)
         categoryhelper.verify_category_matches_data(self, category, response.data)
-        self.assertEqual(category.num_items, response.data['num_items'])
-        self.assertEqual(category.num_graded, response.data['num_graded'])
+        self.assertEqual(response.data['num_homework'], 3)
+        self.assertEqual(response.data['num_homework_graded'], 1)
 
     def test_update_category_by_id(self):
         # GIVEN

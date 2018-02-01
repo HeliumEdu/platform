@@ -46,9 +46,13 @@ class Category(BaseModel):
         return self.course.course_group.get_user()
 
     @property
-    def num_items(self):
+    def num_homework(self):
         return self.homework.count()
 
     @property
-    def num_graded(self):
+    def num_homework_completed(self):
+        return self.homework.completed().count()
+
+    @property
+    def num_homework_graded(self):
         return self.homework.graded().count()

@@ -58,29 +58,13 @@ class CourseGroup(BaseModel):
         return days_remaining if days_remaining > 0 else 0
 
     @property
-    def num_items(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_items
-        return count
+    def num_homework(self):
+        return self.courses.num_homework()
 
     @property
-    def num_complete(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_complete
-        return count
+    def num_homework_completed(self):
+        return self.courses.num_homework_completed()
 
     @property
-    def num_incomplete(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_incomplete
-        return count
-
-    @property
-    def num_graded(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_graded
-        return count
+    def num_homework_graded(self):
+        return self.courses.num_homework_graded()
