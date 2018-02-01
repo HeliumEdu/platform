@@ -10,7 +10,7 @@ from helium.planner.managers.coursemanager import CourseManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 @python_2_unicode_compatible

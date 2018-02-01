@@ -9,7 +9,7 @@ from helium.common.models.base import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 

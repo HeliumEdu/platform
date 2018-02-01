@@ -377,7 +377,7 @@ class TestCaseHomeworkViews(TestCase):
         ]
 
         # THEN
-        self.assertTrue(Homework.objects.filter(pk=homework.pk, course__course_group__user_id=user1.pk).exists())
+        self.assertTrue(Homework.objects.for_user(user1.pk).filter(pk=homework.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
                 self.assertEqual(len(response.data), 0)

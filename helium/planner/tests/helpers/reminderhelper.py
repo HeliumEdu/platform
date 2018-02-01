@@ -5,7 +5,7 @@ from helium.planner.models import Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 def given_reminder_exists(user, title='Test Reminder', message='You need to do something now.', offset=15,
