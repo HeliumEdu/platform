@@ -20,6 +20,15 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if 'course' not in attrs and 'event' not in attrs and 'homework' not in attrs:
-            raise serializers.ValidationError("At least one of `course`, `event`, or `homework` must be given.")
+            raise serializers.ValidationError("One of `course`, `event`, or `homework` must be given.")
+        elif ('course' in attrs and 'event' in attrs) or ('course' in attrs and 'homework' in attrs) or (
+                        'event' in attrs and 'homework' in attrs):
+            raise serializers.ValidationError("Only one of `course`, `event`, or `homework` may be given.")
+
+        # We're settings these to None here as the serialization save will persist the new parent
+        if self.instance and ('course' in attrs or 'event' in attrs or 'homework' in attrs):
+            self.instance.course = None
+            self.instance.event = None
+            self.instance.homework = None
 
         return attrs
