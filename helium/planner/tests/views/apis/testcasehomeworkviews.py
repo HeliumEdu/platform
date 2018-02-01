@@ -507,21 +507,21 @@ class TestCaseHomeworkViews(TestCase):
                                                                                  tzinfo=timezone.utc),
                                                          end=datetime.datetime(2017, 5, 8, 18, 0, 0,
                                                                                tzinfo=timezone.utc))
-        homework3 = homeworkhelper.given_homework_exists(course,
-                                                         start=datetime.datetime(2017, 5, 8, 18, 30, 0,
-                                                                                 tzinfo=timezone.utc),
-                                                         end=datetime.datetime(2017, 5, 8, 19, 0, 0,
-                                                                               tzinfo=timezone.utc))
         homeworkhelper.given_homework_exists(course,
-                                             start=datetime.datetime(2017, 5, 8, 19, 30, 0,
+                                             start=datetime.datetime(2017, 5, 8, 18, 30, 0,
                                                                      tzinfo=timezone.utc),
-                                             end=datetime.datetime(2017, 5, 8, 21, 0, 0,
+                                             end=datetime.datetime(2017, 5, 8, 19, 0, 0,
                                                                    tzinfo=timezone.utc))
+        homework4 = homeworkhelper.given_homework_exists(course,
+                                                         start=datetime.datetime(2017, 5, 8, 19, 30, 0,
+                                                                                 tzinfo=timezone.utc),
+                                                         end=datetime.datetime(2017, 5, 8, 21, 0, 0,
+                                                                               tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_homework_list') + '?start__gte={}&end__lte={}'.format(
+            reverse('api_planner_homework_list') + '?start__gte={}&end__lt={}'.format(
                 quote(homework2.start.isoformat()),
-                quote(homework3.end.isoformat())))
+                quote(homework4.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

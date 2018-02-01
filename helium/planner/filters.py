@@ -16,7 +16,7 @@ class EventFilter(filters.FilterSet):
         model = Event
         fields = {
             'start': ['exact', 'gte'],
-            'end': ['exact', 'lte']
+            'end': ['exact', 'lt']
         }
 
 
@@ -25,7 +25,7 @@ class HomeworkFilter(filters.FilterSet):
         model = Homework
         fields = {
             'start': ['exact', 'gte'],
-            'end': ['exact', 'lte'],
+            'end': ['exact', 'lt'],
             'completed': ['exact'],
             'category': ['exact'],
         }

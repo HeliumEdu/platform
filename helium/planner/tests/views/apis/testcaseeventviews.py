@@ -323,16 +323,16 @@ class TestCaseEventViews(TestCase):
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
                                                 end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
-        event3 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
+        event4 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_events_list') + '?start__gte={}&end__lte={}'.format(quote(event2.start.isoformat()),
-                                                                                     quote(event3.end.isoformat())))
+            reverse('api_planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
+                                                                                    quote(event4.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
