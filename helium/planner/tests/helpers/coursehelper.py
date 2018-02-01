@@ -35,7 +35,7 @@ def verify_course_matches_data(test_case, course, data):
     test_case.assertEqual(course.color, data['color'])
     test_case.assertEqual(course.website, data['website'])
     test_case.assertEqual(course.is_online, data['is_online'])
-    test_case.assertEqual(course.current_grade, float(data['current_grade']))
+    test_case.assertEqual(float(course.current_grade), float(data['current_grade']))
     test_case.assertEqual(course.trend, data['trend'])
     test_case.assertEqual(course.private_slug, data['private_slug'])
     test_case.assertEqual(course.teacher_name, data['teacher_name'])

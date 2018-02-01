@@ -24,7 +24,7 @@ class GradeHolderSerializer(serializers.Serializer):
 
     trend = serializers.FloatField()
 
-    num_graded = serializers.IntegerField()
+    num_homework_graded = serializers.IntegerField()
 
     has_weighted_grading = serializers.BooleanField(required=False)
 

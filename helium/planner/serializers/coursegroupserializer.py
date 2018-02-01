@@ -18,7 +18,7 @@ class CourseGroupSerializer(serializers.ModelSerializer):
             'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'average_grade', 'trend', 'private_slug',
             'user',
             # Property fields (which should also be declared as read-only)
-            'percent_thru', 'days_remaining', 'num_items', 'num_complete', 'num_incomplete', 'num_graded',)
+            'percent_thru', 'days_remaining', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'average_grade', 'trend', 'private_slug', 'user', 'percent_thru', 'days_remaining', 'num_items',
-            'num_complete', 'num_incomplete', 'num_graded',)
+            'average_grade', 'trend', 'private_slug', 'user', 'percent_thru', 'days_remaining', 'num_homework',
+            'num_homework_completed', 'num_homework_graded',)

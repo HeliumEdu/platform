@@ -18,7 +18,7 @@ def verify_category_matches_data(test_case, category, data):
     test_case.assertEqual(category.title, data['title'])
     test_case.assertEqual(category.weight, float(data['weight']))
     test_case.assertEqual(category.color, data['color'])
-    test_case.assertEqual(category.average_grade, float(data['average_grade']))
+    test_case.assertEqual(float(category.average_grade), float(data['average_grade']))
     test_case.assertEqual(category.grade_by_weight, float(data['grade_by_weight']))
     test_case.assertEqual(category.trend, data['trend'])
     if 'course' in data:

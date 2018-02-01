@@ -20,8 +20,8 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',
             # Property fields (which should also be declared as read-only)
-            'num_items', 'num_graded',)
-        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course', 'num_items', 'num_graded',)
+            'num_homework', 'num_homework_graded',)
+        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
 
     def validate_weight(self, weight):
         """

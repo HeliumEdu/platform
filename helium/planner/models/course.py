@@ -147,17 +147,13 @@ class Course(BaseModel):
         return Course.objects.has_weighted_grading(self.pk)
 
     @property
-    def num_items(self):
+    def num_homework(self):
         return self.homework.count()
 
     @property
-    def num_complete(self):
+    def num_homework_completed(self):
         return self.homework.completed().count()
 
     @property
-    def num_incomplete(self):
-        return self.homework.completed().count()
-
-    @property
-    def num_graded(self):
+    def num_homework_graded(self):
         return self.homework.graded().count()

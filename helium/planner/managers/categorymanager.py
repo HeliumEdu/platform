@@ -1,5 +1,7 @@
 import logging
 
+from django.db.models import Count, Q, Case, When
+
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 __author__ = 'Alex Laird'
@@ -19,6 +21,11 @@ class CategoryQuerySet(BaseQuerySet):
     def for_course(self, course_id):
         return self.filter(course_id=course_id)
 
+    def num_homework_graded(self):
+        return self.aggregate(
+            homework_count=Count(Case(
+                When(Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), then=1))))['homework_count']
+
 
 class CategoryManager(BaseManager):
     def get_queryset(self):
@@ -32,3 +39,6 @@ class CategoryManager(BaseManager):
 
     def for_course(self, course_id):
         return self.get_queryset().for_course(course_id)
+
+    def num_homework_graded(self):
+        return self.get_queryset().num_homework_graded()
