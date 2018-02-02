@@ -345,7 +345,7 @@ function HeliumSettings() {
                             async: false,
                             data: JSON.stringify(data),
                             type: 'DELETE',
-                            url: '/api/auth/user/',
+                            url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
                             error: function () {
                                 $("#status_account").html('Sorry, an unknown error occurred while trying to delete your account. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
 

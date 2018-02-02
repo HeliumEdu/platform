@@ -64,8 +64,10 @@ function HeliumGrades() {
             if (days_remaining < 0) days_remaining = 0;
             var percent_thru = (data.num_days_completed / data.num_days) * 100;
             if (percent_thru > 100) percent_thru = 100;
+            if (isNaN(percent_thru)) percent_thru = 0;
             var percent_completed = (data.num_homework_completed / data.num_homework) * 100;
             if (percent_completed > 100) percent_completed = 100;
+            if (isNaN(percent_completed)) percent_completed = 0;
 
             details.append('<div class="infobox infobox-blue2">' + percent_thru.toFixed() + '<div class="infobox-progress"><div class="easy-pie-chart percentage easyPieChart" data-percent="' + percent_thru.toFixed() + '" data-size="46" style="width: 46px; height: 46px; line-height: 46px;"> <span class="percent">' + percent_thru.toFixed() + '</span>% <canvas width="46" height="46"></canvas></div></div><div class="infobox-data"><span class="infobox-text">thru term</span><div class="infobox-content">' + days_remaining + ' days remaining</div></div>');
             details.append('<div class="infobox infobox-red"><div class="infobox-icon"><i class="icon-beaker"></i></div><div class="infobox-data"><span class="infobox-data-number">' + data.num_homework + '</span><div class="infobox-content">assignments</div></div></div>');
