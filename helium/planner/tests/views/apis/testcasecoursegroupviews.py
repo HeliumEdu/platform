@@ -88,6 +88,9 @@ class TestCaseCourseGroupViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
+        self.assertEqual(response.data['num_days'], 122)
+        self.assertEqual(response.data['num_days_completed'],
+                         (datetime.datetime.now().date() - course_group.start_date).days)
         self.assertEqual(response.data['num_homework'], 5)
         self.assertEqual(response.data['num_homework_completed'], 3)
         self.assertEqual(response.data['num_homework_graded'], 1)

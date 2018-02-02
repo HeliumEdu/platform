@@ -427,20 +427,8 @@ function HeliumClasses() {
             $("#course-error").html(data[0].err_msg);
             $("#course-error").parent().show("fast");
         } else {
-            var input_tab, tab_date, adding_date, course_group_div, div, table_div;
-            $.each($('a[href^="#course-group-"]'), function (index, tab) {
-                tab_date = moment($("#course-group-" + $(tab).attr("href").split("#course-group-")[1] + "-start-date").html());
-                adding_date = moment(data.start_date);
-                if (!input_tab && adding_date >= tab_date) {
-                    input_tab = tab;
-                }
-            });
-            if (input_tab) {
-                input_tab = $(input_tab).parent();
-            } else {
-                input_tab = $("#create-course-group-li");
-            }
-            input_tab.before("<li><a data-toggle=\"tab\" href=\"#course-group-" + data.id + "\"><i class=\"icon-book r-110\"></i> " + data.title + (!data.shown_on_calendar ? " (H)" : "") + "</a></li>");
+            var course_group_div, div, table_div;
+            $("#course-group-tabs").prepend("<li><a data-toggle=\"tab\" href=\"#course-group-" + data.id + "\"><i class=\"icon-book r-110\"></i> " + data.title + (!data.shown_on_calendar ? " (H)" : "") + "</a></li>");
             course_group_div = "<div id=\"course-group-" + data.id + "\" class=\"tab-pane\"><div class=\"col-sm-12\"><div class=\"table-header\"><span id=\"course-group-title-" + data.id + "\">" + data.title + (!data.shown_on_calendar ? " (Hidden)" : "") + "</span> <small class=\"hidden-xs\"><span id=\"course-group-" + data.id + "-start-date\">" + moment(data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + "</span><span id=\"course-group-" + data.id + "-end-date\"> to " + moment(data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + "</span></small></span><label class=\"pull-right inline action-buttons\" style=\"padding-right: 10px\"><a class=\"cursor-hover\" id=\"create-course-for-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-plus-sign-alt bigger-120 hidden-print\"></i></span></a>&nbsp;<a class=\"cursor-hover\" id=\"edit-course-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-edit bigger-120 hidden-print\"></i></span>&nbsp;</a><a class=\"cursor-hover\" id=\"delete-course-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-trash bigger-120 hidden-print\"></i></span></a></label></div><div class=\"table-responsive\"><table id=\"course-group-table-" + data.id + "\" class=\"table table-striped table-bordered table-hover\"><thead><tr><th>Title</th><th class=\"hidden-xs\">Dates</th><th>Room</th><th class=\"hidden-xs\">Teacher</th><th>Schedule</th><th class=\"hidden-xs\"></th></tr></thead><tbody id=\"course-group-table-body-" + data.id + "\"></tbody></table></div></div></div>";
             div = $("#course-group-tab-content").append(course_group_div);
             // Bind clickable attributes to their respective handlers
@@ -1775,10 +1763,12 @@ $(document).ready(function () {
         });
     }, false);
 
+    $("#course-group-tabs li a[href^='#course-group-']").first().tab("show");
+
     helium.classes.refresh_course_groups();
 
     $("table[id^='course-group-table-']").each(function () {
-        var id = $(this).attr("id").split("course-group-table-")[1].split("_")[0], table_div = $(this), i = 0;
+        var id = $(this).attr("id").split("course-group-table-")[1].split("_")[0], i = 0;
 
         if (!helium.ajax_error_occurred) {
             helium.classes.ajax_calls.push(helium.planner_api.get_courses_by_course_group_id(function (data) {

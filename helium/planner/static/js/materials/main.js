@@ -473,6 +473,8 @@ $(document).ready(function () {
         });
     }, false);
 
+    $("#material-group-tabs li a[href^='#material-group-']").first().tab("show");
+
     $.when.apply(this, helium.materials.ajax_calls).done(function () {
         if (!helium.ajax_error_occurred) {
             $("table[id^='material-group-table-']").each(function () {

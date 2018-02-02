@@ -21,6 +21,12 @@ class EventSerializer(serializers.ModelSerializer):
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)
 
+    def validate(self, attrs):
+        if attrs['start'] > attrs['end']:
+            raise serializers.ValidationError("The 'start' must be before the 'end'")
+
+        return attrs
+
 
 class EventExtendedSerializer(EventSerializer):
     class Meta(EventSerializer.Meta):

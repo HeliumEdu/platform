@@ -695,7 +695,7 @@ function HeliumCalendar() {
             $("#filter-button-title").html("Filter");
         }
 
-        self.refresh_calendar_items();
+        $("#calendar").fullCalendar("refetchEvents");
     };
 
     this.get_calendar_item_title = function (calendar_item) {
@@ -709,12 +709,10 @@ function HeliumCalendar() {
         }
     };
 
-    this.refresh_calendar_items = function () {
+    this.refresh_calendar_items = function (start, end, timezone, callback) {
         self.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
-        helium.external_sources = [];
-        $("#calendar").fullCalendar("removeEvents");
-        $("#calendar").fullCalendar("removeEventSources");
+        var events = [];
 
         // TODO: after the open source migration, filtering should rely on the backend (which already supports this)
         // for greatly improved efficiency
@@ -723,8 +721,6 @@ function HeliumCalendar() {
             helium.calendar.ajax_calls.push(helium.planner_api.get_external_calendars(function (external_calendars) {
                 $.each(external_calendars, function (index, external_calendar) {
                     helium.planner_api.get_external_calendar_feed(function (data) {
-                        var events = [];
-
                         $.each(data, function (i, calendar_item) {
                             if ($.cookie("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1) {
                                 events.push({
@@ -751,19 +747,13 @@ function HeliumCalendar() {
                                 });
                             }
                         });
-
-                        helium.external_sources.push({
-                            events: events
-                        });
-                    }, external_calendar.id, false);
+                    }, external_calendar.id, true, true);
                 });
             }, true, true));
         }
 
         if ($.cookie("filter_show_events") === undefined || $.cookie("filter_show_events") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_events(function (data) {
-                var events = [];
-
                 $.each(data, function (i, calendar_item) {
                     if ($.cookie("filter_search_string") === undefined ||
                         calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1 ||
@@ -791,17 +781,11 @@ function HeliumCalendar() {
                         });
                     }
                 });
-
-                helium.external_sources.push({
-                    events: events
-                });
-            }, true, true));
+            }, true, false, start.toISOString() + "T00:00Z", end.toISOString() + "T00:00Z"));
         }
 
         if ($.cookie("filter_show_homework") === undefined || $.cookie("filter_show_homework") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_homework_by_user(function (data) {
-                var events = [];
-
                 $.each(data, function (i, calendar_item) {
                     // Check if any filters are applied and failing, in whic case continue before adding the item
                     if ($.cookie("filter_search_string") !== undefined &&
@@ -846,17 +830,11 @@ function HeliumCalendar() {
                         reminders: calendar_item.reminders
                     });
                 });
-
-                helium.external_sources.push({
-                    events: events
-                });
-            }, true, true));
+            }, true, false, start.toISOString() + "T00:00Z", end.toISOString() + "T00:00Z"));
         }
 
         $.when.apply(this, helium.calendar.ajax_calls).done(function () {
-            $.each(helium.external_sources, function (i, external_source) {
-                $("#calendar").fullCalendar("addEventSource", external_source);
-            });
+            callback(events);
 
             self.loading_div.spin(false);
         });
@@ -979,7 +957,7 @@ function HeliumCalendar() {
         $("#loading-calendar").spin(false);
         self.loading_div = $(".fc-header-left").append("<div id=\"fullcalendar-loading\" class=\"loading-mini\" style=\"padding-left: 25px; padding-top: 2px;\"><div id=\"loading-fullcalendar\"></div></div>").find("#loading-fullcalendar");
 
-        self.refresh_calendar_items();
+        $("#calendar").fullCalendar("addEventSource", self.refresh_calendar_items);
 
         self.ajax_calls.push(helium.planner_api.get_courses(function (data) {
             if (helium.data_has_err_msg(data)) {
