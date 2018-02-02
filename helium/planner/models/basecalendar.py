@@ -5,7 +5,7 @@ from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.2'
 
 
 @python_2_unicode_compatible
@@ -19,9 +19,11 @@ class BaseCalendar(BaseModel):
     show_end_time = models.BooleanField(help_text='Whether or not the end time should be shown on the calendar.',
                                         default=False)
 
-    start = models.DateTimeField(help_text='An ISO-8601 date.')
+    start = models.DateTimeField(help_text='An ISO-8601 date.',
+                                 db_index=True)
 
-    end = models.DateTimeField(help_text='An ISO-8601 date.')
+    end = models.DateTimeField(help_text='An ISO-8601 date.',
+                               db_index=True)
 
     priority = models.PositiveIntegerField(help_text='A priority integer between 0 and 100.',
                                            default=50)

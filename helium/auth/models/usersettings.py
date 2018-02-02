@@ -9,7 +9,7 @@ from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.2'
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,6 @@ class UserSettings(BaseModel):
     receive_emails_from_admin = models.BooleanField(
         help_text='Whether or not the `email` on file should receive bulletin emails.',
         default=True)
-
-    events_private_slug = models.SlugField(blank=True, null=True)
 
     private_slug = models.SlugField(blank=True, null=True)
 

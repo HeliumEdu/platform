@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.2'
 
 
 class TestCaseUserViews(TestCase):
@@ -55,7 +55,6 @@ class TestCaseUserViews(TestCase):
         self.assertEqual(user.settings.default_reminder_type, response.data['settings']['default_reminder_type'])
         self.assertEqual(user.settings.receive_emails_from_admin,
                          response.data['settings']['receive_emails_from_admin'])
-        self.assertEqual(user.settings.events_private_slug, response.data['settings']['events_private_slug'])
         self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
         self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
