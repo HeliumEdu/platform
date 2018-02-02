@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.planner.managers.eventmanager import EventManager
@@ -8,7 +7,7 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 
 class Event(BaseCalendar):

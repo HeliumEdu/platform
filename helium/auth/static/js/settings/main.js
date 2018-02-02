@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.0.2
  */
 
 /**
@@ -159,7 +159,6 @@ function HeliumSettings() {
                 "name": "receive_emails_from_admin",
                 "value": helium.USER_PREFS.settings.receive_emails_from_admin
             });
-            data.push({"name": "events_private_slug", "value": helium.USER_PREFS.settings.events_private_slug});
             data.push({"name": "private_slug", "value": helium.USER_PREFS.settings.private_slug});
 
             self.save_externalcalendars(form);

@@ -7,7 +7,7 @@ from helium.planner.managers.materialmanager import MaterialManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.2'
 
 
 @python_2_unicode_compatible
@@ -24,9 +24,8 @@ class Material(BaseModel):
     website = models.URLField(help_text='A valid URL.',
                               max_length=3000, blank=True, null=True)
 
-    # TODO: refactor to use a DecimalField instead of CharField
-    price = models.CharField(help_text='A price string.',
-                             max_length=255, blank=True)
+    price = models.DecimalField(help_text='A price string.',
+                                max_length=255, blank=True)
 
     details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
                                blank=True)
