@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
-from helium.planner.filters import BaseCalendarFilter
+from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
@@ -19,7 +19,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,7 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = BaseCalendarFilter
-    filter_fields = ['start', 'end', 'completed', 'category', ]
+    filter_class = HomeworkFilter
     search_fields = ('title', 'comments', 'category__title', 'course__title',)
     order_fields = ('title', 'start', 'completed', 'priority', 'category__title', 'course__title',)
     schema = SubCourseListSchema()
@@ -62,6 +61,7 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
     """
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
+    filter_class = HomeworkFilter
     schema = SubCourseListSchema()
 
     def get_queryset(self):
@@ -110,6 +110,9 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     put:
     Update the given homework instance.
 
+    patch:
+    Update only the given attributes of the given homework instance.
+
     delete:
     Delete the given homework instance.
     """
@@ -135,6 +138,23 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     def put(self, request, *args, **kwargs):
         timezone.activate(request.user.settings.time_zone)
 
+        permissions.check_course_permission(request.user.pk, request.data['course'])
+        if 'category' in request.data:
+            permissions.check_category_permission(request.user.pk, request.data['category'])
+        for material_id in request.data.get('materials', []):
+            permissions.check_material_permission(request.user.pk, material_id)
+
+        response = self.update(request, *args, **kwargs)
+
+        logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+
+        metricutils.increment('action.homework.updated', request)
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'category' in request.data:
@@ -144,7 +164,7 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info('Homework {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment('action.homework.updated', request)
 

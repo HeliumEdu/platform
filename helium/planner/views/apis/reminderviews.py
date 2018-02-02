@@ -9,12 +9,13 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
+from helium.planner.filters import ReminderFilter
 from helium.planner.schemas import ReminderDetailSchema
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('event', 'homework', 'type', 'sent', 'from_admin')
+    filter_class = ReminderFilter
 
     def get_queryset(self):
         user = self.request.user
@@ -76,6 +77,9 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     put:
     Update the given reminder instance.
 
+    patch:
+    Update only the given attributes of the given reminder instance.
+
     delete:
     Delete the given reminder instance.
     """
@@ -93,9 +97,18 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     def put(self, request, *args, **kwargs):
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
-        if 'homework' in request.data:
+        elif 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
 
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+
+        metricutils.increment('action.reminder.updated', request)
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))

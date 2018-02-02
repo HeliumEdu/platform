@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 /**
@@ -1433,7 +1433,7 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_homework_by_user = function (callback, async, use_cache) {
+    this.get_homework_by_user = function (callback, async, use_cache, start, end) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1443,7 +1443,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/homework/",
+                url: "/api/planner/homework/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1633,15 +1633,17 @@ function HeliumPlannerAPI() {
      * @param id the ID of the Homework
      * @param data the array of values to update for the Homework
      * @param async true if call should be async, false otherwise (default is true)
+     * @param patch true if call should be patch instead of put, false otherwise (default is false)
      */
-    this.edit_homework = function (callback, course_group_id, course_id, id, data, async) {
+    this.edit_homework = function (callback, course_group_id, course_id, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
+        patch = typeof patch === "undefined" ? false : patch;
         delete self.homework[id];
         self.homework_by_course_id = {};
         self.homework_by_user_id = {};
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "PUT",
+            type: patch ? "PATCH" : "PUT",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/homework/" + id + "/",
             async: async,
             data: JSON.stringify(data),
@@ -1711,7 +1713,7 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_events = function (callback, async, use_cache) {
+    this.get_events = function (callback, async, use_cache, start, end) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1721,7 +1723,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/events/",
+                url: "/api/planner/events/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1761,6 +1763,10 @@ function HeliumPlannerAPI() {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
 
         if (use_cache && self.event.hasOwnProperty(id)) {
             ret_val = callback(self.event[id]);
@@ -1837,14 +1843,21 @@ function HeliumPlannerAPI() {
      * @param id the ID of the Event.
      * @param data the array of values to update for the Event
      * @param async true if call should be async, false otherwise (default is true)
+     * @param patch true if call should be patch instead of put, false otherwise (default is false)
      */
-    this.edit_event = function (callback, id, data, async) {
+    this.edit_event = function (callback, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
+        patch = typeof patch === "undefined" ? true : patch;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
         delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "PUT",
+            type: patch ? "PATCH" : "PUT",
             url: "/api/planner/events/" + id + "/",
             async: async,
             data: JSON.stringify(data),
@@ -1877,6 +1890,11 @@ function HeliumPlannerAPI() {
      */
     this.delete_event = function (callback, id, async) {
         async = typeof async === "undefined" ? true : async;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
         delete self.event[id];
         self.events_by_user_id = {};
         self.reminders_by_calendar_item = {};
@@ -2012,7 +2030,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/reminders/?sent=false&type=0",
+                url: "/api/planner/reminders/?sent=false&type=0&start_of_range__lte=" + moment().toISOString(),
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -2132,12 +2150,14 @@ function HeliumPlannerAPI() {
      * @param id the ID of the Reminder
      * @param data the array of values to update for the Category
      * @param async true if call should be async, false otherwise (default is true)
+     * @param patch true if call should be patch instead of put, false otherwise (default is false)
      */
-    this.edit_reminder = function (callback, id, data, async) {
+    this.edit_reminder = function (callback, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
+        patch = typeof patch === "undefined" ? false : patch;
         self.reminders_by_calendar_item = {};
         return $.ajax({
-            type: "PUT",
+            type: patch ? "PATCH" : "PUT",
             url: "/api/planner/reminders/" + id + "/",
             async: async,
             data: JSON.stringify(data),

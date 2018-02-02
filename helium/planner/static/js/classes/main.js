@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 /**
@@ -173,7 +173,7 @@ function HeliumClasses() {
             self.category_unsaved_pk += 1;
         }
 
-        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td>" + "<td class=\"hidden-480\">" + (category.num_items !== undefined ? category.num_items : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
+        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td>" + "<td class=\"hidden-480\">" + (category.num_homework !== undefined ? category.num_homework : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
         $("#categories-table-end-placeholder").before(row);
 
         // Bind attributes within added row
@@ -260,7 +260,7 @@ function HeliumClasses() {
         } else {
             $("#delete-category-" + category.id).on("click", function () {
                 // We can only delete this category if it is not named "Uncategorized", or if the category is empty
-                if (category.num_items > 0) {
+                if (category.num_homework > 0) {
                     if (category.title !== "Uncategorized") {
                         bootbox.dialog({
                             message: "After you save the changes to this class, all assignments attached to this category will become uncategorized.",
@@ -269,12 +269,7 @@ function HeliumClasses() {
                                     "label": '<i class="icon-trash"></i> ' + "Delete",
                                     "className": "btn-sm btn-danger",
                                     "callback": function () {
-                                        var dom_id = $(this).attr("id");
-                                        var id = dom_id.split("-");
-                                        id = id[id.length - 1];
-                                        if (id !== "unsaved") {
-                                            helium.classes.categories_to_delete.push(id);
-                                        }
+                                        helium.classes.categories_to_delete.push(category.id);
 
                                         if ($("#categories-table-body").children().length === 2) {
                                             $("#no-categories").show();
@@ -429,23 +424,11 @@ function HeliumClasses() {
             helium.ajax_error_occurred = true;
             $("#loading-course-group-modal").spin(false);
 
-            $("#course-error").html(data[0].err_msg);
+            $("#course-error").html(helium.get_error_msg(data));
             $("#course-error").parent().show("fast");
         } else {
-            var input_tab, tab_date, adding_date, course_group_div, div, table_div;
-            $.each($('a[href^="#course-group-"]'), function (index, tab) {
-                tab_date = moment($("#course-group-" + $(tab).attr("href").split("#course-group-")[1] + "-start-date").html());
-                adding_date = moment(data.start_date);
-                if (!input_tab && adding_date >= tab_date) {
-                    input_tab = tab;
-                }
-            });
-            if (input_tab) {
-                input_tab = $(input_tab).parent();
-            } else {
-                input_tab = $("#create-course-group-li");
-            }
-            input_tab.before("<li><a data-toggle=\"tab\" href=\"#course-group-" + data.id + "\"><i class=\"icon-book r-110\"></i> " + data.title + (!data.shown_on_calendar ? " (H)" : "") + "</a></li>");
+            var course_group_div, div, table_div;
+            $("#course-group-tabs").prepend("<li><a data-toggle=\"tab\" href=\"#course-group-" + data.id + "\"><i class=\"icon-book r-110\"></i> " + data.title + (!data.shown_on_calendar ? " (H)" : "") + "</a></li>");
             course_group_div = "<div id=\"course-group-" + data.id + "\" class=\"tab-pane\"><div class=\"col-sm-12\"><div class=\"table-header\"><span id=\"course-group-title-" + data.id + "\">" + data.title + (!data.shown_on_calendar ? " (Hidden)" : "") + "</span> <small class=\"hidden-xs\"><span id=\"course-group-" + data.id + "-start-date\">" + moment(data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + "</span><span id=\"course-group-" + data.id + "-end-date\"> to " + moment(data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + "</span></small></span><label class=\"pull-right inline action-buttons\" style=\"padding-right: 10px\"><a class=\"cursor-hover\" id=\"create-course-for-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-plus-sign-alt bigger-120 hidden-print\"></i></span></a>&nbsp;<a class=\"cursor-hover\" id=\"edit-course-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-edit bigger-120 hidden-print\"></i></span>&nbsp;</a><a class=\"cursor-hover\" id=\"delete-course-group-" + data.id + "\"><span class=\"white\"><i class=\"icon-trash bigger-120 hidden-print\"></i></span></a></label></div><div class=\"table-responsive\"><table id=\"course-group-table-" + data.id + "\" class=\"table table-striped table-bordered table-hover\"><thead><tr><th>Title</th><th class=\"hidden-xs\">Dates</th><th>Room</th><th class=\"hidden-xs\">Teacher</th><th>Schedule</th><th class=\"hidden-xs\"></th></tr></thead><tbody id=\"course-group-table-body-" + data.id + "\"></tbody></table></div></div></div>";
             div = $("#course-group-tab-content").append(course_group_div);
             // Bind clickable attributes to their respective handlers
@@ -653,7 +636,7 @@ function HeliumClasses() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     course_group = data;
                     $("#course-group-title").val(course_group.title);
@@ -693,7 +676,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#course-group-" + id).slideUp("fast", function () {
                                     var parent = $('a[href="#course-group-' + id + '"]').parent();
@@ -771,7 +754,7 @@ function HeliumClasses() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     course = data;
 
@@ -965,7 +948,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#course-" + id).slideUp("fast", function () {
                                     self.course_group_table[$("#course-group-tabs li.active a").attr("href").split("#course-group-")[1]].row($(this)).remove().draw();
@@ -1529,7 +1512,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-course-modal").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
                             } else {
                                 $.each(categories_data, function (i, category_data) {
@@ -1538,7 +1521,7 @@ function HeliumClasses() {
                                             helium.ajax_error_occurred = true;
                                             $("#loading-courses").spin(false);
 
-                                            $("#course-error").html(data[0].err_msg);
+                                            $("#course-error").html(helium.get_error_msg(data));
                                             $("#course-error").parent().show("fast");
 
                                             return false;
@@ -1553,7 +1536,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1569,7 +1552,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1623,7 +1606,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-course-modal").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
                             } else {
                                 $.each(categories_data, function (i, category_data) {
@@ -1632,7 +1615,7 @@ function HeliumClasses() {
                                             helium.ajax_error_occurred = true;
                                             $("#loading-courses").spin(false);
 
-                                            $("#course-error").html(data[0].err_msg);
+                                            $("#course-error").html(helium.get_error_msg(data));
                                             $("#course-error").parent().show("fast");
 
                                             return false;
@@ -1647,7 +1630,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1663,7 +1646,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1780,10 +1763,12 @@ $(document).ready(function () {
         });
     }, false);
 
+    $("#course-group-tabs li a[href^='#course-group-']").first().tab("show");
+
     helium.classes.refresh_course_groups();
 
     $("table[id^='course-group-table-']").each(function () {
-        var id = $(this).attr("id").split("course-group-table-")[1].split("_")[0], table_div = $(this), i = 0;
+        var id = $(this).attr("id").split("course-group-table-")[1].split("_")[0], i = 0;
 
         if (!helium.ajax_error_occurred) {
             helium.classes.ajax_calls.push(helium.planner_api.get_courses_by_course_group_id(function (data) {
@@ -1791,7 +1776,7 @@ $(document).ready(function () {
                     helium.ajax_error_occurred = true;
                     $("#loading-courses").spin(false);
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     for (i = 0; i < data.length; i += 1) {
                         helium.classes.add_course_to_groups(data[i], helium.classes.course_group_table[id]);

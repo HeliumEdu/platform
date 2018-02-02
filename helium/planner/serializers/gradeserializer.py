@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +18,13 @@ class GradeHolderSerializer(serializers.Serializer):
 
     weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
 
+    color = serializers.CharField(required=False)
+
     grade_by_weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
 
     trend = serializers.FloatField()
 
-    num_graded = serializers.IntegerField()
+    num_homework_graded = serializers.IntegerField()
 
     has_weighted_grading = serializers.BooleanField(required=False)
 

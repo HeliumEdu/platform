@@ -1,5 +1,4 @@
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.utils.validators import fraction_validator
@@ -9,10 +8,9 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
-@python_2_unicode_compatible
 class Homework(BaseCalendar):
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[fraction_validator])
@@ -36,9 +34,6 @@ class Homework(BaseCalendar):
         verbose_name_plural = 'Homework'
         ordering = ('start',)
 
-    def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
-
     def get_user(self):
         return self.course.get_user()
 
@@ -58,7 +53,6 @@ class Homework(BaseCalendar):
         method, as this method will only recalculate the grade for the category to which the field is being changed.
         """
         if not self.category:
-            self.category = Category.objects.get_or_create(title='Uncategorized', course=self.course,
-                                                           defaults={'weight': 0})[0]
+            self.category = Category.objects.get_uncategorized(self.course_id)
 
         super(Homework, self).save(*args, **kwargs)

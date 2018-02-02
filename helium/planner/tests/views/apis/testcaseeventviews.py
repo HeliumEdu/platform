@@ -1,13 +1,14 @@
-import pytz
-from dateutil import parser
 from future.standard_library import install_aliases
 
 install_aliases()
 
+import pytz
+from dateutil import parser
+
 import datetime
 import json
-from urllib.parse import quote
 
+from urllib.parse import quote
 from django.utils import timezone
 from django.test import TestCase
 from django.urls import reverse
@@ -19,7 +20,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 class TestCaseEventViews(TestCase):
@@ -182,7 +183,7 @@ class TestCaseEventViews(TestCase):
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
 
-    def test_update_converts_to_utc(self):
+    def test_patch_converts_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         event = eventhelper.given_event_exists(user)
@@ -192,10 +193,10 @@ class TestCaseEventViews(TestCase):
             'start': '2016-05-08T12:00:00-0500',
             'end': '2016-05-08T14:00:00-0500',
         }
-        response = self.client.put(reverse('api_planner_events_detail',
-                                           kwargs={'pk': event.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_events_detail',
+                                             kwargs={'pk': event.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -203,7 +204,7 @@ class TestCaseEventViews(TestCase):
         self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
-    def test_update_converts_naive_datetime_to_utc(self):
+    def test_patch_converts_naive_datetime_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -215,10 +216,10 @@ class TestCaseEventViews(TestCase):
             'start': '2016-05-08 12:00:00',
             'end': '2016-05-08 14:00:00',
         }
-        response = self.client.put(reverse('api_planner_events_detail',
-                                           kwargs={'pk': event.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('api_planner_events_detail',
+                                             kwargs={'pk': event.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -322,16 +323,16 @@ class TestCaseEventViews(TestCase):
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
                                                 end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
-        event3 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
+        event4 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_events_list') + '?start={}&end={}'.format(quote(event2.start.isoformat()),
-                                                                           quote(event3.end.isoformat())))
+            reverse('api_planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
+                                                                                    quote(event4.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

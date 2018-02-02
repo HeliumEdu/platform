@@ -7,11 +7,11 @@ from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import CourseGroup
-from helium.planner.tests.helpers import coursegrouphelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 class TestCaseCourseGroupViews(TestCase):
@@ -74,9 +74,13 @@ class TestCaseCourseGroupViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        course_group.average_grade = 87.66
-        course_group.trend = 0.65
-        course_group.save()
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course1)
+        homeworkhelper.given_homework_exists(course1, completed=True)
+        homeworkhelper.given_homework_exists(course1, completed=True, current_grade='25/30')
+        homeworkhelper.given_homework_exists(course2)
+        homeworkhelper.given_homework_exists(course2, completed=True)
 
         # WHEN
         response = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
@@ -84,10 +88,12 @@ class TestCaseCourseGroupViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
-        self.assertEqual(course_group.num_items, response.data['num_items'])
-        self.assertEqual(course_group.num_complete, response.data['num_complete'])
-        self.assertEqual(course_group.num_incomplete, response.data['num_incomplete'])
-        self.assertEqual(course_group.num_graded, response.data['num_graded'])
+        self.assertEqual(response.data['num_days'], 122)
+        self.assertEqual(response.data['num_days_completed'],
+                         (datetime.datetime.now().date() - course_group.start_date).days)
+        self.assertEqual(response.data['num_homework'], 5)
+        self.assertEqual(response.data['num_homework_completed'], 3)
+        self.assertEqual(response.data['num_homework_graded'], 1)
 
     def test_update_coursegroup_by_id(self):
         # GIVEN
@@ -208,7 +214,7 @@ class TestCaseCourseGroupViews(TestCase):
                                                     end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
-            reverse('api_planner_coursegroups_list') + '?start_date={}&end_date={}'.format(
+            reverse('api_planner_coursegroups_list') + '?start_date__gte={}&end_date__lte={}'.format(
                 course_group2.start_date.isoformat(),
                 course_group3.end_date.isoformat()))
 

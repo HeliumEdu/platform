@@ -4,9 +4,11 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+from helium.common import enums
+
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +20,17 @@ class ReminderQuerySet(models.query.QuerySet):
     def unsent(self):
         return self.filter(sent=False)
 
-    def for_today(self, from_admin=False):
+    def for_today(self):
         today = timezone.now()
-        return self.filter(start_of_range__lte=today).filter(
-            Q(homework__isnull=False) | Q(event__isnull=False) | Q(from_admin=from_admin))
+        return self.filter(start_of_range__lte=today).filter(Q(homework__isnull=False) | Q(event__isnull=False))
+
+    def for_calendar_item(self, calendar_item_id, calendar_item_type):
+        if calendar_item_type == enums.EVENT:
+            return self.filter(event__pk=calendar_item_id)
+        elif calendar_item_type == enums.HOMEWORK:
+            return self.filter(homework__pk=calendar_item_id)
+        else:
+            return self.none()
 
 
 class ReminderManager(models.Manager):
@@ -34,5 +43,8 @@ class ReminderManager(models.Manager):
     def unsent(self):
         return self.get_queryset().unsent()
 
-    def for_today(self, from_admin=False):
-        return self.get_queryset().for_today(from_admin)
+    def for_today(self):
+        return self.get_queryset().for_today()
+
+    def for_calendar_item(self, calendar_item_id, calendar_item_type):
+        return self.get_queryset().for_calendar_item(calendar_item_id, calendar_item_type)

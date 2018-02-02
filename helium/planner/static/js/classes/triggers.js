@@ -53,7 +53,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-course-group-modal").spin(false);
 
-                        $("#course-group-error").html(data[0].err_msg);
+                        $("#course-group-error").html(helium.get_error_msg(data));
                         $("#course-group-error").parent().show("fast");
                     } else {
                         var course_group = data;
@@ -139,7 +139,7 @@
                     helium.ajax_error_occurred = true;
                     $("#loading-course-modal").spin(false);
 
-                    $("#course-error").html(data[0].err_msg);
+                    $("#course-error").html(helium.get_error_msg(data));
                     $("#course-error").parent().show("fast");
                 } else {
                     var courses_added = [];

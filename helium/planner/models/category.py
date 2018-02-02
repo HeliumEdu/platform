@@ -7,7 +7,7 @@ from helium.planner.managers.categorymanager import CategoryManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 @python_2_unicode_compatible
@@ -37,6 +37,9 @@ class Category(BaseModel):
 
     class Meta:
         verbose_name_plural = 'Categories'
+        unique_together = (
+            ('course', 'title'),
+        )
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover
@@ -46,9 +49,13 @@ class Category(BaseModel):
         return self.course.course_group.get_user()
 
     @property
-    def num_items(self):
+    def num_homework(self):
         return self.homework.count()
 
     @property
-    def num_graded(self):
+    def num_homework_completed(self):
+        return self.homework.completed().count()
+
+    @property
+    def num_homework_graded(self):
         return self.homework.graded().count()

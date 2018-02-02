@@ -5,7 +5,7 @@ from helium.planner.models import CourseGroup, Course, Category, Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +44,11 @@ def get_grade_points_for_course(course_id):
 
 
 def get_grade_data(user_id):
-    # TODO: refactor how num_graded is acquired here, as it could be more efficient
-
     course_groups = CourseGroup.objects.for_user(user_id).values('id', 'title', 'average_grade', 'trend')
 
     for course_group in course_groups:
         course_group['overall_grade'] = course_group['average_grade']
-        course_group['num_graded'] = CourseGroup.objects.get(pk=course_group['id']).num_graded
+        course_group['num_homework_graded'] = Course.objects.for_course_group(course_group['id']).num_homework_graded()
         course_group.pop('average_grade')
 
         course_group['courses'] = Course.objects.for_user(user_id).for_course_group(course_group['id']).values('id',
@@ -60,7 +58,7 @@ def get_grade_data(user_id):
 
         for course in course_group['courses']:
             course['overall_grade'] = course['current_grade']
-            course['num_graded'] = Course.objects.get(pk=course['id']).num_graded
+            course['num_homework_graded'] = Course.objects.filter(pk=course['id']).num_homework_graded()
             course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
             course.pop('current_grade')
             course['grade_points'] = get_grade_points_for_course(course['id'])
@@ -68,13 +66,14 @@ def get_grade_data(user_id):
             course['categories'] = Category.objects.for_user(user_id).for_course(course['id']).values('id',
                                                                                                       'title',
                                                                                                       'weight',
+                                                                                                      'color',
                                                                                                       'average_grade',
                                                                                                       'grade_by_weight',
                                                                                                       'trend')
 
             for category in course['categories']:
                 category['overall_grade'] = category['average_grade']
-                category['num_graded'] = Category.objects.get(pk=category['id']).num_graded
+                category['num_homework_graded'] = Category.objects.filter(pk=category['id']).num_homework_graded()
                 category.pop('average_grade')
 
     return {

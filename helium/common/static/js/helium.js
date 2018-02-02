@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 var CSRF_TOKEN = $.cookie("csrftoken");
@@ -207,6 +207,27 @@ function Helium() {
         return data != undefined && data.length === 1 && data[0].hasOwnProperty("err_msg");
     };
 
+    /**
+     * Extract the error message from a response already know to have an error.
+     *
+     * @returns An HTML formatted error response.
+     */
+    this.get_error_msg = function (data) {
+        var response = data[0];
+        // If responseJSON exists, we can likely find a more detailed message to be parsed
+        if (response.hasOwnProperty('jqXHR') && response.jqXHR.hasOwnProperty('responseJSON')) {
+            if (response.jqXHR.responseJSON.hasOwnProperty('detail')) {
+                return response.jqXHR.responseJSON.detail;
+            // TODO: we could parse more API responses here, but may make more sense to just wait and improve error
+            // handling when we rebuild the entire UI
+            } else {
+                return response.err_msg
+            }
+        } else {
+            return response.err_msg
+        }
+    };
+
     this.bytes_to_size = function (bytes) {
         var sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
         if (bytes === 0) {
@@ -257,97 +278,88 @@ function Helium() {
             start = moment(data.event.start);
         }
 
-        if ($("#" + id_str).length == 0) {
-            var list_item = $('<li id="reminder-popup-' + data.id + '" class="reminder-popup"><button type="button" class="close reminder-close"><i class="icon-remove"></i></button></li>');
-            var reminder_body = $('<span class="reminder-msg-body' + (location.href.indexOf('/planner/calendar') !== -1 ? ' cursor-hover' : '') + '" id="' + id_str + '"></span>');
-            list_item.append(reminder_body);
+        var list_item = $('<li id="reminder-popup-' + data.id + '" class="reminder-popup"><button type="button" class="close reminder-close"><i class="icon-remove"></i></button></li>');
+        var reminder_body = $('<span class="reminder-msg-body' + (location.href.indexOf('/planner/calendar') !== -1 ? ' cursor-hover' : '') + '" id="' + id_str + '"></span>');
+        list_item.append(reminder_body);
 
-            var msg_body = $('<span class="msg-body">');
-            reminder_body.append(msg_body);
-            if (type === "homework") {
-                msg_body.append('<span class="msg-title"><span class="blue">(' + data.homework.course.title + ') ' + data.homework.title + '</span> ' + data.message + '</span>');
-            } else if (type === "event") {
-                msg_body.append('<span class="msg-title"><span class="blue">(Event) ' + data.event.title + '</span> ' + data.message + '</span>');
-            } else if (data.from_admin) {
-                msg_body.append('<span class="msg-title"><span class="blue">(The Helium Team) </span> ' + data.message + '</span>');
-            }
-
-            var msg_time = $('<span class="msg-time">');
-            reminder_body.append(msg_time);
-            msg_time.append('<i class="icon-time"></i>');
-            msg_time.append('<span>&nbsp;' + start.format(helium.HE_REMINDER_DATE_STRING) + ' at ' + start.format(helium.HE_TIME_STRING_CLIENT) + '</span>');
-
-            list_item.find('.reminder-close').on("click", function () {
-                helium.ajax_error_occurred = false;
-
-                var put_data = {
-                    'sent': true
-                }, reminder_div = $(this).parent();
-                if (type === "homework") {
-                    put_data['homework'] = data.homework.id;
-                } else if (type === "event") {
-                    put_data['event'] = data.event.id;
-                }
-                helium.planner_api.edit_reminder(function (data) {
-                    if (helium.data_has_err_msg(data)) {
-                        helium.ajax_error_occurred = true;
-
-                        bootbox.alert(data[0].err_msg);
-                    } else {
-                        var new_count = parseInt($("#reminder-bell-count").text()) - 1;
-                        reminder_div.hide();
-
-                        $("#reminder-bell-count").html(new_count + " Reminder" + (new_count > 1 ? "s" : ""));
-                        $("#reminder-bell-alt-count").html(new_count);
-                        if (new_count === 0) {
-                            $("#reminder-bell-alt-count").hide("fast");
-                        }
-                    }
-                }, data.id, put_data);
-            });
-            if (location.href.indexOf('/planner/calendar') !== -1) {
-                list_item.find('[id^="reminder-for-"]').on("click", function () {
-                    var id = $(this).attr("id").split("reminder-for-")[1];
-                    if (id.indexOf("event-") !== -1) {
-                        id = id.replace("-", "_");
-                    } else {
-                        id = id.split("-")[1];
-                    }
-
-                    helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
-                    // First resort is to look in the calendar's cache, but if the event isn't found there we'll have to look it
-                    // up in the database
-                    if (helium.calendar.current_calendar_item === undefined) {
-                        helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
-
-                        var callback = function (data) {
-                            if (helium.data_has_err_msg(data)) {
-                                helium.ajax_error_occurred = true;
-                                helium.calendar.loading_div.spin(false);
-
-                                bootbox.alert(data[0].err_msg);
-                            } else {
-                                helium.calendar.loading_div.spin(false);
-
-                                helium.calendar.current_calendar_item = data;
-                                helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
-                            }
-                        };
-                        if (id.indexOf("event") !== -1) {
-                            helium.planner_api.get_event(callback, id, true, true);
-                        } else {
-                            helium.planner_api.get_homework_by_id(function (data) {
-                                helium.planner_api.get_homework(callback, data.course.course_group, data.course.id, id, true, true);
-                            }, id, true);
-                        }
-                    } else {
-                        helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
-                    }
-                });
-            }
-
-            $($($("#reminder-bell-count").parent()).parent()).append(list_item);
+        var msg_body = $('<span class="msg-body">');
+        reminder_body.append(msg_body);
+        if (type === "homework") {
+            msg_body.append('<span class="msg-title"><span class="blue">(' + data.homework.course.title + ') ' + data.homework.title + '</span> ' + data.message + '</span>');
+        } else if (type === "event") {
+            msg_body.append('<span class="msg-title"><span class="blue">(Event) ' + data.event.title + '</span> ' + data.message + '</span>');
         }
+
+        var msg_time = $('<span class="msg-time">');
+        reminder_body.append(msg_time);
+        msg_time.append('<i class="icon-time"></i>');
+        msg_time.append('<span>&nbsp;' + start.format(helium.HE_REMINDER_DATE_STRING) + ' at ' + start.format(helium.HE_TIME_STRING_CLIENT) + '</span>');
+
+        list_item.find('.reminder-close').on("click", function () {
+            helium.ajax_error_occurred = false;
+
+            var put_data = {
+                'sent': true
+            }, reminder_div = $(this).parent();
+            helium.planner_api.edit_reminder(function (data) {
+                if (helium.data_has_err_msg(data)) {
+                    helium.ajax_error_occurred = true;
+
+                    bootbox.alert(helium.get_error_msg(data));
+                } else {
+                    var new_count = parseInt($("#reminder-bell-count").text()) - 1;
+                    reminder_div.hide();
+
+                    $("#reminder-bell-count").html(new_count + " Reminder" + (new_count > 1 ? "s" : ""));
+                    $("#reminder-bell-alt-count").html(new_count);
+                    if (new_count === 0) {
+                        $("#reminder-bell-alt-count").hide("fast");
+                    }
+                }
+            }, data.id, put_data, true, true);
+        });
+        if (location.href.indexOf('/planner/calendar') !== -1) {
+            list_item.find('[id^="reminder-for-"]').on("click", function () {
+                var id = $(this).attr("id").split("reminder-for-")[1];
+                if (id.indexOf("event-") !== -1) {
+                    id = id.replace("-", "_");
+                } else {
+                    id = id.split("-")[1];
+                }
+
+                helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
+                // First resort is to look in the calendar's cache, but if the event isn't found there we'll have to look it
+                // up in the database
+                if (helium.calendar.current_calendar_item === undefined) {
+                    helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
+
+                    var callback = function (data) {
+                        if (helium.data_has_err_msg(data)) {
+                            helium.ajax_error_occurred = true;
+                            helium.calendar.loading_div.spin(false);
+
+                            bootbox.alert(helium.get_error_msg(data));
+                        } else {
+                            helium.calendar.loading_div.spin(false);
+
+                            helium.calendar.current_calendar_item = data;
+                            helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
+                        }
+                    };
+                    if (id.indexOf("event") !== -1) {
+                        helium.planner_api.get_event(callback, id, true, true);
+                    } else {
+                        helium.planner_api.get_homework_by_id(function (data) {
+                            helium.planner_api.get_homework(callback, data.course.course_group, data.course.id, id, true, true);
+                        }, id, true);
+                    }
+                } else {
+                    helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);
+                }
+            });
+        }
+
+        $($($("#reminder-bell-count").parent()).parent()).append(list_item);
     };
 
     this.process_reminders = function (data) {
@@ -362,6 +374,8 @@ function Helium() {
             $("#reminder-bell-alt-count").html(data.length);
             if (data.length > 0) {
                 $("#reminder-bell-alt-count").show("fast");
+            } else {
+                $("#reminder-bell-alt-count").hide("fast");
             }
         }
     };

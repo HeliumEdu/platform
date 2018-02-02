@@ -8,10 +8,9 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
-@python_2_unicode_compatible
 class Event(BaseCalendar):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
@@ -25,9 +24,6 @@ class Event(BaseCalendar):
 
         kwargs.pop('calendar_item_type', None)
         super(Event, self).__init__(*args, **kwargs)
-
-    def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
 
     def get_user(self):
         return self.user

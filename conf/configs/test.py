@@ -9,7 +9,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -87,15 +87,9 @@ if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
         }
     }
 else:
-    DATABASES = {
-        'default': {
-            'NAME': os.environ.get('PLATFORM_DB_NAME'),
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': os.environ.get('PLATFORM_DB_HOST'),
-            'USER': os.environ.get('PLATFORM_DB_USER'),
-            'PASSWORD': os.environ.get('PLATFORM_DB_PASSWORD'),
-        }
-    }
+    from conf.configs import deploy
+
+    DATABASES = deploy.DATABASES
 
 # Static
 

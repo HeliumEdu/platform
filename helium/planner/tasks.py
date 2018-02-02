@@ -15,7 +15,7 @@ from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,15 @@ def recalculate_category_grade(category_id):
         recalculate_course_grade.delay(category.course.pk)
     except Category.DoesNotExist:
         pass
+
+
+@app.task
+def adjust_reminder_times(calendar_item_id, calendar_item_type):
+    for reminder in Reminder.objects.for_calendar_item(calendar_item_id, calendar_item_type).iterator():
+        logger.info('Adjusting start_of_range for reminder {}.'.format(reminder.pk))
+
+        # Forcing a reminder to save will recalculate its start_of_range, if necessary
+        reminder.save()
 
 
 @app.task

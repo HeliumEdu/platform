@@ -10,13 +10,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
-from helium.planner.filters import BaseCalendarFilter
+from helium.planner.filters import EventFilter
 from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = EventExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = BaseCalendarFilter
+    filter_class = EventFilter
     search_fields = ('title',)
     order_fields = ('title', 'start', 'priority',)
 
@@ -72,6 +72,9 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
     put:
     Update the given event instance.
 
+    patch:
+    Update only the given attributes of the given event instance.
+
     delete:
     Delete the given event instance.
     """
@@ -97,9 +100,20 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
     def put(self, request, *args, **kwargs):
         timezone.activate(request.user.settings.time_zone)
 
-        response = self.partial_update(request, *args, **kwargs)
+        response = self.update(request, *args, **kwargs)
 
         logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+
+        metricutils.increment('action.event.updated', request)
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
+        timezone.activate(request.user.settings.time_zone)
+
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info('Event {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         metricutils.increment('action.event.updated', request)
 

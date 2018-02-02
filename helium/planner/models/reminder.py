@@ -10,7 +10,7 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 @python_2_unicode_compatible
@@ -33,8 +33,6 @@ class Reminder(BaseModel):
                                        choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP)
 
     sent = models.BooleanField(default=False)
-
-    from_admin = models.BooleanField(default=False)
 
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)

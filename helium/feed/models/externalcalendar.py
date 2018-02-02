@@ -9,7 +9,7 @@ from helium.common.models.base import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class ExternalCalendar(BaseModel):
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
                                             default=True)
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())

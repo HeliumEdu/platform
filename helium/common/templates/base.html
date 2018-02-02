@@ -205,7 +205,7 @@
 
 {% if request.user.is_authenticated %}
     <script type="application/javascript">
-        var USER_ID = {{ request.user.pk }};
+        var USER_ID = {{ request.user.pk|safe }};
     </script>
 {% endif %}
 

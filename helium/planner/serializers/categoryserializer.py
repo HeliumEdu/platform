@@ -1,12 +1,15 @@
 import logging
+import random
 
 from rest_framework import serializers
 
+from helium.common import enums
+from helium.common.utils import commonutils
 from helium.planner.models.category import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +20,8 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',
             # Property fields (which should also be declared as read-only)
-            'num_items', 'num_graded',)
-        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course', 'num_items', 'num_graded',)
+            'num_homework', 'num_homework_graded',)
+        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
 
     def validate_weight(self, weight):
         """
@@ -41,3 +44,9 @@ class CategorySerializer(serializers.ModelSerializer):
                 "The cumulative weights of all categories associated with a course cannot exceed 100.")
 
         return weight
+
+    def create(self, validated_data):
+        if 'color' not in validated_data:
+            validated_data['color'] = random.choice(enums.ALLOWED_COLORS)[0]
+
+        return super(CategorySerializer, self).create(validated_data)

@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 /*******************************************
@@ -58,7 +58,7 @@
 
                     helium.calendar.loading_div.spin(false);
                 }
-            }, h.course.course_group, h.course.id, homework_id, data);
+            }, h.course.course_group, h.course.id, homework_id, data, true, true);
         }, homework_id, true);
     });
 
@@ -107,7 +107,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         // If the course for this Homework implements weighted grading, but the selected Category has no weight,
@@ -178,7 +178,7 @@
                     helium.ajax_error_occurred = true;
                     $("#loading-homework-modal").spin(false);
 
-                    $("#homework-error").html(data[0].err_msg);
+                    $("#homework-error").html(helium.get_error_msg(data));
                     $("#homework-error").parent().show("fast");
                 } else {
                     course = helium.calendar.get_course_from_list_by_pk(data, helium.calendar.current_class_id);
@@ -196,9 +196,9 @@
                         helium.calendar.show_end_time = true;
                     }
 
-                    if ((month_or_list_view || helium.calendar.all_day) && course.has_schedule) {
-                        start_time = moment(course.sun_start_time);
-                        end_time = moment(course.sun_end_time);
+                    if ((month_or_list_view || helium.calendar.all_day) && helium.calendar.has_schedule(course)) {
+                        start_time = moment(course.sun_start_time, helium.HE_TIME_STRING_SERVER);
+                        end_time = moment(course.sun_end_time, helium.HE_TIME_STRING_SERVER);
                         // If the course has a different schedule each day, set the start/end time according to the specified day
                         if (!course.same_time) {
                             day_of_week = helium.calendar.start.day();
@@ -215,28 +215,28 @@
 
                             switch (day_of_week) {
                                 case 1:
-                                    start_time = moment(course.mon_start_time);
-                                    end_time = moment(course.mon_end_time);
+                                    start_time = moment(course.mon_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.mon_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 2:
-                                    start_time = moment(course.tue_start_time);
-                                    end_time = moment(course.tue_end_time);
+                                    start_time = moment(course.tue_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.tue_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 3:
-                                    start_time = moment(course.wed_start_time);
-                                    end_time = moment(course.wed_end_time);
+                                    start_time = moment(course.wed_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.wed_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 4:
-                                    start_time = moment(course.thu_start_time);
-                                    end_time = moment(course.thu_end_time);
+                                    start_time = moment(course.thu_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.thu_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 5:
-                                    start_time = moment(course.fri_start_time);
-                                    end_time = moment(course.fri_end_time);
+                                    start_time = moment(course.fri_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.fri_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 6:
-                                    start_time = moment(course.sat_start_time);
-                                    end_time = moment(course.sat_end_time);
+                                    start_time = moment(course.sat_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(course.sat_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                             }
                         }
@@ -250,7 +250,7 @@
                             helium.calendar.end.hour(start_time.hour());
                             helium.calendar.end.minute(start_time.minutes() + helium.USER_PREFS.settings.all_day_offset);
                         }
-                    } else if ((month_view && !course.has_schedule) || helium.calendar.all_day) {
+                    } else if ((month_view && !helium.calendar.has_schedule(course)) || helium.calendar.all_day) {
                         helium.calendar.start.hour(12);
                         helium.calendar.start.minute(0);
                         helium.calendar.end.hour(12);
@@ -272,13 +272,17 @@
                 helium.ajax_error_occurred = true;
                 $("#loading-homework-modal").spin(false);
 
-                $("#homework-error").html(data[0].err_msg);
+                $("#homework-error").html(helium.get_error_msg(data));
 
                 $("#homework-error").parent().show("fast");
             } else {
                 $("#homework-materials").find("option").remove();
                 $.each(data, function (index, material) {
-                    $("#homework-materials").append("<option value=\"" + material.id + "\">" + material.title + "</option>");
+                    helium.planner_api.get_material_group(function (material_group) {
+                        if (material_group.shown_on_calendar) {
+                            $("#homework-materials").append("<option value=\"" + material.id + "\">" + material.title + "</option>");
+                        }
+                    }, material.material_group, false, true)
                 });
 
                 $("#homework-materials").val(helium.calendar.preferred_material_ids);
@@ -298,7 +302,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         var course, weight_tag;
@@ -309,7 +313,7 @@
                                     helium.ajax_error_occurred = true;
                                     $("#loading-homework-modal").spin(false);
 
-                                    $("#homework-error").html(data[0].err_msg);
+                                    $("#homework-error").html(helium.get_error_msg(data));
                                     $("#homework-error").parent().show("fast");
                                 } else {
                                     course = helium.calendar.get_course_from_list_by_pk(data, helium.calendar.current_class_id);
@@ -322,12 +326,16 @@
                         if (helium.calendar.preferred_category_name === null) {
                             helium.calendar.preferred_category_name = helium.calendar.get_category_name_by_id(helium.calendar.preferred_category_id);
                             if (helium.calendar.preferred_category_name === null) {
-                                helium.calendar.preferred_category_id = parseInt($("#homework-category").find("option").first().val());
+                                helium.calendar.preferred_category_id = -1;
                             }
                         } else {
                             helium.calendar.preferred_category_id = helium.calendar.get_category_id_by_name(helium.calendar.preferred_category_name);
                         }
-                        $("#homework-category").val(helium.calendar.preferred_category_id);
+                        if (helium.calendar.preferred_category_id === -1) {
+                            $("#homework-category").val(parseInt($("#homework-category").find("option").first().val()));
+                        } else {
+                            $("#homework-category").val(helium.calendar.preferred_category_id);
+                        }
                         $("#homework-category").prop("disabled", data.length === 0).trigger("chosen:updated");
                         $("#loading-homework-modal").spin(false);
                     }

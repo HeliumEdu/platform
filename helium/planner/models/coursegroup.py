@@ -9,7 +9,7 @@ from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 @python_2_unicode_compatible
@@ -44,41 +44,21 @@ class CourseGroup(BaseModel):
         return self.user
 
     @property
-    def percent_thru(self):
-        num_days = (self.end_date - self.start_date).days
-        days_completed = (datetime.datetime.now().date() - self.start_date).days
-
-        return (float(days_completed) / float(num_days)) * 100 if num_days > 0 \
-            else (0 if self.days_remaining > 0 else 100)
+    def num_days(self):
+        return (self.end_date - self.start_date).days
 
     @property
-    def days_remaining(self):
-        return (self.end_date - datetime.datetime.now().date()).days
+    def num_days_completed(self):
+        return (datetime.datetime.now().date() - self.start_date).days
 
     @property
-    def num_items(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_items
-        return count
+    def num_homework(self):
+        return self.courses.num_homework()
 
     @property
-    def num_complete(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_complete
-        return count
+    def num_homework_completed(self):
+        return self.courses.num_homework_completed()
 
     @property
-    def num_incomplete(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_incomplete
-        return count
-
-    @property
-    def num_graded(self):
-        count = 0
-        for course in self.courses.iterator():
-            count += course.num_graded
-        return count
+    def num_homework_graded(self):
+        return self.courses.num_homework_graded()

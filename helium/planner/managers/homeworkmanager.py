@@ -4,7 +4,7 @@ from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class HomeworkQuerySet(BaseQuerySet):
     def graded(self):
         return self.completed().exclude(current_grade='-1/100')
 
-    def completed(self):
-        return self.filter(completed=True)
+    def completed(self, completed=True):
+        return self.filter(completed=completed)
 
 
 class HomeworkManager(BaseManager):
@@ -54,5 +54,5 @@ class HomeworkManager(BaseManager):
     def graded(self):
         return self.get_queryset().graded()
 
-    def completed(self):
-        return self.get_queryset().completed()
+    def completed(self, completed=True):
+        return self.get_queryset().completed(completed)

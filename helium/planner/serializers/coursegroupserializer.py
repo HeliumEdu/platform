@@ -6,7 +6,7 @@ from helium.planner.models import CourseGroup
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,13 @@ class CourseGroupSerializer(serializers.ModelSerializer):
             'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'average_grade', 'trend', 'private_slug',
             'user',
             # Property fields (which should also be declared as read-only)
-            'percent_thru', 'days_remaining', 'num_items', 'num_complete', 'num_incomplete', 'num_graded',)
+            'num_days', 'num_days_completed', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'average_grade', 'trend', 'private_slug', 'user', 'percent_thru', 'days_remaining', 'num_items',
-            'num_complete', 'num_incomplete', 'num_graded',)
+            'average_grade', 'trend', 'private_slug', 'user', 'num_days', 'num_days_completed', 'num_homework',
+            'num_homework_completed', 'num_homework_graded',)
+
+    def validate(self, attrs):
+        if attrs['start_date'] > attrs['end_date']:
+            raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
+
+        return attrs
