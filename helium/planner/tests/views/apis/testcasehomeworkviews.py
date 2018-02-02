@@ -142,7 +142,7 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
-    def test_create_converts_naive_datetime_to_utc(self):
+    def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -173,11 +173,10 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(Homework.objects.count(), 1)
         homework = Homework.objects.get(pk=response.data['id'])
 
-        time_zone = pytz.timezone(user.settings.time_zone)
-        start = timezone.make_aware(parser.parse(data['start']), time_zone)
-        end = timezone.make_aware(parser.parse(data['end']), time_zone)
-        self.assertEquals(homework.start.isoformat(), start.astimezone(timezone.utc).isoformat())
-        self.assertEquals(homework.end.isoformat(), end.astimezone(timezone.utc).isoformat())
+        start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
+        self.assertEquals(homework.start.isoformat(), start.isoformat())
+        self.assertEquals(homework.end.isoformat(), end.isoformat())
 
     def test_get_homework_by_id(self):
         # GIVEN
@@ -232,9 +231,6 @@ class TestCaseHomeworkViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data['start'] = parser.parse(data['start']).astimezone(pytz.timezone(user.settings.time_zone)).isoformat()
-        data['end'] = parser.parse(data['end']).astimezone(pytz.timezone(user.settings.time_zone)).isoformat()
-
         self.assertDictContainsSubset(data, response.data)
         homework = Homework.objects.get(pk=homework.pk)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
@@ -263,7 +259,7 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
-    def test_patch_converts_naive_datetime_to_utc(self):
+    def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -287,11 +283,10 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homework = Homework.objects.get(pk=homework.pk)
 
-        time_zone = pytz.timezone(user.settings.time_zone)
-        start = timezone.make_aware(parser.parse(data['start']), time_zone)
-        end = timezone.make_aware(parser.parse(data['end']), time_zone)
-        self.assertEquals(homework.start.isoformat(), start.astimezone(timezone.utc).isoformat())
-        self.assertEquals(homework.end.isoformat(), end.astimezone(timezone.utc).isoformat())
+        start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
+        self.assertEquals(homework.start.isoformat(), start.isoformat())
+        self.assertEquals(homework.end.isoformat(), end.isoformat())
 
     def test_delete_homework_by_id(self):
         # GIVEN

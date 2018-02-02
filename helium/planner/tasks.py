@@ -129,6 +129,8 @@ def send_email_reminder(email, subject, reminder_id, calendar_item):
                                      },
                                      subject, [email])
 
+    timezone.deactivate()
+
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
