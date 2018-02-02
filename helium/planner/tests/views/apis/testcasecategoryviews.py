@@ -47,9 +47,9 @@ class TestCaseCategoryViews(TestCase):
         course2 = coursehelper.given_course_exists(course_group2)
         course3 = coursehelper.given_course_exists(course_group2)
         categoryhelper.given_category_exists(course1)
-        categoryhelper.given_category_exists(course2)
-        categoryhelper.given_category_exists(course3)
-        categoryhelper.given_category_exists(course3)
+        categoryhelper.given_category_exists(course2, title='Test Category 2')
+        categoryhelper.given_category_exists(course3, title='Test Category 3')
+        categoryhelper.given_category_exists(course3, title='Test Category 4')
 
         # WHEN
         response1 = self.client.get(reverse('api_planner_categories_list'))
@@ -99,9 +99,9 @@ class TestCaseCategoryViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         categoryhelper.given_category_exists(course, weight=25)
-        categoryhelper.given_category_exists(course, weight=25)
-        categoryhelper.given_category_exists(course, weight=25)
-        categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, title='Test Category 2', weight=25)
+        categoryhelper.given_category_exists(course, title='Test Category 3', weight=25)
+        categoryhelper.given_category_exists(course, title='Test Category 4', weight=25)
 
         # WHEN
         data = {
@@ -173,9 +173,9 @@ class TestCaseCategoryViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         categoryhelper.given_category_exists(course, weight=25)
-        categoryhelper.given_category_exists(course, weight=25)
-        categoryhelper.given_category_exists(course, weight=25)
-        category = categoryhelper.given_category_exists(course, weight=25)
+        categoryhelper.given_category_exists(course, title='Test Category 2', weight=25)
+        categoryhelper.given_category_exists(course, title='Test Category 3', weight=25)
+        category = categoryhelper.given_category_exists(course, title='Test Category 4', weight=25)
 
         # WHEN
         data = {
@@ -208,7 +208,8 @@ class TestCaseCategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Category.objects.filter(pk=category.pk).exists())
-        self.assertEqual(Category.objects.count(), 0)
+        # This will equal 1 because, upon deletion of the last category, the system recreated "Uncategorized"
+        self.assertEqual(Category.objects.count(), 1)
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN

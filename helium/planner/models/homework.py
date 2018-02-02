@@ -1,5 +1,4 @@
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.utils.validators import fraction_validator
@@ -54,7 +53,6 @@ class Homework(BaseCalendar):
         method, as this method will only recalculate the grade for the category to which the field is being changed.
         """
         if not self.category:
-            self.category = Category.objects.get_or_create(title='Uncategorized', course=self.course,
-                                                           defaults={'weight': 0})[0]
+            self.category = Category.objects.get_uncategorized(self.course_id)
 
         super(Homework, self).save(*args, **kwargs)

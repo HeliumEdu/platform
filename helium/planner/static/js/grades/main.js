@@ -296,5 +296,5 @@ $(document).ready(function () {
                 $("#no-grades-tab").addClass("active");
             }
         }
-    }, helium.USER_PREFS.id);
+    });
 });

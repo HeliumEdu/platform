@@ -37,6 +37,9 @@ class Category(BaseModel):
 
     class Meta:
         verbose_name_plural = 'Categories'
+        unique_together = (
+            ('course', 'title'),
+        )
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover

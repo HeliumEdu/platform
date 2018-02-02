@@ -332,6 +332,16 @@ function HeliumCalendar() {
         if ($("[id^='calendar-filter-course-']").length > 0) {
             $("#homework-class").trigger("change");
             $("#homework-class").trigger("chosen:updated");
+        } else {
+            self.start.hour(12);
+            self.start.minute(0);
+            if (!self.all_day) {
+                self.end.hour(12);
+                self.end.minute(50);
+            } else {
+                self.end.hour(12);
+                self.end.minute(helium.USER_PREFS.settings.all_day_offset);
+            }
         }
 
         if (calendar_item_type === 0) {

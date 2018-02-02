@@ -203,7 +203,7 @@ class TestCaseHomeworkViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
-        category2 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         material_group = materialgrouphelper.given_material_group_exists(user)
         material1 = materialhelper.given_material_exists(material_group)
         material2 = materialhelper.given_material_exists(material_group)

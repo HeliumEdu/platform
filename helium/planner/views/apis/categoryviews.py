@@ -107,7 +107,19 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         return response
 
     def delete(self, request, *args, **kwargs):
+        category = self.get_object()
+        homework = list(category.homework.all())
+
         response = self.destroy(request, *args, **kwargs)
+
+        uncategorized = Category.objects.get_uncategorized(category.course_id)
+        for h in homework:
+            h.category = uncategorized
+            h.save()
+
+            logger.info(
+                'Homework {} category set to Uncategorized {} for user {}'.format(h.pk, uncategorized.pk,
+                                                                                  request.user.get_username()))
 
         logger.info(
             'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],

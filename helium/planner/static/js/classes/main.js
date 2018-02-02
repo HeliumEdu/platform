@@ -269,12 +269,7 @@ function HeliumClasses() {
                                     "label": '<i class="icon-trash"></i> ' + "Delete",
                                     "className": "btn-sm btn-danger",
                                     "callback": function () {
-                                        var dom_id = $(this).attr("id");
-                                        var id = dom_id.split("-");
-                                        id = id[id.length - 1];
-                                        if (id !== "unsaved") {
-                                            helium.classes.categories_to_delete.push(id);
-                                        }
+                                        helium.classes.categories_to_delete.push(category.id);
 
                                         if ($("#categories-table-body").children().length === 2) {
                                             $("#no-categories").show();
