@@ -87,12 +87,17 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 
 # Database
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.test.sqlite3'),
+        }
     }
-}
+else:
+    from conf.configs import deploy
+
+    DATABASES = deploy.DATABASES
 
 # Static
 
