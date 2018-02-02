@@ -136,12 +136,12 @@ $(document).ready(function () {
             helium.grades.course_groups = data.course_groups;
             helium.grades.courses_for_course_group = {};
             helium.grades.grade_points_for_course_group = {};
+            helium.grades.categories_for_course = {};
             $.each(data.course_groups, function (i, course_group) {
                 helium.grades.courses_for_course_group[course_group['id']] = course_group['courses'];
 
                 helium.grades.grade_points_for_course_group[course_group['id']] = {};
 
-                helium.grades.categories_for_course = {};
                 $.each(course_group['courses'], function (i, course) {
                     helium.grades.categories_for_course[course['id']] = course['categories'];
                     helium.grades.grade_points_for_course_group[course_group['id']][course['id']] = course['grade_points'];
