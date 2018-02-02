@@ -108,3 +108,5 @@ def process_text_reminders():
         else:
             logger.warn('Reminder {} was not processed, as the phone and carrier are not longer set for user {}'.format(
                 reminder.pk, reminder.get_user().pk))
+
+        timezone.deactivate()
