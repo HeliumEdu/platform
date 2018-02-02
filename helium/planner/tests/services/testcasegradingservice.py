@@ -187,8 +187,8 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
-        category2 = categoryhelper.given_category_exists(course)
-        category3 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
+        category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='10/10')
@@ -219,7 +219,7 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
-        categoryhelper.given_category_exists(course)
+        categoryhelper.given_category_exists(course, title='Test Category 2')
 
         # WHEN
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, current_grade='50/100')
@@ -263,7 +263,7 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
-        category2 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
 
         # WHEN
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -327,8 +327,8 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course, weight=30)
-        category2 = categoryhelper.given_category_exists(course, weight=60)
-        category3 = categoryhelper.given_category_exists(course, weight=10)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=60)
+        category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=10)
 
         # WHEN
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -396,8 +396,8 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
-        category2 = categoryhelper.given_category_exists(course)
-        category3 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
+        category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                          start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
                                                          end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
@@ -446,8 +446,8 @@ class TestCaseGradingService(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course, weight=30)
-        category2 = categoryhelper.given_category_exists(course, weight=50)
-        category3 = categoryhelper.given_category_exists(course, weight=20)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
+        category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                          start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
                                                          end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),

@@ -28,6 +28,9 @@ class CategoryQuerySet(BaseQuerySet):
 
 
 class CategoryManager(BaseManager):
+    def get_uncategorized(self, course_id):
+        return self.get_or_create(title='Uncategorized', course_id=course_id, defaults={'weight': 0})[0]
+
     def get_queryset(self):
         return CategoryQuerySet(self.model, using=self._db)
 

@@ -32,9 +32,9 @@ class TestCaseEventViews(TestCase):
         course1 = coursehelper.given_course_exists(course_group1)
         course2 = coursehelper.given_course_exists(course_group2)
         category1 = categoryhelper.given_category_exists(course1, weight=50)
-        category2 = categoryhelper.given_category_exists(course1, weight=50)
+        category2 = categoryhelper.given_category_exists(course1, title='Test Category 2', weight=50)
         # This category having no weight will result in the course not having weighted grading
-        category3 = categoryhelper.given_category_exists(course2, weight=0)
+        category3 = categoryhelper.given_category_exists(course2, title='Test Category 3', weight=0)
         homework1 = homeworkhelper.given_homework_exists(course1, category=category1, completed=True,
                                                          current_grade='20/30')
         homework2 = homeworkhelper.given_homework_exists(course1, category=category1, completed=True,

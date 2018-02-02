@@ -24,7 +24,7 @@ class BaseQuerySet(models.query.QuerySet):
         raise NotImplementedError
 
 
-class BaseManager(BaseUserManager):
+class BaseManager(models.Manager):
     def get_queryset(self):
         return BaseQuerySet(self.model, using=self._db)
 
