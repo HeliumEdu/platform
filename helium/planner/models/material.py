@@ -24,8 +24,8 @@ class Material(BaseModel):
     website = models.URLField(help_text='A valid URL.',
                               max_length=3000, blank=True, null=True)
 
-    price = models.DecimalField(help_text='A price string.',
-                                max_length=255, blank=True)
+    price = models.CharField(help_text='A price string.',
+                             max_length=255, blank=True)
 
     details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
                                blank=True)
