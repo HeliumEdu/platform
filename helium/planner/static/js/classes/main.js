@@ -424,7 +424,7 @@ function HeliumClasses() {
             helium.ajax_error_occurred = true;
             $("#loading-course-group-modal").spin(false);
 
-            $("#course-error").html(data[0].err_msg);
+            $("#course-error").html(helium.get_error_msg(data));
             $("#course-error").parent().show("fast");
         } else {
             var course_group_div, div, table_div;
@@ -636,7 +636,7 @@ function HeliumClasses() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     course_group = data;
                     $("#course-group-title").val(course_group.title);
@@ -676,7 +676,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#course-group-" + id).slideUp("fast", function () {
                                     var parent = $('a[href="#course-group-' + id + '"]').parent();
@@ -754,7 +754,7 @@ function HeliumClasses() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     course = data;
 
@@ -948,7 +948,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#course-" + id).slideUp("fast", function () {
                                     self.course_group_table[$("#course-group-tabs li.active a").attr("href").split("#course-group-")[1]].row($(this)).remove().draw();
@@ -1512,7 +1512,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-course-modal").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
                             } else {
                                 $.each(categories_data, function (i, category_data) {
@@ -1521,7 +1521,7 @@ function HeliumClasses() {
                                             helium.ajax_error_occurred = true;
                                             $("#loading-courses").spin(false);
 
-                                            $("#course-error").html(data[0].err_msg);
+                                            $("#course-error").html(helium.get_error_msg(data));
                                             $("#course-error").parent().show("fast");
 
                                             return false;
@@ -1536,7 +1536,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1552,7 +1552,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1606,7 +1606,7 @@ function HeliumClasses() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-course-modal").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
                             } else {
                                 $.each(categories_data, function (i, category_data) {
@@ -1615,7 +1615,7 @@ function HeliumClasses() {
                                             helium.ajax_error_occurred = true;
                                             $("#loading-courses").spin(false);
 
-                                            $("#course-error").html(data[0].err_msg);
+                                            $("#course-error").html(helium.get_error_msg(data));
                                             $("#course-error").parent().show("fast");
 
                                             return false;
@@ -1630,7 +1630,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1646,7 +1646,7 @@ function HeliumClasses() {
                                                 helium.ajax_error_occurred = true;
                                                 $("#loading-courses").spin(false);
 
-                                                $("#course-error").html(data[0].err_msg);
+                                                $("#course-error").html(helium.get_error_msg(data));
                                                 $("#course-error").parent().show("fast");
 
                                                 return false;
@@ -1776,7 +1776,7 @@ $(document).ready(function () {
                     helium.ajax_error_occurred = true;
                     $("#loading-courses").spin(false);
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     for (i = 0; i < data.length; i += 1) {
                         helium.classes.add_course_to_groups(data[i], helium.classes.course_group_table[id]);

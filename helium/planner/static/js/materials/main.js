@@ -110,7 +110,7 @@ function HeliumMaterials() {
             helium.ajax_error_occurred = true;
             $("#loading-material-group-modal").spin(false);
 
-            $("#material-error").html(data[0].err_msg);
+            $("#material-error").html(helium.get_error_msg(data));
             $("#material-error").parent().show("fast");
         } else {
             var input_tab, material_group_div, div, table_div;
@@ -188,7 +188,7 @@ function HeliumMaterials() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     var material_group = data;
                     $("#material-group-title").val(material_group.title);
@@ -224,7 +224,7 @@ function HeliumMaterials() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-materials").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#material-group-" + id).slideUp("fast", function () {
                                     var parent = $('a[href="#material-group-' + id + '"]').parent();
@@ -275,7 +275,7 @@ function HeliumMaterials() {
                     self.edit = false;
                     self.edit_id = -1;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     var material = data;
 
@@ -329,7 +329,7 @@ function HeliumMaterials() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-materials").spin(false);
 
-                                bootbox.alert(data[0].err_msg);
+                                bootbox.alert(helium.get_error_msg(data));
                             } else {
                                 $("#material-" + id).slideUp("fast", function () {
                                     self.material_group_table[$("#material-group-tabs li.active a").attr("href").split("#material-group-")[1]].row($(this)).remove().draw();
@@ -450,7 +450,7 @@ $(document).ready(function () {
             helium.ajax_error_occurred = true;
             $("#loading-materials").spin(false);
 
-            bootbox.alert(data[0].err_msg);
+            bootbox.alert(helium.get_error_msg(data));
         } else {
             $.each(data, function (index, course) {
                 helium.materials.courses[course.id] = course;
@@ -486,7 +486,7 @@ $(document).ready(function () {
                             helium.ajax_error_occurred = true;
                             $("#loading-materials").spin(false);
 
-                            bootbox.alert(data[0].err_msg);
+                            bootbox.alert(helium.get_error_msg(data));
                         } else {
                             for (i = 0; i < data.length; i += 1) {
                                 helium.materials.add_material_to_group(data[i], helium.materials.material_group_table[id]);

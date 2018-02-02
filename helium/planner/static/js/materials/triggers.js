@@ -52,7 +52,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-material-group-modal").spin(false);
 
-                        $("#material-group-error").html(data[0].err_msg);
+                        $("#material-group-error").html(helium.get_error_msg(data));
                         $("#material-group-error").parent().show("fast");
                     } else {
                         var material_group = data;
@@ -157,7 +157,7 @@
                                 helium.ajax_error_occurred = true;
                                 $("#loading-material-modal").spin(false);
 
-                                $("#material-error").html(data[0].err_msg);
+                                $("#material-error").html(helium.get_error_msg(data));
                                 $("#material-error").parent().show("fast");
                             } else {
                                 var row_div = $("#material-" + data.id);
@@ -189,7 +189,7 @@
                                 helium.ajax_error_occurred = true;
                                 $("#loading-material-modal").spin(false);
 
-                                $("#material-error").html(data[0].err_msg);
+                                $("#material-error").html(helium.get_error_msg(data));
                                 $("#material-error").parent().show("fast");
                             } else {
                                 // Do not close the modal dialog until database saving is complete

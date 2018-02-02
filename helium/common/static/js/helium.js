@@ -207,6 +207,27 @@ function Helium() {
         return data != undefined && data.length === 1 && data[0].hasOwnProperty("err_msg");
     };
 
+    /**
+     * Extract the error message from a response already know to have an error.
+     *
+     * @returns An HTML formatted error response.
+     */
+    this.get_error_msg = function (data) {
+        var response = data[0];
+        // If responseJSON exists, we can likely find a more detailed message to be parsed
+        if (response.hasOwnProperty('jqXHR') && response.jqXHR.hasOwnProperty('responseJSON')) {
+            if (response.jqXHR.responseJSON.hasOwnProperty('detail')) {
+                return response.jqXHR.responseJSON.detail;
+            // TODO: we could parse more API responses here, but may make more sense to just wait and improve error
+            // handling when we rebuild the entire UI
+            } else {
+                return response.err_msg
+            }
+        } else {
+            return response.err_msg
+        }
+    };
+
     this.bytes_to_size = function (bytes) {
         var sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
         if (bytes === 0) {
@@ -284,7 +305,7 @@ function Helium() {
                 if (helium.data_has_err_msg(data)) {
                     helium.ajax_error_occurred = true;
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     var new_count = parseInt($("#reminder-bell-count").text()) - 1;
                     reminder_div.hide();
@@ -317,7 +338,7 @@ function Helium() {
                             helium.ajax_error_occurred = true;
                             helium.calendar.loading_div.spin(false);
 
-                            bootbox.alert(data[0].err_msg);
+                            bootbox.alert(helium.get_error_msg(data));
                         } else {
                             helium.calendar.loading_div.spin(false);
 

@@ -107,7 +107,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         // If the course for this Homework implements weighted grading, but the selected Category has no weight,
@@ -178,7 +178,7 @@
                     helium.ajax_error_occurred = true;
                     $("#loading-homework-modal").spin(false);
 
-                    $("#homework-error").html(data[0].err_msg);
+                    $("#homework-error").html(helium.get_error_msg(data));
                     $("#homework-error").parent().show("fast");
                 } else {
                     course = helium.calendar.get_course_from_list_by_pk(data, helium.calendar.current_class_id);
@@ -272,7 +272,7 @@
                 helium.ajax_error_occurred = true;
                 $("#loading-homework-modal").spin(false);
 
-                $("#homework-error").html(data[0].err_msg);
+                $("#homework-error").html(helium.get_error_msg(data));
 
                 $("#homework-error").parent().show("fast");
             } else {
@@ -302,7 +302,7 @@
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         var course, weight_tag;
@@ -313,7 +313,7 @@
                                     helium.ajax_error_occurred = true;
                                     $("#loading-homework-modal").spin(false);
 
-                                    $("#homework-error").html(data[0].err_msg);
+                                    $("#homework-error").html(helium.get_error_msg(data));
                                     $("#homework-error").parent().show("fast");
                                 } else {
                                     course = helium.calendar.get_course_from_list_by_pk(data, helium.calendar.current_class_id);
@@ -326,12 +326,16 @@
                         if (helium.calendar.preferred_category_name === null) {
                             helium.calendar.preferred_category_name = helium.calendar.get_category_name_by_id(helium.calendar.preferred_category_id);
                             if (helium.calendar.preferred_category_name === null) {
-                                helium.calendar.preferred_category_id = parseInt($("#homework-category").find("option").first().val());
+                                helium.calendar.preferred_category_id = -1;
                             }
                         } else {
                             helium.calendar.preferred_category_id = helium.calendar.get_category_id_by_name(helium.calendar.preferred_category_name);
                         }
-                        $("#homework-category").val(helium.calendar.preferred_category_id);
+                        if (helium.calendar.preferred_category_id === -1) {
+                            $("#homework-category").val(parseInt($("#homework-category").find("option").first().val()));
+                        } else {
+                            $("#homework-category").val(helium.calendar.preferred_category_id);
+                        }
                         $("#homework-category").prop("disabled", data.length === 0).trigger("chosen:updated");
                         $("#loading-homework-modal").spin(false);
                     }

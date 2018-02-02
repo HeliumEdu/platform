@@ -52,7 +52,7 @@ function HeliumGrades() {
             helium.ajax_error_occurred = true;
             $("#loading-grades").spin(false);
 
-            bootbox.alert(data[0].err_msg);
+            bootbox.alert(helium.get_error_msg(data));
         } else {
             $("#course-group-tabs").prepend('<li><a data-toggle="tab" href="#course-group-container-' + data.id + '"><i class="icon-book r-110"></i><span class="hidden-xs">' + data.title + (!data.shown_on_calendar ? " (H)" : "") + '</span></a></li>');
             var container = $('<div id="course-group-container-' + data.id + '" class="tab-pane"></div>');
@@ -136,7 +136,7 @@ $(document).ready(function () {
             helium.ajax_error_occurred = true;
             $("#loading-grades").spin(false);
 
-            bootbox.alert(data[0].err_msg);
+            bootbox.alert(helium.get_error_msg(data));
         } else {
             helium.grades.course_groups = data.course_groups;
             helium.grades.courses_for_course_group = {};

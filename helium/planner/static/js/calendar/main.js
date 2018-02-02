@@ -172,7 +172,7 @@ function HeliumCalendar() {
                 helium.ajax_error_occurred = true;
                 self.loading_div.spin(false);
 
-                bootbox.alert(data[0].err_msg);
+                bootbox.alert(helium.get_error_msg(data));
             } else {
                 // If start does not have a time, this is an all day event
                 if (!self.current_calendar_item.start.hasTime()) {
@@ -218,7 +218,7 @@ function HeliumCalendar() {
                     }, event.id, data, true, true);
                 } else {
                     helium.planner_api.edit_homework(function (data) {
-                        helium.planner_api.get_homework(callback, event.course.course_group, event.course.id, event.id);
+                        helium.planner_api.get_homework(callback, event.course.course_group, data.course, event.id);
                     }, event.course.course_group, event.course.id, event.id, data, true, true);
                 }
             }
@@ -251,7 +251,7 @@ function HeliumCalendar() {
                 helium.ajax_error_occurred = true;
                 self.loading_div.spin(false);
 
-                bootbox.alert(data[0].err_msg);
+                bootbox.alert(helium.get_error_msg(data));
             } else {
                 var calendar_item = data;
 
@@ -274,7 +274,7 @@ function HeliumCalendar() {
             }, event.id, data, true, true);
         } else {
             helium.planner_api.edit_homework(function (data) {
-                helium.planner_api.get_homework(callback, event.course.course_group, event.course.id, event.id);
+                helium.planner_api.get_homework(callback, event.course.course_group, data.course, event.id);
             }, event.course.course_group, event.course.id, event.id, data, true, true);
         }
     };
@@ -480,7 +480,7 @@ function HeliumCalendar() {
                             self.init_calendar_item = false;
                             self.edit = false;
 
-                            bootbox.alert(data[0].err_msg);
+                            bootbox.alert(helium.get_error_msg(data));
                         } else {
                             var calendar_item_fields = data;
 
@@ -964,7 +964,7 @@ function HeliumCalendar() {
                 helium.ajax_error_occurred = true;
                 self.loading_div.spin(false);
 
-                bootbox.alert(data[0].err_msg);
+                bootbox.alert(helium.get_error_msg(data));
             } else {
                 $.each(data, function (index, course) {
                     if ($.inArray(course.id, courses_added) === -1) {
@@ -1098,7 +1098,7 @@ function HeliumCalendar() {
                     self.loading_div.spin(false);
                     loading_filters.spin(false);
 
-                    bootbox.alert(data[0].err_msg);
+                    bootbox.alert(helium.get_error_msg(data));
                 } else {
                     var categories = {};
                     $("#calendar-filter-list").append("<div class=\"filter-strike\"><span>Categories</span></div>");
@@ -1132,7 +1132,7 @@ function HeliumCalendar() {
                 helium.ajax_error_occurred = true;
                 $("#loading-homework-modal").spin(false);
 
-                $("#homework-error").html(data[0].err_msg);
+                $("#homework-error").html(helium.get_error_msg(data));
                 $("#homework-error").parent().show("fast");
             } else {
                 $("#calendar").fullCalendar("removeEvents", self.current_calendar_item.id);
@@ -1168,7 +1168,7 @@ function HeliumCalendar() {
                 helium.ajax_error_occurred = true;
                 $("#loading-homework-modal").spin(false);
 
-                $("#homework-error").html(data[0].err_msg);
+                $("#homework-error").html(helium.get_error_msg(data));
                 $("#homework-error").parent().show("fast");
             } else {
                 var calendar_item = data, event;
@@ -1429,7 +1429,7 @@ function HeliumCalendar() {
                             helium.ajax_error_occurred = true;
                             $("#loading-courses").spin(false);
 
-                            $("#course-error").html(data[0].err_msg);
+                            $("#course-error").html(helium.get_error_msg(data));
                             $("#course-error").parent().show("fast");
 
                             return false;
@@ -1444,7 +1444,7 @@ function HeliumCalendar() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
 
                                 return false;
@@ -1473,7 +1473,7 @@ function HeliumCalendar() {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-courses").spin(false);
 
-                                $("#course-error").html(data[0].err_msg);
+                                $("#course-error").html(helium.get_error_msg(data));
                                 $("#course-error").parent().show("fast");
 
                                 return false;
@@ -1487,7 +1487,7 @@ function HeliumCalendar() {
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         if (!helium.ajax_error_occurred) {
@@ -1532,7 +1532,7 @@ function HeliumCalendar() {
                         }, self.current_calendar_item.id, data);
                     } else {
                         helium.planner_api.edit_homework(function (data) {
-                            helium.planner_api.get_homework(callback, self.current_calendar_item.course.course_group, self.current_calendar_item.course.id, self.current_calendar_item.id);
+                            helium.planner_api.get_homework(callback, self.current_calendar_item.course.course_group, data.course, self.current_calendar_item.id);
                         }, self.current_calendar_item.course.course_group, self.current_calendar_item.course.id, self.current_calendar_item.id, data);
                     }
                 });
@@ -1548,7 +1548,7 @@ function HeliumCalendar() {
                         helium.ajax_error_occurred = true;
                         $("#loading-homework-modal").spin(false);
 
-                        $("#homework-error").html(data[0].err_msg);
+                        $("#homework-error").html(helium.get_error_msg(data));
                         $("#homework-error").parent().show("fast");
                     } else {
                         var calendar_item = data;
@@ -1588,7 +1588,7 @@ function HeliumCalendar() {
                                         helium.ajax_error_occurred = true;
                                         $("#loading-courses").spin(false);
 
-                                        $("#course-error").html(data[0].err_msg);
+                                        $("#course-error").html(helium.get_error_msg(data));
                                         $("#course-error").parent().show("fast");
 
                                         return false;
@@ -1826,7 +1826,7 @@ $(document).ready(function () {
                                 helium.ajax_error_occurred = true;
                                 $("#loading-homework-modal").spin(false);
 
-                                $("#homework-error").html(data[0].err_msg);
+                                $("#homework-error").html(helium.get_error_msg(data));
                                 $("#homework-error").parent().show("fast");
                             } else {
                                 helium.calendar.current_calendar_item.attachments = data;
