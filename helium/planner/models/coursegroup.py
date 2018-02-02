@@ -44,18 +44,12 @@ class CourseGroup(BaseModel):
         return self.user
 
     @property
-    def percent_thru(self):
-        num_days = (self.end_date - self.start_date).days
-        days_completed = (datetime.datetime.now().date() - self.start_date).days
-
-        return (float(days_completed) / float(num_days)) * 100 if num_days > 0 \
-            else (0 if self.days_remaining > 0 else 100)
+    def num_days(self):
+        return (self.end_date - self.start_date).days
 
     @property
-    def days_remaining(self):
-        days_remaining = (self.end_date - datetime.datetime.now().date()).days
-
-        return days_remaining if days_remaining > 0 else 0
+    def num_days_completed(self):
+        return (datetime.datetime.now().date() - self.start_date).days
 
     @property
     def num_homework(self):

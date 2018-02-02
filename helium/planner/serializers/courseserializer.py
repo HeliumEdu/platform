@@ -28,3 +28,9 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = (
             'current_grade', 'trend', 'private_slug', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
+
+    def validate(self, attrs):
+        if attrs['start_date'] > attrs['end_date']:
+            raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
+
+        return attrs

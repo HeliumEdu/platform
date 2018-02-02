@@ -22,6 +22,12 @@ class HomeworkSerializer(serializers.ModelSerializer):
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'calendar_item_type',)
 
+    def validate(self, attrs):
+        if attrs['start'] > attrs['end']:
+            raise serializers.ValidationError("The 'start' must be before the 'end'")
+
+        return attrs
+
     def update(self, instance, validated_data):
         old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
                                                                                   validated_data['category'] else None

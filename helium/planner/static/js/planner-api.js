@@ -1433,7 +1433,7 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_homework_by_user = function (callback, async, use_cache) {
+    this.get_homework_by_user = function (callback, async, use_cache, start, end) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1443,7 +1443,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/homework/",
+                url: "/api/planner/homework/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1713,7 +1713,7 @@ function HeliumPlannerAPI() {
      * @param async true if call should be async, false otherwise (default is true)
      * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
      */
-    this.get_events = function (callback, async, use_cache) {
+    this.get_events = function (callback, async, use_cache, start, end) {
         async = typeof async === "undefined" ? true : async;
         use_cache = typeof use_cache === "undefined" ? false : use_cache;
         var ret_val = null;
@@ -1723,7 +1723,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/events/",
+                url: "/api/planner/events/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {
