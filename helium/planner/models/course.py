@@ -143,6 +143,14 @@ class Course(BaseModel):
         return self.course_group.get_user()
 
     @property
+    def num_days(self):
+        return (self.end_date - self.start_date).days
+
+    @property
+    def num_days_completed(self):
+        return (datetime.datetime.now().date() - self.start_date).days
+
+    @property
     def has_weighted_grading(self):
         return Course.objects.has_weighted_grading(self.pk)
 

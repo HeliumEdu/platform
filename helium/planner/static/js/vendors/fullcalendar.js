@@ -2756,7 +2756,7 @@
                                         helium.ajax_error_occurred = true;
                                         helium.calendar.loading_div.spin(false);
 
-                                        bootbox.alert(data[0].err_msg);
+                                        bootbox.alert(helium.get_error_msg(data));
                                     } else {
                                         helium.planner_api.get_homework(function (data) {
                                             calendar_item = data;
