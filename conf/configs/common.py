@@ -302,6 +302,7 @@ PIPELINE = {
         'base': {
             'source_filenames': (
                 'js/vendors/moment.js',
+                'js/vendors/moment-timezone.js',
                 'js/vendors/jquery.cookie.js',
                 'js/vendors/jquery.ui.touch-punch.min.js',
                 'js/vendors/chosen.jquery.js',
@@ -345,7 +346,6 @@ PIPELINE = {
         },
         'calendar': {
             'source_filenames': (
-                'js/vendors/moment.js',
                 'js/vendors/bootstrap-datepicker.js',
                 'js/vendors/bootstrap-timepicker.js',
                 'js/vendors/bootstrap-editable.js',
@@ -396,7 +396,6 @@ PIPELINE = {
         'grades': {
             'source_filenames': (
                 'js/vendors/bootbox.js',
-                'js/vendors/moment.js',
                 'js/vendors/jquery.easy-pie-chart.js',
                 'js/vendors/jquery.sparkline.js',
                 'js/vendors/jquery.flot.js',
