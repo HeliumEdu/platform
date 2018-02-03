@@ -915,7 +915,7 @@ function HeliumClasses() {
                             $("#attachments-table-body").append("<tr id=\"attachment-" + data[i].id + "\"><td>" + data[i].title + "</td><td>" + helium.bytes_to_size(parseInt(data[i].size)) + "</td><td><div class=\"btn-group\"><a target=\"_blank\" class=\"btn btn-xs btn-success\" href=\"" + data[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + data[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
                             $("#delete-attachment-" + data[i].id).on("click", self.delete_attachment);
                         }
-                    }, self.course_group_id, self.edit_id, false);
+                    }, self.edit_id, false);
 
                     $("#loading-course-modal").spin(false);
                     $("#loading-courses").spin(false);
