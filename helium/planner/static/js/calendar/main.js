@@ -178,10 +178,10 @@ function HeliumCalendar() {
                 if (!self.current_calendar_item.start.hasTime()) {
                     var start_end_days_diff = self.current_calendar_item.end ? self.current_calendar_item.end.diff(self.current_calendar_item.start, "days") : 1;
                     self.start = self.current_calendar_item.start;
-                    self.end = self.current_calendar_item.start.hasTime() ? self.current_calendar_item.end : (start_end_days_diff <= 1 ? self.current_calendar_item.start.clone().add("minutes", helium.USER_PREFS.settings.all_day_offset) : self.current_calendar_item.end.clone());
+                    self.end = self.current_calendar_item.start.hasTime() ? self.current_calendar_item.end : (start_end_days_diff <= 1 ? self.current_calendar_item.start.clone().add(helium.USER_PREFS.settings.all_day_offset, "minutes") : self.current_calendar_item.end.clone());
                 } else {
                     self.start = self.current_calendar_item.start;
-                    self.end = self.current_calendar_item.end || self.current_calendar_item.start.clone().add("minutes", helium.USER_PREFS.settings.all_day_offset);
+                    self.end = self.current_calendar_item.end || self.current_calendar_item.start.clone().add(helium.USER_PREFS.settings.all_day_offset, "minutes");
                 }
             }
         };
@@ -194,8 +194,8 @@ function HeliumCalendar() {
         $.when.apply(this, self.ajax_calls).done(function () {
             if (!helium.ajax_error_occurred) {
                 var data = {
-                    "start": self.start.format(helium.HE_DATE_TIME_STRING_SERVER),
-                    "end": self.end.format(helium.HE_DATE_TIME_STRING_SERVER),
+                    "start": self.start.toISOString(),
+                    "end": self.end.toISOString(),
                     "allDay": !self.start.hasTime(),
                     "all_day": !self.start.hasTime()
                 };
@@ -242,8 +242,8 @@ function HeliumCalendar() {
         self.start = event.start;
         self.end = event.end;
         data = {
-            "start": self.start.format(helium.HE_DATE_TIME_STRING_SERVER),
-            "end": self.end.format(helium.HE_DATE_TIME_STRING_SERVER)
+            "start": self.start.toISOString(),
+            "end": self.end.toISOString()
         };
         var callback = function (data) {
             if (helium.data_has_err_msg(data)) {
@@ -310,7 +310,7 @@ function HeliumCalendar() {
         $('a[href="#homework-panel-tab-1"]').tab("show");
 
         self.start = start;
-        self.end = (start.hasTime && start.hasTime()) ? end : (start_end_days_diff <= 1 ? start.clone().add("minutes", helium.USER_PREFS.settings.all_day_offset) : end.clone());
+        self.end = (start.hasTime && start.hasTime()) ? end : (start_end_days_diff <= 1 ? start.clone().add(helium.USER_PREFS.settings.all_day_offset, "minutes") : end.clone());
         self.all_day = start.hasTime && !start.hasTime();
         self.show_end_time = !self.all_day || (($("#calendar").fullCalendar("getView").name === self.DEFAULT_VIEWS[0] || $("#calendar").fullCalendar("getView").name === self.DEFAULT_VIEWS[1]) && start_end_days_diff > 1);
         // If we're adding an all-day event spanning multiple days, correct the end date to be offset by one
@@ -946,7 +946,7 @@ function HeliumCalendar() {
 
         self.last_good_date = moment("12:00 PM", "HH:mm A");
         self.last_good_end_date = self.last_good_date.clone();
-        self.last_good_end_date.add("minutes", helium.USER_PREFS.settings.all_day_offset);
+        self.last_good_end_date.add(helium.USER_PREFS.settings.all_day_offset, "minutes");
 
         // Customize the calendar header
         $(".fc-header-right").prepend("<div class=\"btn-group\" id=\"calendar-filters\"><button data-toggle=\"dropdown\" class=\"btn btn-sm dropdown-toggle\"><span id=\"filter-button-title\">Filter</span><span class=\"icon-caret-down icon-on-right\"></span></button><ul id=\"calendar-filter-list\" class=\"dropdown-menu dropdown-menu-form pull-right\" role=\"menu\"><li id=\"filter-clear\"><a class=\"cursor-hover\">Clear Filters</a></li></ul></div>");
@@ -1341,7 +1341,7 @@ function HeliumCalendar() {
     this.save_calendar_item = function () {
         helium.ajax_error_occurred = false;
 
-        var calendar_item_title = $("#homework-title").val(), calendar_item_start_date = $("#homework-start-date").val(), calendar_item_start_time = $("#homework-start-time").val(), moment_end_time = moment(calendar_item_start_time, helium.HE_TIME_STRING_CLIENT), calendar_item_end_time = $("#homework-end-time").is(":visible") ? $("#homework-end-time").val() : moment_end_time.add("minutes", helium.USER_PREFS.settings.all_day_offset).format(helium.HE_TIME_STRING_CLIENT), calendar_item_end_date = $("#homework-show-end-time").is(":checked") ? $("#homework-end-date").val() : calendar_item_start_date, homework_category = $("#homework-category").val(), completed, is_category_valid, data;
+        var calendar_item_title = $("#homework-title").val(), calendar_item_start_date = $("#homework-start-date").val(), calendar_item_start_time = $("#homework-start-time").val(), moment_end_time = moment(calendar_item_start_time, helium.HE_TIME_STRING_CLIENT), calendar_item_end_time = $("#homework-end-time").is(":visible") ? $("#homework-end-time").val() : moment_end_time.add(helium.USER_PREFS.settings.all_day_offset, "minutes").format(helium.HE_TIME_STRING_CLIENT), calendar_item_end_date = $("#homework-show-end-time").is(":checked") ? $("#homework-end-date").val() : calendar_item_start_date, homework_category = $("#homework-category").val(), completed, is_category_valid, data;
 
         self.clear_calendar_item_errors();
 
@@ -1391,8 +1391,8 @@ function HeliumCalendar() {
             }
 
             // Stringify
-            start = start.format(helium.HE_DATE_TIME_STRING_SERVER);
-            end = end.format(helium.HE_DATE_TIME_STRING_SERVER);
+            start = start.toISOString();
+            end = end.toISOString();
 
             data = {
                 "title": $("#homework-title").val(),
