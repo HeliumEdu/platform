@@ -31,7 +31,10 @@ class CourseSerializer(serializers.ModelSerializer):
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def validate(self, attrs):
-        if attrs['start_date'] > attrs['end_date']:
+        start_date = self.instance.start_date if self.instance else attrs.get('start_date', None)
+        end_date = self.instance.end_date if self.instance else attrs.get('end_date', None)
+
+        if start_date and end_date and start_date > end_date:
             raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
 
         return attrs

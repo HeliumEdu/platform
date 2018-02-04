@@ -23,7 +23,10 @@ class HomeworkSerializer(serializers.ModelSerializer):
         read_only_fields = ('attachments', 'reminders', 'calendar_item_type',)
 
     def validate(self, attrs):
-        if attrs['start'] > attrs['end']:
+        start = self.instance.start if self.instance else attrs.get('start', None)
+        end = self.instance.end if self.instance else attrs.get('end', None)
+
+        if start and end and start > end:
             raise serializers.ValidationError("The 'start' must be before the 'end'")
 
         return attrs

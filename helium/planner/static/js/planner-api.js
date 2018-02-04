@@ -1443,7 +1443,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/homework/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
+                url: "/api/planner/homework/" + (typeof start !== "undefined" ? "?start__gte=" + start : "") + (typeof end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {
@@ -1638,7 +1638,6 @@ function HeliumPlannerAPI() {
     this.edit_homework = function (callback, course_group_id, course_id, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
         patch = typeof patch === "undefined" ? false : patch;
-        delete self.homework[id];
         self.homework_by_course_id = {};
         self.homework_by_user_id = {};
         self.reminders_by_calendar_item = {};
