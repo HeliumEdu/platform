@@ -324,7 +324,7 @@ function HeliumClasses() {
         self.categories_to_delete = [];
         self.attachments_to_delete = [];
 
-        // First, ensure we have a material group to add the new material to
+        // First, ensure we have a course group to add the new course to
         $("#course-group").val($("#course-group-tabs li.active a").attr("href") ? $("#course-group-tabs li.active a").attr("href").split("course-group-")[1] : "");
 
         $("a[href='#course-panel-tab-1']").tab("show");
@@ -333,6 +333,7 @@ function HeliumClasses() {
         $("#course-title").val("");
         $("#course-start-date").datepicker("setDate", moment().toDate());
         $("#course-end-date").datepicker("setDate", moment().toDate());
+        $("#course-group").trigger("change");
         $("#course-room").val("");
         $("#course-website").val("");
         $("#course-credits").spinner("value", "0");
