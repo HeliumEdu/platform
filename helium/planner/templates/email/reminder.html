@@ -26,12 +26,12 @@
             </p>{% endif %}
             {% if normalized_materials %}<p><em>Materials</em>: {{ normalized_materials }}</p>{% endif %}
             {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
-            {% if calendar_item.attachments %}
+            {% if calendar_item.attachments.count > 0 %}
                 <h4>Attachments</h4>
                 <p>
                     {% for attachment in calendar_item.attachments.all %}
                         <a target="_blank"
-                           href="{{ site_url }}/planner/attachment/{{ attachment.pk|safe }}">{{ attachment.title }}</a>
+                           href="{{ attachment.attachment }}">{{ attachment.title }}</a>
                         <br/>
                     {% endfor %}
                 </p>
