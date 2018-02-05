@@ -31,7 +31,7 @@
                 <p>
                     {% for attachment in calendar_item.attachments.all %}
                         <a target="_blank"
-                           href="{{ attachment.attachment }}">{{ attachment.title }}</a>
+                           href="{{ attachment.attachment.url }}">{{ attachment.title }}</a>
                         <br/>
                     {% endfor %}
                 </p>
