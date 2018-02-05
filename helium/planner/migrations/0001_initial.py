@@ -293,7 +293,7 @@ class Migration(migrations.Migration):
                                              default=0, help_text=b'A valid reminder offset type choice.')),
                 ('type', models.PositiveIntegerField(choices=[(0, b'Popup'), (1, b'Email'), (2, b'Text')], default=0,
                                                      help_text=b'A valid reminder type choice.')),
-                ('sent', models.BooleanField(default=False)),
+                ('sent', models.BooleanField(help_text='Whether or not the reminder has been sent.', default=False)),
                 ('from_admin', models.BooleanField(default=False)),
                 ('event', models.ForeignKey(blank=True, help_text=b'The event with which to associate.', null=True,
                                             on_delete=django.db.models.deletion.CASCADE, related_name='reminders',

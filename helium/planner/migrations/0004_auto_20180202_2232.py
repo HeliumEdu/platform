@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='reminder',
             name='sent',
-            field=models.BooleanField(db_index=True, default=False),
+            field=models.BooleanField(help_text='Whether or not the reminder has been sent.', db_index=True, default=False),
         ),
         migrations.AlterField(
             model_name='reminder',
