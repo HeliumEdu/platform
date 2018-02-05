@@ -1,4 +1,4 @@
-/*
+/*!
  * Very simple jQuery Color Picker
  * https://github.com/tkrotoff/jquery-simplecolorpicker
  *
@@ -77,7 +77,6 @@
 .simplecolorpicker span.color[data-selected]:hover {
     border: 1px solid #222; /* @gray-dark */
 }
-
 .simplecolorpicker span.color[data-selected]:after {
     color: #fff;
 }

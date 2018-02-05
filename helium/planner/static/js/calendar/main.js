@@ -146,14 +146,14 @@ function HeliumCalendar() {
      * Clear any used cookies.
      */
     this.clear_filter_cookies = function () {
-        $.removeCookie("filter_show_homework", {path: "/"});
-        $.removeCookie("filter_show_events", {path: "/"});
-        $.removeCookie("filter_show_external", {path: "/"});
-        $.removeCookie("filter_courses", {path: "/"});
-        $.removeCookie("filter_search_string", {path: "/"});
-        $.removeCookie("filter_categories", {path: "/"});
-        $.removeCookie("filter_complete", {path: "/"});
-        $.removeCookie("filter_overdue", {path: "/"});
+        Cookies.remove("filter_show_homework", {path: "/"});
+        Cookies.remove("filter_show_events", {path: "/"});
+        Cookies.remove("filter_show_external", {path: "/"});
+        Cookies.remove("filter_courses", {path: "/"});
+        Cookies.remove("filter_search_string", {path: "/"});
+        Cookies.remove("filter_categories", {path: "/"});
+        Cookies.remove("filter_complete", {path: "/"});
+        Cookies.remove("filter_overdue", {path: "/"});
     };
 
     /**
@@ -651,13 +651,13 @@ function HeliumCalendar() {
         var courses = $("[id^='calendar-filter-course-']"), categories = $("[id^='calendar-filter-category-']"), calendar_search = $("#calendar-search").val(), course_ids = "", calendar_ids = "", category_ids = "";
 
         // Whether or not to filter by a search string
-        $.cookie("filter_search_string", calendar_search, {path: "/"});
+        Cookies.set("filter_search_string", calendar_search, {path: "/"});
         self.last_search_string = calendar_search;
 
         // Whether or not to filter by assignments, events, or both
-        $.cookie("filter_show_homework", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-homework").children().find("input").prop("checked"), {path: "/"});
-        $.cookie("filter_show_events", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-events").children().find("input").prop("checked"), {path: "/"});
-        $.cookie("filter_show_external", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-external").children().find("input").prop("checked"), {path: "/"});
+        Cookies.set("filter_show_homework", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-homework").children().find("input").prop("checked"), {path: "/"});
+        Cookies.set("filter_show_events", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-events").children().find("input").prop("checked"), {path: "/"});
+        Cookies.set("filter_show_external", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-external").children().find("input").prop("checked"), {path: "/"});
 
         // Check if we should filter by selected courses
         $.each(courses, function () {
@@ -668,7 +668,7 @@ function HeliumCalendar() {
         if (course_ids.match(/,$/)) {
             course_ids = course_ids.substring(0, course_ids.length - 1);
         }
-        $.cookie("filter_courses", course_ids, {path: "/"});
+        Cookies.set("filter_courses", course_ids, {path: "/"});
 
         // Check if we should filter by selected categories
         $.each(categories, function () {
@@ -679,21 +679,21 @@ function HeliumCalendar() {
         if (category_ids.match(/,$/)) {
             category_ids = category_ids.substring(0, category_ids.length - 1);
         }
-        $.cookie("filter_categories", category_ids, {path: "/"});
+        Cookies.set("filter_categories", category_ids, {path: "/"});
 
         // If neither OR both complete/incomplete checkboxes are checked, we're not filtering by completion
         if ((!$("#calendar-filter-complete").children().find("input").prop("checked") && !$("#calendar-filter-incomplete").children().find("input").prop("checked")) || (($("#calendar-filter-complete").children().find("input").prop("checked") && $("#calendar-filter-incomplete").children().find("input").prop("checked")))) {
-            $.removeCookie("filter_complete", {path: "/"});
+            Cookies.remove("filter_complete", {path: "/"});
         } else {
             // If one of the complete/incomplete checkbox was checked, just take the status of the complete checkbox since we only need a true/false value
-            $.cookie("filter_complete", $("#calendar-filter-complete").children().find("input").prop("checked"), {path: "/"});
+            Cookies.set("filter_complete", $("#calendar-filter-complete").children().find("input").prop("checked"), {path: "/"});
         }
 
         // If we should filter by overdue elements
         if ($("#calendar-filter-overdue").children().find("input").prop("checked")) {
-            $.cookie("filter_overdue", $("#calendar-filter-overdue").children().find("input").prop("checked"), {path: "/"});
+            Cookies.set("filter_overdue", $("#calendar-filter-overdue").children().find("input").prop("checked"), {path: "/"});
         } else {
-            $.removeCookie("filter_overdue", {path: "/"});
+            Cookies.remove("filter_overdue", {path: "/"});
         }
 
         // If all filters are off, clear the filter title
@@ -723,12 +723,12 @@ function HeliumCalendar() {
         // TODO: after the open source migration, filtering should rely on the backend (which already supports this)
         // for greatly improved efficiency
 
-        if ($.cookie("filter_show_external") === undefined || $.cookie("filter_show_external") === "true") {
+        if (Cookies.get("filter_show_external") === undefined || Cookies.get("filter_show_external") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_external_calendars(function (external_calendars) {
                 $.each(external_calendars, function (index, external_calendar) {
                     helium.planner_api.get_external_calendar_feed(function (data) {
                         $.each(data, function (i, calendar_item) {
-                            if ($.cookie("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1) {
+                            if (Cookies.get("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) !== -1) {
                                 events.push({
                                     id: "ext_" + calendar_item.id,
                                     color: external_calendar.color,
@@ -758,12 +758,12 @@ function HeliumCalendar() {
             }, true, true));
         }
 
-        if ($.cookie("filter_show_events") === undefined || $.cookie("filter_show_events") === "true") {
+        if (Cookies.get("filter_show_events") === undefined || Cookies.get("filter_show_events") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_events(function (data) {
                 $.each(data, function (i, calendar_item) {
-                    if ($.cookie("filter_search_string") === undefined ||
-                        calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1 ||
-                        calendar_item.comments.toLowerCase().indexOf($.cookie("filter_search_string")) !== -1) {
+                    if (Cookies.get("filter_search_string") === undefined ||
+                        calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) !== -1 ||
+                        calendar_item.comments.toLowerCase().indexOf(Cookies.get("filter_search_string")) !== -1) {
                         events.push({
                             id: "event_" + calendar_item.id,
                             color: helium.USER_PREFS.settings.events_color,
@@ -790,27 +790,27 @@ function HeliumCalendar() {
             }, true, false, start.toISOString() + "T00:00Z", end.toISOString() + "T00:00Z"));
         }
 
-        if ($.cookie("filter_show_homework") === undefined || $.cookie("filter_show_homework") === "true") {
+        if (Cookies.get("filter_show_homework") === undefined || Cookies.get("filter_show_homework") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_homework_by_user(function (data) {
                 $.each(data, function (i, calendar_item) {
                     // Check if any filters are applied and failing, in whic case continue before adding the item
-                    if ($.cookie("filter_search_string") !== undefined &&
-                        calendar_item.title.toLowerCase().indexOf($.cookie("filter_search_string")) === -1 &&
-                        calendar_item.comments.toLowerCase().indexOf($.cookie("filter_search_string")) === -1 &&
-                        calendar_item.category.title.toLowerCase().indexOf($.cookie("filter_search_string")) === -1 &&
-                        calendar_item.course.title.toLowerCase().indexOf($.cookie("filter_search_string")) === -1) {
+                    if (Cookies.get("filter_search_string") !== undefined &&
+                        calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) === -1 &&
+                        calendar_item.comments.toLowerCase().indexOf(Cookies.get("filter_search_string")) === -1 &&
+                        calendar_item.category.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) === -1 &&
+                        calendar_item.course.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) === -1) {
                         return true;
                     }
-                    if ($.cookie("filter_complete") && $.cookie("filter_complete") != calendar_item.completed.toString()) {
+                    if (Cookies.get("filter_complete") && Cookies.get("filter_complete") != calendar_item.completed.toString()) {
                         return true;
                     }
-                    if ($.cookie("filter_courses") && $.inArray(calendar_item.course.id.toString(), $.cookie('filter_courses').split(",")) === -1) {
+                    if (Cookies.get("filter_courses") && $.inArray(calendar_item.course.id.toString(), Cookies.get('filter_courses').split(",")) === -1) {
                         return true;
                     }
-                    if ($.cookie("filter_categories") && $.inArray(calendar_item.category.id.toString(), $.cookie('filter_categories').split(",")) === -1) {
+                    if (Cookies.get("filter_categories") && $.inArray(calendar_item.category.id.toString(), Cookies.get('filter_categories').split(",")) === -1) {
                         return true;
                     }
-                    if ($.cookie("filter_overdue") !== undefined && (calendar_item.completed || moment().isBefore(moment(calendar_item.start)))) {
+                    if (Cookies.get("filter_overdue") !== undefined && (calendar_item.completed || moment().isBefore(moment(calendar_item.start)))) {
                         return true;
                     }
 
@@ -1817,7 +1817,7 @@ $(document).ready(function () {
                 previewTemplate: "<div class=\"dz-preview dz-file-preview\">\n  <div class=\"dz-details\">\n    <div class=\"dz-filename\"><span data-dz-name></span></div>\n    <div class=\"dz-size\" data-dz-size></div>\n    <img data-dz-thumbnail />\n  </div>\n  <div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div>\n  <div class=\"dz-success-mark\"><span></span></div>\n  <div class=\"dz-error-mark\"><span></span></div>\n  <div class=\"dz-error-message\"><span data-dz-errormessage></span></div>\n</div>",
                 init: function () {
                     helium.calendar.dropzone = this;
-                    var CSRF_TOKEN = $.cookie("csrftoken");
+                    var CSRF_TOKEN = Cookies.get("csrftoken");
 
                     this.on("sendingmultiple", function (na, xhr, form_data) {
                         xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
