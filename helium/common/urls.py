@@ -19,7 +19,7 @@ sitemaps = {
 urlpatterns = [
     # Top-level URLs
     url(r'^admin/', include(admin_site.urls)),
-    url(r'^docs/', include_docs_urls(title='Helium API Documentation', public=False)),
+    url(r'^docs/', include_docs_urls(title='Helium API Documentation')),
 
     # Crawler shortcuts and placeholders
     url(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps}),
