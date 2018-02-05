@@ -162,6 +162,9 @@ function HeliumCalendar() {
      * @param event the event being dropped
      */
     this.drop_calendar_item = function (event) {
+        event.start = event.start.tz(helium.USER_PREFS.settings.time_zone);
+        event.end = event.end.tz(helium.USER_PREFS.settings.time_zone);
+
         helium.ajax_error_occurred = false;
 
         self.loading_div.spin(helium.SMALL_LOADING_OPTS);
@@ -728,8 +731,8 @@ function HeliumCalendar() {
                                     color: external_calendar.color,
                                     title: helium.calendar.get_calendar_item_title(calendar_item),
                                     title_no_format: calendar_item.title,
-                                    start: calendar_item.start,
-                                    end: calendar_item.end,
+                                    start: moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone),
+                                    end: moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone),
                                     allDay: calendar_item.all_day,
                                     editable: false,
                                     // The following elements are for list view display accuracy
@@ -763,8 +766,8 @@ function HeliumCalendar() {
                             color: helium.USER_PREFS.settings.events_color,
                             title: helium.calendar.get_calendar_item_title(calendar_item),
                             title_no_format: calendar_item.title,
-                            start: calendar_item.start,
-                            end: calendar_item.end,
+                            start: moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone),
+                            end: moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone),
                             allDay: calendar_item.all_day,
                             // The following elements are for list view display accuracy
                             materials: [],
@@ -813,8 +816,8 @@ function HeliumCalendar() {
                         color: calendar_item.course.color,
                         title: helium.calendar.get_calendar_item_title(calendar_item),
                         title_no_format: calendar_item.title,
-                        start: calendar_item.start,
-                        end: calendar_item.end,
+                        start: moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone),
+                        end: moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone),
                         allDay: calendar_item.all_day,
                         // The following elements are for list view display accuracy
                         materials: calendar_item.materials,
@@ -1178,8 +1181,8 @@ function HeliumCalendar() {
                     color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color,
                     title: helium.calendar.get_calendar_item_title(calendar_item),
                     title_no_format: calendar_item.title,
-                    start: calendar_item.start,
-                    end: calendar_item.end,
+                    start: moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone),
+                    end: moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone),
                     allDay: calendar_item.all_day,
                     // The following elements are for list view display accuracy
                     materials: calendar_item.calendar_item_type === 1 ? calendar_item.materials : [],
@@ -1497,8 +1500,6 @@ function HeliumCalendar() {
                                 calendar_item.id = "event_" + calendar_item.id;
                             }
 
-                            calendar_item.start = moment(calendar_item.start);
-                            calendar_item.end = moment(calendar_item.end);
                             self.update_current_calendar_item(calendar_item);
 
                             self.last_type_event = $("#homework-event-switch").is(":checked");
@@ -1558,8 +1559,8 @@ function HeliumCalendar() {
                             color: calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color,
                             title: helium.calendar.get_calendar_item_title(calendar_item),
                             title_no_format: calendar_item.title,
-                            start: calendar_item.start,
-                            end: calendar_item.end,
+                            start: moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone),
+                            end: moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone),
                             allDay: calendar_item.all_day,
                             // The following elements are for list view display accuracy
                             materials: calendar_item.calendar_item_type === 1 ? calendar_item.materials : [],
@@ -1666,11 +1667,14 @@ function HeliumCalendar() {
      * @param calendar_item the latest calendar item from the database
      */
     this.update_current_calendar_item = function (calendar_item) {
+        calendar_item.start = moment(calendar_item.start).tz(helium.USER_PREFS.settings.time_zone);
+        calendar_item.end = moment(calendar_item.end).tz(helium.USER_PREFS.settings.time_zone);
+
         self.current_calendar_item.color = calendar_item.calendar_item_type === 1 ? calendar_item.course.color : helium.USER_PREFS.settings.events_color;
         self.current_calendar_item.title = helium.calendar.get_calendar_item_title(calendar_item);
         self.current_calendar_item.title_no_format = calendar_item.title;
-        self.current_calendar_item.start = !calendar_item.all_day ? moment(calendar_item.start) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
-        self.current_calendar_item.end = !calendar_item.all_day ? moment(calendar_item.end) : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
+        self.current_calendar_item.start = !calendar_item.all_day ? calendar_item.start : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.start).stripTime().stripZone();
+        self.current_calendar_item.end = !calendar_item.all_day ? calendar_item.end : $("#calendar").fullCalendar("getCalendar").moment(calendar_item.end).stripTime().stripZone();
         self.current_calendar_item.allDay = calendar_item.all_day;
 
         // The following elements are for list view display accuracy
