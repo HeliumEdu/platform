@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 /**
@@ -1045,12 +1045,22 @@ function HeliumCalendar() {
     this.update_filter_checkbox_from_event = function () {
         self.update_filter_checkbox($(this));
     };
+    
+    this.get_material_styled_titles_from_data = function (data) {
+        var titles = "";
+
+        $.each(data, function (index, material) {
+            titles += '<span class="label label-info arrowed-right">' + material.title + "</span>&nbsp;";
+        });
+
+        return titles;
+    };
 
     this.get_titles_from_data = function (data) {
         var titles = [];
 
-        $.each(data, function (index, material) {
-            titles.push(material.title);
+        $.each(data, function (index, item) {
+            titles.push(item.title);
         });
 
         return titles.join(", ");
