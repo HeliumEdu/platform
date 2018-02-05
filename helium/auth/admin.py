@@ -39,7 +39,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'username', 'created_at', 'last_login',)
+    list_display = ('email', 'username', 'created_at', 'last_login', 'is_active')
     list_filter = (
         'is_active', 'profile__phone_verified', 'settings__default_view', 'settings__receive_emails_from_admin',)
     search_fields = ('email', 'username')
@@ -62,6 +62,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
+    search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
     readonly_fields = ('user', 'created_at', 'updated_at')
 
@@ -79,8 +80,9 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 
 class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'phone_carrier']
+    list_display = ['get_user', 'phone', 'phone_carrier', 'phone_verified']
     list_filter = ('phone_carrier',)
+    search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
     readonly_fields = ('user', 'created_at', 'updated_at')
 

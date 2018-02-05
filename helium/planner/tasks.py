@@ -6,9 +6,10 @@ from django.conf import settings
 from django.utils import timezone
 
 from conf.celery import app
+from helium.common import enums
 from helium.common.utils import commonutils
 from helium.common.utils import metricutils
-from helium.planner.models import CourseGroup, Course, Category
+from helium.planner.models import CourseGroup, Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
@@ -92,16 +93,32 @@ def text_reminders():
 
 
 @app.task
-def send_email_reminder(email, subject, reminder_id, calendar_item):
+def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_item_type):
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         reminder = Reminder.objects.get(pk=reminder_id)
     except Reminder.DoesNotExist:
+        logger.info('Reminder {} does not exist. Nothing to do.'.format(reminder_id))
+
         return
 
     if settings.DISABLE_EMAILS:
         logger.warn('Emails disabled. Reminder {} not being sent.'.format(reminder.pk))
+        return
+
+    try:
+        if calendar_item_type == enums.EVENT:
+            calendar_item = Event.objects.get(pk=calendar_item_id)
+        elif calendar_item_type == enums.HOMEWORK:
+            calendar_item = Homework.objects.get(pk=calendar_item_id)
+        else:
+            logger.info('Nothing to do here, as a calendar_item_type of {} does not exist.'.format(calendar_item_type))
+
+            return
+    except (Event.DoesNotExist, Homework.DoesNotExist):
+        logger.info('calendar_item_id {} does not exist. Nothing to do.'.format(calendar_item_id))
+
         return
 
     timezone.activate(pytz.timezone(reminder.user.settings.time_zone))
