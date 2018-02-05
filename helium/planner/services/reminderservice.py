@@ -49,19 +49,20 @@ def process_email_reminders():
 
                 metricutils.increment('task.reminder.queue.email')
 
-                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event)
+                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event.pk,
+                                          enums.EVENT)
             elif reminder.homework:
                 logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
 
                 metricutils.increment('task.reminder.queue.email')
 
-                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk,
-                                          reminder.homework)
+                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.homework.pk,
+                                          enums.HOMEWORK)
 
             reminder.sent = True
             reminder.save()
         else:
-            logger.warn('Reminder {} was not processed, as the phone and carrier are not longer set for user {}'.format(
+            logger.warn('Reminder {} was not processed, as the account appears to be inactive for user {}'.format(
                 reminder.pk, reminder.get_user().pk))
 
 
@@ -106,5 +107,5 @@ def process_text_reminders():
             reminder.sent = True
             reminder.save()
         else:
-            logger.warn('Reminder {} was not processed, as the phone and carrier are not longer set for user {}'.format(
+            logger.warn('Reminder {} was not processed, as the phone and carrier are no longer set for user {}'.format(
                 reminder.pk, reminder.get_user().pk))
