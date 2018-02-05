@@ -8,7 +8,7 @@
 
 {% block greeting %}{{ subject|safe }}{% endblock %}
 
-{% block body %}
+{% block content %}
     <tr>
         <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; ">
             <h3>Message: {{ reminder.message }}</h3>
@@ -26,12 +26,12 @@
             </p>{% endif %}
             {% if normalized_materials %}<p><em>Materials</em>: {{ normalized_materials }}</p>{% endif %}
             {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
-            {% if calendar_item.attachments %}
+            {% if calendar_item.attachments.count > 0 %}
                 <h4>Attachments</h4>
                 <p>
                     {% for attachment in calendar_item.attachments.all %}
                         <a target="_blank"
-                           href="{{ site_url }}/planner/attachment/{{ attachment.pk|safe }}">{{ attachment.title }}</a>
+                           href="{{ attachment.attachment.url }}">{{ attachment.title }}</a>
                         <br/>
                     {% endfor %}
                 </p>
