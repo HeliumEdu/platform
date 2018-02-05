@@ -162,8 +162,8 @@ function HeliumCalendar() {
      * @param event the event being dropped
      */
     this.drop_calendar_item = function (event) {
-        event.start = event.start.tz(helium.USER_PREFS.settings.time_zone);
-        event.end = event.end.tz(helium.USER_PREFS.settings.time_zone);
+        event.start = $("#calendar").fullCalendar("getCalendar").moment(moment(event.start.format()).format());
+        event.end = $("#calendar").fullCalendar("getCalendar").moment(moment(event.end.format()).format());
 
         helium.ajax_error_occurred = false;
 
@@ -234,6 +234,9 @@ function HeliumCalendar() {
      * @param event the event being resized
      */
     this.resize_calendar_item = function (event) {
+        event.start = $("#calendar").fullCalendar("getCalendar").moment(moment(event.start.format()).format());
+        event.end = $("#calendar").fullCalendar("getCalendar").moment(moment(event.end.format()).format());
+
         self.is_resizing_calendar_item = true;
         helium.ajax_error_occurred = false;
 
