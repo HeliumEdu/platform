@@ -1796,8 +1796,8 @@ $(document).ready(function () {
             /*******************************************
              * Check cookies for triggers passed in
              ******************************************/
-            if ($.cookie("edit_categories")) {
-                var course_id = $.cookie("course_id");
+            if (Cookies.get("edit_categories")) {
+                var course_id = Cookies.get("course_id");
 
                 helium.classes.edit_course_btn($("#edit-course-" + course_id), false);
                 $("a[href='#course-panel-tab-3']").tab("show");
@@ -1827,7 +1827,7 @@ $(document).ready(function () {
             previewTemplate: "<div class=\"dz-preview dz-file-preview\">\n  <div class=\"dz-details\">\n    <div class=\"dz-filename\"><span data-dz-name></span></div>\n    <div class=\"dz-size\" data-dz-size></div>\n    <img data-dz-thumbnail />\n  </div>\n  <div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div>\n  <div class=\"dz-success-mark\"><span></span></div>\n  <div class=\"dz-error-mark\"><span></span></div>\n  <div class=\"dz-error-message\"><span data-dz-errormessage></span></div>\n</div>",
             init: function () {
                 helium.classes.dropzone = this;
-                var CSRF_TOKEN = $.cookie("csrftoken");
+                var CSRF_TOKEN = Cookies.get("csrftoken");
 
                 this.on("sendingmultiple", function (na, xhr, form_data) {
                     xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);

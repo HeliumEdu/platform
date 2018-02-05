@@ -9,7 +9,7 @@
  * @version 1.0.1
  */
 
-var CSRF_TOKEN = $.cookie("csrftoken");
+var CSRF_TOKEN = Cookies.get("csrftoken");
 
 // Initialize AJAX configuration
 function csrfSafeMethod(method) {

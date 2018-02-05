@@ -252,6 +252,10 @@ span.twitter-typeahead > input.form-control.input-sm.tt-query {
     width: 15px;
 }
 
+.search-choice {
+    padding-left: 10px;
+}
+
 .logo-icon {
     display: inline !important;
     margin-top: -15px;

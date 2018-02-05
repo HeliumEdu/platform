@@ -353,8 +353,8 @@ function HeliumSettings() {
                             success: function () {
                                 $("#loading-account").spin(false);
 
-                                $.cookie("status_type", "warning", {path: "/"});
-                                $.cookie("status_msg", "Sorry to see you go! We've deleted all traces of your existence from Helium.", {path: "/"});
+                                Cookies.set("status_type", "warning", {path: "/"});
+                                Cookies.set("status_msg", "Sorry to see you go! We've deleted all traces of your existence from Helium.", {path: "/"});
 
                                 window.location = "/logout";
                             }

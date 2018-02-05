@@ -303,10 +303,9 @@ PIPELINE = {
             'source_filenames': (
                 'js/vendors/moment.js',
                 'js/vendors/moment-timezone.js',
-                'js/vendors/jquery.cookie.js',
+                'js/vendors/js.cookie.js',
                 'js/vendors/jquery.ui.touch-punch.min.js',
                 'js/vendors/chosen.jquery.js',
-                'js/vendors/globalize.js',
                 'js/vendors/spin.js',
                 'js/vendors/jquery.spin.js',
                 'js/helium.js',
@@ -329,12 +328,6 @@ PIPELINE = {
             ),
             'output_filename': 'js/helium_ie9_{}'.format(PROJECT_VERSION)
         },
-        'register_footer': {
-            'source_filenames': (
-                'js/vendors/jstz.js',
-            ),
-            'output_filename': 'js/helium_jstz.{}.min.js'.format(PROJECT_VERSION)
-        },
         'settings': {
             'source_filenames': (
                 'js/vendors/bootstrap-editable.js',
@@ -353,8 +346,7 @@ PIPELINE = {
                 'js/vendors/jquery.dataTables.js',
                 'js/vendors/jquery.dataTables.bootstrap.js',
                 'js/vendors/fullcalendar.js',
-                'js/vendors/gcal.js',
-                'js/vendors/dropzone.min.js',
+                'js/vendors/dropzone.js',
                 'js/vendors/jquery.qtip.js',
                 'js/vendors/jquery.hotkeys.js',
                 'js/vendors/bootstrap-wysiwyg.js',
@@ -374,7 +366,7 @@ PIPELINE = {
                 'js/vendors/jquery.dataTables.js',
                 'js/vendors/jquery.dataTables.bootstrap.js',
                 'js/vendors/jquery.simplecolorpicker.js',
-                'js/vendors/dropzone.min.js',
+                'js/vendors/dropzone.js',
                 'js/classes/main.js',
                 'js/classes/triggers.js',
             ),
