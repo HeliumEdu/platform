@@ -82,7 +82,7 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
         return user.events.all()
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request and self.request.method == 'GET':
             return EventExtendedSerializer
         else:
             return self.serializer_class
