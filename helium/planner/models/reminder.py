@@ -10,7 +10,7 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 
 @python_2_unicode_compatible
@@ -21,7 +21,7 @@ class Reminder(BaseModel):
     message = models.TextField(
         help_text='A string that will be used as the reminder message (may contain HTML formatting).')
 
-    start_of_range = models.DateTimeField(help_text='An ISO-8601 date.')
+    start_of_range = models.DateTimeField(db_index=True)
 
     offset = models.PositiveIntegerField(help_text='The number of units (in `offset_type`) from the offset.',
                                          default=30)
@@ -30,9 +30,9 @@ class Reminder(BaseModel):
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)
 
     type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
-                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP)
+                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP, db_index=True)
 
-    sent = models.BooleanField(default=False)
+    sent = models.BooleanField(default=False, db_index=True)
 
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)

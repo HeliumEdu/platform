@@ -9,7 +9,7 @@ from helium.common.models.base import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class ExternalCalendar(BaseModel):
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
-                                            default=True)
+                                            default=True, db_index=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 

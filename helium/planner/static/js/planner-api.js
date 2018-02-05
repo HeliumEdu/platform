@@ -1443,7 +1443,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/homework/" + (start !== "undefined" ? "?start__gte=" + start : "") + (end !== "undefined" ? "&end__lt=" + end : ""),
+                url: "/api/planner/homework/" + (typeof start !== "undefined" ? "?start__gte=" + start : "") + (typeof end !== "undefined" ? "&end__lt=" + end : ""),
                 async: async,
                 dataType: "json",
                 success: function (data) {

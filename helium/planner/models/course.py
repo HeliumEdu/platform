@@ -10,7 +10,7 @@ from helium.planner.managers.coursemanager import CourseManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 
 @python_2_unicode_compatible
@@ -48,8 +48,10 @@ class Course(BaseModel):
                                       default=None, blank=True, null=True)
 
     # TODO: these fields will be abstracted into a CourseSchedule model after the open source migration is finished
-    start_date = models.DateField(help_text='An ISO-8601 date.')
-    end_date = models.DateField(help_text='An ISO-8601 date.')
+    start_date = models.DateField(help_text='An ISO-8601 date.',
+                                  db_index=True)
+    end_date = models.DateField(help_text='An ISO-8601 date.',
+                                db_index=True)
     days_of_week = models.CharField(help_text='Seven booleans (0 or 1) indicating which days of the week the course is '
                                               'on (week starts on Sunday).',
                                     max_length=7, default='0000000', validators=[
