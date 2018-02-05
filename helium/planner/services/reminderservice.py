@@ -41,23 +41,25 @@ def process_email_reminders():
             subject = get_subject(reminder)
 
             if not subject:
-                logger.warn('Reminder {} was not processed, as it appears to be orphaned'.format(reminder.pk))
+                logger.warn('Reminder {} was not processed, as it appears to be orphaned.'.format(reminder.pk))
                 continue
 
             if reminder.event:
-                logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
-
-                metricutils.increment('task.reminder.queue.email')
-
-                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.event.pk,
-                                          enums.EVENT)
+                calendar_item_id = reminder.event.pk
+                calendar_item_type = enums.EVENT
             elif reminder.homework:
-                logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
+                calendar_item_id = reminder.homework.pk
+                calendar_item_type = enums.HOMEWORK
+            else:
+                logger.warn('Reminder {} was not for a homework or event. Nothing to do.'.format(reminder.pk))
+                continue
 
-                metricutils.increment('task.reminder.queue.email')
+            logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
 
-                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, reminder.homework.pk,
-                                          enums.HOMEWORK)
+            metricutils.increment('task.reminder.queue.email')
+
+            send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, calendar_item_id,
+                                      calendar_item_type)
 
             reminder.sent = True
             reminder.save()
@@ -71,38 +73,21 @@ def process_text_reminders():
         timezone.activate(pytz.timezone(reminder.get_user().settings.time_zone))
 
         if reminder.get_user().profile.phone and reminder.get_user().profile.phone_carrier and reminder.get_user().profile.phone_verified:
-            if reminder.event:
-                subject = get_subject(reminder)
-                message = '({}) {}'.format(subject, reminder.message)
+            subject = get_subject(reminder)
+            message = '({}) {}'.format(subject, reminder.message)
 
-                if not subject:
-                    logger.warn('Reminder {} was not processed, as it appears to be orphaned'.format(reminder.pk))
-                    continue
+            if not subject:
+                logger.warn('Reminder {} was not processed, as it appears to be orphaned'.format(reminder.pk))
+                continue
 
-                logger.info('Sending text reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
+            logger.info('Sending text reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
 
-                metricutils.increment('task.reminder.queue.text')
+            metricutils.increment('task.reminder.queue.text')
 
-                send_text.delay(reminder.get_user().profile.phone,
-                                reminder.get_user().profile.phone_carrier,
-                                'Helium Reminder',
-                                message)
-            elif reminder.homework:
-                subject = get_subject(reminder)
-                message = '({}) {}'.format(subject, reminder.message)
-
-                if not subject:
-                    logger.warn('Reminder {} was not processed, as it appears to be orphaned'.format(reminder.pk))
-                    continue
-
-                logger.info('Sending text reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
-
-                metricutils.increment('task.reminder.queue.text')
-
-                send_text.delay(reminder.get_user().profile.phone,
-                                reminder.get_user().profile.phone_carrier,
-                                'Helium Reminder',
-                                message)
+            send_text.delay(reminder.get_user().profile.phone,
+                            reminder.get_user().profile.phone_carrier,
+                            'Helium Reminder',
+                            message)
 
             reminder.sent = True
             reminder.save()
