@@ -26,6 +26,20 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertRedirects(response, reverse('settings'))
         userhelper.verify_user_logged_in(self)
 
+    def test_login_with_email_success(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.verify_user_not_logged_in(self)
+
+        # WHEN
+        response = self.client.post(reverse('login') + '?next={}'.format(reverse('settings')),
+                                    {'username': user.email, 'password': 'test_pass_1!',
+                                     'remember-me': 'remember-me'})
+
+        # THEN
+        self.assertRedirects(response, reverse('settings'))
+        userhelper.verify_user_logged_in(self)
+
     def test_logout_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
