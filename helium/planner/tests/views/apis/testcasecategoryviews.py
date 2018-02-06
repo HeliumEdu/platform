@@ -39,7 +39,7 @@ class TestCaseCategoryViews(TestCase):
 
     def test_get_categories(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -213,7 +213,7 @@ class TestCaseCategoryViews(TestCase):
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)

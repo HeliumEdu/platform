@@ -20,7 +20,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 
 class TestCaseEventViews(TestCase):
@@ -42,7 +42,7 @@ class TestCaseEventViews(TestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_events(self):
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         eventhelper.given_event_exists(user1)
         eventhelper.given_event_exists(user2)
@@ -242,7 +242,7 @@ class TestCaseEventViews(TestCase):
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
 

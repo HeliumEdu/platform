@@ -1,7 +1,9 @@
 import logging
+import time
 
 from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 from six import python_2_unicode_compatible
 
 from helium.common import enums
@@ -9,7 +11,7 @@ from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.2'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +61,14 @@ class UserSettings(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.pk, self.user.get_username())
+
+    def get_user(self):
+        return self.user
+
+    def enable_private_slug(self):
+        self.private_slug = slugify(str(self.get_user().pk) + str(time.time()))
+        self.save()
+
+    def disable_private_slug(self):
+        self.private_slug = None
+        self.save()

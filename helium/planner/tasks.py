@@ -16,7 +16,7 @@ from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +142,6 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                          'normalized_datetime': normalized_datetime,
                                          'normalized_materials': normalized_materials,
                                          'comments': calendar_item.comments if calendar_item.comments.strip() != '' else None,
-                                         'site_url': settings.PLATFORM_HOST,
                                      },
                                      subject, [email])
 

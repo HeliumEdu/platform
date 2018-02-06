@@ -13,10 +13,10 @@ from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 
-class TestCaseExternalCalendarViews(TestCase):
+class TestCaseExternalCalendarResourceViews(TestCase):
     def test_externalevent_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -32,7 +32,7 @@ class TestCaseExternalCalendarViews(TestCase):
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 

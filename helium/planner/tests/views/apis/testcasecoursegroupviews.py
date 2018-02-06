@@ -34,7 +34,7 @@ class TestCaseCourseGroupViews(TestCase):
 
     def test_get_coursegroups(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         coursegrouphelper.given_course_group_exists(user1)
         coursegrouphelper.given_course_group_exists(user2)
@@ -135,7 +135,7 @@ class TestCaseCourseGroupViews(TestCase):
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
 
@@ -153,7 +153,7 @@ class TestCaseCourseGroupViews(TestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user2)
         average_grade = course_group.average_grade
