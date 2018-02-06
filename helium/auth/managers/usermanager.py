@@ -73,6 +73,15 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def get_by_natural_key(self, username):
+        """
+        Get the user for authentication/login from the database.
+
+        :param username: the username to lookup
+        :return: the user
+        """
+        return self.get(Q(username__iexact=username) | Q(email__iexact=username))
+
     def get_by_private_slug(self, private_slug):
         return self.get(settings__private_slug=private_slug)
 
