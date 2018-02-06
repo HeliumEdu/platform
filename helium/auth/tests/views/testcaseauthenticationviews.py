@@ -32,9 +32,7 @@ class TestCaseAuthenticationViews(TestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('login') + '?next={}'.format(reverse('settings')),
-                                    {'username': user.email, 'password': 'test_pass_1!',
-                                     'remember-me': 'remember-me'})
+        response = self.client.post(reverse('login'), {'username': user.email, 'password': 'test_pass_1!'})
 
         # THEN
         self.assertRedirects(response, reverse('settings'))
