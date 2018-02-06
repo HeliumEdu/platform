@@ -16,7 +16,7 @@ from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +145,8 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                          'site_url': settings.PLATFORM_HOST,
                                      },
                                      subject, [email])
+
+    timezone.deactivate()
 
 
 @app.on_after_finalize.connect

@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.2
+ * @version 1.1.0
  */
 
 /**
@@ -353,8 +353,8 @@ function HeliumSettings() {
                             success: function () {
                                 $("#loading-account").spin(false);
 
-                                $.cookie("status_type", "warning", {path: "/"});
-                                $.cookie("status_msg", "Sorry to see you go! We've deleted all traces of your existence from Helium.", {path: "/"});
+                                Cookies.set("status_type", "warning", {path: "/"});
+                                Cookies.set("status_msg", "Sorry to see you go! We've deleted all traces of your existence from Helium.", {path: "/"});
 
                                 window.location = "/logout";
                             }

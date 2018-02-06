@@ -1,4 +1,4 @@
-/*
+/*!
  * Very simple jQuery Color Picker
  * https://github.com/tkrotoff/jquery-simplecolorpicker
  *
@@ -7,13 +7,13 @@
  * Licensed under the MIT license
  */
 
-(function ($) {
+(function($) {
     'use strict';
 
     /**
      * Constructor.
      */
-    var SimpleColorPicker = function (select, options) {
+    var SimpleColorPicker = function(select, options) {
         this.init('simplecolorpicker', select, options);
     };
 
@@ -23,7 +23,7 @@
     SimpleColorPicker.prototype = {
         constructor: SimpleColorPicker,
 
-        init: function (type, select, options) {
+        init: function(type, select, options) {
             var self = this;
 
             self.type = type;
@@ -57,7 +57,7 @@
 
             // Build the list of colors
             // <span class="color selected" title="Green" style="background-color: #7bd148;" role="button"></span>
-            self.$select.find('> option').each(function () {
+            self.$select.find('> option').each(function() {
                 var $option = $(this);
                 var color = $option.val();
 
@@ -109,10 +109,10 @@
          *
          * @param color the hexadecimal color to select, ex: '#fbd75b'
          */
-        selectColor: function (color) {
+        selectColor: function(color) {
             var self = this;
 
-            var $colorSpan = self.$colorList.find('> span.color').filter(function () {
+            var $colorSpan = self.$colorList.find('> span.color').filter(function() {
                 return $(this).data('color').toLowerCase() === color.toLowerCase();
             });
 
@@ -123,7 +123,7 @@
             }
         },
 
-        showPicker: function () {
+        showPicker: function() {
             var pos = this.$icon.offset();
             this.$picker.css({
                 // Remove some pixels to align the picker icon with the icons inside the dropdown
@@ -134,7 +134,7 @@
             this.$picker.show(this.options.pickerDelay);
         },
 
-        hidePicker: function () {
+        hidePicker: function() {
             this.$picker.hide(this.options.pickerDelay);
         },
 
@@ -144,7 +144,7 @@
          * The given span becomes the selected one.
          * It also changes the HTML select value, this will emit the 'change' event.
          */
-        selectColorSpan: function ($colorSpan) {
+        selectColorSpan: function($colorSpan) {
             var color = $colorSpan.data('color');
             var title = $colorSpan.prop('title');
 
@@ -165,7 +165,7 @@
         /**
          * The user clicked on a color inside $colorList.
          */
-        colorSpanClicked: function (e) {
+        colorSpanClicked: function(e) {
             // When a color is clicked, make it the new selected one (unless disabled)
             if ($(e.target).is('[data-disabled]') === false) {
                 this.selectColorSpan($(e.target));
@@ -176,12 +176,12 @@
         /**
          * Prevents the mousedown event from "eating" the click event.
          */
-        mousedown: function (e) {
+        mousedown: function(e) {
             e.stopPropagation();
             e.preventDefault();
         },
 
-        destroy: function () {
+        destroy: function() {
             if (this.options.picker === true) {
                 this.$icon.off('.' + this.type);
                 this.$icon.remove();
@@ -200,12 +200,12 @@
      * Plugin definition.
      * How to use: $('#id').simplecolorpicker()
      */
-    $.fn.simplecolorpicker = function (option) {
+    $.fn.simplecolorpicker = function(option) {
         var args = $.makeArray(arguments);
         args.shift();
 
         // For HTML element passed to the plugin
-        return this.each(function () {
+        return this.each(function() {
             var $this = $(this),
                 data = $this.data('simplecolorpicker'),
                 options = typeof option === 'object' && option;

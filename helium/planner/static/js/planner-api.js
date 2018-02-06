@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 /**
@@ -855,7 +855,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/planner/materials/?course=" + id,
+                url: "/api/planner/materials/?courses=" + id,
                 async: async,
                 dataType: "json",
                 success: function (data) {

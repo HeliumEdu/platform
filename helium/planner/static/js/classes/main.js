@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 /**
@@ -324,7 +324,7 @@ function HeliumClasses() {
         self.categories_to_delete = [];
         self.attachments_to_delete = [];
 
-        // First, ensure we have a material group to add the new material to
+        // First, ensure we have a course group to add the new course to
         $("#course-group").val($("#course-group-tabs li.active a").attr("href") ? $("#course-group-tabs li.active a").attr("href").split("course-group-")[1] : "");
 
         $("a[href='#course-panel-tab-1']").tab("show");
@@ -333,6 +333,7 @@ function HeliumClasses() {
         $("#course-title").val("");
         $("#course-start-date").datepicker("setDate", moment().toDate());
         $("#course-end-date").datepicker("setDate", moment().toDate());
+        $("#course-group").trigger("change");
         $("#course-room").val("");
         $("#course-website").val("");
         $("#course-credits").spinner("value", "0");
@@ -1795,8 +1796,8 @@ $(document).ready(function () {
             /*******************************************
              * Check cookies for triggers passed in
              ******************************************/
-            if ($.cookie("edit_categories")) {
-                var course_id = $.cookie("course_id");
+            if (Cookies.get("edit_categories")) {
+                var course_id = Cookies.get("course_id");
 
                 helium.classes.edit_course_btn($("#edit-course-" + course_id), false);
                 $("a[href='#course-panel-tab-3']").tab("show");
@@ -1826,7 +1827,7 @@ $(document).ready(function () {
             previewTemplate: "<div class=\"dz-preview dz-file-preview\">\n  <div class=\"dz-details\">\n    <div class=\"dz-filename\"><span data-dz-name></span></div>\n    <div class=\"dz-size\" data-dz-size></div>\n    <img data-dz-thumbnail />\n  </div>\n  <div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div>\n  <div class=\"dz-success-mark\"><span></span></div>\n  <div class=\"dz-error-mark\"><span></span></div>\n  <div class=\"dz-error-message\"><span data-dz-errormessage></span></div>\n</div>",
             init: function () {
                 helium.classes.dropzone = this;
-                var CSRF_TOKEN = $.cookie("csrftoken");
+                var CSRF_TOKEN = Cookies.get("csrftoken");
 
                 this.on("sendingmultiple", function (na, xhr, form_data) {
                     xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);

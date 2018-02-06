@@ -11,7 +11,7 @@ from helium.planner.models import Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 logger = logging.getLogger(__name__)
 
@@ -94,3 +94,5 @@ def process_text_reminders():
         else:
             logger.warn('Reminder {} was not processed, as the phone and carrier are no longer set for user {}'.format(
                 reminder.pk, reminder.get_user().pk))
+
+        timezone.deactivate()

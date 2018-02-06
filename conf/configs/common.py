@@ -7,7 +7,7 @@ import socket
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.2'
+__version__ = '1.1.0'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -302,10 +302,10 @@ PIPELINE = {
         'base': {
             'source_filenames': (
                 'js/vendors/moment.js',
-                'js/vendors/jquery.cookie.js',
+                'js/vendors/moment-timezone.js',
+                'js/vendors/js.cookie.js',
                 'js/vendors/jquery.ui.touch-punch.min.js',
                 'js/vendors/chosen.jquery.js',
-                'js/vendors/globalize.js',
                 'js/vendors/spin.js',
                 'js/vendors/jquery.spin.js',
                 'js/helium.js',
@@ -328,12 +328,6 @@ PIPELINE = {
             ),
             'output_filename': 'js/helium_ie9_{}'.format(PROJECT_VERSION)
         },
-        'register_footer': {
-            'source_filenames': (
-                'js/vendors/jstz.js',
-            ),
-            'output_filename': 'js/helium_jstz.{}.min.js'.format(PROJECT_VERSION)
-        },
         'settings': {
             'source_filenames': (
                 'js/vendors/bootstrap-editable.js',
@@ -345,7 +339,6 @@ PIPELINE = {
         },
         'calendar': {
             'source_filenames': (
-                'js/vendors/moment.js',
                 'js/vendors/bootstrap-datepicker.js',
                 'js/vendors/bootstrap-timepicker.js',
                 'js/vendors/bootstrap-editable.js',
@@ -353,8 +346,7 @@ PIPELINE = {
                 'js/vendors/jquery.dataTables.js',
                 'js/vendors/jquery.dataTables.bootstrap.js',
                 'js/vendors/fullcalendar.js',
-                'js/vendors/gcal.js',
-                'js/vendors/dropzone.min.js',
+                'js/vendors/dropzone.js',
                 'js/vendors/jquery.qtip.js',
                 'js/vendors/jquery.hotkeys.js',
                 'js/vendors/bootstrap-wysiwyg.js',
@@ -374,7 +366,7 @@ PIPELINE = {
                 'js/vendors/jquery.dataTables.js',
                 'js/vendors/jquery.dataTables.bootstrap.js',
                 'js/vendors/jquery.simplecolorpicker.js',
-                'js/vendors/dropzone.min.js',
+                'js/vendors/dropzone.js',
                 'js/classes/main.js',
                 'js/classes/triggers.js',
             ),
@@ -396,7 +388,6 @@ PIPELINE = {
         'grades': {
             'source_filenames': (
                 'js/vendors/bootbox.js',
-                'js/vendors/moment.js',
                 'js/vendors/jquery.easy-pie-chart.js',
                 'js/vendors/jquery.sparkline.js',
                 'js/vendors/jquery.flot.js',

@@ -6,10 +6,10 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.1
+ * @version 1.1.0
  */
 
-var CSRF_TOKEN = $.cookie("csrftoken");
+var CSRF_TOKEN = Cookies.get("csrftoken");
 
 // Initialize AJAX configuration
 function csrfSafeMethod(method) {
@@ -66,7 +66,6 @@ function Helium() {
     // Date/Time formats used between the client and server
     this.HE_DATE_STRING_SERVER = "YYYY-MM-DD";
     this.HE_TIME_STRING_SERVER = "HH:mm:ss";
-    this.HE_DATE_TIME_STRING_SERVER = this.HE_DATE_STRING_SERVER + " " + this.HE_TIME_STRING_SERVER;
     this.HE_DATE_STRING_CLIENT = "MMM D, YYYY";
     this.HE_TIME_STRING_CLIENT = "h:mm A";
     this.HE_DATE_TIME_STRING_CLIENT = this.HE_DATE_STRING_CLIENT + " " + this.HE_TIME_STRING_CLIENT;
@@ -394,4 +393,6 @@ if (typeof USER_ID !== 'undefined') {
             $.extend(helium.USER_PREFS, data);
         }
     });
+
+    moment.tz.setDefault(helium.USER_PREFS.settings.time_zone);
 }

@@ -1,6 +1,5 @@
 import logging
 
-from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.generics import GenericAPIView
@@ -19,7 +18,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +41,6 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         return Homework.objects.for_user(user.pk)
 
     def get(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -69,14 +66,12 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request and self.request.method == 'GET':
             return HomeworkExtendedSerializer
         else:
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -85,8 +80,6 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         if 'category' in request.data:
             permissions.check_category_permission(request.user.pk, request.data['category'])
         for material_id in request.data.get('materials', []):
@@ -125,19 +118,15 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
         return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request and self.request.method == 'GET':
             return HomeworkExtendedSerializer
         else:
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'category' in request.data:
             permissions.check_category_permission(request.user.pk, request.data['category'])
@@ -153,8 +142,6 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
         return response
 
     def patch(self, request, *args, **kwargs):
-        timezone.activate(request.user.settings.time_zone)
-
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'category' in request.data:

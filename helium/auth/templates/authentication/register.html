@@ -109,14 +109,13 @@
 {% endblock %}
 
 {% block page_footer %}
-{% javascript 'register_footer' %}
 <script type="application/javascript">
     (function () {
         "use strict";
 
         $("#email").focus();
         $("#id_time_zone").chosen({width: "100%", search_contains: true, no_results_text: "No time zones match"});
-        $("#id_time_zone").val(jstz.determine().name());
+        $("#id_time_zone").val(moment.tz.guess());
         $("#id_time_zone").trigger("change");
         $("#id_time_zone").trigger("chosen:updated")
     }());

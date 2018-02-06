@@ -4,7 +4,7 @@
  * Helium stylesheet shared among all pages.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 body, html {
@@ -250,6 +250,10 @@ span.twitter-typeahead > input.form-control.input-sm.tt-query {
 
 .input-group-addon i {
     width: 15px;
+}
+
+.search-choice {
+    padding-left: 10px;
 }
 
 .logo-icon {

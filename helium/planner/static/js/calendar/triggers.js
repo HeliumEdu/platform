@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 /*******************************************
@@ -355,8 +355,8 @@
         helium.calendar.clear_calendar_item_errors();
     });
     $("#edit-categories").on("click", function () {
-        $.cookie("course_id", $("#homework-class").val(), {path: "/"});
-        $.cookie("edit_categories", true, {path: "/"});
+        Cookies.set("course_id", $("#homework-class").val(), {path: "/"});
+        Cookies.set("edit_categories", true, {path: "/"});
         window.location = "/planner/classes";
     });
 
