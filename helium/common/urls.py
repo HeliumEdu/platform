@@ -38,10 +38,4 @@ urlpatterns = [
     url(r'^press', press, name='press'),
     url(r'^about', about, name='about'),
     url(r'^contact', contact, name='contact'),
-
-    # Legacy URLs
-    url(r'^tour', RedirectView.as_view(pattern_name='home', permanent=True)),
-    url(r'^prodigy', RedirectView.as_view(pattern_name='home', permanent=True)),
-    url(r'^plans', RedirectView.as_view(pattern_name='home', permanent=True)),
-    url(r'^purchase', RedirectView.as_view(pattern_name='home', permanent=True)),
 ]

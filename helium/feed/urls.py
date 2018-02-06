@@ -3,7 +3,7 @@ from django.conf.urls import url
 from helium.feed.views.apis.externalcalendarresourceviews import ExternalCalendarAsExternalEventsResourceView
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.apis.privateresourceviews import PrivateEnableResourceView, PrivateDisableResourceView
-from helium.feed.views.feedviews import feed_events_ical, feed_homework_ical
+from helium.feed.views.privateviews import private_events_ical, private_homework_ical
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -11,8 +11,8 @@ __version__ = '1.2.0'
 
 urlpatterns = [
     # Unauthenticated external feed URLs (rely on private slugs for authentication)
-    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/events\.ics$', feed_events_ical, name='feed_events_ical'),
-    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/homework\.ics$', feed_homework_ical, name='feed_homework_ical'),
+    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/events\.ics$', private_events_ical, name='private_events_ical'),
+    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/homework\.ics$', private_homework_ical, name='private_homework_ical'),
 
     ##############################
     # Authenticated API URLs

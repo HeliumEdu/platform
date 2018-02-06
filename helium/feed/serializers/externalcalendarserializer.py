@@ -1,7 +1,7 @@
 from future.standard_library import install_aliases
 
-from helium.feed.services import icalservice
-from helium.feed.services.icalservice import ICalError
+from helium.feed.services import icalexternalcalendarservice
+from helium.feed.services.icalexternalcalendarservice import ICalError
 
 install_aliases()
 import logging
@@ -33,7 +33,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             return url
 
         try:
-            icalservice.validate_url(url)
+            icalexternalcalendarservice.validate_url(url)
 
             return url
         except ICalError as ex:
