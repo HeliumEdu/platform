@@ -8,6 +8,7 @@ import helium.auth.urls
 import helium.common.urls
 import helium.feed.urls
 import helium.planner.urls
+import helium.importexport.urls
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -26,6 +27,7 @@ urlpatterns = [
     url(r'^', include(helium.auth.urls)),
     url(r'^', include(helium.feed.urls)),
     url(r'^', include(helium.planner.urls)),
+    url(r'^', include(helium.importexport.urls)),
 ]
 
 if config.DEBUG:
