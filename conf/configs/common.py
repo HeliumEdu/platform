@@ -56,6 +56,7 @@ DEFAULT_INSTALLED_APPS = (
     'helium.auth',
     'helium.planner',
     'helium.feed',
+    'helium.importexport',
 )
 
 DEFAULT_MIDDLEWARE = (

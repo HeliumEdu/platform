@@ -26,7 +26,7 @@ class TestCaseFeedViews(TestCase):
         eventhelper.given_event_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse("feed_events_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("private_events_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)
@@ -61,7 +61,7 @@ class TestCaseFeedViews(TestCase):
         homeworkhelper.given_homework_exists(course3, category=category3, completed=True, current_grade="-1/100")
 
         # WHEN
-        response = self.client.get(reverse("feed_homework_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("private_homework_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)

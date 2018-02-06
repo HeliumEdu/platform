@@ -49,7 +49,7 @@ class TestCaseExternalCalendarViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    @mock.patch('helium.feed.services.icalservice.validate_url')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
     def test_create_externalcalendar(self, mock_validate_url):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -160,7 +160,7 @@ class TestCaseExternalCalendarViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
-    @mock.patch('helium.feed.services.icalservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_create_bad_data(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -178,7 +178,7 @@ class TestCaseExternalCalendarViews(TestCase):
         self.assertIn('url', response.data)
         self.assertEqual(ExternalCalendar.objects.count(), 0)
 
-    @mock.patch('helium.feed.services.icalservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_update_bad_data(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
