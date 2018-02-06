@@ -9,7 +9,7 @@ from helium.auth.models.usersettings import UserSettings
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +73,14 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def get_by_private_slug(self, private_slug):
+        return self.get(settings__private_slug=private_slug)
+
     def get_queryset(self):
         return UserQuerySet(self.model, using=self._db)
 
     def email_used(self, user_id, email):
-        self.get_queryset().email_used(user_id, email)
+        return self.get_queryset().email_used(user_id, email)
 
     def phone_verification_code_used(self, phone_verification_code):
-        self.get_queryset().phone_verification_code_used(phone_verification_code)
+        return self.get_queryset().phone_verification_code_used(phone_verification_code)

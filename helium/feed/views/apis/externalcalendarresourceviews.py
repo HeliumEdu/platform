@@ -11,12 +11,12 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarAsExternalEventsView(GenericAPIView):
+class ExternalCalendarAsExternalEventsResourceView(GenericAPIView):
     """
     get:
     Return a list of all external event instances for the given external calendar's feed.
