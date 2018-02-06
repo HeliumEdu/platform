@@ -38,7 +38,7 @@ class TestCaseAttachmentViews(TestCase):
 
     def test_get_attachments(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
@@ -207,7 +207,7 @@ class TestCaseAttachmentViews(TestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -224,7 +224,7 @@ class TestCaseAttachmentViews(TestCase):
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)

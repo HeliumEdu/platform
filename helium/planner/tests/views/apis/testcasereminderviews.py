@@ -42,7 +42,7 @@ class TestCaseReminderViews(TestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_reminders(self):
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
@@ -265,7 +265,7 @@ class TestCaseReminderViews(TestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
+        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
@@ -300,7 +300,7 @@ class TestCaseReminderViews(TestCase):
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
         event_reminder = reminderhelper.given_reminder_exists(user1, event=event)

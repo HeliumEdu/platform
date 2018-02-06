@@ -49,7 +49,7 @@ class TestCaseHomeworkViews(TestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_homework(self):
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -307,7 +307,7 @@ class TestCaseHomeworkViews(TestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
+        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         materialgroup2 = materialgrouphelper.given_material_group_exists(user2)
         material2 = materialhelper.given_material_exists(materialgroup2)
@@ -350,7 +350,7 @@ class TestCaseHomeworkViews(TestCase):
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
         course = coursehelper.given_course_exists(course_group)
