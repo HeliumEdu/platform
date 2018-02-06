@@ -6,7 +6,6 @@ import icalendar
 import pytz
 from django.conf import settings
 from django.utils import timezone
-from icalendar import Calendar
 from rest_framework import status
 
 from helium.common import enums
@@ -40,7 +39,7 @@ def validate_url(url):
             raise ICalError("The URL did not return a valid response.")
 
         # TODO: responses should, in the future, be cached for at least a few minutes
-        return Calendar.from_ical(response.read())
+        return icalendar.Calendar.from_ical(response.read())
     except URLError as ex:
         logger.info("The URL is not reachable: {}".format(ex))
 
@@ -113,7 +112,7 @@ def __create_calendar(user):
 
 
 def __create_event_description(event):
-    description = event.comments
+    description = "Comments: {}".format(event.comments)
 
     if event.url:
         description = "URL: {}\n".format(event.url) + description
@@ -124,9 +123,9 @@ def __create_event_description(event):
 def __create_homework_description(homework):
     class_info = homework.course.title
     if homework.category and homework.category.title != "Uncategorized":
-        "{} for {}".format(homework.category.title, class_info)
+        class_info = "{} for {}".format(homework.category.title, class_info)
     if homework.course.room:
-        "{} in {}".format(class_info, homework.course.room)
+        class_info += " in {}".format(homework.course.room)
 
     materials = []
     for material in homework.materials.iterator():
@@ -138,17 +137,19 @@ def __create_homework_description(homework):
         description += "Materials: {}\n".format(",".join(materials))
 
     if homework.url:
-        description = "URL: {}\n".format(homework.url)
+        description += "URL: {}\n".format(homework.url)
 
     if homework.completed and homework.current_grade != "-1/100":
-        description = "Grade: {}\n".format(homework.current_grade)
+        description += "Grade: {}\n".format(homework.current_grade)
 
-    description += homework.comments
+    description += "Comments: {}".format(homework.comments)
 
     return description
 
 
 def events_to_private_ical_feed(user):
+    # TODO: responses should, in the future, be cached for at least a few minutes
+
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
     calendar = __create_calendar(user)
@@ -174,6 +175,8 @@ def events_to_private_ical_feed(user):
 
 
 def homework_to_private_ical_feed(user):
+    # TODO: responses should, in the future, be cached for at least a few minutes
+
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
     calendar = __create_calendar(user)

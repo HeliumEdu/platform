@@ -33,7 +33,7 @@ class TestCaseMaterialGroupViews(TestCase):
 
     def test_get_materialgroups(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         materialgrouphelper.given_material_group_exists(user1)
         materialgrouphelper.given_material_group_exists(user2)
@@ -116,7 +116,7 @@ class TestCaseMaterialGroupViews(TestCase):
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user1)
 
@@ -134,7 +134,7 @@ class TestCaseMaterialGroupViews(TestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user2)
 

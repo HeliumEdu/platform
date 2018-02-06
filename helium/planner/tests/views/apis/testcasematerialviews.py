@@ -46,7 +46,7 @@ class TestCaseMaterialViews(TestCase):
 
     def test_get_materials(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         material_group1 = materialgrouphelper.given_material_group_exists(user1)
         material_group2 = materialgrouphelper.given_material_group_exists(user2)
@@ -189,7 +189,7 @@ class TestCaseMaterialViews(TestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user1')
+        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -227,7 +227,7 @@ class TestCaseMaterialViews(TestCase):
 
     def test_access_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user1)
         material = materialhelper.given_material_exists(material_group)

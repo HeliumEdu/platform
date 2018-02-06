@@ -214,7 +214,7 @@ class TestCaseUserViews(TestCase):
 
     def test_username_already_exists(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
 
         # WHEN
@@ -232,7 +232,7 @@ class TestCaseUserViews(TestCase):
 
     def test_email_already_exists(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
 
         # WHEN

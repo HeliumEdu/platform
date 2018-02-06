@@ -35,7 +35,7 @@ class TestCaseExternalCalendarViews(TestCase):
 
     def test_get_externalcalendars(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         externalcalendarhelper.given_external_calendar_exists(user1)
         externalcalendarhelper.given_external_calendar_exists(user2)
@@ -124,7 +124,7 @@ class TestCaseExternalCalendarViews(TestCase):
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
@@ -142,7 +142,7 @@ class TestCaseExternalCalendarViews(TestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists(username='user1')
+        user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user2)
 
