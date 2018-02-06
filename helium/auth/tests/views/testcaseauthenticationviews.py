@@ -35,7 +35,7 @@ class TestCaseAuthenticationViews(TestCase):
         response = self.client.post(reverse('login'), {'username': user.email, 'password': 'test_pass_1!'})
 
         # THEN
-        self.assertRedirects(response, reverse('settings'))
+        self.assertRedirects(response, reverse('planner'), fetch_redirect_response=False)
         userhelper.verify_user_logged_in(self)
 
     def test_logout_success(self):
