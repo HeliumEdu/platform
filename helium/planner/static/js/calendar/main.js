@@ -162,6 +162,11 @@ function HeliumCalendar() {
      * @param event the event being dropped
      */
     this.drop_calendar_item = function (event) {
+        var all_day = false;
+        if (!event.start.hasTime()) {
+            all_day = true;
+        }
+
         event.start = $("#calendar").fullCalendar("getCalendar").moment(moment(event.start.format()).format());
         event.end = $("#calendar").fullCalendar("getCalendar").moment(moment(event.end.format()).format());
 
@@ -199,8 +204,8 @@ function HeliumCalendar() {
                 var data = {
                     "start": self.start.toISOString(),
                     "end": self.end.toISOString(),
-                    "allDay": !self.start.hasTime(),
-                    "all_day": !self.start.hasTime()
+                    "allDay": all_day,
+                    "all_day": all_day
                 };
                 var callback = function (data) {
                     var calendar_item = data;
@@ -1045,7 +1050,7 @@ function HeliumCalendar() {
     this.update_filter_checkbox_from_event = function () {
         self.update_filter_checkbox($(this));
     };
-    
+
     this.get_material_styled_titles_from_data = function (data) {
         var titles = "";
 
@@ -1223,8 +1228,11 @@ function HeliumCalendar() {
         delete cloned["reminders"];
         delete cloned["source"];
 
-        cloned['title'] = $("#homework-title").val() + " (Cloned)";
+        cloned["title"] = $("#homework-title").val() + " (Cloned)";
+        cloned["start"] = moment(cloned.start.format()).format();
+        cloned["end"] = moment(cloned.end.format()).format();
         cloned["course"] = $("#homework-class").val();
+        cloned["all_day"] = cloned["allDay"];
         cloned["category"] = $("#homework-category").val() !== null ? $("#homework-category").val().toString() : "-1"
         if ($("#homework-materials").val()) {
             cloned["materials"] = $("#homework-materials").val();
