@@ -65,6 +65,12 @@ def __create_homework_description(homework):
 
 
 def events_to_private_ical_feed(user):
+    """
+    Generate an ICAL feed for all events associated with the given user.
+
+    :param user: The user to generate an ICAL feed for.
+    :return: An ICAL string of all the user's events.
+    """
     # TODO: responses should, in the future, be cached for at least a few minutes
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
@@ -92,6 +98,12 @@ def events_to_private_ical_feed(user):
 
 
 def homework_to_private_ical_feed(user):
+    """
+    Generate an ICAL feed for all homework associated with the given user.
+
+    :param user: The user to generate an ICAL feed for.
+    :return: An ICAL string of all the user's homework.
+    """
     # TODO: responses should, in the future, be cached for at least a few minutes
 
     timezone.activate(pytz.timezone(user.settings.time_zone))

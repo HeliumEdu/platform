@@ -11,8 +11,8 @@ __version__ = '1.2.0'
 
 urlpatterns = [
     # Unauthenticated external feed URLs (rely on private slugs for authentication)
-    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/events\.ics$', private_events_ical, name='private_events_ical'),
-    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/homework\.ics$', private_homework_ical, name='private_homework_ical'),
+    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/events\.ics$', private_events_ical, name='feed_private_events_ical'),
+    url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/homework\.ics$', private_homework_ical, name='feed_private_homework_ical'),
 
     ##############################
     # Authenticated API URLs

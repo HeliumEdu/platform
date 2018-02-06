@@ -32,8 +32,8 @@ class PrivateEnableResourceView(APIView):
         user.settings.enable_private_slug()
 
         serializer = PrivateFeedSerializer({
-            'events_private_url': reverse('private_events_ical', kwargs={'slug': user.settings.private_slug}),
-            'homework_private_url': reverse('private_homework_ical', kwargs={'slug': user.settings.private_slug})
+            'events_private_url': reverse('feed_private_events_ical', kwargs={'slug': user.settings.private_slug}),
+            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug})
         })
 
         return Response(serializer.data, status=status.HTTP_200_OK)
