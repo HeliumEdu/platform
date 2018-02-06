@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 def register(request):
-    if request.user.is_authenticated():
-        return HttpResponseRedirect(reverse('planner'))
-
     redirect = None
 
     if request.user.is_authenticated():
@@ -78,7 +75,7 @@ def login(request):
 
     user_login_form = UserLoginForm()
     if request.user.is_authenticated():
-        redirect = HttpResponseRedirect(reverse('planner'))
+        redirect = reverse('planner')
     else:
         if request.method == 'POST':
             user_login_form = UserLoginForm(request.POST)

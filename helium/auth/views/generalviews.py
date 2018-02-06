@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 
 from helium.auth.services import subscriptionservice
 from helium.common.utils import metricutils
@@ -32,7 +33,7 @@ def unsubscribe(request):
 
         return render(request, 'settings/unsubscribe.html', data)
     else:
-        return HttpResponseRedirect('home')
+        return HttpResponseRedirect(reverse('home'))
 
 
 @login_required
