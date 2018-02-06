@@ -73,11 +73,20 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def get_by_natural_key(self, username):
+        """
+        Get the user for authentication/login from the database.
+
+        :param username: the username to lookup
+        :return: the user
+        """
+        return self.get(Q(username__iexact=username) | Q(email__iexact=username))
+
     def get_queryset(self):
         return UserQuerySet(self.model, using=self._db)
 
     def email_used(self, user_id, email):
-        self.get_queryset().email_used(user_id, email)
+        return self.get_queryset().email_used(user_id, email)
 
     def phone_verification_code_used(self, phone_verification_code):
-        self.get_queryset().phone_verification_code_used(phone_verification_code)
+        return self.get_queryset().phone_verification_code_used(phone_verification_code)
