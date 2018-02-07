@@ -2,7 +2,6 @@ import json
 import logging
 import os
 
-import mock
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -63,7 +62,7 @@ class TestCaseImportExportViews(TestCase):
     def test_import_invalid_json(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        tmp_file = attachmenthelper.given_file_exists()
+        tmp_file = attachmenthelper.given_file_exists(ext='.json')
 
         # WHEN
         with open(tmp_file.name) as fp:
@@ -76,7 +75,8 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('invalid JSON', json.loads(response.content)[0]['non_field_errors'][0])
+        self.assertIn('detail', response.data)
+        self.assertIn('Expecting value', response.data['detail'])
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
