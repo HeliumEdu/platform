@@ -18,7 +18,7 @@ __version__ = '1.2.0'
 logger = logging.getLogger(__name__)
 
 
-class ICalError(HeliumError):
+class HeliumICalError(HeliumError):
     pass
 
 
@@ -35,18 +35,18 @@ def validate_url(url):
         response = urlopen(url)
 
         if response.getcode() != status.HTTP_200_OK:
-            raise ICalError("The URL did not return a valid response.")
+            raise HeliumICalError("The URL did not return a valid response.")
 
         # TODO: responses should, in the future, be cached for at least a few minutes
         return icalendar.Calendar.from_ical(response.read())
     except URLError as ex:
         logger.info("The URL is not reachable: {}".format(ex))
 
-        raise ICalError("The URL is not reachable.")
+        raise HeliumICalError("The URL is not reachable.")
     except ValueError as ex:
         logger.info("The URL did not return a valid ICAL feed: {}".format(ex))
 
-        raise ICalError("The URL did not return a valid ICAL feed.")
+        raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 
 def calendar_to_external_events(external_calendar, calendar):

@@ -8,12 +8,15 @@ from helium.common import enums
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
 
 class ReminderQuerySet(models.query.QuerySet):
+    def for_user(self, user_id):
+        return self.filter(user_id=user_id)
+
     def with_type(self, type):
         return self.filter(type=type)
 
@@ -36,6 +39,9 @@ class ReminderQuerySet(models.query.QuerySet):
 class ReminderManager(models.Manager):
     def get_queryset(self):
         return ReminderQuerySet(self.model, using=self._db)
+
+    def for_user(self, user_id):
+        return self.get_queryset().for_user(user_id)
 
     def with_type(self, type):
         return self.get_queryset().with_type(type)

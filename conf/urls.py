@@ -12,7 +12,7 @@ import helium.importexport.urls
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 handler400 = 'helium.common.views.errorviews.bad_request'
 handler401 = 'helium.common.views.errorviews.unauthorized'

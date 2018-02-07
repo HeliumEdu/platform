@@ -1,4 +1,14 @@
 {
+  "external_calendars": [
+    {
+      "id": 1,
+      "title": "My Calendar",
+      "url": "http://go.com/valid-ical-feed",
+      "color": "#fad165",
+      "shown_on_calendar": true,
+      "user": 1
+    }
+  ],
   "course_groups": [
     {
       "id": 1,
@@ -238,7 +248,9 @@
         1
       ],
       "attachments": [],
-      "reminders": [],
+      "reminders": [
+        1
+      ],
       "course": 1,
       "calendar_item_type": 1
     },
@@ -260,6 +272,21 @@
       "reminders": [],
       "course": 2,
       "calendar_item_type": 1
+    }
+  ],
+  "reminders": [
+    {
+      "id": 1,
+      "title": "Test Reminder",
+      "message": "You need to do something now.",
+      "start_of_range": "2017-05-08T15:45:00Z",
+      "offset": 15,
+      "offset_type": 0,
+      "type": 2,
+      "sent": false,
+      "homework": 1,
+      "event": null,
+      "user": 1
     }
   ]
 }
