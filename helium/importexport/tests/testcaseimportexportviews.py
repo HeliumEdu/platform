@@ -36,8 +36,7 @@ class TestCaseImportExportViews(TestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
-    def test_import_success(self, mock_validate_url):
+    def test_import_success(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
@@ -103,12 +102,12 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('course', response.data)
-        self.assertIn('object does not exist', response.data['course'][0])
-        self.assertIn('category', response.data)
-        self.assertIn('object does not exist', response.data['category'][0])
-        self.assertIn('materials', response.data)
-        self.assertIn('object does not exist', response.data['materials'][0])
+        self.assertIn('course', response.data['homework'])
+        self.assertIn('object does not exist', response.data['homework']['course'][0])
+        self.assertIn('category', response.data['homework'])
+        self.assertIn('object does not exist', response.data['homework']['category'][0])
+        self.assertIn('materials', response.data['homework'])
+        self.assertIn('object does not exist', response.data['homework']['materials'][0])
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)

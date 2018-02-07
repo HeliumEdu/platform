@@ -22,21 +22,27 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'url', 'color', 'shown_on_calendar', 'user',)
         read_only_fields = ('user',)
 
-    def validate_url(self, url):
+    def validate(self, attrs):
         """
-        Ensure a valid ICAL URL is given.
+        Ensure a valid ICAL URL is given. If not, disable the calendar.
 
-        :param url: the URL to validate
-        :return: the validated URL
+        :param attrs: the data to be saved
+        :return: the validated data
         """
-        if self.instance and url == self.instance.url:
-            return url
+        url = attrs.get('url', None)
+        if not url and self.instance:
+            url = self.instance.url
 
-        try:
-            icalexternalcalendarservice.validate_url(url)
+        if url and (not self.instance or (self.instance and url != self.instance.url)):
+            try:
+                icalexternalcalendarservice.validate_url(url)
+            except HeliumICalError:
+                logger.info("Unable to validate external ICAL URL {}, so disabling the calendar.")
 
-            return url
-        except HeliumICalError as ex:
-            logger.info("Unable to validate external ICAL URL {}: {}".format(url, ex))
+                if self.instance:
+                    self.instance.shown_on_calendar = False
+                    self.instance.save()
+                else:
+                    attrs['shown_on_calendar'] = False
 
-            raise serializers.ValidationError(ex)
+        return attrs
