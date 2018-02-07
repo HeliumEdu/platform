@@ -1,10 +1,10 @@
 import logging
 
-from django.http import HttpResponse, JsonResponse
-from rest_framework import status
+from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
+from helium.common.services import uploadfileservice
 from helium.importexport.services import importservice
 
 __author__ = 'Alex Laird'
@@ -25,16 +25,9 @@ class ImportView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        try:
-            for upload in request.data.getlist('file[]'):
-                json_str = b''
-                for chunk in upload.chunks():
-                    json_str += chunk
+        for upload in request.data.getlist('file[]'):
+            json_str = uploadfileservice.read(upload)
 
-                importservice.import_user(request, json_str.decode("utf-8"))
+            importservice.import_user(request, json_str.decode("utf-8"))
 
             return HttpResponse()
-        except ValueError:
-            return JsonResponse([{
-                'non_field_errors': ['An uploaded file contains invalid JSON']
-            }], safe=False, status=status.HTTP_400_BAD_REQUEST)

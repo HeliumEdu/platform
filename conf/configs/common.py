@@ -147,11 +147,14 @@ USE_TZ = True
 
 # DateTime sanity
 
-DATE_FORMAT = '%Y-%m-%d'
-TIME_FORMAT = '%H:%M:%S'
-DATE_TIME_FORMAT = '{} {}'.format(DATE_FORMAT, TIME_FORMAT)
 NORMALIZED_DATE_FORMAT = '%a, %b %d'
 NORMALIZED_DATE_TIME_FORMAT = '{} at %I:%M %p'.format(NORMALIZED_DATE_FORMAT)
+
+# File uploads
+
+FILE_TYPES = ['json']
+
+MAX_UPLOAD_SIZE = 10485760
 
 # Email settings
 

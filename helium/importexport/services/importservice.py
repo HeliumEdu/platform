@@ -30,7 +30,14 @@ def import_user(request, json_str):
     :param request: The request performing the import.
     :param json_str: The JSON string that will be parsed and imported for the user.
     """
-    data = json.loads(json_str)
+    try:
+        data = json.loads(json_str)
+    except ValueError as e:
+        raise ValidationError({
+            'detail': e
+        })
+
+    # TODO: this still will not work outside of unit tests, as the IDs are not imported and thus the references could point to valid, existing models in the database
 
     for external_calendar in data.get('external_calendars', []):
         serializer = ExternalCalendarSerializer(data=external_calendar)
