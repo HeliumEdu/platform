@@ -1,5 +1,4 @@
 import logging
-from json import JSONDecodeError
 
 from django.http import HttpResponse, JsonResponse
 from rest_framework import status
@@ -35,7 +34,7 @@ class ImportView(APIView):
                 importservice.import_user(request, json_str.decode("utf-8"))
 
             return HttpResponse()
-        except JSONDecodeError:
+        except ValueError:
             return JsonResponse([{
                 'non_field_errors': ['An uploaded file contains invalid JSON']
             }], safe=False, status=status.HTTP_400_BAD_REQUEST)
