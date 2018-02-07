@@ -4,12 +4,11 @@ import random
 from rest_framework import serializers
 
 from helium.common import enums
-from helium.common.utils import commonutils
 from helium.planner.models.category import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,8 @@ class CategorySerializer(serializers.ModelSerializer):
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_graded',)
-        read_only_fields = ('average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
+        read_only_fields = (
+        'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
 
     def validate_weight(self, weight):
         """

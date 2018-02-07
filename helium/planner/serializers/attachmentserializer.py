@@ -6,7 +6,7 @@ from helium.planner.models.attachment import Attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +21,9 @@ class AttachmentSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if 'course' not in attrs and 'event' not in attrs and 'homework' not in attrs:
             raise serializers.ValidationError("One of `course`, `event`, or `homework` must be given.")
-        elif ('course' in attrs and 'event' in attrs) or ('course' in attrs and 'homework' in attrs) or (
-                        'event' in attrs and 'homework' in attrs):
+        elif (attrs.get('course', None) and attrs.get('event', None)) or \
+                (attrs.get('course', None) and attrs.get('homework', None)) or \
+                (attrs.get('event', None) and attrs.get('homework', None)):
             raise serializers.ValidationError("Only one of `course`, `event`, or `homework` may be given.")
 
         # We're settings these to None here as the serialization save will persist the new parent

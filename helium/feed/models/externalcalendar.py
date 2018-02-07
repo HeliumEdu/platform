@@ -6,10 +6,11 @@ from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models.base import BaseModel
+from helium.feed.managers.externalcalendarmanager import ExternalCalendarManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.2'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,8 @@ class ExternalCalendar(BaseModel):
                                             default=True, db_index=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
+
+    objects = ExternalCalendarManager()
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())

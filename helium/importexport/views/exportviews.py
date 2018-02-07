@@ -5,8 +5,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 
+from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
-from helium.planner.models import CourseGroup, Course, Category, MaterialGroup, Material, Event, Homework
+from helium.planner.models import CourseGroup, Course, Category, MaterialGroup, Material, Event, Homework, Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -28,13 +29,15 @@ class ExportView(APIView):
         user = self.request.user
 
         serializer = ExportSerializer({
+            'external_calendars': ExternalCalendar.objects.for_user(user.pk),
             'course_groups': CourseGroup.objects.for_user(user.pk),
             'courses': Course.objects.for_user(user.pk),
             'categories': Category.objects.for_user(user.pk),
             'material_groups': MaterialGroup.objects.for_user(user.pk),
             'materials': Material.objects.for_user(user.pk),
             'events': Event.objects.for_user(user.pk),
-            'homework': Homework.objects.for_user(user.pk)
+            'homework': Homework.objects.for_user(user.pk),
+            'reminders': Reminder.objects.for_user(user.pk)
         })
 
         json_str = JSONRenderer().render(serializer.data)

@@ -1,7 +1,7 @@
 from future.standard_library import install_aliases
 
 from helium.feed.services import icalexternalcalendarservice
-from helium.feed.services.icalexternalcalendarservice import ICalError
+from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 
 install_aliases()
 import logging
@@ -11,7 +11,7 @@ from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             icalexternalcalendarservice.validate_url(url)
 
             return url
-        except ICalError as ex:
+        except HeliumICalError as ex:
             logger.info("Unable to validate external ICAL URL {}: {}".format(url, ex))
 
             raise serializers.ValidationError(ex)
