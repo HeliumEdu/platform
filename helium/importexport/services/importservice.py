@@ -1,3 +1,4 @@
+import json
 import logging
 
 __author__ = 'Alex Laird'
@@ -7,13 +8,14 @@ __version__ = '1.2.0'
 logger = logging.getLogger(__name__)
 
 
-def import_user(user, json):
+def import_user(user, json_str):
     """
     Parse the given JSON string and import its associated data for the given user. Each model will be imported in a schema
     matching that of the documented APIs.
 
     :param user: The user to be load the imported data to.
-    :param json: The JSON string that will be parsed and imported for the user.
+    :param json_str: The JSON string that will be parsed and imported for the user.
     """
+    data = json.loads(json_str)
+
     # TODO: implement
-    pass
