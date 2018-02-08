@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import os
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -196,7 +197,7 @@ def import_user(request, json_str):
 def __adjust_schedule_relative_today(user):
     timezone.activate(user.settings.time_zone)
 
-    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0).date()
+    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0)
     days_ahead = 0 - start_of_current_month.weekday()
     if days_ahead <= 0:
         days_ahead += 7
@@ -214,13 +215,31 @@ def __adjust_schedule_relative_today(user):
     for homework in Homework.objects.for_user(user.pk):
         course = homework.course
         delta = (homework.start.date() - course.start_date).days
-        homework.start = first_monday + datetime.timedelta(days=delta - 1)
-        homework.end = homework.end + datetime.timedelta(days=delta - 1)
+        homework.start = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+            hour=homework.start.time().hour,
+            minute=homework.start.time().minute,
+            second=0,
+            tzinfo=timezone.utc)
+        homework.end = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+            hour=homework.end.time().hour,
+            minute=homework.end.time().minute,
+            second=0,
+            tzinfo=timezone.utc)
+        homework.save()
 
     for event in Event.objects.for_user(user.pk).iterator():
         delta = (event.start.date() - start_of_current_month).days
-        event.start = first_monday + datetime.timedelta(days=delta - 1)
-        event.end = event.end + datetime.timedelta(days=delta - 1)
+        event.start = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+            hour=event.start.time().hour,
+            minute=event.start.time().minute,
+            second=0,
+            tzinfo=timezone.utc)
+        event.end = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+            hour=event.end.time().hour,
+            minute=event.end.time().minute,
+            second=0,
+            tzinfo=timezone.utc)
+        event.save()
 
     for course in Course.objects.for_user(user.pk):
         delta = (course.end_date - course.start_date).days
@@ -237,8 +256,9 @@ def import_example_schedule(user):
     request = Request(HttpRequest(), parser_context={'kwargs': {}})
     request.user = user
 
-    # TODO: get a better example schedule
-    json_str = '{"external_calendars":[{"id":1,"title":"My Calendar","url":"http://go.com/valid-ical-feed","color":"#fad165","shown_on_calendar":true,"user":1}],"course_groups":[{"id":1,"title":"Test Course Group","start_date":"2017-01-06","end_date":"2017-05-08","shown_on_calendar":true,"average_grade":"66.6667","trend":null,"private_slug":null,"user":1,"num_days":122,"num_days_completed":397,"num_homework":1,"num_homework_completed":1,"num_homework_graded":1},{"id":2,"title":"Test Course Group","start_date":"2017-01-06","end_date":"2017-05-08","shown_on_calendar":true,"average_grade":"-1.0000","trend":null,"private_slug":null,"user":1,"num_days":122,"num_days_completed":397,"num_homework":1,"num_homework_completed":0,"num_homework_graded":0}],"courses":[{"id":1,"title":"Test Course","room":"","credits":"5.00","color":"#4986e7","website":"http://mycourse.com","is_online":false,"current_grade":"66.6667","trend":null,"private_slug":null,"teacher_name":"My Teacher","teacher_email":"teacher@email.com","start_date":"2017-01-06","end_date":"2017-05-08","days_of_week":"0000000","sun_start_time":"12:00:00","sun_end_time":"12:00:00","mon_start_time":"12:00:00","mon_end_time":"12:00:00","tue_start_time":"12:00:00","tue_end_time":"12:00:00","wed_start_time":"12:00:00","wed_end_time":"12:00:00","thu_start_time":"12:00:00","thu_end_time":"12:00:00","fri_start_time":"12:00:00","fri_end_time":"12:00:00","sat_start_time":"12:00:00","sat_end_time":"12:00:00","days_of_week_alt":"0000000","sun_start_time_alt":"12:00:00","sun_end_time_alt":"12:00:00","mon_start_time_alt":"12:00:00","mon_end_time_alt":"12:00:00","tue_start_time_alt":"12:00:00","tue_end_time_alt":"12:00:00","wed_start_time_alt":"12:00:00","wed_end_time_alt":"12:00:00","thu_start_time_alt":"12:00:00","thu_end_time_alt":"12:00:00","fri_start_time_alt":"12:00:00","fri_end_time_alt":"12:00:00","sat_start_time_alt":"12:00:00","sat_end_time_alt":"12:00:00","course_group":1,"num_days":122,"num_days_completed":397,"has_weighted_grading":false,"num_homework":1,"num_homework_completed":1,"num_homework_graded":1},{"id":2,"title":"Test Course","room":"DNC 201","credits":"5.00","color":"#4986e7","website":"http://mycourse.com","is_online":false,"current_grade":"-1.0000","trend":null,"private_slug":null,"teacher_name":"My Teacher","teacher_email":"teacher@email.com","start_date":"2017-01-06","end_date":"2017-05-08","days_of_week":"0000000","sun_start_time":"12:00:00","sun_end_time":"12:00:00","mon_start_time":"12:00:00","mon_end_time":"12:00:00","tue_start_time":"12:00:00","tue_end_time":"12:00:00","wed_start_time":"12:00:00","wed_end_time":"12:00:00","thu_start_time":"12:00:00","thu_end_time":"12:00:00","fri_start_time":"12:00:00","fri_end_time":"12:00:00","sat_start_time":"12:00:00","sat_end_time":"12:00:00","days_of_week_alt":"0000000","sun_start_time_alt":"12:00:00","sun_end_time_alt":"12:00:00","mon_start_time_alt":"12:00:00","mon_end_time_alt":"12:00:00","tue_start_time_alt":"12:00:00","tue_end_time_alt":"12:00:00","wed_start_time_alt":"12:00:00","wed_end_time_alt":"12:00:00","thu_start_time_alt":"12:00:00","thu_end_time_alt":"12:00:00","fri_start_time_alt":"12:00:00","fri_end_time_alt":"12:00:00","sat_start_time_alt":"12:00:00","sat_end_time_alt":"12:00:00","course_group":2,"num_days":122,"num_days_completed":397,"has_weighted_grading":false,"num_homework":1,"num_homework_completed":0,"num_homework_graded":0}],"categories":[{"id":2,"title":"Test Category 1","weight":"0.00","average_grade":"-1.0000","grade_by_weight":"0.0000","trend":null,"color":"#4986e7","course":2,"num_homework":1,"num_homework_graded":0},{"id":1,"title":"Uncategorized","weight":"0.00","average_grade":"66.6667","grade_by_weight":"0.0000","trend":null,"color":"#4986e7","course":1,"num_homework":1,"num_homework_graded":1}],"material_groups":[{"id":1,"title":"Test Material Group","shown_on_calendar":true,"user":1}],"materials":[{"id":1,"title":"Test Material","status":3,"condition":7,"website":"http://www.material.com","price":"9.99","details":"Return by 7/1","material_group":1,"courses":[]}],"events":[{"id":1,"title":"Test Event","all_day":false,"show_end_time":true,"start":"2017-05-08T12:00:00Z","end":"2017-05-08T14:00:00Z","priority":75,"url":null,"comments":"A comment on an event.","attachments":[],"reminders":[],"user":1,"calendar_item_type":0},{"id":2,"title":"Test Event","all_day":false,"show_end_time":true,"start":"2017-05-08T12:00:00Z","end":"2017-05-08T14:00:00Z","priority":75,"url":null,"comments":"A comment on an event.","attachments":[],"reminders":[],"user":1,"calendar_item_type":0}],"homework":[{"id":1,"title":"Test Homework","all_day":false,"show_end_time":true,"start":"2017-05-08T16:00:00Z","end":"2017-05-08T18:00:00Z","priority":65,"url":null,"comments":"A comment on a homework.","current_grade":"20/30","completed":true,"category":1,"materials":[1],"attachments":[],"reminders":[1],"course":1,"calendar_item_type":1},{"id":2,"title":"Test Homework","all_day":false,"show_end_time":true,"start":"2017-05-08T16:00:00Z","end":"2017-05-08T18:00:00Z","priority":65,"url":null,"comments":"A comment on a homework.","current_grade":"-1/100","completed":false,"category":2,"materials":[],"attachments":[],"reminders":[],"course":2,"calendar_item_type":1}],"reminders":[{"id":1,"title":"Test Reminder","message":"You need to do something now.","start_of_range":"2017-05-08T15:45:00Z","offset":15,"offset_type":0,"type":2,"sent":false,"homework":1,"event":null,"user":1}]}'
+    example_file = open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb')
+
+    json_str = example_file.read()
 
     import_user(request, json_str)
 

@@ -189,11 +189,10 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(get_user_model().objects.count(), 1)
-        self.assertEqual(CourseGroup.objects.count(), 2)
+        self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 2)
-        self.assertEqual(Category.objects.count(), 2)
-        self.assertEqual(MaterialGroup.objects.count(), 1)
-        self.assertEqual(Material.objects.count(), 1)
-        self.assertEqual(Event.objects.count(), 2)
-        self.assertEqual(Homework.objects.count(), 2)
+        self.assertEqual(Category.objects.count(), 11)
+        self.assertEqual(MaterialGroup.objects.count(), 2)
+        self.assertEqual(Material.objects.count(), 4)
+        self.assertEqual(Homework.objects.count(), 22)
         # TODO: implement more assertions
