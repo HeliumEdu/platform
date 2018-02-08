@@ -1,12 +1,15 @@
+import datetime
 import json
 import logging
 
 from django.db import transaction
 from django.http import HttpRequest
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.planner.models import CourseGroup, Course, Homework, Event
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.courseserializer import CourseSerializer
@@ -191,8 +194,43 @@ def import_user(request, json_str):
 
 
 def __adjust_schedule_relative_today(user):
-    # TODO: implement adjustmenets to current month
-    pass
+    timezone.activate(user.settings.time_zone)
+
+    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0).date()
+    days_ahead = 0 - start_of_current_month.weekday()
+    if days_ahead <= 0:
+        days_ahead += 7
+    first_monday = start_of_current_month + datetime.timedelta(days_ahead)
+
+    logger.info('Start of month adjusted to {}'.format(start_of_current_month))
+    logger.info('Start of week adjusted ahead {} days'.format(days_ahead))
+
+    for course_group in CourseGroup.objects.for_user(user.pk).iterator():
+        delta = (course_group.end_date - course_group.start_date).days
+        course_group.start_date = start_of_current_month
+        course_group.end_date = start_of_current_month + datetime.timedelta(days=delta)
+        course_group.save()
+
+    for homework in Homework.objects.for_user(user.pk):
+        course = homework.course
+        delta = (homework.start.date() - course.start_date).days
+        homework.start = first_monday + datetime.timedelta(days=delta - 1)
+        homework.end = homework.end + datetime.timedelta(days=delta - 1)
+
+    for event in Event.objects.for_user(user.pk).iterator():
+        delta = (event.start.date() - start_of_current_month).days
+        event.start = first_monday + datetime.timedelta(days=delta - 1)
+        event.end = event.end + datetime.timedelta(days=delta - 1)
+
+    for course in Course.objects.for_user(user.pk):
+        delta = (course.end_date - course.start_date).days
+        course.start_date = start_of_current_month
+        course.end_date = start_of_current_month + datetime.timedelta(days=delta)
+        course.save()
+
+    logger.info('Dates adjusted relative to the start of the month for new user example schedule')
+
+    timezone.deactivate()
 
 
 def import_example_schedule(user):
