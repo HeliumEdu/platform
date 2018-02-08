@@ -15,7 +15,7 @@ class HeliumError(Exception):
     pass
 
 
-def send_multipart_email(template_name, context, subject, to):
+def send_multipart_email(template_name, context, subject, to, bcc=None):
     """
     Send a multipart text/html email.
 
@@ -23,6 +23,7 @@ def send_multipart_email(template_name, context, subject, to):
     :param context: A dictionary of context elements to pass to the email templates
     :param subject: The subject of the email
     :param to: A list of email addresses to which to send
+    :param bcc: A list of email addresses to which to BCC
     :return:
     """
     plaintext = get_template('{}.txt'.format(template_name))
@@ -30,7 +31,7 @@ def send_multipart_email(template_name, context, subject, to):
     text_content = plaintext.render(context)
     html_content = html.render(context)
 
-    msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to)
+    msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
