@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from helium.common.services import uploadfileservice
+from helium.common.utils import metricutils
 from helium.importexport.services import importservice
 
 __author__ = 'Alex Laird'
@@ -29,5 +30,7 @@ class ImportView(APIView):
             json_str = uploadfileservice.read(upload)
 
             importservice.import_user(request, json_str.decode("utf-8"))
+
+            metricutils.increment('action.user.imported', request)
 
             return HttpResponse()

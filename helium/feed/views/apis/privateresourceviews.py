@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from helium.common.utils import metricutils
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
@@ -35,6 +36,8 @@ class PrivateEnableResourceView(APIView):
             'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug})
         })
 
+        metricutils.increment('action.privatefeed.enabled', request)
+
         return Response(serializer.data)
 
 
@@ -49,5 +52,7 @@ class PrivateDisableResourceView(APIView):
         user = self.request.user
 
         user.settings.disable_private_slug()
+
+        metricutils.increment('action.privatefeed.disabled', request)
 
         return Response()

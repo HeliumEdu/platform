@@ -143,6 +143,48 @@ function HeliumSettings() {
         self.create_externalcalendar("null", 'Holidays', 'https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics', false, $($("#id_events_color option")[Math.floor(Math.random() * $("#id_events_color option").length)]).val());
     });
 
+    $("#importexport-form").submit(function (e) {
+        // Prevent default submit
+        e.preventDefault();
+        e.returnValue = false;
+
+        if (!$('#id_file').val()) {
+            $("#status_importexport").html("You must choose a file to import first.").addClass("alert-info").removeClass("hidden");
+
+            return false;
+        }
+
+        $("#import-button").prop("disabled", true);
+
+        $("#loading-importexport").spin(helium.SMALL_LOADING_OPTS);
+
+        helium.clear_form_errors($(this).attr("id"));
+
+        $.ajax({
+            processData: false,
+            contentType: false,
+            data: new FormData(this),
+            type: 'POST',
+            url: '/api/importexport/import/',
+            error: function (xhr) {
+                $("#status_importexport").html(JSON.stringify(xhr.responseJSON)).addClass("alert-danger").removeClass("hidden");
+
+                $("#import-button").prop("disabled", false);
+
+                $("#loading-importexport").spin(false);
+            },
+            success: function () {
+                $("#import-button").prop("disabled", false);
+
+                helium.clear_form_errors("importexport-form");
+
+                $("#status_importexport").html("Import successful.").addClass("alert-success").removeClass("hidden");
+
+                $("#loading-importexport").spin(false);
+            }
+        });
+    });
+
     $("#preferences-form").submit(function (e) {
         // Prevent default submit
         e.preventDefault();
@@ -186,12 +228,16 @@ function HeliumSettings() {
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/settings/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
-                        helium.show_error(key, value);
+                        helium.show_error("preferences", key, value);
                     });
 
                     $("#loading-preferences").spin(false);
                 },
                 success: function () {
+                    helium.clear_form_errors("preferences-form");
+
+                    $("#status_preferences").html("Changes saved.").addClass("alert-success").removeClass("hidden");
+
                     $("#loading-preferences").spin(false);
                 }
             });
@@ -219,7 +265,7 @@ function HeliumSettings() {
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/profile/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
-                        helium.show_error(key, value);
+                        helium.show_error("personal", key, value);
                     });
 
                     $("#loading-personal").spin(false);
@@ -241,6 +287,10 @@ function HeliumSettings() {
                         $("#phone_verification_row").hide("fast");
                     }
 
+                    helium.clear_form_errors("personal-form");
+
+                    $("#status_personal").html("Changes saved.").addClass("alert-success").removeClass("hidden");
+
                     $("#loading-personal").spin(false);
                 }
             });
@@ -260,17 +310,17 @@ function HeliumSettings() {
             // If one is present, all three must be present
             var has_error = false;
             if ($("#id_old_password").val() === '') {
-                helium.show_error("old_password", "This field is required.");
+                helium.show_error("account", "old_password", "This field is required.");
 
                 has_error = true;
             }
             if ($("#id_new_password1").val() === '') {
-                helium.show_error("new_password1", "This field is required.");
+                helium.show_error("account", "new_password1", "This field is required.");
 
                 has_error = true;
             }
             if ($("#id_new_password2").val() === '') {
-                helium.show_error("new_password2", "This field is required.");
+                helium.show_error("account", "new_password2", "This field is required.");
 
                 has_error = true;
             }
@@ -300,7 +350,7 @@ function HeliumSettings() {
                 url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
-                        helium.show_error(key, value);
+                        helium.show_error("account", key, value);
                     });
 
                     $("#loading-account").spin(false);
@@ -309,6 +359,10 @@ function HeliumSettings() {
                     if (data.email_changing) {
                         self.email_pending(data.email_changing);
                     }
+
+                    helium.clear_form_errors("account-form");
+
+                    $("#status_account").html("Changes saved.").addClass("alert-success").removeClass("hidden");
 
                     $("#loading-account").spin(false);
                 }

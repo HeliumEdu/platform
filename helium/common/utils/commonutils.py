@@ -4,9 +4,11 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
+from helium.common.utils import metricutils
+
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 
 class HeliumError(Exception):
@@ -31,6 +33,8 @@ def send_multipart_email(template_name, context, subject, to):
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+    metricutils.increment('action.email.sent')
 
 
 def remove_exponent(d):

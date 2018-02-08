@@ -9,7 +9,7 @@ from helium.common.utils.viewutils import set_request_status
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +52,7 @@ def process_verification(request, username, verification_code):
             user.is_active = True
             user.save()
 
-            if not user.email.endswith('@heliumedu.com'):
-                metricutils.increment('action.user.created', request)
+            metricutils.increment('action.user.verified', request)
 
             send_registration_email.delay(user.email)
 
@@ -69,6 +68,8 @@ def process_verification(request, username, verification_code):
             user.email = user.email_changing
             user.email_changing = None
             user.save()
+
+            metricutils.increment('action.user.email-changed', request)
 
             logger.info('Verified new email for user {}'.format(username))
 
@@ -124,6 +125,8 @@ def process_logout(request):
     email = request.user.email
     logout(request)
     logger.info('Logged out user {}'.format(email))
+
+    metricutils.increment('action.user.logged-out', request)
 
 
 def process_forgot_password(request):
