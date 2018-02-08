@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from conf.celery import app
@@ -61,3 +62,17 @@ def send_password_reset_email(email, temp_password):
                                          'support_url': reverse('support'),
                                      },
                                      'Your Helium Password Has Been Reset', [email])
+
+
+@app.task
+def delete_user(user_id):
+    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
+    # skip it
+    try:
+        user = get_user_model().objects.get(pk=user_id)
+
+        user.delete()
+    except get_user_model().DoesNotExist:
+        logger.info('User {} does not exist. Nothing to do.'.format(user_id))
+
+        return
