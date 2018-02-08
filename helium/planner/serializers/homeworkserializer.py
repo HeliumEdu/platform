@@ -28,7 +28,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
             start = self.instance.start
         end = attrs.get('end', None)
         if not end and self.instance:
-            end = self.instance.end_date
+            end = self.instance.end
 
         if start and end and start > end:
             raise serializers.ValidationError("The 'start' must be before the 'end'")
