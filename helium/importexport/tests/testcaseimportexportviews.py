@@ -44,19 +44,28 @@ class TestCaseImportExportViews(TestCase):
             data = {
                 'file[]': [fp]
             }
+            self.client.post(
+                reverse('importexport_import'),
+                data)
+        # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
+        # up and the remapping is properly tested
+        with open(os.path.join(os.path.dirname(__file__), os.path.join('resources', 'sample.json'))) as fp:
+            data = {
+                'file[]': [fp]
+            }
             response = self.client.post(
                 reverse('importexport_import'),
                 data)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(CourseGroup.objects.count(), 2)
-        self.assertEqual(Course.objects.count(), 2)
-        self.assertEqual(Category.objects.count(), 2)
-        self.assertEqual(MaterialGroup.objects.count(), 1)
-        self.assertEqual(Material.objects.count(), 1)
-        self.assertEqual(Event.objects.count(), 2)
-        self.assertEqual(Homework.objects.count(), 2)
+        self.assertEqual(CourseGroup.objects.count(), 4)
+        self.assertEqual(Course.objects.count(), 4)
+        self.assertEqual(Category.objects.count(), 4)
+        self.assertEqual(MaterialGroup.objects.count(), 2)
+        self.assertEqual(Material.objects.count(), 2)
+        self.assertEqual(Event.objects.count(), 4)
+        self.assertEqual(Homework.objects.count(), 4)
         # TODO: implement more assertions
 
     def test_import_invalid_json(self):

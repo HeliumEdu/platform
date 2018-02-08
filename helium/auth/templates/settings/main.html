@@ -53,6 +53,13 @@
                                     </a>
                                 </li>
 
+                                <li class="col-xs-12 col-sm-reset{% if settings_tab == '#settings-tab-feed' %} active{% endif %}">
+                                    <a data-toggle="tab" href="#settings-tab-feed">
+                                        <i class="red icon-rss bigger-120 hidden-xs"></i>
+                                        Feed
+                                    </a>
+                                </li>
+
                                 <li class="col-xs-12 col-sm-reset{% if settings_tab == '#settings-tab-importexport' %} active{% endif %}">
                                     <a data-toggle="tab" href="#settings-tab-importexport">
                                         <i class="pink icon-exchange bigger-120 hidden-xs"></i>
@@ -67,6 +74,8 @@
                                 {% include 'settings/snippets/personaltab.html' %}
 
                                 {% include 'settings/snippets/accounttab.html' %}
+
+                                {% include 'settings/snippets/feedtab.html' %}
 
                                 {% include 'settings/snippets/importexporttab.html' %}
                             </div>
