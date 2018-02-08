@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 
+from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
 from helium.planner.models import CourseGroup, Course, Category, MaterialGroup, Material, Event, Homework, Reminder
@@ -41,6 +42,8 @@ class ExportView(APIView):
         })
 
         json_str = JSONRenderer().render(serializer.data)
+
+        metricutils.increment('action.user.exported', request)
 
         response = HttpResponse(json_str, content_type='application/json; charset=utf-8')
         response['Filename'] = 'Helium_' + user.username + '.json'

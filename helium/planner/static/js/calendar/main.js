@@ -564,7 +564,7 @@ function HeliumCalendar() {
                             }
 
                             for (i = 0; i < calendar_item_fields.attachments.length; i += 1) {
-                                $("#attachments-table-body").append("<tr id=\"attachment-" + calendar_item_fields.attachments[i].id + "\"><td>" + calendar_item_fields.attachments[i].title + "</td><td>" + helium.bytes_to_size(parseInt(calendar_item_fields.attachments[i].size)) + "</td><td><div class=\"btn-group\"><a class=\"btn btn-xs btn-success\" download href=\"" + calendar_item_fields.attachments[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + calendar_item_fields.attachments[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
+                                $("#attachments-table-body").append("<tr id=\"attachment-" + calendar_item_fields.attachments[i].id + "\"><td>" + calendar_item_fields.attachments[i].title + "</td><td>" + helium.bytes_to_size(parseInt(calendar_item_fields.attachments[i].size)) + "</td><td><div class=\"btn-group\"><a class=\"btn btn-xs btn-success\" download target=\"_blank\" href=\"" + calendar_item_fields.attachments[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + calendar_item_fields.attachments[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
                                 $("#delete-attachment-" + calendar_item_fields.attachments[i].id).on("click", self.delete_attachment);
                             }
 

@@ -44,8 +44,11 @@ def import_user(request, json_str):
             serializer.save(user=request.user)
         else:
             raise ValidationError({
-                'external_calendars': serializer.errors
+                'external_calendars': {
+                    external_calendar['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} external calendars.".format(len(data.get("external_calendars", []))))
 
     course_group_remap = {}
     for course_group in data.get('course_groups', []):
@@ -56,8 +59,11 @@ def import_user(request, json_str):
             course_group_remap[course_group['id']] = instance.pk
         else:
             raise ValidationError({
-                'course_groups': serializer.errors
+                'course_groups': {
+                    course_group['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} course groups.".format(len(data.get("course_groups", []))))
 
     course_remap = {}
     for course in data.get('courses', []):
@@ -68,8 +74,11 @@ def import_user(request, json_str):
             course_remap[course['id']] = instance.pk
         else:
             raise ValidationError({
-                'courses': serializer.errors
+                'courses': {
+                    course['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} courses.".format(len(data.get("courses", []))))
 
     category_remap = {}
     for category in data.get('categories', []):
@@ -81,8 +90,11 @@ def import_user(request, json_str):
             category_remap[category['id']] = instance.pk
         else:
             raise ValidationError({
-                'categories': serializer.errors
+                'categories': {
+                    category['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} categories.".format(len(data.get("categories", []))))
 
     material_group_remap = {}
     for material_group in data.get('material_groups', []):
@@ -93,8 +105,11 @@ def import_user(request, json_str):
             material_group_remap[material_group['id']] = instance.pk
         else:
             raise ValidationError({
-                'material_groups': serializer.errors
+                'material_groups': {
+                    material_group['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} material groups.".format(len(data.get("material_groups", []))))
 
     material_remap = {}
     for material in data.get('materials', []):
@@ -108,8 +123,11 @@ def import_user(request, json_str):
             material_remap[material['id']] = instance.pk
         else:
             raise ValidationError({
-                'material_groups': serializer.errors
+                'materials': {
+                    material['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} materials.".format(len(data.get("materials", []))))
 
     event_remap = {}
     for event in data.get('events', []):
@@ -120,8 +138,11 @@ def import_user(request, json_str):
             event_remap[event['id']] = instance.pk
         else:
             raise ValidationError({
-                'events': serializer.errors
+                'events': {
+                    event['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} events.".format(len(data.get("events", []))))
 
     homework_remap = {}
     for homework in data.get('homework', []):
@@ -137,8 +158,11 @@ def import_user(request, json_str):
             homework_remap[homework['id']] = instance.pk
         else:
             raise ValidationError({
-                'homework': serializer.errors
+                'homework': {
+                    homework['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} homework.".format(len(data.get("homework", []))))
 
     for reminder in data.get('reminders', []):
         reminder['homework'] = homework_remap.get(reminder['homework'], None) if \
@@ -151,5 +175,8 @@ def import_user(request, json_str):
             serializer.save(user=request.user)
         else:
             raise ValidationError({
-                'reminders': serializer.errors
+                'reminders': {
+                    reminder['id']: serializer.errors
+                }
             })
+    logger.info("Imported {} reminders.".format(len(data.get("reminders", []))))

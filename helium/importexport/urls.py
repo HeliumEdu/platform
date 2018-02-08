@@ -9,6 +9,6 @@ __version__ = '1.2.0'
 
 urlpatterns = [
     # Import/Export URLs
-    url(r'^importexport/import$', ImportView.as_view(), name='importexport_import'),
-    url(r'^importexport/export$', ExportView.as_view(), name='importexport_export'),
+    url(r'^api/importexport/import/$', ImportView.as_view(), name='importexport_import'),
+    url(r'^api/importexport/export/$', ExportView.as_view(), name='importexport_export'),
 ]

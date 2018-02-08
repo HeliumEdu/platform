@@ -217,8 +217,8 @@ function Helium() {
         if (response.hasOwnProperty('jqXHR') && response.jqXHR.hasOwnProperty('responseJSON')) {
             if (response.jqXHR.responseJSON.hasOwnProperty('detail')) {
                 return response.jqXHR.responseJSON.detail;
-            // TODO: we could parse more API responses here, but may make more sense to just wait and improve error
-            // handling when we rebuild the entire UI
+                // TODO: we could parse more API responses here, but may make more sense to just wait and improve error
+                // handling when we rebuild the entire UI
             } else {
                 return response.err_msg
             }
@@ -256,11 +256,13 @@ function Helium() {
         });
     };
 
-    this.show_error = function (selector, error_msg) {
-        $($("#id_" + selector).parent()).addClass("has-error");
-        $("#status_" + selector).html(error_msg).removeClass("hidden");
-
-        // TODO: if the given status_{field_id} select is not found, show the error in the form's status div at the top
+    this.show_error = function (form_id, selector, error_msg) {
+        if ($("#status_" + selector).length > 0) {
+            $($("#id_" + selector).parent()).addClass("has-error");
+            $("#status_" + selector).html(error_msg).removeClass("hidden");
+        } else {
+            $("#status_" + form_id).html(error_msg).addClass("alert-warning").removeClass("hidden");
+        }
     };
 
     this.add_reminder_to_page = function (data) {
