@@ -110,10 +110,10 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('course', response.data['homework'])
-        self.assertIn('object does not exist', response.data['homework']['course'][0])
-        self.assertIn('materials', response.data['homework'])
-        self.assertIn('object does not exist', response.data['homework']['materials'][0])
+        self.assertIn('course', response.data['homework'][1])
+        self.assertIn('object does not exist', response.data['homework'][1]['course'][0])
+        self.assertIn('materials', response.data['homework'][1])
+        self.assertIn('object does not exist', response.data['homework'][1]['materials'][0])
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
