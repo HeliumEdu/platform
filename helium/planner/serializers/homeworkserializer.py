@@ -7,7 +7,7 @@ from helium.planner.models import Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
