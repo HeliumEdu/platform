@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -5,6 +6,7 @@ import os
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from helium.auth.tests.helpers import userhelper
@@ -60,14 +62,151 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(CourseGroup.objects.count(), 4)
-        self.assertEqual(Course.objects.count(), 4)
-        self.assertEqual(Category.objects.count(), 4)
-        self.assertEqual(MaterialGroup.objects.count(), 2)
-        self.assertEqual(Material.objects.count(), 2)
-        self.assertEqual(Event.objects.count(), 4)
-        self.assertEqual(Homework.objects.count(), 4)
-        # TODO: implement more assertions
+        course_groups = CourseGroup.objects.all()
+        courses = Course.objects.all()
+        categories = Category.objects.all()
+        material_groups = MaterialGroup.objects.all()
+        materials = Material.objects.all()
+        events = Event.objects.all()
+        homework = Homework.objects.all()
+        self.assertEqual(len(course_groups), 4)
+        self.assertEqual(len(courses), 4)
+        self.assertEqual(len(categories), 4)
+        self.assertEqual(len(material_groups), 2)
+        self.assertEqual(len(materials), 2)
+        self.assertEqual(len(events), 4)
+        self.assertEqual(len(homework), 4)
+        coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'average_grade': 66.6667,
+                                                                                    'start_date': '2017-01-06',
+                                                                                    'end_date': '2017-05-08',
+                                                                                    'private_slug': None,
+                                                                                    'shown_on_calendar': True,
+                                                                                    'title': 'Test Course Group',
+                                                                                    'trend': None,
+                                                                                    'user': 1})
+        coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'average_grade': -1.0,
+                                                                                    'start_date': '2017-01-06',
+                                                                                    'end_date': '2017-05-08',
+                                                                                    'private_slug': None,
+                                                                                    'shown_on_calendar': True,
+                                                                                    'title': 'Test Course Group',
+                                                                                    'trend': None,
+                                                                                    'user': 1})
+        coursehelper.verify_course_matches_data(self, courses[2], {'title': 'Test Course', 'room': '',
+                                                                   'credits': 5.0, 'color': '#4986e7',
+                                                                   'website': 'http://mycourse.com', 'is_online': False,
+                                                                   'current_grade': 66.6667, 'trend': None,
+                                                                   'private_slug': None, 'teacher_name': 'My Teacher',
+                                                                   'teacher_email': 'teacher@email.com',
+                                                                   'start_date': '2017-01-06',
+                                                                   'end_date': '2017-05-08',
+                                                                   'days_of_week': '0000000',
+                                                                   'sun_start_time': '12:00:00',
+                                                                   'sun_end_time': '12:00:00',
+                                                                   'mon_start_time': '12:00:00',
+                                                                   'mon_end_time': '12:00:00',
+                                                                   'tue_start_time': '12:00:00',
+                                                                   'tue_end_time': '12:00:00',
+                                                                   'wed_start_time': '12:00:00',
+                                                                   'wed_end_time': '12:00:00',
+                                                                   'thu_start_time': '12:00:00',
+                                                                   'thu_end_time': '12:00:00',
+                                                                   'fri_start_time': '12:00:00',
+                                                                   'fri_end_time': '12:00:00',
+                                                                   'sat_start_time': '12:00:00',
+                                                                   'sat_end_time': '12:00:00',
+                                                                   'days_of_week_alt': '0000000',
+                                                                   'sun_start_time_alt': '12:00:00',
+                                                                   'sun_end_time_alt': '12:00:00',
+                                                                   'mon_start_time_alt': '12:00:00',
+                                                                   'mon_end_time_alt': '12:00:00',
+                                                                   'tue_start_time_alt': '12:00:00',
+                                                                   'tue_end_time_alt': '12:00:00',
+                                                                   'wed_start_time_alt': '12:00:00',
+                                                                   'wed_end_time_alt': '12:00:00',
+                                                                   'thu_start_time_alt': '12:00:00',
+                                                                   'thu_end_time_alt': '12:00:00',
+                                                                   'fri_start_time_alt': '12:00:00',
+                                                                   'fri_end_time_alt': '12:00:00',
+                                                                   'sat_start_time_alt': '12:00:00',
+                                                                   'sat_end_time_alt': '12:00:00',
+                                                                   'course_group': course_groups[2].pk})
+        coursehelper.verify_course_matches_data(self, courses[3],
+                                                {'title': 'Test Course', 'room': 'DNC 201', 'credits': 5.0,
+                                                 'color': '#4986e7', 'website': 'http://mycourse.com',
+                                                 'is_online': False, 'current_grade': -1.0, 'trend': None,
+                                                 'private_slug': None, 'teacher_name': 'My Teacher',
+                                                 'teacher_email': 'teacher@email.com',
+                                                 'start_date': '2017-01-06',
+                                                 'end_date': '2017-05-08', 'days_of_week': '0000000',
+                                                 'sun_start_time': '12:00:00',
+                                                 'sun_end_time': '12:00:00',
+                                                 'mon_start_time': '12:00:00',
+                                                 'mon_end_time': '12:00:00',
+                                                 'tue_start_time': '12:00:00',
+                                                 'tue_end_time': '12:00:00',
+                                                 'wed_start_time': '12:00:00',
+                                                 'wed_end_time': '12:00:00',
+                                                 'thu_start_time': '12:00:00',
+                                                 'thu_end_time': '12:00:00',
+                                                 'fri_start_time': '12:00:00',
+                                                 'fri_end_time': '12:00:00',
+                                                 'sat_start_time': '12:00:00',
+                                                 'sat_end_time': '12:00:00', 'days_of_week_alt': '0000000',
+                                                 'sun_start_time_alt': '12:00:00',
+                                                 'sun_end_time_alt': '12:00:00',
+                                                 'mon_start_time_alt': '12:00:00',
+                                                 'mon_end_time_alt': '12:00:00',
+                                                 'tue_start_time_alt': '12:00:00',
+                                                 'tue_end_time_alt': '12:00:00',
+                                                 'wed_start_time_alt': '12:00:00',
+                                                 'wed_end_time_alt': '12:00:00',
+                                                 'thu_start_time_alt': '12:00:00',
+                                                 'thu_end_time_alt': '12:00:00',
+                                                 'fri_start_time_alt': '12:00:00',
+                                                 'fri_end_time_alt': '12:00:00',
+                                                 'sat_start_time_alt': '12:00:00',
+                                                 'sat_end_time_alt': '12:00:00',
+                                                 'course_group': course_groups[3].pk})
+        categoryhelper.verify_category_matches_data(self, categories[2],
+                                                    {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
+                                                     'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
+                                                     'course': courses[0].pk})
+        categoryhelper.verify_category_matches_data(self, categories[3],
+                                                    {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
+                                                     'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
+                                                     'course': courses[2].pk})
+        materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
+                                                               {'title': 'Test Material Group',
+                                                                'shown_on_calendar': True, 'user': 1})
+        materialhelper.verify_material_matches_data(self, materials[1],
+                                                    {'title': 'Test Material', 'status': 3, 'condition': 7,
+                                                     'website': 'http://www.material.com', 'price': '9.99',
+                                                     'details': 'Return by 7/1', 'material_group': 2, 'courses': []})
+        eventhelper.verify_event_matches_data(self, events[2],
+                                              {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
+                                               'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
+                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'user': 1})
+        eventhelper.verify_event_matches_data(self, events[3],
+                                              {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
+                                               'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
+                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'user': 1})
+        homeworkhelper.verify_homework_matches_data(self, homework[2],
+                                                    {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
+                                                     'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
+                                                     'priority': 65, 'url': None,
+                                                     'comments': 'A comment on a homework.', 'current_grade': '20/30',
+                                                     'completed': True, 'category': categories[3].pk,
+                                                     'course': courses[2].pk, 'materials': [materials[1].pk]})
+        homeworkhelper.verify_homework_matches_data(self, homework[3],
+                                                    {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
+                                                     'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
+                                                     'priority': 65, 'url': None,
+                                                     'comments': 'A comment on a homework.', 'current_grade': '-1/100',
+                                                     'completed': False, 'category': categories[1].pk,
+                                                     'course': courses[3].pk, 'materials': []})
 
     def test_import_invalid_json(self):
         # GIVEN
@@ -183,11 +322,13 @@ class TestCaseImportExportViews(TestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('register'),
-                                    {'email': 'test@test.com', 'username': 'my_test_user', 'password1': 'test_pass_1!',
-                                     'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
+        self.client.post(reverse('register'),
+                         {'email': 'test@test.com', 'username': 'my_test_user',
+                          'password1': 'test_pass_1!',
+                          'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
 
         # THEN
+        start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 2)
@@ -195,4 +336,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(MaterialGroup.objects.count(), 2)
         self.assertEqual(Material.objects.count(), 4)
         self.assertEqual(Homework.objects.count(), 22)
-        # TODO: implement more assertions
+        self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
+        self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
+        homework = Homework.objects.all()[0]
+        self.assertEqual(homework.start.date(), homework.course.start_date + datetime.timedelta(days=11))
