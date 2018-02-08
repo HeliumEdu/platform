@@ -2,6 +2,7 @@ import json
 import logging
 import os
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -111,7 +112,7 @@ class TestCaseImportExportViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('course', response.data['homework'][1])
-        self.assertIn('object does not exist', response.data['homework'][1]['course'][0])
+        self.assertIn('may not be null', response.data['homework'][1]['course'][0])
         self.assertIn('materials', response.data['homework'][1])
         self.assertIn('object does not exist', response.data['homework'][1]['materials'][0])
         self.assertEqual(ExternalCalendar.objects.count(), 0)
@@ -176,3 +177,23 @@ class TestCaseImportExportViews(TestCase):
         homeworkhelper.verify_homework_matches_data(self, homework1, data['homework'][0])
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
+
+    def test_user_registration_imports_example_schedule(self):
+        # GIVEN
+        userhelper.verify_user_not_logged_in(self)
+
+        # WHEN
+        response = self.client.post(reverse('register'),
+                                    {'email': 'test@test.com', 'username': 'my_test_user', 'password1': 'test_pass_1!',
+                                     'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
+
+        # THEN
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(CourseGroup.objects.count(), 2)
+        self.assertEqual(Course.objects.count(), 2)
+        self.assertEqual(Category.objects.count(), 2)
+        self.assertEqual(MaterialGroup.objects.count(), 1)
+        self.assertEqual(Material.objects.count(), 1)
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertEqual(Homework.objects.count(), 2)
+        # TODO: implement more assertions
