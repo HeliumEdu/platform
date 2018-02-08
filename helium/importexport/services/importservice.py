@@ -220,11 +220,13 @@ def __adjust_schedule_relative_today(user):
             hour=homework.start.time().hour,
             minute=homework.start.time().minute,
             second=0,
+            microsecond=0,
             tzinfo=timezone.utc)
         homework.end = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=homework.end.time().hour,
             minute=homework.end.time().minute,
             second=0,
+            microsecond=0,
             tzinfo=timezone.utc)
         homework.save()
 
@@ -234,11 +236,13 @@ def __adjust_schedule_relative_today(user):
             hour=event.start.time().hour,
             minute=event.start.time().minute,
             second=0,
+            microsecond=0,
             tzinfo=timezone.utc)
         event.end = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=event.end.time().hour,
             minute=event.end.time().minute,
             second=0,
+            microsecond=0,
             tzinfo=timezone.utc)
         event.save()
 
