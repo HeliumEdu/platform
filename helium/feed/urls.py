@@ -20,8 +20,8 @@ urlpatterns = [
     # Authenticated API URLs
     ##############################
     # Resource shortcuts
-    url(r'^api/feed/private/enable$', PrivateEnableResourceView.as_view(), name='api_feed_private_resource_enable'),
-    url(r'^api/feed/private/disable', PrivateDisableResourceView.as_view(), name='api_feed_private_resource_disable'),
+    url(r'^api/feed/private/enable/$', PrivateEnableResourceView.as_view(), name='api_feed_private_resource_enable'),
+    url(r'^api/feed/private/disable/$', PrivateDisableResourceView.as_view(), name='api_feed_private_resource_disable'),
     url(r'^api/feed/externalcalendars/(?P<pk>[0-9]+)/externalevents',
         ExternalCalendarAsExternalEventsResourceView.as_view(),
         name='api_feed_resource_externalcalendaras_externalevents'),

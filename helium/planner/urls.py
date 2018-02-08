@@ -37,7 +37,7 @@ urlpatterns = [
     # Authenticated API URLs
     ##############################
     # Resource shortcuts
-    url(r'^api/planner/grades', GradesApiListView.as_view(), name='api_planner_resource_grades'),
+    url(r'^api/planner/grades/$', GradesApiListView.as_view(), name='api_planner_resource_grades'),
 
     # CourseGroup
     url(r'^api/planner/coursegroups/$', CourseGroupsApiListView.as_view(), name='api_planner_coursegroups_list'),

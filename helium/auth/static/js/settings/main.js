@@ -316,6 +316,65 @@ function HeliumSettings() {
         });
     });
 
+    this.refresh_feeds = function () {
+        if (helium.USER_PREFS.settings.private_slug === null) {
+            $("#enable-disable-feed").addClass("btn-success");
+            $("#enable-disable-feed").removeClass("btn-warning");
+            $("#enable-disable-feed").html('<i class="icon-check"></i>Enable Private Feeds');
+
+            $("#private-feed-urls").html("Private feeds are not yet enabled. Enable using the button below.");
+        } else {
+            $("#enable-disable-feed").removeClass("btn-success");
+            $("#enable-disable-feed").addClass("btn-warning");
+            $("#enable-disable-feed").html('<i class="icon-check-minus"></i>Disable Private Feeds');
+
+            var base_url = helium.SITE_URL + "feed/private/" + helium.USER_PREFS.settings.private_slug;
+
+            $("#private-feed-urls").html("<strong>Events: </strong><a href=\"" + base_url + "\"/events.ics\">" + base_url + "/events.ics</a>" +
+                "<br /><strong>Homework: </strong><a href=\"" + base_url + "\"/homework.ics\">" + base_url + "/homework.ics</a>");
+        }
+    };
+
+    $("#enable-disable-feed").on("click", function () {
+        $("#loading-feed").spin(helium.SMALL_LOADING_OPTS);
+
+        if (helium.USER_PREFS.settings.private_slug === null) {
+            $.ajax({
+                async: false,
+                type: 'PUT',
+                url: '/api/feed/private/enable/',
+                error: function () {
+                    $("#status_feed").html('Sorry, an unknown error occurred while trying to enable feeds. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
+
+                    $("#loading-feed").spin(false);
+                },
+                success: function (data) {
+                    helium.USER_PREFS.settings.private_slug = data.events_private_url.substr(14, data.events_private_url.lastIndexOf('/') - 14);
+
+                    $("#loading-feed").spin(false);
+                }
+            });
+        } else {
+            $.ajax({
+                async: false,
+                type: 'PUT',
+                url: '/api/feed/private/disable/',
+                error: function () {
+                    $("#status_feed").html('Sorry, an unknown error occurred while trying to enable feeds. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
+
+                    $("#loading-feed").spin(false);
+                },
+                success: function () {
+                    helium.USER_PREFS.settings.private_slug = null;
+
+                    $("#loading-feed").spin(false);
+                }
+            });
+        }
+
+        self.refresh_feeds();
+    });
+
     $("#delete-account").on("click", function () {
         bootbox.dialog({
             title: "To permanently delete your Helium account <em>and all data you have stored in Helium</em>, confirm your password below.",
@@ -417,4 +476,6 @@ $(document).ready(function () {
     } else if (helium.USER_PREFS.profile.phone_verified) {
         ($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
     }
+
+    helium.settings.refresh_feeds();
 });
