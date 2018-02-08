@@ -246,7 +246,7 @@ function Helium() {
     };
 
     this.clear_form_errors = function (selector) {
-        $("#status_" + selector.split("-form")[0]).html("").addClass("hidden");
+        $("#status_" + selector.split("-form")[0]).html("").removeClass("alter-danger").removeClass("alter-warning").addClass("hidden");
 
         $("#" + selector + " *").filter(':input').each(function (index, data) {
             if ($(data).attr("id") !== undefined) {

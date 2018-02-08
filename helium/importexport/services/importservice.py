@@ -197,7 +197,7 @@ def import_user(request, json_str):
 def __adjust_schedule_relative_today(user):
     timezone.activate(user.settings.time_zone)
 
-    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0)
+    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     days_ahead = 0 - start_of_current_month.weekday()
     if days_ahead <= 0:
         days_ahead += 7
@@ -205,6 +205,7 @@ def __adjust_schedule_relative_today(user):
 
     logger.info('Start of month adjusted to {}'.format(start_of_current_month))
     logger.info('Start of week adjusted ahead {} days'.format(days_ahead))
+    logger.info('First Monday set to {}'.format(first_monday))
 
     for course_group in CourseGroup.objects.for_user(user.pk).iterator():
         delta = (course_group.end_date - course_group.start_date).days
@@ -215,12 +216,12 @@ def __adjust_schedule_relative_today(user):
     for homework in Homework.objects.for_user(user.pk):
         course = homework.course
         delta = (homework.start.date() - course.start_date).days
-        homework.start = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+        homework.start = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=homework.start.time().hour,
             minute=homework.start.time().minute,
             second=0,
             tzinfo=timezone.utc)
-        homework.end = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+        homework.end = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=homework.end.time().hour,
             minute=homework.end.time().minute,
             second=0,
@@ -229,12 +230,12 @@ def __adjust_schedule_relative_today(user):
 
     for event in Event.objects.for_user(user.pk).iterator():
         delta = (event.start.date() - start_of_current_month).days
-        event.start = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+        event.start = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=event.start.time().hour,
             minute=event.start.time().minute,
             second=0,
             tzinfo=timezone.utc)
-        event.end = (first_monday + datetime.timedelta(days=delta - 1)).replace(
+        event.end = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=event.end.time().hour,
             minute=event.end.time().minute,
             second=0,
@@ -247,7 +248,8 @@ def __adjust_schedule_relative_today(user):
         course.end_date = start_of_current_month + datetime.timedelta(days=delta)
         course.save()
 
-    logger.info('Dates adjusted relative to the start of the month for new user example schedule')
+    logger.info('Dates adjusted on imported example schedule relative to the start of the month for new user {}'.format(
+        user.pk))
 
     timezone.deactivate()
 
