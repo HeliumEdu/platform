@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class UserCoursesApiListView(GenericAPIView, ListModelMixin):
     """
     get:
-    Return a list of all course instances for the authenticated user.
+    Return a list of all course instances for the authenticated user, including course schedule details.
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
@@ -41,7 +41,7 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
 class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
-    Return a list of all course instances for the given course group.
+    Return a list of all course instances, including course schedule details, for the given course group.
 
     post:
     Create a new course instance for the given course group.
@@ -78,7 +78,7 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
 class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given course instance.
+    Return the given course instance, including course schedule details.
 
     put:
     Update the given course instance.
