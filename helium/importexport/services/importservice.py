@@ -28,6 +28,222 @@ __version__ = '1.3.0'
 logger = logging.getLogger(__name__)
 
 
+def __import_external_calendars(external_calendars, user):
+    for external_calendar in external_calendars:
+        serializer = ExternalCalendarSerializer(data=external_calendar)
+
+        if serializer.is_valid():
+            serializer.save(user=user)
+        else:
+            raise ValidationError({
+                'external_calendars': {
+                    external_calendar['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} external calendars.".format(len(external_calendars)))
+
+
+def __import_course_groups(course_groups, user):
+    course_group_remap = {}
+
+    for course_group in course_groups:
+        serializer = CourseGroupSerializer(data=course_group)
+
+        if serializer.is_valid():
+            instance = serializer.save(user=user)
+            course_group_remap[course_group['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'course_groups': {
+                    course_group['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} course groups.".format(len(course_groups)))
+
+    return course_group_remap
+
+
+def __import_courses(courses, course_group_remap):
+    course_remap = {}
+
+    for course in courses:
+        course['course_group'] = course_group_remap.get(course['course_group'], None)
+
+        serializer = CourseSerializer(data=course)
+
+        if serializer.is_valid():
+            instance = serializer.save(course_group_id=course['course_group'])
+            course_remap[course['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'courses': {
+                    course['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} courses.".format(len(courses)))
+
+    return course_remap
+
+
+def __import_course_schedules(course_schedules, course_remap):
+    for course_schedule in course_schedules:
+        course_schedule['course'] = course_remap.get(course_schedule['course'], None)
+
+        serializer = CourseScheduleSerializer(data=course_schedule)
+
+        if serializer.is_valid():
+            serializer.save(course_id=course_schedule['course'])
+        else:
+            raise ValidationError({
+                'course_schedules': {
+                    course_schedule['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} course schedules.".format(len(course_schedules)))
+
+
+def __import_categories(categories, request, course_remap):
+    category_remap = {}
+
+    for category in categories:
+        request.parser_context['kwargs']['course'] = course_remap.get(category['course'], None)
+
+        serializer = CategorySerializer(data=category, context={'request': request})
+
+        if serializer.is_valid():
+            instance = serializer.save(course_id=course_remap.get(category['course'], None))
+            category_remap[category['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'categories': {
+                    category['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} categories.".format(len(categories)))
+
+    return category_remap
+
+
+def __import_material_groups(material_groups, user):
+    material_group_remap = {}
+
+    for material_group in material_groups:
+        serializer = MaterialGroupSerializer(data=material_group)
+
+        if serializer.is_valid():
+            instance = serializer.save(user=user)
+            material_group_remap[material_group['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'material_groups': {
+                    material_group['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} material groups.".format(len(material_groups)))
+
+    return material_group_remap
+
+
+def __import_materials(materials, material_group_remap, course_remap):
+    material_remap = {}
+
+    for material in materials:
+        material['material_group'] = material_group_remap.get(material['material_group'], None)
+        for i, course in enumerate(material['courses']):
+            material['courses'][i] = course_remap.get(course, None)
+
+        serializer = MaterialSerializer(data=material)
+
+        if serializer.is_valid():
+            instance = serializer.save(material_group_id=material['material_group'])
+            material_remap[material['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'materials': {
+                    material['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} materials.".format(len(materials)))
+
+    return material_remap
+
+
+def __import_events(events, user):
+    event_remap = {}
+
+    for event in events:
+        serializer = EventSerializer(data=event)
+
+        if serializer.is_valid():
+            instance = serializer.save(user=user)
+            event_remap[event['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'events': {
+                    event['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} events.".format(len(events)))
+
+    return event_remap
+
+
+def __import_homework(homework, course_remap, category_remap, material_remap):
+    homework_remap = {}
+
+    for h in homework:
+        h['course'] = course_remap.get(h['course'], None)
+        h['category'] = category_remap.get(h['category'], None) if \
+            ('category' in h and h['category']) else None
+        for i, material in enumerate(h['materials']):
+            h['materials'][i] = material_remap.get(material, None)
+
+        serializer = HomeworkSerializer(data=h)
+
+        if serializer.is_valid():
+            instance = serializer.save(course_id=h['course'])
+            homework_remap[h['id']] = instance.pk
+        else:
+            raise ValidationError({
+                'homework': {
+                    h['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} homework.".format(len(homework)))
+
+    return homework_remap
+
+
+def __import_reminders(reminders, user, event_remap, homework_remap):
+    for reminder in reminders:
+        reminder['homework'] = homework_remap.get(reminder['homework'], None) if \
+            ('homework' in reminder and reminder['homework']) else None
+        reminder['event'] = event_remap.get(reminder['event'], None) if \
+            ('event' in reminder and reminder['event']) else None
+
+        serializer = ReminderSerializer(data=reminder)
+
+        if serializer.is_valid():
+            serializer.save(user=user)
+        else:
+            raise ValidationError({
+                'reminders': {
+                    reminder['id']: serializer.errors
+                }
+            })
+
+    logger.info("Imported {} reminders.".format(len(reminders)))
+
+
 @transaction.atomic
 def import_user(request, json_str):
     """
@@ -44,170 +260,25 @@ def import_user(request, json_str):
             'detail': e
         })
 
-    for external_calendar in data.get('external_calendars', []):
-        serializer = ExternalCalendarSerializer(data=external_calendar)
+    __import_external_calendars(data.get('external_calendars', []), request.user)
 
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-        else:
-            raise ValidationError({
-                'external_calendars': {
-                    external_calendar['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} external calendars.".format(len(data.get("external_calendars", []))))
+    course_group_remap = __import_course_groups(data.get('course_groups', []), request.user)
 
-    course_group_remap = {}
-    for course_group in data.get('course_groups', []):
-        serializer = CourseGroupSerializer(data=course_group)
+    course_remap = __import_courses(data.get('courses', []), course_group_remap)
 
-        if serializer.is_valid():
-            instance = serializer.save(user=request.user)
-            course_group_remap[course_group['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'course_groups': {
-                    course_group['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} course groups.".format(len(data.get("course_groups", []))))
+    __import_course_schedules(data.get('course_schedules', []), course_remap)
 
-    course_remap = {}
-    for course in data.get('courses', []):
-        course['course_group'] = course_group_remap.get(course['course_group'], None)
+    category_remap = __import_categories(data.get('categories', []), request, course_remap)
 
-        serializer = CourseSerializer(data=course)
+    material_group_remap = __import_material_groups(data.get('material_groups', []), request.user)
 
-        if serializer.is_valid():
-            instance = serializer.save(course_group_id=course['course_group'])
-            course_remap[course['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'courses': {
-                    course['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} courses.".format(len(data.get("courses", []))))
+    material_remap = __import_materials(data.get('materials', []), material_group_remap, course_remap)
 
-    for course_schedule in data.get('course_schedules', []):
-        course_schedule['course'] = course_remap.get(course_schedule['course'], None)
+    event_remap = __import_events(data.get('events', []), request.user)
 
-        serializer = CourseScheduleSerializer(data=course_schedule)
+    homework_remap = __import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
-        if serializer.is_valid():
-            serializer.save(course_id=course_schedule['course'])
-        else:
-            raise ValidationError({
-                'course_schedules': {
-                    course_schedule['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} course schedules.".format(len(data.get("course_schedules", []))))
-
-    category_remap = {}
-    for category in data.get('categories', []):
-        request.parser_context['kwargs']['course'] = course_remap.get(category['course'], None)
-
-        serializer = CategorySerializer(data=category, context={'request': request})
-
-        if serializer.is_valid():
-            instance = serializer.save(course_id=course_remap.get(category['course'], None))
-            category_remap[category['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'categories': {
-                    category['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} categories.".format(len(data.get("categories", []))))
-
-    material_group_remap = {}
-    for material_group in data.get('material_groups', []):
-        serializer = MaterialGroupSerializer(data=material_group)
-
-        if serializer.is_valid():
-            instance = serializer.save(user=request.user)
-            material_group_remap[material_group['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'material_groups': {
-                    material_group['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} material groups.".format(len(data.get("material_groups", []))))
-
-    material_remap = {}
-    for material in data.get('materials', []):
-        material['material_group'] = material_group_remap.get(material['material_group'], None)
-        for i, course in enumerate(material['courses']):
-            material['courses'][i] = course_remap.get(course, None)
-
-        serializer = MaterialSerializer(data=material)
-
-        if serializer.is_valid():
-            instance = serializer.save(material_group_id=material['material_group'])
-            material_remap[material['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'materials': {
-                    material['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} materials.".format(len(data.get("materials", []))))
-
-    event_remap = {}
-    for event in data.get('events', []):
-        serializer = EventSerializer(data=event)
-
-        if serializer.is_valid():
-            instance = serializer.save(user=request.user)
-            event_remap[event['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'events': {
-                    event['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} events.".format(len(data.get("events", []))))
-
-    homework_remap = {}
-    for homework in data.get('homework', []):
-        homework['course'] = course_remap.get(homework['course'], None)
-        homework['category'] = category_remap.get(homework['category'], None) if \
-            ('category' in homework and homework['category']) else None
-        for i, material in enumerate(homework['materials']):
-            homework['materials'][i] = material_remap.get(material, None)
-
-        serializer = HomeworkSerializer(data=homework)
-
-        if serializer.is_valid():
-            instance = serializer.save(course_id=homework['course'])
-            homework_remap[homework['id']] = instance.pk
-        else:
-            raise ValidationError({
-                'homework': {
-                    homework['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} homework.".format(len(data.get("homework", []))))
-
-    for reminder in data.get('reminders', []):
-        reminder['homework'] = homework_remap.get(reminder['homework'], None) if \
-            ('homework' in reminder and reminder['homework']) else None
-        reminder['event'] = event_remap.get(reminder['event'], None) if \
-            ('event' in reminder and reminder['event']) else None
-
-        serializer = ReminderSerializer(data=reminder)
-
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-        else:
-            raise ValidationError({
-                'reminders': {
-                    reminder['id']: serializer.errors
-                }
-            })
-    logger.info("Imported {} reminders.".format(len(data.get("reminders", []))))
+    __import_reminders(data.get('reminder', []), request.user, event_remap, homework_remap)
 
 
 def __adjust_schedule_relative_today(user):
