@@ -2,9 +2,8 @@ import logging
 
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
-    UpdateModelMixin
+    UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
@@ -15,15 +14,16 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer, Re
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
 
-class RemindersApiListView(GenericAPIView, CreateModelMixin):
+class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
     """
     get:
-    Return a list of all reminder instances for the authenticated user.
+    Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a GET are
+    serialized to a depth of two to avoid the need for redundant API calls.
 
     post:
     Create a new reminder instance for the authenticated user.
@@ -39,17 +39,9 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
         return user.reminders.all()
 
     def get(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        self.serializer_class = ReminderExtendedSerializer
 
-        serializer_class = ReminderExtendedSerializer
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = serializer_class(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = serializer_class(queryset, many=True)
-        return Response(serializer.data)
+        return self.list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -72,7 +64,8 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin):
 class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given reminder instance.
+    Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of two
+    to avoid the need for redundant API calls.
 
     put:
     Update the given reminder instance.
@@ -92,6 +85,8 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
         return user.reminders.all()
 
     def get(self, request, *args, **kwargs):
+        self.serializer_class = ReminderExtendedSerializer
+
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):

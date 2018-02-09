@@ -5,7 +5,7 @@ from helium.planner.models import Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.1'
 
 
 def given_reminder_exists(user, title='Test Reminder', message='You need to do something now.', offset=15,
@@ -32,7 +32,16 @@ def verify_reminder_matches_data(test_case, reminder, data):
     test_case.assertEqual(reminder.type, data['type'])
     test_case.assertEqual(reminder.sent, data['sent'])
     if 'event' in data and data['event']:
-        test_case.assertEqual(reminder.event.pk, data['event'])
+        if isinstance(data['event'], dict):
+            test_case.assertEqual(reminder.event.pk, int(data['event']['id']))
+        else:
+            test_case.assertEqual(reminder.event.pk, int(data['event']))
     if 'homework' in data and data['homework']:
-        test_case.assertEqual(reminder.homework.pk, data['homework'])
-    test_case.assertEqual(reminder.user.pk, data['user'])
+        if isinstance(data['homework'], dict):
+            test_case.assertEqual(reminder.homework.pk, int(data['homework']['id']))
+        else:
+            test_case.assertEqual(reminder.homework.pk, int(data['homework']))
+    if isinstance(data['user'], dict):
+        test_case.assertEqual(reminder.user.pk, int(data['user']['id']))
+    else:
+        test_case.assertEqual(reminder.user.pk, int(data['user']))

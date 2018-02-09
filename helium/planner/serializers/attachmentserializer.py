@@ -1,12 +1,15 @@
 import logging
 
+from django.conf import settings
+from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from helium.planner.models.attachment import Attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +20,13 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'attachment', 'size', 'course', 'event', 'homework', 'user',)
         read_only_fields = ('size', 'user',)
+
+    def validate_attachment(self, attachment):
+        if attachment.size > settings.MAX_UPLOAD_SIZE:
+            raise ValidationError(
+                'The uploaded file exceeds the max upload size of {}.'.format(filesizeformat(settings.MAX_UPLOAD_SIZE)))
+
+        return attachment
 
     def validate(self, attrs):
         if 'course' not in attrs and 'event' not in attrs and 'homework' not in attrs:

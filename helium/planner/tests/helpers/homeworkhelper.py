@@ -7,7 +7,7 @@ from helium.planner.models import Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.1'
 
 
 def given_homework_exists(course, title='Test Homework', all_day=False, show_end_time=True,
@@ -47,13 +47,7 @@ def verify_homework_matches_data(test_case, homework, data):
     test_case.assertEqual(homework.current_grade, data['current_grade'])
     test_case.assertEqual(homework.completed, data['completed'])
     if 'category' in data:
-        if isinstance(data['category'], dict):
-            test_case.assertEqual(homework.category.pk, int(data['category']['id']))
-        else:
-            test_case.assertEqual(homework.category.pk, int(data['category']))
+        test_case.assertEqual(homework.category.pk, int(data['category']))
     for material_id in data['materials']:
         test_case.assertTrue(homework.materials.filter(pk=material_id).exists())
-    if isinstance(data['course'], dict):
-        test_case.assertEqual(homework.course.pk, int(data['course']['id']))
-    else:
-        test_case.assertEqual(homework.course.pk, int(data['course']))
+    test_case.assertEqual(homework.course.pk, int(data['course']))

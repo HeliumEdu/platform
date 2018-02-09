@@ -6,7 +6,7 @@ from helium.planner.models import Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -36,3 +36,10 @@ class ReminderSerializer(serializers.ModelSerializer):
 class ReminderExtendedSerializer(ReminderSerializer):
     class Meta(ReminderSerializer.Meta):
         depth = 2
+
+    def to_representation(self, instance):
+        representation = super(ReminderExtendedSerializer, self).to_representation(instance)
+
+        representation['user'] = representation['user']['id']
+
+        return representation

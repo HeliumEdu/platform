@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
@@ -14,7 +15,7 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
     list.
 
     The `title` attribute is set dynamically by the `filename` field passed for each file to be uploaded.
+
+    The maximum file size for each upload is 10M.
 
     At least one of `course`, `event`, or `homework` must be given.
 

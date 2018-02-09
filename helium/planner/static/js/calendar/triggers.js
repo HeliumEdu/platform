@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /*******************************************
@@ -41,25 +41,27 @@
         var completed = $(this).is(":checked"), homework_id = $(this).attr("id").split("calendar-homework-checkbox-")[1], data;
         helium.calendar.loading_div.spin(helium.SMALL_LOADING_OPTS);
 
-        helium.planner_api.get_homework_by_id(function (h) {
-            data = {"completed": completed};
-            helium.planner_api.edit_homework(function (h_edited) {
-                self.homework_by_course_id = {};
-                self.homework_by_user_id = {};
+        var homework = $("#calendar").fullCalendar("clientEvents", [homework_id])[0];
 
-                if (helium.data_has_err_msg(h_edited)) {
-                    helium.ajax_error_occurred = true;
-                    helium.calendar.loading_div.spin(false);
+        var course = helium.calendar.courses[homework.course];
 
-                    bootbox.alert(h_edited[0].err_msg);
-                } else {
-                    h["completed"] = completed;
-                    helium.calendar.update_current_calendar_item(h);
+        data = {"completed": completed};
+        helium.planner_api.edit_homework(function (data) {
+            self.homework_by_course_id = {};
+            self.homework_by_user_id = {};
 
-                    helium.calendar.loading_div.spin(false);
-                }
-            }, h.course.course_group, h.course.id, homework_id, data, true, true);
-        }, homework_id, true);
+            if (helium.data_has_err_msg(data)) {
+                helium.ajax_error_occurred = true;
+                helium.calendar.loading_div.spin(false);
+
+                bootbox.alert(helium.get_error_msg(data));
+            } else {
+                data.attachments = homework.attachments;
+                helium.calendar.update_current_calendar_item(data);
+
+                helium.calendar.loading_div.spin(false);
+            }
+        }, course.course_group, course.id, homework.id, data, true, true);
     });
 
     $("#homework-event-switch").on("change", function () {
