@@ -37,4 +37,5 @@ class EventSerializer(serializers.ModelSerializer):
 
 class EventExtendedSerializer(EventSerializer):
     class Meta(EventSerializer.Meta):
-        depth = 1
+        pass
+        # depth = 1

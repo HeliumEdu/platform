@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 
 from helium.planner.models import Reminder
+from helium.planner.serializers.homeworkserializer import HomeworkExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'

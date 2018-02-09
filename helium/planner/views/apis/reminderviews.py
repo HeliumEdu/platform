@@ -4,7 +4,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
@@ -23,7 +22,8 @@ logger = logging.getLogger(__name__)
 class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
     """
     get:
-    Return a list of all reminder instances for the authenticated user.
+    Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a GET are
+    serialized to a depth of two to avoid the need for redundant API calls.
 
     post:
     Create a new reminder instance for the authenticated user.
@@ -64,7 +64,8 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
 class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given reminder instance.
+    Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of two
+    to avoid the need for redundant API calls.
 
     put:
     Update the given reminder instance.

@@ -34,7 +34,7 @@ class UserSettings(BaseModel):
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#ffad46')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
