@@ -915,7 +915,7 @@ function HeliumCalendar() {
                     element.qtip({
                         content: {
                             title: "<strong>" + event.title_no_format + "</strong> on " + start,
-                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && helium.calendar.categories[event.category].title !== "Uncategorized" ? (helium.calendar.categories[event.category].title + " for ") : "") + course_string + (helium.calendar.courses[event.course].room.replace(/\s/g, "").length > 0 ? " in " + helium.calendar.courses[event.course].room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_materials_from_ids(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_materials_from_ids(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_attachments_from_data(event.attachments) + "</div></div>" : "")
+                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && helium.calendar.categories[event.category].title !== "Uncategorized" ? ("<span style=\"color: " + helium.calendar.categories[event.category].color + "\">" + helium.calendar.categories[event.category].title + "</span> for ") : "") + course_string + (helium.calendar.courses[event.course].room.replace(/\s/g, "").length > 0 ? " in " + helium.calendar.courses[event.course].room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_materials_from_ids(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_materials_from_ids(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_attachments_from_data(event.attachments) + "</div></div>" : "")
                         },
                         hide: {
                             event: "mousedown mouseup mouseleave",
@@ -1061,7 +1061,7 @@ function HeliumCalendar() {
         var titles = "";
 
         $.each(data, function (index, id) {
-            titles += '<span class="label label-info arrowed-right">' + helium.calendar.materials[id].title + "</span>&nbsp;";
+            titles += '<span class="label label-info arrowed-right" style="padding-top: 2px;">' + helium.calendar.materials[id].title + "</span>&nbsp;";
         });
 
         return titles;
@@ -1155,7 +1155,7 @@ function HeliumCalendar() {
                     for (i = 0; i < data.length; i += 1) {
                         if (!categories.hasOwnProperty(data[i].title)) {
                             categories[data[i].title] = true;
-                            $("#calendar-filter-list").append("<li id=\"calendar-filter-category-" + data[i].id + "\"><a class=\"checkbox cursor-hover\"><input type=\"checkbox\" /> &nbsp;<span>" + data[i].title + "</span></a></li>");
+                            $("#calendar-filter-list").append("<li id=\"calendar-filter-category-" + data[i].id + "\"><a class=\"checkbox cursor-hover\"><input type=\"checkbox\" /> &nbsp;<span style=\"color: " + data[i].color + "\">" + data[i].title + "</span></a></li>");
                             $("#calendar-filter-category-" + data[i].id + " input").on("click", self.event_stop_propagation).on("change", self.refresh_filters);
                             $("#calendar-filter-category-" + data[i].id + " a").on("click", self.update_filter_checkbox_from_event);
                         }

@@ -46,18 +46,18 @@
         var course = helium.calendar.courses[homework.course];
 
         data = {"completed": completed};
-        helium.planner_api.edit_homework(function (h_edited) {
+        helium.planner_api.edit_homework(function (data) {
             self.homework_by_course_id = {};
             self.homework_by_user_id = {};
 
-            if (helium.data_has_err_msg(h_edited)) {
+            if (helium.data_has_err_msg(data)) {
                 helium.ajax_error_occurred = true;
                 helium.calendar.loading_div.spin(false);
 
-                bootbox.alert(h_edited[0].err_msg);
+                bootbox.alert(helium.get_error_msg(data));
             } else {
-                h["completed"] = completed;
-                helium.calendar.update_current_calendar_item(h);
+                data.attachments = homework.attachments;
+                helium.calendar.update_current_calendar_item(data);
 
                 helium.calendar.loading_div.spin(false);
             }
