@@ -23,7 +23,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': '9999'}))
+            self.client.get(reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
         # WHEN
         responses = [
             self.client.get(
-                reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': external_calendar.pk}))
+                reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
         ]
 
         # THEN
@@ -56,7 +56,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': external_calendar.pk}))
+            reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(len(response.data), 2)
