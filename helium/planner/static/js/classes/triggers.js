@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.0.0
+ * @version 1.3.0
  */
 
 /*******************************************
@@ -168,7 +168,7 @@
         if ($(this).is(":checked")) {
             $("#sun-time-lbl").html("Sunday");
             $("#sun-time-lbl-alt").html("Sunday");
-            helium.classes.show_hide_schedule_times(null, false, false);
+            helium.classes.show_hide_schedule_times(null, false);
         } else {
             $("#sun-time-lbl").html("Time");
             $("#sun-time-lbl-alt").html("Time");
@@ -182,27 +182,23 @@
     $("#course-schedule-has-alt-week").on("change", function () {
         if ($(this).is(":checked")) {
             $("#course-schedule-alt-week").show("fast");
-            helium.classes.show_hide_schedule_times(null, false, false);
+            helium.classes.show_hide_schedule_times(null, false);
         } else {
             $("#course-schedule-alt-week").hide("fast");
         }
     });
 
     $(".course-schedule-btn").on("click", function () {
-        var day = $(this).attr("id").split("course-schedule-")[1], any_shown = false, any_shown_alt = false;
+        var day = $(this).attr("id").split("course-schedule-")[1], any_shown = false;
         if ($("#course-schedule-has-different-times").is(":checked")) {
             if ($(this).hasClass("active")) {
                 $("#" + day + "-time").hide("fast");
             } else {
                 $("#" + day + "-time").show("fast");
-                if (day.indexOf("alt") === -1) {
-                    any_shown = true;
-                } else {
-                    any_shown_alt = true;
-                }
+                any_shown = true;
             }
         }
-        helium.classes.show_hide_schedule_times(day, any_shown, any_shown_alt);
+        helium.classes.show_hide_schedule_times(day, any_shown);
     });
 
     $("#course-website").on("focusout", function () {

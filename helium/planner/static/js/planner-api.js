@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 /**
@@ -585,6 +585,116 @@ function HeliumPlannerAPI() {
         return $.ajax({
             type: "PUT",
             url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
+            async: async,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: callback,
+            error: function (jqXHR, textStatus, errorThrown) {
+                var data = [{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }];
+                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0 && jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]].length > 0) {
+                    data['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                }
+                callback(data);
+            }
+        });
+    };
+
+    /**
+     * Delete the Course for the given ID and pass the returned values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param id the ID of the Course
+     * @param async true if call should be async, false otherwise (default is true)
+     */
+    this.delete_course = function (callback, course_group_id, id, async) {
+        async = typeof async === "undefined" ? true : async;
+        delete self.course[id];
+        self.courses_around_date = {};
+        self.courses_by_course_group_id = {};
+        self.courses_by_user_id = {};
+        self.category_names = null;
+        self.categories_by_course_id = {};
+        return $.ajax({
+            type: "DELETE",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + id + "/",
+            async: async,
+            dataType: "json",
+            success: callback,
+            error: function (jqXHR, textStatus, errorThrown) {
+                var data = [{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }];
+                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                    var name = Object.keys(jqXHR.responseJSON)[0];
+                    if (jqXHR.responseJSON[name].length > 0) {
+                        data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                    }
+                }
+                callback(data);
+            }
+        });
+    };
+
+    /**
+     * Create a new Course and pass the returned values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the Course
+     * @param data the array of values to set for the new Course
+     * @param async true if call should be async, false otherwise (default is true)
+     */
+    this.add_courseschedule = function (callback, course_group_id, course_id, data, async) {
+        async = typeof async === "undefined" ? true : async;
+        return $.ajax({
+            type: "POST",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/courseschedules/",
+            async: async,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: callback,
+            error: function (jqXHR, textStatus, errorThrown) {
+                var data = [{
+                    'err_msg': self.GENERIC_ERROR_MESSAGE,
+                    'jqXHR': jqXHR,
+                    'textStatus': textStatus,
+                    'errorThrown': errorThrown
+                }];
+                if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                    var name = Object.keys(jqXHR.responseJSON)[0];
+                    if (jqXHR.responseJSON[name].length > 0) {
+                        data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                    }
+                }
+                callback(data);
+            }
+        });
+    };
+
+    /**
+     * Edit the Course for the given ID and pass the returned values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param course_group_id the ID of the CourseGroup
+     * @param course_id the ID of the CourseGroup
+     * @param id the ID of the Course
+     * @param data the array of values to update for the Course
+     * @param async true if call should be async, false otherwise (default is true)
+     */
+    this.edit_courseschedule = function (callback, course_group_id, course_id, id, data, async) {
+        async = typeof async === "undefined" ? true : async;
+        return $.ajax({
+            type: "PUT",
+            url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/courseschedules/" + id + "/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",
