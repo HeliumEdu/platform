@@ -11,7 +11,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.0'
 
 
 class TestCaseCourseViews(TestCase):
@@ -77,42 +77,10 @@ class TestCaseCourseViews(TestCase):
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
             'end_date': '2015-07-09',
-            'days_of_week': '0101010',
-            'mon_start_time': '14:30:00',
-            'mon_end_time': '15:30:00',
-            'wed_start_time': '14:30:00',
-            'wed_end_time': '15:30:00',
-            'fri_start_time': '14:30:00',
-            'fri_end_time': '15:30:00',
-            'days_of_week_alt': '0001000',
-            'wed_start_time_alt': '18:30:00',
-            'wed_end_time_alt': '19:30:00',
-            # These fields are set to their defaults
-            'sun_start_time': '12:00:00',
-            'sun_end_time': '12:00:00',
-            'tue_start_time': '12:00:00',
-            'tue_end_time': '12:00:00',
-            'thu_start_time': '12:00:00',
-            'thu_end_time': '12:00:00',
-            'sat_start_time': '12:00:00',
-            'sat_end_time': '12:00:00',
-            'sun_start_time_alt': '12:00:00',
-            'sun_end_time_alt': '12:00:00',
-            'mon_start_time_alt': '12:00:00',
-            'mon_end_time_alt': '12:00:00',
-            'tue_start_time_alt': '12:00:00',
-            'tue_end_time_alt': '12:00:00',
-            'thu_start_time_alt': '12:00:00',
-            'thu_end_time_alt': '12:00:00',
-            'fri_start_time_alt': '12:00:00',
-            'fri_end_time_alt': '12:00:00',
-            'sat_start_time_alt': '12:00:00',
-            'sat_end_time_alt': '12:00:00',
             'course_group': course_group.pk,
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'current_grade': -1,
             'trend': None,
-            'private_slug': None,
         }
         response = self.client.post(
             reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
@@ -168,16 +136,6 @@ class TestCaseCourseViews(TestCase):
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
             'end_date': '2015-07-09',
-            'days_of_week': '0101010',
-            'mon_start_time': '14:30:00',
-            'mon_end_time': '15:30:00',
-            'wed_start_time': '14:30:00',
-            'wed_end_time': '15:30:00',
-            'fri_start_time': '14:30:00',
-            'fri_end_time': '15:30:00',
-            'days_of_week_alt': '0001000',
-            'wed_start_time_alt': '18:30:00',
-            'wed_end_time_alt': '19:30:00',
             'course_group': course_group2.pk
         }
         response = self.client.put(
@@ -204,7 +162,7 @@ class TestCaseCourseViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Course.objects.filter(pk=course_group.pk).exists())
+        self.assertFalse(Course.objects.filter(pk=course.pk).exists())
         self.assertEqual(Course.objects.count(), 0)
 
     def test_related_field_owned_by_another_user_forbidden(self):
@@ -268,13 +226,11 @@ class TestCaseCourseViews(TestCase):
         course = coursehelper.given_course_exists(course_group)
         current_grade = course.current_grade
         trend = course.trend
-        private_slug = course.private_slug
 
         # WHEN
         data = {
             'current_grade': 23,
             'trend': 1.5,
-            'private_slug': 'new_slug',
             # Intentionally NOT changing these value
             'title': course.title,
             'credits': course.credits,
@@ -291,7 +247,6 @@ class TestCaseCourseViews(TestCase):
         course = Course.objects.get(pk=course.id)
         self.assertEqual(course.current_grade, current_grade)
         self.assertEqual(course.trend, trend)
-        self.assertEqual(course.private_slug, private_slug)
 
     def test_create_bad_data(self):
         # GIVEN

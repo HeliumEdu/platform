@@ -11,15 +11,15 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarAsExternalEventsResourceView(GenericAPIView):
+class ExternalCalendarAsEventsResourceView(GenericAPIView):
     """
     get:
-    Return a list of all external event instances for the given external calendar's feed.
+    Return an external calendar's ICAL feed items as a list of event instances.
     """
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
@@ -34,7 +34,7 @@ class ExternalCalendarAsExternalEventsResourceView(GenericAPIView):
 
         calendar = icalexternalcalendarservice.validate_url(external_calendar.url)
 
-        # TODO: add support to filter by a start/end date as well as other filters
+        # TODO: add support for filtering
         external_events = icalexternalcalendarservice.calendar_to_external_events(external_calendar, calendar)
 
         serializer = self.get_serializer(external_events, many=True)

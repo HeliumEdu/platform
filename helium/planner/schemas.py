@@ -9,7 +9,7 @@ from helium.planner.models import Attachment, Course, Category, Material
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +129,11 @@ class SubCourseListSchema(SubCourseGroupListSchema):
 class CourseDetailSchema(BaseIDSchema, SubCourseGroupListSchema):
     def __init__(self):
         super(CourseDetailSchema, self).__init__('course')
+
+
+class CourseScheduleDetailSchema(BaseIDSchema, SubCourseListSchema):
+    def __init__(self):
+        super(CourseScheduleDetailSchema, self).__init__('course schedule')
 
 
 class CategoryDetailSchema(BaseIDSchema, SubCourseListSchema):

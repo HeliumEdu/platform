@@ -13,6 +13,7 @@ from helium.feed.serializers.externalcalendarserializer import ExternalCalendarS
 from helium.planner.models import CourseGroup, Course, Homework, Event
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
@@ -22,7 +23,7 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,21 @@ def import_user(request, json_str):
                 }
             })
     logger.info("Imported {} courses.".format(len(data.get("courses", []))))
+
+    for course_schedule in data.get('course_schedules', []):
+        course_schedule['course'] = course_remap.get(course_schedule['course'], None)
+
+        serializer = CourseScheduleSerializer(data=course_schedule)
+
+        if serializer.is_valid():
+            serializer.save(course_id=course_schedule['course'])
+        else:
+            raise ValidationError({
+                'course_schedules': {
+                    course_schedule['id']: serializer.errors
+                }
+            })
+    logger.info("Imported {} course schedules.".format(len(data.get("course_schedules", []))))
 
     category_remap = {}
     for category in data.get('categories', []):
