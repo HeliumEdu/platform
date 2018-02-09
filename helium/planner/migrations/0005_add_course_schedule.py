@@ -80,6 +80,13 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.AddField(
+            model_name='courseschedule',
+            name='course',
+            field=models.ForeignKey(help_text=b'The course with which to associate.',
+                                    on_delete=django.db.models.deletion.CASCADE, related_name='schedules',
+                                    to='planner.Course'),
+        ),
         migrations.RunPython(migrate_course_schedules),
         migrations.RemoveField(
             model_name='course',
@@ -204,12 +211,5 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='course',
             name='wed_start_time_alt',
-        ),
-        migrations.AddField(
-            model_name='courseschedule',
-            name='course',
-            field=models.ForeignKey(help_text=b'The course with which to associate.',
-                                    on_delete=django.db.models.deletion.CASCADE, related_name='schedules',
-                                    to='planner.Course'),
         ),
     ]
