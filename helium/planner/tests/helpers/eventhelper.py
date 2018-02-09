@@ -7,7 +7,7 @@ from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.1'
 
 
 def given_event_exists(user, title='Test Event', all_day=False, show_end_time=True,
@@ -34,7 +34,4 @@ def verify_event_matches_data(test_case, event, data):
     test_case.assertEqual(event.end, parser.parse(data['end']))
     test_case.assertEqual(event.priority, data['priority'])
     test_case.assertEqual(event.comments, data['comments'])
-    if isinstance(data['user'], dict):
-        test_case.assertEqual(event.user.pk, int(data['user']['id']))
-    else:
-        test_case.assertEqual(event.user.pk, int(data['user']))
+    test_case.assertEqual(event.user.pk, int(data['user']))

@@ -18,7 +18,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
-    Return a list of all homework instances for the authenticated user.
+    Return a list of all homework instances for the authenticated user. For convenience, homework instances on a GET are
+    serialized with representations of associated attachments and reminders to avoid the need for redundant API calls.
     """
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
@@ -49,7 +50,8 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
-    Return a list of all homework instances for the given course.
+    Return a list of all homework instances for the given course. For convenience, homework instances on a GET are
+    serialized with representations of associated attachments and reminders to avoid the need for redundant API calls.
 
     post:
     Create a new homework instance for the given course.
@@ -98,7 +100,8 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
 class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given homework instance.
+    Return the given homework instance. For convenience, homework instances on a GET are serialized with representations
+    of associated attachments and reminders to avoid the need for redundant API calls.
 
     put:
     Update the given homework instance.

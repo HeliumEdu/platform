@@ -2,14 +2,14 @@ import logging
 
 from rest_framework import serializers
 
-from helium.planner.serializers.categoryserializer import CategorySerializer
-from helium.planner.serializers.courseserializer import CourseSerializer
-from helium.planner.tasks import recalculate_category_grade
 from helium.planner.models import Homework
+from helium.planner.serializers.attachmentserializer import AttachmentSerializer
+from helium.planner.serializers.reminderserializer import ReminderSerializer
+from helium.planner.tasks import recalculate_category_grade
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,6 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
 
 class HomeworkExtendedSerializer(HomeworkSerializer):
-    class Meta(HomeworkSerializer.Meta):
-        pass
-        # depth = 1
+    attachments = AttachmentSerializer(many=True)
+
+    reminders = ReminderSerializer(many=True)

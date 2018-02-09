@@ -15,7 +15,7 @@ from helium.planner.serializers.eventserializer import EventSerializer, EventExt
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,15 @@ logger = logging.getLogger(__name__)
 class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
-    Return a list of all event instances for the authenticated user.
+    Return a list of all event instances for the authenticated user. For convenience, event instances on a GET are
+    serialized with representations of associated attachments and reminders to avoid the need for redundant API calls.
 
     post:
     Create a new event instance for the authenticated user.
 
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
-    serializer_class = EventExtendedSerializer
+    serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_class = EventFilter
@@ -40,6 +41,12 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     def get_queryset(self):
         user = self.request.user
         return user.events.all()
+
+    def get_serializer_class(self):
+        if self.request and self.request.method == 'GET':
+            return EventExtendedSerializer
+        else:
+            return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -62,7 +69,8 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
-    Return the given event instance.
+    Return the given event instance. For convenience, event instances on a GET are serialized with representations of
+    associated attachments and reminders to avoid the need for redundant API calls.
 
     put:
     Update the given event instance.
