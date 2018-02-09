@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 /**
@@ -407,44 +407,34 @@ function HeliumCalendar() {
         });
     };
 
-    this.same_time = function (course) {
+    this.on_day_of_week = function (schedule, day) {
+        if (schedule == null) {
+            return false;
+        }
+
+        return schedule.days_of_week.substring(day, day + 1) == '1';
+    };
+
+    this.same_time = function (schedule) {
         return (
-            (course.sun_start_time == course.mon_start_time &&
-            course.sun_start_time == course.tue_start_time &&
-            course.sun_start_time == course.wed_start_time &&
-            course.sun_start_time == course.thu_start_time &&
-            course.sun_start_time == course.fri_start_time &&
-            course.sun_start_time == course.sat_start_time)
+            (schedule.sun_start_time == schedule.mon_start_time &&
+            schedule.sun_start_time == schedule.tue_start_time &&
+            schedule.sun_start_time == schedule.wed_start_time &&
+            schedule.sun_start_time == schedule.thu_start_time &&
+            schedule.sun_start_time == schedule.fri_start_time &&
+            schedule.sun_start_time == schedule.sat_start_time)
             &&
-            (course.sun_end_time == course.mon_end_time &&
-            course.sun_end_time == course.tue_end_time &&
-            course.sun_end_time == course.wed_end_time &&
-            course.sun_end_time == course.thu_end_time &&
-            course.sun_end_time == course.fri_end_time &&
-            course.sun_end_time == course.sat_end_time)
+            (schedule.sun_end_time == schedule.mon_end_time &&
+            schedule.sun_end_time == schedule.tue_end_time &&
+            schedule.sun_end_time == schedule.wed_end_time &&
+            schedule.sun_end_time == schedule.thu_end_time &&
+            schedule.sun_end_time == schedule.fri_end_time &&
+            schedule.sun_end_time == schedule.sat_end_time)
         )
     };
 
-    this.same_time_alt = function (course) {
-        return (
-            (course.sun_start_time_alt == course.mon_start_time_alt &&
-            course.sun_start_time_alt == course.tue_start_time_alt &&
-            course.sun_start_time_alt == course.wed_start_time_alt &&
-            course.sun_start_time_alt == course.thu_start_time_alt &&
-            course.sun_start_time_alt == course.fri_start_time_alt &&
-            course.sun_start_time_alt == course.sat_start_time_alt)
-            &&
-            (course.sun_end_time_alt == course.mon_end_time_alt &&
-            course.sun_end_time_alt == course.tue_end_time_alt &&
-            course.sun_end_time_alt == course.wed_end_time_alt &&
-            course.sun_end_time_alt == course.thu_end_time_alt &&
-            course.sun_end_time_alt == course.fri_end_time_alt &&
-            course.sun_end_time_alt == course.sat_end_time_alt)
-        )
-    };
-
-    this.has_schedule = function (course) {
-        return course.days_of_week != '0000000' || course.days_of_week_alt != '0000000' || !self.same_time(course) || !self.same_time_alt(course);
+    this.has_schedule = function (schedule) {
+        return schedule.days_of_week != '0000000' || !self.same_time(schedule);
     };
 
     /**
@@ -1761,6 +1751,8 @@ $(document).ready(function () {
     "use strict";
 
     $("#loading-calendar").spin(helium.LARGE_LOADING_OPTS);
+
+    moment.tz.setDefault(helium.USER_PREFS.settings.time_zone);
 
     // Prevent Dropzone auto-initialization, as we'll do it in a bit
     Dropzone.autoDiscover = false;

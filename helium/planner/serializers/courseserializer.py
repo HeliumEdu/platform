@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 
 from helium.planner.models import Course
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
+
     class Meta:
         model = Course
         fields = (
@@ -21,7 +24,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'num_days', 'num_days_completed', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
         read_only_fields = (
-            'current_grade', 'trend', 'schedules', 'num_days', 'num_days_completed', 'has_weighted_grading',
+            'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def validate(self, attrs):
