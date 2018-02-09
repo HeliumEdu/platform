@@ -384,8 +384,8 @@ function HeliumSettings() {
 
             var base_url = helium.SITE_URL + "feed/private/" + helium.USER_PREFS.settings.private_slug;
 
-            $("#private-feed-urls").html("<strong>Events: </strong><a href=\"" + base_url + "\"/events.ics\">" + base_url + "/events.ics</a>" +
-                "<br /><strong>Homework: </strong><a href=\"" + base_url + "\"/homework.ics\">" + base_url + "/homework.ics</a>");
+            $("#private-feed-urls").html("<strong>Events: </strong><a href=\"" + base_url + "/events.ics\">" + base_url + "/events.ics</a>" +
+                "<br /><strong>Homework: </strong><a href=\"" + base_url + "/homework.ics\">" + base_url + "/homework.ics</a>");
         }
     };
 
