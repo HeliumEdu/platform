@@ -18,4 +18,6 @@ def course_schedule_to_events(course_schedule):
 
     # TODO: implement
 
+    # TODO: responses should, in the future, be cached for at least a few minutes
+
     return events
