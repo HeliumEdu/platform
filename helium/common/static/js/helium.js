@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 var CSRF_TOKEN = Cookies.get("csrftoken");
@@ -327,6 +327,7 @@ function Helium() {
                 } else {
                     id = id.split("-")[1];
                 }
+                var reminder_id = $(this).parent().attr("id").split("-")[2];
 
                 helium.calendar.current_calendar_item = $("#calendar").fullCalendar("clientEvents", [id])[0];
                 // First resort is to look in the calendar's cache, but if the event isn't found there we'll have to look it
@@ -350,9 +351,9 @@ function Helium() {
                     if (id.indexOf("event") !== -1) {
                         helium.planner_api.get_event(callback, id, true, true);
                     } else {
-                        helium.planner_api.get_homework_by_id(function (data) {
-                            helium.planner_api.get_homework(callback, data.course.course_group, data.course.id, id, true, true);
-                        }, id, true);
+                        helium.planner_api.get_reminder(function (data) {
+                            helium.planner_api.get_homework(callback, data.homework.course.course_group, data.homework.course.id, data.homework.id, true, true);
+                        }, reminder_id);
                     }
                 } else {
                     helium.calendar.edit_calendar_item_btn(helium.calendar.current_calendar_item);

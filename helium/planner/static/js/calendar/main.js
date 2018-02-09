@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /**
@@ -48,6 +48,7 @@ function HeliumCalendar() {
     this.is_resizing_calendar_item = false;
     this.listViewLoaded = false;
     this.course_groups = {};
+    this.courses = {};
 
     var self = this;
 
@@ -862,8 +863,6 @@ function HeliumCalendar() {
     this.initialize_calendar = function () {
         helium.ajax_error_occurred = false;
 
-        var courses_added = [];
-
         $("#calendar").fullCalendar({
             defaultTimedEventDuration: moment().hours(0).minutes(helium.USER_PREFS.settings.all_day_offset).seconds(0).format("HH:mm:ss"),
             defaultView: self.DEFAULT_VIEWS[helium.USER_PREFS.settings.default_view],
@@ -983,8 +982,8 @@ function HeliumCalendar() {
                 bootbox.alert(helium.get_error_msg(data));
             } else {
                 $.each(data, function (index, course) {
-                    if ($.inArray(course.id, courses_added) === -1) {
-                        courses_added.push(course.id);
+                    if (!helium.calendar.courses.hasOwnProperty(course.id)) {
+                        helium.calendar.courses[course.id] = course;
                         $("#homework-class").append("<option value=\"" + course.id + "\">" + course.title + "</option>");
                     }
                 });

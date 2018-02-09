@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /**
@@ -41,6 +41,7 @@ function HeliumPlannerAPI() {
     this.events_by_user_id = {};
     this.external_calendars_by_user_id = {};
     this.external_calendar_feed = {};
+    this.reminder = {};
     this.reminders_by_user_id = {};
     this.reminders_by_calendar_item = {};
 
@@ -52,7 +53,6 @@ function HeliumPlannerAPI() {
     this.clear_all_caches = function () {
         self.course_groups_by_user_id = {};
         self.course_group = {};
-        self.courses_around_date = {};
         self.courses_by_course_group_id = {};
         self.courses_by_user_id = {};
         self.course = {};
@@ -63,11 +63,15 @@ function HeliumPlannerAPI() {
         self.category_names = null;
         self.categories_by_course_id = {};
         self.category = {};
+        self.homework_by_user_id = {};
         self.homework_by_course_id = {};
         self.homework = {};
         self.event = {};
         self.events_by_user_id = {};
         self.external_calendars_by_user_id = {};
+        self.external_calendar_feed = {};
+        self.reminder = {};
+        self.reminders_by_user_id = {};
         self.reminders_by_calendar_item = {};
     };
 
@@ -2144,6 +2148,52 @@ function HeliumPlannerAPI() {
     };
 
     /**
+     * Compile the Reminder for the given ID and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param id the ID of the Reminder.
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_reminder = function (callback, id, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.reminder.hasOwnProperty(id)) {
+            ret_val = callback(self.reminder[id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/reminders/" + id + "/",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.reminder[id] = data;
+                    callback(self.reminder[id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var data = [{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }];
+                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                        var name = Object.keys(jqXHR.responseJSON)[0];
+                        if (jqXHR.responseJSON[name].length > 0) {
+                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                        }
+                    }
+                    callback(data);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
      * Edit the Reminder for the given ID and pass the returned values to the given callback function in JSON format.
      *
      * @param callback function to pass response data and call after completion
@@ -2155,7 +2205,11 @@ function HeliumPlannerAPI() {
     this.edit_reminder = function (callback, id, data, async, patch) {
         async = typeof async === "undefined" ? true : async;
         patch = typeof patch === "undefined" ? false : patch;
+
+        delete self.reminder[id];
+        self.reminders_by_user_id = {};
         self.reminders_by_calendar_item = {};
+
         return $.ajax({
             type: patch ? "PATCH" : "PUT",
             url: "/api/planner/reminders/" + id + "/",
@@ -2191,8 +2245,11 @@ function HeliumPlannerAPI() {
      */
     this.delete_reminder = function (callback, id, data, async) {
         async = typeof async === "undefined" ? true : async;
+
+        delete self.reminder[id];
         self.reminders_by_user_id = {};
         self.reminders_by_calendar_item = {};
+
         return $.ajax({
             type: "DELETE",
             url: "/api/planner/reminders/" + id + "/",
