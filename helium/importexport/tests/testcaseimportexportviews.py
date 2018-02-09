@@ -12,13 +12,14 @@ from rest_framework import status
 from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
-from helium.planner.models import CourseGroup, Course, Category, MaterialGroup, Material, Event, Homework, Reminder
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, materialgrouphelper, \
-    materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
+    Homework, Reminder
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
+    materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
+        course_schedules = CourseSchedule.objects.all()
         categories = Category.objects.all()
         material_groups = MaterialGroup.objects.all()
         materials = Material.objects.all()
@@ -71,6 +73,7 @@ class TestCaseImportExportViews(TestCase):
         homework = Homework.objects.all()
         self.assertEqual(len(course_groups), 4)
         self.assertEqual(len(courses), 4)
+        self.assertEqual(len(course_schedules), 4)
         self.assertEqual(len(categories), 4)
         self.assertEqual(len(material_groups), 2)
         self.assertEqual(len(materials), 2)
@@ -98,38 +101,7 @@ class TestCaseImportExportViews(TestCase):
                                                                    'current_grade': 66.6667, 'trend': None,
                                                                    'private_slug': None, 'teacher_name': 'My Teacher',
                                                                    'teacher_email': 'teacher@email.com',
-                                                                   'start_date': '2017-01-06',
-                                                                   'end_date': '2017-05-08',
-                                                                   'days_of_week': '0000000',
-                                                                   'sun_start_time': '12:00:00',
-                                                                   'sun_end_time': '12:00:00',
-                                                                   'mon_start_time': '12:00:00',
-                                                                   'mon_end_time': '12:00:00',
-                                                                   'tue_start_time': '12:00:00',
-                                                                   'tue_end_time': '12:00:00',
-                                                                   'wed_start_time': '12:00:00',
-                                                                   'wed_end_time': '12:00:00',
-                                                                   'thu_start_time': '12:00:00',
-                                                                   'thu_end_time': '12:00:00',
-                                                                   'fri_start_time': '12:00:00',
-                                                                   'fri_end_time': '12:00:00',
-                                                                   'sat_start_time': '12:00:00',
-                                                                   'sat_end_time': '12:00:00',
-                                                                   'days_of_week_alt': '0000000',
-                                                                   'sun_start_time_alt': '12:00:00',
-                                                                   'sun_end_time_alt': '12:00:00',
-                                                                   'mon_start_time_alt': '12:00:00',
-                                                                   'mon_end_time_alt': '12:00:00',
-                                                                   'tue_start_time_alt': '12:00:00',
-                                                                   'tue_end_time_alt': '12:00:00',
-                                                                   'wed_start_time_alt': '12:00:00',
-                                                                   'wed_end_time_alt': '12:00:00',
-                                                                   'thu_start_time_alt': '12:00:00',
-                                                                   'thu_end_time_alt': '12:00:00',
-                                                                   'fri_start_time_alt': '12:00:00',
-                                                                   'fri_end_time_alt': '12:00:00',
-                                                                   'sat_start_time_alt': '12:00:00',
-                                                                   'sat_end_time_alt': '12:00:00',
+                                                                   'start_date': '2017-01-06', 'end_date': '2017-05-08',
                                                                    'course_group': course_groups[2].pk})
         coursehelper.verify_course_matches_data(self, courses[3],
                                                 {'title': 'Test Course', 'room': 'DNC 201', 'credits': 5.0,
@@ -137,41 +109,44 @@ class TestCaseImportExportViews(TestCase):
                                                  'is_online': False, 'current_grade': -1.0, 'trend': None,
                                                  'private_slug': None, 'teacher_name': 'My Teacher',
                                                  'teacher_email': 'teacher@email.com',
-                                                 'start_date': '2017-01-06',
-                                                 'end_date': '2017-05-08', 'days_of_week': '0000000',
-                                                 'sun_start_time': '12:00:00',
-                                                 'sun_end_time': '12:00:00',
-                                                 'mon_start_time': '12:00:00',
-                                                 'mon_end_time': '12:00:00',
-                                                 'tue_start_time': '12:00:00',
-                                                 'tue_end_time': '12:00:00',
-                                                 'wed_start_time': '12:00:00',
-                                                 'wed_end_time': '12:00:00',
-                                                 'thu_start_time': '12:00:00',
-                                                 'thu_end_time': '12:00:00',
-                                                 'fri_start_time': '12:00:00',
-                                                 'fri_end_time': '12:00:00',
-                                                 'sat_start_time': '12:00:00',
-                                                 'sat_end_time': '12:00:00', 'days_of_week_alt': '0000000',
-                                                 'sun_start_time_alt': '12:00:00',
-                                                 'sun_end_time_alt': '12:00:00',
-                                                 'mon_start_time_alt': '12:00:00',
-                                                 'mon_end_time_alt': '12:00:00',
-                                                 'tue_start_time_alt': '12:00:00',
-                                                 'tue_end_time_alt': '12:00:00',
-                                                 'wed_start_time_alt': '12:00:00',
-                                                 'wed_end_time_alt': '12:00:00',
-                                                 'thu_start_time_alt': '12:00:00',
-                                                 'thu_end_time_alt': '12:00:00',
-                                                 'fri_start_time_alt': '12:00:00',
-                                                 'fri_end_time_alt': '12:00:00',
-                                                 'sat_start_time_alt': '12:00:00',
-                                                 'sat_end_time_alt': '12:00:00',
+                                                 'start_date': '2017-01-06', 'end_date': '2017-05-08',
                                                  'course_group': course_groups[3].pk})
-        categoryhelper.verify_category_matches_data(self, categories[2],
-                                                    {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
-                                                     'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
-                                                     'course': courses[0].pk})
+        courseschedulehelper.verify_course_schedule_matches(self, course_schedules[2], {'days_of_week': '0101010',
+                                                                                        'sun_start_time': '12:00:00',
+                                                                                        'sun_end_time': '12:00:00',
+                                                                                        'mon_start_time': '2:30:00',
+                                                                                        'mon_end_time': '3:00:00',
+                                                                                        'tue_start_time': '12:00:00',
+                                                                                        'tue_end_time': '12:00:00',
+                                                                                        'wed_start_time': '2:30:00',
+                                                                                        'wed_end_time': '3:00:00',
+                                                                                        'thu_start_time': '12:00:00',
+                                                                                        'thu_end_time': '12:00:00',
+                                                                                        'fri_start_time': '2:30:00',
+                                                                                        'fri_end_time': '5:00:00',
+                                                                                        'sat_start_time': '12:00:00',
+                                                                                        'sat_end_time': '12:00:00',
+                                                                                        'course': courses[2].pk})
+        courseschedulehelper.verify_course_schedule_matches(self, course_schedules[3], {'days_of_week': '0101010',
+                                                                                        'sun_start_time': '12:00:00',
+                                                                                        'sun_end_time': '12:00:00',
+                                                                                        'mon_start_time': '2:30:00',
+                                                                                        'mon_end_time': '3:00:00',
+                                                                                        'tue_start_time': '12:00:00',
+                                                                                        'tue_end_time': '12:00:00',
+                                                                                        'wed_start_time': '2:30:00',
+                                                                                        'wed_end_time': '3:00:00',
+                                                                                        'thu_start_time': '12:00:00',
+                                                                                        'thu_end_time': '12:00:00',
+                                                                                        'fri_start_time': '2:30:00',
+                                                                                        'fri_end_time': '5:00:00',
+                                                                                        'sat_start_time': '12:00:00',
+                                                                                        'sat_end_time': '12:00:00',
+                                                                                        'course': courses[3].pk})
+        categoryhelper.verify_category_matches_data(self, categories[1],
+                                                    {'title': 'Test Category 1', 'weight': 0.0, 'color': '#4986e7',
+                                                     'average_grade': -1.0, 'grade_by_weight': 0.0, 'trend': None,
+                                                     'course': courses[3].pk})
         categoryhelper.verify_category_matches_data(self, categories[3],
                                                     {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
@@ -228,6 +203,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(CourseSchedule.objects.count(), 0)
         self.assertEqual(Category.objects.count(), 0)
         self.assertEqual(MaterialGroup.objects.count(), 0)
         self.assertEqual(Material.objects.count(), 0)
@@ -257,6 +233,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(CourseSchedule.objects.count(), 0)
         self.assertEqual(Category.objects.count(), 0)
         self.assertEqual(MaterialGroup.objects.count(), 0)
         self.assertEqual(Material.objects.count(), 0)
@@ -278,6 +255,9 @@ class TestCaseImportExportViews(TestCase):
         course1 = coursehelper.given_course_exists(course_group1, room='')
         course2 = coursehelper.given_course_exists(course_group2)
         course3 = coursehelper.given_course_exists(course_group3)
+        course_schedule1 = courseschedulehelper.given_course_schedule_exists(course1)
+        course_schedule2 = courseschedulehelper.given_course_schedule_exists(course2)
+        courseschedulehelper.given_course_schedule_exists(course3)
         category1 = categoryhelper.given_category_exists(course1, title='Uncategorized')
         category2 = categoryhelper.given_category_exists(course2)
         category3 = categoryhelper.given_category_exists(course3)
@@ -311,6 +291,8 @@ class TestCaseImportExportViews(TestCase):
         coursegrouphelper.verify_course_group_matches_data(self, course_group2, data['course_groups'][1])
         coursehelper.verify_course_matches_data(self, course1, data['courses'][0])
         coursehelper.verify_course_matches_data(self, course2, data['courses'][1])
+        courseschedulehelper.verify_course_schedule_matches(self, course_schedule1, data['course_schedules'][0])
+        courseschedulehelper.verify_course_schedule_matches(self, course_schedule2, data['course_schedules'][1])
         categoryhelper.verify_category_matches_data(self, category1, data['categories'][1])
         categoryhelper.verify_category_matches_data(self, category2, data['categories'][0])
         homeworkhelper.verify_homework_matches_data(self, homework1, data['homework'][0])
@@ -332,6 +314,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 2)
+        self.assertEqual(CourseSchedule.objects.count(), 2)
         self.assertEqual(Category.objects.count(), 11)
         self.assertEqual(MaterialGroup.objects.count(), 2)
         self.assertEqual(Material.objects.count(), 4)

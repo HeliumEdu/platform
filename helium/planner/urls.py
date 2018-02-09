@@ -6,6 +6,8 @@ from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, C
     CourseGroupCourseCategoriesApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
+from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiDetailView
+from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
 from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView
@@ -21,7 +23,7 @@ from helium.planner.views.generalviews import calendar, classes, materials, grad
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 urlpatterns = [
     # Base URL
@@ -51,6 +53,15 @@ urlpatterns = [
     url(r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<pk>[0-9]+)/$',
         CourseGroupCoursesApiDetailView.as_view(),
         name='api_planner_coursegroups_courses_detail'),
+
+    # CourseSchedule
+    url(r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/$',
+        CourseGroupCourseCourseSchedulesApiListView.as_view(),
+        name='api_planner_coursegroups_courses_courseschedules_list'),
+    url(
+        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/(?P<pk>[0-9]+)/$',
+        CourseGroupCourseCourseSchedulesApiDetailView.as_view(),
+        name='api_planner_coursegroups_courses_courseschedules_detail'),
 
     # Category
     url(r'^api/planner/categories/$', UserCategoriesApiListView.as_view(), name='api_planner_categories_list'),

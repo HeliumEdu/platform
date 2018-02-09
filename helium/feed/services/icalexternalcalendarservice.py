@@ -13,7 +13,7 @@ from helium.planner.models import Event
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +51,14 @@ def validate_url(url):
 
 def calendar_to_external_events(external_calendar, calendar):
     """
-    For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an external
-    event resources.
+    For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
+    resources.
 
     :param external_calendar: The external calendar source that is referenced by the calendar object.
     :param calendar: The calendar object that is being parsed.
-    :return: A list of external event resources.
+    :return: A list of event resources.
     """
-    external_events = []
+    events = []
 
     time_zone = pytz.timezone(external_calendar.get_user().settings.time_zone)
     for component in calendar.walk():
@@ -92,6 +92,6 @@ def calendar_to_external_events(external_calendar, calendar):
                           user=external_calendar.get_user(),
                           calendar_item_type=enums.EXTERNAL)
 
-            external_events.append(event)
+            events.append(event)
 
-    return external_events
+    return events
