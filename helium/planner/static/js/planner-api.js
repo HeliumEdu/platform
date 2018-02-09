@@ -2099,7 +2099,7 @@ function HeliumPlannerAPI() {
         } else {
             ret_val = $.ajax({
                 type: "GET",
-                url: "/api/feed/externalcalendars/" + id + "/externalevents/",
+                url: "/api/feed/externalcalendars/" + id + "/events/",
                 async: async,
                 dataType: "json",
                 success: function (data) {
