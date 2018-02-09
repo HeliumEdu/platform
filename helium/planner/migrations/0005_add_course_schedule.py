@@ -23,23 +23,8 @@ def migrate_course_schedules(apps, schema_editor):
                                           fri_start_time=course.fri_start_time, fri_end_time=course.fri_end_time,
                                           sat_start_time=course.sat_start_time, sat_end_time=course.sat_end_time,
                                           course=course)
-        if course.days_of_week_alt != '0000000':
-            CourseSchedule.objects.create(days_of_week=course.days_of_week_alt,
-                                          sun_start_time=course.sun_start_time_alt,
-                                          sun_end_time=course.sun_end_time_alt,
-                                          mon_start_time=course.mon_start_time_alt,
-                                          mon_end_time=course.mon_end_time_alt,
-                                          tue_start_time=course.tue_start_time_alt,
-                                          tue_end_time=course.tue_end_time_alt,
-                                          wed_start_time=course.wed_start_time_alt,
-                                          wed_end_time=course.wed_end_time_alt,
-                                          thu_start_time=course.thu_start_time_alt,
-                                          thu_end_time=course.thu_end_time_alt,
-                                          fri_start_time=course.fri_start_time_alt,
-                                          fri_end_time=course.fri_end_time_alt,
-                                          sat_start_time=course.sat_start_time_alt,
-                                          sat_end_time=course.sat_end_time_alt,
-                                          course=course)
+        else:
+            CourseSchedule.objects.create(course=course)
 
 
 class Migration(migrations.Migration):
