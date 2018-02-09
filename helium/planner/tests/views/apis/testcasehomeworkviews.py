@@ -21,7 +21,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 
 class TestCaseHomeworkViews(TestCase):
@@ -72,7 +72,6 @@ class TestCaseHomeworkViews(TestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(Homework.objects.count(), 4)
         self.assertEqual(len(response1.data), 3)
-        self.assertIn('course_group', response1.data[0]['course'])
         self.assertEqual(len(response2.data), 2)
 
     def test_create_homework(self):
@@ -193,8 +192,6 @@ class TestCaseHomeworkViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
-        self.assertEqual(homework.category.title, response.data['category']['title'])
-        self.assertEqual(homework.course.title, response.data['course']['title'])
 
     def test_update_homework_by_id(self):
         # GIVEN

@@ -2079,7 +2079,7 @@ function HeliumPlannerAPI() {
         if (use_cache && self.reminders_by_calendar_item.hasOwnProperty(id)) {
             ret_val = callback(self.reminders_by_calendar_item[id]);
         } else {
-            var query = calendar_item_type === "0" ? "event=" + id : "homework=" + id;
+            var query = calendar_item_type == "0" ? "event=" + id : "homework=" + id;
 
             ret_val = $.ajax({
                 type: "GET",
@@ -2285,7 +2285,12 @@ function HeliumPlannerAPI() {
      */
     this.get_attachments_for_calendar_item = function (callback, id, calendar_item_type, async) {
         async = typeof async === "undefined" ? true : async;
-        var query = calendar_item_type === "0" ? "event=" + id : "homework=" + id;
+
+        if (id.lastIndexOf("event_", 0) === 0) {
+            id = id.substr(6);
+        }
+
+        var query = calendar_item_type == "0" ? "event=" + id : "homework=" + id;
         return $.ajax({
             type: "GET",
             url: "/api/planner/attachments/?" + query,

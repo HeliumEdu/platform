@@ -3,10 +3,12 @@ import logging
 from rest_framework import serializers
 
 from helium.planner.models import Event
+from helium.planner.serializers.attachmentserializer import AttachmentSerializer
+from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,6 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventExtendedSerializer(EventSerializer):
-    class Meta(EventSerializer.Meta):
-        pass
-        # depth = 1
+    attachments = AttachmentSerializer(many=True)
+
+    reminders = ReminderSerializer(many=True)
