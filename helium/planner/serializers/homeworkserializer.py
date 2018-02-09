@@ -2,6 +2,8 @@ import logging
 
 from rest_framework import serializers
 
+from helium.planner.serializers.categoryserializer import CategorySerializer
+from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.tasks import recalculate_category_grade
 from helium.planner.models import Homework
 
@@ -49,4 +51,5 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
 class HomeworkExtendedSerializer(HomeworkSerializer):
     class Meta(HomeworkSerializer.Meta):
-        depth = 1
+        pass
+        # depth = 1

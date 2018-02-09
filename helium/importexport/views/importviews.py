@@ -21,6 +21,8 @@ class ImportView(APIView):
     Import the resources for the authenticated user from the the uploaded files. Multiple files can be imported at once
     passed in the `file[]` field.
 
+    The maximum file size for each upload is 10M.
+
     Each model will be imported in a schema matching that of the documented APIs.
     """
     permission_classes = (IsAuthenticated,)

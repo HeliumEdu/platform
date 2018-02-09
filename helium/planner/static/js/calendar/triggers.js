@@ -43,6 +43,8 @@
 
         var homework = $("#calendar").fullCalendar("clientEvents", [homework_id])[0];
 
+        var course = helium.calendar.courses[homework.course];
+
         data = {"completed": completed};
         helium.planner_api.edit_homework(function (h_edited) {
             self.homework_by_course_id = {};
@@ -59,7 +61,7 @@
 
                 helium.calendar.loading_div.spin(false);
             }
-        }, homework.course.course_group, h.course.id, homework.id, data, true, true);
+        }, course.course_group, course.id, homework.id, data, true, true);
     });
 
     $("#homework-event-switch").on("change", function () {

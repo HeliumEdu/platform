@@ -2736,7 +2736,7 @@
                 for (evt in events) {
                     event = events[evt];
                     if (event) {
-                        row = $(t.dataTable.row.add([event.calendar_item_type === 1 ? ("<input id=\"homework-completed-" + event.id + "\" type=\"checkbox\" class=\"ace\"" + (event.completed ? " checked=\"checked\"" : "") + " /><span class=\"lbl\" style=\"margin-top: -5px;\" />") : "", event.title_no_format, formatDate(event.start, "MMM D, YYYY") + (!event.all_day ? formatDate(event.start, " h:mm a") : ""), "<span class=\"label label-sm\" style=\"background-color: " + event.color + " !important\">" + (event.course !== null ? event.course.title : "") + "</span>", event.calendar_item_type === 1 ? (event.category !== null ? event.category.title : "") : "", event.calendar_item_type === 1 ? helium.calendar.get_material_styled_titles_from_data(event.materials) : "", (event.calendar_item_type == 0 || event.calendar_item_type == 1 ? "<div class=\"progress progress-mini progress-striped\" style=\"margin-top: 6px; margin-bottom: 0;\"><div class=\"progress-bar progress-bar-success\" style=\"width: " + event.priority + "%;\"><span class=\"hidden\">" + event.priority + "</span></div></div>" : ""), (event.completed && event.current_grade != "-1/100" ? "<span class=\"badge badge-info\">" + helium.grade_for_display(event.current_grade) + "</span>" : ""), (event.calendar_item_type == 0 || event.calendar_item_type == 1 ? "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-homework-" + event.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-homework-" + event.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>" : "")]).node());
+                        row = $(t.dataTable.row.add([event.calendar_item_type === 1 ? ("<input id=\"homework-completed-" + event.id + "\" type=\"checkbox\" class=\"ace\"" + (event.completed ? " checked=\"checked\"" : "") + " /><span class=\"lbl\" style=\"margin-top: -5px;\" />") : "", event.title_no_format, formatDate(event.start, "MMM D, YYYY") + (!event.all_day ? formatDate(event.start, " h:mm a") : ""), "<span class=\"label label-sm\" style=\"background-color: " + event.color + " !important\">" + (event.course !== null ? helium.calendar.courses[event.course].title : "") + "</span>", event.calendar_item_type === 1 ? (event.category !== null ? event.category.title : "") : "", event.calendar_item_type === 1 ? helium.calendar.get_material_styled_titles_from_data(event.materials) : "", (event.calendar_item_type == 0 || event.calendar_item_type == 1 ? "<div class=\"progress progress-mini progress-striped\" style=\"margin-top: 6px; margin-bottom: 0;\"><div class=\"progress-bar progress-bar-success\" style=\"width: " + event.priority + "%;\"><span class=\"hidden\">" + event.priority + "</span></div></div>" : ""), (event.completed && event.current_grade != "-1/100" ? "<span class=\"badge badge-info\">" + helium.grade_for_display(event.current_grade) + "</span>" : ""), (event.calendar_item_type == 0 || event.calendar_item_type == 1 ? "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-homework-" + event.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-homework-" + event.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>" : "")]).node());
                         row.attr("id", "homework-table-row-" + event.id);
                         // Bind clickable attributes to their respective handlers
                         eventElementHandlers(event, row);
@@ -2751,6 +2751,8 @@
 
                             data = {"completed": !helium.calendar.current_calendar_item.completed};
                             if (helium.calendar.current_calendar_item.calendar_item_type === 1) {
+                                var course = helium.calendar.courses[helium.calendar.current_calendar_item.course];
+
                                 helium.planner_api.edit_homework(function (data) {
                                     if (helium.data_has_err_msg(data)) {
                                         helium.ajax_error_occurred = true;
@@ -2758,19 +2760,17 @@
 
                                         bootbox.alert(helium.get_error_msg(data));
                                     } else {
-                                        helium.planner_api.get_homework(function (data) {
-                                            calendar_item = data;
+                                        calendar_item = data;
 
-                                            if (calendar_item.calendar_item_type === 0) {
-                                                calendar_item.id = "event_" + calendar_item.id;
-                                            }
+                                        if (calendar_item.calendar_item_type === 0) {
+                                            calendar_item.id = "event_" + calendar_item.id;
+                                        }
 
-                                            helium.calendar.update_current_calendar_item(calendar_item);
+                                        helium.calendar.update_current_calendar_item(calendar_item);
 
-                                            helium.calendar.loading_div.spin(false);
-                                        }, helium.calendar.current_calendar_item.course.course_group, helium.calendar.current_calendar_item.course.id, id);
+                                        helium.calendar.loading_div.spin(false);
                                     }
-                                }, helium.calendar.current_calendar_item.course.course_group, helium.calendar.current_calendar_item.course.id, id, data, true, true);
+                                }, course.course_group, course.id, id, data, true, true);
                             }
                         });
                         row.find("#edit-homework-" + event.id).on("click", function () {
