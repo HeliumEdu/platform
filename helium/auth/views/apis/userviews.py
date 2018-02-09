@@ -10,12 +10,13 @@ from rest_framework.response import Response
 from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.forms.userpasswordchangeform import UserPasswordChangeForm
 from helium.auth.serializers.userserializer import UserSerializer
+from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
 
             metricutils.increment('action.user.deleted', request)
 
-            form.user.delete()
+            delete_user.delay(form.user.pk)
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 

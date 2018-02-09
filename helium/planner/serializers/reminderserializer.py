@@ -6,7 +6,7 @@ from helium.planner.models import Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class ReminderSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if not self.instance and ('event' not in attrs and 'homework' not in attrs):
             raise serializers.ValidationError("One of `event` or `homework` must be given.")
-        elif 'event' in attrs and 'homework' in attrs:
+        elif attrs.get('event', None) and attrs.get('homework', None):
             raise serializers.ValidationError("Only one of `event` or `homework` may be given.")
 
         # We're settings these to None here as the serialization save will persist the new parent

@@ -47,6 +47,7 @@ function HeliumCalendar() {
     this.dropzone = null;
     this.is_resizing_calendar_item = false;
     this.listViewLoaded = false;
+    this.course_groups = {};
 
     var self = this;
 
@@ -459,7 +460,7 @@ function HeliumCalendar() {
 
         var ret_val = true, i = 0;
         // If what we've clicked on is an external source with a URL, open in a new window
-        if (calendar_item.url !== undefined) {
+        if (calendar_item.url !== undefined && calendar_item.url !== null) {
             window.open(calendar_item.url);
             ret_val = false;
         } else {
@@ -564,7 +565,7 @@ function HeliumCalendar() {
                             }
 
                             for (i = 0; i < calendar_item_fields.attachments.length; i += 1) {
-                                $("#attachments-table-body").append("<tr id=\"attachment-" + calendar_item_fields.attachments[i].id + "\"><td>" + calendar_item_fields.attachments[i].title + "</td><td>" + helium.bytes_to_size(parseInt(calendar_item_fields.attachments[i].size)) + "</td><td><div class=\"btn-group\"><a target=\"_blank\" class=\"btn btn-xs btn-success\" href=\"" + calendar_item_fields.attachments[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + calendar_item_fields.attachments[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
+                                $("#attachments-table-body").append("<tr id=\"attachment-" + calendar_item_fields.attachments[i].id + "\"><td>" + calendar_item_fields.attachments[i].title + "</td><td>" + helium.bytes_to_size(parseInt(calendar_item_fields.attachments[i].size)) + "</td><td><div class=\"btn-group\"><a class=\"btn btn-xs btn-success\" download target=\"_blank\" href=\"" + calendar_item_fields.attachments[i].attachment + "\"><i class=\"icon-cloud-download bigger-120\"></i></a> <button class=\"btn btn-xs btn-danger\" id=\"delete-attachment-" + calendar_item_fields.attachments[i].id + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td></tr>");
                                 $("#delete-attachment-" + calendar_item_fields.attachments[i].id).on("click", self.delete_attachment);
                             }
 
@@ -798,6 +799,10 @@ function HeliumCalendar() {
         if (Cookies.get("filter_show_homework") === undefined || Cookies.get("filter_show_homework") === "true") {
             helium.calendar.ajax_calls.push(helium.planner_api.get_homework_by_user(function (data) {
                 $.each(data, function (i, calendar_item) {
+                    if (!helium.calendar.course_groups[calendar_item.course.course_group].shown_on_calendar) {
+                        return true;
+                    }
+
                     // Check if any filters are applied and failing, in whic case continue before adding the item
                     if (Cookies.get("filter_search_string") !== undefined &&
                         calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) === -1 &&
@@ -909,7 +914,7 @@ function HeliumCalendar() {
                     element.qtip({
                         content: {
                             title: "<strong>" + event.title_no_format + "</strong> on " + start,
-                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && event.category.title !== "Uncategorized" ? (event.category.title + " for ") : "") + course_string + (event.course.room.replace(/\s/g, "").length > 0 ? " in " + event.course.room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_titles_from_data(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_titles_from_data(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_titles_from_data(event.attachments) + "</div></div>" : "")
+                            text: "<div class=\"row\"><div class=\"col-xs-12\"><strong>When:</strong> " + start + (event.show_end_time && end ? (" to " + end) : "") + "</div></div>" + (event.calendar_item_type === 1 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Class Info:</strong> " + (event.category !== null && event.category.title !== "Uncategorized" ? (event.category.title + " for ") : "") + course_string + (event.course.room.replace(/\s/g, "").length > 0 ? " in " + event.course.room : "") + "</div></div>" : "") + (event.materials.length > 0 && helium.calendar.get_titles_from_data(event.materials) ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Materials:</strong> " + helium.calendar.get_titles_from_data(event.materials) + "</div></div>" : "") + (event.calendar_item_type === 1 && event.completed && event.current_grade !== "-1/100" ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Grade:</strong> " + helium.grade_for_display(event.current_grade) + "</div></div>" : "") + (event.comments.replace(/\s/g, "").length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Comments:</strong> " + helium.get_comments_with_link(event.comments) + "</div></div>" : "") + (event.attachments.length > 0 ? "<div class=\"row\"><div class=\"col-xs-12\"><strong>Attachments:</strong> " + helium.calendar.get_attachments_from_data(event.attachments) + "</div></div>" : "")
                         },
                         hide: {
                             event: "mousedown mouseup mouseleave",
@@ -1061,6 +1066,16 @@ function HeliumCalendar() {
         return titles;
     };
 
+    this.get_attachments_from_data = function (data) {
+        var titles = "";
+
+        $.each(data, function (index, item) {
+            titles += '<a href="' + item.attachment + '" download>' + item.title + '</a>&nbsp;';
+        });
+
+        return titles;
+    };
+
     this.get_titles_from_data = function (data) {
         var titles = [];
 
@@ -1096,12 +1111,25 @@ function HeliumCalendar() {
         $("#calendar-filter-overdue a").on("click", self.update_filter_checkbox_from_event);
 
         // Initialize course filters
+        var classes_filter_div = $("<div class=\"filter-strike\"><span>Classes</span></div>");
         if (courses.length > 0) {
-            $("#calendar-filter-list").append("<div class=\"filter-strike\"><span>Classes</span></div>");
+            $("#calendar-filter-list").append(classes_filter_div);
+
+            var courses_added = 0;
             for (i = 0; i < courses.length; i += 1) {
+                if (!helium.calendar.course_groups[courses[i].course_group].shown_on_calendar){
+                    continue;
+                }
+
                 $("#calendar-filter-list").append("<li id=\"calendar-filter-course-" + courses[i].id + "\"><a class=\"checkbox cursor-hover filter-course-title\"><input type=\"checkbox\" /> &nbsp;<span style=\"color: " + courses[i].color + "\">" + courses[i].title + "</span></a></li>");
                 $("#calendar-filter-course-" + courses[i].id + " input").on("click", self.event_stop_propagation).on("change", self.refresh_filters);
                 $("#calendar-filter-course-" + courses[i].id + " a").on("click", self.update_filter_checkbox_from_event);
+
+                courses_added += 1;
+            }
+
+            if (courses_added === 0) {
+                classes_filter_div.remove();
             }
         }
 
@@ -1806,6 +1834,14 @@ $(document).ready(function () {
          * Other page initialization
          ******************************************/
         helium.calendar.clear_filter_cookies();
+
+        helium.calendar.course_groups = {};
+
+        helium.planner_api.get_course_groups(function (data) {
+            $.each(data, function (index, course_group) {
+                helium.calendar.course_groups[course_group['id']] = course_group;
+            });
+        }, false, true);
 
         helium.calendar.initialize_calendar();
 

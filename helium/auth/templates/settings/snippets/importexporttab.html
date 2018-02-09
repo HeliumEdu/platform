@@ -12,42 +12,39 @@
     <div class="space-8"></div>
 
     <form class="form-horizontal" id="importexport-form" role="form">{% csrf_token %}
-        <div class="row">
-            <div class="col-sm-10 col-sm-offset-1">
-                <div class="error-container">
-                    <div class="well">
-                        <h1 class="grey lighter smaller">
-                            <img src="{% static 'img/logo_square.png' %}" width="50" height="50"
-                                 class="logo-icon"/>
-                            We're Rebuilding Import/Export
-                        </h1>
+        <p>Import a Helium JSON backup file.</p>
 
-                        <hr/>
-                        <h3 class="lighter smaller">
-                            Howdy! We're in the process of rebuilding the import/exprot functionality to <i
-                                class="icon-wrench icon-animated-wrench bigger-125"></i> make things more.
-                        </h3>
-
-                        <div class="space"></div>
-
-                        <h3 class="lighter smaller">
-                            This shouldn't take too long—maybe a few weeks at the most before this section is backup. In
-                            the meantime, if you absolutely need an import or export, contact support and we'll help you
-                            out.
-                        </h3>
-
-                        <hr/>
-                        <div class="space"></div>
-
-                        <div class="center">
-                            <a href="mailto:{{ PROJECT_EMAIL }}" class="btn btn-primary">
-                                <i class="icon-envelope"></i>
-                                Contact Us
-                            </a>
-                        </div>
-                    </div>
+        <div class="form-group">
+            <label class="block clearfix bottom-buffer-10">
+                <div class="col-sm-12 bottom-buffer-10">
+                    <input id="id_file" name="file[]" type="file">
                 </div>
+                <div class="col-sm-12 bottom-buffer-10">
+                    <button type="submit" id="import-button" class="btn btn-primary btn-sm">
+                        <i class="icon-upload"></i>
+                        Import
+                    </button>
+                </div>
+            </label>
+        </div>
+
+        <hr/>
+
+        <p>Export all data (excluding attachments) to a Helium JSON backup file.</p>
+
+        <div class="form-group">
+            <div class="col-sm-12 bottom-buffer-10">
+                <a target="_blank" download href="{% url 'importexport_export' %}" id="export-button"
+                   class="btn btn-primary btn-sm">
+                    <i class="icon-download"></i>
+                    Export
+                </a>
             </div>
+            <div class="col-sm-1"></div>
+            <div id="export-status-div"
+                 class="col-sm-10 alert alert-info to-hide">Your download will begin shortly.
+            </div>
+            <div class="col-sm-1"></div>
         </div>
 
         <hr/>

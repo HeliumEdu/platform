@@ -14,7 +14,7 @@ from helium.common.utils.viewutils import set_request_status, get_request_status
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,8 @@ def register(request):
         user_register_form = UserRegisterForm(request.POST)
         if user_register_form.is_valid():
             user_register_form.save()
+
+            metricutils.increment('action.user.created', request)
 
             redirect = authservice.process_register(request, user_register_form.instance)
         else:
@@ -84,8 +86,6 @@ def login(request):
                 password = user_login_form.cleaned_data.get('password')
 
                 redirect = authservice.process_login(request, username, password)
-
-                metricutils.increment('action.user.logged-in', request)
             else:
                 set_request_status(request, 'warning', list(user_login_form.errors.values())[0][0])
 
@@ -94,6 +94,8 @@ def login(request):
     # Login was successful, or the user is already logged in
     if redirect:
         redirect = HttpResponseRedirect(redirect)
+
+        metricutils.increment('action.user.logged-in', request)
 
         return redirect
     else:

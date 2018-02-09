@@ -2,10 +2,10 @@ from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 
-def given_external_calendar_exists(user, title='My Calendar', url='http://go.com/valid-ical-feed', color='#4442',
+def given_external_calendar_exists(user, title='My Calendar', url='http://go.com/valid-ical-feed', color='#fad165',
                                    shown_on_calendar=True):
     external_calendar = ExternalCalendar.objects.create(title=title,
                                                         url=url,

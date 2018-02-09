@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.feed.schemas import ExternalCalendarIDSchema
-from helium.feed.services import icalservice
+from helium.feed.services import icalexternalcalendarservice
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
@@ -32,10 +32,10 @@ class ExternalCalendarAsExternalEventsResourceView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         external_calendar = self.get_object()
 
-        calendar = icalservice.validate_url(external_calendar.url)
+        calendar = icalexternalcalendarservice.validate_url(external_calendar.url)
 
         # TODO: add support to filter by a start/end date as well as other filters
-        external_events = icalservice.calendar_to_external_events(external_calendar, calendar)
+        external_events = icalexternalcalendarservice.calendar_to_external_events(external_calendar, calendar)
 
         serializer = self.get_serializer(external_events, many=True)
 

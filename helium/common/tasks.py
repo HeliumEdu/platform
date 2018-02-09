@@ -4,10 +4,11 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 from conf.celery import app
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -21,3 +22,5 @@ def send_text(phone, phone_carrier, subject, body):
     logger.info('Sending text with subject "{}" to {}@{}'.format(subject, phone, phone_carrier))
 
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, ['{}@{}'.format(phone, phone_carrier)])
+
+    metricutils.increment('task.text.sent')

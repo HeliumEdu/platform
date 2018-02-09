@@ -1,11 +1,11 @@
 import logging
 
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from helium.common.utils import metricutils
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
@@ -32,11 +32,13 @@ class PrivateEnableResourceView(APIView):
         user.settings.enable_private_slug()
 
         serializer = PrivateFeedSerializer({
-            'events_private_url': reverse('feed_events_ical', kwargs={'slug': user.settings.private_slug}),
-            'homework_private_url': reverse('feed_homework_ical', kwargs={'slug': user.settings.private_slug})
+            'events_private_url': reverse('feed_private_events_ical', kwargs={'slug': user.settings.private_slug}),
+            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug})
         })
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        metricutils.increment('action.privatefeed.enabled', request)
+
+        return Response(serializer.data)
 
 
 class PrivateDisableResourceView(APIView):
@@ -51,4 +53,6 @@ class PrivateDisableResourceView(APIView):
 
         user.settings.disable_private_slug()
 
-        return Response(status=status.HTTP_200_OK)
+        metricutils.increment('action.privatefeed.disabled', request)
+
+        return Response()

@@ -21,7 +21,7 @@ from helium.planner.views.generalviews import calendar, classes, materials, grad
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 urlpatterns = [
     # Base URL
@@ -33,17 +33,11 @@ urlpatterns = [
     url(r'^planner/materials', materials, name='materials'),
     url(r'^planner/grades', grades, name='grades'),
 
-    # Legacy URLs
-    url(r'^calendar', RedirectView.as_view(pattern_name='calendar', permanent=True)),
-    url(r'^classes', RedirectView.as_view(pattern_name='classes', permanent=True)),
-    url(r'^materials', RedirectView.as_view(pattern_name='materials', permanent=True)),
-    url(r'^grades', RedirectView.as_view(pattern_name='grades', permanent=True)),
-
     ##############################
     # Authenticated API URLs
     ##############################
     # Resource shortcuts
-    url(r'^api/planner/grades', GradesApiListView.as_view(), name='api_planner_resource_grades'),
+    url(r'^api/planner/grades/$', GradesApiListView.as_view(), name='api_planner_resource_grades'),
 
     # CourseGroup
     url(r'^api/planner/coursegroups/$', CourseGroupsApiListView.as_view(), name='api_planner_coursegroups_list'),

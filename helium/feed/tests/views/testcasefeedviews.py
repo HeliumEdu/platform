@@ -9,7 +9,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, catego
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = "1.2.0"
+__version__ = '1.2.0'
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class TestCaseFeedViews(TestCase):
         eventhelper.given_event_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse("feed_events_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_private_events_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)
@@ -61,7 +61,7 @@ class TestCaseFeedViews(TestCase):
         homeworkhelper.given_homework_exists(course3, category=category3, completed=True, current_grade="-1/100")
 
         # WHEN
-        response = self.client.get(reverse("feed_homework_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)

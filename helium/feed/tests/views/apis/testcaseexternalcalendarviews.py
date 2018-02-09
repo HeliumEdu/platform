@@ -12,7 +12,7 @@ from helium.feed.tests.helpers import externalcalendarhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 
 class TestCaseExternalCalendarViews(TestCase):
@@ -49,7 +49,7 @@ class TestCaseExternalCalendarViews(TestCase):
         self.assertEqual(ExternalCalendar.objects.count(), 3)
         self.assertEqual(len(response.data), 2)
 
-    @mock.patch('helium.feed.services.icalservice.validate_url')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
     def test_create_externalcalendar(self, mock_validate_url):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
@@ -160,26 +160,29 @@ class TestCaseExternalCalendarViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
-    @mock.patch('helium.feed.services.icalservice.urlopen')
-    def test_create_bad_data(self, mock_urlopen):
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_create_invalid_url_disables_calendar(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
         commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
 
         # WHEN
         data = {
-            'url': 'http://www.not-a-valid-ical-url.com/nope'
+            'title': 'some title',
+            'url': 'http://www.not-a-valid-ical-url.com/nope',
+            'color': '#7bd148',
+            'shown_on_calendar': True
         }
         response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('url', response.data)
-        self.assertEqual(ExternalCalendar.objects.count(), 0)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['url'], data['url'])
+        self.assertFalse(response.data['shown_on_calendar'])
 
-    @mock.patch('helium.feed.services.icalservice.urlopen')
-    def test_update_bad_data(self, mock_urlopen):
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_update_invalid_url_disables_calendar(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
@@ -187,14 +190,17 @@ class TestCaseExternalCalendarViews(TestCase):
 
         # WHEN
         data = {
-            'url': 'http://www.not-a-valid-ical-url.com/nope'
+            'url': 'http://www.not-a-valid-ical-url.com/nope',
+            # Intentionally NOT changing these value
+            'title': external_calendar.title
         }
         response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('url', response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['url'], data['url'])
+        self.assertFalse(response.data['shown_on_calendar'])
 
     def test_not_found(self):
         userhelper.given_a_user_exists_and_is_logged_in(self.client)

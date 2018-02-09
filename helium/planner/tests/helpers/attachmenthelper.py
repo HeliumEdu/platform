@@ -7,15 +7,15 @@ from helium.planner.models import Attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 tmp_files = []
 
 
-def given_file_exists():
+def given_file_exists(ext='.txt'):
     global tmp_files
 
-    tmp_file = NamedTemporaryFile(delete=False)
+    tmp_file = NamedTemporaryFile(suffix=ext, delete=False)
     tmp_file.write("Attachment File".encode())
     tmp_file.close()
 
