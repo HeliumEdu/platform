@@ -48,7 +48,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_get_external_calendar_as_external_events(self, mock_urlopen):
+    def test_get_external_calendar_as_events(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)

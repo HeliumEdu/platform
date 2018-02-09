@@ -49,7 +49,7 @@ def validate_url(url):
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 
-def calendar_to_external_events(external_calendar, calendar):
+def calendar_to_events(external_calendar, calendar):
     """
     For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
     resources.
