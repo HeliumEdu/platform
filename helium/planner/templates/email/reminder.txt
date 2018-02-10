@@ -5,7 +5,7 @@ Message: {{ reminder.message }}
 -- {{ item_heading }} --
 Details for {{ reminder.title }}
 When: {{ normalized_datetime }}
-{% if reminder.homework and calendar_item.course.title %}Class Info: {{ calendar_item.title }}{% if calendar_item.category.title %} for {{ calendar_item.category.title }}{% endif %}{% if calendar_item.course.room %} in {{ calendar_item.course.room }} {% endif %}{% endif %}
+{% if reminder.homework %}Class Info: {% if calendar_item.category.title %} for {% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.room %} in {{ calendar_item.course.room }}{% endif %}{% endif %}
 {% if normalized_materials %}Materials: {{ normalized_materials }}{% endif %}
 Comments: {{ comments }}
 {% if calendar_item.attachments.count > 0 %}- Attachments -{% for attachment in calendar_item.attachments.all %}

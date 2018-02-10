@@ -20,9 +20,9 @@
 
             <p><em>When</em>: {{ normalized_datetime }}</p>
 
-            {% if reminder.homework and calendar_item.course.title %}<p><em>Class Info</em>: {{ calendar_item.title }}
-                {% if calendar_item.category.title %} for {{ calendar_item.category.title }}{% endif %}
-                {% if calendar_item.course.room %} in {{ calendar_item.course.room }} {% endif %}
+            {% if reminder.homework %}<p><em>Class Info</em>:
+                {% if calendar_item.category.title %} for {% endif %}{{ calendar_item.course.title }}
+                {% if calendar_item.course.room %} in {{ calendar_item.course.room }}{% endif %}
             </p>{% endif %}
             {% if normalized_materials %}<p><em>Materials</em>: {{ normalized_materials }}</p>{% endif %}
             {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
