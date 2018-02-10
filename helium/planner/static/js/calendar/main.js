@@ -562,7 +562,7 @@ function HeliumCalendar() {
                             $("tr[id^='reminder-']").remove();
                             $("#no-reminders").show();
 
-                            self.reminder_unsaved_pk = calendar_item_fields.length + 1;
+                            self.reminder_unsaved_pk = calendar_item_fields.reminders.length + 1;
                             for (i = 0; i < calendar_item_fields.reminders.length; i += 1) {
                                 self.add_reminder_to_table(calendar_item_fields.reminders[i], false);
                             }
