@@ -10,7 +10,7 @@ from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.1'
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,9 @@ class PrivateEnableResourceView(APIView):
 
         serializer = PrivateFeedSerializer({
             'events_private_url': reverse('feed_private_events_ical', kwargs={'slug': user.settings.private_slug}),
-            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug})
+            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug}),
+            'courseschedules_private_url': reverse('feed_private_courseschedules_ical',
+                                                   kwargs={'slug': user.settings.private_slug})
         })
 
         metricutils.increment('action.privatefeed.enabled', request)
