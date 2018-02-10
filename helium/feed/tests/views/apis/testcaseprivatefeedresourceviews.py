@@ -7,7 +7,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.1'
 
 
 class TestCasePrivateFeedResourceViews(TestCase):
@@ -38,8 +38,10 @@ class TestCasePrivateFeedResourceViews(TestCase):
         self.assertIsNotNone(user.settings.private_slug)
         self.assertIn('events_private_url', response.data)
         self.assertIn('homework_private_url', response.data)
+        self.assertIn('courseschedules_private_url', response.data)
         self.assertEqual(self.client.get(response.data['events_private_url']).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(response.data['homework_private_url']).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(response.data['courseschedules_private_url']).status_code, status.HTTP_200_OK)
 
     def test_disable_private_url(self):
         # GIVEN
@@ -59,4 +61,7 @@ class TestCasePrivateFeedResourceViews(TestCase):
             status.HTTP_404_NOT_FOUND)
         self.assertEqual(
             self.client.get(reverse('feed_private_homework_ical', kwargs={'slug': private_slug})).status_code,
+            status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            self.client.get(reverse('feed_private_courseschedules_ical', kwargs={'slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)

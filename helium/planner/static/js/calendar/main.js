@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.0
+ * @version 1.3.1
  */
 
 /**
@@ -655,8 +655,8 @@ function HeliumCalendar() {
         // Whether or not to filter by assignments, events, or both
         Cookies.set("filter_show_homework", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-homework").children().find("input").prop("checked"), {path: "/"});
         Cookies.set("filter_show_events", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-events").children().find("input").prop("checked"), {path: "/"});
-        Cookies.set("filter_show_class", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-external").children().find("input").prop("checked"), {path: "/"});
-        Cookies.set("filter_show_external", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-class").children().find("input").prop("checked"), {path: "/"});
+        Cookies.set("filter_show_class", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-class").children().find("input").prop("checked"), {path: "/"});
+        Cookies.set("filter_show_external", (!$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) || $("#calendar-filter-external").children().find("input").prop("checked"), {path: "/"});
 
         // Check if we should filter by selected courses
         $.each(courses, function () {
@@ -1909,8 +1909,6 @@ $(document).ready(function () {
 
         $.when.apply(this, helium.calendar.ajax_calls).done(function () {
             $(".homework-help").popover({html: true}).data("bs.popover").tip().css("z-index", 1060);
-
-            helium.calendar.loading_div.spin(false);
         });
 
         $(".wysiwyg-editor").ace_wysiwyg({

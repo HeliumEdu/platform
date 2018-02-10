@@ -9,7 +9,7 @@ from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +71,10 @@ def course_schedules_to_events(course, course_schedules):
                               all_day=False,
                               show_end_time=True,
                               start=make_aware(datetime.datetime.combine(day, start_time),
-                                               pytz.timezone(course.get_user().settings.time_zone)),
+                                               pytz.timezone(course.get_user().settings.time_zone)).astimezone(
+                                  pytz.utc),
                               end=make_aware(datetime.datetime.combine(day, end_time),
-                                             pytz.timezone(course.get_user().settings.time_zone)),
+                                             pytz.timezone(course.get_user().settings.time_zone)).astimezone(pytz.utc),
                               owner_id=course.pk,
                               user=course.get_user(),
                               calendar_item_type=enums.COURSE)

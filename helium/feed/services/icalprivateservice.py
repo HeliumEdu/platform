@@ -6,11 +6,12 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
-from helium.planner.models import Homework
+from helium.planner.models import Homework, Course
+from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.2.0'
+__version__ = '1.3.1'
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +82,10 @@ def events_to_private_ical_feed(user):
         calendar_event = icalendar.Event()
         calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
         calendar_event["summary"] = event.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(event.created_at)
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(event.start)
-            calendar_event["dtend"] = icalendar.vDatetime(event.end)
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
         else:
             calendar_event["dtstart"] = icalendar.vDate(event.start)
             calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
@@ -114,14 +115,51 @@ def homework_to_private_ical_feed(user):
         calendar_event = icalendar.Event()
         calendar_event["uid"] = "he-{}-{}".format(user.pk, homework.pk)
         calendar_event["summary"] = homework.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(homework.created_at)
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
         if not homework.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(homework.start)
-            calendar_event["dtend"] = icalendar.vDatetime(homework.end)
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(homework.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(homework.end))
         else:
             calendar_event["dtstart"] = icalendar.vDate(homework.start)
             calendar_event["dtend"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
         calendar_event["description"] = __create_homework_description(homework)
+
+        calendar.add_component(calendar_event)
+
+    timezone.deactivate()
+
+    return calendar.to_ical()
+
+
+def courseschedules_to_private_ical_feed(user):
+    """
+    Generate an ICAL feed for all course schedules associated with the given user.
+
+    :param user: The user to generate an ICAL feed for.
+    :return: An ICAL string of all the user's course schedules.
+    """
+    # TODO: responses should, in the future, be cached for at least a few minutes
+
+    calendar = __create_calendar(user)
+
+    events = []
+    for course in Course.objects.for_user(user.pk):
+        events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
+
+    timezone.activate(pytz.timezone(user.settings.time_zone))
+
+    for event in events:
+        calendar_event = icalendar.Event()
+        calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
+        calendar_event["summary"] = event.title
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
+        if not event.all_day:
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
+        else:
+            calendar_event["dtstart"] = icalendar.vDate(event.start)
+            calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+        calendar_event["description"] = __create_event_description(event)
 
         calendar.add_component(calendar_event)
 

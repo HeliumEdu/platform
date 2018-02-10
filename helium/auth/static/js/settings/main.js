@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.0
+ * @version 1.3.1
  */
 
 /**
@@ -371,7 +371,7 @@ function HeliumSettings() {
     });
 
     this.refresh_feeds = function () {
-        if (helium.USER_PREFS.settings.private_slug === null) {
+        if (helium.USER_PREFS.settings.private_slug === null || helium.USER_PREFS.settings.private_slug === "") {
             $("#enable-disable-feed").addClass("btn-success");
             $("#enable-disable-feed").removeClass("btn-warning");
             $("#enable-disable-feed").html('<i class="icon-check"></i>Enable Private Feeds');
@@ -385,14 +385,15 @@ function HeliumSettings() {
             var base_url = helium.SITE_URL + "feed/private/" + helium.USER_PREFS.settings.private_slug;
 
             $("#private-feed-urls").html("<strong>Events: </strong><a href=\"" + base_url + "/events.ics\">" + base_url + "/events.ics</a>" +
-                "<br /><strong>Homework: </strong><a href=\"" + base_url + "/homework.ics\">" + base_url + "/homework.ics</a>");
+                "<br /><strong>Homework: </strong><a href=\"" + base_url + "/homework.ics\">" + base_url + "/homework.ics</a>" +
+                "<br /><strong>Class Schedule: </strong><a href=\"" + base_url + "/courseschedules.ics\">" + base_url + "/courseschedules.ics</a>");
         }
     };
 
     $("#enable-disable-feed").on("click", function () {
         $("#loading-feed").spin(helium.SMALL_LOADING_OPTS);
 
-        if (helium.USER_PREFS.settings.private_slug === null) {
+        if (helium.USER_PREFS.settings.private_slug === null || helium.USER_PREFS.settings.private_slug === "") {
             $.ajax({
                 async: false,
                 type: 'PUT',
