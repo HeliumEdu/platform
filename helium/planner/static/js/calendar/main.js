@@ -1909,8 +1909,6 @@ $(document).ready(function () {
 
         $.when.apply(this, helium.calendar.ajax_calls).done(function () {
             $(".homework-help").popover({html: true}).data("bs.popover").tip().css("z-index", 1060);
-
-            helium.calendar.loading_div.spin(false);
         });
 
         $(".wysiwyg-editor").ace_wysiwyg({
