@@ -76,18 +76,16 @@ def events_to_private_ical_feed(user):
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    # TODO: timezone is activated, but it doesn't appear the start/end dates are actually made aware
-
     calendar = __create_calendar(user)
 
     for event in user.events.iterator():
         calendar_event = icalendar.Event()
         calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
         calendar_event["summary"] = event.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(event.created_at)
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(event.start)
-            calendar_event["dtend"] = icalendar.vDatetime(event.end)
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
         else:
             calendar_event["dtstart"] = icalendar.vDate(event.start)
             calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
@@ -111,18 +109,16 @@ def homework_to_private_ical_feed(user):
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    # TODO: timezone is activated, but it doesn't appear the start/end dates are actually made aware
-
     calendar = __create_calendar(user)
 
     for homework in Homework.objects.for_user(user.pk).iterator():
         calendar_event = icalendar.Event()
         calendar_event["uid"] = "he-{}-{}".format(user.pk, homework.pk)
         calendar_event["summary"] = homework.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(homework.created_at)
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
         if not homework.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(homework.start)
-            calendar_event["dtend"] = icalendar.vDatetime(homework.end)
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(homework.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(homework.end))
         else:
             calendar_event["dtstart"] = icalendar.vDate(homework.start)
             calendar_event["dtend"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
@@ -152,16 +148,14 @@ def courseschedules_to_private_ical_feed(user):
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    # TODO: timezone is activated, but it doesn't appear the start/end dates are actually made aware
-
     for event in events:
         calendar_event = icalendar.Event()
         calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
         calendar_event["summary"] = event.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(event.created_at)
+        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(event.start)
-            calendar_event["dtend"] = icalendar.vDatetime(event.end)
+            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
         else:
             calendar_event["dtstart"] = icalendar.vDate(event.start)
             calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))

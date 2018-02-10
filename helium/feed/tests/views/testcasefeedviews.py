@@ -105,5 +105,5 @@ class TestCaseFeedViews(TestCase):
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)
-        self.assertEqual(len(calendar.subcomponents), 3)
+        self.assertEqual(len(calendar.subcomponents), 106)
         # TODO: implement assertions
