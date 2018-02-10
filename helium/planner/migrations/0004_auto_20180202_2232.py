@@ -4,13 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-def add_materials(apps, schema_editor):
-    User = apps.get_model('helium', 'User')
-    MaterialGroup = apps.get_model('planner', 'MaterialGroup')
-    for user_id in User.objects.values_list('id', flat=True):
-        if not MaterialGroup.objects.filter(user_id=user_id, title='Textbooks').exists():
-            MaterialGroup(title='Textbooks', shown_on_calendar=True, user_id=user_id).save()
-
 
 class Migration(migrations.Migration):
 

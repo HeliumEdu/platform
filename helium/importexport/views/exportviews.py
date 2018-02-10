@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
-from helium.planner.models import CourseGroup, Course, Category, MaterialGroup, Material, Event, Homework, Reminder
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
+    Homework, Reminder
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class ExportView(APIView):
             'external_calendars': ExternalCalendar.objects.for_user(user.pk),
             'course_groups': CourseGroup.objects.for_user(user.pk),
             'courses': Course.objects.for_user(user.pk),
+            'course_schedules': CourseSchedule.objects.for_user(user.pk),
             'categories': Category.objects.for_user(user.pk),
             'material_groups': MaterialGroup.objects.for_user(user.pk),
             'materials': Material.objects.for_user(user.pk),

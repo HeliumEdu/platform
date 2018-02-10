@@ -13,7 +13,7 @@ from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 
 class TestCaseExternalCalendarResourceViews(TestCase):
@@ -23,7 +23,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': '9999'}))
+            self.client.get(reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
         # WHEN
         responses = [
             self.client.get(
-                reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': external_calendar.pk}))
+                reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
         ]
 
         # THEN
@@ -48,7 +48,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_get_external_calendar_as_external_events(self, mock_urlopen):
+    def test_get_external_calendar_as_events(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
@@ -56,7 +56,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('api_feed_resource_externalcalendaras_externalevents', kwargs={'pk': external_calendar.pk}))
+            reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(len(response.data), 2)

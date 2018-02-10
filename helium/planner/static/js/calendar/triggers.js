@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 /*******************************************
@@ -198,14 +198,25 @@
                         helium.calendar.show_end_time = true;
                     }
 
-                    if ((month_or_list_view || helium.calendar.all_day) && helium.calendar.has_schedule(course)) {
-                        start_time = moment(course.sun_start_time, helium.HE_TIME_STRING_SERVER);
-                        end_time = moment(course.sun_end_time, helium.HE_TIME_STRING_SERVER);
+                    if ((month_or_list_view || helium.calendar.all_day) && course.schedules.length > 0 && helium.calendar.has_schedule(course.schedules[0])) {
+                        var schedule = course.schedules[0];
+
+                        start_time = moment(schedule.sun_start_time, helium.HE_TIME_STRING_SERVER);
+                        end_time = moment(schedule.sun_end_time, helium.HE_TIME_STRING_SERVER);
                         // If the course has a different schedule each day, set the start/end time according to the specified day
-                        if (!course.same_time) {
+                        if (!helium.calendar.same_time(schedule)) {
+
                             day_of_week = helium.calendar.start.day();
                             // If this class isn't on this day of the week, we won't get a valid time, so grab the closest valid day
-                            on_days = [course.sun, course.mon, course.tue, course.wed, course.thu, course.fri, course.sat];
+                            on_days = [
+                                helium.calendar.on_day_of_week(schedule, 0),
+                                helium.calendar.on_day_of_week(schedule, 1),
+                                helium.calendar.on_day_of_week(schedule, 2),
+                                helium.calendar.on_day_of_week(schedule, 3),
+                                helium.calendar.on_day_of_week(schedule, 4),
+                                helium.calendar.on_day_of_week(schedule, 5),
+                                helium.calendar.on_day_of_week(schedule, 6)
+                            ];
                             if (!on_days[day_of_week]) {
                                 for (i = 0; i < on_days.length; i += 1) {
                                     if (on_days[i]) {
@@ -217,28 +228,28 @@
 
                             switch (day_of_week) {
                                 case 1:
-                                    start_time = moment(course.mon_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.mon_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.mon_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.mon_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 2:
-                                    start_time = moment(course.tue_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.tue_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.tue_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.tue_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 3:
-                                    start_time = moment(course.wed_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.wed_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.wed_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.wed_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 4:
-                                    start_time = moment(course.thu_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.thu_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.thu_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.thu_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 5:
-                                    start_time = moment(course.fri_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.fri_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.fri_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.fri_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                                 case 6:
-                                    start_time = moment(course.sat_start_time, helium.HE_TIME_STRING_SERVER);
-                                    end_time = moment(course.sat_end_time, helium.HE_TIME_STRING_SERVER);
+                                    start_time = moment(schedule.sat_start_time, helium.HE_TIME_STRING_SERVER);
+                                    end_time = moment(schedule.sat_end_time, helium.HE_TIME_STRING_SERVER);
                                     break;
                             }
                         }
@@ -252,7 +263,7 @@
                             helium.calendar.end.hour(start_time.hour());
                             helium.calendar.end.minute(start_time.minutes() + helium.USER_PREFS.settings.all_day_offset);
                         }
-                    } else if ((month_view && !helium.calendar.has_schedule(course)) || helium.calendar.all_day) {
+                    } else if (((month_view && course.schedules.length == 0) || (course.schedules.length > 0 && !helium.calendar.has_schedule(course.schedules[0]))) || helium.calendar.all_day) {
                         helium.calendar.start.hour(12);
                         helium.calendar.start.minute(0);
                         helium.calendar.end.hour(12);

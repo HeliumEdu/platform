@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 var CSRF_TOKEN = Cookies.get("csrftoken");
@@ -396,6 +396,4 @@ if (typeof USER_ID !== 'undefined') {
             $.extend(helium.USER_PREFS, data);
         }
     });
-
-    moment.tz.setDefault(helium.USER_PREFS.settings.time_zone);
 }
