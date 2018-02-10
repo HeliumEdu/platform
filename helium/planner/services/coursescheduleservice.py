@@ -66,6 +66,7 @@ def course_schedules_to_events(course, course_schedules):
                 start_time = __get_start_time_for_weekday(course_schedule, day.weekday())
                 end_time = __get_end_time_for_weekday(course_schedule, day.weekday())
 
+                # TODO: this should return in UTC
                 event = Event(id=len(events),
                               title=course.title,
                               all_day=False,

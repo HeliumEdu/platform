@@ -5,11 +5,12 @@ from django.test import TestCase
 from django.urls import reverse
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper, eventhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
+    homeworkhelper, eventhelper
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.2.0'
+__version__ = '1.3.1'
 
 logger = logging.getLogger(__name__)
 
@@ -81,3 +82,28 @@ class TestCaseFeedViews(TestCase):
                                                                             homework2.course.title,
                                                                             homework2.course.room,
                                                                             homework2.comments))
+
+    def test_courseschedules_feed(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        user1.settings.enable_private_slug()
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        user2.settings.enable_private_slug()
+        course_group1 = coursegrouphelper.given_course_group_exists(user1)
+        course_group2 = coursegrouphelper.given_course_group_exists(user1)
+        course_group3 = coursegrouphelper.given_course_group_exists(user2)
+        course1 = coursehelper.given_course_exists(course_group1, room='')
+        course2 = coursehelper.given_course_exists(course_group2)
+        course3 = coursehelper.given_course_exists(course_group3)
+        course_schedule1 = courseschedulehelper.given_course_schedule_exists(course1)
+        course_schedule2 = courseschedulehelper.given_course_schedule_exists(course2)
+        course_schedule3 = courseschedulehelper.given_course_schedule_exists(course3)
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_private_courseschedules_ical", kwargs={"slug": user1.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content)
+        self.assertEqual(len(calendar.subcomponents), 3)
+        # TODO: implement assertions
