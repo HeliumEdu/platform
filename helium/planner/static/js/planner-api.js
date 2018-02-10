@@ -41,6 +41,7 @@ function HeliumPlannerAPI() {
     this.events_by_user_id = {};
     this.external_calendars_by_user_id = {};
     this.external_calendar_feed = {};
+    this.class_schedules = {};
     this.reminder = {};
     this.reminders_by_user_id = {};
     this.reminders_by_calendar_item = {};
@@ -456,6 +457,53 @@ function HeliumPlannerAPI() {
                 success: function (data) {
                     self.courses_by_user_id[helium.USER_PREFS.id] = data;
                     callback(self.courses_by_user_id[helium.USER_PREFS.id]);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var data = [{
+                        'err_msg': self.GENERIC_ERROR_MESSAGE,
+                        'jqXHR': jqXHR,
+                        'textStatus': textStatus,
+                        'errorThrown': errorThrown
+                    }];
+                    if (jqXHR.hasOwnProperty('responseJSON') && Object.keys(jqXHR.responseJSON).length > 0) {
+                        var name = Object.keys(jqXHR.responseJSON)[0];
+                        if (jqXHR.responseJSON[name].length > 0) {
+                            data[0]['err_msg'] = jqXHR.responseJSON[Object.keys(jqXHR.responseJSON)[0]][0];
+                        }
+                    }
+                    callback(data);
+                }
+            });
+        }
+
+        return ret_val;
+    };
+
+    /**
+     * Compile all Events for the given CourseSchedule and pass the values to the given callback function in JSON format.
+     *
+     * @param callback function to pass response data and call after completion
+     * @param course_group_id The ID of the CourseGroup.
+     * @param course_id The ID of the Course.
+     * @param async true if call should be async, false otherwise (default is true)
+     * @param use_cache true if the call should attempt to used cache data, false if a database call should be made to refresh the cache (default to false)
+     */
+    this.get_class_schedule_events = function (callback, course_group_id, course_id, async, use_cache) {
+        async = typeof async === "undefined" ? true : async;
+        use_cache = typeof use_cache === "undefined" ? false : use_cache;
+        var ret_val = null;
+
+        if (use_cache && self.class_schedules.hasOwnProperty(course_id)) {
+            ret_val = callback(self.class_schedules[course_id]);
+        } else {
+            ret_val = $.ajax({
+                type: "GET",
+                url: "/api/planner/coursegroups/" + course_group_id + "/courses/" + course_id + "/courseschedules/events/",
+                async: async,
+                dataType: "json",
+                success: function (data) {
+                    self.class_schedules[course_id] = data;
+                    callback(self.class_schedules[course_id]);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     var data = [{

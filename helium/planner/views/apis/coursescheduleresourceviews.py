@@ -1,11 +1,10 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from helium.common.permissions import IsOwner
-from helium.planner.models import CourseSchedule
+from helium.planner.models import Course, CourseSchedule
 from helium.planner.schemas import CourseScheduleDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
@@ -17,24 +16,21 @@ __version__ = '1.3.0'
 logger = logging.getLogger(__name__)
 
 
-class CourseScheduleAsEventsResourceView(GenericAPIView):
+class CourseScheduleAsEventsResourceView(APIView):
     """
     get:
-    Return a course's schedule as a list of event instances.
+    Return all course schedules as a list of event instances.
     """
-    serializer_class = EventSerializer
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (IsAuthenticated,)
     schema = CourseScheduleDetailSchema()
 
-    def get_queryset(self):
-        user = self.request.user
-        return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
-
     def get(self, request, *args, **kwargs):
-        course_schedule = self.get_object()
+        user = self.request.user
+        course = Course.objects.get(pk=self.kwargs['course'])
+        course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
 
-        events = coursescheduleservice.course_schedule_to_events(course_schedule)
+        events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
 
-        serializer = self.get_serializer(events, many=True)
+        serializer = EventSerializer(events, many=True)
 
         return Response(serializer.data)

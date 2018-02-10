@@ -7,13 +7,13 @@ from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 
 
 def given_event_exists(user, title='Test Event', all_day=False, show_end_time=True,
                        start=datetime.datetime(2017, 5, 8, 12, 0, 0, tzinfo=timezone.utc),
                        end=datetime.datetime(2017, 5, 8, 14, 0, 0, tzinfo=timezone.utc),
-                       priority=75, comments='A comment on an event.'):
+                       priority=75, comments='A comment on an event.', owner_id='12345'):
     event = Event.objects.create(title=title,
                                  all_day=all_day,
                                  show_end_time=show_end_time,
@@ -21,6 +21,7 @@ def given_event_exists(user, title='Test Event', all_day=False, show_end_time=Tr
                                  end=end,
                                  priority=priority,
                                  comments=comments,
+                                 owner_id=owner_id,
                                  user=user)
 
     return event
@@ -34,4 +35,5 @@ def verify_event_matches_data(test_case, event, data):
     test_case.assertEqual(event.end, parser.parse(data['end']))
     test_case.assertEqual(event.priority, data['priority'])
     test_case.assertEqual(event.comments, data['comments'])
+    test_case.assertEqual(event.owner_id, data['owner_id'])
     test_case.assertEqual(event.user.pk, int(data['user']))

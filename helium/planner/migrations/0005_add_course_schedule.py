@@ -197,4 +197,9 @@ class Migration(migrations.Migration):
             model_name='course',
             name='wed_start_time_alt',
         ),
+        migrations.AddField(
+            model_name='event',
+            name='owner_id',
+            field=models.CharField(blank=True, help_text=b'An arbitrary string identifying the owning resource.', max_length=255, null=True),
+        ),
     ]

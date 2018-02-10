@@ -42,7 +42,7 @@ urlpatterns = [
     # Resource shortcuts
     url(r'^api/planner/grades/$', GradesApiListView.as_view(), name='api_planner_resource_grades'),
     url(
-        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/(?P<pk>[0-9]+)/events/$',
+        r'^api/planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/events/$',
         CourseScheduleAsEventsResourceView.as_view(), name='api_planner_resource_courseschedules_events'),
 
     # CourseGroup
