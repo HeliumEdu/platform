@@ -20,7 +20,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 
 class TestCaseEventViews(TestCase):
@@ -69,6 +69,7 @@ class TestCaseEventViews(TestCase):
             'end': '2014-05-08T14:00:00Z',
             'priority': 75,
             'comments': 'some comment',
+            'owner_id': '12345',
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
         }
@@ -166,7 +167,8 @@ class TestCaseEventViews(TestCase):
             'start': '2016-05-08T12:00:00Z',
             'end': '2016-05-08T14:00:00Z',
             'priority': 12,
-            'comments': 'some comment'
+            'comments': 'some comment',
+            'owner_id': '54321'
         }
         response = self.client.put(reverse('api_planner_events_detail',
                                            kwargs={'pk': event.pk}),

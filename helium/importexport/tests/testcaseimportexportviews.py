@@ -162,12 +162,12 @@ class TestCaseImportExportViews(TestCase):
                                               {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
-                                               'user': 1})
+                                               'owner_id': None, 'user': 1})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
-                                               'user': 1})
+                                               'owner_id': None, 'user': 1})
         homeworkhelper.verify_homework_matches_data(self, homework[2],
                                                     {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',

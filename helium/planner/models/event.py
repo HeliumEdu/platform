@@ -7,10 +7,13 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.2'
+__version__ = '1.3.0'
 
 
 class Event(BaseCalendar):
+    owner_id = models.CharField(help_text='An arbitrary string identifying the owning resource.',
+                                max_length=255, blank=True, null=True)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
     objects = EventManager()

@@ -8,7 +8,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 
 class TestCaseExternalCalendarResourceViews(TestCase):
@@ -19,7 +19,7 @@ class TestCaseExternalCalendarResourceViews(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_resource_courseschedules_events',
-                                    kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'}))
+                                    kwargs={'course_group': '9999', 'course': '9999'}))
         ]
 
         # THEN
@@ -37,28 +37,29 @@ class TestCaseExternalCalendarResourceViews(TestCase):
         # WHEN
         responses = [
             self.client.get(reverse('api_planner_resource_courseschedules_events',
-                                    kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                            'pk': course_schedule.pk}))
+                                    kwargs={'course_group': course_group.pk, 'course': course.pk}))
         ]
 
         # THEN
         self.assertTrue(
             CourseSchedule.objects.filter(pk=course_schedule.pk, course__course_group__user_id=user1.pk).exists())
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            if isinstance(response.data, list):
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_course_schedule_as_events(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
         response = self.client.get(reverse('api_planner_resource_courseschedules_events',
-                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
-                                                   'pk': course_schedule.pk}))
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
-        # TODO: implement
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data), 53)
+        # TODO: implement more assertions
