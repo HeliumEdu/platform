@@ -18,12 +18,12 @@ function HeliumClasses() {
     "use strict";
 
     this.CATEGORY_SUGGESTIONS = [
-        {value: "Assignment", tokens: ["Assignment"]},
-        {value: "Project", tokens: ["Project"]},
-        {value: "Quiz", tokens: ["Quiz"]},
-        {value: "Exam", tokens: ["Exam"]},
-        {value: "Midterm", tokens: ["Midterm"]},
-        {value: "Final Exam", tokens: ["Final Exam"]}
+        {value: "Assignment", color: "#16a765", tokens: ["Assignment"]},
+        {value: "Exam", color: "#ac725e", tokens: ["Exam"]},
+        {value: "Final Exam", color: "#f691b2", tokens: ["Final Exam"]},
+        {value: "Midterm", color: "#9fe1e7", tokens: ["Midterm"]},
+        {value: "Project", color: "#f83a22", tokens: ["Project"]},
+        {value: "Quiz", color: "#b99aff", tokens: ["Quiz"]},
     ];
 
     this.ajax_calls = [];
@@ -173,8 +173,23 @@ function HeliumClasses() {
             self.category_unsaved_pk += 1;
         }
 
-        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td>" + "<td class=\"hidden-480\">" + (category.num_homework !== undefined ? category.num_homework : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
+        row = "<tr id=\"category-" + category.id + unsaved_string + "\">" + "<td><a class=\"cursor-hover\" data-type=\"typeaheadjs\" id=\"category-" + category.id + unsaved_string + "-type\">" + category.title + "</a></td>" + "<td><a class=\"cursor-hover\" id=\"category-" + category.id + unsaved_string + "-weight\">" + category.weight + "</a></td><td><select id=\"category-" + category.id + unsaved_string + "-color\" class='color-picker'>" + $("#id_course_color").html() + "</select></td><td class=\"hidden-480\">" + (category.num_homework !== undefined ? category.num_homework : "0") + "</td>" + "<td><div class=\"btn-group\"><button class=\"btn btn-xs btn-danger\" id=\"delete-category-" + category.id + unsaved_string + "\"><i class=\"icon-trash bigger-120\"></i></button></div></td>" + "</tr>";
         $("#categories-table-end-placeholder").before(row);
+
+        $("#category-" + category.id + unsaved_string + "-color").simplecolorpicker({
+            picker: true,
+            theme: "glyphicons"
+        });
+        $("#category-" + category.id + unsaved_string + "-color").simplecolorpicker("selectColor", category.color);
+        $("#category-" + category.id + unsaved_string + "-color").on("change", function () {
+            var id = $(this).attr("id").split("category-")[1].split("-color")[0], parent_id = $(this).parent().parent().attr("id");
+            if (id.split("-").length === 2) {
+                id = id.split("-")[1];
+            }
+            if (parent_id.indexOf("unsaved") === -1 && parent_id.indexOf("modified") === -1) {
+                $(this).parent().parent().attr("id", $(this).parent().parent().attr("id") + "-modified");
+            }
+        });
 
         // Bind attributes within added row
         $("#category-" + category.id + unsaved_string + "-type").editable({
@@ -183,13 +198,21 @@ function HeliumClasses() {
                 name: "categories",
                 local: self.CATEGORY_SUGGESTIONS
             },
-            success: function () {
+            success: function (response, newValue) {
                 var id = $(this).attr("id").split("category-")[1].split("-type")[0], parent_id = $(this).parent().parent().attr("id");
                 if (id.split("-").length === 2) {
                     id = id.split("-")[1];
                 }
                 if (parent_id.indexOf("unsaved") === -1 && parent_id.indexOf("modified") === -1) {
                     $(this).parent().parent().attr("id", $(this).parent().parent().attr("id") + "-modified");
+                }
+
+                for (var i = 0; i < self.CATEGORY_SUGGESTIONS.length; ++i) {
+                    if (self.CATEGORY_SUGGESTIONS[i].value == newValue) {
+                        $("[id^='category-" + parent_id.split("-")[1] + "'][id$='-color']").simplecolorpicker("selectColor", self.CATEGORY_SUGGESTIONS[i].color);
+
+                        break;
+                    }
                 }
             },
             type: "text",
@@ -384,6 +407,7 @@ function HeliumClasses() {
                 id: self.category_unsaved_pk,
                 title: self.CATEGORY_SUGGESTIONS[i].value,
                 weight: 0,
+                color: self.CATEGORY_SUGGESTIONS[i].color,
                 average_grade: -1,
                 course: self.edit_id
             };
@@ -944,7 +968,7 @@ function HeliumClasses() {
      * @param table the course group table in which to add the course
      */
     this.add_course_to_groups = function (course_data, table) {
-        var row = table.row.add(["<span class=\"label label-sm\" style=\"background-color: " + course_data.color + " !important\">" + (course_data.website !== "" ? "<a target=\"_blank\" href=\"" + course_data.website + "\" class=\"course-title-with-link\">" + course_data.title + " <i class=\"icon-external-link bigger-110\"></i></a>" : course_data.title) + "</span>", moment(course_data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + " to " + moment(course_data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT), course_data.room, course_data.teacher_email !== "" ? ("<a target=\"_blank\" href=\"mailto:" + course_data.teacher_email + "\" class=\"teacher-email-with-link\">" + course_data.teacher_name + "</a>") : course_data.teacher_name, self.get_schedule(course_data), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-course-" + course_data.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-course-" + course_data.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node(), row_div = $(row).attr("id", "course-" + course_data.id);
+        var row = table.row.add(["<span class=\"label label-sm\" style=\"background-color: " + course_data.color + " !important\">" + (course_data.website !== "" ? "<a target=\"_blank\" href=\"" + course_data.website + "\" class=\"course-title-with-link\">" + course_data.title + " <i class=\"icon-external-link bigger-110\"></i></a>" : course_data.title) + "</span>", moment(course_data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + " to " + moment(course_data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT), course_data.is_online ? "Online" : course_data.room, course_data.teacher_email !== "" ? ("<a target=\"_blank\" href=\"mailto:" + course_data.teacher_email + "\" class=\"teacher-email-with-link\">" + course_data.teacher_name + "</a>") : course_data.teacher_name, self.get_schedule(course_data), "<div class=\"hidden-xs action-buttons\"><a class=\"green cursor-hover\" id=\"edit-course-" + course_data.id + "\"><i class=\"icon-edit bigger-130\"></i></a><a class=\"red cursor-hover\" id=\"delete-course-" + course_data.id + "\"><i class=\"icon-trash bigger-130\"></i></a></div>"]).node(), row_div = $(row).attr("id", "course-" + course_data.id);
         // Bind clickable attributes to their respective handlers
         row_div.find("[class$='-with-link']").on("click", function (e) {
             e.stopImmediatePropagation();
@@ -1154,14 +1178,16 @@ function HeliumClasses() {
                             self.course_group_id, self.edit_id, $(this).attr("id").split("category-")[1].split("-modified")[0],
                             {
                                 "title": $($(this).children()[0]).text(),
-                                "weight": $($(this).children()[1]).text() != "N/A" ? $($(this).children()[1]).text().slice(0, -1) : 0
+                                "weight": $($(this).children()[1]).text() != "N/A" ? $($(this).children()[1]).text().slice(0, -1) : 0,
+                                "color": $($(this).children()[2]).find(".color-picker").val()
                             });
                     });
 
                     $("[id^='category-'][id$='-unsaved']").each(function () {
                         categories_data.push({
                             "title": $($(this).children()[0]).text(),
-                            "weight": $($(this).children()[1]).text() != "N/A" ? $($(this).children()[1]).text().slice(0, -1) : 0
+                            "weight": $($(this).children()[1]).text() != "N/A" ? $($(this).children()[1]).text().slice(0, -1) : 0,
+                            "color": $($(this).children()[2]).find(".color-picker").val()
                         });
                     });
 
@@ -1262,7 +1288,7 @@ function HeliumClasses() {
                                         var row_div = $("#course-" + data.id);
                                         self.course_group_table[data.course_group.toString()].cell(row_div, 0).data("<span class=\"label label-sm\" style=\"background-color: " + data.color + " !important\">" + (data.website !== "" ? "<a target=\"_blank\" href=\"" + data.website + "\" class=\"course-title-with-link\">" + data.title + " <i class=\"icon-external-link bigger-110\"></i></a>" : data.title) + "</span>");
                                         self.course_group_table[data.course_group.toString()].cell(row_div, 1).data(moment(data.start_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT) + " to " + moment(data.end_date, helium.HE_DATE_STRING_SERVER).format(helium.HE_DATE_STRING_CLIENT));
-                                        self.course_group_table[data.course_group.toString()].cell(row_div, 2).data(data.room);
+                                        self.course_group_table[data.course_group.toString()].cell(row_div, 2).data(data.is_online ? "Online" : data.room);
                                         self.course_group_table[data.course_group.toString()].cell(row_div, 3).data(data.teacher_email !== "" ? ("<a target=\"_blank\" href=\"mailto:" + data.teacher_email + "\" class=\"teacher-email-with-link\">" + data.teacher_name + "</a>") : data.teacher_name);
                                         self.course_group_table[data.course_group.toString()].cell(row_div, 4).data(self.get_schedule(data));
                                         self.course_group_table[data.course_group.toString()].draw();

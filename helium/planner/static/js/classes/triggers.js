@@ -239,6 +239,7 @@
             title: "Unnamed Category " + helium.classes.unnamed_category_index,
             weight: 0,
             average_grade: -1,
+            color: $($("#id_course_color option")[Math.floor(Math.random() * $("#id_course_color option").length)]).val(),
             course: helium.classes.edit_id
         };
         helium.classes.unnamed_category_index += 1;
