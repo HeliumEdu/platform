@@ -1516,8 +1516,8 @@ $(document).ready(function () {
                 helium.classes.edit_course_btn($("#edit-course-" + course_id), false);
                 $("a[href='#course-panel-tab-3']").tab("show");
 
-                $.removeCookie("course_id", {path: "/"});
-                $.removeCookie("edit_categories", {path: "/"});
+                Cookies.remove("course_id", {path: "/"});
+                Cookies.remove("edit_categories", {path: "/"});
             }
 
             if ($("#course-group-tabs a").length === 1) {
