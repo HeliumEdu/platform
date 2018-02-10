@@ -646,7 +646,7 @@ function HeliumCalendar() {
      * Refresh the filters based on the current filter selection.
      */
     this.refresh_filters = function () {
-        var courses = $("[id^='calendar-filter-course-']"), categories = $("[id^='calendar-filter-category-']"), calendar_search = $("#calendar-search").val(), course_ids = "", calendar_ids = "", category_ids = "";
+        var courses = $("[id^='calendar-filter-course-']"), categories = $("[id^='calendar-filter-category-']"), calendar_search = $("#calendar-search").val(), course_ids = "", calendar_ids = "", category_names = "";
 
         // Whether or not to filter by a search string
         Cookies.set("filter_search_string", calendar_search, {path: "/"});
@@ -672,13 +672,13 @@ function HeliumCalendar() {
         // Check if we should filter by selected categories
         $.each(categories, function () {
             if ($(this).children().find("input").prop("checked")) {
-                category_ids += ($(this).attr("id").split("calendar-filter-category-")[1] + ",");
+                category_names += ($(this).attr("id").split("calendar-filter-category-")[1] + ",");
             }
         });
-        if (category_ids.match(/,$/)) {
-            category_ids = category_ids.substring(0, category_ids.length - 1);
+        if (category_names.match(/,$/)) {
+            category_names = category_names.substring(0, category_names.length - 1);
         }
-        Cookies.set("filter_categories", category_ids, {path: "/"});
+        Cookies.set("filter_categories", category_names, {path: "/"});
 
         // If neither OR both complete/incomplete checkboxes are checked, we're not filtering by completion
         if ((!$("#calendar-filter-complete").children().find("input").prop("checked") && !$("#calendar-filter-incomplete").children().find("input").prop("checked")) || (($("#calendar-filter-complete").children().find("input").prop("checked") && $("#calendar-filter-incomplete").children().find("input").prop("checked")))) {
@@ -696,7 +696,7 @@ function HeliumCalendar() {
         }
 
         // If all filters are off, clear the filter title
-        if (calendar_ids === "" && course_ids === "" && category_ids === "" && !$("#calendar-filter-complete").children().find("input").prop("checked") && !$("#calendar-filter-incomplete").children().find("input").prop("checked") && !$("#calendar-filter-overdue").children().find("input").prop("checked") && !$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) {
+        if (calendar_ids === "" && course_ids === "" && category_names === "" && !$("#calendar-filter-complete").children().find("input").prop("checked") && !$("#calendar-filter-incomplete").children().find("input").prop("checked") && !$("#calendar-filter-overdue").children().find("input").prop("checked") && !$("#calendar-filter-homework").children().find("input").prop("checked") && !$("#calendar-filter-events").children().find("input").prop("checked") && !$("#calendar-filter-class").children().find("input").prop("checked") && !$("#calendar-filter-external").children().find("input").prop("checked")) {
             $("#filter-button-title").html("Filter");
         }
 
@@ -812,7 +812,8 @@ function HeliumCalendar() {
                     if (Cookies.get("filter_courses") && $.inArray(course.id.toString(), Cookies.get('filter_courses').split(",")) === -1) {
                         return true;
                     }
-                    if (Cookies.get("filter_categories") && $.inArray(calendar_item.category.toString(), Cookies.get('filter_categories').split(",")) === -1) {
+                    var slug = helium.calendar.categories[calendar_item.category].title.replace(" ", "").toLowerCase();
+                    if (Cookies.get("filter_categories") && $.inArray(slug, Cookies.get('filter_categories').split(",")) === -1) {
                         return true;
                     }
                     if (Cookies.get("filter_overdue") !== undefined && (calendar_item.completed || moment().isBefore(moment(calendar_item.start)))) {
@@ -1182,14 +1183,15 @@ function HeliumCalendar() {
 
                     bootbox.alert(helium.get_error_msg(data));
                 } else {
-                    var categories = {};
+                    var categories = [];
                     $("#calendar-filter-list").append("<div class=\"filter-strike\"><span>Categories</span></div>");
                     for (i = 0; i < data.length; i += 1) {
-                        if (!categories.hasOwnProperty(data[i].title)) {
-                            categories[data[i].title] = true;
-                            $("#calendar-filter-list").append("<li id=\"calendar-filter-category-" + data[i].id + "\"><a class=\"checkbox cursor-hover\"><input type=\"checkbox\" /> &nbsp;<span style=\"color: " + data[i].color + "\">" + data[i].title + "</span></a></li>");
-                            $("#calendar-filter-category-" + data[i].id + " input").on("click", self.event_stop_propagation).on("change", self.refresh_filters);
-                            $("#calendar-filter-category-" + data[i].id + " a").on("click", self.update_filter_checkbox_from_event);
+                        var slug = data[i].title.replace(" ", "").toLowerCase();
+                        if ($.inArray(slug, categories) === -1) {
+                            categories.push(slug);
+                            $("#calendar-filter-list").append("<li id=\"calendar-filter-category-" + slug + "\"><a class=\"checkbox cursor-hover\"><input type=\"checkbox\" /> &nbsp;<span>" + data[i].title + "</span></a></li>");
+                            $("#calendar-filter-category-" + slug + " input").on("click", self.event_stop_propagation).on("change", self.refresh_filters);
+                            $("#calendar-filter-category-" + slug + " a").on("click", self.update_filter_checkbox_from_event);
                         }
                     }
 
