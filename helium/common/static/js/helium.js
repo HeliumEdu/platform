@@ -48,8 +48,7 @@ function Helium() {
     ];
     this.REMINDER_TYPE_CHOICES = [
         "Popup",
-        "Email",
-        "Text"
+        "Email"
     ];
 
     // Variables to establish the current request/page the user is accessing
@@ -396,4 +395,8 @@ if (typeof USER_ID !== 'undefined') {
             $.extend(helium.USER_PREFS, data);
         }
     });
+
+    if (helium.USER_PREFS.profile.phone !== null) {
+        helium.REMINDER_TYPE_CHOICES.push("Text");
+    }
 }
