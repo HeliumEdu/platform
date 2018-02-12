@@ -13,7 +13,7 @@ from helium.planner.models import Event
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.0'
+__version__ = '1.3.3'
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +65,8 @@ def calendar_to_events(external_calendar, calendar):
         if component.name == "VTIMEZONE":
             time_zone = pytz.timezone(component.get("TZID"))
         elif component.name == "VEVENT":
-            start = component.get("dtstart").dt
-            end = component.get("dtend").dt
+            start = component.get("DTSTART").dt
+            end = component.get("DTEND").dt
             all_day = not isinstance(start, datetime.datetime)
             show_end_time = isinstance(start, datetime.datetime)
 
@@ -82,13 +82,14 @@ def calendar_to_events(external_calendar, calendar):
                 end = timezone.make_aware(end, time_zone)
             end = end.astimezone(pytz.utc)
 
-            event = Event(title=component.get("summary"),
+            event = Event(id=len(events),
+                          title=component.get("SUMMARY"),
                           all_day=all_day,
                           show_end_time=show_end_time,
                           start=start,
                           end=end,
-                          url=component.get("url"),
-                          comments=component.get("description"),
+                          url=component.get("URL"),
+                          comments=component.get("DESCRIPTION"),
                           user=external_calendar.get_user(),
                           calendar_item_type=enums.EXTERNAL)
 

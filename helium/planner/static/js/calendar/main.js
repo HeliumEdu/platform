@@ -739,13 +739,13 @@ function HeliumCalendar() {
         // for greatly improved efficiency
 
         if (Cookies.get("filter_show_external") === undefined || Cookies.get("filter_show_external") === "true") {
-            helium.calendar.ajax_calls.push(helium.planner_api.get_external_calendars(function (external_calendars) {
+            helium.planner_api.get_external_calendars(function (external_calendars) {
                 $.each(external_calendars, function (index, external_calendar) {
-                    helium.planner_api.get_external_calendar_feed(function (data) {
+                    helium.calendar.ajax_calls.push(helium.planner_api.get_external_calendar_feed(function (data) {
                         $.each(data, function (i, calendar_item) {
                             if (Cookies.get("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) !== -1) {
                                 events.push({
-                                    id: "ext_" + calendar_item.id,
+                                    id: "ext_" + external_calendar.id + "_" + calendar_item.id,
                                     color: external_calendar.color,
                                     title: helium.calendar.get_calendar_item_title(calendar_item),
                                     title_no_format: calendar_item.title,
@@ -768,9 +768,9 @@ function HeliumCalendar() {
                                 });
                             }
                         });
-                    }, external_calendar.id, true, true);
+                    }, external_calendar.id, true, true));
                 });
-            }, true, true));
+            }, false, true);
         }
 
         if (Cookies.get("filter_show_events") === undefined || Cookies.get("filter_show_events") === "true") {
@@ -876,7 +876,7 @@ function HeliumCalendar() {
 
                         if (Cookies.get("filter_search_string") === undefined || calendar_item.title.toLowerCase().indexOf(Cookies.get("filter_search_string")) !== -1) {
                             events.push({
-                                id: "class_" + calendar_item.id,
+                                id: "class_" + course.id + "_" + calendar_item.id,
                                 color: course.color,
                                 title: helium.calendar.get_calendar_item_title(calendar_item),
                                 title_no_format: calendar_item.title,
