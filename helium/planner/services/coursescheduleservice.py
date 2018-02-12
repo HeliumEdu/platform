@@ -9,7 +9,7 @@ from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.1'
+__version__ = '1.3.3'
 
 logger = logging.getLogger(__name__)
 
