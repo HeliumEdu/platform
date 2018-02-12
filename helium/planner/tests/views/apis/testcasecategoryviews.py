@@ -208,8 +208,6 @@ class TestCaseCategoryViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Category.objects.filter(pk=category.pk).exists())
-        # This will equal 1 because, upon deletion of the last category, the system recreated "Uncategorized"
-        self.assertEqual(Category.objects.count(), 1)
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
