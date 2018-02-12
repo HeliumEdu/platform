@@ -4,7 +4,7 @@
  * Stylesheet for the /planner/calendar pages.
  *
  * @author Alex Laird
- * @version 0.1.0
+ * @version 1.3.3
  */
 
 body {
@@ -35,12 +35,12 @@ body {
     display: none;
 }
 
-#calendar-filters {
+#calendar-classes, #calendar-filters {
     margin-right: 6px;
     margin-top: -2px;
 }
 
-#calendar-filter-list {
+#calendar-classes-list, #calendar-filter-list {
     margin-top: -1px;
 }
 
@@ -96,7 +96,7 @@ ul.dropdown-menu-form {
     overflow-y: scroll;
 }
 
-#calendar-filter-list a > input {
+#calendar-classes-list a > input, #calendar-filter-list a > input {
     margin-left: -5px;
 }
 

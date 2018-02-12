@@ -11,7 +11,7 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.3'
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,9 @@ class ExternalCalendarAsEventsResourceView(GenericAPIView):
     """
     get:
     Return an external calendar's ICAL feed items as a list of event instances.
+
+    The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
+    guaranteed to be consistent across calls.
     """
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

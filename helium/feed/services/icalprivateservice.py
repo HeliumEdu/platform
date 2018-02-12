@@ -11,7 +11,7 @@ from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.1'
+__version__ = '1.3.3'
 
 logger = logging.getLogger(__name__)
 
@@ -80,16 +80,16 @@ def events_to_private_ical_feed(user):
 
     for event in user.events.iterator():
         calendar_event = icalendar.Event()
-        calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
-        calendar_event["summary"] = event.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
+        calendar_event["UID"] = "he-{}-{}".format(user.pk, event.pk)
+        calendar_event["SUMMARY"] = event.title
+        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
-            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
+            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
         else:
-            calendar_event["dtstart"] = icalendar.vDate(event.start)
-            calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["description"] = __create_event_description(event)
+            calendar_event["DTSTART"] = icalendar.vDate(event.start)
+            calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+        calendar_event["DESCRIPTION"] = __create_event_description(event)
 
         calendar.add_component(calendar_event)
 
@@ -113,16 +113,16 @@ def homework_to_private_ical_feed(user):
 
     for homework in Homework.objects.for_user(user.pk).iterator():
         calendar_event = icalendar.Event()
-        calendar_event["uid"] = "he-{}-{}".format(user.pk, homework.pk)
-        calendar_event["summary"] = homework.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
+        calendar_event["UID"] = "he-{}-{}".format(user.pk, homework.pk)
+        calendar_event["SUMMARY"] = homework.title
+        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
         if not homework.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(homework.start))
-            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(homework.end))
+            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(homework.start))
+            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(homework.end))
         else:
-            calendar_event["dtstart"] = icalendar.vDate(homework.start)
-            calendar_event["dtend"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
-        calendar_event["description"] = __create_homework_description(homework)
+            calendar_event["DTSTART"] = icalendar.vDate(homework.start)
+            calendar_event["DTEND"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
+        calendar_event["DESCRIPTION"] = __create_homework_description(homework)
 
         calendar.add_component(calendar_event)
 
@@ -134,6 +134,9 @@ def homework_to_private_ical_feed(user):
 def courseschedules_to_private_ical_feed(user):
     """
     Generate an ICAL feed for all course schedules associated with the given user.
+
+    The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
+    guaranteed to be consistent across calls.
 
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's course schedules.
@@ -150,16 +153,16 @@ def courseschedules_to_private_ical_feed(user):
 
     for event in events:
         calendar_event = icalendar.Event()
-        calendar_event["uid"] = "he-{}-{}".format(user.pk, event.pk)
-        calendar_event["summary"] = event.title
-        calendar_event["dtstamp"] = icalendar.vDatetime(timezone.localtime(event.created_at))
+        calendar_event["UID"] = "he-{}-{}".format(user.pk, event.pk)
+        calendar_event["SUMMARY"] = event.title
+        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
-            calendar_event["dtstart"] = icalendar.vDatetime(timezone.localtime(event.start))
-            calendar_event["dtend"] = icalendar.vDatetime(timezone.localtime(event.end))
+            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
+            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
         else:
-            calendar_event["dtstart"] = icalendar.vDate(event.start)
-            calendar_event["dtend"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["description"] = __create_event_description(event)
+            calendar_event["DTSTART"] = icalendar.vDate(event.start)
+            calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+        calendar_event["DESCRIPTION"] = __create_event_description(event)
 
         calendar.add_component(calendar_event)
 

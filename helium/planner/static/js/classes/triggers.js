@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.0
+ * @version 1.3.3
  */
 
 /*******************************************
@@ -239,6 +239,7 @@
             title: "Unnamed Category " + helium.classes.unnamed_category_index,
             weight: 0,
             average_grade: -1,
+            color: $($("#id_course_color option")[Math.floor(Math.random() * $("#id_course_color option").length)]).val(),
             course: helium.classes.edit_id
         };
         helium.classes.unnamed_category_index += 1;

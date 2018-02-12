@@ -96,4 +96,4 @@ before those services will work properly. Do NOT commit real credentials to thir
 ### Documentation
 
 Auto-generated API documentation is accessible via any environment at /docs. Additional documentation can be found
-on the [Platform Wiki](https://github.com/HeliumEdu/platform/wiki), and code documentation will be coming soon.
+on the [Platform Wiki](https://github.com/HeliumEdu/platform/wiki).

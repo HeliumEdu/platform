@@ -23,7 +23,7 @@
             {% if reminder.homework %}<p><em>Class Info</em>:
                 {% if calendar_item.category.title %}{{ calendar_item.category.title }}
                     for {% endif %}{{ calendar_item.course.title }}
-                {% if calendar_item.course.room %} in {{ calendar_item.course.room }}{% endif %}
+                {% if not calendar_item.course.is_online and calendar_item.course.room %} in {{ calendar_item.course.room }}{% endif %}
             </p>{% endif %}
             {% if normalized_materials %}<p><em>Materials</em>: {{ normalized_materials }}</p>{% endif %}
             {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
