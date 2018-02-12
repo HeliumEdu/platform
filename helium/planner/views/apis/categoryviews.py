@@ -14,7 +14,7 @@ from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.3'
 
 logger = logging.getLogger(__name__)
 
@@ -112,14 +112,15 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
 
         response = self.destroy(request, *args, **kwargs)
 
-        uncategorized = Category.objects.get_uncategorized(category.course_id)
-        for h in homework:
-            h.category = uncategorized
-            h.save()
+        if len(homework) > 0:
+            uncategorized = Category.objects.get_uncategorized(category.course_id)
+            for h in homework:
+                h.category = uncategorized
+                h.save()
 
-            logger.info(
-                'Homework {} category set to Uncategorized {} for user {}'.format(h.pk, uncategorized.pk,
-                                                                                  request.user.get_username()))
+                logger.info(
+                    'Homework {} category set to Uncategorized {} for user {}'.format(h.pk, uncategorized.pk,
+                                                                                      request.user.get_username()))
 
         logger.info(
             'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
