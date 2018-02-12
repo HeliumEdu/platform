@@ -194,7 +194,9 @@
       "url": null,
       "comments": "A comment on an event.",
       "attachments": [],
-      "reminders": [],
+      "reminders": [
+        2
+      ],
       "user": 1,
       "calendar_item_type": 0
     },
@@ -261,7 +263,7 @@
   "reminders": [
     {
       "id": 1,
-      "title": "Test Reminder",
+      "title": "Test Homework Reminder",
       "message": "You need to do something now.",
       "start_of_range": "2017-05-08T15:45:00Z",
       "offset": 15,
@@ -270,6 +272,19 @@
       "sent": false,
       "homework": 1,
       "event": null,
+      "user": 1
+    },
+    {
+      "id": 2,
+      "title": "Test Event Reminder",
+      "message": "You need to do something now.",
+      "start_of_range": "2017-05-08T11:30:00Z",
+      "offset": 30,
+      "offset_type": 0,
+      "type": 2,
+      "sent": false,
+      "homework": null,
+      "event": 1,
       "user": 1
     }
   ]

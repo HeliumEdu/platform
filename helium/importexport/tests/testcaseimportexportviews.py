@@ -4,6 +4,7 @@ import logging
 import os
 
 from django.contrib.auth import get_user_model
+from django.forms import model_to_dict
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -63,6 +64,7 @@ class TestCaseImportExportViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
         course_schedules = CourseSchedule.objects.all()
@@ -71,6 +73,8 @@ class TestCaseImportExportViews(TestCase):
         materials = Material.objects.all()
         events = Event.objects.all()
         homework = Homework.objects.all()
+        reminders = Reminder.objects.all()
+        self.assertEqual(len(external_calendars), 2)
         self.assertEqual(len(course_groups), 4)
         self.assertEqual(len(courses), 4)
         self.assertEqual(len(course_schedules), 4)
@@ -79,6 +83,12 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(len(materials), 2)
         self.assertEqual(len(events), 4)
         self.assertEqual(len(homework), 4)
+        self.assertEqual(len(reminders), 4)
+        externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendars[1],
+                                                                    {'id': 2, 'title': 'My Calendar',
+                                                                     'url': 'http://go.com/valid-ical-feed',
+                                                                     'color': '#fad165', 'shown_on_calendar': False,
+                                                                     'user': 1})
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'average_grade': 66.6667,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
@@ -182,6 +192,18 @@ class TestCaseImportExportViews(TestCase):
                                                      'comments': 'A comment on a homework.', 'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[1].pk,
                                                      'course': courses[3].pk, 'materials': []})
+        reminderhelper.verify_reminder_matches_data(self, reminders[2], {'id': 1, 'title': 'Test Homework Reminder',
+                                                                         'message': 'You need to do something now.',
+                                                                         'start_of_range': '2017-05-08T15:45:00Z',
+                                                                         'offset': 15, 'offset_type': 0, 'type': 2,
+                                                                         'sent': False, 'homework': 1, 'event': None,
+                                                                         'user': 1})
+        reminderhelper.verify_reminder_matches_data(self, reminders[3], {'id': 3, 'title': 'Test Homework Reminder',
+                                                                         'message': 'You need to do something now.',
+                                                                         'start_of_range': '2017-05-08T15:45Z',
+                                                                         'offset': 15, 'offset_type': 0, 'type': 2,
+                                                                         'sent': False, 'homework': 3, 'event': None,
+                                                                         'user': 1})
 
     def test_import_invalid_json(self):
         # GIVEN

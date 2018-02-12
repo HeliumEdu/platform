@@ -178,6 +178,8 @@ function HeliumSettings() {
 
                 helium.clear_form_errors("importexport-form");
 
+                Cookies.remove("filter_courses", {path: "/"});
+
                 $("#status_importexport").html("Import successful.").addClass("alert-success").removeClass("hidden");
 
                 $("#loading-importexport").spin(false);
