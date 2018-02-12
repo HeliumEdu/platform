@@ -278,7 +278,7 @@ def import_user(request, json_str):
 
     homework_remap = __import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
-    __import_reminders(data.get('reminder', []), request.user, event_remap, homework_remap)
+    __import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
 
 
 def __adjust_schedule_relative_today(user):
@@ -318,7 +318,7 @@ def __adjust_schedule_relative_today(user):
         homework.save()
 
     for event in Event.objects.for_user(user.pk).iterator():
-        delta = (event.start.date() - start_of_current_month).days
+        delta = (event.start.date() - start_of_current_month.date()).days
         event.start = (first_monday + datetime.timedelta(days=delta)).replace(
             hour=event.start.time().hour,
             minute=event.start.time().minute,
