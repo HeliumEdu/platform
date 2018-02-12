@@ -4,7 +4,6 @@ import logging
 import os
 
 from django.contrib.auth import get_user_model
-from django.forms import model_to_dict
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -341,6 +340,7 @@ class TestCaseImportExportViews(TestCase):
         self.assertEqual(MaterialGroup.objects.count(), 2)
         self.assertEqual(Material.objects.count(), 4)
         self.assertEqual(Homework.objects.count(), 22)
+        self.assertEqual(Reminder.objects.count(), 5)
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
         homework = Homework.objects.all()[0]
