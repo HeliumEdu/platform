@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.0
+ * @version 1.3.4
  */
 
 /*******************************************
@@ -350,6 +350,7 @@
                             $("#homework-category").val(helium.calendar.preferred_category_id);
                         }
                         $("#homework-category").prop("disabled", data.length === 0).trigger("chosen:updated");
+                        $("#homework-completed").trigger("change");
                         $("#loading-homework-modal").spin(false);
                     }
                 }, helium.calendar.current_course_group_id, helium.calendar.current_class_id, true, true);
