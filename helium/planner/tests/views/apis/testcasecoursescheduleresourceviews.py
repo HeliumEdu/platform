@@ -8,7 +8,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.5'
 
 
 class TestCaseExternalCalendarResourceViews(TestCase):
