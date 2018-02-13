@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.1
+ * @version 1.3.4
  */
 
 /**
@@ -178,7 +178,7 @@ function HeliumSettings() {
 
                 helium.clear_form_errors("importexport-form");
 
-                Cookies.remove("filter_courses", {path: "/"});
+                Cookies.remove("filter_courses_" + helium.USER_PREFS.id, {path: "/"});
 
                 $("#status_importexport").html("Import successful.").addClass("alert-success").removeClass("hidden");
 
