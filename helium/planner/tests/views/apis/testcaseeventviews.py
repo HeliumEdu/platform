@@ -20,7 +20,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.5'
 
 
 class TestCaseEventViews(TestCase):
@@ -180,6 +180,25 @@ class TestCaseEventViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
+
+    def test_update_start_before_end_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        data = {
+            'start': '2016-05-08T12:00:00Z',
+            'end': '2016-05-07T14:00:00Z',
+        }
+        response = self.client.patch(reverse('api_planner_events_detail',
+                                             kwargs={'pk': event.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('must be before', response.data['non_field_errors'][0])
 
     def test_patch_converts_to_utc(self):
         # GIVEN

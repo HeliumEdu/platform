@@ -11,7 +11,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.5'
 
 
 class TestCaseCourseViews(TestCase):
@@ -149,6 +149,31 @@ class TestCaseCourseViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         course = Course.objects.get(pk=course.pk)
         coursehelper.verify_course_matches_data(self, course, response.data)
+
+    def test_update_start_before_end_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'start_date': '2017-08-12',
+            'end_date': '2017-07-12',
+            # Intentionally NOT changing these value
+            'title': course.title,
+            'credits': course.credits,
+            'course_group': course.course_group.pk,
+        }
+        response = self.client.put(
+            reverse('api_planner_coursegroups_courses_detail',
+                    kwargs={'course_group': course_group.pk, 'pk': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('must be before', response.data['non_field_errors'][0])
 
     def test_delete_course_by_id(self):
         # GIVEN

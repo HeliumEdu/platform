@@ -36,7 +36,7 @@ class TestCaseReminderService(TestCase):
         # This reminder is ignored, as we're not yet in its send window
         reminder3 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event2)
         # Sent reminders are ignored
-        reminder4 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, sent=True, event=event1)
+        reminderhelper.given_reminder_exists(user, type=enums.EMAIL, sent=True, event=event1)
 
         # WHEN
         reminderservice.process_email_reminders()
