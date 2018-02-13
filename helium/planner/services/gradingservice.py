@@ -5,7 +5,7 @@ from helium.planner.models import CourseGroup, Course, Category, Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.4'
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,10 @@ def get_grade_points_for_course(course_id):
         earned = float(earned)
         possible = float(possible)
         if course_has_weighted_grading:
+            # If no weight is present, this category is ungraded
+            if category.weight == 0:
+                continue
+
             if category.pk not in category_totals:
                 category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
 

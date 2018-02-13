@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.3
+ * @version 1.3.4
  */
 
 /**
@@ -1400,6 +1400,14 @@ function HeliumClasses() {
                                     if (!helium.ajax_error_occurred) {
                                         helium.classes.categories_to_delete = [];
                                         helium.classes.attachments_to_delete = [];
+
+                                        if (Cookies.get("filter_courses_" + helium.USER_PREFS.id) === undefined) {
+                                            Cookies.set("filter_courses_" + helium.USER_PREFS.id, {path: "/"});
+                                        }
+
+                                        var course_ids = Cookies.get("filter_courses_" + helium.USER_PREFS.id).split(",");
+                                        course_ids.push(data.id);
+                                        Cookies.set("filter_courses_" + helium.USER_PREFS.id, course_ids.join(","), {path: "/"});
 
                                         self.add_course_to_groups(data, self.course_group_table[data.course_group.toString()]);
                                         self.course_group_table[data.course_group.toString()].draw();

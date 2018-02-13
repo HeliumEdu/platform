@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.3
+ * @version 1.3.4
  */
 
 /**
@@ -712,7 +712,7 @@ function HeliumCalendar() {
         if (course_ids.match(/,$/)) {
             course_ids = course_ids.substring(0, course_ids.length - 1);
         }
-        Cookies.set("filter_courses", course_ids, {path: "/"});
+        Cookies.set("filter_courses_" + helium.USER_PREFS.id, course_ids, {path: "/"});
 
         if (refetch) {
             $("#calendar").fullCalendar("refetchEvents");
@@ -825,11 +825,11 @@ function HeliumCalendar() {
                     if (Cookies.get("filter_complete") && Cookies.get("filter_complete") != calendar_item.completed.toString()) {
                         return true;
                     }
-                    if ($.inArray(course.id.toString(), Cookies.get('filter_courses').split(",")) === -1) {
+                    if ($.inArray(course.id.toString(), Cookies.get("filter_courses_" + helium.USER_PREFS.id).split(",")) === -1) {
                         return true;
                     }
                     var slug = helium.calendar.categories[calendar_item.category].title.replace(" ", "").toLowerCase();
-                    if (Cookies.get("filter_categories") && $.inArray(slug, Cookies.get('filter_categories').split(",")) === -1) {
+                    if (Cookies.get("filter_categories") && $.inArray(slug, Cookies.get("filter_categories").split(",")) === -1) {
                         return true;
                     }
                     if (Cookies.get("filter_overdue") !== undefined && (calendar_item.completed || moment().isBefore(moment(calendar_item.start)))) {
@@ -870,7 +870,7 @@ function HeliumCalendar() {
                         if (!helium.calendar.course_groups[helium.calendar.courses[calendar_item.owner_id].course_group].shown_on_calendar) {
                             return true;
                         }
-                        if ($.inArray(course.id.toString(), Cookies.get('filter_courses').split(",")) === -1) {
+                        if ($.inArray(course.id.toString(), Cookies.get("filter_courses_" + helium.USER_PREFS.id).split(",")) === -1) {
                             return true;
                         }
 
@@ -1053,12 +1053,17 @@ function HeliumCalendar() {
                     if (!helium.calendar.courses.hasOwnProperty(course.id)) {
                         course_ids.push(course.id);
                         helium.calendar.courses[course.id] = course;
+
+                        if (!helium.calendar.course_groups[course.course_group].shown_on_calendar) {
+                            return true;
+                        }
+
                         $("#homework-class").append("<option value=\"" + course.id + "\">" + course.title + "</option>");
                     }
                 });
 
-                if (Cookies.get("filter_courses") === undefined) {
-                    Cookies.set("filter_courses", course_ids.join(","), {path: "/"});
+                if (Cookies.get("filter_courses_" + helium.USER_PREFS.id) === undefined) {
+                    Cookies.set("filter_courses_" + helium.USER_PREFS.id, course_ids.join(","), {path: "/"});
                 }
 
                 $("#calendar").fullCalendar("addEventSource", self.refresh_calendar_items);
@@ -1203,7 +1208,8 @@ function HeliumCalendar() {
         $("#calendar-filter-overdue a").on("click", self.update_filter_checkbox_from_event);
 
         // Initialize course filters
-        var course_ids = Cookies.get("filter_courses").split(",");
+        var course_ids = Cookies.get("filter_courses_" + helium.USER_PREFS.id).split(",");
+        var courses_added = 0;
         if (courses.length > 0) {
             for (i = 0; i < courses.length; i += 1) {
                 if (!helium.calendar.course_groups[courses[i].course_group].shown_on_calendar) {
@@ -1217,8 +1223,12 @@ function HeliumCalendar() {
                     checkbox = $($(this).children()[0]);
                     checkbox.prop("checked", !checkbox.is(":checked")).trigger("change");
                 });
+
+                courses_added += 1;
             }
-        } else {
+        }
+
+        if (courses_added == 0) {
             $("#calendar-classes button").attr("disabled", "disabled");
             $("#calendar-filters button").attr("disabled", "disabled");
         }
