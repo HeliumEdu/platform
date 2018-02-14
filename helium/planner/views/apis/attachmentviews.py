@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
@@ -15,7 +14,7 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.5'
 
 logger = logging.getLogger(__name__)
 

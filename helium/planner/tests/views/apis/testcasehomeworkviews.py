@@ -1,5 +1,5 @@
-import pytz
 from future.standard_library import install_aliases
+from rest_framework.test import APITestCase
 
 install_aliases()
 
@@ -10,7 +10,6 @@ from urllib.parse import quote
 
 from dateutil import parser
 from django.utils import timezone
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.reverse import reverse
 
@@ -21,10 +20,10 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.5'
 
 
-class TestCaseHomeworkViews(TestCase):
+class TestCaseHomeworkViews(APITestCase):
     def test_homework_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -231,6 +230,28 @@ class TestCaseHomeworkViews(TestCase):
         self.assertDictContainsSubset(data, response.data)
         homework = Homework.objects.get(pk=homework.pk)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
+
+    def test_update_start_before_end_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        data = {
+            'start': '2016-05-08T12:00:00Z',
+            'end': '2016-05-07T14:00:00Z',
+        }
+        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+                                             kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                     'pk': homework.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('must be before', response.data['non_field_errors'][0])
 
     def test_patch_converts_to_utc(self):
         # GIVEN

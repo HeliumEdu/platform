@@ -1,9 +1,9 @@
 import json
 
 import mock
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.helpers import commonhelper
@@ -12,10 +12,10 @@ from helium.feed.tests.helpers import externalcalendarhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.5'
 
 
-class TestCaseExternalCalendarViews(TestCase):
+class TestCaseExternalCalendarViews(APITestCase):
     def test_externalcalendar_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()

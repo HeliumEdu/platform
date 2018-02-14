@@ -1,4 +1,5 @@
 from future.standard_library import install_aliases
+from rest_framework.test import APITestCase
 
 install_aliases()
 
@@ -8,7 +9,6 @@ import json
 import datetime
 from datetime import timedelta
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from django.utils import timezone
@@ -20,10 +20,10 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.5'
 
 
-class TestCaseReminderViews(TestCase):
+class TestCaseReminderViews(APITestCase):
     def test_reminder_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
