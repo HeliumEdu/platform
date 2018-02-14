@@ -25,8 +25,8 @@ pip install virtualenv
 virtualenv .venv
 ```
 
-If you're unfamiliar with how works, [read up on it](https://virtualenv.pypa.io/en/stable). The short version is, you only need to run the
-above one time. After that point, you only need to execute the following command to active and use the isolated environment when developing:
+If you're unfamiliar with how it works, [read up on it](https://virtualenv.pypa.io/en/stable). The short version is, you only need to run the
+above one time. After that, you just execute the following command to activavate and use the isolated environment when developing:
 
 ```
 source .venv/bin/activate
