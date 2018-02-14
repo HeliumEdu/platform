@@ -11,7 +11,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.5'
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class UserSettingsApiDetailView(GenericAPIView):
     """
     put:
-    Update the given (and authenticated) user's settings.
+    Update the authenticated user's settings.
 
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
@@ -27,10 +27,7 @@ class UserSettingsApiDetailView(GenericAPIView):
     serializer_class = UserSettingsSerializer
     permission_classes = (IsAuthenticated,)
 
-    def put(self, request, pk, format=None):
-        # This call gets the object and checks permissions
-        self.get_object()
-
+    def put(self, request, *args, **kwargs):
         serializer = self.get_serializer(request.user.settings, data=request.data, partial=True)
 
         if serializer.is_valid():

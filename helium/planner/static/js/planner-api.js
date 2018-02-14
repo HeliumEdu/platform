@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.0
+ * @version 1.3.5
  */
 
 /**
@@ -89,7 +89,7 @@ function HeliumPlannerAPI() {
         self.course_groups_by_user_id = {};
         return $.ajax({
             type: "PUT",
-            url: "/api/auth/users/" + helium.USER_PREFS.id + "/settings/",
+            url: "/api/auth/user/settings/",
             async: async,
             data: JSON.stringify(data),
             dataType: "json",

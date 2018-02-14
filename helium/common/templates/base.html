@@ -206,12 +206,6 @@
 <script type="application/javascript" src="//code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
 <script type="application/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
-{% if request.user.is_authenticated %}
-    <script type="application/javascript">
-        var USER_ID = {{ request.user.pk|safe }};
-    </script>
-{% endif %}
-
 {% javascript 'base' %}
 
 <script type="application/javascript">

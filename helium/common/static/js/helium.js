@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.0
+ * @version 1.3.5
  */
 
 var CSRF_TOKEN = Cookies.get("csrftoken");
@@ -385,18 +385,16 @@ function Helium() {
 // Initialize the Helium object
 var helium = new Helium();
 
-if (typeof USER_ID !== 'undefined') {
-    $.ajax({
-        type: "GET",
-        url: "/api/auth/users/" + USER_ID + "/",
-        async: false,
-        dataType: "json",
-        success: function (data) {
-            $.extend(helium.USER_PREFS, data);
-        }
-    });
+$.ajax({
+    type: "GET",
+    url: "/api/auth/user/",
+    async: false,
+    dataType: "json",
+    success: function (data) {
+        $.extend(helium.USER_PREFS, data);
 
-    if (helium.USER_PREFS.profile.phone !== null) {
-        helium.REMINDER_TYPE_CHOICES.push("Text");
+        if (helium.USER_PREFS.profile.phone !== null) {
+            helium.REMINDER_TYPE_CHOICES.push("Text");
+        }
     }
-}
+});

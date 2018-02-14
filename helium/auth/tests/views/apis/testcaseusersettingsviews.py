@@ -16,12 +16,12 @@ __version__ = '1.3.5'
 class TestCaseUserSettingsViews(APITestCase):
     def test_user_settings_login_required(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk})),
-            self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}))
+            self.client.get(reverse('api_auth_user_settings_detail')),
+            self.client.put(reverse('api_auth_user_settings_detail'))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseUserSettingsViews(APITestCase):
             'show_getting_started': False,
             'time_zone': 'America/Chicago'
         }
-        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -51,13 +51,13 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
         data = {
             'time_zone': 'invalid'
         }
-        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -75,7 +75,7 @@ class TestCaseUserSettingsViews(APITestCase):
         data = {
             'private_slug': 'new_slug'
         }
-        response = self.client.put(reverse('api_auth_users_settings_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN

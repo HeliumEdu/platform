@@ -16,12 +16,12 @@ __version__ = '1.3.5'
 class TestCaseUserViews(APITestCase):
     def test_user_login_required(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk})),
-            self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+            self.client.get(reverse('api_auth_user_detail')),
+            self.client.put(reverse('api_auth_user_detail'))
         ]
 
         # THEN
@@ -33,7 +33,7 @@ class TestCaseUserViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        response = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response = self.client.get(reverse('api_auth_user_detail'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -70,7 +70,7 @@ class TestCaseUserViews(APITestCase):
             # Intentionally NOT changing these value
             'email': user.email
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -95,7 +95,7 @@ class TestCaseUserViews(APITestCase):
             # Intentionally NOT changing these value
             'username': user.username
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -136,7 +136,7 @@ class TestCaseUserViews(APITestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!'
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # WHEN
@@ -147,14 +147,14 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_missing_old_new_pass(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
             'old_password': '',
             'new_password1': 'new_pass_1!',
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # WHEN
@@ -163,7 +163,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_blank_new_pass(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -171,7 +171,7 @@ class TestCaseUserViews(APITestCase):
             'new_password1': '',
             'new_password2': '',
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # WHEN
@@ -180,7 +180,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_mismatch(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -188,7 +188,7 @@ class TestCaseUserViews(APITestCase):
             'new_password1': 'new_pass_1!',
             'new_password2': 'new_pass_1!oops',
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # WHEN
@@ -197,7 +197,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_to_meet_requirements(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # THEN
         data = {
@@ -205,7 +205,7 @@ class TestCaseUserViews(APITestCase):
             'new_password1': 'blerg',
             'new_password2': 'blerg',
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # WHEN
@@ -223,7 +223,7 @@ class TestCaseUserViews(APITestCase):
             'username': user1.username,
             'email': user2.email
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user2.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -241,7 +241,7 @@ class TestCaseUserViews(APITestCase):
             'email': user1.email,
             'username': user2.username
         }
-        response = self.client.put(reverse('api_auth_users_detail', kwargs={'pk': user2.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -259,7 +259,7 @@ class TestCaseUserViews(APITestCase):
             'username': user.username,
             'password': 'test_pass_1!'
         }
-        response = self.client.delete(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.delete(reverse('api_auth_user_detail'), json.dumps(data),
                                       content_type='application/json')
 
         # THEN
@@ -279,7 +279,7 @@ class TestCaseUserViews(APITestCase):
             'username': user.username,
             'password': 'wrong_pass'
         }
-        response = self.client.delete(reverse('api_auth_users_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.delete(reverse('api_auth_user_detail'), json.dumps(data),
                                       content_type='application/json')
 
         # THEN

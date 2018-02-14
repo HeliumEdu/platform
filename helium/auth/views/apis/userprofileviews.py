@@ -12,7 +12,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.5'
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class UserProfileApiDetailView(GenericAPIView):
     """
     put:
-    Update the given (and authenticated) user's profile.
+    Update the authenticated user's profile.
 
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
@@ -28,10 +28,7 @@ class UserProfileApiDetailView(GenericAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
-    def put(self, request, pk, format=None):
-        user = self.get_object()
-        self.check_object_permissions(request, user)
-
+    def put(self, request, *args, **kwargs):
         serializer = self.get_serializer(request.user.profile, data=request.data)
 
         if serializer.is_valid():
