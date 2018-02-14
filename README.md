@@ -14,8 +14,8 @@
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
 
 ### Environment Setup
-Virtualenv creates isolated Python environments so your development area(ss play nicely with each other in regards to
-dependencies, permissions, and a myriad of other ways. While this is not necessary for development, it is highly
+Virtualenv creates isolated Python environments so your development areas play nicely with each other in regards to
+dependencies, permissions, and in a myriad of other ways. While this is not necessary for development, it is highly
 recommended.
 
 This project is configured to work with a Virtualenv in the `.venv` folder, and it can be setup like this:
@@ -51,7 +51,7 @@ Once migrations have been run, you can create a super user, which is a standard 
 python manage.py createsuperuser
 ```
 
-Before commits are made, be sure to run tests and check the generated coverage report
+Before commits are made, be sure to run tests and check the generated coverage report.
 
 ```
 make test
@@ -59,14 +59,16 @@ make test
 
 ## Development
 ### Modules
-The Platform project is split up into several modules, all contained within this repository.They are independent modules that can be deployed
-separately, functioning on separate nodes for scalability, as needed.
+The Platform project is split up into several modules, all contained within this repository. They are independent modules that can be deployed
+separately, functioning on separate nodes for scalability.
 
 The project's base configuration is defined under `conf`. Application-specific configuration variables should have their application name as their
 prefix.
 
-* users
+* auth
+* common
 * feed
+* importexport
 * planner
 
 ### Vagrant Development
