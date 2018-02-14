@@ -16,7 +16,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.5'
 
 logger = logging.getLogger(__name__)
 
@@ -24,27 +24,24 @@ logger = logging.getLogger(__name__)
 class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
     """
     get:
-    Return the given (and authenticated) user instance, including profile and settings details.
+    Return the authenticated user instance, including profile and settings details.
 
     put:
-    Update the given (and authenticated) user instance.
+    Update the authenticated user instance.
 
     delete:
-    Delete the given (and authenticated) user instance.
+    Delete the authenticated user instance.
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
     def get(self, request, *args, **kwargs):
-        response = self.retrieve(request, *args, **kwargs)
+        serializer = self.get_serializer(request.user)
 
-        return response
+        return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        # This call gets the object and checks permissions
-        self.get_object()
-
+    def put(self, request, *args, **kwargs):
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
         response_data = {}
@@ -82,10 +79,7 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def delete(self, request, pk, format=None):
-        # This call gets the object and checks permissions
-        self.get_object()
-
+    def delete(self, request, *args, **kwargs):
         form = UserDeleteForm(user=request.user, data=request.data)
 
         if form.is_valid():

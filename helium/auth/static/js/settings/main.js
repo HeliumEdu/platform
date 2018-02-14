@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.4
+ * @version 1.3.5
  */
 
 /**
@@ -227,7 +227,7 @@ function HeliumSettings() {
                 data: data,
                 contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
-                url: '/api/auth/users/' + helium.USER_PREFS.id + '/settings/',
+                url: '/api/auth/user/settings/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error("preferences", key, value);
@@ -264,7 +264,7 @@ function HeliumSettings() {
                 data: data,
                 contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
-                url: '/api/auth/users/' + helium.USER_PREFS.id + '/profile/',
+                url: '/api/auth/user/profile/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error("personal", key, value);
@@ -349,7 +349,7 @@ function HeliumSettings() {
                 data: data,
                 contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 type: 'PUT',
-                url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
+                url: '/api/auth/user/',
                 error: function (xhr) {
                     $.each(xhr.responseJSON, function (key, value) {
                         helium.show_error("account", key, value);
@@ -460,7 +460,7 @@ function HeliumSettings() {
                             async: false,
                             data: JSON.stringify(data),
                             type: 'DELETE',
-                            url: '/api/auth/users/' + helium.USER_PREFS.id + '/',
+                            url: '/api/auth/user/',
                             error: function () {
                                 $("#status_account").html('Sorry, an unknown error occurred while trying to delete your account. Please <a href="/contact">contact support</a>').addClass("alert-warning").removeClass("hidden");
 

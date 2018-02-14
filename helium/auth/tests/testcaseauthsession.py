@@ -69,9 +69,9 @@ class TestCaseAuthSession(APITestCase):
         user = userhelper.given_a_user_exists(self.client)
 
         # WHEN
-        response1 = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response1 = self.client.get(reverse('api_auth_user_detail'))
         self.client.login(username=user.get_username(), password='test_pass_1!')
-        response2 = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response2 = self.client.get(reverse('api_auth_user_detail'))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)

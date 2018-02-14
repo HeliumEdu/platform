@@ -15,12 +15,12 @@ __version__ = '1.3.5'
 class TestCaseUserProfileViews(APITestCase):
     def test_user_profile_login_required(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk})),
-            self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}))
+            self.client.get(reverse('api_auth_user_profile_detail')),
+            self.client.put(reverse('api_auth_user_profile_detail'))
         ]
 
         # THEN
@@ -29,14 +29,14 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
         data = {
             'phone': '555-5555',
             'phone_carrier': 'invalid'
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -54,7 +54,7 @@ class TestCaseUserProfileViews(APITestCase):
             'phone': '555-5555',
             'phone_carrier': 'tmomail.net'
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -78,7 +78,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': user.profile.phone_verification_code,
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -106,7 +106,7 @@ class TestCaseUserProfileViews(APITestCase):
             'phone': '',
             'phone_carrier': '',
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -128,7 +128,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': 000000,
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -146,7 +146,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_changing': '444-4444'
         }
-        response = self.client.put(reverse('api_auth_users_profile_detail', kwargs={'pk': user.pk}), json.dumps(data),
+        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
