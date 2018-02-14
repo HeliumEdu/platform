@@ -4,10 +4,10 @@ import logging
 import os
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
@@ -19,12 +19,12 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.0'
+__version__ = '1.3.5'
 
 logger = logging.getLogger(__name__)
 
 
-class TestCaseImportExportViews(TestCase):
+class TestCaseImportExportViews(APITestCase):
     def test_importexport_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -321,9 +321,6 @@ class TestCaseImportExportViews(TestCase):
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
 
     def test_user_registration_imports_example_schedule(self):
-        # GIVEN
-        userhelper.verify_user_not_logged_in(self)
-
         # WHEN
         self.client.post(reverse('register'),
                          {'email': 'test@test.com', 'username': 'my_test_user',

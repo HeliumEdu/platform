@@ -1,8 +1,8 @@
 import os
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Attachment
@@ -10,10 +10,10 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attach
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.5'
 
 
-class TestCaseAttachmentViews(TestCase):
+class TestCaseAttachmentViews(APITestCase):
     def setUp(self):
         self.tmp_files = []
 

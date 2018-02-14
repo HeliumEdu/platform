@@ -1,6 +1,6 @@
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import CourseSchedule
@@ -11,7 +11,7 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.3.5'
 
 
-class TestCaseExternalCalendarResourceViews(TestCase):
+class TestCaseExternalCalendarResourceViews(APITestCase):
     def test_courseschedule_event_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()

@@ -1,8 +1,8 @@
 import json
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Category
@@ -10,10 +10,10 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, catego
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.5'
 
 
-class TestCaseCategoryViews(TestCase):
+class TestCaseCategoryViews(APITestCase):
     def test_category_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
