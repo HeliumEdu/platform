@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -7,7 +9,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 
 
 class TestCaseAuthToken(APITestCase):
@@ -16,8 +18,13 @@ class TestCaseAuthToken(APITestCase):
         user = userhelper.given_a_user_exists()
 
         # WHEN
+        data = {
+            'username': user.get_username(),
+            'password': 'test_pass_1!'
+        }
         response = self.client.post(reverse('api_auth_token'),
-                                    {'username': user.get_username(), 'password': 'test_pass_1!'})
+                                    json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -29,7 +36,13 @@ class TestCaseAuthToken(APITestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('api_auth_token'), {'username': user.email, 'password': 'test_pass_1!'})
+        data = {
+            'username': user.email,
+            'password': 'test_pass_1!'
+        }
+        response = self.client.post(reverse('api_auth_token'),
+                                    json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -37,11 +50,11 @@ class TestCaseAuthToken(APITestCase):
 
     def test_revoke_token(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_token_set(self.client)
+        userhelper.given_a_user_exists_and_token_set(self.client)
 
         # WHEN
-        response1 = self.client.get(reverse('api_auth_token_revoke'))
-        response2 = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response1 = self.client.delete(reverse('api_auth_token_revoke'))
+        response2 = self.client.get(reverse('api_auth_user_detail'))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -55,8 +68,12 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         responses = [
-            self.client.post(reverse('api_auth_token'), {'username': 'not-a-user', 'password': 'test_pass_1!'}),
-            self.client.post(reverse('api_auth_token'), {'username': user.get_username(), 'password': 'wrong_pass'})
+            self.client.post(reverse('api_auth_token'),
+                             json.dumps({'username': 'not-a-user', 'password': 'test_pass_1!'}),
+                             content_type='application/json'),
+            self.client.post(reverse('api_auth_token'),
+                             json.dumps({'username': user.get_username(), 'password': 'wrong_pass'}),
+                             content_type='application/json')
         ]
 
         # THEN
@@ -70,9 +87,9 @@ class TestCaseAuthToken(APITestCase):
         user = userhelper.given_a_user_exists(self.client)
 
         # WHEN
-        response1 = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response1 = self.client.get(reverse('api_auth_user_detail'))
         self.client.force_authenticate(user)
-        response2 = self.client.get(reverse('api_auth_users_detail', kwargs={'pk': user.pk}))
+        response2 = self.client.get(reverse('api_auth_user_detail'))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
