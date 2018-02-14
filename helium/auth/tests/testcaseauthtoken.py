@@ -2,6 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
+from tweepy.streaming import json
 
 from helium.auth.tests.helpers import userhelper
 
@@ -16,8 +17,13 @@ class TestCaseAuthToken(APITestCase):
         user = userhelper.given_a_user_exists()
 
         # WHEN
+        data = {
+            'username': user.get_username(),
+            'password': 'test_pass_1!'
+        }
         response = self.client.post(reverse('api_auth_token'),
-                                    {'username': user.get_username(), 'password': 'test_pass_1!'})
+                                    json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -29,7 +35,13 @@ class TestCaseAuthToken(APITestCase):
         userhelper.verify_user_not_logged_in(self)
 
         # WHEN
-        response = self.client.post(reverse('api_auth_token'), {'username': user.email, 'password': 'test_pass_1!'})
+        data = {
+            'username': user.email,
+            'password': 'test_pass_1!'
+        }
+        response = self.client.post(reverse('api_auth_token'),
+                                    json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -55,8 +67,12 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         responses = [
-            self.client.post(reverse('api_auth_token'), {'username': 'not-a-user', 'password': 'test_pass_1!'}),
-            self.client.post(reverse('api_auth_token'), {'username': user.get_username(), 'password': 'wrong_pass'})
+            self.client.post(reverse('api_auth_token'),
+                             json.dumps({'username': 'not-a-user', 'password': 'test_pass_1!'}),
+                             content_type='application/json'),
+            self.client.post(reverse('api_auth_token'),
+                             json.dumps({'username': user.get_username(), 'password': 'wrong_pass'}),
+                             content_type='application/json')
         ]
 
         # THEN
