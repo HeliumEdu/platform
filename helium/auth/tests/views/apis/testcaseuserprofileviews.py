@@ -1,18 +1,18 @@
 import json
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.5'
 
 
-class TestCaseUserProfileViews(TestCase):
+class TestCaseUserProfileViews(APITestCase):
     def test_user_profile_login_required(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

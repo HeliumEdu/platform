@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.5'
 
 
 def given_an_inactive_user_exists(username='test_user', email='user@test.com', password='test_pass_1!'):
@@ -28,6 +29,16 @@ def given_a_user_exists_and_is_logged_in(client, username='test_user', email='us
     user = given_a_user_exists(username, email, password)
 
     client.login(username=user.get_username(), password=password)
+
+    return user
+
+
+def given_a_user_exists_and_token_set(client, username='test_user', email='user@test.com',
+                                      password='test_pass_1!'):
+    user = given_a_user_exists(username, email, password)
+    token = Token.objects.create(user=user)
+
+    client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     return user
 

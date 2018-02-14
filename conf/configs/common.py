@@ -50,6 +50,7 @@ DEFAULT_INSTALLED_APPS = (
     'widget_tweaks',
     'pipeline',
     'rest_framework',
+    'rest_framework.authtoken',
     'django_filters',
     # Project modules
     'helium.common',
@@ -125,6 +126,11 @@ MAINTENANCE_MODE_TEMPLATE = os.environ.get('PLATFORM_MAINTENANCE_MODE_TEMPLATE',
 # API configuration
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'

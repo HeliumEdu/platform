@@ -1,4 +1,5 @@
 from future.standard_library import install_aliases
+from rest_framework.test import APITestCase
 
 install_aliases()
 
@@ -9,7 +10,6 @@ from urllib.parse import quote
 
 from dateutil import parser
 from django.utils import timezone
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.reverse import reverse
 
@@ -23,7 +23,7 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.3.5'
 
 
-class TestCaseHomeworkViews(TestCase):
+class TestCaseHomeworkViews(APITestCase):
     def test_homework_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
