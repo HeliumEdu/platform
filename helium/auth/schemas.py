@@ -6,7 +6,7 @@ from rest_framework.schemas import AutoSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 
 logger = logging.getLogger(__name__)
 

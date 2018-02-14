@@ -9,7 +9,7 @@ from helium.auth.views.generalviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 
 urlpatterns = [
     # Authentication URLs
