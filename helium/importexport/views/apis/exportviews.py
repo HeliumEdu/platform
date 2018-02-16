@@ -1,9 +1,12 @@
 import logging
 
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
@@ -18,16 +21,19 @@ __version__ = '1.3.7'
 logger = logging.getLogger(__name__)
 
 
-class ExportView(APIView):
+class ExportView(ViewSet):
     """
-    get:
-    Return a JSON of all non-sensitive data for the user. The result will be a downloadable file.
+    export_data:
+    Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of
+    `attachment; filename=Helium_<username>.json`, so if the request is initiated from an HTML form, the response will
+    be a downloadable file in a browser.
 
     The exported data for each model type will match that of the documented APIs.
     """
+    queryset = get_user_model().objects.all()
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, *args, **kwargs):
+    def export_data(self, request, *args, **kwargs):
         user = self.request.user
 
         serializer = ExportSerializer({

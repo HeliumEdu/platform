@@ -4,21 +4,23 @@ from django.urls import reverse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
 from helium.common.utils import metricutils
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.1'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateEnableResourceView(APIView):
+class PrivateEnableResourceView(ViewSet):
     """
-    put:
-    Enable the private feed URLs for the authenticated user.
+    enable:
+    Enable the private feed URLs for the authenticated user. It is safe to make this request multiple times, and if
+    private feeds are already enabled, the response will simply contain links to the feeds.
     """
     permission_classes = (IsAuthenticated,)
 
@@ -26,7 +28,7 @@ class PrivateEnableResourceView(APIView):
         user = self.request.user
         return user.external_calendars.all()
 
-    def put(self, request, *args, **kwargs):
+    def enable(self, request, *args, **kwargs):
         user = self.request.user
 
         user.settings.enable_private_slug()
@@ -43,14 +45,14 @@ class PrivateEnableResourceView(APIView):
         return Response(serializer.data)
 
 
-class PrivateDisableResourceView(APIView):
+class PrivateDisableResourceView(ViewSet):
     """
-    put:
+    disable:
     Disable the private feed URLs for the authenticated user.
     """
     permission_classes = (IsAuthenticated,)
 
-    def put(self, request, *args, **kwargs):
+    def disable(self, request, *args, **kwargs):
         user = self.request.user
 
         user.settings.disable_private_slug()

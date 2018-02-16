@@ -2,7 +2,7 @@ import logging
 
 from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
 from helium.common.services import uploadfileservice
 from helium.common.utils import metricutils
@@ -15,9 +15,9 @@ __version__ = '1.3.7'
 logger = logging.getLogger(__name__)
 
 
-class ImportView(APIView):
+class ImportView(ViewSet):
     """
-    post:
+    import_data:
     Import the resources for the authenticated user from the the uploaded files. Multiple files can be imported at once
     passed in the `file[]` field.
 
@@ -27,7 +27,7 @@ class ImportView(APIView):
     """
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request, *args, **kwargs):
+    def import_data(self, request, *args, **kwargs):
         for upload in request.data.getlist('file[]'):
             json_str = uploadfileservice.read(upload)
 

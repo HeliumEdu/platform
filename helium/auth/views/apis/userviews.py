@@ -16,7 +16,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -36,35 +36,42 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
+    def get_object(self):
+        return self.request.user
+
     def get(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.user)
+        user = self.get_object()
+
+        serializer = self.get_serializer(user)
 
         return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
+        user = self.get_object()
+
         # Process password change (if present) first, as we're going to use a form-based mechanism to do (this allows us
         # to use Django's built-in auth functionality for this, and we obviously never want to serializer passwords)
         response_data = {}
         errors = {}
         if 'old_password' in request.data or 'new_password1' in request.data or 'new_password2' in request.data:
-            form = UserPasswordChangeForm(user=request.user, data=request.data)
+            form = UserPasswordChangeForm(user=user, data=request.data)
 
             if form.is_valid():
                 form.save()
                 update_session_auth_hash(request, form.user)
 
-                logger.info('Password updated for {}'.format(request.user.get_username()))
+                logger.info('Password updated for {}'.format(user.get_username()))
             else:
                 errors.update(list(form.errors.items()))
 
         # Process remaining attributes (if any) using serializers
         if 'username' in request.data and 'email' in request.data:
-            serializer = self.get_serializer(request.user, data=request.data, context={'request': request})
+            serializer = self.get_serializer(user, data=request.data, context={'request': request})
 
             if serializer.is_valid():
                 serializer.save()
 
-                logger.info('Details updated for user {}'.format(request.user.get_username()))
+                logger.info('Details updated for user {}'.format(user.get_username()))
 
                 response_data.update(serializer.data)
             else:
@@ -80,10 +87,12 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     def delete(self, request, *args, **kwargs):
-        form = UserDeleteForm(user=request.user, data=request.data)
+        user = self.get_object()
+
+        form = UserDeleteForm(user=user, data=request.data)
 
         if form.is_valid():
-            logger.info('User {} deleted'.format(request.user.get_username()))
+            logger.info('User {} deleted'.format(user.get_username()))
 
             metricutils.increment('action.user.deleted', request)
 

@@ -9,6 +9,6 @@ __version__ = '1.3.7'
 
 urlpatterns = [
     # Import/Export URLs
-    url(r'^api/importexport/import/$', ImportView.as_view(), name='importexport_import'),
-    url(r'^api/importexport/export/$', ExportView.as_view(), name='importexport_export'),
+    url(r'^api/importexport/import/$', ImportView.as_view({'post': 'import_data'}), name='importexport_import'),
+    url(r'^api/importexport/export/$', ExportView.as_view({'get': 'export_data'}), name='importexport_export'),
 ]

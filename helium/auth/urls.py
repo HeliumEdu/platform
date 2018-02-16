@@ -27,7 +27,7 @@ urlpatterns = [
     # Authentication API URLs
     ##############################
     url(r'^api/auth/token/$', ObtainAuthToken.as_view(), name='api_auth_token'),
-    url(r'^api/auth/token/revoke/$', DestroyAuthToken.as_view(), name='api_auth_token_revoke'),
+    url(r'^api/auth/token/revoke/$', DestroyAuthToken.as_view({'delete': 'revoke'}), name='api_auth_token_revoke'),
 
     ##############################
     # Authenticated API URLs
