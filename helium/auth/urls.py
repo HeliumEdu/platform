@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from helium.auth.views.apis.tokenviews import ObtainHeliumAuthToken, DestroyHeliumAuthToken
+from helium.auth.views.apis.tokenviews import ObtainAuthToken, DestroyAuthToken
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
 from helium.auth.views.apis.userviews import UserApiDetailView
@@ -9,7 +9,7 @@ from helium.auth.views.generalviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 urlpatterns = [
     # Authentication URLs
@@ -26,8 +26,8 @@ urlpatterns = [
     ##############################
     # Authentication API URLs
     ##############################
-    url(r'^api/auth/token/$', ObtainHeliumAuthToken.as_view(), name='api_auth_token'),
-    url(r'^api/auth/token/revoke/$', DestroyHeliumAuthToken.as_view(), name='api_auth_token_revoke'),
+    url(r'^api/auth/token/$', ObtainAuthToken.as_view(), name='api_auth_token'),
+    url(r'^api/auth/token/revoke/$', DestroyAuthToken.as_view(), name='api_auth_token_revoke'),
 
     ##############################
     # Authenticated API URLs

@@ -7,12 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
+from helium.planner.models import MaterialGroup
 from helium.planner.schemas import MaterialGroupDetailSchema
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,11 @@ class MaterialGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        user = self.request.user
-        return user.material_groups.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.material_groups.all()
+        else:
+            MaterialGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -66,8 +70,11 @@ class MaterialGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateMode
     schema = MaterialGroupDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.material_groups.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.material_groups.all()
+        else:
+            return MaterialGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

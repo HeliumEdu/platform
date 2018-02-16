@@ -1,44 +1,36 @@
 import logging
 
 from rest_framework import status
-from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
-
-from helium.auth.schemas import TokenSchema
-
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
-
-logger = logging.getLogger(__name__)
-
-from rest_framework import parsers, renderers
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from helium.auth.serializers.tokenserializer import TokenSerializer
 
-class ObtainHeliumAuthToken(ObtainAuthToken):
+__author__ = 'Alex Laird'
+__copyright__ = 'Copyright 2018, Helium Edu'
+__version__ = '1.3.7'
+
+logger = logging.getLogger(__name__)
+
+
+class ObtainAuthToken(GenericAPIView):
     """
     post:
-    Obtain an authentication token for the given user credentials. The response contains an object with a "token"
-    field. The token should then be provided in the "Authorization" header with a value of "Token {token}" to all
-    requests that required authentication.
+    Obtain an authentication token for the given user credentials. The "token" in the response should then be provided
+    in all future calls that required authentication. This can be done by setting the `Authorization` header with a
+    value of `Token <token>`.
     """
-    parser_classes = (parsers.JSONParser,)
-    schema = TokenSchema()
+    serializer_class = TokenSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-
-        return Response({'token': token.key})
+        return Response(serializer.data)
 
 
-class DestroyHeliumAuthToken(APIView):
+class DestroyAuthToken(APIView):
     """
     delete:
     Revoke the authenticated user's access token.

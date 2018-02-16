@@ -9,12 +9,13 @@ from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
 from helium.planner.filters import ReminderFilter
+from helium.planner.models import Reminder
 from helium.planner.schemas import ReminderDetailSchema
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,11 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
     filter_class = ReminderFilter
 
     def get_queryset(self):
-        user = self.request.user
-        return user.reminders.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.reminders.all()
+        else:
+            return Reminder.objects.none()
 
     def get(self, request, *args, **kwargs):
         self.serializer_class = ReminderExtendedSerializer
@@ -81,8 +85,11 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     schema = ReminderDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.reminders.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.reminders.all()
+        else:
+            return Reminder.objects.none()
 
     def get(self, request, *args, **kwargs):
         self.serializer_class = ReminderExtendedSerializer

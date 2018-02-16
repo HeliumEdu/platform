@@ -1,20 +1,20 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from helium.planner.serializers.gradeserializer import GradeSerializer
 from helium.planner.services import gradingservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
 
-class GradesApiListView(GenericAPIView):
+class GradesApiListView(APIView):
     """
     get:
     Return the grades for the authenticated user.
@@ -28,11 +28,10 @@ class GradesApiListView(GenericAPIView):
     points, each a tuple containing two values of the format [time, grade_at_time].
     """
     permission_classes = (IsAuthenticated,)
-    serializer_class = GradeSerializer
 
     def get(self, request, *args, **kwargs):
         grade_data = gradingservice.get_grade_data(request.user.pk)
 
-        serializer = self.get_serializer(grade_data)
+        serializer = GradeSerializer(grade_data)
 
         return Response(serializer.data)

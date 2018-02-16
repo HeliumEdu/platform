@@ -8,12 +8,13 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.filters import CourseGroupFilter
+from helium.planner.models import CourseGroup
 from helium.planner.schemas import CourseGroupDetailSchema
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,11 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     filter_class = CourseGroupFilter
 
     def get_queryset(self):
-        user = self.request.user
-        return user.course_groups.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.course_groups.all()
+        else:
+            CourseGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -68,8 +72,11 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
     schema = CourseGroupDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.course_groups.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.course_groups.all()
+        else:
+            CourseGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

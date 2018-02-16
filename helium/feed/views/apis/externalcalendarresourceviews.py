@@ -5,13 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
+from helium.feed.models import ExternalCalendar
 from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.services import icalexternalcalendarservice
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.3'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,11 @@ class ExternalCalendarAsEventsResourceView(GenericAPIView):
     schema = ExternalCalendarIDSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.external_calendars.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.external_calendars.all()
+        else:
+            return ExternalCalendar.objects.none()
 
     def get(self, request, *args, **kwargs):
         external_calendar = self.get_object()

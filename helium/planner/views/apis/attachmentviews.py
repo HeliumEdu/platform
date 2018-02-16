@@ -9,12 +9,13 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner import permissions
+from helium.planner.models import Attachment
 from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,11 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
     schema = AttachmentListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.attachments.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.attachments.all()
+        else:
+            return Attachment.objects.none()
 
     def options(self, request, *args, **kwargs):  # pragma: no cover
         """
@@ -115,8 +119,11 @@ class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelM
     schema = AttachmentDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.attachments.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.attachments.all()
+        else:
+            return Attachment.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

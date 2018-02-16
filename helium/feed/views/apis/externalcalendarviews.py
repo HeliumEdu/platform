@@ -7,12 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
+from helium.feed.models import ExternalCalendar
 from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,11 @@ class ExternalCalendarsApiListView(GenericAPIView, ListModelMixin, CreateModelMi
     filter_fields = ('shown_on_calendar',)
 
     def get_queryset(self):
-        user = self.request.user
-        return user.external_calendars.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.external_calendars.all()
+        else:
+            return ExternalCalendar.objects.none()
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -70,8 +74,11 @@ class ExternalCalendarsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateM
     schema = ExternalCalendarIDSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.external_calendars.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.external_calendars.all()
+        else:
+            return ExternalCalendar.objects.none()
 
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)

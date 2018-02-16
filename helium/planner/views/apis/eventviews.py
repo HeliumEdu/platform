@@ -10,12 +10,13 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
 from helium.planner.filters import EventFilter
+from helium.planner.models import Event
 from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,11 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     order_fields = ('title', 'start', 'priority',)
 
     def get_queryset(self):
-        user = self.request.user
-        return user.events.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.events.all()
+        else:
+            Event.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
@@ -86,8 +90,11 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
     schema = EventDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return user.events.all()
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.events.all()
+        else:
+            Event.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
