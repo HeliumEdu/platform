@@ -1,11 +1,11 @@
 from django.conf.urls import url
 
-from helium.importexport.views.exportviews import ExportView
-from helium.importexport.views.importviews import ImportView
+from helium.importexport.views.apis.exportviews import ExportView
+from helium.importexport.views.apis.importviews import ImportView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.7'
 
 urlpatterns = [
     # Import/Export URLs

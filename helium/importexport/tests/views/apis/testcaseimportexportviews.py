@@ -19,7 +19,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.5'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class TestCaseImportExportViews(APITestCase):
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('resources', 'sample.json'))) as fp:
+        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
             data = {
                 'file[]': [fp]
             }
@@ -53,7 +53,7 @@ class TestCaseImportExportViews(APITestCase):
                 data)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('resources', 'sample.json'))) as fp:
+        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
             data = {
                 'file[]': [fp]
             }
@@ -237,7 +237,7 @@ class TestCaseImportExportViews(APITestCase):
         userhelper.given_a_user_exists_and_is_logged_in(self.client)
 
         # WHEN
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('resources', 'invalidsample.json'))) as fp:
+        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'invalidsample.json'))) as fp:
             data = {
                 'file[]': [fp]
             }

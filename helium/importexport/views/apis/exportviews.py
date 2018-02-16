@@ -13,7 +13,7 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
