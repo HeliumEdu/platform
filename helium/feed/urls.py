@@ -1,5 +1,4 @@
 from django.conf.urls import url
-from rest_framework.routers import DefaultRouter
 
 from helium.feed.views.apis.externalcalendarresourceviews import ExternalCalendarAsEventsResourceView
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
@@ -10,9 +9,6 @@ from helium.feed.views.privateviews import PrivateEventsICALView, PrivateHomewor
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.3.7'
-
-router = DefaultRouter()
-router.register('')
 
 urlpatterns = [
     # Unauthenticated external feed URLs (rely on private slugs for authentication)
