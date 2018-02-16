@@ -12,7 +12,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,18 @@ class UserProfileApiDetailView(GenericAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
+    def get_object(self):
+        return self.request.user
+
     def put(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.user.profile, data=request.data)
+        user = self.get_object()
+
+        serializer = self.get_serializer(user.profile, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
 
-            logger.info('Profile updated for user {}'.format(request.user.get_username()))
+            logger.info('Profile updated for user {}'.format(user.get_username()))
 
             metricutils.increment('action.user-profile.updated', request)
 

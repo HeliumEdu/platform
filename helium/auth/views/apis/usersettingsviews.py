@@ -11,7 +11,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +27,18 @@ class UserSettingsApiDetailView(GenericAPIView):
     serializer_class = UserSettingsSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_object(self):
+        return self.request.user
+
     def put(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.user.settings, data=request.data, partial=True)
+        user = self.get_object()
+
+        serializer = self.get_serializer(user.settings, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
 
-            logger.info('Settings updated for user {}'.format(request.user.get_username()))
+            logger.info('Settings updated for user {}'.format(user.get_username()))
 
             metricutils.increment('action.user-settings.updated', request)
 

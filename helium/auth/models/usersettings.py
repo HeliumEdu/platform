@@ -66,8 +66,9 @@ class UserSettings(BaseModel):
         return self.user
 
     def enable_private_slug(self):
-        self.private_slug = slugify(str(self.get_user().pk) + str(time.time()))
-        self.save()
+        if not self.private_slug:
+            self.private_slug = slugify(str(self.get_user().pk) + str(time.time()))
+            self.save()
 
     def disable_private_slug(self):
         self.private_slug = None
