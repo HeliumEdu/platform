@@ -11,7 +11,7 @@ from helium.common.views.apis.infoviews import InfoView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.7'
 
 sitemaps = {
     'static': StaticViewSitemap,
