@@ -6,11 +6,12 @@ from rest_framework.documentation import include_docs_urls
 
 from conf.sitemaps import StaticViewSitemap
 from helium.common.admin import admin_site
+from helium.common.views.apis.infoviews import InfoView
 from helium.common.views.generalviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.7'
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -38,4 +39,9 @@ urlpatterns = [
     url(r'^press', press, name='press'),
     url(r'^about', about, name='about'),
     url(r'^contact', contact, name='contact'),
+
+    ##############################
+    # Unauthenticated API URLs
+    ##############################
+    url(r'^api/common/info/$', InfoView.as_view({'get': 'info'}), name='api_common_info'),
 ]

@@ -7,7 +7,7 @@ django-dotenv==1.4.2
 django-debug-toolbar==1.9.1
 django-widget-tweaks==1.4.1
 django-storages==1.6.5
-djangorestframework==3.7.3
+djangorestframework==3.7.7
 django-filter==1.1.0
 django-maintenance-mode==0.7.0
 django-pipeline==1.6.13

@@ -6,7 +6,7 @@
  * FIXME: This implementation is pretty crude compared to modern standards and will be completely overhauled in favor of a framework once the open source migration is completed.
  *
  * @author Alex Laird
- * @version 1.3.6
+ * @version 1.3.7
  */
 
 /**
@@ -388,7 +388,7 @@ function HeliumSettings() {
 
             $("#private-feed-urls").html("<strong>Events: </strong><a href=\"" + base_url + "/events.ics\">" + base_url + "/events.ics</a>" +
                 "<br /><strong>Homework: </strong><a href=\"" + base_url + "/homework.ics\">" + base_url + "/homework.ics</a>" +
-                "<br /><strong>Class Schedule: </strong><a href=\"" + base_url + "/courseschedules.ics\">" + base_url + "/courseschedules.ics</a>");
+                "<br /><strong>Class Schedule: </strong><a href=\"" + base_url + "/coursescheduleevents.ics\">" + base_url + "/coursescheduleevents.ics</a>");
         }
     };
 

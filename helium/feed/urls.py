@@ -8,7 +8,7 @@ from helium.feed.views.privateviews import PrivateEventsICALView, PrivateHomewor
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.1'
+__version__ = '1.3.7'
 
 urlpatterns = [
     # Unauthenticated external feed URLs (rely on private slugs for authentication)
@@ -23,8 +23,10 @@ urlpatterns = [
     # Authenticated API URLs
     ##############################
     # Resource shortcuts
-    url(r'^api/feed/private/enable/$', PrivateEnableResourceView.as_view(), name='api_feed_private_resource_enable'),
-    url(r'^api/feed/private/disable/$', PrivateDisableResourceView.as_view(), name='api_feed_private_resource_disable'),
+    url(r'^api/feed/private/enable/$', PrivateEnableResourceView.as_view({'put': 'enable'}),
+        name='api_feed_private_resource_enable'),
+    url(r'^api/feed/private/disable/$', PrivateDisableResourceView.as_view({'put': 'disable'}),
+        name='api_feed_private_resource_disable'),
     url(r'^api/feed/externalcalendars/(?P<pk>[0-9]+)/events',
         ExternalCalendarAsEventsResourceView.as_view(),
         name='api_feed_resource_externalcalendars_events'),

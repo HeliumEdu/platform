@@ -15,7 +15,7 @@ from helium.planner.serializers.materialserializer import MaterialSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,15 @@ class UserMaterialsApiListView(GenericAPIView, ListModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        user = self.request.user
-        materials = Material.objects.for_user(user.pk)
-        # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
-        if 'courses' in self.request.query_params:
-            materials = materials.with_courses(self.request.query_params.getlist('courses'))
-        return materials
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            materials = Material.objects.for_user(user.pk)
+            # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
+            if 'courses' in self.request.query_params:
+                materials = materials.with_courses(self.request.query_params.getlist('courses'))
+            return materials
+        else:
+            return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -55,8 +58,11 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
     schema = SubMaterialGroupListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+        else:
+            return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -96,8 +102,11 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
     schema = MaterialDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+        else:
+            return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

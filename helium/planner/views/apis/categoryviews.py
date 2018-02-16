@@ -14,7 +14,7 @@ from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.3'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +26,13 @@ class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
     """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
-    schema = SubCourseListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Category.objects.for_user(user.pk)
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Category.objects.for_user(user.pk)
+        else:
+            Category.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -53,8 +55,11 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
     schema = SubCourseListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            Category.objects.none()
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -91,8 +96,11 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
     schema = CategoryDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            Category.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

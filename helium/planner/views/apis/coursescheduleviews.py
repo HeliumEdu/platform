@@ -14,7 +14,7 @@ from helium.planner.serializers.coursescheduleserializer import CourseScheduleSe
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,11 @@ class CourseGroupCourseCourseSchedulesApiListView(GenericAPIView, ListModelMixin
     schema = SubCourseListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            CourseSchedule.objects.none()
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -71,8 +74,11 @@ class CourseGroupCourseCourseSchedulesApiDetailView(GenericAPIView, RetrieveMode
     schema = CourseScheduleDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            CourseSchedule.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
