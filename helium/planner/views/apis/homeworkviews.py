@@ -18,7 +18,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,11 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
     schema = SubCourseListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Homework.objects.for_user(user.pk)
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Homework.objects.for_user(user.pk)
+        else:
+            return Homework.objects.none()
 
     def get(self, request, *args, **kwargs):
         response = self.list(request, *args, **kwargs)
@@ -64,8 +67,11 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
     schema = SubCourseListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            return Homework.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
@@ -117,8 +123,11 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
     schema = HomeworkDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            return Homework.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':

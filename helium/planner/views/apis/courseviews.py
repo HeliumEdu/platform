@@ -16,7 +16,7 @@ from helium.planner.serializers.courseserializer import CourseSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.3.7'
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,11 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
     filter_class = CourseFilter
 
     def get_queryset(self):
-        user = self.request.user
-        return Course.objects.for_user(user.pk)
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Course.objects.for_user(user.pk)
+        else:
+            Course.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -54,8 +57,11 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
     schema = SubCourseGroupListSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
+        else:
+            return Course.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -91,8 +97,11 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
     schema = CourseDetailSchema()
 
     def get_queryset(self):
-        user = self.request.user
-        return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
+        else:
+            Course.objects.none()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
