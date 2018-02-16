@@ -24,7 +24,9 @@ class InfoView(APIView):
             'name': settings.PROJECT_NAME,
             'tagline': settings.PROJECT_TAGLINE,
             'version': settings.PROJECT_VERSION,
-            'email': settings.EMAIL_ADDRESS,
+            'support_email': settings.EMAIL_ADDRESS,
+            'support_url': settings.SUPPORT_REDIRECT_URL,
+            'max_upload_size': settings.MAX_UPLOAD_SIZE
         })
 
         return Response(serializer.data)
