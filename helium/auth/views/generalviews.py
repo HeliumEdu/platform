@@ -1,39 +1,15 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse
 
-from helium.auth.services import subscriptionservice
 from helium.common.utils import metricutils
-from helium.common.utils.viewutils import set_request_status, get_request_status
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
-
-
-def unsubscribe(request):
-    unsubsribed = False
-    if request.method == 'GET' and 'username' in request.GET and 'code' in request.GET:
-        unsubsribed = subscriptionservice.process_unsubscribe(request.GET['username'], request.GET['code'])
-
-    if unsubsribed:
-        metricutils.increment('action.unsubscribe', request)
-
-        set_request_status(request, 'warning',
-                           'Sorry we bothered you! You won\'t receive emails from The Helium Team in the future.')
-
-        data = {
-            'status': get_request_status(request)
-        }
-
-        return render(request, 'settings/unsubscribe.html', data)
-    else:
-        return HttpResponseRedirect(reverse('home'))
 
 
 @login_required
