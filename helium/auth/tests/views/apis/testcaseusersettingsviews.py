@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.3.8'
 
 
 class TestCaseUserSettingsViews(APITestCase):
@@ -82,19 +82,3 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.settings.private_slug, private_slug)
-
-    def test_unsubscribe_admin_emails(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertTrue(user.settings.receive_emails_from_admin)
-
-        response1 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username,
-                                                                                           user.verification_code))
-        response2 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format('fake-user',
-                                                                                           'fake-verification'))
-
-        # THEN
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
-        user = get_user_model().objects.get(pk=user.id)
-        self.assertFalse(user.settings.receive_emails_from_admin)

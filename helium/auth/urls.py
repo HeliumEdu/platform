@@ -9,7 +9,7 @@ from helium.auth.views.generalviews import *
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.3.8'
 
 urlpatterns = [
     # Authentication URLs
@@ -20,7 +20,6 @@ urlpatterns = [
     url(r'^forgot', forgot, name='forgot'),
 
     # Account URLs
-    url(r'^unsubscribe', unsubscribe, name='unsubscribe'),
     url(r'^settings', settings, name='settings'),
 
     ##############################
