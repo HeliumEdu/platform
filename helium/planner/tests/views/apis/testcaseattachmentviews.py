@@ -39,7 +39,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_get_attachments(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
@@ -79,7 +79,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_course_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()
@@ -106,7 +106,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_event_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         tmp_file = attachmenthelper.given_file_exists()
 
@@ -132,7 +132,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_homework_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -160,7 +160,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_orphaned_attachment_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
         tmp_file = attachmenthelper.given_file_exists()
 
         # WHEN
@@ -178,7 +178,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_get_attachment_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         attachment = attachmenthelper.given_attachment_exists(user, course)
@@ -192,7 +192,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_delete_attachment_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         attachment = attachmenthelper.given_attachment_exists(user, course)
@@ -208,7 +208,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -225,7 +225,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -253,7 +253,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -271,7 +271,7 @@ class TestCaseAttachmentViews(APITestCase):
         self.assertEqual(Attachment.objects.count(), 0)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()

@@ -35,7 +35,7 @@ class TestCaseCourseGroupViews(APITestCase):
     def test_get_coursegroups(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         coursegrouphelper.given_course_group_exists(user1)
         coursegrouphelper.given_course_group_exists(user2)
         coursegrouphelper.given_course_group_exists(user2)
@@ -50,7 +50,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
     def test_create_coursegroup(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -72,7 +72,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
     def test_get_coursegroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
@@ -97,7 +97,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
     def test_update_coursegroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         self.assertEqual(course_group.title, 'Test Course Group')
         self.assertTrue(course_group.shown_on_calendar)
@@ -122,7 +122,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
     def test_update_start_before_end_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         self.assertEqual(course_group.title, 'Test Course Group')
         self.assertTrue(course_group.shown_on_calendar)
@@ -145,7 +145,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
     def test_delete_coursegroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # WHEN
@@ -159,7 +159,7 @@ class TestCaseCourseGroupViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
 
         # WHEN
@@ -177,7 +177,7 @@ class TestCaseCourseGroupViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user2)
         average_grade = course_group.average_grade
         trend = course_group.trend
@@ -206,7 +206,7 @@ class TestCaseCourseGroupViews(APITestCase):
         self.assertEqual(course_group.get_user().pk, user2.pk)
 
     def test_not_found(self):
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         responses = [
             self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
@@ -222,7 +222,7 @@ class TestCaseCourseGroupViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         coursegrouphelper.given_course_group_exists(user,
                                                     start_date=datetime.date(2016, 5, 8),
                                                     end_date=datetime.date(2016, 8, 15))

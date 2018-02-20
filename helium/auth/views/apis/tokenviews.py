@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.auth.serializers.tokenserializer import TokenSerializer
+from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,11 @@ class ObtainAuthToken(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
+
         serializer.is_valid(raise_exception=True)
+
+        metricutils.increment('action.user.toke-obtained', request)
+
         return Response(serializer.data)
 
 
@@ -39,5 +44,7 @@ class DestroyAuthToken(ViewSet):
 
     def revoke(self, request, *args, **kwargs):
         request.user.auth_token.delete()
+
+        metricutils.increment('action.user.toke-revoked', request)
 
         return Response(status=status.HTTP_200_OK)

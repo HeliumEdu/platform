@@ -50,7 +50,7 @@ class TestCaseAuthToken(APITestCase):
 
     def test_revoke_token(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_token_set(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         response1 = self.client.delete(reverse('api_auth_token_revoke'))

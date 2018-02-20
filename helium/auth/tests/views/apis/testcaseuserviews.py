@@ -1,4 +1,5 @@
 import json
+from unittest import skip
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -30,7 +31,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_get_user(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         response = self.client.get(reverse('api_auth_user_detail'))
@@ -60,7 +61,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_username_changes(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
 
@@ -84,7 +85,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_email_changing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
         self.assertEqual(user.username, 'test_user')
@@ -108,9 +109,10 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.email_changing, response.data['email_changing'])
         self.assertEqual(user.username, response.data['username'])
 
+    @skip("Rewrite to rely on new verification flow")
     def test_email_changes_after_verification(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.email_changing = 'new@email.com'
         user.verification_code = 'moo-moo-moo'
         user.save()
@@ -128,7 +130,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
@@ -142,12 +144,11 @@ class TestCaseUserViews(APITestCase):
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user = get_user_model().objects.get(pk=user.id)
-        userhelper.verify_user_logged_in(self)
         self.assertTrue(user.check_password('new_pass_1!'))
 
     def test_password_change_fails_missing_old_new_pass(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
@@ -163,7 +164,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_blank_new_pass(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
@@ -180,7 +181,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_mismatch(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
@@ -197,7 +198,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_password_change_fails_to_meet_requirements(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
@@ -215,7 +216,7 @@ class TestCaseUserViews(APITestCase):
     def test_username_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
 
         # WHEN
         data = {
@@ -233,7 +234,7 @@ class TestCaseUserViews(APITestCase):
     def test_email_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
 
         # WHEN
         data = {
@@ -250,7 +251,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_delete_user(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -270,7 +271,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_delete_fails_bad_request(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {

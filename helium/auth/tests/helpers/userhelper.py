@@ -24,17 +24,8 @@ def given_a_user_exists(username='test_user', email='user@test.com', password='t
     return user
 
 
-def given_a_user_exists_and_is_logged_in(client, username='test_user', email='user@test.com',
-                                         password='test_pass_1!'):
-    user = given_a_user_exists(username, email, password)
-
-    client.login(username=user.get_username(), password=password)
-
-    return user
-
-
-def given_a_user_exists_and_token_set(client, username='test_user', email='user@test.com',
-                                      password='test_pass_1!'):
+def given_a_user_exists_and_is_authenticated(client, username='test_user', email='user@test.com',
+                                             password='test_pass_1!'):
     user = given_a_user_exists(username, email, password)
     token = Token.objects.create(user=user)
 

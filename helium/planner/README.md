@@ -5,7 +5,7 @@
 * users
 
 ## Overview
-This module serves to provide functionality to render and interact with the modules of planner, including classes,
+This module serves to provide functionality to interact with the modules of planner, including classes,
 supplies, and grades.
 
 ## Configuration Variables

@@ -29,7 +29,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -45,7 +45,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_put_user_profile(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertIsNone(user.profile.phone)
         self.assertIsNone(user.profile.phone_changing)
 
@@ -67,7 +67,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_phone_changes_after_verification(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone_changing = '5555555'
         user.profile.phone_carrier_changing = 'txt.att.net'
         user.profile.phone_verification_code = 123456
@@ -96,7 +96,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_remove_phone(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone = '5555555'
         user.profile.phone_carrier = 'txt.att.net'
         user.profile.save()
@@ -119,7 +119,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone_changing = '5555555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
@@ -137,7 +137,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         phone_changing = '5555555'
         user.profile.phone_changing = phone_changing
         user.profile.save()

@@ -20,7 +20,7 @@ urlpatterns = [
         name='feed_private_courseschedules_ical'),
 
     ##############################
-    # Authenticated API URLs
+    # Authenticated URLs
     ##############################
     # Resource shortcuts
     url(r'^api/feed/private/enable/$', PrivateEnableResourceView.as_view({'put': 'enable'}),

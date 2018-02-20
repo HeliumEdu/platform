@@ -47,7 +47,7 @@ class TestCaseMaterialViews(APITestCase):
     def test_get_materials(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         material_group1 = materialgrouphelper.given_material_group_exists(user1)
         material_group2 = materialgrouphelper.given_material_group_exists(user2)
         material_group3 = materialgrouphelper.given_material_group_exists(user2)
@@ -70,7 +70,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_create_material(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         material_group = materialgrouphelper.given_material_group_exists(user)
@@ -99,7 +99,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_get_material_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
@@ -113,7 +113,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_update_material_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
@@ -146,7 +146,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_update_multiple_courses(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
@@ -174,7 +174,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_delete_material_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
@@ -189,7 +189,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -228,7 +228,7 @@ class TestCaseMaterialViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user1)
         material = materialhelper.given_material_exists(material_group)
 
@@ -257,7 +257,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
 
         # WHEN
@@ -276,7 +276,7 @@ class TestCaseMaterialViews(APITestCase):
 
     def test_update_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
@@ -293,7 +293,7 @@ class TestCaseMaterialViews(APITestCase):
         self.assertIn('status', response.data)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
@@ -330,7 +330,7 @@ class TestCaseMaterialViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_courses_filter_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)

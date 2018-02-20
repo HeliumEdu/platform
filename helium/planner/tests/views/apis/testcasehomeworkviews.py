@@ -49,7 +49,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_get_homework(self):
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -75,7 +75,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_create_homework(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -111,7 +111,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_create_converts_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -142,7 +142,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
         user.settings.save()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -178,7 +178,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_get_homework_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -194,7 +194,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_update_homework_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
@@ -233,7 +233,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_update_start_before_end_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -255,7 +255,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_patch_converts_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -279,7 +279,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
         user.settings.save()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -308,7 +308,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_delete_homework_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -325,7 +325,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         materialgroup2 = materialgrouphelper.given_material_group_exists(user2)
         material2 = materialhelper.given_material_exists(materialgroup2)
@@ -369,7 +369,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -399,7 +399,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -417,7 +417,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_patch_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -437,7 +437,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_update_invalid_fraction_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -465,7 +465,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn('current_grade', response2.data)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -507,7 +507,7 @@ class TestCaseHomeworkViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course,
@@ -540,7 +540,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 2)
 
     def test_title_search_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course, title='test1')
@@ -553,7 +553,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.data[0]['title'], homework.title)
 
     def test_course_search_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group, title='testcourse')
         course2 = coursehelper.given_course_exists(course_group, title='othercourse')
@@ -567,7 +567,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.data[0]['title'], homework.title)
 
     def test_category_search_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course, title='testcategory')

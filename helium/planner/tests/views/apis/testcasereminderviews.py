@@ -43,7 +43,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_get_reminders(self):
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
@@ -80,7 +80,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_create_event_reminder(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -109,7 +109,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_create_homework_reminder(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -140,7 +140,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_create_orphaned_reminder_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -161,7 +161,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_create_reminder_multiple_parents_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -188,7 +188,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_get_reminder_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
@@ -202,7 +202,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_update_reminder_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
@@ -227,7 +227,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_update_reminder_parent_updates(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -250,7 +250,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_delete_reminder_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
@@ -265,7 +265,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
@@ -301,7 +301,7 @@ class TestCaseReminderViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
         event_reminder = reminderhelper.given_reminder_exists(user1, event=event)
         course_group = coursegrouphelper.given_course_group_exists(user1)
@@ -328,7 +328,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
         start_of_range = reminder.start_of_range
@@ -347,7 +347,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminderhelper.given_reminder_exists(user, event=event)
 
@@ -364,7 +364,7 @@ class TestCaseReminderViews(APITestCase):
 
     def test_update_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
@@ -380,7 +380,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertIn('offset', response.data)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course)
@@ -401,7 +401,7 @@ class TestCaseReminderViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework1 = homeworkhelper.given_homework_exists(course,

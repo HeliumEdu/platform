@@ -43,7 +43,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_get_events(self):
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         eventhelper.given_event_exists(user1)
         eventhelper.given_event_exists(user2)
         eventhelper.given_event_exists(user2)
@@ -58,7 +58,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_create_event(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -86,7 +86,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_create_converts_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -113,7 +113,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -143,7 +143,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_get_event_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -156,7 +156,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_update_event_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -183,7 +183,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_update_start_before_end_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -202,7 +202,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_patch_converts_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -223,7 +223,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
         user.settings.save()
         event = eventhelper.given_event_exists(user)
@@ -249,7 +249,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_delete_event_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -264,7 +264,7 @@ class TestCaseEventViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
 
         # WHEN
@@ -284,7 +284,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -299,7 +299,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_update_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # WHEN
@@ -314,7 +314,7 @@ class TestCaseEventViews(APITestCase):
         self.assertIn('start', response.data)
 
     def test_not_found(self):
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         responses = [
@@ -332,7 +332,7 @@ class TestCaseEventViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user,
                                        start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
                                        end=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc))
@@ -354,7 +354,7 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(len(response.data), 2)
 
     def test_title_search_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user, title='test1')
         eventhelper.given_event_exists(user, title='test2')
 
