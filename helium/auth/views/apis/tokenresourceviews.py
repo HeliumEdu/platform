@@ -16,7 +16,7 @@ __version__ = '1.4.0'
 logger = logging.getLogger(__name__)
 
 
-class ObtainAuthToken(GenericAPIView):
+class ObtainTokenResourceView(GenericAPIView):
     """
     post:
     Obtain an authentication token for the given user credentials. The "token" in the response should then be provided
@@ -35,7 +35,7 @@ class ObtainAuthToken(GenericAPIView):
         return Response(serializer.data)
 
 
-class DestroyAuthToken(ViewSet):
+class DestroyTokenResourceView(ViewSet):
     """
     revoke:
     Revoke the authenticated user's access token.

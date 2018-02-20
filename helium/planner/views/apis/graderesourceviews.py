@@ -9,12 +9,12 @@ from helium.planner.services import gradingservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
 
-class GradesApiListView(APIView):
+class GradesApiResourceView(APIView):
     """
     get:
     Return the grades for the authenticated user.

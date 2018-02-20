@@ -26,10 +26,10 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_attachments_list')),
-            self.client.post(reverse('api_planner_attachments_list')),
-            self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_attachments_list')),
+            self.client.post(reverse('planner_attachments_list')),
+            self.client.get(reverse('planner_attachments_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -61,10 +61,10 @@ class TestCaseAttachmentViews(APITestCase):
         attachmenthelper.given_attachment_exists(user2, homework=homework2)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_attachments_list'))
-        response2 = self.client.get(reverse('api_planner_attachments_list') + '?course={}'.format(course3.pk))
-        response3 = self.client.get(reverse('api_planner_attachments_list') + '?event={}'.format(event2.pk))
-        response4 = self.client.get(reverse('api_planner_attachments_list') + '?homework={}'.format(homework2.pk))
+        response1 = self.client.get(reverse('planner_attachments_list'))
+        response2 = self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course3.pk))
+        response3 = self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event2.pk))
+        response4 = self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework2.pk))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -91,7 +91,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -117,7 +117,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -145,7 +145,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -169,7 +169,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -184,7 +184,7 @@ class TestCaseAttachmentViews(APITestCase):
         attachment = attachmenthelper.given_attachment_exists(user, course)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': attachment.pk}))
+        response = self.client.get(reverse('planner_attachments_detail', kwargs={'pk': attachment.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -198,7 +198,7 @@ class TestCaseAttachmentViews(APITestCase):
         attachment = attachmenthelper.given_attachment_exists(user, course)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': attachment.pk}))
+        response = self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': attachment.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -217,7 +217,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         with open(tmp_file.name) as fp:
-            response = self.client.post(reverse('api_planner_attachments_list'), {'course': course1.pk})
+            response = self.client.post(reverse('planner_attachments_list'), {'course': course1.pk})
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -238,10 +238,10 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_attachments_list') + '?course={}'.format(course1.pk)),
-            self.client.get(reverse('api_planner_attachments_list') + '?event={}'.format(event.pk)),
-            self.client.get(reverse('api_planner_attachments_list') + '?homework={}'.format(homework.pk)),
-            self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': attachment1.pk}))
+            self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course1.pk)),
+            self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event.pk)),
+            self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework.pk)),
+            self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': attachment1.pk}))
         ]
 
         # THEN
@@ -262,7 +262,7 @@ class TestCaseAttachmentViews(APITestCase):
             'course': course.pk
         }
         response = self.client.post(
-            reverse('api_planner_attachments_list'),
+            reverse('planner_attachments_list'),
             data)
 
         # THEN
@@ -283,9 +283,9 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             responses = [
-                self.client.post(reverse('api_planner_attachments_list'), data),
-                self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
-                self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
+                self.client.post(reverse('planner_attachments_list'), data),
+                self.client.get(reverse('planner_attachments_detail', kwargs={'pk': '9999'})),
+                self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': '9999'}))
             ]
 
         # THEN

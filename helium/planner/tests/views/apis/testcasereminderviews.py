@@ -30,11 +30,11 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_reminders_list')),
-            self.client.post(reverse('api_planner_reminders_list')),
-            self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_reminders_list')),
+            self.client.post(reverse('planner_reminders_list')),
+            self.client.get(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -65,9 +65,9 @@ class TestCaseReminderViews(APITestCase):
         reminderhelper.given_reminder_exists(user2, event=event2)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_reminders_list'))
-        response2 = self.client.get(reverse('api_planner_reminders_list') + '?homework={}'.format(homework4.pk))
-        response3 = self.client.get(reverse('api_planner_reminders_list') + '?event={}'.format(event2.pk))
+        response1 = self.client.get(reverse('planner_reminders_list'))
+        response2 = self.client.get(reverse('planner_reminders_list') + '?homework={}'.format(homework4.pk))
+        response3 = self.client.get(reverse('planner_reminders_list') + '?event={}'.format(event2.pk))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -96,7 +96,7 @@ class TestCaseReminderViews(APITestCase):
             'sent': False,
             'user': user.pk
         }
-        response = self.client.post(reverse('api_planner_reminders_list'),
+        response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -127,7 +127,7 @@ class TestCaseReminderViews(APITestCase):
             'sent': False,
             'user': user.pk
         }
-        response = self.client.post(reverse('api_planner_reminders_list'),
+        response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -152,7 +152,7 @@ class TestCaseReminderViews(APITestCase):
             'type': enums.POPUP,
         }
         response = self.client.post(
-            reverse('api_planner_reminders_list'),
+            reverse('planner_reminders_list'),
             data)
 
         # THEN
@@ -179,7 +179,7 @@ class TestCaseReminderViews(APITestCase):
             'event': event.pk,
         }
         response = self.client.post(
-            reverse('api_planner_reminders_list'),
+            reverse('planner_reminders_list'),
             data)
 
         # THEN
@@ -193,7 +193,7 @@ class TestCaseReminderViews(APITestCase):
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_reminders_detail',
+        response = self.client.get(reverse('planner_reminders_detail',
                                            kwargs={'pk': reminder.pk}))
 
         # THEN
@@ -214,7 +214,7 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.HOURS,
             'type': enums.POPUP
         }
-        response = self.client.put(reverse('api_planner_reminders_detail',
+        response = self.client.put(reverse('planner_reminders_detail',
                                            kwargs={'pk': reminder.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
@@ -238,7 +238,7 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'homework': homework.pk
         }
-        response = self.client.patch(reverse('api_planner_reminders_detail',
+        response = self.client.patch(reverse('planner_reminders_detail',
                                              kwargs={'pk': reminder.pk}),
                                      json.dumps(data),
                                      content_type='application/json')
@@ -255,7 +255,7 @@ class TestCaseReminderViews(APITestCase):
         reminder = reminderhelper.given_reminder_exists(user, event=event)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_reminders_detail',
+        response = self.client.delete(reverse('planner_reminders_detail',
                                               kwargs={'pk': reminder.pk}))
 
         # THEN
@@ -276,19 +276,19 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.post(reverse('api_planner_reminders_list'),
+            self.client.post(reverse('planner_reminders_list'),
                              json.dumps({'event': event2.pk}),
                              content_type='application/json'),
-            self.client.post(reverse('api_planner_reminders_list'),
+            self.client.post(reverse('planner_reminders_list'),
                              json.dumps({'homework': homework2.pk}),
                              content_type='application/json'),
             self.client.put(
-                reverse('api_planner_reminders_detail',
+                reverse('planner_reminders_detail',
                         kwargs={'pk': reminder.pk}),
                 json.dumps({'event': event2.pk}),
                 content_type='application/json'),
             self.client.put(
-                reverse('api_planner_reminders_detail',
+                reverse('planner_reminders_detail',
                         kwargs={'pk': reminder.pk}),
                 json.dumps({'homework': homework2.pk}),
                 content_type='application/json')
@@ -311,11 +311,11 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_reminders_list') + '?event={}'.format(event.pk)),
-            self.client.get(reverse('api_planner_reminders_list') + '?homework={}'.format(homework.pk)),
-            self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
-            self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
-            self.client.delete(reverse('api_planner_reminders_detail', kwargs={'pk': event_reminder.pk}))
+            self.client.get(reverse('planner_reminders_list') + '?event={}'.format(event.pk)),
+            self.client.get(reverse('planner_reminders_list') + '?homework={}'.format(homework.pk)),
+            self.client.get(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
+            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
+            self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk}))
         ]
 
         # THEN
@@ -337,7 +337,7 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'start_of_range': '2014-05-08T12:00:00Z'
         }
-        response = self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': reminder.pk}),
+        response = self.client.put(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -355,7 +355,7 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'offset': 'asdf'
         }
-        response = self.client.post(reverse('api_planner_reminders_list'),
+        response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data), content_type='application/json')
 
         # THEN
@@ -372,7 +372,7 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'offset': 'asdf'
         }
-        response = self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': reminder.pk}),
+        response = self.client.put(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -387,9 +387,9 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_reminders_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -416,7 +416,7 @@ class TestCaseReminderViews(APITestCase):
         reminderhelper.given_reminder_exists(user, homework=homework2)
 
         response = self.client.get(
-            reverse('api_planner_reminders_list') + '?start_of_range__lte={}'.format(quote(timezone.now().isoformat())))
+            reverse('planner_reminders_list') + '?start_of_range__lte={}'.format(quote(timezone.now().isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)

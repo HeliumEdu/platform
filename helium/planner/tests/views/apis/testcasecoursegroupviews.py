@@ -21,11 +21,11 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_list')),
-            self.client.post(reverse('api_planner_coursegroups_list')),
-            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_coursegroups_list')),
+            self.client.post(reverse('planner_coursegroups_list')),
+            self.client.get(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -41,7 +41,7 @@ class TestCaseCourseGroupViews(APITestCase):
         coursegrouphelper.given_course_group_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_list'))
+        response = self.client.get(reverse('planner_coursegroups_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -59,7 +59,7 @@ class TestCaseCourseGroupViews(APITestCase):
             'end_date': '2015-07-09',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_planner_coursegroups_list'), json.dumps(data),
+        response = self.client.post(reverse('planner_coursegroups_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -83,7 +83,7 @@ class TestCaseCourseGroupViews(APITestCase):
         homeworkhelper.given_homework_exists(course2, completed=True)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response = self.client.get(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -110,7 +110,7 @@ class TestCaseCourseGroupViews(APITestCase):
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
         }
-        response = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
+        response = self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
 
@@ -135,7 +135,7 @@ class TestCaseCourseGroupViews(APITestCase):
             'title': course_group.title,
             'shown_on_calendar': course_group.shown_on_calendar,
         }
-        response = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
+        response = self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
 
@@ -149,7 +149,7 @@ class TestCaseCourseGroupViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+        response = self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -164,9 +164,9 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
-            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
-            self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
+            self.client.get(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
+            self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk})),
+            self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}))
         ]
 
         # THEN
@@ -194,7 +194,7 @@ class TestCaseCourseGroupViews(APITestCase):
             'start_date': course_group.start_date.isoformat(),
             'end_date': course_group.end_date.isoformat()
         }
-        response = self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
+        response = self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': course_group.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -209,9 +209,9 @@ class TestCaseCourseGroupViews(APITestCase):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'}))
         ]
 
         for response in responses:
@@ -237,7 +237,7 @@ class TestCaseCourseGroupViews(APITestCase):
                                                     end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
-            reverse('api_planner_coursegroups_list') + '?start_date__gte={}&end_date__lte={}'.format(
+            reverse('planner_coursegroups_list') + '?start_date__gte={}&end_date__lte={}'.format(
                 course_group2.start_date.isoformat(),
                 course_group3.end_date.isoformat()))
 

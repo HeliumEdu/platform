@@ -25,18 +25,18 @@ class TestCaseMaterialViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_materials_list')),
-            self.client.get(reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
+            self.client.get(reverse('planner_materials_list')),
+            self.client.get(reverse('planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
             self.client.post(
-                reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
+                reverse('planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
             self.client.get(
-                reverse('api_planner_materialgroups_materials_detail',
+                reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': '9999', 'pk': '9999'})),
             self.client.put(
-                reverse('api_planner_materialgroups_materials_detail',
+                reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': '9999', 'pk': '9999'})),
             self.client.delete(
-                reverse('api_planner_materialgroups_materials_detail',
+                reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': '9999', 'pk': '9999'}))
         ]
 
@@ -57,9 +57,9 @@ class TestCaseMaterialViews(APITestCase):
         materialhelper.given_material_exists(material_group3)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_materials_list'))
+        response1 = self.client.get(reverse('planner_materials_list'))
         response2 = self.client.get(
-            reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group3.pk}))
+            reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -87,7 +87,7 @@ class TestCaseMaterialViews(APITestCase):
             'courses': [course.pk]
         }
         response = self.client.post(
-            reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group.pk}),
+            reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -104,7 +104,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_materialgroups_materials_detail',
+        response = self.client.get(reverse('planner_materialgroups_materials_detail',
                                            kwargs={'material_group': material_group.pk, 'pk': material.pk}))
 
         # THEN
@@ -133,7 +133,7 @@ class TestCaseMaterialViews(APITestCase):
             'courses': [course2.pk]
         }
         response = self.client.put(
-            reverse('api_planner_materialgroups_materials_detail',
+            reverse('planner_materialgroups_materials_detail',
                     kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -161,7 +161,7 @@ class TestCaseMaterialViews(APITestCase):
             'material_group': material.material_group.pk
         }
         response = self.client.put(
-            reverse('api_planner_materialgroups_materials_detail',
+            reverse('planner_materialgroups_materials_detail',
                     kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -179,7 +179,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+        response = self.client.delete(reverse('planner_materialgroups_materials_detail',
                                               kwargs={'material_group': material_group.pk, 'pk': material.pk}))
 
         # THEN
@@ -202,20 +202,20 @@ class TestCaseMaterialViews(APITestCase):
         # WHEN
         responses = [
             self.client.post(
-                reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group1.pk}),
+                reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group1.pk}),
                 json.dumps({'courses': [course2.pk]}),
                 content_type='application/json'),
             self.client.post(
-                reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group2.pk}),
+                reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group2.pk}),
                 json.dumps({}),
                 content_type='application/json'),
             self.client.put(
-                reverse('api_planner_materialgroups_materials_detail',
+                reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
                 json.dumps({'material_group': material_group2.pk}),
                 content_type='application/json'),
             self.client.put(
-                reverse('api_planner_materialgroups_materials_detail',
+                reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
                 json.dumps({'courses': [course2.pk]}),
                 content_type='application/json')
@@ -234,16 +234,16 @@ class TestCaseMaterialViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_materialgroups_materials_list',
+            self.client.get(reverse('planner_materialgroups_materials_list',
                                     kwargs={'material_group': material_group.pk})),
-            self.client.post(reverse('api_planner_materialgroups_materials_list',
+            self.client.post(reverse('planner_materialgroups_materials_list',
                                      kwargs={'material_group': material_group.pk}),
                              content_type='application/json'),
-            self.client.get(reverse('api_planner_materialgroups_materials_detail',
+            self.client.get(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': material.pk})),
-            self.client.put(reverse('api_planner_materialgroups_materials_detail',
+            self.client.put(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': material.pk})),
-            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+            self.client.delete(reverse('planner_materialgroups_materials_detail',
                                        kwargs={'material_group': material_group.pk, 'pk': material.pk}))
         ]
 
@@ -265,7 +265,7 @@ class TestCaseMaterialViews(APITestCase):
             'status': 'not-a-valid-status'
         }
         response = self.client.post(
-            reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': material_group.pk}),
+            reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -284,7 +284,7 @@ class TestCaseMaterialViews(APITestCase):
         data = {
             'status': 'not-a-valid-status'
         }
-        response = self.client.put(reverse('api_planner_materialgroups_materials_detail',
+        response = self.client.put(reverse('planner_materialgroups_materials_detail',
                                            kwargs={'material_group': material_group.pk, 'pk': material.pk}),
                                    json.dumps(data), content_type='application/json')
 
@@ -298,27 +298,27 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group)
 
         responses = [
-            self.client.get(reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
+            self.client.get(reverse('planner_materialgroups_materials_list', kwargs={'material_group': '9999'})),
             self.client.post(
-                reverse('api_planner_materialgroups_materials_list', kwargs={'material_group': '9999'}),
+                reverse('planner_materialgroups_materials_list', kwargs={'material_group': '9999'}),
                 content_type='application/json'),
-            self.client.get(reverse('api_planner_materialgroups_materials_detail',
+            self.client.get(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': '9999'})),
-            self.client.put(reverse('api_planner_materialgroups_materials_detail',
+            self.client.put(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+            self.client.delete(reverse('planner_materialgroups_materials_detail',
                                        kwargs={'material_group': '9999', 'pk': '9999'})),
-            self.client.get(reverse('api_planner_materialgroups_materials_detail',
+            self.client.get(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': '9999'})),
-            self.client.put(reverse('api_planner_materialgroups_materials_detail',
+            self.client.put(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': material_group.pk, 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+            self.client.delete(reverse('planner_materialgroups_materials_detail',
                                        kwargs={'material_group': material_group.pk, 'pk': '9999'})),
-            self.client.get(reverse('api_planner_materialgroups_materials_detail',
+            self.client.get(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': material.pk})),
-            self.client.put(reverse('api_planner_materialgroups_materials_detail',
+            self.client.put(reverse('planner_materialgroups_materials_detail',
                                     kwargs={'material_group': '9999', 'pk': material.pk})),
-            self.client.delete(reverse('api_planner_materialgroups_materials_detail',
+            self.client.delete(reverse('planner_materialgroups_materials_detail',
                                        kwargs={'material_group': '9999', 'pk': material.pk}))
         ]
 
@@ -339,7 +339,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group, courses=[course1, course2])
 
         response = self.client.get(
-            reverse('api_planner_materials_list') + '?courses={}&courses={}'.format(course1.pk, course2.pk))
+            reverse('planner_materials_list') + '?courses={}&courses={}'.format(course1.pk, course2.pk))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
