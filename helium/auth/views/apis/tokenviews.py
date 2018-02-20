@@ -11,7 +11,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 

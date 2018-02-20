@@ -8,10 +8,12 @@ from helium.feed.views.privateviews import PrivateEventsICALView, PrivateHomewor
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 urlpatterns = [
-    # Unauthenticated external feed URLs (rely on private slugs for authentication)
+    ##############################
+    # Unauthenticated URLs
+    ##############################
     url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/events\.ics$', PrivateEventsICALView.as_view(),
         name='feed_private_events_ical'),
     url(r'^feed/private/(?P<slug>[a-zA-Z0-9]+)/homework\.ics$', PrivateHomeworkICALView.as_view(),
