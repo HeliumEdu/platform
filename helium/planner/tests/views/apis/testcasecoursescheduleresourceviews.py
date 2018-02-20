@@ -18,7 +18,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courseschedules_events',
                                     kwargs={'course_group': '9999', 'course': '9999'}))
         ]
 
@@ -36,7 +36,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courseschedules_events',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk}))
         ]
 
@@ -57,7 +57,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courseschedules_events',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN

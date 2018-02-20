@@ -30,16 +30,16 @@ class TestCaseHomeworkViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_homework_list')),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.get(reverse('planner_homework_list')),
+            self.client.get(reverse('planner_coursegroups_courses_homework_list',
                                     kwargs={'course_group': '9999', 'course': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': '9999', 'course': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                        kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'}))
         ]
 
@@ -61,9 +61,9 @@ class TestCaseHomeworkViews(APITestCase):
         homeworkhelper.given_homework_exists(course3)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_homework_list'))
+        response1 = self.client.get(reverse('planner_homework_list'))
         response2 = self.client.get(
-            reverse('api_planner_coursegroups_courses_homework_list',
+            reverse('planner_coursegroups_courses_homework_list',
                     kwargs={'course_group': course_group2.pk, 'course': course3.pk}))
 
         # THEN
@@ -97,7 +97,7 @@ class TestCaseHomeworkViews(APITestCase):
             'materials': [material.pk],
             'course': course.pk
         }
-        response = self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                             kwargs={'course_group': course_group.pk, 'course': course.pk}),
                                     json.dumps(data),
                                     content_type='application/json')
@@ -128,7 +128,7 @@ class TestCaseHomeworkViews(APITestCase):
             'completed': False,
             'course': course.pk
         }
-        response = self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                             kwargs={'course_group': course_group.pk, 'course': course.pk}),
                                     json.dumps(data),
                                     content_type='application/json')
@@ -161,7 +161,7 @@ class TestCaseHomeworkViews(APITestCase):
             'completed': False,
             'course': course.pk
         }
-        response = self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                             kwargs={'course_group': course_group.pk, 'course': course.pk}),
                                     json.dumps(data),
                                     content_type='application/json')
@@ -184,7 +184,7 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                    'pk': homework.pk}))
 
@@ -219,7 +219,7 @@ class TestCaseHomeworkViews(APITestCase):
             'materials': [material2.pk],
             'course': course.pk
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                    'pk': homework.pk}),
                                    json.dumps(data),
@@ -243,7 +243,7 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2016-05-08T12:00:00Z',
             'end': '2016-05-07T14:00:00Z',
         }
-        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                      'pk': homework.pk}),
                                      json.dumps(data),
@@ -265,7 +265,7 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2016-05-08T12:00:00-0500',
             'end': '2016-05-08T14:00:00-0500',
         }
-        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                      'pk': homework.pk}),
                                      json.dumps(data),
@@ -291,7 +291,7 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2016-05-08 12:00:00',
             'end': '2016-05-08 14:00:00',
         }
-        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                      'pk': homework.pk}),
                                      json.dumps(data),
@@ -314,7 +314,7 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                       'pk': homework.pk}))
 
@@ -338,25 +338,25 @@ class TestCaseHomeworkViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group1.pk, 'course': course2.pk}),
                              json.dumps({}),
                              content_type='application/json'),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group1.pk, 'course': course1.pk}),
                              json.dumps({'category': category2.pk}),
                              content_type='application/json'),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group1.pk, 'course': course1.pk}),
                              json.dumps({'materials': [material2.pk]}),
                              content_type='application/json'),
             self.client.patch(
-                reverse('api_planner_coursegroups_courses_homework_detail',
+                reverse('planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
                 json.dumps({'course': course2.pk}),
                 content_type='application/json'),
             self.client.patch(
-                reverse('api_planner_coursegroups_courses_homework_detail',
+                reverse('planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
                 json.dumps({'materials': [material2.pk]}),
                 content_type='application/json'),
@@ -376,15 +376,15 @@ class TestCaseHomeworkViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.get(reverse('planner_coursegroups_courses_homework_list',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk})),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group.pk, 'course': course.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk})),
-            self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                        kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                'pk': homework.pk}))
         ]
@@ -407,7 +407,7 @@ class TestCaseHomeworkViews(APITestCase):
         data = {
             'start': 'not-a-valid-date'
         }
-        response = self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                             kwargs={'course_group': course_group.pk, 'course': course.pk}),
                                     json.dumps(data), content_type='application/json')
 
@@ -426,7 +426,7 @@ class TestCaseHomeworkViews(APITestCase):
         data = {
             'start': 'not-a-valid-date'
         }
-        response = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                      'pk': homework.pk}),
                                      json.dumps(data), content_type='application/json')
@@ -443,14 +443,14 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course)
 
         # WHEN
-        response1 = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response1 = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                       'pk': homework.pk}),
                                       json.dumps({
                                           'current_grade': 'not-a-fraction'
                                       }),
                                       content_type='application/json')
-        response2 = self.client.patch(reverse('api_planner_coursegroups_courses_homework_detail',
+        response2 = self.client.patch(reverse('planner_coursegroups_courses_homework_detail',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk,
                                                       'pk': homework.pk}),
                                       json.dumps({
@@ -472,29 +472,29 @@ class TestCaseHomeworkViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.get(reverse('planner_coursegroups_courses_homework_list',
                                     kwargs={'course_group': '9999', 'course': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group.pk, 'course': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_homework_list',
+            self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': '9999', 'course': course.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                        kwargs={'course_group': course_group.pk, 'course': '9999', 'pk': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                        kwargs={'course_group': '9999', 'course': course.pk, 'pk': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.get(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': homework.pk})),
-            self.client.put(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': homework.pk})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_homework_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
                                        kwargs={'course_group': '9999', 'course': '9999', 'pk': homework.pk}))
         ]
 
@@ -532,7 +532,7 @@ class TestCaseHomeworkViews(APITestCase):
                                                                                tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_homework_list') + '?start__gte={}&end__lt={}'.format(
+            reverse('planner_homework_list') + '?start__gte={}&end__lt={}'.format(
                 quote(homework2.start.isoformat()),
                 quote(homework4.end.isoformat())))
 
@@ -546,7 +546,7 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course, title='test1')
         homeworkhelper.given_homework_exists(course, title='test2')
 
-        response = self.client.get(reverse('api_planner_homework_list') + '?search=test1')
+        response = self.client.get(reverse('planner_homework_list') + '?search=test1')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -560,7 +560,7 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course1, title='test1')
         homeworkhelper.given_homework_exists(course2, title='test2')
 
-        response = self.client.get(reverse('api_planner_homework_list') + '?search=testcourse')
+        response = self.client.get(reverse('planner_homework_list') + '?search=testcourse')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -574,7 +574,7 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course, title='test1', category=category)
         homeworkhelper.given_homework_exists(course, title='test2')
 
-        response = self.client.get(reverse('api_planner_homework_list') + '?search=testcategory')
+        response = self.client.get(reverse('planner_homework_list') + '?search=testcategory')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)

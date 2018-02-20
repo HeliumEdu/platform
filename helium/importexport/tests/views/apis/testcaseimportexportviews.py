@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 import os
-from unittest import skip
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -32,8 +31,8 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('importexport_import')),
-            self.client.post(reverse('importexport_export'))
+            self.client.get(reverse('importexport_resource_import')),
+            self.client.post(reverse('importexport_resource_export'))
         ]
 
         # THEN
@@ -50,7 +49,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             self.client.post(
-                reverse('importexport_import'),
+                reverse('importexport_resource_import'),
                 data)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
@@ -59,7 +58,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('importexport_import'),
+                reverse('importexport_resource_import'),
                 data)
 
         # THEN
@@ -216,7 +215,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('importexport_import'),
+                reverse('importexport_resource_import'),
                 data)
 
         # THEN
@@ -243,7 +242,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('importexport_import'),
+                reverse('importexport_resource_import'),
                 data)
 
         # THEN
@@ -294,7 +293,7 @@ class TestCaseImportExportViews(APITestCase):
         reminder = reminderhelper.given_reminder_exists(user1, homework=homework1)
 
         # WHEN
-        response = self.client.get(reverse('importexport_export'))
+        response = self.client.get(reverse('importexport_resource_export'))
         data = json.loads(response.content)
 
         # THEN
@@ -321,13 +320,12 @@ class TestCaseImportExportViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
 
-    @skip("Rewrite to rely on new registration flow")
     def test_user_registration_imports_example_schedule(self):
         # WHEN
-        self.client.post(reverse('register'),
-                         {'email': 'test@test.com', 'username': 'my_test_user',
-                          'password1': 'test_pass_1!',
-                          'password2': 'test_pass_1!', 'time_zone': 'America/Chicago'})
+        self.client.post(reverse('auth_user_resource_register'),
+                         json.dumps({'email': 'test@test.com', 'username': 'my_test_user', 'password': 'test_pass_1!',
+                                     'time_zone': 'America/Chicago'}),
+                         content_type='application/json')
 
         # THEN
         start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)

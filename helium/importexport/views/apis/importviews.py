@@ -10,12 +10,12 @@ from helium.importexport.services import importservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
 
-class ImportView(ViewSet):
+class ImportResourceView(ViewSet):
     """
     import_data:
     Import the resources for the authenticated user from the the uploaded files. Multiple files can be imported at once

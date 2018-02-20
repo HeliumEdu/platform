@@ -9,12 +9,12 @@ from helium.feed.services import icalprivateservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateEventsICALView(View):
+class PrivateEventsICALResourceView(View):
     """
     :get
     Return a list of all event instances for the authenticated user formatted for an ICAL stream. The response will
@@ -37,7 +37,7 @@ class PrivateEventsICALView(View):
             return HttpResponseNotFound()
 
 
-class PrivateHomeworkICALView(View):
+class PrivateHomeworkICALResourceView(View):
     """
     :get
     Return a list of all homework instances for the authenticated user formatted for an ICAL stream. The response will
@@ -60,7 +60,7 @@ class PrivateHomeworkICALView(View):
             return HttpResponseNotFound()
 
 
-class PrivateCourseSchedulesICALView(View):
+class PrivateCourseSchedulesICALResourceView(View):
     """
     :get
     Return a list of all course schedule instances for the authenticated user formatted for an ICAL stream. The response will

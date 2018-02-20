@@ -19,8 +19,8 @@ class TestCaseUserProfileViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_user_profile_detail')),
-            self.client.put(reverse('api_auth_user_profile_detail'))
+            self.client.get(reverse('auth_user_profile_detail')),
+            self.client.put(reverse('auth_user_profile_detail'))
         ]
 
         # THEN
@@ -36,7 +36,7 @@ class TestCaseUserProfileViews(APITestCase):
             'phone': '555-5555',
             'phone_carrier': 'invalid'
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -54,7 +54,7 @@ class TestCaseUserProfileViews(APITestCase):
             'phone': '555-5555',
             'phone_carrier': 'tmomail.net'
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -78,7 +78,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': user.profile.phone_verification_code,
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -106,7 +106,7 @@ class TestCaseUserProfileViews(APITestCase):
             'phone': '',
             'phone_carrier': '',
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -128,7 +128,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': 000000,
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -146,7 +146,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_changing': '444-4444'
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN

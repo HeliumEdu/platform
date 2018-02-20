@@ -30,11 +30,11 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_list')),
-            self.client.post(reverse('api_planner_events_list')),
-            self.client.get(reverse('api_planner_events_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_events_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_events_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_events_list')),
+            self.client.post(reverse('planner_events_list')),
+            self.client.get(reverse('planner_events_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_events_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_events_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -49,7 +49,7 @@ class TestCaseEventViews(APITestCase):
         eventhelper.given_event_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_events_list'))
+        response = self.client.get(reverse('planner_events_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -73,7 +73,7 @@ class TestCaseEventViews(APITestCase):
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
         }
-        response = self.client.post(reverse('api_planner_events_list'),
+        response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -100,7 +100,7 @@ class TestCaseEventViews(APITestCase):
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
         }
-        response = self.client.post(reverse('api_planner_events_list'),
+        response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -127,7 +127,7 @@ class TestCaseEventViews(APITestCase):
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
         }
-        response = self.client.post(reverse('api_planner_events_list'),
+        response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -147,7 +147,7 @@ class TestCaseEventViews(APITestCase):
         event = eventhelper.given_event_exists(user)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_events_detail',
+        response = self.client.get(reverse('planner_events_detail',
                                            kwargs={'pk': event.pk}))
 
         # THEN
@@ -170,7 +170,7 @@ class TestCaseEventViews(APITestCase):
             'comments': 'some comment',
             'owner_id': '54321'
         }
-        response = self.client.put(reverse('api_planner_events_detail',
+        response = self.client.put(reverse('planner_events_detail',
                                            kwargs={'pk': event.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
@@ -191,7 +191,7 @@ class TestCaseEventViews(APITestCase):
             'start': '2016-05-08T12:00:00Z',
             'end': '2016-05-07T14:00:00Z',
         }
-        response = self.client.patch(reverse('api_planner_events_detail',
+        response = self.client.patch(reverse('planner_events_detail',
                                              kwargs={'pk': event.pk}),
                                      json.dumps(data),
                                      content_type='application/json')
@@ -210,7 +210,7 @@ class TestCaseEventViews(APITestCase):
             'start': '2016-05-08T12:00:00-0500',
             'end': '2016-05-08T14:00:00-0500',
         }
-        response = self.client.patch(reverse('api_planner_events_detail',
+        response = self.client.patch(reverse('planner_events_detail',
                                              kwargs={'pk': event.pk}),
                                      json.dumps(data),
                                      content_type='application/json')
@@ -233,7 +233,7 @@ class TestCaseEventViews(APITestCase):
             'start': '2016-05-08 12:00:00',
             'end': '2016-05-08 14:00:00',
         }
-        response = self.client.patch(reverse('api_planner_events_detail',
+        response = self.client.patch(reverse('planner_events_detail',
                                              kwargs={'pk': event.pk}),
                                      json.dumps(data),
                                      content_type='application/json')
@@ -253,7 +253,7 @@ class TestCaseEventViews(APITestCase):
         event = eventhelper.given_event_exists(user)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_events_detail',
+        response = self.client.delete(reverse('planner_events_detail',
                                               kwargs={'pk': event.pk}))
 
         # THEN
@@ -269,9 +269,9 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_detail', kwargs={'pk': event.pk})),
-            self.client.put(reverse('api_planner_events_detail', kwargs={'pk': event.pk})),
-            self.client.delete(reverse('api_planner_events_detail', kwargs={'pk': event.pk}))
+            self.client.get(reverse('planner_events_detail', kwargs={'pk': event.pk})),
+            self.client.put(reverse('planner_events_detail', kwargs={'pk': event.pk})),
+            self.client.delete(reverse('planner_events_detail', kwargs={'pk': event.pk}))
         ]
 
         # THEN
@@ -290,7 +290,7 @@ class TestCaseEventViews(APITestCase):
         data = {
             'start': 'not-a-valid-date'
         }
-        response = self.client.post(reverse('api_planner_events_list'),
+        response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data), content_type='application/json')
 
         # THEN
@@ -306,7 +306,7 @@ class TestCaseEventViews(APITestCase):
         data = {
             'start': 'not-a-valid-date'
         }
-        response = self.client.put(reverse('api_planner_events_detail', kwargs={'pk': event.pk}),
+        response = self.client.put(reverse('planner_events_detail', kwargs={'pk': event.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -318,9 +318,9 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_events_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_planner_events_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_events_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_events_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_events_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_events_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -347,7 +347,7 @@ class TestCaseEventViews(APITestCase):
                                                 end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('api_planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
+            reverse('planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
                                                                                     quote(event4.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -358,7 +358,7 @@ class TestCaseEventViews(APITestCase):
         event = eventhelper.given_event_exists(user, title='test1')
         eventhelper.given_event_exists(user, title='test2')
 
-        response = self.client.get(reverse('api_planner_events_list') + '?search=test1')
+        response = self.client.get(reverse('planner_events_list') + '?search=test1')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)

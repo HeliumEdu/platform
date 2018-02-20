@@ -17,7 +17,7 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_grades'))
+            self.client.get(reverse('planner_resource_grades'))
         ]
 
         # THEN
@@ -52,7 +52,7 @@ class TestCaseEventViews(APITestCase):
                                              current_grade='-1/100')
 
         # WHEN
-        response = self.client.get(reverse('api_planner_resource_grades'))
+        response = self.client.get(reverse('planner_resource_grades'))
 
         # THEN
         self.assertEquals(len(response.data['course_groups']), 2)

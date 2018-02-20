@@ -22,11 +22,11 @@ class TestCaseExternalCalendarViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_list')),
-            self.client.post(reverse('api_feed_externalcalendars_list')),
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('feed_externalcalendars_list')),
+            self.client.post(reverse('feed_externalcalendars_list')),
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -42,7 +42,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_list'))
+        response = self.client.get(reverse('feed_externalcalendars_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -61,7 +61,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
+        response = self.client.post(reverse('feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -78,7 +78,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -98,7 +98,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             # Intentionally NOT changing these value
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
 
@@ -115,7 +115,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        response = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -130,9 +130,9 @@ class TestCaseExternalCalendarViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
-            self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
         ]
 
         # THEN
@@ -153,7 +153,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'title': external_calendar.title,
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -173,7 +173,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'color': '#7bd148',
             'shown_on_calendar': True
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
+        response = self.client.post(reverse('feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -194,7 +194,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             # Intentionally NOT changing these value
             'title': external_calendar.title
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -206,8 +206,8 @@ class TestCaseExternalCalendarViews(APITestCase):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'}))
         ]
 
         for response in responses:

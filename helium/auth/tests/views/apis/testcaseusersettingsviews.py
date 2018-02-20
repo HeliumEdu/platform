@@ -20,8 +20,8 @@ class TestCaseUserSettingsViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_user_settings_detail')),
-            self.client.put(reverse('api_auth_user_settings_detail'))
+            self.client.get(reverse('auth_user_settings_detail')),
+            self.client.put(reverse('auth_user_settings_detail'))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseUserSettingsViews(APITestCase):
             'show_getting_started': False,
             'time_zone': 'America/Chicago'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -57,7 +57,7 @@ class TestCaseUserSettingsViews(APITestCase):
         data = {
             'time_zone': 'invalid'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -75,7 +75,7 @@ class TestCaseUserSettingsViews(APITestCase):
         data = {
             'private_slug': 'new_slug'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN

@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from rest_framework.documentation import include_docs_urls
 
 from helium.common.admin import admin_site
-from helium.common.views.apis.infoviews import InfoView
+from helium.common.views.apis.infoviews import InfoResourceView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -16,5 +16,5 @@ urlpatterns = [
     ##############################
     # Unauthenticated URLs
     ##############################
-    url(r'^api/common/info/$', InfoView.as_view({'get': 'info'}), name='api_common_info'),
+    url(r'^common/info/$', InfoResourceView.as_view({'get': 'info'}), name='common_resource_info'),
 ]

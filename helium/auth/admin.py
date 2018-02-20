@@ -10,7 +10,7 @@ from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.4.0'
 
 
 class AdminUserCreationForm(UserCreationForm):
@@ -18,12 +18,15 @@ class AdminUserCreationForm(UserCreationForm):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
-        error = validate_password(password1, password2)
+        if password1 != password2:
+            raise forms.ValidationError("You must enter matching passwords.")
+
+        error = validate_password(password1)
 
         if error:
             raise forms.ValidationError(error)
 
-        return password2
+        return password1
 
     def save(self, commit=True):
         super(UserCreationForm, self).save(commit)

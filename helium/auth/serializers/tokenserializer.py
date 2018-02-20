@@ -3,10 +3,11 @@ import logging
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.exceptions import ValidationError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,9 @@ class TokenSerializer(AuthTokenSerializer):
 
     def validate(self, attrs):
         attrs = super(TokenSerializer, self).validate(attrs)
+
+        if not attrs['user'].is_active:
+            raise ValidationError('This account is not active.')
 
         attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
         if not created:

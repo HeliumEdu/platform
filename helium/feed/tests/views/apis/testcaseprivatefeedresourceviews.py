@@ -17,8 +17,8 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.put(reverse('api_feed_private_resource_enable')),
-            self.client.put(reverse('api_feed_private_resource_disable'))
+            self.client.put(reverse('feed_private_resource_enable')),
+            self.client.put(reverse('feed_private_resource_disable'))
         ]
 
         # THEN
@@ -30,7 +30,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        response = self.client.put(reverse('api_feed_private_resource_enable'))
+        response = self.client.put(reverse('feed_private_resource_enable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -50,7 +50,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         private_slug = user.settings.private_slug
 
         # WHEN
-        response = self.client.put(reverse('api_feed_private_resource_disable'))
+        response = self.client.put(reverse('feed_private_resource_disable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

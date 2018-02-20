@@ -1,7 +1,6 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,7 +11,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,8 @@ logger = logging.getLogger(__name__)
 class UserProfileApiDetailView(GenericAPIView):
     """
     put:
-    Update the authenticated user's profile.
+    Update the authenticated user's profile. This endpoint only updates the fields given (i.e. no need to PATCH
+    for partials data).
 
     For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
@@ -34,15 +34,12 @@ class UserProfileApiDetailView(GenericAPIView):
     def put(self, request, *args, **kwargs):
         user = self.get_object()
 
-        serializer = self.get_serializer(user.profile, data=request.data)
+        serializer = self.get_serializer(user.profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        if serializer.is_valid():
-            serializer.save()
+        logger.info('Profile updated for user {}'.format(user.get_username()))
 
-            logger.info('Profile updated for user {}'.format(user.get_username()))
+        metricutils.increment('action.user-profile.updated', request)
 
-            metricutils.increment('action.user-profile.updated', request)
-
-            return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data)

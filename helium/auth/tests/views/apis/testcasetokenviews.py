@@ -22,7 +22,7 @@ class TestCaseAuthToken(APITestCase):
             'username': user.get_username(),
             'password': 'test_pass_1!'
         }
-        response = self.client.post(reverse('api_auth_token'),
+        response = self.client.post(reverse('auth_token_resource_obtain'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -40,7 +40,7 @@ class TestCaseAuthToken(APITestCase):
             'username': user.email,
             'password': 'test_pass_1!'
         }
-        response = self.client.post(reverse('api_auth_token'),
+        response = self.client.post(reverse('auth_token_resource_obtain'),
                                     json.dumps(data),
                                     content_type='application/json')
 
@@ -53,8 +53,8 @@ class TestCaseAuthToken(APITestCase):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        response1 = self.client.delete(reverse('api_auth_token_revoke'))
-        response2 = self.client.get(reverse('api_auth_user_detail'))
+        response1 = self.client.delete(reverse('auth_token_resource_revoke'))
+        response2 = self.client.get(reverse('auth_user_detail'))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -68,10 +68,10 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         responses = [
-            self.client.post(reverse('api_auth_token'),
+            self.client.post(reverse('auth_token_resource_obtain'),
                              json.dumps({'username': 'not-a-user', 'password': 'test_pass_1!'}),
                              content_type='application/json'),
-            self.client.post(reverse('api_auth_token'),
+            self.client.post(reverse('auth_token_resource_obtain'),
                              json.dumps({'username': user.get_username(), 'password': 'wrong_pass'}),
                              content_type='application/json')
         ]
@@ -87,9 +87,9 @@ class TestCaseAuthToken(APITestCase):
         user = userhelper.given_a_user_exists(self.client)
 
         # WHEN
-        response1 = self.client.get(reverse('api_auth_user_detail'))
+        response1 = self.client.get(reverse('auth_user_detail'))
         self.client.force_authenticate(user)
-        response2 = self.client.get(reverse('api_auth_user_detail'))
+        response2 = self.client.get(reverse('auth_user_detail'))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
