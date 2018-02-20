@@ -7,7 +7,7 @@ import socket
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.0'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -20,7 +20,8 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 PROJECT_NAME = os.environ.get('PROJECT_NAME')
 PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
-PLATFORM_HOST = os.environ.get('PLATFORM_HOST')
+PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST')
+PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST')
 
 # Version information
 

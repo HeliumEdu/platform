@@ -3,7 +3,7 @@ from rest_framework.authtoken.models import Token
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 def given_an_inactive_user_exists(username='test_user', email='user@test.com', password='test_pass_1!'):

@@ -6,10 +6,10 @@ from helium.common.views.apis.infoviews import InfoView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.0'
 
 urlpatterns = [
-    # Top-level URLs
+    # URLs for auto-generated resources
     url(r'^admin/', include(admin_site.urls)),
     url(r'^docs/', include_docs_urls(title='Helium API Documentation')),
 
