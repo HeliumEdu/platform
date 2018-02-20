@@ -20,24 +20,14 @@ from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListVi
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
     MaterialGroupMaterialsApiListView
 from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView
-from helium.planner.views.generalviews import calendar, classes, materials, grades
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.3.0'
 
 urlpatterns = [
-    # Base URL
-    url(r'^planner/$', RedirectView.as_view(pattern_name='calendar', permanent=True), name='planner'),
-
-    # Planner URLs
-    url(r'^planner/calendar', calendar, name='calendar'),
-    url(r'^planner/classes', classes, name='classes'),
-    url(r'^planner/materials', materials, name='materials'),
-    url(r'^planner/grades', grades, name='grades'),
-
     ##############################
-    # Authenticated API URLs
+    # Authenticated URLs
     ##############################
     # Resource shortcuts
     url(r'^api/planner/grades/$', GradesApiListView.as_view(), name='api_planner_resource_grades'),

@@ -27,7 +27,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
     def test_enable_private_url(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         response = self.client.put(reverse('api_feed_private_resource_enable'))
@@ -45,7 +45,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
     def test_disable_private_url(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.enable_private_slug()
         private_slug = user.settings.private_slug
 

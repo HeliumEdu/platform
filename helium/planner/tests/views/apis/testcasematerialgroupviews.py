@@ -34,7 +34,7 @@ class TestCaseMaterialGroupViews(APITestCase):
     def test_get_materialgroups(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         materialgrouphelper.given_material_group_exists(user1)
         materialgrouphelper.given_material_group_exists(user2)
         materialgrouphelper.given_material_group_exists(user2)
@@ -49,7 +49,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
     def test_create_materialgroup(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -69,7 +69,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
     def test_get_materialgroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
 
         # WHEN
@@ -81,7 +81,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
     def test_update_materialgroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         self.assertEqual(material_group.title, 'Test Material Group')
         self.assertTrue(material_group.shown_on_calendar)
@@ -103,7 +103,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
     def test_delete_materialgroup_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
 
         # WHEN
@@ -117,7 +117,7 @@ class TestCaseMaterialGroupViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user1)
 
         # WHEN
@@ -135,7 +135,7 @@ class TestCaseMaterialGroupViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user2)
 
         # WHEN
@@ -153,7 +153,7 @@ class TestCaseMaterialGroupViews(APITestCase):
         self.assertEqual(material_group.get_user().pk, user2.pk)
 
     def test_not_found(self):
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         responses = [
             self.client.get(reverse('api_planner_materialgroups_detail', kwargs={'pk': '9999'})),

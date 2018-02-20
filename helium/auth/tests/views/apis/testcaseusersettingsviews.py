@@ -30,7 +30,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_user_setting(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertTrue(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
 
@@ -51,7 +51,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -66,7 +66,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         private_slug = str(uuid.uuid4())
         user.settings.private_slug = private_slug
         user.settings.save()

@@ -40,7 +40,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_get_categories(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -66,7 +66,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_create_category(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -95,7 +95,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_create_category_exceeds_weight_course_100_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         categoryhelper.given_category_exists(course, weight=25)
@@ -122,7 +122,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_get_category_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -144,7 +144,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_update_category_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -169,7 +169,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_update_category_exceeds_weight_course_100_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         categoryhelper.given_category_exists(course, weight=25)
@@ -195,7 +195,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_delete_category_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -212,7 +212,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -245,7 +245,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
@@ -280,7 +280,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -301,7 +301,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_update_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -320,7 +320,7 @@ class TestCaseCategoryViews(APITestCase):
         self.assertIn('color', response.data)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)

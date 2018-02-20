@@ -7,19 +7,12 @@ from django.views import static
 import helium.auth.urls
 import helium.common.urls
 import helium.feed.urls
-import helium.planner.urls
 import helium.importexport.urls
+import helium.planner.urls
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.2.0'
-
-handler400 = 'helium.common.views.errorviews.bad_request'
-handler401 = 'helium.common.views.errorviews.unauthorized'
-handler403 = 'helium.common.views.errorviews.forbidden'
-handler404 = 'helium.common.views.errorviews.not_found'
-handler500 = 'helium.common.views.errorviews.internal_server_error'
-handler503 = 'helium.common.views.errorviews.service_unavailable'
 
 urlpatterns = [
     # Include app-specific URL files

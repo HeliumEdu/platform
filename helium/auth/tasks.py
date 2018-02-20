@@ -26,7 +26,7 @@ def send_verification_email(email, username, verification_code):
                                          'username': username,
                                          'verification_code': verification_code,
                                          'site_url': settings.PLATFORM_HOST,
-                                         'verify_url': reverse('verify'),
+                                         'verify_url': "{}/verify".format(settings.PLATFORM_HOST),
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
@@ -41,7 +41,7 @@ def send_registration_email(email):
                                      {
                                          'PROJECT_NAME': settings.PROJECT_NAME,
                                          'site_url': settings.PLATFORM_HOST,
-                                         'login_url': reverse('login'),
+                                         'login_url': "{}/login".format(settings.PLATFORM_HOST),
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
 
@@ -58,8 +58,8 @@ def send_password_reset_email(email, temp_password):
                                      {
                                          'password': temp_password,
                                          'site_url': settings.PLATFORM_HOST,
-                                         'settings_url': reverse('settings'),
-                                         'support_url': reverse('support'),
+                                         'settings': "{}/settings".format(settings.PLATFORM_HOST),
+                                         'support': "{}/support".format(settings.PLATFORM_HOST),
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 

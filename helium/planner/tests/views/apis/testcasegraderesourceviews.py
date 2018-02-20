@@ -26,7 +26,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_get_grades(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group1 = coursegrouphelper.given_course_group_exists(user)
         course_group2 = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group1)
