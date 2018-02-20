@@ -37,10 +37,6 @@ if DEBUG:
 
 SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
-# Application definition
-
-PREPEND_WWW = os.environ.get('PLATFORM_PREPEND_WWW', 'False') == 'True'
-
 # Security
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
