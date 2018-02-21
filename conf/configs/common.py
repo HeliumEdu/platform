@@ -122,8 +122,6 @@ MAINTENANCE_MODE_IGNORE_TESTS = True
 
 MAINTENANCE_MODE_IGNORE_URLS = ('^/admin',)
 
-MAINTENANCE_MODE_TEMPLATE = os.environ.get('PLATFORM_MAINTENANCE_MODE_TEMPLATE', 'errors/maintenance.html')
-
 # API configuration
 
 REST_FRAMEWORK = {
@@ -212,5 +210,13 @@ MEDIA_ROOT = 'media/'
 # Pipelines
 
 PIPELINE = {
-    'DISABLE_WRAPPER': True
+    'DISABLE_WRAPPER': True,
+    'STYLESHEETS': {
+        'error': {
+            'source_filenames': (
+                'css/error.css',
+            ),
+            'output_filename': 'css/helium_error_{}.min.css'.format(PROJECT_VERSION),
+        },
+    },
 }
