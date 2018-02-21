@@ -102,9 +102,6 @@ SERVE_LOCAL = False
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 AUTH_USER_MODEL = 'helium_auth.User'
-LOGIN_URL = '/login'
-LOGIN_REDIRECT_URL = '/planner'
-LOGOUT_URL = '/logout'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
