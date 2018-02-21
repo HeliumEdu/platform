@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from django.views.generic import RedirectView
 from rest_framework.documentation import include_docs_urls
 
 from helium.common.admin import admin_site
@@ -9,6 +10,9 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.0'
 
 urlpatterns = [
+    # Base URL
+    url(r'^$', RedirectView.as_view(url='/docs'), name='home'),
+
     # URLs for auto-generated resources
     url(r'^admin/', include(admin_site.urls)),
     url(r'^docs/', include_docs_urls(title='Helium API Documentation')),

@@ -1,7 +1,9 @@
 from django import forms
+from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from rest_framework.authtoken.models import Token
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
@@ -102,7 +104,27 @@ class UserProfileAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
+class TokenAdmin(ModelAdmin):
+    list_display = ['get_user', 'key']
+    search_fields = ('key', 'user__email', 'user__username')
+    ordering = ('user__username',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ('user',)
+        return self.readonly_fields
+
+    def get_user(self, obj):
+        if obj.user:
+            return obj.user.get_username()
+        else:
+            return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
+admin_site.register(Token, TokenAdmin)
