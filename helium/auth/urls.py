@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.contrib.auth import views as auth_views
 
 from helium.auth.views.apis.tokenresourceviews import ObtainTokenResourceView, DestroyTokenResourceView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
@@ -12,6 +13,10 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.0'
 
 urlpatterns = [
+    # URLs Django's auto-generated, session-based login views for ease of API navigation
+    url(r'^login/$', auth_views.login, {'template_name': 'admin/login.html'}, name='login'),
+    url(r'^logout/$', auth_views.logout, name='logout'),
+
     ##############################
     # Unauthenticated URLs
     ##############################
