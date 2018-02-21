@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.conf.urls import url
-from django.contrib.auth import views as auth_views
+from django.contrib.auth.views import LoginView, LogoutView
 
 from helium.auth.views.apis.tokenresourceviews import ObtainTokenResourceView, DestroyTokenResourceView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
@@ -14,8 +15,10 @@ __version__ = '1.4.0'
 
 urlpatterns = [
     # URLs Django's auto-generated, session-based login views for ease of API navigation
-    url(r'^login/$', auth_views.login, {'template_name': 'admin/login.html'}, name='login'),
-    url(r'^logout/$', auth_views.logout, name='logout'),
+    url(r'^login/$', LoginView.as_view(redirect_authenticated_user=True,
+                                       extra_context={'title': 'Login', 'site_title': settings.PROJECT_NAME,
+                                                      'site_header': settings.PROJECT_NAME}), name='login'),
+    url(r'^logout/$', LogoutView.as_view(), name='logout'),
 
     ##############################
     # Unauthenticated URLs
