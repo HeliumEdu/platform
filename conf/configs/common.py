@@ -105,6 +105,7 @@ AUTH_USER_MODEL = 'helium_auth.User'
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/docs'
 LOGOUT_URL = '/logout'
+LOGOUT_REDIRECT_URL = '/docs'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
