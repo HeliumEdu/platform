@@ -12,7 +12,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.8'
 
 
 class TestCaseReminderService(TestCase):
@@ -47,12 +47,11 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
         self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
 
-    @mock.patch('helium.common.tasks.send_mail')
-    def test_process_text_reminders(self, send_mail):
+    @mock.patch('helium.common.tasks.twilioservice.send_text')
+    def test_process_text_reminders(self, send_text):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.profile.phone = '555-5555'
-        user.profile.phone_carrier = enums.PHONE_CARRIER_CHOICES[0][0]
         user.profile.phone_verified = True
         user.profile.save()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -71,13 +70,13 @@ class TestCaseReminderService(TestCase):
         # This reminder is ignored, as we're not yet in its send window
         reminder3 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event2)
         # Sent reminders are ignored
-        reminder4 = reminderhelper.given_reminder_exists(user, sent=True, event=event1)
+        reminderhelper.given_reminder_exists(user, sent=True, event=event1)
 
         # WHEN
         reminderservice.process_text_reminders()
 
         # THEN
-        self.assertEqual(send_mail.call_count, 2)
+        self.assertEqual(send_text.call_count, 2)
         self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
         self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
         self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
