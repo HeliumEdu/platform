@@ -12,7 +12,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.8'
 
 
 class TestCaseReminderService(TestCase):
@@ -71,7 +71,7 @@ class TestCaseReminderService(TestCase):
         # This reminder is ignored, as we're not yet in its send window
         reminder3 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event2)
         # Sent reminders are ignored
-        reminder4 = reminderhelper.given_reminder_exists(user, sent=True, event=event1)
+        reminderhelper.given_reminder_exists(user, sent=True, event=event1)
 
         # WHEN
         reminderservice.process_text_reminders()

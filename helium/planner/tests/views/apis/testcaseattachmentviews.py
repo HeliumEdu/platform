@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attach
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.3.8'
 
 
 class TestCaseAttachmentViews(APITestCase):
@@ -216,7 +216,7 @@ class TestCaseAttachmentViews(APITestCase):
         tmp_file = attachmenthelper.given_file_exists()
 
         # WHEN
-        with open(tmp_file.name) as fp:
+        with open(tmp_file.name):
             response = self.client.post(reverse('api_planner_attachments_list'), {'course': course1.pk})
 
         # THEN
@@ -273,7 +273,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
+        coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()
 
         # WHEN
