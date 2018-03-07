@@ -2,12 +2,14 @@ six==1.11.0
 future==0.16.0
 coverage==4.4.2
 codecov==2.0.10
+pytz==2018.3
 django==1.11.8
 django-dotenv==1.4.2
 django-debug-toolbar==1.9.1
 django-widget-tweaks==1.4.1
 django-storages==1.6.5
 djangorestframework==3.7.7
+coreschema==0.0.4
 django-filter==1.1.0
 django-maintenance-mode==0.7.0
 django-pipeline==1.6.13
@@ -15,6 +17,7 @@ celery[redis]==4.1.0
 django-redis==4.8.0
 statsd==3.2.1
 boto==2.48.0
+twilio==6.10.4
 pyOpenSSL==17.5.0
 pycrypto==2.6.1
 Pillow==2.5.3

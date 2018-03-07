@@ -16,7 +16,7 @@ from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def adjust_reminder_times(calendar_item_id, calendar_item_type):
 @app.task
 def email_reminders():
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Email reminders not being sent.')
+        logger.warning('Emails disabled. Email reminders not being sent.')
         return
 
     reminderservice.process_email_reminders()
@@ -86,7 +86,7 @@ def email_reminders():
 @app.task
 def text_reminders():
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Text reminders not being sent.')
+        logger.warning('Emails disabled. Text reminders not being sent.')
         return
 
     reminderservice.process_text_reminders()
@@ -104,7 +104,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
         return
 
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Reminder {} not being sent.'.format(reminder.pk))
+        logger.warning('Emails disabled. Reminder {} not being sent.'.format(reminder.pk))
         return
 
     try:
