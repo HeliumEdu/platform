@@ -2,7 +2,6 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 @app.task
 def send_verification_email(email, username, verification_code):
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Verification code: {}'.format(verification_code))
+        logger.warning('Emails disabled. Verification code: {}'.format(verification_code))
         return
 
     commonutils.send_multipart_email('email/verification',
@@ -34,7 +33,7 @@ def send_verification_email(email, username, verification_code):
 @app.task
 def send_registration_email(email):
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Welcome email not sent.')
+        logger.warning('Emails disabled. Welcome email not sent.')
         return
 
     commonutils.send_multipart_email('email/register',
@@ -49,7 +48,7 @@ def send_registration_email(email):
 @app.task
 def send_password_reset_email(email, temp_password):
     if settings.DISABLE_EMAILS:
-        logger.warn('Emails disabled. Reset password: {}'.format(temp_password))
+        logger.warning('Emails disabled. Reset password: {}'.format(temp_password))
         return
 
     metricutils.increment('task.user.password-reset')

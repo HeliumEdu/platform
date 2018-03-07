@@ -8,7 +8,7 @@ from helium.planner.models.category import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class CategorySerializer(serializers.ModelSerializer):
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_graded',)
         read_only_fields = (
-        'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
+            'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
 
     def validate_weight(self, weight):
         """

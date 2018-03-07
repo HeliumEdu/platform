@@ -63,9 +63,9 @@ class PrivateHomeworkICALResourceView(View):
 class PrivateCourseSchedulesICALResourceView(View):
     """
     :get
-    Return a list of all course schedule instances for the authenticated user formatted for an ICAL stream. The response will
-    contain a `Content-Disposition` of `attachment; filename=Helium_<username>_coursescheduleevents.ics`, so if the request is
-    initiated from an HTML form, the response will be a downloadable file in a browser.
+    Return a list of all course schedule instances for the authenticated user formatted for an ICAL stream. The
+    response will contain a `Content-Disposition` of `attachment; filename=Helium_<username>_coursescheduleevents.ics`,
+    so if the request is initiated from an HTML form, the response will be a downloadable file in a browser.
     """
     def get(self, request, slug):
         try:
@@ -77,7 +77,8 @@ class PrivateCourseSchedulesICALResourceView(View):
 
             response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
             response['Filename'] = 'he_' + user.username + 'coursescheduleevents.ics'
-            response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '_coursescheduleevents.ics'
+            response['Content-Disposition'] = 'attachment; ' \
+                                              'filename=Helium_' + user.username + '_coursescheduleevents.ics'
             return response
         except get_user_model().DoesNotExist:
             return HttpResponseNotFound()

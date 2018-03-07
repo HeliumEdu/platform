@@ -85,8 +85,7 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 
 class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'phone', 'phone_carrier', 'phone_verified']
-    list_filter = ('phone_carrier',)
+    list_display = ['get_user', 'phone', 'phone_verified']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
     readonly_fields = ('user', 'created_at', 'updated_at')
