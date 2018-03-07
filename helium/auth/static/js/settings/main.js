@@ -273,13 +273,10 @@ function HeliumSettings() {
                     $("#loading-personal").spin(false);
                 },
                 success: function (data) {
-                    if (data.phone_changing || data.phone_carrier_changing) {
+                    if (data.phone_changing) {
                         self.phone_pending(data.phone_changing);
                     } else {
                         $("#id_phone").val(data.phone);
-                        $("#id_phone_carrier").val(data.phone_carrier);
-                        $("#id_phone_carrier").trigger("change");
-                        $("#id_phone_carrier").trigger("chosen:updated");
 
                         if (data.phone_verified) {
                             $($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));
@@ -515,9 +512,6 @@ $(document).ready(function () {
     $("#id_default_reminder_offset").val(helium.USER_PREFS.settings.default_reminder_offset);
     $("#id_default_reminder_offset_type").val(helium.USER_PREFS.settings.default_reminder_offset_type);
     $("#id_phone").val(helium.USER_PREFS.profile.phone);
-    $("#id_phone_carrier").val(helium.USER_PREFS.profile.phone_carrier);
-    $("#id_phone_carrier").trigger("change");
-    $("#id_phone_carrier").trigger("chosen:updated");
     $("#id_username").val(helium.USER_PREFS.username);
     $("#id_email").val(helium.USER_PREFS.email);
 
@@ -527,8 +521,7 @@ $(document).ready(function () {
         helium.settings.email_pending(helium.USER_PREFS.email_changing);
     }
 
-    if ((helium.USER_PREFS.profile.phone_changing !== null && helium.USER_PREFS.profile.phone_changing !== '') ||
-        (helium.USER_PREFS.profile.phone_carrier_changing !== null && helium.USER_PREFS.profile.phone_carrier_changing !== '')) {
+    if (helium.USER_PREFS.profile.phone_changing !== null && helium.USER_PREFS.profile.phone_changing !== '') {
         helium.settings.phone_pending(helium.USER_PREFS.profile.phone_changing);
     } else if (helium.USER_PREFS.profile.phone_verified) {
         ($("#id_phone_verification_status").html('<i class="icon-ok bigger-110 green"></i> Verified'));

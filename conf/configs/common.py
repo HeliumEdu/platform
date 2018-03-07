@@ -35,6 +35,7 @@ AWS_S3_SECRET_ACCESS_KEY = os.environ.get('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
 
 TWILIO_ACCOUNT_SID = os.environ.get('PLATFORM_TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_SMS_FROM = os.environ.get('PLATFORM_TWILIO_SMS_FROM')
 
 #############################
 # Default lists for host-specific configurations

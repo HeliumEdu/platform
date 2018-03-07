@@ -1,10 +1,9 @@
 import logging
 
-from twilio.rest import Client
 from django.conf import settings
-from django.core.mail import send_mail
 
 from conf.celery import app
+from helium.common.services import twilioservice
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
@@ -13,18 +12,16 @@ __version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 
-client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
 
 @app.task
-def send_text(phone, phone_carrier, subject, body):
+def send_text(phone, message):
     if settings.DISABLE_EMAILS:
         logger.warning(
-            'Emails disabled. Text with subject "{}" to {}@{} not sent.'.format(subject, phone, phone_carrier))
+            'Emails disabled. Text with message "{}" to {} not sent.'.format(message, phone))
         return
 
-    logger.info('Sending text with subject "{}" to {}@{}'.format(subject, phone, phone_carrier))
+    logger.info('Sending text with message "{}" to {}'.format(message, phone))
 
-    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, ['{}@{}'.format(phone, phone_carrier)])
+    twilioservice.send_text(phone, message)
 
     metricutils.increment('task.text.sent')

@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from mock import mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -27,23 +28,8 @@ class TestCaseUserProfileViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_put_bad_data_fails(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
-
-        # WHEN
-        data = {
-            'phone': '555-5555',
-            'phone_carrier': 'invalid'
-        }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('phone_carrier', response.data)
-
-    def test_put_user_profile(self):
+    @mock.patch('helium.common.tasks.twilioservice.send_text')
+    def test_put_user_profile(self, send_text):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         self.assertIsNone(user.profile.phone)
@@ -52,12 +38,12 @@ class TestCaseUserProfileViews(APITestCase):
         # WHEN
         data = {
             'phone': '555-5555',
-            'phone_carrier': 'tmomail.net'
         }
         response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
+        self.assertEqual(send_text.call_count, 1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
         self.assertEqual(response.data['phone_changing'], '5555555')
@@ -69,7 +55,6 @@ class TestCaseUserProfileViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.profile.phone_changing = '5555555'
-        user.profile.phone_carrier_changing = 'txt.att.net'
         user.profile.phone_verification_code = 123456
         user.profile.save()
         self.assertFalse(user.profile.phone_verified)
@@ -85,26 +70,20 @@ class TestCaseUserProfileViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_changing'])
-        self.assertEqual(response.data['phone_carrier'], 'txt.att.net')
-        self.assertIsNone(response.data['phone_carrier_changing'])
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
-        self.assertEqual(user.profile.phone_carrier, response.data['phone_carrier'])
-        self.assertIsNone(user.profile.phone_carrier_changing)
         self.assertTrue(user.profile.phone_verified)
 
     def test_remove_phone(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
         user.profile.phone = '5555555'
-        user.profile.phone_carrier = 'txt.att.net'
         user.profile.save()
 
         # WHEN
         data = {
             'phone': '',
-            'phone_carrier': '',
         }
         response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -112,10 +91,8 @@ class TestCaseUserProfileViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'], '5555555')
-        self.assertIsNone(response.data['phone_carrier'])
         user = get_user_model().objects.get(pk=user.id)
         self.assertIsNone(user.profile.phone)
-        self.assertIsNone(user.profile.phone_carrier)
 
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN
