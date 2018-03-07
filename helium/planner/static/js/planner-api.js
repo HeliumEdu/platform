@@ -2530,14 +2530,12 @@ function HeliumPlannerAPI() {
 // Initialize HeliumPlannerAPI and give a reference to the Helium object
 helium.planner_api = new HeliumPlannerAPI();
 
-if (typeof USER_ID !== 'undefined') {
+helium.planner_api.get_reminders(function (data) {
+    helium.process_reminders(data);
+});
+
+window.setInterval(function () {
     helium.planner_api.get_reminders(function (data) {
         helium.process_reminders(data);
     });
-
-    window.setInterval(function () {
-        helium.planner_api.get_reminders(function (data) {
-            helium.process_reminders(data);
-        });
-    }, 60000);
-}
+}, 60000);

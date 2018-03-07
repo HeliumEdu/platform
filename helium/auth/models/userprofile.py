@@ -22,15 +22,8 @@ class UserProfile(BaseModel):
 
     phone_changing = models.CharField(max_length=50, blank=True, null=True)
 
-    phone_carrier = models.CharField(help_text='A valid phone carrier choice.',
-                                     max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None, blank=True,
-                                     null=True)
-
-    phone_carrier_changing = models.CharField(max_length=255, choices=enums.PHONE_CARRIER_CHOICES, default=None,
-                                              blank=True, null=True)
-
     phone_verification_code = models.PositiveIntegerField(
-        help_text='The code sent to `phone` when registering or changing an email address',
+        help_text='The code sent to `phone` when registering or changing a phone number',
         default=generate_phone_verification_code)
 
     phone_verified = models.BooleanField(default=False)

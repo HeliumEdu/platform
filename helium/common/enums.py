@@ -173,43 +173,6 @@ TIME_ZONE_CHOICES = (
       ('Pacific/Wake', 'Wake'), ('Pacific/Wallis', 'Wallis')])
 )
 
-PHONE_CARRIER_CHOICES = (
-    ('txt.att.net', 'AT&T'),
-    ('cingularme.com', 'AT&T Mobility (Cingular)'),
-    ('message.alltel.com', 'Alltel'),
-    ('txt.bellmobility.ca', 'Bell Canada'),
-    ('myboostmobile.com', 'Boost Mobile'),
-    ('mobile.celloneusa.com', 'Cellular One'),
-    ('clarotorpedo.com.br', 'Claro'),
-    ('sms.mycricket.com', 'Cricket'),
-    ('fido.ca', 'Fido'),
-    ('mymetropcs.com', 'Metro PCS'),
-    ('clearlydigital.com', 'Midwest Wireless'),
-    ('correo.movistar.net', 'Movistar'),
-    ('orange.net', 'Orange'),
-    ('orange.pl', 'Orange Polska (Poland)'),
-    ('text.plusgsm.pl', 'Plus Poland'),
-    ('messaging.nextel.com', 'Sprint (Nextel)'),
-    ('messaging.sprintpcs.com', 'Sprint (PCS)'),
-    ('tmomail.net', 'T-Mobile'),
-    ('sms.t-mobile.at', 'T-Mobile Austria'),
-    ('t-d1-sms.de', 'T-Mobile Germany'),
-    ('t-mobile.uk.net', 'T-Mobile UK'),
-    ('movistar.net', 'Telefonica Movistar'),
-    ('timnet.com', 'TIM'),
-    ('utext.com', 'Unicel'),
-    ('email.uscc.com', 'US Cellular'),
-    ('uswestdatamail.com', 'US West'),
-    ('vtext.com', 'Verizon'),
-    ('vmobl.com', 'Virgin Mobile'),
-    ('vmobile.ca', 'Virgin Mobile Canada'),
-    ('torpedoemail.com.br', 'Vivo'),
-    ('sms.vodafone.it', 'Vodafone Italy'),
-    ('c.vodafone.ne.jp', 'Vodafone Japan'),
-    ('vodafone.net', 'Vodafone UK'),
-    ('cellularonewest.com', 'Western Wireless'),
-)
-
 MONTH = 0
 WEEK = 1
 DAY = 2

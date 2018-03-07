@@ -72,9 +72,7 @@ def process_text_reminders():
     for reminder in Reminder.objects.with_type(enums.TEXT).unsent().for_today().iterator():
         timezone.activate(pytz.timezone(reminder.get_user().settings.time_zone))
 
-        if reminder.get_user().profile.phone and \
-                reminder.get_user().profile.phone_carrier and \
-                reminder.get_user().profile.phone_verified:
+        if reminder.get_user().profile.phone and reminder.get_user().profile.phone_verified:
             subject = get_subject(reminder)
             message = '({}) {}'.format(subject, reminder.message)
 
@@ -87,8 +85,6 @@ def process_text_reminders():
             metricutils.increment('task.reminder.queue.text')
 
             send_text.delay(reminder.get_user().profile.phone,
-                            reminder.get_user().profile.phone_carrier,
-                            'Helium Reminder',
                             message)
 
             reminder.sent = True
