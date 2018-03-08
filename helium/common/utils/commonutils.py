@@ -8,7 +8,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.3.8'
 
 
 class HeliumError(Exception):
@@ -19,7 +19,7 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     """
     Send a multipart text/html email.
 
-    :param template_name: The path to the template (without extension), assuming both a .txt and .html version are present
+    :param template_name: The path to the template (no extension), assuming both a .txt and .html version are present
     :param context: A dictionary of context elements to pass to the email templates
     :param subject: The subject of the email
     :param to: A list of email addresses to which to send

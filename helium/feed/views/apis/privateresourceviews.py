@@ -3,7 +3,6 @@ import logging
 from django.urls import reverse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
 from helium.common.utils import metricutils
@@ -11,7 +10,7 @@ from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 

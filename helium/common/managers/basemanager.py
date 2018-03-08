@@ -1,12 +1,11 @@
 import logging
 from abc import abstractmethod
 
-from django.contrib.auth.models import BaseUserManager
 from django.db import models
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.3.8'
 
 logger = logging.getLogger(__name__)
 
