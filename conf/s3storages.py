@@ -1,5 +1,5 @@
 """
-Storages for funneling Pipelines to datastores.
+Storages for funneling Pipelines to S3.
 """
 from django.conf import settings
 
