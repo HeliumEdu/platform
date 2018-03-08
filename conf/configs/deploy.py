@@ -11,7 +11,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.3.8'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -183,7 +183,7 @@ else:
 
     # Static
 
-    STATICFILES_STORAGE = 'conf.s3storages.S3StaticPipelineStorage'
+    STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
     AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
     AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
     AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
@@ -191,7 +191,7 @@ else:
 
     # Media
 
-    DEFAULT_FILE_STORAGE = 'conf.s3storages.S3MediaPipelineStorage'
+    DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
     AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
     AWS_S3_MEDIA_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
     MEDIA_URL = "https://{}/".format(AWS_S3_MEDIA_DOMAIN)
