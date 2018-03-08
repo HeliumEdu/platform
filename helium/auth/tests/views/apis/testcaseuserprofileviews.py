@@ -28,7 +28,7 @@ class TestCaseUserProfileViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @mock.patch('helium.common.tasks.twilioservice.send_text')
+    @mock.patch('helium.common.tasks.send_sms')
     def test_put_user_profile(self, send_text):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

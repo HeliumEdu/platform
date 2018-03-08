@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 
 from conf.celery import app
-from helium.common.services import twilioservice
+from helium.common.services.smsservice import send_sms
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
@@ -22,6 +22,6 @@ def send_text(phone, message):
 
     logger.info('Sending text with message "{}" to {}'.format(message, phone))
 
-    twilioservice.send_text(phone, message)
+    send_sms(phone, message)
 
     metricutils.increment('task.text.sent')
