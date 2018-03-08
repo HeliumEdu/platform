@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 
-def send_text(phone, message):
+def send_sms(phone, message):
     client.api.account.messages.create(
         to=phone,
         from_=settings.TWILIO_SMS_FROM,

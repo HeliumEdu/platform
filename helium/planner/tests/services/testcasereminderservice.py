@@ -47,7 +47,7 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
         self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
 
-    @mock.patch('helium.common.tasks.twilioservice.send_text')
+    @mock.patch('helium.common.tasks.send_sms')
     def test_process_text_reminders(self, send_text):
         # GIVEN
         user = userhelper.given_a_user_exists()
