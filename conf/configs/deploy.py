@@ -179,7 +179,7 @@ else:
 
     # Static
 
-    STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
+    STATICFILES_STORAGE = 'conf.s3storages.S3StaticPipelineStorage'
     AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
     AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
     AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
@@ -187,7 +187,7 @@ else:
 
     # Media
 
-    DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
+    DEFAULT_FILE_STORAGE = 'conf.s3storages.S3MediaPipelineStorage'
     AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
     AWS_S3_MEDIA_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
     MEDIA_URL = "https://{}/".format(AWS_S3_MEDIA_DOMAIN)
