@@ -129,6 +129,7 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         data = {
+            'old_password': 'test_pass_1!',
             'password': 'new_pass_1!'
         }
         response = self.client.put(reverse('auth_user_detail'),
@@ -140,12 +141,30 @@ class TestCaseUserViews(APITestCase):
         user = get_user_model().objects.get(pk=user.id)
         self.assertTrue(user.check_password('new_pass_1!'))
 
+    def test_password_change_fails_old_password(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # THEN
+        data = {
+            'old_password': 'wrong',
+            'password': 'new_pass_1!',
+        }
+        response = self.client.put(reverse('auth_user_detail'),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # WHEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('old_password', response.data)
+
     def test_password_change_fails_blank_new_pass(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # THEN
         data = {
+            'old_password': 'test_pass_1!',
             'password': '',
         }
         response = self.client.put(reverse('auth_user_detail'),
@@ -162,6 +181,7 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         data = {
+            'old_password': 'test_pass_1!',
             'password': 'blerg',
         }
         response = self.client.put(reverse('auth_user_detail'),
