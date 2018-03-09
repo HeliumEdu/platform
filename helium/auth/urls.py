@@ -14,7 +14,7 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.0'
 
 urlpatterns = [
-    # URLs Django's auto-generated, session-based login views for ease of API navigation
+    # URLs for Django's auto-generated, session-based login views for ease of API navigation
     url(r'^login/$', LoginView.as_view(redirect_authenticated_user=True,
                                        extra_context={'title': 'Login', 'site_title': settings.PROJECT_NAME,
                                                       'site_header': settings.PROJECT_NAME}), name='login'),
