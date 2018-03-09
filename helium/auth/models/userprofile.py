@@ -5,12 +5,11 @@ from django.db import models
 from six import python_2_unicode_compatible
 
 from helium.auth.utils.userutils import generate_phone_verification_code
-from helium.common import enums
 from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
