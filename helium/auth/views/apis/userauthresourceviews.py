@@ -1,16 +1,13 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.mixins import CreateModelMixin
-from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
 from helium.auth.schemas import UserRegisterSchema, UserVerifySchema, UserForgotSchema
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
-from helium.auth.tasks import send_registration_email
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'

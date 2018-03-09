@@ -1,7 +1,5 @@
 from statsd.defaults.django import statsd
 
-from helium.auth.utils import userutils
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.0'
