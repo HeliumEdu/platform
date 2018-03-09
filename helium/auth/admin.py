@@ -1,13 +1,13 @@
 from django import forms
 from django.contrib.admin import ModelAdmin
-from django.contrib.auth import admin
+from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.core import exceptions
 from rest_framework.authtoken.models import Token
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
-from helium.auth.utils.userutils import validate_password
 from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
@@ -23,10 +23,10 @@ class AdminUserCreationForm(UserCreationForm):
         if password1 != password2:
             raise forms.ValidationError("You must enter matching passwords.")
 
-        error = validate_password(password1)
-
-        if error:
-            raise forms.ValidationError(error)
+        try:
+            password_validation.validate_password(password=password1, user=get_user_model())
+        except exceptions.ValidationError as e:
+            raise forms.ValidationError(list(e.messages))
 
         return password1
 

@@ -217,7 +217,7 @@ class Migration(migrations.Migration):
                 ('current_grade',
                  models.CharField(help_text=b'The current grade in fraction form (ex. 25/30).', max_length=255,
                                   validators=[
-                                      helium.common.utils.validators.fraction_validator])),
+                                      helium.common.utils.validators.validate_fraction])),
                 ('completed',
                  models.BooleanField(default=False, help_text=b'Whether or not the homework has been completed.')),
                 ('category',

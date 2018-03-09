@@ -1,13 +1,13 @@
 import logging
 import uuid
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, password_validation
+from django.core import exceptions
 from rest_framework import serializers
 
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import validate_password
 from helium.importexport.tasks import import_example_schedule
 
 __author__ = 'Alex Laird'
@@ -43,10 +43,10 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
     def validate_password(self, password):
-        error = validate_password(password)
-
-        if error:
-            raise serializers.ValidationError(error)
+        try:
+            password_validation.validate_password(password=password, user=get_user_model())
+        except exceptions.ValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
 
         return password
 
