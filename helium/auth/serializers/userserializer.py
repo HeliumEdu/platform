@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(
+        help_text='The current password for the user (required only when changing an existing password).',
+        required=False, write_only=True)
+
     password = serializers.CharField(help_text='A password to set for the user.',
                                      required=False, write_only=True)
 
@@ -27,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'password', 'profile', 'settings',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings',)
         read_only_fields = ('email_changing',)
 
     def validate_email(self, email):
@@ -41,6 +45,12 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Sorry, that email is already in use.")
 
         return email
+
+    def validate_old_password(self, old_password):
+        if self.instance and not self.instance.check_password(old_password):
+            raise serializers.ValidationError("The current password was entered incorrectly and did not match.")
+
+        return old_password
 
     def validate_password(self, password):
         try:
@@ -59,10 +69,11 @@ class UserSerializer(serializers.ModelSerializer):
 
             send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
 
+        old_password = validated_data.pop('old_password', None)
         password = validated_data.pop('password', None)
         instance = super(UserSerializer, self).update(instance, validated_data)
 
-        if password:
+        if old_password and password:
             instance.set_password(password)
             instance.save()
 
