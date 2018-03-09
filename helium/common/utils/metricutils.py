@@ -4,14 +4,14 @@ from helium.auth.utils import userutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.0'
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
-    if request and ignore_staff and not userutils.is_anonymous(request.user) and userutils.is_staff(request.user):
+    if request and ignore_staff and request.user.is_authenticated() and request.user.is_staff:
         return
 
-    if request and ignore_anonymous and userutils.is_anonymous(request.user):
+    if request and ignore_anonymous and not request.user.is_authenticated():
         return
 
     statsd.incr("platform.{}".format(metric))

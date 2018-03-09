@@ -17,20 +17,3 @@ def generate_phone_verification_code():
             code = None
 
     return code
-
-
-def validate_password(password):
-    if not password or len(password) < 8:
-        return "Your password must be at least 8 characters long and contain one letter and one number."
-
-    first_isalpha = password[0].isalpha()
-    if all(c.isalpha() == first_isalpha for c in password):
-        return "Your password must be at least 8 characters long and contain one letter and one number."
-
-
-def is_staff(user):
-    return user.is_staff
-
-
-def is_anonymous(user):
-    return not user.is_authenticated()

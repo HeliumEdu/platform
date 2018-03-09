@@ -1,19 +1,19 @@
 from django.db import models
 
 from helium.common import enums
-from helium.common.utils.validators import fraction_validator
+from helium.common.utils.validators import validate_fraction
 from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.4.0'
 
 
 class Homework(BaseCalendar):
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
-                                     max_length=255, validators=[fraction_validator])
+                                     max_length=255, validators=[validate_fraction])
 
     completed = models.BooleanField(help_text='Whether or not the homework has been completed.',
                                     default=False)
