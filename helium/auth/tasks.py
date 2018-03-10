@@ -24,7 +24,6 @@ def send_verification_email(email, username, verification_code):
                                          'PROJECT_NAME': settings.PROJECT_NAME,
                                          'username': username,
                                          'verification_code': verification_code,
-                                         'site_url': settings.PROJECT_APP_HOST,
                                          'verify_url': "{}/verify".format(settings.PROJECT_APP_HOST),
                                      },
                                      'Verify Your Email Address with Helium', [email])
@@ -39,7 +38,6 @@ def send_registration_email(email):
     commonutils.send_multipart_email('email/register',
                                      {
                                          'PROJECT_NAME': settings.PROJECT_NAME,
-                                         'site_url': settings.PROJECT_APP_HOST,
                                          'login_url': "{}/login".format(settings.PROJECT_APP_HOST),
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
@@ -56,7 +54,6 @@ def send_password_reset_email(email, temp_password):
     commonutils.send_multipart_email('email/forgot',
                                      {
                                          'password': temp_password,
-                                         'site_url': settings.PROJECT_APP_HOST,
                                          'settings': "{}/settings".format(settings.PROJECT_APP_HOST),
                                          'support': "{}/support".format(settings.PROJECT_APP_HOST),
                                      },
