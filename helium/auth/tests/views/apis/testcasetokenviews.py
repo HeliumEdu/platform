@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -29,11 +30,12 @@ class TestCaseAuthToken(APITestCase):
         # THEN
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn('token', response.data)
+        user = get_user_model().objects.get(username=user.get_username())
+        self.assertIsNotNone(user.last_login)
 
     def test_token_with_email_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        userhelper.verify_user_not_logged_in(self)
 
         # WHEN
         data = {
@@ -64,7 +66,6 @@ class TestCaseAuthToken(APITestCase):
     def test_login_invalid_user(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        userhelper.verify_user_not_logged_in(self)
 
         # WHEN
         responses = [
@@ -77,7 +78,6 @@ class TestCaseAuthToken(APITestCase):
         ]
 
         # THEN
-        userhelper.verify_user_not_logged_in(self)
         for response in responses:
             self.assertContains(response, 'provided credentials',
                                 status_code=status.HTTP_400_BAD_REQUEST)

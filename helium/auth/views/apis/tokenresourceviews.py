@@ -1,5 +1,7 @@
 import logging
 
+from django.contrib.auth.signals import user_logged_in
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -29,6 +31,9 @@ class ObtainTokenResourceView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
+
+        user = get_user_model().objects.get_by_natural_key(request.data['username'])
+        user_logged_in.send(sender=user.__class__, request=request, user=user)
 
         metricutils.increment('action.user.toke-obtained', request)
 
