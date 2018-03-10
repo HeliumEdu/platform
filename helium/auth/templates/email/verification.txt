@@ -2,7 +2,7 @@ Hey!
 
 You're almost there. Click the link below to verify this email address with your Helium account!
 
-{{ site_url }}{{ verify_url }}?username={{ username }}&code={{ verification_code }}
+{{ verify_url }}?username={{ username }}&code={{ verification_code }}
 
 Regards,
 The Helium Team
