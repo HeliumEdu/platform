@@ -13,7 +13,7 @@ from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase):
@@ -23,7 +23,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': '9999'}))
+            self.client.get(reverse('feed_resource_externalcalendars_events', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -33,13 +33,13 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
         # WHEN
         responses = [
             self.client.get(
-                reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+                reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
         ]
 
         # THEN
@@ -50,13 +50,13 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_get_external_calendar_as_events(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
         # WHEN
         response = self.client.get(
-            reverse('api_feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(len(response.data), 2)

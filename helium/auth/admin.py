@@ -1,16 +1,18 @@
 from django import forms
-from django.contrib.auth import admin
+from django.contrib.admin import ModelAdmin
+from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.core import exceptions
+from rest_framework.authtoken.models import Token
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
-from helium.auth.utils.userutils import validate_password
 from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.4.0'
 
 
 class AdminUserCreationForm(UserCreationForm):
@@ -18,12 +20,15 @@ class AdminUserCreationForm(UserCreationForm):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
-        error = validate_password(password1, password2)
+        if password1 != password2:
+            raise forms.ValidationError("You must enter matching passwords.")
 
-        if error:
-            raise forms.ValidationError(error)
+        try:
+            password_validation.validate_password(password=password1, user=get_user_model())
+        except exceptions.ValidationError as e:
+            raise forms.ValidationError(list(e.messages))
 
-        return password2
+        return password1
 
     def save(self, commit=True):
         super(UserCreationForm, self).save(commit)
@@ -98,7 +103,27 @@ class UserProfileAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
+class TokenAdmin(ModelAdmin):
+    list_display = ['get_user', 'key']
+    search_fields = ('key', 'user__email', 'user__username')
+    ordering = ('user__username',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ('user',)
+        return self.readonly_fields
+
+    def get_user(self, obj):
+        if obj.user:
+            return obj.user.get_username()
+        else:
+            return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
+admin_site.register(Token, TokenAdmin)

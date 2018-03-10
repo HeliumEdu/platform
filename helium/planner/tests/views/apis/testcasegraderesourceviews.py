@@ -7,7 +7,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, catego
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCaseEventViews(APITestCase):
@@ -17,7 +17,7 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_grades'))
+            self.client.get(reverse('planner_resource_grades'))
         ]
 
         # THEN
@@ -26,7 +26,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_get_grades(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group1 = coursegrouphelper.given_course_group_exists(user)
         course_group2 = coursegrouphelper.given_course_group_exists(user)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -52,7 +52,7 @@ class TestCaseEventViews(APITestCase):
                                              current_grade='-1/100')
 
         # WHEN
-        response = self.client.get(reverse('api_planner_resource_grades'))
+        response = self.client.get(reverse('planner_resource_grades'))
 
         # THEN
         self.assertEquals(len(response.data['course_groups']), 2)

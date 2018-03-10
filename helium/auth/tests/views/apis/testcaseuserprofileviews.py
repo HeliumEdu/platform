@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.4.0'
 
 
 class TestCaseUserProfileViews(APITestCase):
@@ -20,8 +20,8 @@ class TestCaseUserProfileViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_user_profile_detail')),
-            self.client.put(reverse('api_auth_user_profile_detail'))
+            self.client.get(reverse('auth_user_profile_detail')),
+            self.client.put(reverse('auth_user_profile_detail'))
         ]
 
         # THEN
@@ -31,7 +31,7 @@ class TestCaseUserProfileViews(APITestCase):
     @mock.patch('helium.common.tasks.send_sms')
     def test_put_user_profile(self, send_text):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertIsNone(user.profile.phone)
         self.assertIsNone(user.profile.phone_changing)
 
@@ -39,7 +39,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone': '555-5555',
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -53,7 +53,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_phone_changes_after_verification(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone_changing = '5555555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
@@ -63,7 +63,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': user.profile.phone_verification_code,
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -77,7 +77,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_remove_phone(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone = '5555555'
         user.profile.save()
 
@@ -85,7 +85,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone': '',
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -96,7 +96,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_invalid_phone_verification_code_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.profile.phone_changing = '5555555'
         user.profile.phone_verification_code = 123456
         user.profile.save()
@@ -105,7 +105,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_verification_code': 000000,
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -114,7 +114,7 @@ class TestCaseUserProfileViews(APITestCase):
 
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         phone_changing = '5555555'
         user.profile.phone_changing = phone_changing
         user.profile.save()
@@ -123,7 +123,7 @@ class TestCaseUserProfileViews(APITestCase):
         data = {
             'phone_changing': '444-4444'
         }
-        response = self.client.put(reverse('api_auth_user_profile_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN

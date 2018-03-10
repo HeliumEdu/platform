@@ -12,7 +12,7 @@ from helium.feed.tests.helpers import externalcalendarhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCaseExternalCalendarViews(APITestCase):
@@ -22,11 +22,11 @@ class TestCaseExternalCalendarViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_list')),
-            self.client.post(reverse('api_feed_externalcalendars_list')),
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('feed_externalcalendars_list')),
+            self.client.post(reverse('feed_externalcalendars_list')),
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -36,13 +36,13 @@ class TestCaseExternalCalendarViews(APITestCase):
     def test_get_externalcalendars(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         externalcalendarhelper.given_external_calendar_exists(user1)
         externalcalendarhelper.given_external_calendar_exists(user2)
         externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_list'))
+        response = self.client.get(reverse('feed_externalcalendars_list'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -52,7 +52,7 @@ class TestCaseExternalCalendarViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
     def test_create_externalcalendar(self, mock_validate_url):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -61,7 +61,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'color': '#7bd148',
             'shown_on_calendar': False,
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
+        response = self.client.post(reverse('feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -74,11 +74,11 @@ class TestCaseExternalCalendarViews(APITestCase):
 
     def test_get_externalcalendar_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        response = self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -86,7 +86,7 @@ class TestCaseExternalCalendarViews(APITestCase):
 
     def test_update_externalcalendar_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         self.assertEqual(external_calendar.title, 'My Calendar')
         self.assertTrue(external_calendar.shown_on_calendar)
@@ -98,7 +98,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             # Intentionally NOT changing these value
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data),
                                    content_type='application/json')
 
@@ -110,12 +110,12 @@ class TestCaseExternalCalendarViews(APITestCase):
 
     def test_delete_externalcalendar_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         externalcalendarhelper.given_external_calendar_exists(user)
 
         # WHEN
-        response = self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
+        response = self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -125,14 +125,14 @@ class TestCaseExternalCalendarViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user1)
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
-            self.client.delete(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
+            self.client.delete(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk})),
         ]
 
         # THEN
@@ -143,7 +143,7 @@ class TestCaseExternalCalendarViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
@@ -153,7 +153,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'title': external_calendar.title,
             'url': external_calendar.url
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -163,7 +163,7 @@ class TestCaseExternalCalendarViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_create_invalid_url_disables_calendar(self, mock_urlopen):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
         commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
 
         # WHEN
@@ -173,7 +173,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             'color': '#7bd148',
             'shown_on_calendar': True
         }
-        response = self.client.post(reverse('api_feed_externalcalendars_list'), json.dumps(data),
+        response = self.client.post(reverse('feed_externalcalendars_list'), json.dumps(data),
                                     content_type='application/json')
 
         # THEN
@@ -184,7 +184,7 @@ class TestCaseExternalCalendarViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_update_invalid_url_disables_calendar(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
 
@@ -194,7 +194,7 @@ class TestCaseExternalCalendarViews(APITestCase):
             # Intentionally NOT changing these value
             'title': external_calendar.title
         }
-        response = self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
@@ -203,11 +203,11 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertFalse(response.data['shown_on_calendar'])
 
     def test_not_found(self):
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         responses = [
-            self.client.get(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('api_feed_externalcalendars_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': '9999'}))
         ]
 
         for response in responses:

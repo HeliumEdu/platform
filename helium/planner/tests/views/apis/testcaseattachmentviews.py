@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attach
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.0'
 
 
 class TestCaseAttachmentViews(APITestCase):
@@ -26,10 +26,10 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_attachments_list')),
-            self.client.post(reverse('api_planner_attachments_list')),
-            self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
+            self.client.get(reverse('planner_attachments_list')),
+            self.client.post(reverse('planner_attachments_list')),
+            self.client.get(reverse('planner_attachments_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_get_attachments(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event1 = eventhelper.given_event_exists(user1)
         event2 = eventhelper.given_event_exists(user2)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
@@ -61,10 +61,10 @@ class TestCaseAttachmentViews(APITestCase):
         attachmenthelper.given_attachment_exists(user2, homework=homework2)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_attachments_list'))
-        response2 = self.client.get(reverse('api_planner_attachments_list') + '?course={}'.format(course3.pk))
-        response3 = self.client.get(reverse('api_planner_attachments_list') + '?event={}'.format(event2.pk))
-        response4 = self.client.get(reverse('api_planner_attachments_list') + '?homework={}'.format(homework2.pk))
+        response1 = self.client.get(reverse('planner_attachments_list'))
+        response2 = self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course3.pk))
+        response3 = self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event2.pk))
+        response4 = self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework2.pk))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -79,7 +79,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_course_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()
@@ -91,7 +91,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -106,7 +106,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_event_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         tmp_file = attachmenthelper.given_file_exists()
 
@@ -117,7 +117,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -132,7 +132,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_homework_attachment(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -145,7 +145,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -160,7 +160,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_orphaned_attachment_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
         tmp_file = attachmenthelper.given_file_exists()
 
         # WHEN
@@ -169,7 +169,7 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('api_planner_attachments_list'),
+                reverse('planner_attachments_list'),
                 data)
 
         # THEN
@@ -178,13 +178,13 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_get_attachment_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         attachment = attachmenthelper.given_attachment_exists(user, course)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': attachment.pk}))
+        response = self.client.get(reverse('planner_attachments_detail', kwargs={'pk': attachment.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -192,13 +192,13 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_delete_attachment_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         attachment = attachmenthelper.given_attachment_exists(user, course)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': attachment.pk}))
+        response = self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': attachment.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -208,7 +208,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -217,7 +217,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         with open(tmp_file.name):
-            response = self.client.post(reverse('api_planner_attachments_list'), {'course': course1.pk})
+            response = self.client.post(reverse('planner_attachments_list'), {'course': course1.pk})
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -225,7 +225,7 @@ class TestCaseAttachmentViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         event = eventhelper.given_event_exists(user1)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -238,10 +238,10 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_attachments_list') + '?course={}'.format(course1.pk)),
-            self.client.get(reverse('api_planner_attachments_list') + '?event={}'.format(event.pk)),
-            self.client.get(reverse('api_planner_attachments_list') + '?homework={}'.format(homework.pk)),
-            self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': attachment1.pk}))
+            self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course1.pk)),
+            self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event.pk)),
+            self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework.pk)),
+            self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': attachment1.pk}))
         ]
 
         # THEN
@@ -253,7 +253,7 @@ class TestCaseAttachmentViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -262,7 +262,7 @@ class TestCaseAttachmentViews(APITestCase):
             'course': course.pk
         }
         response = self.client.post(
-            reverse('api_planner_attachments_list'),
+            reverse('planner_attachments_list'),
             data)
 
         # THEN
@@ -271,7 +271,7 @@ class TestCaseAttachmentViews(APITestCase):
         self.assertEqual(Attachment.objects.count(), 0)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         coursehelper.given_course_exists(course_group)
         tmp_file = attachmenthelper.given_file_exists()
@@ -283,9 +283,9 @@ class TestCaseAttachmentViews(APITestCase):
                 'file[]': [fp]
             }
             responses = [
-                self.client.post(reverse('api_planner_attachments_list'), data),
-                self.client.get(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'})),
-                self.client.delete(reverse('api_planner_attachments_detail', kwargs={'pk': '9999'}))
+                self.client.post(reverse('planner_attachments_list'), data),
+                self.client.get(reverse('planner_attachments_detail', kwargs={'pk': '9999'})),
+                self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': '9999'}))
             ]
 
         # THEN

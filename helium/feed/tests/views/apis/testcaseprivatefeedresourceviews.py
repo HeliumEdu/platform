@@ -7,7 +7,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCasePrivateFeedResourceViews(APITestCase):
@@ -17,8 +17,8 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.put(reverse('api_feed_private_resource_enable')),
-            self.client.put(reverse('api_feed_private_resource_disable'))
+            self.client.put(reverse('feed_private_resource_enable')),
+            self.client.put(reverse('feed_private_resource_disable'))
         ]
 
         # THEN
@@ -27,10 +27,10 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
     def test_enable_private_url(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        response = self.client.put(reverse('api_feed_private_resource_enable'))
+        response = self.client.put(reverse('feed_private_resource_enable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -45,12 +45,12 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
     def test_disable_private_url(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.enable_private_slug()
         private_slug = user.settings.private_slug
 
         # WHEN
-        response = self.client.put(reverse('api_feed_private_resource_disable'))
+        response = self.client.put(reverse('feed_private_resource_disable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

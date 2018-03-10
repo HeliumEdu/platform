@@ -11,7 +11,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCaseCourseViews(APITestCase):
@@ -21,15 +21,15 @@ class TestCaseCourseViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_courses_list')),
-            self.client.get(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
+            self.client.get(reverse('planner_courses_list')),
+            self.client.get(reverse('planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
+            self.client.post(reverse('planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
             self.client.get(
-                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'})),
+                reverse('planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'})),
             self.client.put(
-                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'})),
+                reverse('planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'})),
             self.client.delete(
-                reverse('api_planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'}))
+                reverse('planner_coursegroups_courses_detail', kwargs={'course_group': '9999', 'pk': '9999'}))
         ]
 
         # THEN
@@ -39,7 +39,7 @@ class TestCaseCourseViews(APITestCase):
     def test_get_courses(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course_group3 = coursegrouphelper.given_course_group_exists(user2)
@@ -49,9 +49,9 @@ class TestCaseCourseViews(APITestCase):
         coursehelper.given_course_exists(course_group3)
 
         # WHEN
-        response1 = self.client.get(reverse('api_planner_courses_list'))
+        response1 = self.client.get(reverse('planner_courses_list'))
         response2 = self.client.get(
-            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group3.pk}))
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group3.pk}))
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -62,7 +62,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_create_course(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # WHEN
@@ -83,7 +83,7 @@ class TestCaseCourseViews(APITestCase):
             'trend': None,
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -96,7 +96,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_get_course_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course)
@@ -104,7 +104,7 @@ class TestCaseCourseViews(APITestCase):
         homeworkhelper.given_homework_exists(course, completed=True, current_grade='25/30')
 
         # WHEN
-        response = self.client.get(reverse('api_planner_coursegroups_courses_detail',
+        response = self.client.get(reverse('planner_coursegroups_courses_detail',
                                            kwargs={'course_group': course_group.pk, 'pk': course.pk}))
 
         # THEN
@@ -119,7 +119,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_update_course_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group1 = coursegrouphelper.given_course_group_exists(user)
         course_group2 = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group1)
@@ -139,7 +139,7 @@ class TestCaseCourseViews(APITestCase):
             'course_group': course_group2.pk
         }
         response = self.client.put(
-            reverse('api_planner_coursegroups_courses_detail',
+            reverse('planner_coursegroups_courses_detail',
                     kwargs={'course_group': course_group1.pk, 'pk': course.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -152,7 +152,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_update_start_before_end_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -166,7 +166,7 @@ class TestCaseCourseViews(APITestCase):
             'course_group': course.course_group.pk,
         }
         response = self.client.put(
-            reverse('api_planner_coursegroups_courses_detail',
+            reverse('planner_coursegroups_courses_detail',
                     kwargs={'course_group': course_group.pk, 'pk': course.pk}),
             json.dumps(data),
             content_type='application/json')
@@ -177,12 +177,12 @@ class TestCaseCourseViews(APITestCase):
 
     def test_delete_course_by_id(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
         # WHEN
-        response = self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+        response = self.client.delete(reverse('planner_coursegroups_courses_detail',
                                               kwargs={'course_group': course_group.pk, 'pk': course.pk}))
 
         # THEN
@@ -192,7 +192,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
@@ -201,11 +201,11 @@ class TestCaseCourseViews(APITestCase):
         # WHEN
         responses = [
             self.client.post(
-                reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group2.pk}),
+                reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group2.pk}),
                 json.dumps({}),
                 content_type='application/json'),
             self.client.put(
-                reverse('api_planner_coursegroups_courses_detail',
+                reverse('planner_coursegroups_courses_detail',
                         kwargs={'course_group': course_group1.pk, 'pk': course.pk}),
                 json.dumps({'course_group': course_group2.pk}),
                 content_type='application/json')
@@ -218,21 +218,21 @@ class TestCaseCourseViews(APITestCase):
     def test_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
         course = coursehelper.given_course_exists(course_group)
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_list',
+            self.client.get(reverse('planner_coursegroups_courses_list',
                                     kwargs={'course_group': course_group.pk})),
-            self.client.post(reverse('api_planner_coursegroups_courses_list',
+            self.client.post(reverse('planner_coursegroups_courses_list',
                                      kwargs={'course_group': course_group.pk})),
-            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+            self.client.get(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': course.pk})),
-            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+            self.client.put(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': course.pk})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_detail',
                                        kwargs={'course_group': course_group.pk, 'pk': course.pk}))
         ]
 
@@ -246,7 +246,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         current_grade = course.current_grade
@@ -263,7 +263,7 @@ class TestCaseCourseViews(APITestCase):
             'end_date': course.end_date.isoformat(),
             'course_group': course.course_group.pk
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
+        response = self.client.put(reverse('planner_coursegroups_courses_detail',
                                            kwargs={'course_group': course_group.pk, 'pk': course.pk}),
                                    json.dumps(data), content_type='application/json')
 
@@ -275,7 +275,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_create_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # WHEN
@@ -283,7 +283,7 @@ class TestCaseCourseViews(APITestCase):
             'start_date': 'not-a-valid-date',
         }
         response = self.client.post(
-            reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
             json.dumps(data),
             content_type='application/json')
 
@@ -294,7 +294,7 @@ class TestCaseCourseViews(APITestCase):
 
     def test_update_bad_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -302,7 +302,7 @@ class TestCaseCourseViews(APITestCase):
         data = {
             'start_date': 'not-a-valid-date'
         }
-        response = self.client.put(reverse('api_planner_coursegroups_courses_detail',
+        response = self.client.put(reverse('planner_coursegroups_courses_detail',
                                            kwargs={'course_group': course_group.pk, 'pk': course.pk}),
                                    json.dumps(data), content_type='application/json')
 
@@ -311,30 +311,30 @@ class TestCaseCourseViews(APITestCase):
         self.assertIn('start_date', response.data)
 
     def test_not_found(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
         responses = [
-            self.client.get(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
-            self.client.post(reverse('api_planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+            self.client.get(reverse('planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
+            self.client.post(reverse('planner_coursegroups_courses_list', kwargs={'course_group': '9999'})),
+            self.client.get(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+            self.client.put(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_detail',
                                        kwargs={'course_group': '9999', 'pk': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+            self.client.get(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': '9999'})),
-            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+            self.client.put(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': course_group.pk, 'pk': '9999'})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_detail',
                                        kwargs={'course_group': course_group.pk, 'pk': '9999'})),
-            self.client.get(reverse('api_planner_coursegroups_courses_detail',
+            self.client.get(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': course.pk})),
-            self.client.put(reverse('api_planner_coursegroups_courses_detail',
+            self.client.put(reverse('planner_coursegroups_courses_detail',
                                     kwargs={'course_group': '9999', 'pk': course.pk})),
-            self.client.delete(reverse('api_planner_coursegroups_courses_detail',
+            self.client.delete(reverse('planner_coursegroups_courses_detail',
                                        kwargs={'course_group': '9999', 'pk': course.pk}))
         ]
 
@@ -346,7 +346,7 @@ class TestCaseCourseViews(APITestCase):
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         coursehelper.given_course_exists(course_group,
                                          start_date=datetime.date(2016, 5, 8),
@@ -362,7 +362,7 @@ class TestCaseCourseViews(APITestCase):
                                          end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
-            reverse('api_planner_coursegroups_courses_list',
+            reverse('planner_coursegroups_courses_list',
                     kwargs={'course_group': course_group.pk}) + '?start_date__gte={}&end_date__lte={}'.format(
                 course2.start_date.isoformat(),
                 course3.end_date.isoformat()))

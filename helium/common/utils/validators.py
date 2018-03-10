@@ -7,10 +7,10 @@ from helium.common.utils import commonutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.0'
 
 
-def fraction_validator(value):
+def validate_fraction(value):
     """
     Ensure the given value is a valid fraction (1235/2346) with valid numbers on either side of the ratio. If not,
     raise a validation error.

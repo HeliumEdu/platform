@@ -2,8 +2,6 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
@@ -16,12 +14,12 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.0'
 
 logger = logging.getLogger(__name__)
 
 
-class ExportView(ViewSet):
+class ExportResourceView(ViewSet):
     """
     export_data:
     Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of

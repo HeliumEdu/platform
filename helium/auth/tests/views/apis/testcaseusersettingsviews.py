@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.6'
+__version__ = '1.4.0'
 
 
 class TestCaseUserSettingsViews(APITestCase):
@@ -20,8 +20,8 @@ class TestCaseUserSettingsViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_auth_user_settings_detail')),
-            self.client.put(reverse('api_auth_user_settings_detail'))
+            self.client.get(reverse('auth_user_settings_detail')),
+            self.client.put(reverse('auth_user_settings_detail'))
         ]
 
         # THEN
@@ -30,7 +30,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_user_setting(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertTrue(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
 
@@ -39,7 +39,7 @@ class TestCaseUserSettingsViews(APITestCase):
             'show_getting_started': False,
             'time_zone': 'America/Chicago'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -51,13 +51,13 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_bad_data_fails(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
             'time_zone': 'invalid'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
@@ -66,7 +66,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_put_read_only_field_does_nothing(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         private_slug = str(uuid.uuid4())
         user.settings.private_slug = private_slug
         user.settings.save()
@@ -75,26 +75,10 @@ class TestCaseUserSettingsViews(APITestCase):
         data = {
             'private_slug': 'new_slug'
         }
-        response = self.client.put(reverse('api_auth_user_settings_detail'), json.dumps(data),
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.settings.private_slug, private_slug)
-
-    def test_unsubscribe_admin_emails(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
-        self.assertTrue(user.settings.receive_emails_from_admin)
-
-        response1 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format(user.username,
-                                                                                           user.verification_code))
-        response2 = self.client.get(reverse('unsubscribe') + '?username={}&code={}'.format('fake-user',
-                                                                                           'fake-verification'))
-
-        # THEN
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
-        user = get_user_model().objects.get(pk=user.id)
-        self.assertFalse(user.settings.receive_emails_from_admin)

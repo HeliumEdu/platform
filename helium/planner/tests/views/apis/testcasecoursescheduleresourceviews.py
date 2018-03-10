@@ -8,7 +8,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.0'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase):
@@ -18,7 +18,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courseschedules_events',
                                     kwargs={'course_group': '9999', 'course': '9999'}))
         ]
 
@@ -29,14 +29,14 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_logged_in(self.client, username='user2', email='test2@email.com')
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user1)
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
         responses = [
-            self.client.get(reverse('api_planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courseschedules_events',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk}))
         ]
 
@@ -51,13 +51,13 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
     def test_course_schedule_as_events(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_logged_in(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
-        response = self.client.get(reverse('api_planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courseschedules_events',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN

@@ -1,3 +1,6 @@
+from future.standard_library import install_aliases
+install_aliases()
+
 import datetime
 import logging
 from urllib.request import urlopen, URLError

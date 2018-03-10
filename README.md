@@ -72,7 +72,7 @@ prefix.
 * planner
 
 ### Vagrant Development
-To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy)
+To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy#readme)
 project. This is the recommended way to develop and test for production as this environment is provisioned in the same way other prod-like
 environments are deployed and interacts with related projects as necessary.
 
@@ -81,7 +81,7 @@ and system resources, the local development environment described below is the q
 
 ### Local Development
 This is the simplest way to get started with minimal effort. To get going (assuming you have followed the "Getting Started"
-directions above), you should have the ENVIRONMENT environment variable set to "dev".
+directions above), you should have the `ENVIRONMENT` environment variable set to "dev".
 
 Now you're all set! To start the development server, execute:
 
@@ -93,6 +93,13 @@ A development server will be started at http://localhost:8000.
 
 Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
 before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
+
+### Frontend
+The frontend is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
+
+Note that the frontend was previously bundled, rendered, and served as a part of this project, but it was pulled out
+into its own project with the with `1.4.0` release. For reference, checkout the `1.3.8` tag or download it [here](https://github.com/HeliumEdu/platform/releases/tag/1.3.8)
+to see how this was previously done. 
 
 ### Documentation
 
