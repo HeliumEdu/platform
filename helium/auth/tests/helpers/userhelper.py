@@ -32,11 +32,3 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
     client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     return user
-
-
-def verify_user_not_logged_in(test_case):
-    test_case.assertNotIn('_auth_user_id', test_case.client.session)
-
-
-def verify_user_logged_in(test_case):
-    test_case.assertIn('_auth_user_id', test_case.client.session)
