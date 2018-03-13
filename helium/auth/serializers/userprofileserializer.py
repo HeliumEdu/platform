@@ -1,15 +1,15 @@
 import logging
-import re
 
 from rest_framework import serializers
 
 from helium.auth.models import UserProfile
 from helium.auth.utils.userutils import generate_phone_verification_code
+from helium.common.services.phoneservice import verify_number, HeliumPhoneError
 from helium.common.tasks import send_text
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def validate_phone(self, phone):
         """
-        Cleanup the phone number. This currently does no validation, just ensures the stored value is numeric.
+        Cleanup the phone number by validating it with an external service.
 
         :param phone: the phone number being saved
         :return:
         """
-        return re.sub("[^0-9]", "", phone)
+        if phone.strip() == "":
+            return ""
+
+        try:
+            return verify_number(phone)
+        except HeliumPhoneError as ex:
+            raise serializers.ValidationError(ex)
 
     def validate_phone_verification_code(self, phone_verification_code):
         """

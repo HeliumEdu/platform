@@ -3,12 +3,12 @@ import logging
 from django.conf import settings
 
 from conf.celery import app
-from helium.common.services.smsservice import send_sms
+from helium.common.services.phoneservice import send_sms
 from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 

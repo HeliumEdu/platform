@@ -7,10 +7,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.services.phoneservice import HeliumPhoneError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 
 class TestCaseUserProfileViews(APITestCase):
@@ -29,27 +30,49 @@ class TestCaseUserProfileViews(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @mock.patch('helium.common.tasks.send_sms')
-    def test_put_user_profile(self, send_text):
+    @mock.patch('helium.auth.serializers.userprofileserializer.verify_number')
+    def test_put_user_profile(self, mock_verify_number, mock_send_sms):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertIsNone(user.profile.phone)
         self.assertIsNone(user.profile.phone_changing)
+        mock_verify_number.return_value = '+15555555555'
 
         # WHEN
         data = {
-            'phone': '555-5555',
+            'phone': '5555555555',
         }
         response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')
 
         # THEN
-        self.assertEqual(send_text.call_count, 1)
+        mock_verify_number.assert_called_once()
+        mock_send_sms.assert_called_once()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
-        self.assertEqual(response.data['phone_changing'], '5555555')
+        self.assertEqual(response.data['phone_changing'], '+15555555555')
         user = get_user_model().objects.get(pk=user.id)
         self.assertIsNone(user.profile.phone)
         self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
+
+    @mock.patch('helium.common.services.phoneservice.verify_number')
+    def test_put_bad_data_fails(self, mock_verify_number):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.assertIsNone(user.profile.phone)
+        self.assertIsNone(user.profile.phone_changing)
+        mock_verify_number.side_effect = HeliumPhoneError('Invalid phone number.')
+
+        # WHEN
+        data = {
+            'phone': 'not-a-phone',
+        }
+        response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('phone', response.data)
 
     def test_phone_changes_after_verification(self):
         # GIVEN
