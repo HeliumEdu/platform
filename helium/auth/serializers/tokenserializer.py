@@ -2,7 +2,7 @@ import logging
 
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.compat import authenticate
 from rest_framework.exceptions import ValidationError
 
 __author__ = 'Alex Laird'
@@ -12,7 +12,7 @@ __version__ = '1.4.0'
 logger = logging.getLogger(__name__)
 
 
-class TokenSerializer(AuthTokenSerializer):
+class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(help_text="The username or email for the user.",
                                      label="Username", write_only=True)
     password = serializers.CharField(help_text="The password for the user.",
@@ -21,14 +21,28 @@ class TokenSerializer(AuthTokenSerializer):
     token = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
-        attrs = super(TokenSerializer, self).validate(attrs)
+        username = attrs.get('username')
+        password = attrs.get('password')
 
-        if not attrs['user'].is_active:
-            raise ValidationError('This account is not active.')
+        if username and password:
+            user = authenticate(request=self.context.get('request'),
+                                username=username, password=password)
 
-        attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
-        if not created:
-            attrs['token'].delete()
+            if not user:
+                raise serializers.ValidationError('Oops! We don\'t recognize that account. Check to make sure you '
+                                                  'entered your credentials properly.', code='authorization')
+
+            attrs['user'] = user
+
+            if not attrs['user'].is_active:
+                raise ValidationError(
+                    'Sorry, your account is not active. Check your to see if you received a verification email after '
+                    'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
+                    'this out!')
+
             attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
+            if not created:
+                attrs['token'].delete()
+                attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
 
         return attrs
