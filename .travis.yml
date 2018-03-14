@@ -7,6 +7,7 @@ install:
   - python -m virtualenv .venv
   - source .venv/bin/activate
   - easy_install distribute
+  - pip install -r requirements.txt
 script: make env test
 after_success:
   - codecov
