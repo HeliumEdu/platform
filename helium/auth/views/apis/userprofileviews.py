@@ -11,7 +11,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +21,6 @@ class UserProfileApiDetailView(GenericAPIView):
     put:
     Update the authenticated user's profile. This endpoint only updates the fields given (i.e. no need to PATCH
     for partials data).
-
-    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserProfileSerializer
