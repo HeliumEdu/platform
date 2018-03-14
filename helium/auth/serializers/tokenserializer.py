@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
