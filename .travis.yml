@@ -4,7 +4,7 @@ python:
   - "3.6"
 install:
   - easy_install distribute
-  - pip install virtualenv .venv
+  - pip install virtualenv
   - python -m virtualenv .venv
 script: make env test
 after_success:
