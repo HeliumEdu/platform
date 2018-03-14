@@ -33,6 +33,22 @@ class TestCaseAuthToken(APITestCase):
         user = get_user_model().objects.get(username=user.get_username())
         self.assertIsNotNone(user.last_login)
 
+    def test_token_fail_no_password(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # WHEN
+        data = {
+            'username': user.get_username(),
+        }
+        response = self.client.post(reverse('auth_token_resource_obtain'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('password', response.data)
+
     def test_token_with_email_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -79,7 +95,7 @@ class TestCaseAuthToken(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertContains(response, 'provided credentials',
+            self.assertContains(response, 'recognize that account',
                                 status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_authenticated_view_success(self):
