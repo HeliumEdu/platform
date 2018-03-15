@@ -40,7 +40,6 @@ SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
 # Security
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = "default"
 
 # Logging
 
