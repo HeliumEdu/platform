@@ -8,7 +8,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase):
@@ -62,4 +62,10 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(len(response.data), 53)
-        # TODO: implement more assertions
+        self.assertEqual(response.data[0]['title'], course.title)
+        self.assertEqual(response.data[0]['start'], '2017-01-06T10:30:00Z')
+        self.assertEqual(response.data[0]['end'], '2017-01-06T13:00:00Z')
+        self.assertEqual(response.data[0]['all_day'], False)
+        self.assertEqual(response.data[0]['show_end_time'], True)
+        self.assertEqual(response.data[0]['comments'],
+                         '<a href="{}">{}</a> in {}'.format(course.website, course.title, course.room))
