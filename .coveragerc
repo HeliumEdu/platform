@@ -1,6 +1,7 @@
 [run]
 branch = True
 omit =
+    .venv/**
     conf/**
     */admin.py
     */apps.py

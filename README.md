@@ -13,25 +13,6 @@
 ## Getting Started
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
 
-### Environment Setup
-Virtualenv creates isolated Python environments so your development areas play nicely with each other in regards to
-dependencies, permissions, and in a myriad of other ways. While this is not necessary for development, it is highly
-recommended.
-
-This project is configured to work with a Virtualenv in the `.venv` folder, and it can be setup like this:
-
-```
-pip install virtualenv
-virtualenv .venv
-```
-
-If you're unfamiliar with how it works, [read up on it](https://virtualenv.pypa.io/en/stable). The short version is, you only need to run the
-above one time. After that, you just execute the following command to activavate and use the isolated environment when developing:
-
-```
-source .venv/bin/activate
-```
-
 ### Project Setup
 To setup the Python/Django Platform build environment, execute:
 
@@ -39,13 +20,27 @@ To setup the Python/Django Platform build environment, execute:
 make install
 ```
 
-To ensure the database is in sync with the latest schema, database migrations are generated and run with Django. To run migrations, execute:
+This project is configured to work with a Virtualenv which has now been setup in the `.venv` folder. If you're
+unfamiliar with how this works, [read up on Virtualenv here](https://virtualenv.pypa.io/en/stable). The short version
+is, virtualenv creates isolated environments for each project's dependencies. To activate and use this environment when
+developing, execute:
+
+```
+source .venv/bin/activate
+```
+
+All commands below will now be run within the virtualenv (though `make` commands will always automatically enter the
+virtualenv before executing).
+
+To ensure the database is in sync with the latest schema, database migrations are generated and run with Django. To
+run migrations, execute:
 
 ```
 make migrate
 ```
 
-Once migrations have been run, you can create a super user, which is a standard user that also has access to the /admin site.
+Once migrations have been run, you can create a super user, which is a standard user that also has access to the
+/admin site.
 
 ```
 python manage.py createsuperuser

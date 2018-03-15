@@ -9,7 +9,7 @@ from helium.planner.models import Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,19 @@ def __get_end_time_for_weekday(course_schedule, weekday):
         return course_schedule.sat_end_time
 
 
+def __get_comments(course):
+    title = course.title
+    if course.website:
+        title = "<a href=\"{}\">{}</a>".format(course.website, title)
+
+    if not course.is_online and course.room:
+        return "{} in {}".format(title, course.room)
+    elif course.website:
+        return title
+    else:
+        return ""
+
+
 def course_schedules_to_events(course, course_schedules):
     """
     For the given course schedule model, generate an event for each class time within the courses's start/end window.
@@ -63,8 +76,11 @@ def course_schedules_to_events(course, course_schedules):
     while day <= course.end_date:
         for course_schedule in course_schedules.iterator():
             if course_schedule.days_of_week[enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]] == "1":
-                start_time = __get_start_time_for_weekday(course_schedule, day.weekday())
-                end_time = __get_end_time_for_weekday(course_schedule, day.weekday())
+                start_time = __get_start_time_for_weekday(course_schedule,
+                                                          enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
+                end_time = __get_end_time_for_weekday(course_schedule,
+                                                      enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
+                comments = __get_comments(course)
 
                 event = Event(id=len(events),
                               title=course.title,
@@ -77,7 +93,8 @@ def course_schedules_to_events(course, course_schedules):
                                              pytz.timezone(course.get_user().settings.time_zone)).astimezone(pytz.utc),
                               owner_id=course.pk,
                               user=course.get_user(),
-                              calendar_item_type=enums.COURSE)
+                              calendar_item_type=enums.COURSE,
+                              comments=comments)
                 events.append(event)
 
                 break

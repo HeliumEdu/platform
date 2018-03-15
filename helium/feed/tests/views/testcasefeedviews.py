@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.1'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +92,12 @@ class TestCaseFeedViews(TestCase):
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user1)
         course_group3 = coursegrouphelper.given_course_group_exists(user2)
-        course1 = coursehelper.given_course_exists(course_group1, room='')
+        course1 = coursehelper.given_course_exists(course_group1, room='SSC 123')
         course2 = coursehelper.given_course_exists(course_group2)
         course3 = coursehelper.given_course_exists(course_group3)
-        course_schedule1 = courseschedulehelper.given_course_schedule_exists(course1)
-        course_schedule2 = courseschedulehelper.given_course_schedule_exists(course2)
-        course_schedule3 = courseschedulehelper.given_course_schedule_exists(course3)
+        courseschedulehelper.given_course_schedule_exists(course1)
+        courseschedulehelper.given_course_schedule_exists(course2)
+        courseschedulehelper.given_course_schedule_exists(course3)
 
         # WHEN
         response = self.client.get(
@@ -106,4 +106,8 @@ class TestCaseFeedViews(TestCase):
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content)
         self.assertEqual(len(calendar.subcomponents), 106)
-        # TODO: implement assertions
+        self.assertEqual(calendar.subcomponents[0]['SUMMARY'], course1.title)
+        self.assertEqual(str(calendar.subcomponents[0]['DTSTART'].dt), '2017-01-06 02:30:00-08:00')
+        self.assertEqual(str(calendar.subcomponents[0]['DTEND'].dt), '2017-01-06 05:00:00-08:00')
+        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
+                         'Comments: <a href="{}">{}</a> in {}'.format(course1.website, course1.title, course1.room))
