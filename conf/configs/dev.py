@@ -99,6 +99,9 @@ else:
 
     DATABASES = deploy.DATABASES
 
+    SESSION_ENGINE = deploy.SESSION_ENGINE
+    CACHES = deploy.CACHES
+
 # Static
 
 STATIC_URL = '/static/'
