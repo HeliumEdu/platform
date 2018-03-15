@@ -157,7 +157,7 @@ class TestCaseCourseViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset(data, response.data)
-        course_schedule = CourseSchedule.objects.get(pk=course.pk)
+        course_schedule = CourseSchedule.objects.get(pk=course_schedule.pk)
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
     def test_delete_course_schedule_by_id(self):
@@ -203,7 +203,7 @@ class TestCaseCourseViews(APITestCase):
         ]
 
         # THEN
-        self.assertTrue(CourseSchedule.objects.filter(pk=course.pk, course__course_group__user_id=user1.pk).exists())
+        self.assertTrue(CourseSchedule.objects.filter(pk=course_schedule.pk, course__course_group__user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
                 self.assertEqual(len(response.data), 0)
@@ -243,8 +243,8 @@ class TestCaseCourseViews(APITestCase):
             'sun_start_time': 'not-a-valid-time'
         }
         response = self.client.put(reverse('planner_coursegroups_courses_courseschedules_detail',
-                                           kwargs={'course_group': course_group.pk, 'course': course_schedule.pk,
-                                                   'pk': course.pk}),
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                   'pk': course_schedule.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN

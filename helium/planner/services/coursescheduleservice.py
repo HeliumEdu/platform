@@ -78,13 +78,24 @@ def course_schedules_to_events(course, course_schedules):
 
     # TODO: responses should, in the future, be cached for at least a few minutes
     # TODO: when a class is saved, clear all cached keys with this prefix
+    use_cached = False
     cached_events = cache.get_many(cache.keys(cache_prefix + "*")) if getattr(cache, "keys", None) else None
     if cached_events:
+        use_cached = True
+
         for event in cached_events:
             serializer = EventSerializer(data=event)
+            if not serializer.is_valid():
+                use_cached = False
+                events = []
+
+                break
 
             events.append(serializer.data)
-    else:
+
+    if not use_cached:
+        # TODO: wipe cache here, as the above may have found an invalid attribute in the cache
+
         day = course.start_date
         while day <= course.end_date:
             for course_schedule in course_schedules.iterator():
