@@ -11,7 +11,7 @@ from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.3'
+__version__ = '1.4.1'
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +72,6 @@ def events_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's events.
     """
-    # TODO: responses should, in the future, be cached for at least a few minutes
-
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
     calendar = __create_calendar(user)
@@ -105,8 +103,6 @@ def homework_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's homework.
     """
-    # TODO: responses should, in the future, be cached for at least a few minutes
-
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
     calendar = __create_calendar(user)
@@ -141,8 +137,6 @@ def courseschedules_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's course schedules.
     """
-    # TODO: responses should, in the future, be cached for at least a few minutes
-
     calendar = __create_calendar(user)
 
     events = []

@@ -55,7 +55,7 @@ class TestCaseUserProfileViews(APITestCase):
         self.assertIsNone(user.profile.phone)
         self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
 
-    @mock.patch('helium.common.services.phoneservice.verify_number')
+    @mock.patch('helium.auth.serializers.userprofileserializer.verify_number')
     def test_put_bad_data_fails(self, mock_verify_number):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
