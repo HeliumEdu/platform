@@ -1,10 +1,10 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
+from helium.common.views.views import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.services import icalexternalcalendarservice
@@ -12,12 +12,12 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarAsEventsResourceView(GenericAPIView):
+class ExternalCalendarAsEventsResourceView(HeliumAPIView):
     """
     get:
     Return an external calendar's ICAL feed items as a list of event instances.

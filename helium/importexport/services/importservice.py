@@ -23,12 +23,12 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-def __import_external_calendars(external_calendars, user):
+def _import_external_calendars(external_calendars, user):
     for external_calendar in external_calendars:
         serializer = ExternalCalendarSerializer(data=external_calendar)
 
@@ -44,7 +44,7 @@ def __import_external_calendars(external_calendars, user):
     logger.info("Imported {} external calendars.".format(len(external_calendars)))
 
 
-def __import_course_groups(course_groups, user):
+def _import_course_groups(course_groups, user):
     course_group_remap = {}
 
     for course_group in course_groups:
@@ -65,7 +65,7 @@ def __import_course_groups(course_groups, user):
     return course_group_remap
 
 
-def __import_courses(courses, course_group_remap):
+def _import_courses(courses, course_group_remap):
     course_remap = {}
 
     for course in courses:
@@ -88,7 +88,7 @@ def __import_courses(courses, course_group_remap):
     return course_remap
 
 
-def __import_course_schedules(course_schedules, course_remap):
+def _import_course_schedules(course_schedules, course_remap):
     for course_schedule in course_schedules:
         course_schedule['course'] = course_remap.get(course_schedule['course'], None)
 
@@ -106,7 +106,7 @@ def __import_course_schedules(course_schedules, course_remap):
     logger.info("Imported {} course schedules.".format(len(course_schedules)))
 
 
-def __import_categories(categories, request, course_remap):
+def _import_categories(categories, request, course_remap):
     category_remap = {}
 
     for category in categories:
@@ -129,7 +129,7 @@ def __import_categories(categories, request, course_remap):
     return category_remap
 
 
-def __import_material_groups(material_groups, user):
+def _import_material_groups(material_groups, user):
     material_group_remap = {}
 
     for material_group in material_groups:
@@ -150,7 +150,7 @@ def __import_material_groups(material_groups, user):
     return material_group_remap
 
 
-def __import_materials(materials, material_group_remap, course_remap):
+def _import_materials(materials, material_group_remap, course_remap):
     material_remap = {}
 
     for material in materials:
@@ -175,7 +175,7 @@ def __import_materials(materials, material_group_remap, course_remap):
     return material_remap
 
 
-def __import_events(events, user):
+def _import_events(events, user):
     event_remap = {}
 
     for event in events:
@@ -196,7 +196,7 @@ def __import_events(events, user):
     return event_remap
 
 
-def __import_homework(homework, course_remap, category_remap, material_remap):
+def _import_homework(homework, course_remap, category_remap, material_remap):
     homework_remap = {}
 
     for h in homework:
@@ -223,7 +223,7 @@ def __import_homework(homework, course_remap, category_remap, material_remap):
     return homework_remap
 
 
-def __import_reminders(reminders, user, event_remap, homework_remap):
+def _import_reminders(reminders, user, event_remap, homework_remap):
     for reminder in reminders:
         reminder['homework'] = homework_remap.get(reminder['homework'], None) if \
             ('homework' in reminder and reminder['homework']) else None
@@ -260,28 +260,28 @@ def import_user(request, json_str):
             'detail': e
         })
 
-    __import_external_calendars(data.get('external_calendars', []), request.user)
+    _import_external_calendars(data.get('external_calendars', []), request.user)
 
-    course_group_remap = __import_course_groups(data.get('course_groups', []), request.user)
+    course_group_remap = _import_course_groups(data.get('course_groups', []), request.user)
 
-    course_remap = __import_courses(data.get('courses', []), course_group_remap)
+    course_remap = _import_courses(data.get('courses', []), course_group_remap)
 
-    __import_course_schedules(data.get('course_schedules', []), course_remap)
+    _import_course_schedules(data.get('course_schedules', []), course_remap)
 
-    category_remap = __import_categories(data.get('categories', []), request, course_remap)
+    category_remap = _import_categories(data.get('categories', []), request, course_remap)
 
-    material_group_remap = __import_material_groups(data.get('material_groups', []), request.user)
+    material_group_remap = _import_material_groups(data.get('material_groups', []), request.user)
 
-    material_remap = __import_materials(data.get('materials', []), material_group_remap, course_remap)
+    material_remap = _import_materials(data.get('materials', []), material_group_remap, course_remap)
 
-    event_remap = __import_events(data.get('events', []), request.user)
+    event_remap = _import_events(data.get('events', []), request.user)
 
-    homework_remap = __import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
+    homework_remap = _import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
-    __import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
+    _import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
 
 
-def __adjust_schedule_relative_today(user):
+def _adjust_schedule_relative_today(user):
     timezone.activate(user.settings.time_zone)
 
     start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -355,4 +355,4 @@ def import_example_schedule(user):
 
     import_user(request, json_str)
 
-    __adjust_schedule_relative_today(user)
+    _adjust_schedule_relative_today(user)

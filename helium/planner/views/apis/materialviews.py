@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
@@ -15,12 +14,12 @@ from helium.planner.serializers.materialserializer import MaterialSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserMaterialsApiListView(GenericAPIView, ListModelMixin):
+class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     """
     get:
     Return a list of all material instances for the authenticated user.
@@ -40,10 +39,12 @@ class UserMaterialsApiListView(GenericAPIView, ListModelMixin):
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
 
-class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
+class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     """
     get:
     Return a list of all material instances for the given material group.
@@ -65,7 +66,9 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
     def perform_create(self, serializer, *args, **kwargs):
         serializer.save(material_group_id=self.kwargs['material_group'])
@@ -81,12 +84,10 @@ class MaterialGroupMaterialsApiListView(GenericAPIView, CreateModelMixin, ListMo
                                                                          request.data['material_group'],
                                                                          request.user.get_username()))
 
-        metricutils.increment('action.material.created', request)
-
         return response
 
 
-class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given material instance.
@@ -109,7 +110,9 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         if 'material_group' in request.data:
@@ -121,8 +124,6 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
 
         logger.info('Material {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.material.updated', request)
-
         return response
 
     def delete(self, request, *args, **kwargs):
@@ -131,7 +132,5 @@ class MaterialGroupMaterialsApiDetailView(GenericAPIView, RetrieveModelMixin, Up
         logger.info(
             'Material {} deleted from MaterialGroup {} for user {}'.format(kwargs['pk'], kwargs['material_group'],
                                                                            request.user.get_username()))
-
-        metricutils.increment('action.material.deleted', request)
 
         return response

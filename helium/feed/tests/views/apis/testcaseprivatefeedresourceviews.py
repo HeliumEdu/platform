@@ -4,13 +4,14 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.test import CacheTestCase
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 
-class TestCasePrivateFeedResourceViews(APITestCase):
+class TestCasePrivateFeedResourceViews(APITestCase, CacheTestCase):
     def test_private_url_resource_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()

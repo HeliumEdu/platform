@@ -2,8 +2,8 @@ import logging
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from helium.common.views.views import HeliumAPIView
 from helium.planner.models import Course, CourseSchedule
 from helium.planner.schemas import CourseScheduleDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer
@@ -11,12 +11,12 @@ from helium.planner.services import coursescheduleservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class CourseScheduleAsEventsResourceView(APIView):
+class CourseScheduleAsEventsResourceView(HeliumAPIView):
     """
     get:
     Return all course schedules as a list of event instances.

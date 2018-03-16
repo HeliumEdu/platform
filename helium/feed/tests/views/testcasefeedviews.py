@@ -1,21 +1,21 @@
 import logging
 
 import icalendar
-from django.test import TestCase
 from django.urls import reverse
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.test import CacheTestCase
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     homeworkhelper, eventhelper
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class TestCaseFeedViews(TestCase):
+class TestCaseFeedViews(CacheTestCase):
     def test_events_feed(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()

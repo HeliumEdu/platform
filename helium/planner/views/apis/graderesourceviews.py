@@ -2,19 +2,19 @@ import logging
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from helium.common.views.views import HeliumAPIView
 from helium.planner.serializers.gradeserializer import GradeSerializer
 from helium.planner.services import gradingservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class GradesApiResourceView(APIView):
+class GradesApiResourceView(HeliumAPIView):
     """
     get:
     Return the grades for the authenticated user.

@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
 
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
@@ -14,12 +14,12 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class ExportResourceView(ViewSet):
+class ExportResourceView(ViewSet, HeliumAPIView):
     """
     export_data:
     Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of
@@ -32,6 +32,7 @@ class ExportResourceView(ViewSet):
     permission_classes = (IsAuthenticated,)
 
     def export_data(self, request, *args, **kwargs):
+
         user = self.request.user
 
         serializer = ExportSerializer({
@@ -48,8 +49,6 @@ class ExportResourceView(ViewSet):
         })
 
         json_str = JSONRenderer().render(serializer.data)
-
-        metricutils.increment('action.user.exported', request)
 
         response = HttpResponse(json_str, content_type='application/json; charset=utf-8')
         response['Filename'] = 'Helium_' + user.username + '.json'

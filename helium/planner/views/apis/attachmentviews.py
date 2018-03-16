@@ -1,13 +1,12 @@
 import logging
 
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Attachment
 from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
@@ -15,12 +14,12 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class AttachmentsApiListView(GenericAPIView, ListModelMixin):
+class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     """
     get:
     Return a list of all attachment instances for the authenticated user. To download the attachment, follow the link
@@ -56,7 +55,7 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
         Manually specifying the POST parameters to show when OPTIONS is called, as they don't directly map to the
         serializer (which is used for GET and other operations).
         """
-        response = super(AttachmentsApiListView, self).options(request, args, kwargs)
+        response = super(AttachmentsApiListView, self).options(request, *args, **kwargs)
 
         self.schema.modify_options_response(response)
 
@@ -91,8 +90,6 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
                 logger.info(
                     'Attachment {} created for user {}'.format(serializer.instance.pk, request.user.get_username()))
 
-                metricutils.increment('action.attachment.created', request)
-
                 response_data.append(serializer.data)
             else:
                 errors.append(serializer.errors)
@@ -105,7 +102,7 @@ class AttachmentsApiListView(GenericAPIView, ListModelMixin):
             return Response({'details': 'An unknown error occurred.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelMixin):
+class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMixin):
     """
     get:
     Return the given attachment instance. To download the attachment, follow the link contained in the `attachment`
@@ -126,13 +123,13 @@ class AttachmentsApiDetailView(GenericAPIView, RetrieveModelMixin, DestroyModelM
             return Attachment.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Attachment {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.attachment.deleted', request)
 
         return response

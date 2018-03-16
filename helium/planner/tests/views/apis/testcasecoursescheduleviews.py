@@ -5,15 +5,16 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 
-class TestCaseCourseViews(APITestCase):
+class TestCaseCourseViews(APITestCase, CacheTestCase):
     def test_course_schedule_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -42,7 +43,8 @@ class TestCaseCourseViews(APITestCase):
     def test_get_course_schedules(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course_group3 = coursegrouphelper.given_course_group_exists(user2)
@@ -203,7 +205,8 @@ class TestCaseCourseViews(APITestCase):
         ]
 
         # THEN
-        self.assertTrue(CourseSchedule.objects.filter(pk=course_schedule.pk, course__course_group__user_id=user1.pk).exists())
+        self.assertTrue(
+            CourseSchedule.objects.filter(pk=course_schedule.pk, course__course_group__user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
                 self.assertEqual(len(response.data), 0)
