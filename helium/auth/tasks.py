@@ -49,8 +49,6 @@ def send_password_reset_email(email, temp_password):
         logger.warning('Emails disabled. Reset password: {}'.format(temp_password))
         return
 
-    metricutils.increment('task.user.password-reset')
-
     commonutils.send_multipart_email('email/forgot',
                                      {
                                          'password': temp_password,
