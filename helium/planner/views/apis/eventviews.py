@@ -2,13 +2,12 @@ import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event
 from helium.planner.schemas import EventDetailSchema
@@ -16,12 +15,12 @@ from helium.planner.serializers.eventserializer import EventSerializer, EventExt
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all event instances for the authenticated user. For convenience, event instances on a GET are
@@ -65,12 +64,10 @@ class EventsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
         logger.info('Event {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment('action.event.created', request)
-
         return response
 
 
-class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given event instance. For convenience, event instances on a GET are serialized with representations of
@@ -103,14 +100,14 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
         logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.event.updated', request)
 
         return response
 
@@ -119,15 +116,11 @@ class EventsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, 
 
         logger.info('Event {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.event.updated', request)
-
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Event {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.event.deleted', request)
 
         return response

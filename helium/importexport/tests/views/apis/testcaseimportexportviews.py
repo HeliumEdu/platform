@@ -19,7 +19,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class TestCaseImportExportViews(APITestCase):
 
     def test_import_success(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
@@ -87,7 +87,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                     {'id': 2, 'title': 'My Calendar',
                                                                      'url': 'http://go.com/valid-ical-feed',
                                                                      'color': '#fad165', 'shown_on_calendar': False,
-                                                                     'user': 1})
+                                                                     'user': user.pk})
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'average_grade': 66.6667,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
@@ -95,7 +95,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                                     'shown_on_calendar': True,
                                                                                     'title': 'Test Course Group',
                                                                                     'trend': None,
-                                                                                    'user': 1})
+                                                                                    'user': user.pk})
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'average_grade': -1.0,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
@@ -103,7 +103,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                                     'shown_on_calendar': True,
                                                                                     'title': 'Test Course Group',
                                                                                     'trend': None,
-                                                                                    'user': 1})
+                                                                                    'user': user.pk})
         coursehelper.verify_course_matches_data(self, courses[2], {'title': 'Test Course', 'room': '',
                                                                    'credits': 5.0, 'color': '#4986e7',
                                                                    'website': 'http://mycourse.com', 'is_online': False,
@@ -162,21 +162,22 @@ class TestCaseImportExportViews(APITestCase):
                                                      'course': courses[2].pk})
         materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
                                                                {'title': 'Test Material Group',
-                                                                'shown_on_calendar': True, 'user': 1})
+                                                                'shown_on_calendar': True, 'user': user.pk})
         materialhelper.verify_material_matches_data(self, materials[1],
                                                     {'title': 'Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
-                                                     'details': 'Return by 7/1', 'material_group': 2, 'courses': []})
+                                                     'details': 'Return by 7/1',
+                                                     'material_group': material_groups[1].pk, 'courses': []})
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
-                                               'owner_id': None, 'user': 1})
+                                               'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
-                                               'owner_id': None, 'user': 1})
+                                               'owner_id': None, 'user': user.pk})
         homeworkhelper.verify_homework_matches_data(self, homework[2],
                                                     {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
@@ -195,14 +196,14 @@ class TestCaseImportExportViews(APITestCase):
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45:00Z',
                                                                          'offset': 15, 'offset_type': 0, 'type': 2,
-                                                                         'sent': False, 'homework': 1, 'event': None,
-                                                                         'user': 1})
+                                                                         'sent': False, 'homework': homework[0].pk,
+                                                                         'event': None, 'user': user.pk})
         reminderhelper.verify_reminder_matches_data(self, reminders[3], {'id': 3, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45Z',
                                                                          'offset': 15, 'offset_type': 0, 'type': 2,
-                                                                         'sent': False, 'homework': 3, 'event': None,
-                                                                         'user': 1})
+                                                                         'sent': False, 'homework': homework[2].pk,
+                                                                         'event': None, 'user': user.pk})
 
     def test_import_invalid_json(self):
         # GIVEN

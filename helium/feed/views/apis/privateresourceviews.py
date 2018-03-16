@@ -5,12 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from helium.common.utils import metricutils
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +38,6 @@ class PrivateEnableResourceView(ViewSet):
                                                    kwargs={'slug': user.settings.private_slug})
         })
 
-        metricutils.increment('action.privatefeed.enabled', request)
-
         return Response(serializer.data)
 
 
@@ -55,7 +52,5 @@ class PrivateDisableResourceView(ViewSet):
         user = self.request.user
 
         user.settings.disable_private_slug()
-
-        metricutils.increment('action.privatefeed.disabled', request)
 
         return Response()

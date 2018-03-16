@@ -8,16 +8,16 @@ from helium.auth.schemas import UserRegisterSchema, UserVerifySchema, UserForgot
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserRegisterResourceView(GenericViewSet, CreateModelMixin):
+class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     """
     register:
     Register a new user.
@@ -38,16 +38,15 @@ class UserRegisterResourceView(GenericViewSet, CreateModelMixin):
 
         logger.info('User {} created with username '.format(response.data['id'], response.data['username']))
 
-        metricutils.increment('action.user.created', request)
-
         return response
 
 
-class UserVerifyResourceView(ViewSet):
+class UserVerifyResourceView(ViewSet, HeliumAPIView):
     """
     verify_email:
     Verify an email address for the user instance associated with the username and verification code.
     """
+    serializer_class = UserSerializer
     schema = UserVerifySchema()
 
     def verify_email(self, request, *args, **kwargs):
@@ -56,11 +55,12 @@ class UserVerifyResourceView(ViewSet):
         return response
 
 
-class UserForgotResourceView(ViewSet):
+class UserForgotResourceView(ViewSet, HeliumAPIView):
     """
     forgot_password:
     Reset the password for the user instance associated with the given email.
     """
+    serializer_class = UserSerializer
     schema = UserForgotSchema()
 
     def forgot_password(self, request, *args, **kwargs):

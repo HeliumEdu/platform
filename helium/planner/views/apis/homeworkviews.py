@@ -2,13 +2,12 @@ import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
@@ -18,12 +17,12 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class UserHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all homework instances for the authenticated user. For convenience, homework instances on a GET are
@@ -50,7 +49,7 @@ class UserHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
         return response
 
 
-class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all homework instances for the given course. For convenience, homework instances on a GET are
@@ -98,12 +97,10 @@ class CourseGroupCourseHomeworkApiListView(GenericAPIView, ListModelMixin, Creat
         logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                           request.user.get_username()))
 
-        metricutils.increment('action.homework.created', request)
-
         return response
 
 
-class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given homework instance. For convenience, homework instances on a GET are serialized with representations
@@ -136,7 +133,9 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
             return self.serializer_class
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         permissions.check_course_permission(request.user.pk, request.data['course'])
@@ -148,8 +147,6 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
         response = self.update(request, *args, **kwargs)
 
         logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.homework.updated', request)
 
         return response
 
@@ -165,15 +162,11 @@ class CourseGroupCourseHomeworkApiDetailView(GenericAPIView, RetrieveModelMixin,
 
         logger.info('Homework {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.homework.updated', request)
-
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Homework {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.homework.deleted', request)
 
         return response

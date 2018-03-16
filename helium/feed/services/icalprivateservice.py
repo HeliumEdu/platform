@@ -11,12 +11,12 @@ from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-def __create_calendar(user):
+def _create_calendar(user):
     calendar = icalendar.Calendar()
 
     calendar.add("PRODID", "-//Helium Edu//{}//EN".format(settings.PROJECT_VERSION))
@@ -29,7 +29,7 @@ def __create_calendar(user):
     return calendar
 
 
-def __create_event_description(event):
+def _create_event_description(event):
     description = "Comments: {}".format(event.comments)
 
     if event.url:
@@ -38,7 +38,7 @@ def __create_event_description(event):
     return description
 
 
-def __create_homework_description(homework):
+def _create_homework_description(homework):
     class_info = homework.course.title
     if homework.category and homework.category.title != "Uncategorized":
         class_info = "{} for {}".format(homework.category.title, class_info)
@@ -74,7 +74,7 @@ def events_to_private_ical_feed(user):
     """
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    calendar = __create_calendar(user)
+    calendar = _create_calendar(user)
 
     for event in user.events.iterator():
         calendar_event = icalendar.Event()
@@ -87,7 +87,7 @@ def events_to_private_ical_feed(user):
         else:
             calendar_event["DTSTART"] = icalendar.vDate(event.start)
             calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = __create_event_description(event)
+        calendar_event["DESCRIPTION"] = _create_event_description(event)
 
         calendar.add_component(calendar_event)
 
@@ -105,7 +105,7 @@ def homework_to_private_ical_feed(user):
     """
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    calendar = __create_calendar(user)
+    calendar = _create_calendar(user)
 
     for homework in Homework.objects.for_user(user.pk).iterator():
         calendar_event = icalendar.Event()
@@ -118,7 +118,7 @@ def homework_to_private_ical_feed(user):
         else:
             calendar_event["DTSTART"] = icalendar.vDate(homework.start)
             calendar_event["DTEND"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = __create_homework_description(homework)
+        calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
         calendar.add_component(calendar_event)
 
@@ -137,7 +137,7 @@ def courseschedules_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's course schedules.
     """
-    calendar = __create_calendar(user)
+    calendar = _create_calendar(user)
 
     events = []
     for course in Course.objects.for_user(user.pk):
@@ -156,7 +156,7 @@ def courseschedules_to_private_ical_feed(user):
         else:
             calendar_event["DTSTART"] = icalendar.vDate(event.start)
             calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = __create_event_description(event)
+        calendar_event["DESCRIPTION"] = _create_event_description(event)
 
         calendar.add_component(calendar_event)
 

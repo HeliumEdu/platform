@@ -1,22 +1,21 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserProfileApiDetailView(GenericAPIView):
+class UserProfileApiDetailView(HeliumAPIView):
     """
     put:
     Update the authenticated user's profile. This endpoint only updates the fields given (i.e. no need to PATCH
@@ -37,7 +36,5 @@ class UserProfileApiDetailView(GenericAPIView):
         serializer.save()
 
         logger.info('Profile updated for user {}'.format(user.get_username()))
-
-        metricutils.increment('action.user-profile.updated', request)
 
         return Response(serializer.data)

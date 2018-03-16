@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import CourseFilter
 from helium.planner.models import Course
@@ -16,12 +15,12 @@ from helium.planner.serializers.courseserializer import CourseSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserCoursesApiListView(GenericAPIView, ListModelMixin):
+class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
     """
     get:
     Return a list of all course instances for the authenticated user, including course schedule details.
@@ -38,10 +37,12 @@ class UserCoursesApiListView(GenericAPIView, ListModelMixin):
             Course.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
 
-class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all course instances, including course schedule details, for the given course group.
@@ -64,7 +65,9 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
             return Course.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
     def perform_create(self, serializer, *args, **kwargs):
         serializer.save(course_group_id=self.kwargs['course_group'])
@@ -76,12 +79,10 @@ class CourseGroupCoursesApiListView(GenericAPIView, ListModelMixin, CreateModelM
             'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group'],
                                                                      self.request.user.get_username()))
 
-        metricutils.increment('action.course.created', request)
-
         return response
 
 
-class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given course instance, including course schedule details.
@@ -104,7 +105,9 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
             Course.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         if 'course_group' in request.data:
@@ -114,8 +117,6 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
         logger.info('Course {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.course.updated', request)
-
         return response
 
     def delete(self, request, *args, **kwargs):
@@ -123,7 +124,5 @@ class CourseGroupCoursesApiDetailView(GenericAPIView, RetrieveModelMixin, Update
 
         logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],
                                                                                request.user.get_username()))
-
-        metricutils.increment('action.course.deleted', request)
 
         return response
