@@ -1,6 +1,3 @@
-from future.standard_library import install_aliases
-install_aliases()
-
 import datetime
 import logging
 from urllib.request import urlopen, URLError
@@ -16,7 +13,7 @@ from helium.planner.models import Event
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.3.3'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 

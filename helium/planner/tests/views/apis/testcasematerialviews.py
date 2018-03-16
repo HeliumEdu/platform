@@ -1,7 +1,4 @@
-from future.standard_library import install_aliases
 from rest_framework.test import APITestCase
-
-install_aliases()
 
 import json
 
@@ -15,7 +12,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, materi
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 
 class TestCaseMaterialViews(APITestCase):
@@ -47,7 +44,8 @@ class TestCaseMaterialViews(APITestCase):
     def test_get_materials(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         material_group1 = materialgrouphelper.given_material_group_exists(user1)
         material_group2 = materialgrouphelper.given_material_group_exists(user2)
         material_group3 = materialgrouphelper.given_material_group_exists(user2)

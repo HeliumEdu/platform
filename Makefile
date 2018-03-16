@@ -10,8 +10,8 @@ env:
 
 virtualenv:
 	if [ ! -d "$(PLATFORM_VENV)" ]; then \
-		pip install virtualenv --user; \
-        python -m virtualenv $(PLATFORM_VENV); \
+		python3 -m pip install virtualenv --user; \
+        python3 -m virtualenv $(PLATFORM_VENV); \
 	fi
 
 install: env virtualenv

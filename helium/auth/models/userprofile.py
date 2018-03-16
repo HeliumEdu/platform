@@ -2,19 +2,17 @@ import logging
 
 from django.conf import settings
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.auth.utils.userutils import generate_phone_verification_code
 from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class UserProfile(BaseModel):
     phone = models.CharField(help_text='A valid phone number.',
                              max_length=50, blank=True, null=True)
