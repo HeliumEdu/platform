@@ -17,7 +17,7 @@ def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
 
 
 def request_start(request):
-    metric_id = "platform.{}.{}".format(re.sub("[^a-zA-Z]+", "", request.path), request.method)
+    metric_id = "platform.request.{}.{}".format(re.sub("[^a-zA-Z]+", "", request.path), request.method)
     timer = statsd.timer(metric_id + '.timer', rate=1)
     timer.start()
 
