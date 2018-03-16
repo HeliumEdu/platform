@@ -1,7 +1,6 @@
 import datetime
 
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
@@ -9,10 +8,9 @@ from helium.planner.managers.coursemanager import CourseManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.2'
 
 
-@python_2_unicode_compatible
 class Course(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)

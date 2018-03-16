@@ -2,17 +2,15 @@ import datetime
 
 from django.core import validators
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common.models import BaseModel
 from helium.planner.managers.courseschedulemanager import CourseScheduleManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.2'
 
 
-@python_2_unicode_compatible
 class CourseSchedule(BaseModel):
     days_of_week = models.CharField(help_text='Seven booleans (0 or 1) indicating which days of the week the course is '
                                               'on (week starts on Sunday).',

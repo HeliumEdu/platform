@@ -5,7 +5,7 @@
 # Helium Platform Project
 
 ## Prerequisites
-* Python (>= 2.7, >= 3.6)
+* Python (>= 3.5)
 * Pip (>= 9.0)
 * MySQL (>= 5.7)
 * Redis (>= 3.2)

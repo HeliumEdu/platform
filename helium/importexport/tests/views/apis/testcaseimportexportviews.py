@@ -295,7 +295,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         response = self.client.get(reverse('importexport_resource_export'))
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode('utf-8'))
 
         # THEN
         course_group1 = CourseGroup.objects.get(pk=course_group1.pk)

@@ -2,7 +2,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from six import python_2_unicode_compatible
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
@@ -10,14 +9,13 @@ from helium.planner.utils.attachmentutils import get_path_for_attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.2'
 
 
 class AttachmentError(HeliumError):
     pass
 
 
-@python_2_unicode_compatible
 class Attachment(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)

@@ -1,5 +1,4 @@
 from django.db import models
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
@@ -7,10 +6,9 @@ from helium.planner.managers.categorymanager import CategoryManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.4.2'
 
 
-@python_2_unicode_compatible
 class Category(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)

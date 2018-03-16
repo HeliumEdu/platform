@@ -351,7 +351,7 @@ def import_example_schedule(user):
 
     example_file = open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb')
 
-    json_str = example_file.read()
+    json_str = example_file.read().decode('utf-8')
 
     import_user(request, json_str)
 

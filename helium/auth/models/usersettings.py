@@ -4,19 +4,17 @@ import time
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
-from six import python_2_unicode_compatible
 
 from helium.common import enums
 from helium.common.models import BaseModel
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class UserSettings(BaseModel):
     time_zone = models.CharField(help_text='A valid time zone choice.',
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)

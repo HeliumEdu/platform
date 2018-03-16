@@ -31,8 +31,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
     def import_data(self, request, *args, **kwargs):
         for upload in request.data.getlist('file[]'):
-            json_str = uploadfileservice.read(upload)
+            json_str = uploadfileservice.read(upload).decode('utf-8')
 
-            importservice.import_user(request, json_str.decode("utf-8"))
+            importservice.import_user(request, json_str)
 
         return HttpResponse()

@@ -1,5 +1,5 @@
 """
-Storages for funneling Pipelines to S3.
+Storages for funneling Pipelines to storage destinations.
 """
 from django.conf import settings
 
@@ -9,7 +9,7 @@ from storages.backends.s3boto import S3BotoStorage
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.2'
 
 
 class S3StaticPipelineStorage(PipelineMixin, S3BotoStorage):
