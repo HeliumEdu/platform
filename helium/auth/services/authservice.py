@@ -28,6 +28,8 @@ def forgot_password(request):
 
         logger.info('Reset password for user with email {}'.format(user.email))
 
+        metricutils.increment('action.user.password-reset', request)
+
         send_password_reset_email.delay(user.email, password)
 
         request.session.modified = True

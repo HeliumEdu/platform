@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import ReminderFilter
 from helium.planner.models import Reminder
@@ -15,12 +14,12 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer, Re
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
+class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     """
     get:
     Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a GET are
@@ -45,7 +44,9 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
     def get(self, request, *args, **kwargs):
         self.serializer_class = ReminderExtendedSerializer
 
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -60,12 +61,10 @@ class RemindersApiListView(GenericAPIView, CreateModelMixin, ListModelMixin):
 
         logger.info('Reminder {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment('action.reminder.created', request)
-
         return response
 
 
-class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of two
@@ -94,7 +93,9 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
     def get(self, request, *args, **kwargs):
         self.serializer_class = ReminderExtendedSerializer
 
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         if 'event' in request.data:
@@ -106,8 +107,6 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.reminder.updated', request)
-
         return response
 
     def patch(self, request, *args, **kwargs):
@@ -115,15 +114,11 @@ class RemindersApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixi
 
         logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
 
-        metricutils.increment('action.reminder.updated', request)
-
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('Reminder {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.reminder.deleted', request)
 
         return response

@@ -9,7 +9,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__version__ = '1.4.2'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -90,6 +90,9 @@ else:
     from conf.configs import deploy
 
     DATABASES = deploy.DATABASES
+
+    SESSION_ENGINE = deploy.SESSION_ENGINE
+    CACHES = deploy.CACHES
 
 # Static
 

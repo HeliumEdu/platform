@@ -1,7 +1,4 @@
-from future.standard_library import install_aliases
 from rest_framework.test import APITestCase
-
-install_aliases()
 
 import pytz
 from dateutil import parser
@@ -20,7 +17,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 
 class TestCaseEventViews(APITestCase):
@@ -43,7 +40,8 @@ class TestCaseEventViews(APITestCase):
 
     def test_get_events(self):
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         eventhelper.given_event_exists(user1)
         eventhelper.given_event_exists(user2)
         eventhelper.given_event_exists(user2)
@@ -348,7 +346,7 @@ class TestCaseEventViews(APITestCase):
 
         response = self.client.get(
             reverse('planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
-                                                                                    quote(event4.end.isoformat())))
+                                                                                quote(event4.end.isoformat())))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

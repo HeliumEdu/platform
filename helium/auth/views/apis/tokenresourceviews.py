@@ -2,23 +2,21 @@ import logging
 
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth import get_user_model
-from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.auth.serializers.tokenserializer import TokenSerializer
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class ObtainTokenResourceView(GenericAPIView):
+class ObtainTokenResourceView(HeliumAPIView):
     """
     post:
     Obtain an authentication token for the given user credentials. The "token" in the response should then be provided
@@ -35,12 +33,10 @@ class ObtainTokenResourceView(GenericAPIView):
         user = get_user_model().objects.get_by_natural_key(request.data['username'])
         user_logged_in.send(sender=user.__class__, request=request, user=user)
 
-        metricutils.increment('action.user.toke-obtained', request)
-
         return Response(serializer.data)
 
 
-class DestroyTokenResourceView(ViewSet):
+class DestroyTokenResourceView(ViewSet, HeliumAPIView):
     """
     revoke:
     Revoke the authenticated user's access token.
@@ -50,6 +46,4 @@ class DestroyTokenResourceView(ViewSet):
     def revoke(self, request, *args, **kwargs):
         request.user.auth_token.delete()
 
-        metricutils.increment('action.user.toke-revoked', request)
-
-        return Response(status=status.HTTP_200_OK)
+        return Response()

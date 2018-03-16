@@ -1,7 +1,4 @@
-from future.standard_library import install_aliases
 from rest_framework.test import APITestCase
-
-install_aliases()
 
 import json
 
@@ -20,7 +17,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 
 class TestCaseHomeworkViews(APITestCase):

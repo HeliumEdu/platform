@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner.filters import CourseGroupFilter
 from helium.planner.models import CourseGroup
 from helium.planner.schemas import CourseGroupDetailSchema
@@ -14,12 +13,12 @@ from helium.planner.serializers.coursegroupserializer import CourseGroupSerializ
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all course group instances for the authenticated user.
@@ -41,7 +40,9 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
             CourseGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -51,12 +52,10 @@ class CourseGroupsApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
 
         logger.info('CourseGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
 
-        metricutils.increment('action.coursegroup.created', request)
-
         return response
 
 
-class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given course group instance.
@@ -79,14 +78,14 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
             CourseGroup.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
         logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.coursegroup.updated', request)
 
         return response
 
@@ -94,7 +93,5 @@ class CourseGroupsApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelM
         response = self.destroy(request, *args, **kwargs)
 
         logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.coursegroup.deleted', request)
 
         return response

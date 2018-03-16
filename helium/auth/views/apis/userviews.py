@@ -2,7 +2,6 @@ import logging
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,16 +10,16 @@ from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
+class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     """
     get:
     Return the authenticated user instance, including profile and settings details.
@@ -55,8 +54,6 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
 
         logger.info('User {} updated'.format(user.get_username()))
 
-        metricutils.increment('action.user.updated', request)
-
         return Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -67,10 +64,12 @@ class UserApiDetailView(GenericAPIView, RetrieveModelMixin):
         if form.is_valid():
             logger.info('User {} deleted'.format(user.get_username()))
 
-            metricutils.increment('action.user.deleted', request)
-
             delete_user.delay(form.user.pk)
 
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            data = None
+            status_code = status.HTTP_204_NO_CONTENT
+        else:
+            data = dict(list(form.errors.items()))
+            status_code = status.HTTP_400_BAD_REQUEST
 
-        return Response(dict(list(form.errors.items())), status=status.HTTP_400_BAD_REQUEST)
+        return Response(data, status=status_code)

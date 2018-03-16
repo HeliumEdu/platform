@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner.models import Category
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.schemas import CategoryDetailSchema, SubCourseListSchema
@@ -14,12 +13,12 @@ from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
+class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     """
     get:
     Return a list of all category instances for the authenticated user.
@@ -35,10 +34,12 @@ class UserCategoriesApiListView(GenericAPIView, ListModelMixin):
             Category.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
 
-class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all category instances for the given course.
@@ -75,12 +76,10 @@ class CourseGroupCourseCategoriesApiListView(GenericAPIView, ListModelMixin, Cre
         logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                           request.user.get_username()))
 
-        metricutils.increment('action.category.created', request)
-
         return response
 
 
-class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     """
     get:
     Return the given category instance.
@@ -103,14 +102,14 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
             Category.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
         logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.category.updated', request)
 
         return response
 
@@ -133,7 +132,5 @@ class CourseGroupCourseCategoriesApiDetailView(GenericAPIView, RetrieveModelMixi
         logger.info(
             'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
                                                                     request.user.get_username()))
-
-        metricutils.increment('action.category.deleted', request)
 
         return response

@@ -1,6 +1,6 @@
 import logging
-
 import re
+
 from django.conf import settings
 from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client

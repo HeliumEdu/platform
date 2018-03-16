@@ -1,12 +1,11 @@
 import logging
 
-from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils
+from helium.common.views.views import HeliumAPIView
 from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.schemas import SubCourseListSchema, CourseScheduleDetailSchema
@@ -14,12 +13,12 @@ from helium.planner.serializers.coursescheduleserializer import CourseScheduleSe
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.7'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
 
-class CourseGroupCourseCourseSchedulesApiListView(GenericAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     get:
     Return a list of all course schedule instances for the given course.
@@ -52,12 +51,10 @@ class CourseGroupCourseCourseSchedulesApiListView(GenericAPIView, ListModelMixin
         logger.info('CourseSchedule {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
                                                                                 request.user.get_username()))
 
-        metricutils.increment('action.courseschedule.created', request)
-
         return response
 
 
-class CourseGroupCourseCourseSchedulesApiDetailView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin,
+class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
                                                     DestroyModelMixin):
     """
     get:
@@ -81,14 +78,14 @@ class CourseGroupCourseCourseSchedulesApiDetailView(GenericAPIView, RetrieveMode
             CourseSchedule.objects.none()
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+
+        return response
 
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
         logger.info('CourseSchedule {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
-
-        metricutils.increment('action.courseschedule.updated', request)
 
         return response
 
@@ -98,7 +95,5 @@ class CourseGroupCourseCourseSchedulesApiDetailView(GenericAPIView, RetrieveMode
         logger.info(
             'CourseSchedule {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
                                                                           request.user.get_username()))
-
-        metricutils.increment('action.courseschedule.deleted', request)
 
         return response

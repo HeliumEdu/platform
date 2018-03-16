@@ -1,17 +1,15 @@
-from future.standard_library import install_aliases
+import logging
+
+from rest_framework import serializers
 
 from helium.feed.services import icalexternalcalendarservice
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
-
-install_aliases()
-import logging
-from rest_framework import serializers
 
 from helium.feed.models import ExternalCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__version__ = '1.4.2'
 
 logger = logging.getLogger(__name__)
 
