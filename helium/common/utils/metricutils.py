@@ -1,4 +1,3 @@
-import six
 from statsd.defaults.django import statsd
 
 __author__ = 'Alex Laird'
