@@ -8,12 +8,12 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
-from helium.planner.services.coursescheduleservice import clear_cache
+from helium.planner.services.coursescheduleservice import clear_cached_course_schedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
@@ -86,8 +86,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(cached_event[0]['show_end_time'], response_db.data[0]['show_end_time'])
         self.assertEqual(cached_event[0]['comments'], response_db.data[0]['comments'])
 
-    @mock.patch('helium.planner.services.coursescheduleservice.clear_cache')
-    def test_course_schedule_cache_cleared_when_course_changed(self, clear_cache_mock):
+    @mock.patch('helium.planner.services.coursescheduleservice._create_events_from_course_schedules')
+    def test_course_schedule_cache_cleared_when_course_changed(self, _create_events_from_course_schedules_mock):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -95,21 +95,17 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
         self.client.get(reverse('planner_resource_courseschedules_events',
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
-        self.assertEqual(clear_cache_mock.call_count, 3)
+        self.assertEqual(_create_events_from_course_schedules_mock.call_count, 1)
 
         # WHEN
         course.start_date = datetime.date(2017, 1, 2)
         course.save()
-        self.assertEqual(clear_cache_mock.call_count, 4)
-        clear_cache(course)
 
         course_schedule.mon_start_time = datetime.time(2, 00, 0)
         course_schedule.save()
-        self.assertEqual(clear_cache_mock.call_count, 5)
-        clear_cache(course)
 
         self.client.get(reverse('planner_resource_courseschedules_events',
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
-        self.assertEqual(clear_cache_mock.call_count, 6)
+        self.assertEqual(_create_events_from_course_schedules_mock.call_count, 2)
