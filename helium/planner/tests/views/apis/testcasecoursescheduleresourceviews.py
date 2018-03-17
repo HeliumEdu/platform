@@ -8,7 +8,6 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
-from helium.planner.services.coursescheduleservice import clear_cached_course_schedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
 __author__ = 'Alex Laird'
