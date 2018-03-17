@@ -10,14 +10,14 @@ from helium.planner.tasks import recalculate_course_group_grade, recalculate_cou
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Course)
 def save_course(sender, instance, **kwargs):
-    coursescheduleservice.clear_cache(instance)
+    coursescheduleservice.clear_cached_course_schedule(instance)
 
 
 @receiver(post_delete, sender=Course)
@@ -27,7 +27,7 @@ def delete_course(sender, instance, **kwargs):
 
 @receiver(post_save, sender=CourseSchedule)
 def save_course_schedule(sender, instance, **kwargs):
-    coursescheduleservice.clear_cache(instance.course)
+    coursescheduleservice.clear_cached_course_schedule(instance.course)
 
 
 @receiver(post_save, sender=Category)
