@@ -239,3 +239,8 @@ PIPELINE = {
         },
     },
 }
+
+# Metrics
+
+DATADOG_API_KEY = os.environ.get('PROJECT_DATADOG_API_KEY', None)
+DATADOG_APP_KEY = os.environ.get('PROJECT_DATADOG_APP_KEY', None)

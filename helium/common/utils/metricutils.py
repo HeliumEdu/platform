@@ -1,5 +1,20 @@
 import re
-from statsd.defaults.django import statsd
+
+from django.conf import settings
+
+if settings.DATADOG_API_KEY:
+    from datadog import initialize
+
+    options = {
+        'api_key': settings.DATADOG_API_KEY,
+        'app_key': settings.DATADOG_APP_KEY
+    }
+
+    initialize(**options)
+
+    from datadog import statsd
+else:
+    from statsd.defaults.django import statsd
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
