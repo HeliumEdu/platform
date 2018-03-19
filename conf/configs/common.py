@@ -7,7 +7,7 @@ import socket
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 # ############################
 # Project configuration
@@ -239,3 +239,8 @@ PIPELINE = {
         },
     },
 }
+
+# Metrics
+
+DATADOG_API_KEY = os.environ.get('PROJECT_DATADOG_API_KEY', None)
+DATADOG_APP_KEY = os.environ.get('PROJECT_DATADOG_APP_KEY', None)
