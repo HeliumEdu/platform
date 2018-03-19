@@ -12,7 +12,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
@@ -53,7 +53,28 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_course_schedule_as_events_db_and_cached(self):
+    def test_get_course_schedule_as_events(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_courseschedules_events',
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk}))
+
+        # THEN
+        self.assertEqual(len(response.data), 53)
+        self.assertEqual(response.data[0]['title'], course.title)
+        self.assertEqual(response.data[0]['start'], '2017-01-06T10:30:00Z')
+        self.assertEqual(response.data[0]['end'], '2017-01-06T13:00:00Z')
+        self.assertEqual(response.data[0]['all_day'], False)
+        self.assertEqual(response.data[0]['show_end_time'], True)
+        self.assertEqual(response.data[0]['comments'],
+                         '<a href="{}">{}</a> in {}'.format(course.website, course.title, course.room))
+
+    def test_get_course_schedule_cached(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -63,30 +84,25 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         # WHEN
         response_db = self.client.get(reverse('planner_resource_courseschedules_events',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk}))
-        response_cached = self.client.get(reverse('planner_resource_courseschedules_events',
-                                                  kwargs={'course_group': course_group.pk, 'course': course.pk}))
+        with mock.patch('helium.planner.services.coursescheduleservice._create_events_from_course_schedules') as \
+                _create_events_from_course_schedules_mock:
+            response_cached = self.client.get(reverse('planner_resource_courseschedules_events',
+                                                      kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
-        # THEN
-        self.assertEqual(len(response_db.data), 53)
-        self.assertEqual(response_db.data[0]['title'], course.title)
-        self.assertEqual(response_db.data[0]['start'], '2017-01-06T10:30:00Z')
-        self.assertEqual(response_db.data[0]['end'], '2017-01-06T13:00:00Z')
-        self.assertEqual(response_db.data[0]['all_day'], False)
-        self.assertEqual(response_db.data[0]['show_end_time'], True)
-        self.assertEqual(response_db.data[0]['comments'],
-                         '<a href="{}">{}</a> in {}'.format(course.website, course.title, course.room))
-        self.assertEqual(len(response_cached.data), len(response_db.data))
-        cached_event = [e for e in response_cached.data if e['id'] == response_db.data[0]['id']]
-        self.assertTrue(len(cached_event) == 1)
-        self.assertEqual(cached_event[0]['title'], response_db.data[0]['title'])
-        self.assertEqual(cached_event[0]['start'], response_db.data[0]['start'])
-        self.assertEqual(cached_event[0]['end'], response_db.data[0]['end'])
-        self.assertEqual(cached_event[0]['all_day'], response_db.data[0]['all_day'])
-        self.assertEqual(cached_event[0]['show_end_time'], response_db.data[0]['show_end_time'])
-        self.assertEqual(cached_event[0]['comments'], response_db.data[0]['comments'])
+            # THEN
+            self.assertEqual(_create_events_from_course_schedules_mock.call_count, 0)
+            self.assertEqual(len(response_cached.data), len(response_db.data))
+            cached_event = [e for e in response_cached.data if e['id'] == response_db.data[0]['id']]
+            self.assertTrue(len(cached_event) == 1)
+            self.assertEqual(cached_event[0]['title'], response_db.data[0]['title'])
+            self.assertEqual(cached_event[0]['start'], response_db.data[0]['start'])
+            self.assertEqual(cached_event[0]['end'], response_db.data[0]['end'])
+            self.assertEqual(cached_event[0]['all_day'], response_db.data[0]['all_day'])
+            self.assertEqual(cached_event[0]['show_end_time'], response_db.data[0]['show_end_time'])
+            self.assertEqual(cached_event[0]['comments'], response_db.data[0]['comments'])
 
-    @mock.patch('helium.planner.services.coursescheduleservice._create_events_from_course_schedules')
-    def test_course_schedule_cache_cleared_when_course_changed(self, _create_events_from_course_schedules_mock):
+    @mock.patch('helium.planner.services.coursescheduleservice.cache.get_many')
+    def test_course_schedule_cache_cleared_when_course_changed(self, get_many_mock):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -94,7 +110,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
         self.client.get(reverse('planner_resource_courseschedules_events',
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
-        self.assertEqual(_create_events_from_course_schedules_mock.call_count, 1)
+        self.assertEqual(get_many_mock.call_count, 0)
 
         # WHEN
         course.start_date = datetime.date(2017, 1, 2)
@@ -107,4 +123,4 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
-        self.assertEqual(_create_events_from_course_schedules_mock.call_count, 2)
+        self.assertEqual(get_many_mock.call_count, 0)

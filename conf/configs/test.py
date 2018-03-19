@@ -9,7 +9,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -77,7 +77,22 @@ if os.environ.get('TEST_DEBUG', 'False') == 'True':
 else:
     logging.disable(logging.ERROR)
 
-# Database configuration
+# Cache
+
+if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+    CACHES = {
+        'default': {
+            'BACKEND': 'helium.common.cache.heliumlocmem.HeliumLocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+else:
+    from conf.configs import deploy
+
+    SESSION_ENGINE = deploy.SESSION_ENGINE
+    CACHES = deploy.CACHES
+
+# Database
 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
     DATABASES = {
@@ -90,9 +105,6 @@ else:
     from conf.configs import deploy
 
     DATABASES = deploy.DATABASES
-
-    SESSION_ENGINE = deploy.SESSION_ENGINE
-    CACHES = deploy.CACHES
 
 # Static
 

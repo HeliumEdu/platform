@@ -13,7 +13,7 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def _get_comments(course):
 
 
 def _get_cache_prefix(course):
-    return "{}:{}:courseschedule:".format(course.get_user().pk, course.pk)
+    return "users:{}:courses:{}:coursescheduleevents:".format(course.get_user().pk, course.pk)
 
 
 def _get_events_from_cache(cached_keys):
@@ -141,6 +141,18 @@ def _create_events_from_course_schedules(course, course_schedules):
     return events
 
 
+def clear_cached_course_schedule(course):
+    """
+    For a given course, clear all cached keys for course schedule events.
+
+    :param course: The course to clear keys for.
+    """
+    cache_prefix = _get_cache_prefix(course)
+    cached_keys = cache.keys(cache_prefix + "*")
+
+    cache.delete_many(cached_keys)
+
+
 def course_schedules_to_events(course, course_schedules):
     """
     For the given course schedule model, generate an event for each class time within the courses's start/end window.
@@ -152,7 +164,7 @@ def course_schedules_to_events(course, course_schedules):
     events = []
 
     cached = False
-    cached_keys = cache.keys(_get_cache_prefix(course) + "*") if getattr(cache, "keys", None) else None
+    cached_keys = cache.keys(_get_cache_prefix(course) + "*")
     if cached_keys:
         events, cached = _get_events_from_cache(cached_keys)
 
@@ -160,18 +172,3 @@ def course_schedules_to_events(course, course_schedules):
         events = _create_events_from_course_schedules(course, course_schedules)
 
     return events
-
-
-def clear_cached_course_schedule(course):
-    """
-    For a given course, clear all cached keys for course schedule events.
-
-    :param course: The course to clear keys for.
-    """
-    if getattr(cache, "keys", None):
-        cache_prefix = _get_cache_prefix(course)
-        cached_keys = cache.keys(cache_prefix + "*")
-
-        cache.delete_many(cached_keys)
-    else:
-        cache.clear()

@@ -13,7 +13,7 @@ from helium.feed.tests.helpers import icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.3'
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase):
@@ -80,3 +80,32 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
         self.assertEqual(response.data[1]['comments'], 'all day event test')
         self.assertEqual(response.data[1]['user'], user.pk)
         self.assertEqual(response.data[1]['calendar_item_type'], enums.EXTERNAL)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_external_calendar_cached(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response_db = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+        with mock.patch('helium.feed.services.icalexternalcalendarservice._create_events_from_calendar') as \
+                _create_events_from_calendar:
+            response_cached = self.client.get(
+                reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+
+            # THEN
+            self.assertEqual(_create_events_from_calendar.call_count, 0)
+            self.assertEqual(len(response_db.data), len(response_cached.data))
+            self.assertEqual(response_db.data[0]['title'], response_cached.data[0]['title'])
+            self.assertEqual(response_db.data[0]['all_day'], response_cached.data[0]['all_day'])
+            self.assertEqual(response_db.data[0]['show_end_time'], response_cached.data[0]['show_end_time'])
+            self.assertEqual(response_db.data[0]['start'], response_cached.data[0]['start'])
+            self.assertEqual(response_db.data[0]['end'], response_cached.data[0]['end'])
+            self.assertEqual(response_db.data[0]['priority'], response_cached.data[0]['priority'])
+            self.assertEqual(response_db.data[0]['url'], response_cached.data[0]['url'])
+            self.assertEqual(response_db.data[0]['comments'], response_cached.data[0]['comments'])
+            self.assertEqual(response_db.data[0]['user'], response_cached.data[0]['user'])
+            self.assertEqual(response_db.data[0]['calendar_item_type'], response_cached.data[0]['calendar_item_type'])
