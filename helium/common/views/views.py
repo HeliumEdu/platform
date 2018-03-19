@@ -6,7 +6,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,8 @@ class HeliumAPIView(GenericAPIView):
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super(HeliumAPIView, self).finalize_response(request, response, *args, **kwargs)
+
+        # TODO: responses should have a Request-Cached-Response header set
 
         if self.__request_metrics:
             metricutils.request_stop(self.__request_metrics, response)
