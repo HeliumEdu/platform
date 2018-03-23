@@ -51,7 +51,6 @@ DEFAULT_INSTALLED_APPS = (
     'django.contrib.sitemaps',
     # Third-party modules
     'maintenance_mode',
-    'widget_tweaks',
     'pipeline',
     'rest_framework',
     'rest_framework.authtoken',
