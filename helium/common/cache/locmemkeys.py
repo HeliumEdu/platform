@@ -7,7 +7,7 @@ __copyright__ = "Copyright 2018, Helium Edu"
 __version__ = '1.4.3'
 
 
-class HeliumLocMemCache(LocMemCache):
+class LocMemKeysCache(LocMemCache):
     def keys(self, search):
         pattern = re.compile(self.make_key(search))
 

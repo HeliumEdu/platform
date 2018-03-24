@@ -80,12 +80,9 @@ else:
 # Cache
 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
-    CACHES = {
-        'default': {
-            'BACKEND': 'helium.common.cache.heliumlocmem.HeliumLocMemCache',
-            'LOCATION': 'unique-snowflake',
-        }
-    }
+    from conf.configs import dev
+
+    CACHES = dev.CACHES
 else:
     from conf.configs import deploy
 
@@ -95,12 +92,9 @@ else:
 # Database
 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.test.sqlite3'),
-        }
-    }
+    from conf.configs import dev
+
+    DATABASES = dev.DATABASES
 else:
     from conf.configs import deploy
 
