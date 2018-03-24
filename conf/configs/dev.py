@@ -90,7 +90,7 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
     CACHES = {
         'default': {
-            'BACKEND': 'helium.common.cache.heliumlocmem.HeliumLocMemCache',
+            'BACKEND': 'helium.common.cache.locmemkeys.LocMemKeysCache',
             'LOCATION': 'unique-snowflake',
         }
     }
