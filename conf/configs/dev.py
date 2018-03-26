@@ -75,7 +75,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        PROJECT_ID: {
+        str(PROJECT_ID): {
             'handlers': ['console'],
             'level': 'DEBUG',
         }
