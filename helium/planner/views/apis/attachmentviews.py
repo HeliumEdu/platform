@@ -14,7 +14,7 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         Manually specifying the POST parameters to show when OPTIONS is called, as they don't directly map to the
         serializer (which is used for GET and other operations).
         """
-        response = super(AttachmentsApiListView, self).options(request, *args, **kwargs)
+        response = super().options(request, *args, **kwargs)
 
         self.schema.modify_options_response(response)
 

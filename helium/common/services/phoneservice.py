@@ -9,7 +9,7 @@ from helium.common.utils.commonutils import HeliumError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def send_sms(phone, message):
 
 def verify_number(phone):
     try:
-        cleaned_phone = re.sub("[\(\)\-\+\s]", "", phone)
+        cleaned_phone = re.sub("[()\-+\s]", "", phone)
 
         logger.info("Asking Twilio to validate {}".format(cleaned_phone))
 

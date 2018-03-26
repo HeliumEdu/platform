@@ -6,7 +6,7 @@ from rest_framework.schemas import AutoSchema
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -31,4 +31,4 @@ class BaseIDSchema(AutoSchema):
             ),
         ]
 
-        super(BaseIDSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)

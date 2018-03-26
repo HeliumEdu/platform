@@ -1,15 +1,13 @@
-from rest_framework.test import APITestCase
+import datetime
+import json
+from urllib.parse import quote
 
 import pytz
 from dateutil import parser
-
-import datetime
-import json
-
-from urllib.parse import quote
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Event
@@ -17,7 +15,7 @@ from helium.planner.tests.helpers import eventhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 
 class TestCaseEventViews(APITestCase):

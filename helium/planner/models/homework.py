@@ -8,7 +8,7 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class Homework(BaseCalendar):
@@ -55,4 +55,4 @@ class Homework(BaseCalendar):
         if not self.category:
             self.category = Category.objects.get_uncategorized(self.course_id)
 
-        super(Homework, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)

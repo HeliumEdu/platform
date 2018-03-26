@@ -11,7 +11,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class TestCaseCourseGroupViews(APITestCase):
@@ -35,7 +35,8 @@ class TestCaseCourseGroupViews(APITestCase):
     def test_get_coursegroups(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         coursegrouphelper.given_course_group_exists(user1)
         coursegrouphelper.given_course_group_exists(user2)
         coursegrouphelper.given_course_group_exists(user2)
@@ -177,7 +178,8 @@ class TestCaseCourseGroupViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user2)
         average_grade = course_group.average_grade
         trend = course_group.trend

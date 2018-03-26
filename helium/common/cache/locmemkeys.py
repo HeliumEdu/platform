@@ -4,10 +4,15 @@ from django.core.cache.backends.locmem import LocMemCache
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 
 class LocMemKeysCache(LocMemCache):
+    """
+    Extends the generic in-memory cache to support the querying of keys, similar to how a Redis-based implementation
+    might similar support this.
+    """
+
     def keys(self, search):
         pattern = re.compile(self.make_key(search))
 

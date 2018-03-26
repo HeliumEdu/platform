@@ -12,7 +12,7 @@ from helium.feed.tests.helpers import externalcalendarhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class TestCaseExternalCalendarViews(APITestCase):
@@ -36,7 +36,8 @@ class TestCaseExternalCalendarViews(APITestCase):
     def test_get_externalcalendars(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         externalcalendarhelper.given_external_calendar_exists(user1)
         externalcalendarhelper.given_external_calendar_exists(user2)
         externalcalendarhelper.given_external_calendar_exists(user2)
@@ -143,7 +144,8 @@ class TestCaseExternalCalendarViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user2)
 
         # WHEN
