@@ -10,19 +10,23 @@
 <table cellpadding="0" cellspacing="0" width="100%">
     <tr>
         <td style="padding: 10px 0 30px 0;">
-            <table width="600px" style="margin-left: auto; margin-right: auto; border: 1px solid #cccccc; border-collapse: collapse;">
-                {% block heading %}<tr>
-                <td style="padding: 40px 0 10px 0; color: #153643; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;">
-                    <img src="{% static 'img/email_logo.png' %}" alt="Logo" width="300" height="125" style="display: block; margin-left: auto; margin-right: auto;"/>
-                </td>
-            </tr>{% endblock %}
+            <table width="600px"
+                   style="margin-left: auto; margin-right: auto; border: 1px solid #cccccc; border-collapse: collapse;">
+                {% block heading %}
+                    <tr>
+                        <td style="padding: 40px 0 10px 0; color: #153643; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;">
+                            <img src="{% static 'img/email_logo.png' %}" alt="Logo" width="300" height="125"
+                                 style="display: block; margin-left: auto; margin-right: auto;"/>
+                        </td>
+                    </tr>{% endblock %}
                 <tr>
                     <td bgcolor="#ffffff" style="padding: 40px 30px 10px 30px;">
                         <table cellpadding="0" cellspacing="0" width="100%">
                             <tr>
                                 <td style="color: #153643; font-family: Arial, sans-serif; font-size: 24px;">
                                     {% block greeting_pre %}{% endblock %}
-                                    <b style="display: inline; vertical-align: middle;">{% block greeting %}{% endblock %}</b>
+                                    <b style="display: inline; vertical-align: middle;">
+                                        {% block greeting %}{% endblock %}</b>
                                 </td>
                             </tr>
                             {% block content %}{% endblock %}
@@ -48,23 +52,26 @@
                                     <table cellpadding="0" cellspacing="0">
                                         <tr>
                                             <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; padding-right: 3px;">
-                                                <a href="http://www.twitter.com/heliumstudents" style="color: #ffffff;" target="_blank">
+                                                <a href="http://www.twitter.com/heliumstudents" style="color: #ffffff;"
+                                                   target="_blank">
                                                     <img src="{% static 'img/twitter.png' %}" alt="Twitter" width="38"
-                                                    height="38" style="display: block;" />
+                                                         height="38" style="display: block;"/>
                                                 </a>
                                             </td>
                                             <td style="font-size: 0; line-height: 0;" width="20">&nbsp;</td>
                                             <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; padding-right: 3px;">
-                                                <a href="http://www.facebook.com/heliumstudents" style="color: #ffffff;" target="_blank">
+                                                <a href="http://www.facebook.com/heliumstudents" style="color: #ffffff;"
+                                                   target="_blank">
                                                     <img src="{% static 'img/facebook.png' %}" alt="Facebook" width="38"
-                                                    height="38" style="display: block;" />
+                                                         height="38" style="display: block;"/>
                                                 </a>
                                             </td>
                                             <td style="font-size: 0; line-height: 0;" width="20">&nbsp;</td>
                                             <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; padding-right: 3px;">
-                                                <a href="http://blog.heliumedu.com" style="color: #ffffff;" target="_blank">
+                                                <a href="http://blog.heliumedu.com" style="color: #ffffff;"
+                                                   target="_blank">
                                                     <img src="{% static 'img/tumblr.png' %}" alt="Blog" width="38"
-                                                    height="38" style="display: block;" />
+                                                         height="38" style="display: block;"/>
                                                 </a>
                                             </td>
                                         </tr>

@@ -1,13 +1,12 @@
 import logging
 
-from django.core.cache import cache
 from rest_framework import serializers
 
 from helium.planner.models import CourseSchedule
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 

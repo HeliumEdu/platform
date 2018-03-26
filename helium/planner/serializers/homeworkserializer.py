@@ -9,7 +9,7 @@ from helium.planner.tasks import recalculate_category_grade
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
                                                                                   validated_data['category'] else None
 
-        instance = super(HomeworkSerializer, self).update(instance, validated_data)
+        instance = super().update(instance, validated_data)
 
         if old_category:
             recalculate_category_grade(old_category.pk)
