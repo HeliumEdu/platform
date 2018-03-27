@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.4'
 
 
 class PlannerConfig(AppConfig):
@@ -11,4 +11,4 @@ class PlannerConfig(AppConfig):
 
     def ready(self):
         # noinspection PyUnresolvedReferences
-        import helium.planner.signals
+        import helium.planner.handlers
