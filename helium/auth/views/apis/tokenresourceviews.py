@@ -1,7 +1,7 @@
 import logging
 
-from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth import get_user_model
+from django.contrib.auth.signals import user_logged_in
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -11,7 +11,7 @@ from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 

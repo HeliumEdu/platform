@@ -5,9 +5,11 @@ Settings common to all deployment methods.
 import os
 import socket
 
+from conf.settings import PROJECT_ID
+
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 # ############################
 # Project configuration
@@ -57,11 +59,11 @@ DEFAULT_INSTALLED_APPS = (
     'django_filters',
     'corsheaders',
     # Project modules
-    'helium.common',
     'helium.auth',
-    'helium.planner',
+    'helium.common',
     'helium.feed',
     'helium.importexport',
+    'helium.planner',
 )
 
 DEFAULT_MIDDLEWARE = (
@@ -113,7 +115,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = 'https://heliumedu.uservoice.com'
+SUPPORT_REDIRECT_URL = os.environ.get('PROJECT_SUPPORT_URL')
 
 # Maintenance mode
 
@@ -234,7 +236,7 @@ PIPELINE = {
             'source_filenames': (
                 'css/error.css',
             ),
-            'output_filename': 'css/helium_error_{}.min.css'.format(PROJECT_VERSION),
+            'output_filename': 'css/{}_error_{}.min.css'.format(PROJECT_ID, PROJECT_VERSION),
         },
     },
 }

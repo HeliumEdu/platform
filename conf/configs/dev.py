@@ -5,11 +5,12 @@ Settings specific to a development environemnt using Django's `runserver` comman
 import os
 import warnings
 
+from conf.settings import PROJECT_ID
 from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -74,7 +75,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'helium': {
+        str(PROJECT_ID): {
             'handlers': ['console'],
             'level': 'DEBUG',
         }

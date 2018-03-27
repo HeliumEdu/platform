@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PLATFORM_VENV=${PLATFORM_VENV:=${DIR}/../.venv}
+
+make install -C ${DIR}/..
+make migrate -C ${DIR}/..
+
+source ${PLATFORM_VENV}/bin/activate
+
+python ${DIR}/../manage.py runserver

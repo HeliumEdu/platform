@@ -9,7 +9,7 @@ from helium.common.tasks import send_text
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         else:
             self.__process_phone_changing(instance, validated_data)
 
-        super(UserProfileSerializer, self).update(instance, validated_data)
+        super().update(instance, validated_data)
 
         return instance
 

@@ -2,7 +2,7 @@ from django import forms
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__version__ = '1.4.4'
 
 
 class UserDeleteForm(forms.Form):
@@ -14,7 +14,7 @@ class UserDeleteForm(forms.Form):
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
-        super(UserDeleteForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean_password(self):
         password = self.cleaned_data.get("password")

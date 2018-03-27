@@ -9,7 +9,7 @@ from helium.planner.utils.attachmentutils import get_path_for_attachment
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 
 class AttachmentError(HeliumError):
@@ -58,7 +58,7 @@ class Attachment(BaseModel):
         """
         self.size = self.attachment.size if self.attachment else 0
 
-        super(Attachment, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 @receiver(post_delete, sender=Attachment)
