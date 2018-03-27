@@ -1,14 +1,12 @@
-from rest_framework.test import APITestCase
-
+import datetime
+import json
+from datetime import timedelta
 from urllib.parse import quote
 
-import json
-import datetime
-from datetime import timedelta
-
 from django.urls import reverse
-from rest_framework import status
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
@@ -17,7 +15,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 
 class TestCaseReminderViews(APITestCase):

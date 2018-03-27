@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, catego
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class TestCaseCategoryViews(APITestCase):
@@ -40,7 +40,8 @@ class TestCaseCategoryViews(APITestCase):
     def test_get_categories(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -212,7 +213,8 @@ class TestCaseCategoryViews(APITestCase):
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)

@@ -8,7 +8,7 @@ from helium.planner.models.category import Category
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -49,4 +49,4 @@ class CategorySerializer(serializers.ModelSerializer):
         if 'color' not in validated_data:
             validated_data['color'] = random.choice(enums.ALLOWED_COLORS)[0]
 
-        return super(CategorySerializer, self).create(validated_data)
+        return super().create(validated_data)

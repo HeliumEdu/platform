@@ -8,7 +8,7 @@ from helium.planner.managers.courseschedulemanager import CourseScheduleManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 
 class CourseSchedule(BaseModel):
@@ -16,8 +16,8 @@ class CourseSchedule(BaseModel):
                                               'on (week starts on Sunday).',
                                     max_length=7, default='0000000', validators=[
             validators.RegexValidator(r'^[0-1]+$',
-                                      'Seven booleans (0 or 1) indicating which days of the week the course is on (week '
-                                      'starts on Sunday).',
+                                      'Seven booleans (0 or 1) indicating which days of the week the course is on '
+                                      '(week starts on Sunday).',
                                       'invalid'),
             validators.MinLengthValidator(7,
                                           'Seven booleans (0 or 1) indicating which days of the week the course is on '

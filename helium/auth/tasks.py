@@ -4,11 +4,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from conf.celery import app
-from helium.common.utils import commonutils, metricutils
+from helium.common.utils import commonutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 

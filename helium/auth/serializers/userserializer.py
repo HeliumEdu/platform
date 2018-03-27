@@ -12,7 +12,7 @@ from helium.importexport.tasks import import_example_schedule
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         old_password = validated_data.pop('old_password', None)
         password = validated_data.pop('password', None)
-        instance = super(UserSerializer, self).update(instance, validated_data)
+        instance = super().update(instance, validated_data)
 
         if old_password and password:
             instance.set_password(password)
@@ -81,7 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        instance = super(UserSerializer, self).create(validated_data)
+        instance = super().create(validated_data)
 
         instance.set_password(password)
         instance.save()

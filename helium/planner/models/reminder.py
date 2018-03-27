@@ -9,7 +9,7 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 
 class Reminder(BaseModel):
@@ -64,4 +64,4 @@ class Reminder(BaseModel):
             self.start_of_range = calendar_item.start - timedelta(
                 **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
 
-        super(Reminder, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
