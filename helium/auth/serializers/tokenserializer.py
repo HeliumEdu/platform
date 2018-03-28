@@ -14,10 +14,12 @@ logger = logging.getLogger(__name__)
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(help_text="The username or email for the user.",
-                                     label="Username", write_only=True)
+                                     label="Username")
+
     password = serializers.CharField(help_text="The password for the user.",
                                      label="Password", write_only=True, style={'input_type': 'password'},
                                      trim_whitespace=False)
+
     token = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
@@ -32,6 +34,7 @@ class TokenSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Oops! We don\'t recognize that account. Check to make sure you '
                                                   'entered your credentials properly.', code='authorization')
 
+            attrs['username'] = username
             attrs['user'] = user
 
             if not attrs['user'].is_active:
