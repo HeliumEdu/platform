@@ -12,7 +12,7 @@ from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class AdminUserCreationForm(UserCreationForm):
@@ -31,7 +31,7 @@ class AdminUserCreationForm(UserCreationForm):
         return password1
 
     def save(self, commit=True):
-        super(UserCreationForm, self).save(commit)
+        super().save(commit)
 
         self.instance.is_active = True
 
@@ -121,6 +121,7 @@ class TokenAdmin(ModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
 
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)

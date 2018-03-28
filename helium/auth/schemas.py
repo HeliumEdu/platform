@@ -43,7 +43,7 @@ class UserRegisterSchema(AutoSchema):
             ),
         ]
 
-        super(UserRegisterSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)
 
 
 class UserVerifySchema(AutoSchema):
@@ -68,7 +68,7 @@ class UserVerifySchema(AutoSchema):
             ),
         ]
 
-        super(UserVerifySchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)
 
 
 class UserForgotSchema(AutoSchema):
@@ -86,4 +86,4 @@ class UserForgotSchema(AutoSchema):
             ),
         ]
 
-        super(UserForgotSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)

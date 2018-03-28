@@ -17,7 +17,7 @@ from builtins import str
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__version__ = '1.4.4'
 
 # Are we running on the dev server
 DEV_SERVER = False
@@ -46,10 +46,15 @@ else:
 
     dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), True)
 
+# Initialize some global settings
+locals()['DEV_SERVER'] = DEV_SERVER
+PROJECT_ID = os.environ.get('PROJECT_ID')
+locals()['PROJECT_ID'] = PROJECT_ID
+
 # Load conf properties into the local scope
 print('Using conf.configs.{}'.format(conf))
-common_conf_module = __import__('conf.configs.common', globals(), locals(), 'helium')
-conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), 'helium')
+common_conf_module = __import__('conf.configs.common', globals(), locals(), [PROJECT_ID])
+conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), [PROJECT_ID])
 
 # Load common conf properties into the local scope
 for setting in dir(common_conf_module):
@@ -60,8 +65,6 @@ for setting in dir(common_conf_module):
 for setting in dir(conf_module):
     if setting == setting.upper():
         locals()[setting] = getattr(conf_module, setting)
-
-locals()['DEV_SERVER'] = DEV_SERVER
 
 # Special configuration if we are using SQLite
 if conf_module.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':

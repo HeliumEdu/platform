@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.4'
 
 
 class TestCaseAuthToken(APITestCase):
@@ -56,6 +56,23 @@ class TestCaseAuthToken(APITestCase):
         # WHEN
         data = {
             'username': user.email,
+            'password': 'test_pass_1!'
+        }
+        response = self.client.post(reverse('auth_token_resource_obtain'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+
+    def test_token_with_whitespace_success(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # WHEN
+        data = {
+            'username': '  {}  '.format(user.email),
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_resource_obtain'),

@@ -9,14 +9,14 @@ from helium.planner.models import Attachment, Course, Category, Material
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
 
 class AttachmentListSchema(AutoSchema):
     def get_link(self, path, method, base_url):
-        link = super(AttachmentListSchema, self).get_link(path, method, base_url)
+        link = super().get_link(path, method, base_url)
 
         if method == 'POST':
             fields = [
@@ -77,7 +77,7 @@ class AttachmentListSchema(AutoSchema):
 
 class AttachmentDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(AttachmentDetailSchema, self).__init__('attachment')
+        super().__init__('attachment')
 
 
 class SubCourseGroupListSchema(AutoSchema):
@@ -100,12 +100,12 @@ class SubCourseGroupListSchema(AutoSchema):
             ),
         ]
 
-        super(SubCourseGroupListSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)
 
 
 class CourseGroupDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(CourseGroupDetailSchema, self).__init__('course group')
+        super().__init__('course group')
 
 
 class SubCourseListSchema(SubCourseGroupListSchema):
@@ -123,32 +123,32 @@ class SubCourseListSchema(SubCourseGroupListSchema):
             ),
         ]
 
-        super(SubCourseListSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)
 
 
 class CourseDetailSchema(BaseIDSchema, SubCourseGroupListSchema):
     def __init__(self):
-        super(CourseDetailSchema, self).__init__('course')
+        super().__init__('course')
 
 
 class CourseScheduleDetailSchema(BaseIDSchema, SubCourseListSchema):
     def __init__(self):
-        super(CourseScheduleDetailSchema, self).__init__('course schedule')
+        super().__init__('course schedule')
 
 
 class CategoryDetailSchema(BaseIDSchema, SubCourseListSchema):
     def __init__(self):
-        super(CategoryDetailSchema, self).__init__('category')
+        super().__init__('category')
 
 
 class EventDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(EventDetailSchema, self).__init__('event')
+        super().__init__('event')
 
 
 class HomeworkDetailSchema(BaseIDSchema, SubCourseListSchema):
     def __init__(self):
-        super(HomeworkDetailSchema, self).__init__('homework')
+        super().__init__('homework')
 
 
 class SubMaterialGroupListSchema(AutoSchema):
@@ -166,19 +166,19 @@ class SubMaterialGroupListSchema(AutoSchema):
             ),
         ]
 
-        super(SubMaterialGroupListSchema, self).__init__(manual_fields=manual_fields)
+        super().__init__(manual_fields=manual_fields)
 
 
 class MaterialGroupDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(MaterialGroupDetailSchema, self).__init__('material group')
+        super().__init__('material group')
 
 
 class MaterialDetailSchema(BaseIDSchema, SubMaterialGroupListSchema):
     def __init__(self):
-        super(MaterialDetailSchema, self).__init__('material')
+        super().__init__('material')
 
 
 class ReminderDetailSchema(BaseIDSchema):
     def __init__(self):
-        super(ReminderDetailSchema, self).__init__('reminder')
+        super().__init__('reminder')

@@ -2,14 +2,13 @@ import logging
 
 from rest_framework import serializers
 
+from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 
-from helium.feed.models import ExternalCalendar
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 

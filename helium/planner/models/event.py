@@ -7,7 +7,7 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.4'
 
 
 class Event(BaseCalendar):
@@ -25,7 +25,7 @@ class Event(BaseCalendar):
         self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']
 
         kwargs.pop('calendar_item_type', None)
-        super(Event, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_user(self):
         return self.user

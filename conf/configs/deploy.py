@@ -6,12 +6,13 @@ import os
 
 from boto.s3.connection import OrdinaryCallingFormat
 
+from conf.settings import PROJECT_ID
 from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PROJECT_NAME, ADMIN_EMAIL_ADDRESS, \
     DEBUG, PIPELINE
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -62,7 +63,7 @@ LOGGING = {
         'django_log': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/helium/django.log',
+            'filename': '/var/log/{}/django.log'.format(PROJECT_ID),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -72,26 +73,18 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'include_html': True,
         },
-        'platform_common_log': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/helium/platform_common.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
         'platform_auth_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/helium/platform_auth.log',
+            'filename': '/var/log/{}/platform_auth.log'.format(PROJECT_ID),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_planner_log': {
+        'platform_common_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/helium/platform_planner.log',
+            'filename': '/var/log/{}/platform_common.log'.format(PROJECT_ID),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -99,7 +92,23 @@ LOGGING = {
         'platform_feed_log': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/helium/platform_feed.log',
+            'filename': '/var/log/{}/platform_feed.log'.format(PROJECT_ID),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
+        'platform_importexport_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_importexport.log'.format(PROJECT_ID),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
+        'platform_planner_log': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/platform_planner.log'.format(PROJECT_ID),
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -111,22 +120,26 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'helium.auth': {
+            'handlers': ['platform_auth_log', 'mail_admins'],
+            'level': 'INFO',
+        },
         'helium.common': {
             'handlers': ['platform_common_log', 'mail_admins'],
             'level': 'INFO',
         },
-        'helium.auth': {
-            'handlers': ['platform_auth_log', 'mail_admins'],
+        'helium.feed': {
+            'handlers': ['platform_feed_log', 'mail_admins'],
+            'level': 'INFO',
+        },
+        'helium.importexport': {
+            'handlers': ['platform_importexport_log', 'mail_admins'],
             'level': 'INFO',
         },
         'helium.planner': {
             'handlers': ['platform_planner_log', 'mail_admins'],
             'level': 'INFO',
         },
-        'helium.feed': {
-            'handlers': ['platform_feed_log', 'mail_admins'],
-            'level': 'INFO',
-        }
     }
 }
 

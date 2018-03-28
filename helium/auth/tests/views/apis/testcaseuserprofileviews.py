@@ -11,7 +11,7 @@ from helium.common.services.phoneservice import HeliumPhoneError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.4'
 
 
 class TestCaseUserProfileViews(APITestCase):
@@ -30,17 +30,16 @@ class TestCaseUserProfileViews(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @mock.patch('helium.common.tasks.send_sms')
-    @mock.patch('helium.auth.serializers.userprofileserializer.verify_number')
+    @mock.patch('helium.auth.serializers.userprofileserializer.verify_number', return_value='+15555555555')
     def test_put_user_profile(self, mock_verify_number, mock_send_sms):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertIsNone(user.profile.phone)
         self.assertIsNone(user.profile.phone_changing)
-        mock_verify_number.return_value = '+15555555555'
 
         # WHEN
         data = {
-            'phone': '5555555555',
+            'phone': '(555) 555-5555',
         }
         response = self.client.put(reverse('auth_user_profile_detail'), json.dumps(data),
                                    content_type='application/json')

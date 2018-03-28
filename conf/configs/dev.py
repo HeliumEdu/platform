@@ -1,15 +1,16 @@
 """
-Settings specific to a development environemnt using Django's `runserver` command, reading values from `.env`.
+Settings specific to a development environment using Django's `runserver` command, reading values from `.env`.
 """
 
 import os
 import warnings
 
+from conf.settings import PROJECT_ID
 from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -74,7 +75,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'helium': {
+        str(PROJECT_ID): {
             'handlers': ['console'],
             'level': 'DEBUG',
         }
@@ -90,7 +91,7 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
     CACHES = {
         'default': {
-            'BACKEND': 'helium.common.cache.heliumlocmem.HeliumLocMemCache',
+            'BACKEND': 'helium.common.cache.locmemkeys.LocMemKeysCache',
             'LOCATION': 'unique-snowflake',
         }
     }

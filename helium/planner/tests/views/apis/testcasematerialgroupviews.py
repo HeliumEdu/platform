@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import materialgrouphelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.4'
 
 
 class TestCaseMaterialGroupViews(APITestCase):
@@ -34,7 +34,8 @@ class TestCaseMaterialGroupViews(APITestCase):
     def test_get_materialgroups(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         materialgrouphelper.given_material_group_exists(user1)
         materialgrouphelper.given_material_group_exists(user2)
         materialgrouphelper.given_material_group_exists(user2)
@@ -135,7 +136,8 @@ class TestCaseMaterialGroupViews(APITestCase):
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
         material_group = materialgrouphelper.given_material_group_exists(user2)
 
         # WHEN

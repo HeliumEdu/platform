@@ -14,7 +14,7 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ class ExportResourceView(ViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
 
     def export_data(self, request, *args, **kwargs):
-
         user = self.request.user
 
         serializer = ExportSerializer({
