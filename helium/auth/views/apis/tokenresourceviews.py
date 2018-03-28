@@ -30,7 +30,7 @@ class ObtainTokenResourceView(HeliumAPIView):
 
         serializer.is_valid(raise_exception=True)
 
-        user = get_user_model().objects.get_by_natural_key(request.data['username'].strip())
+        user = get_user_model().objects.get_by_natural_key(serializer.data['username'])
         user_logged_in.send(sender=user.__class__, request=request, user=user)
 
         return Response(serializer.data)
