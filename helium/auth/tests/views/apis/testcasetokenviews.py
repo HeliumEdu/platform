@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.4'
 
 
 class TestCaseAuthToken(APITestCase):
@@ -20,7 +20,7 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         data = {
-            'username': user.get_username(),
+            'username': user.get_username() + '  ',
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_resource_obtain'),
