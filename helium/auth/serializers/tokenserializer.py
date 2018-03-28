@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.1'
+__version__ = '1.4.4'
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class TokenSerializer(serializers.Serializer):
     token = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
-        username = attrs.get('username')
+        username = attrs.get('username').strip()
         password = attrs.get('password')
 
         if username and password:
