@@ -109,11 +109,6 @@ class TokenAdmin(ModelAdmin):
     ordering = ('user__username',)
     readonly_fields = ('user', 'created')
 
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('user',)
-        return self.readonly_fields
-
     def get_user(self, obj):
         if obj.user:
             return obj.user.get_username()
