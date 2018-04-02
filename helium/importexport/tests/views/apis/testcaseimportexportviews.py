@@ -342,4 +342,5 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
         homework = Homework.objects.all()[0]
-        self.assertEqual(homework.start.date(), homework.course.start_date + datetime.timedelta(days=11))
+        self.assertEqual(homework.start.date(), homework.course.start_date + datetime.timedelta(
+            days=(homework.start.date() - homework.course.start_date).days))
