@@ -12,7 +12,7 @@ from helium.common.admin import admin_site, BaseModelAdmin
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.5'
 
 
 class AdminUserCreationForm(UserCreationForm):
@@ -65,11 +65,11 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
 
 class UserSettingsAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin']
+    list_display = ['time_zone', 'default_view', 'receive_emails_from_admin', 'get_user']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
-    readonly_fields = ('user', 'created_at', 'updated_at')
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         if obj.user:
@@ -85,10 +85,10 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 
 class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'phone', 'phone_verified']
+    list_display = ['phone', 'phone_verified', 'get_user']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
-    readonly_fields = ('user', 'created_at', 'updated_at')
+    readonly_fields = ('user',)
 
     def has_add_permission(self, request):
         return False
@@ -104,9 +104,10 @@ class UserProfileAdmin(BaseModelAdmin):
 
 
 class TokenAdmin(ModelAdmin):
-    list_display = ['get_user', 'key']
+    list_display = ['key', 'created', 'get_user']
     search_fields = ('key', 'user__email', 'user__username')
     ordering = ('user__username',)
+    readonly_fields = ('user', 'created')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
