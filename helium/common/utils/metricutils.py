@@ -20,7 +20,7 @@ if settings.DATADOG_API_KEY:
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.6'
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
