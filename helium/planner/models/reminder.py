@@ -9,7 +9,7 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.6'
 
 
 class Reminder(BaseModel):
