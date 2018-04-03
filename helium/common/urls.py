@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 from django.views.generic import RedirectView
 from rest_framework.documentation import include_docs_urls
 
@@ -14,8 +14,8 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/docs'), name='home'),
 
     # URLs for auto-generated resources
-    url(r'^admin/', include(admin_site.urls)),
-    url(r'^docs/', include_docs_urls(title='Helium API Documentation')),
+    url(r'^admin/', admin_site.urls, name='admin'),
+    url(r'^docs/', include_docs_urls(title='Helium API Documentation'), name='docs'),
 
     ##############################
     # Unauthenticated URLs
