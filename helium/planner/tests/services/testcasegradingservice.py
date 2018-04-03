@@ -207,7 +207,7 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(float(course_group.average_grade), 78.2609)
         self.assertEqual(float(course.current_grade), 78.2609)
         # 60/110 total points
-        self.assertEqual(float(category1.average_grade), 54.5455)
+        self.assertEqual(float(category1.average_grade), 54.5454)
         # 100/150 total points
         self.assertEqual(float(category2.average_grade), 66.6667)
         # 200/200 total points

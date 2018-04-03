@@ -3,9 +3,9 @@ import json
 from urllib.parse import quote
 
 from dateutil import parser
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
