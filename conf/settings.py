@@ -17,7 +17,7 @@ from builtins import str
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.6'
 
 # Are we running on the dev server
 DEV_SERVER = False
@@ -65,10 +65,3 @@ for setting in dir(common_conf_module):
 for setting in dir(conf_module):
     if setting == setting.upper():
         locals()[setting] = getattr(conf_module, setting)
-
-# Special configuration if we are using SQLite
-if conf_module.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-    from django.db import connection
-
-    connection.cursor()
-    connection.connection.text_factory = lambda x: str(x)

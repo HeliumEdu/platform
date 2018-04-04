@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from helium.planner.views.apis.attachmentviews import AttachmentsApiListView, AttachmentsApiDetailView
 from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, CourseGroupCourseCategoriesApiListView, \
@@ -22,84 +22,84 @@ from helium.planner.views.apis.reminderviews import RemindersApiListView, Remind
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.6'
 
 urlpatterns = [
     ##############################
     # Authenticated URLs
     ##############################
     # Resource shortcuts
-    url(r'^planner/grades/$', GradesApiResourceView.as_view(), name='planner_resource_grades'),
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/events/$',
-        CourseScheduleAsEventsResourceView.as_view(), name='planner_resource_courseschedules_events'),
+    path('planner/grades/', GradesApiResourceView.as_view(), name='planner_resource_grades'),
+    path('planner/coursegroups/<int:course_group>/courses/<int:course>/courseschedules/events/',
+         CourseScheduleAsEventsResourceView.as_view(), name='planner_resource_courseschedules_events'),
 
     # CourseGroup
-    url(r'^planner/coursegroups/$', CourseGroupsApiListView.as_view(), name='planner_coursegroups_list'),
-    url(r'^planner/coursegroups/(?P<pk>[0-9]+)/$', CourseGroupsApiDetailView.as_view(),
-        name='planner_coursegroups_detail'),
+    path('planner/coursegroups/', CourseGroupsApiListView.as_view(), name='planner_coursegroups_list'),
+    path('planner/coursegroups/<int:pk>/', CourseGroupsApiDetailView.as_view(),
+         name='planner_coursegroups_detail'),
 
     # Course
-    url(r'^planner/courses/$', UserCoursesApiListView.as_view(), name='planner_courses_list'),
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/$', CourseGroupCoursesApiListView.as_view(),
-        name='planner_coursegroups_courses_list'),
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<pk>[0-9]+)/$',
-        CourseGroupCoursesApiDetailView.as_view(),
-        name='planner_coursegroups_courses_detail'),
+    path('planner/courses/', UserCoursesApiListView.as_view(), name='planner_courses_list'),
+    path('planner/coursegroups/<int:course_group>/courses/', CourseGroupCoursesApiListView.as_view(),
+         name='planner_coursegroups_courses_list'),
+    path('planner/coursegroups/<int:course_group>/courses/<int:pk>/',
+         CourseGroupCoursesApiDetailView.as_view(),
+         name='planner_coursegroups_courses_detail'),
 
     # CourseSchedule
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/$',
-        CourseGroupCourseCourseSchedulesApiListView.as_view(),
-        name='planner_coursegroups_courses_courseschedules_list'),
-    url(
-        r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/courseschedules/(?P<pk>[0-9]+)/$',
+    path('planner/coursegroups/<int:course_group>/courses/<int:course>/courseschedules/',
+         CourseGroupCourseCourseSchedulesApiListView.as_view(),
+         name='planner_coursegroups_courses_courseschedules_list'),
+    path(
+        'planner/coursegroups/<int:course_group>/courses/<int:course>/courseschedules/<int:pk>/',
         CourseGroupCourseCourseSchedulesApiDetailView.as_view(),
         name='planner_coursegroups_courses_courseschedules_detail'),
 
     # Category
-    url(r'^planner/categories/$', UserCategoriesApiListView.as_view(), name='planner_categories_list'),
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/categories/$',
-        CourseGroupCourseCategoriesApiListView.as_view(),
-        name='planner_coursegroups_courses_categories_list'),
-    url(
-        r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/categories/(?P<pk>[0-9]+)/$',
+    path('planner/categories/', UserCategoriesApiListView.as_view(), name='planner_categories_list'),
+    path('planner/coursegroups/<int:course_group>/courses/<int:course>/categories/',
+         CourseGroupCourseCategoriesApiListView.as_view(),
+         name='planner_coursegroups_courses_categories_list'),
+    path(
+        'planner/coursegroups/<int:course_group>/courses/<int:course>/categories/<int:pk>/',
         CourseGroupCourseCategoriesApiDetailView.as_view(),
         name='planner_coursegroups_courses_categories_detail'),
 
     # Attachment
-    url(r'^planner/attachments/$', AttachmentsApiListView.as_view(), name='planner_attachments_list'),
-    url(r'^planner/attachments/(?P<pk>[0-9]+)/$', AttachmentsApiDetailView.as_view(),
-        name='planner_attachments_detail'),
+    path('planner/attachments/', AttachmentsApiListView.as_view(), name='planner_attachments_list'),
+    path('planner/attachments/<int:pk>/', AttachmentsApiDetailView.as_view(),
+         name='planner_attachments_detail'),
 
     # MaterialGroup
-    url(r'^planner/materialgroups/$', MaterialGroupsApiListView.as_view(), name='planner_materialgroups_list'),
-    url(r'^planner/materialgroups/(?P<pk>[0-9]+)/$', MaterialGroupsApiDetailView.as_view(),
-        name='planner_materialgroups_detail'),
+    path('planner/materialgroups/', MaterialGroupsApiListView.as_view(), name='planner_materialgroups_list'),
+    path('planner/materialgroups/<int:pk>/', MaterialGroupsApiDetailView.as_view(),
+         name='planner_materialgroups_detail'),
 
     # Material
-    url(r'^planner/materials/$', UserMaterialsApiListView.as_view(), name='planner_materials_list'),
-    url(r'^planner/materialgroups/(?P<material_group>[0-9]+)/materials/$',
-        MaterialGroupMaterialsApiListView.as_view(),
-        name='planner_materialgroups_materials_list'),
-    url(r'^planner/materialgroups/(?P<material_group>[0-9]+)/materials/(?P<pk>[0-9]+)/$',
-        MaterialGroupMaterialsApiDetailView.as_view(),
-        name='planner_materialgroups_materials_detail'),
+    path('planner/materials/', UserMaterialsApiListView.as_view(), name='planner_materials_list'),
+    path('planner/materialgroups/<int:material_group>/materials/',
+         MaterialGroupMaterialsApiListView.as_view(),
+         name='planner_materialgroups_materials_list'),
+    path('planner/materialgroups/<int:material_group>/materials/<int:pk>/',
+         MaterialGroupMaterialsApiDetailView.as_view(),
+         name='planner_materialgroups_materials_detail'),
 
     # Event
-    url(r'^planner/events/$', EventsApiListView.as_view(), name='planner_events_list'),
-    url(r'^planner/events/(?P<pk>[0-9]+)/$', EventsApiDetailView.as_view(), name='planner_events_detail'),
+    path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
+    path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
 
     # Homework
-    url(r'^planner/homework/$', UserHomeworkApiListView.as_view(), name='planner_homework_list'),
-    url(r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/$',
-        CourseGroupCourseHomeworkApiListView.as_view(),
-        name='planner_coursegroups_courses_homework_list'),
-    url(
-        r'^planner/coursegroups/(?P<course_group>[0-9]+)/courses/(?P<course>[0-9]+)/homework/(?P<pk>[0-9]+)/$',
+    path('planner/homework/', UserHomeworkApiListView.as_view(), name='planner_homework_list'),
+    path('planner/coursegroups/<int:course_group>/courses/<int:course>/homework/',
+         CourseGroupCourseHomeworkApiListView.as_view(),
+         name='planner_coursegroups_courses_homework_list'),
+    path(
+        'planner/coursegroups/<int:course_group>/courses/<int:course>/homework/<int:pk>/',
         CourseGroupCourseHomeworkApiDetailView.as_view(),
         name='planner_coursegroups_courses_homework_detail'),
 
     # Reminder
-    url(r'^planner/reminders/$', RemindersApiListView.as_view(), name='planner_reminders_list'),
-    url(r'^planner/reminders/(?P<pk>[0-9]+)/$', RemindersApiDetailView.as_view(),
-        name='planner_reminders_detail'),
+    path('planner/reminders/', RemindersApiListView.as_view(), name='planner_reminders_list'),
+    path('planner/reminders/<int:pk>/', RemindersApiDetailView.as_view(),
+         name='planner_reminders_detail'),
 ]

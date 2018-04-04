@@ -9,7 +9,7 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.6'
 
 
 class Reminder(BaseModel):
@@ -38,7 +38,7 @@ class Reminder(BaseModel):
     event = models.ForeignKey('Event', help_text='The event with which to associate.',
                               related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', on_delete=models.CASCADE)
 
     objects = ReminderManager()
 
