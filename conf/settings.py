@@ -13,11 +13,9 @@ All configuration files first read `common.py` before applying deployment-specif
 import os
 import sys
 
-from builtins import str
-
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__version__ = '1.4.7'
 
 # Are we running on the dev server
 DEV_SERVER = False
