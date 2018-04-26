@@ -68,6 +68,14 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
+        'health_check_log': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/health_check.log'.format(PROJECT_ID),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -119,6 +127,10 @@ LOGGING = {
             'handlers': ['django_log', 'mail_admins'],
             'level': 'ERROR',
             'propagate': False,
+        },
+        'health-check': {
+            'handlers': ['health_check_log', 'mail_admins'],
+            'level': 'ERROR',
         },
         'helium.auth': {
             'handlers': ['platform_auth_log', 'mail_admins'],
@@ -187,6 +199,7 @@ else:
     # Storages
     INSTALLED_APPS += (
         'storages',
+        'health_check.contrib.s3boto_storage',
     )
 
     # Static

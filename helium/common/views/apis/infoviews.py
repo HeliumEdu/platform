@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class InfoResourceView(ViewSet):
     """
     info:
-    Return useful information about the app.
+    Return version and configuration information about the app.
     """
 
     def info(self, request, *args, **kwargs):
