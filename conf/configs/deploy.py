@@ -129,7 +129,7 @@ LOGGING = {
             'propagate': False,
         },
         'health-check': {
-            'handlers': ['health_check_log', 'mail_admins'],
+            'handlers': ['health_check_log'],
             'level': 'ERROR',
         },
         'helium.auth': {
