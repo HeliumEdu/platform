@@ -82,7 +82,7 @@ directions above), you should have the `ENVIRONMENT` environment variable set to
 Now you're all set! To start the development server, execute:
 
 ```
-python manage.py runserver
+bin/runserver
 ```
 
 A development server will be started at http://localhost:8000.

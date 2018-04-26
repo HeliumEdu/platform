@@ -12,7 +12,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.9'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -68,6 +68,14 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
+        'health_check_log': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/{}/health_check.log'.format(PROJECT_ID),
+            'maxBytes': 50000000,
+            'backupCount': 3,
+            'formatter': 'standard',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -119,6 +127,10 @@ LOGGING = {
             'handlers': ['django_log', 'mail_admins'],
             'level': 'ERROR',
             'propagate': False,
+        },
+        'health-check': {
+            'handlers': ['health_check_log', 'mail_admins'],
+            'level': 'ERROR',
         },
         'helium.auth': {
             'handlers': ['platform_auth_log', 'mail_admins'],
@@ -187,6 +199,7 @@ else:
     # Storages
     INSTALLED_APPS += (
         'storages',
+        'health_check.contrib.s3boto_storage',
     )
 
     # Static

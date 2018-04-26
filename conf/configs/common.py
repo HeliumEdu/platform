@@ -9,7 +9,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.8'
+__version__ = '1.4.9'
 
 # ############################
 # Project configuration
@@ -51,6 +51,13 @@ DEFAULT_INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sitemaps',
+    # Health modules
+    'health_check',
+    'health_check.db',
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.celery',
+    'health_check.contrib.twilio',
     # Third-party modules
     'maintenance_mode',
     'pipeline',
@@ -125,6 +132,13 @@ MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IG
 MAINTENANCE_MODE_IGNORE_TESTS = True
 
 MAINTENANCE_MODE_IGNORE_URLS = ('^/admin',)
+
+# Health check
+
+HEALTH_CHECK = {
+    'DISABLE_HTML_RENDERING': True,
+    'JSON_VERBOSE': True
+}
 
 # API configuration
 

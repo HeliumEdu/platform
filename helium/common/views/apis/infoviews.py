@@ -8,7 +8,7 @@ from helium.common.serializers.infoserializer import InfoSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.9'
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class InfoResourceView(ViewSet):
     """
     info:
-    Return useful information about the app.
+    Return version and configuration information about the app.
     """
 
     def info(self, request, *args, **kwargs):
