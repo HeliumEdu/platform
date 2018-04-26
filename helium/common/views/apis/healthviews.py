@@ -4,7 +4,7 @@ from rest_framework.viewsets import ViewSet
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.8'
+__version__ = '1.4.9'
 
 
 class HealthResourceView(MainView, ViewSet):

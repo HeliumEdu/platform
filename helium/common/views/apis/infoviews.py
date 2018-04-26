@@ -8,7 +8,7 @@ from helium.common.serializers.infoserializer import InfoSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.9'
 
 logger = logging.getLogger(__name__)
 
