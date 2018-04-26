@@ -75,6 +75,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'health-check': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
         str(PROJECT_ID): {
             'handlers': ['console'],
             'level': 'DEBUG',
