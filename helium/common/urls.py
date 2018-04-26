@@ -8,7 +8,7 @@ from helium.common.views.apis.infoviews import InfoResourceView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__version__ = '1.4.9'
 
 urlpatterns = [
     # Base URL
