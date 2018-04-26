@@ -1,5 +1,6 @@
 from celery import current_app
 from django.apps import AppConfig
+from django.conf import settings
 
 from health_check.plugins import plugin_dir
 
@@ -19,33 +20,31 @@ class CommonConfig(AppConfig):
         from health_check.contrib.s3boto_storage.backends import S3BotoStorageHealthCheck
         from health_check.contrib.twilio.backends import TwilioHealthCheck
 
-        plugin_dir.reregister(DatabaseBackend.__name__,
-                              type('Database', (DatabaseBackend,),
-                                   {
-                                       'description': 'The database is critical for a fully operational system'
-                                   }))
-        plugin_dir.reregister(CacheBackend.__name__,
-                              type('Cache', (CacheBackend,),
-                                   {
-                                       'description': 'The caching service is critical for a fully operational system'
-                                   }))
-        plugin_dir.reregister(CeleryHealthCheck.__name__,
-                              type('Task Processing', (CeleryHealthCheck,),
-                                   {
-                                       'description': 'Task processing, including grade calculations, emails, and text messages',
-                                       'queues': current_app.amqp.queues
-                                   }))
+        plugin_dir.register(type('Database', (DatabaseBackend,),
+                                 {
+                                     'description': 'The database is critical for a fully operational system'
+                                 }))
+        plugin_dir.register(type('Cache', (CacheBackend,),
+                                 {
+                                     'description': 'The caching service is critical for a fully operational system'
+                                 }))
+        plugin_dir.register(type('Task Processing', (CeleryHealthCheck,),
+                                 {
+                                     'description': 'Grade calculation, emails, text messages, and other '
+                                                    'deferred tasks',
+                                     'queues': current_app.amqp.queues
+                                 }))
 
-        plugin_dir.reregister(S3BotoStorageHealthCheck.__name__,
-                              type('AWS', (S3BotoStorageHealthCheck,),
-                                   {
-                                       'critical': False,
-                                       'description': 'Attachment and other file storage'
-                                   }))
-        plugin_dir.reregister(TwilioHealthCheck.__name__,
-                              type('Twilio', (TwilioHealthCheck,),
-                                   {
-                                       'critical': False,
-                                       'description': 'Reminders and other text message notifications',
-                                       'services': ['SMS']
-                                   }))
+        plugin_dir.register(type('Twilio', (TwilioHealthCheck,),
+                                 {
+                                     'critical': False,
+                                     'description': 'Reminders and other text message notifications',
+                                     'services': ['SMS']
+                                 }))
+
+        if not settings.SERVE_LOCAL:
+            plugin_dir.register(type('AWS', (S3BotoStorageHealthCheck,),
+                                     {
+                                         'critical': False,
+                                         'description': 'Attachment and other file storage'
+                                     }))

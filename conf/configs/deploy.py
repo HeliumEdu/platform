@@ -199,7 +199,6 @@ else:
     # Storages
     INSTALLED_APPS += (
         'storages',
-        'health_check.contrib.s3boto_storage',
     )
 
     # Static
