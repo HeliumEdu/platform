@@ -220,3 +220,4 @@ else:
 # Celery
 
 CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
+CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
