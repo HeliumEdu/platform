@@ -35,8 +35,9 @@ def _build_components_status(plugins):
             "description": p.description,
             "took": round(p.time_taken, 4)
         }
-        if p.highest_severity() < highest_severity:
-            highest_severity = p.highest_severity
+        plugin_severity = p.highest_severity()
+        if plugin_severity < highest_severity:
+            highest_severity = plugin_severity
             system_status = components[str(p.identifier())]["status"]
 
     return components, system_status
