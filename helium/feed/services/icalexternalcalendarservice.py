@@ -6,7 +6,9 @@ from urllib.request import urlopen, URLError
 import icalendar
 import pytz
 from dateutil import parser
+from django.core import validators
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework import status
 
@@ -20,6 +22,8 @@ __copyright__ = "Copyright 2018, Helium Edu"
 __version__ = '1.4.3'
 
 logger = logging.getLogger(__name__)
+
+url_validator = validators.URLValidator()
 
 
 class HeliumICalError(HeliumError):
@@ -115,12 +119,18 @@ def validate_url(url):
     :return: The validated ICAL feed in a Calendar object
     """
     try:
+        url_validator(url)
+
         response = urlopen(url)
 
         if response.getcode() != status.HTTP_200_OK:
             raise HeliumICalError("The URL did not return a valid response.")
 
         return icalendar.Calendar.from_ical(response.read())
+    except ValidationError as ex:
+        logger.info("The URL is invalid: {}".format(ex))
+
+        raise HeliumICalError(ex.message)
     except URLError as ex:
         logger.info("The URL is not reachable: {}".format(ex))
 
