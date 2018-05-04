@@ -29,4 +29,4 @@ Pygments==2.2.0
 Markdown==2.6.10
 Sphinx==1.6.5
 psutil==5.4.5
--e git+git://github.com/alexdlaird/django-health-check.git@master#egg=django-health-check
+git+git://github.com/alexdlaird/django-health-check.git@3.5.2#egg=django-health-check
