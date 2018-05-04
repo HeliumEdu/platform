@@ -12,7 +12,7 @@ from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.10'
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
 
             response.data['settings'] = serializer.data
 
-        logger.info('User {} created with username '.format(response.data['id'], response.data['username']))
+        logger.info('User {} created with username {}'.format(response.data['id'], response.data['username']))
 
         return response
 

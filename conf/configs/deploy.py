@@ -129,7 +129,7 @@ LOGGING = {
             'propagate': False,
         },
         'health-check': {
-            'handlers': ['health_check_log', 'mail_admins'],
+            'handlers': ['health_check_log'],
             'level': 'ERROR',
         },
         'helium.auth': {
@@ -199,7 +199,6 @@ else:
     # Storages
     INSTALLED_APPS += (
         'storages',
-        'health_check.contrib.s3boto_storage',
     )
 
     # Static
@@ -220,3 +219,4 @@ else:
 # Celery
 
 CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
+CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')

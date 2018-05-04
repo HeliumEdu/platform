@@ -10,12 +10,12 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.2'
+__version__ = '1.4.10'
 
 logger = logging.getLogger(__name__)
 
 
-class TestCaseFeedViews(CacheTestCase):
+class TestCasePrivateViews(CacheTestCase):
     def test_events_feed(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
