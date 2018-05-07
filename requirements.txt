@@ -19,7 +19,7 @@ boto==2.48.0
 twilio==6.10.3
 pyOpenSSL==17.5.0
 pycrypto==2.6.1
-Pillow==2.5.3
+Pillow==5.1.0
 icalendar==4.0.0
 python-dateutil==2.6.1
 mock==2.0.0
