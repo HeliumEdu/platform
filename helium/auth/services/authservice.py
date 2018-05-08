@@ -68,7 +68,8 @@ def verify_email(request):
 
             logger.info('Completed registration and verification for user {}'.format(user.username))
 
-            send_registration_email.delay(user.email)
+            if request.GET.get('welcome-email', 'false') == 'true':
+                send_registration_email.delay(user.email)
         elif user.email_changing:
             user.email = user.email_changing
             user.email_changing = None
