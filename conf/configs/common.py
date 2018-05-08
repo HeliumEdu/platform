@@ -21,6 +21,8 @@ PROJECT_NAME = os.environ.get('PROJECT_NAME')
 PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
 PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST')
 PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST')
+PROJECT_CI_USER = os.environ.get('PROJECT_CI_USER')
+PROJECT_CI_USER_VERIFICATION_CODE = os.environ.get('PROJECT_CI_USER_VERIFICATION_CODE')
 
 # Version information
 

@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from rest_framework import serializers
@@ -84,6 +85,10 @@ class UserSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
 
         instance.set_password(password)
+
+        if instance.username == settings.PROJECT_CI_USER:
+            instance.verification_code = settings.PROJECT_CI_USER_VERIFICATION_CODE
+
         instance.save()
 
         send_verification_email.delay(instance.email, instance.username, instance.verification_code)
