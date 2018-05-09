@@ -16,7 +16,7 @@ from helium.planner.services import reminderservice
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.12'
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def recalculate_course_group_grade(course_group_id):
     # skip it
     try:
         gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
-    except Category.DoesNotExist:
+    except CourseGroup.DoesNotExist:
         pass
 
 

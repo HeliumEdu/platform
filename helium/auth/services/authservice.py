@@ -9,7 +9,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.12'
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,10 @@ def verify_email(request):
 
             logger.info('Completed registration and verification for user {}'.format(user.username))
 
-            send_registration_email.delay(user.email)
+            if request.GET.get('welcome-email', 'true') == 'true':
+                send_registration_email.delay(user.email)
+            else:
+                logger.info('Welcome email not sent, flag disabled')
         elif user.email_changing:
             user.email = user.email_changing
             user.email_changing = None
