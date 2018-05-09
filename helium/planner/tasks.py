@@ -29,7 +29,7 @@ def recalculate_course_group_grade(course_group_id):
     # skip it
     try:
         gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
-    except Category.DoesNotExist:
+    except CourseGroup.DoesNotExist:
         pass
 
 
