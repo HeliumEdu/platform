@@ -3,6 +3,7 @@ import logging
 import pytz
 from celery.schedules import crontab
 from django.conf import settings
+from django.db import IntegrityError
 from django.utils import timezone
 
 from conf.celery import app
@@ -20,21 +21,32 @@ __version__ = '1.4.12'
 
 logger = logging.getLogger(__name__)
 
+_INTEGRITY_RETRIES = 2
+_INTEGRITY_RETRY_DELAY = 2
+
 
 @app.task
-def recalculate_course_group_grade(course_group_id):
+def recalculate_course_group_grade(course_group_id, retries=0):
     metricutils.increment('task.grading.recalculate.course-group')
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
+    except IntegrityError as ex:
+        if retries < _INTEGRITY_RETRIES:
+            # This error is common when importing schedules, as async tasks may come in different orders
+            logger.warn("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
+
+            recalculate_course_group_grade.apply_async((course_group_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+        else:
+            raise ex
     except CourseGroup.DoesNotExist:
         pass
 
 
 @app.task
-def recalculate_course_grade(course_id):
+def recalculate_course_grade(course_id, retries=0):
     metricutils.increment('task.grading.recalculate.course')
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
@@ -45,12 +57,20 @@ def recalculate_course_grade(course_id):
         gradingservice.recalculate_course_grade(course)
 
         recalculate_course_group_grade.delay(course.course_group.pk)
+    except IntegrityError as ex:
+        if retries < _INTEGRITY_RETRIES:
+            # This error is common when importing schedules, as async tasks may come in different orders
+            logger.warn("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
+
+            recalculate_course_grade.apply_async((course_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+        else:
+            raise ex
     except Course.DoesNotExist:
         pass
 
 
 @app.task
-def recalculate_category_grade(category_id):
+def recalculate_category_grade(category_id, retries=0):
     metricutils.increment('task.grading.recalculate.category')
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
@@ -61,6 +81,14 @@ def recalculate_category_grade(category_id):
         gradingservice.recalculate_category_grade(category)
 
         recalculate_course_grade.delay(category.course.pk)
+    except IntegrityError as ex:
+        if retries < _INTEGRITY_RETRIES:
+            # This error is common when importing schedules, as async tasks may come in different orders
+            logger.warn("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
+
+            recalculate_category_grade.apply_async((category_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+        else:
+            raise ex
     except Category.DoesNotExist:
         pass
 
