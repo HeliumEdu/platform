@@ -12,7 +12,7 @@ from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APP
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.9'
+__version__ = '1.4.13'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -220,3 +220,4 @@ else:
 
 CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
+CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
