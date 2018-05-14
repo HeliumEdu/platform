@@ -5,6 +5,8 @@ Settings common to all deployment methods.
 import os
 import socket
 
+from corsheaders.defaults import default_headers
+
 from conf.settings import PROJECT_ID
 
 __author__ = 'Alex Laird'
@@ -210,6 +212,9 @@ SESSION_COOKIE_SECURE = os.environ.get('PLATFORM_SESSION_COOKIE_SECURE', 'True')
 ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS').split(' ')
 CSRF_MIDDLEWARE_SECRET = os.environ.get('PLATFORM_CSRF_MIDDLEWARE_SECRET')
 CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST').split(' ')
+CORS_ALLOW_HEADERS = default_headers + (
+    'cache-control',
+)
 
 # Logging
 
