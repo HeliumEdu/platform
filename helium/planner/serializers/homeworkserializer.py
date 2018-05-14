@@ -2,7 +2,7 @@ import logging
 
 from rest_framework import serializers
 
-from helium.planner.models import Homework
+from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.tasks import recalculate_category_grade
@@ -15,6 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if 'request' in self.context:
+            self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)
+            self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
+            # ManyToMany fields need to have their `child_relation` queryset modified instead
+            self.fields['materials'].child_relation.queryset = Material.objects.for_user(
+                self.context['request'].user.pk)
+
     class Meta:
         model = Homework
         fields = (

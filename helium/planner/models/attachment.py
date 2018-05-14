@@ -5,6 +5,7 @@ from django.dispatch import receiver
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
+from helium.planner.managers.attachmentmanager import AttachmentManager
 from helium.planner.utils.attachmentutils import get_path_for_attachment
 
 __author__ = 'Alex Laird'
@@ -35,6 +36,8 @@ class Attachment(BaseModel):
                                  related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attachments', on_delete=models.CASCADE)
+
+    objects = AttachmentManager()
 
     class Meta:
         ordering = ('title',)
