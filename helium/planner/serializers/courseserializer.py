@@ -2,18 +2,24 @@ import logging
 
 from rest_framework import serializers
 
-from helium.planner.models import Course
+from helium.planner.models import Course, CourseGroup
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.14'
 
 logger = logging.getLogger(__name__)
 
 
 class CourseSerializer(serializers.ModelSerializer):
     schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if 'request' in self.context:
+            self.fields['course_group'].queryset = CourseGroup.objects.for_user(self.context['request'].user.pk)
 
     class Meta:
         model = Course
