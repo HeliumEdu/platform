@@ -5,16 +5,24 @@ from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from helium.planner.models.attachment import Attachment
+from helium.planner.models import Attachment, Course, Homework, Event
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.5'
+__version__ = '1.4.14'
 
 logger = logging.getLogger(__name__)
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.context.get('request', None):
+            self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
+            self.fields['homework'].queryset = Homework.objects.for_user(self.context['request'].user.pk)
+            self.fields['event'].queryset = Event.objects.for_user(self.context['request'].user.pk)
+
     class Meta:
         model = Attachment
         fields = (

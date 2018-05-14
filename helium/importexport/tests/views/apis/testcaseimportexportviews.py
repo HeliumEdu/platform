@@ -341,6 +341,16 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Reminder.objects.count(), 5)
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
-        homework = Homework.objects.all()[0]
-        self.assertEqual(homework.start.date(), homework.course.start_date + datetime.timedelta(
-            days=(homework.start.date() - homework.course.start_date).days))
+        homework1 = Homework.objects.all()[0]
+        self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
+            days=(homework1.start.date() - homework1.course.start_date).days))
+        course_group = CourseGroup.objects.all()[0]
+        course = Course.objects.for_course_group(course_group.pk)[0]
+        category = Category.objects.for_course(course.pk)[2]
+        self.assertEqual(float(course_group.average_grade), 86.2108)
+        self.assertEqual(float(course_group.trend), -0.00092027674442886)
+        self.assertEqual(float(course.current_grade), 90.6358)
+        self.assertEqual(float(course.trend), 0.00397350448605024)
+        self.assertEqual(float(category.average_grade), 91.5)
+        self.assertEqual(float(category.grade_by_weight), 40.7861)
+        self.assertEqual(float(category.trend), -0.0275)
