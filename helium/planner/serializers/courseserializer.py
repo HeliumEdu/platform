@@ -18,7 +18,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if 'request' in self.context:
+        if self.context.get('request', None):
             self.fields['course_group'].queryset = CourseGroup.objects.for_user(self.context['request'].user.pk)
 
     class Meta:

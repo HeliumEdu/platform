@@ -15,7 +15,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if 'request' in self.context:
+        if self.context.get('request', None):
             self.fields['material_group'].queryset = MaterialGroup.objects.for_user(self.context['request'].user.pk)
             # ManyToMany fields need to have their `child_relation` queryset modified instead
             self.fields['courses'].child_relation.queryset = Course.objects.for_user(self.context['request'].user.pk)
