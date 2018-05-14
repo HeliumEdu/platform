@@ -15,7 +15,7 @@ class ReminderSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if 'request' in self.context:
+        if self.context.get('request', None):
             self.fields['homework'].queryset = Homework.objects.for_user(self.context['request'].user.pk)
             self.fields['event'].queryset = Event.objects.for_user(self.context['request'].user.pk)
 
