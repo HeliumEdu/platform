@@ -9,7 +9,7 @@ from helium.planner.tasks import recalculate_category_grade
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.14'
 
 logger = logging.getLogger(__name__)
 
