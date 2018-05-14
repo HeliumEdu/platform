@@ -7,7 +7,7 @@ from helium.planner.serializers.coursescheduleserializer import CourseScheduleSe
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.0'
+__version__ = '1.4.14'
 
 logger = logging.getLogger(__name__)
 
