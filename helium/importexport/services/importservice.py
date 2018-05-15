@@ -20,6 +20,8 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
+from helium.planner.services import coursescheduleservice
+from helium.planner.tasks import adjust_reminder_times
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -296,48 +298,53 @@ def _adjust_schedule_relative_today(user):
 
     for course_group in CourseGroup.objects.for_user(user.pk).iterator():
         delta = (course_group.end_date - course_group.start_date).days
-        course_group.start_date = start_of_current_month
-        course_group.end_date = start_of_current_month + datetime.timedelta(days=delta)
-        course_group.save()
+        CourseGroup.objects.filter(pk=course_group.pk).update(
+            start_date=start_of_current_month,
+            end_date=start_of_current_month + datetime.timedelta(days=delta))
 
     for homework in Homework.objects.for_user(user.pk).iterator():
         course = homework.course
         delta = (homework.start.date() - course.start_date).days
-        homework.start = (first_monday + datetime.timedelta(days=delta)).replace(
-            hour=homework.start.time().hour,
-            minute=homework.start.time().minute,
-            second=0,
-            microsecond=0,
-            tzinfo=timezone.utc)
-        homework.end = (first_monday + datetime.timedelta(days=delta)).replace(
-            hour=homework.end.time().hour,
-            minute=homework.end.time().minute,
-            second=0,
-            microsecond=0,
-            tzinfo=timezone.utc)
-        homework.save()
+        Homework.objects.filter(pk=homework.pk).update(
+            start=(first_monday + datetime.timedelta(days=delta)).replace(
+                hour=homework.start.time().hour,
+                minute=homework.start.time().minute,
+                second=0,
+                microsecond=0,
+                tzinfo=timezone.utc),
+            end=(first_monday + datetime.timedelta(days=delta)).replace(
+                hour=homework.end.time().hour,
+                minute=homework.end.time().minute,
+                second=0,
+                microsecond=0,
+                tzinfo=timezone.utc))
+
+        adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
 
     for event in Event.objects.for_user(user.pk).iterator():
-        delta = (event.start.date() - start_of_current_month.date()).days
-        event.start = (first_monday + datetime.timedelta(days=delta)).replace(
-            hour=event.start.time().hour,
-            minute=event.start.time().minute,
-            second=0,
-            microsecond=0,
-            tzinfo=timezone.utc)
-        event.end = (first_monday + datetime.timedelta(days=delta)).replace(
-            hour=event.end.time().hour,
-            minute=event.end.time().minute,
-            second=0,
-            microsecond=0,
-            tzinfo=timezone.utc)
-        event.save()
+        start_of_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        delta = (event.start.date() - start_of_month.date()).days
+        Event.objects.filter(pk=event.pk).update(
+            start=(first_monday + datetime.timedelta(days=delta)).replace(
+                hour=event.start.time().hour,
+                minute=event.start.time().minute,
+                second=0,
+                microsecond=0,
+                tzinfo=timezone.utc),
+            end=(first_monday + datetime.timedelta(days=delta)).replace(
+                hour=event.end.time().hour,
+                minute=event.end.time().minute,
+                second=0,
+                microsecond=0,
+                tzinfo=timezone.utc))
 
     for course in Course.objects.for_user(user.pk).iterator():
         delta = (course.end_date - course.start_date).days
-        course.start_date = start_of_current_month
-        course.end_date = start_of_current_month + datetime.timedelta(days=delta)
-        course.save()
+        Course.objects.filter(pk=course.pk).update(
+            start_date=start_of_current_month,
+            end_date=start_of_current_month + datetime.timedelta(days=delta))
+
+        coursescheduleservice.clear_cached_course_schedule(course)
 
     logger.info('Dates adjusted on imported example schedule relative to the start of the month for new user {}'.format(
         user.pk))
