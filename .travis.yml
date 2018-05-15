@@ -3,7 +3,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
 install:
   - python -m pip install virtualenv
   - python -m virtualenv .venv
