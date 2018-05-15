@@ -161,6 +161,10 @@ def recalculate_course_grade(course):
             category_possible += float(category['instance'].weight)
 
             grade_by_weight = category_earned
+
+            logger.debug(
+                'Course triggered category {} recalculation of grade_by_weight to {}'.format(category['instance'].pk,
+                                                                                             grade_by_weight))
         else:
             category_earned += total_earned
             category_possible += total_possible
@@ -175,7 +179,13 @@ def recalculate_course_grade(course):
     else:
         course.current_grade = -1
 
+    logger.debug('Course {} current grade recalculated to {} with {} homework'.format(course.pk,
+                                                                                      course.current_grade,
+                                                                                      course.num_homework))
+
     course.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+
+    logger.debug('Course {} trend recalculated to {}'.format(course.pk, course.trend))
 
     course.save()
 
@@ -199,6 +209,9 @@ def recalculate_category_grade(category):
     # Update the values in the datastore, circumventing signals
     Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
 
-    logger.debug('Category {} average grade recalculated to {} with {} homework'.format(category.pk,
-                                                                                        category.average_grade,
-                                                                                        len(grade_series)))
+    logger.debug(
+        'Category {} average grade recalculated to {} with {} grade_by_weight for {} homework'.format(category.pk,
+                                                                                                      category.average_grade,
+                                                                                                      category.grade_by_weight,
+                                                                                                      len(
+                                                                                                          grade_series)))
