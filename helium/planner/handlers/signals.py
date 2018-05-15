@@ -51,7 +51,7 @@ def delete_homework(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Event)
 def save_event(sender, instance, **kwargs):
-    adjust_reminder_times(instance.pk, instance.calendar_item_type)
+    adjust_reminder_times.delay(instance.pk, instance.calendar_item_type)
 
 
 @receiver(post_save, sender=Homework)
@@ -59,4 +59,4 @@ def save_homework(sender, instance, **kwargs):
     if instance.category:
         recalculate_category_grade.delay(instance.category.pk)
 
-    adjust_reminder_times(instance.pk, instance.calendar_item_type)
+    adjust_reminder_times.delay(instance.pk, instance.calendar_item_type)
