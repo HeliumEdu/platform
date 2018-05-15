@@ -19,7 +19,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.2'
+__version__ = '1.4.15'
 
 logger = logging.getLogger(__name__)
 
@@ -341,6 +341,16 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Reminder.objects.count(), 5)
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
-        homework = Homework.objects.all()[0]
-        self.assertEqual(homework.start.date(), homework.course.start_date + datetime.timedelta(
-            days=(homework.start.date() - homework.course.start_date).days))
+        homework1 = Homework.objects.all()[0]
+        self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
+            days=(homework1.start.date() - homework1.course.start_date).days))
+        course_group = CourseGroup.objects.all()[0]
+        course = Course.objects.for_course_group(course_group.pk)[0]
+        category = Category.objects.for_course(course.pk)[2]
+        self.assertEqual(float(course_group.average_grade), 86.2108)
+        self.assertEqual(round(float(course_group.trend), 10), -0.001048497)
+        self.assertEqual(float(course.current_grade), 90.6358)
+        self.assertEqual(round(float(course.trend), 10), 0.0039735045)
+        self.assertEqual(float(category.average_grade), 91.5)
+        self.assertEqual(float(category.grade_by_weight), 13.725)
+        self.assertEqual(round(float(category.trend), 10), -0.0275)
