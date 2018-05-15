@@ -300,7 +300,7 @@ def _adjust_schedule_relative_today(user):
         course_group.end_date = start_of_current_month + datetime.timedelta(days=delta)
         course_group.save()
 
-    for homework in Homework.objects.for_user(user.pk):
+    for homework in Homework.objects.for_user(user.pk).iterator():
         course = homework.course
         delta = (homework.start.date() - course.start_date).days
         homework.start = (first_monday + datetime.timedelta(days=delta)).replace(
@@ -333,7 +333,7 @@ def _adjust_schedule_relative_today(user):
             tzinfo=timezone.utc)
         event.save()
 
-    for course in Course.objects.for_user(user.pk):
+    for course in Course.objects.for_user(user.pk).iterator():
         delta = (course.end_date - course.start_date).days
         course.start_date = start_of_current_month
         course.end_date = start_of_current_month + datetime.timedelta(days=delta)

@@ -32,7 +32,7 @@ class Homework(BaseCalendar):
 
     class Meta:
         verbose_name_plural = 'Homework'
-        ordering = ('start',)
+        ordering = ('start', 'title')
 
     def get_user(self):
         return self.course.get_user()

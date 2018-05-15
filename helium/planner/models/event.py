@@ -19,7 +19,7 @@ class Event(BaseCalendar):
     objects = EventManager()
 
     class Meta:
-        ordering = ('start',)
+        ordering = ('start', 'title')
 
     def __init__(self, *args, **kwargs):
         self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']
