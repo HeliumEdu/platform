@@ -19,7 +19,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.15'
+__version__ = '1.4.16'
 
 logger = logging.getLogger(__name__)
 
