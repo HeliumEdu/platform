@@ -32,6 +32,9 @@ class ExternalCalendar(BaseModel):
 
     objects = ExternalCalendarManager()
 
+    class Meta:
+        ordering = ('title',)
+
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
 

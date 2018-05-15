@@ -35,7 +35,7 @@ class CourseGroup(BaseModel):
     objects = CourseGroupManager()
 
     class Meta:
-        ordering = ('start_date',)
+        ordering = ('start_date', 'title')
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())
