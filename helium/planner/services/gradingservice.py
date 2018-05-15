@@ -156,11 +156,11 @@ def recalculate_course_grade(course):
     category_possible = 0
     for category in category_totals.values():
         if course_has_weighted_grading:
-            category_earned += (((category['total_earned'] / category['total_possible']) * (
+            grade_by_weight = (((category['total_earned'] / category['total_possible']) * (
                 float(category['instance'].weight) / 100)) * 100)
-            category_possible += float(category['instance'].weight)
 
-            grade_by_weight = category_earned
+            category_earned += grade_by_weight
+            category_possible += float(category['instance'].weight)
 
             logger.debug(
                 'Course triggered category {} recalculation of grade_by_weight to {}'.format(category['instance'].pk,
