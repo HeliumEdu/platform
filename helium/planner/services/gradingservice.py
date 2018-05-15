@@ -5,7 +5,7 @@ from helium.planner.models import CourseGroup, Course, Category, Homework
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.4'
+__version__ = '1.4.16'
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def recalculate_course_group_grade(course_group):
     course_grades = Course.objects.for_course_group(course_group.pk).graded().values_list('current_grade', flat=True)
     total = sum(course_grades)
 
-    course_group.average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
+    average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
 
     logger.debug('Course Group {} average grade recalculated to {} with {} courses'.format(course_group.pk,
                                                                                            course_group.average_grade,
@@ -110,11 +110,11 @@ def recalculate_course_group_grade(course_group):
 
         grade_series.append(total_earned / total_possible)
 
-    course_group.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+    trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
     logger.debug('Course Group {} trend recalculated to {}'.format(course_group.pk, course_group.trend))
 
-    course_group.save()
+    CourseGroup.objects.filter(pk=course_group.pk).update(average_grade=average_grade, trend=trend)
 
 
 def recalculate_course_grade(course):
@@ -175,19 +175,19 @@ def recalculate_course_grade(course):
         Category.objects.filter(pk=category['instance'].pk).update(grade_by_weight=grade_by_weight)
 
     if len(grade_series) > 0 and category_possible > 0:
-        course.current_grade = (category_earned / category_possible) * 100
+        current_grade = (category_earned / category_possible) * 100
     else:
-        course.current_grade = -1
+        current_grade = -1
 
     logger.debug('Course {} current grade recalculated to {} with {} homework'.format(course.pk,
                                                                                       course.current_grade,
                                                                                       course.num_homework))
 
-    course.trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
+    trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
     logger.debug('Course {} trend recalculated to {}'.format(course.pk, course.trend))
 
-    course.save()
+    Course.objects.filter(pk=course.pk).update(current_grade=current_grade, trend=trend)
 
 
 def recalculate_category_grade(category):
@@ -206,12 +206,12 @@ def recalculate_category_grade(category):
     average_grade = (total_earned / total_possible) * 100 if len(grade_series) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
-    # Update the values in the datastore, circumventing signals
-    Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
-
     logger.debug(
         'Category {} average grade recalculated to {} with {} grade_by_weight for {} homework'.format(category.pk,
                                                                                                       category.average_grade,
                                                                                                       category.grade_by_weight,
                                                                                                       len(
                                                                                                           grade_series)))
+
+    # Update the values in the datastore, circumventing signals
+    Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
