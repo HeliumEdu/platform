@@ -9,7 +9,7 @@ from helium.feed.managers.externalcalendarmanager import ExternalCalendarManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.16'
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,9 @@ class ExternalCalendar(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 
     objects = ExternalCalendarManager()
+
+    class Meta:
+        ordering = ('title',)
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())

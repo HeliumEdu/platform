@@ -8,7 +8,7 @@ from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.16'
 
 
 class CourseGroup(BaseModel):
@@ -35,7 +35,7 @@ class CourseGroup(BaseModel):
     objects = CourseGroupManager()
 
     class Meta:
-        ordering = ('start_date',)
+        ordering = ('start_date', 'title')
 
     def __str__(self):  # pragma: no cover
         return '{} ({})'.format(self.title, self.get_user().get_username())

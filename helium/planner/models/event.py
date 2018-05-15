@@ -7,7 +7,7 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.16'
 
 
 class Event(BaseCalendar):
@@ -19,7 +19,7 @@ class Event(BaseCalendar):
     objects = EventManager()
 
     class Meta:
-        ordering = ('start',)
+        ordering = ('start', 'title')
 
     def __init__(self, *args, **kwargs):
         self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']

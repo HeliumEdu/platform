@@ -11,7 +11,7 @@ from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.2'
+__version__ = '1.4.16'
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ def courseschedules_to_private_ical_feed(user):
     calendar = _create_calendar(user)
 
     events = []
-    for course in Course.objects.for_user(user.pk):
+    for course in Course.objects.for_user(user.pk).iterator():
         events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
