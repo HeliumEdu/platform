@@ -352,5 +352,5 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(float(course.current_grade), 90.6358)
         self.assertEqual(round(float(course.trend), 10), 0.0039735045)
         self.assertEqual(float(category.average_grade), 91.5)
-        self.assertEqual(float(category.grade_by_weight), 40.7861)
+        self.assertEqual(float(category.grade_by_weight), 13.725)
         self.assertEqual(round(float(category.trend), 10), -0.0275)
