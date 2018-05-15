@@ -348,7 +348,7 @@ class TestCaseImportExportViews(APITestCase):
         course = Course.objects.for_course_group(course_group.pk)[0]
         category = Category.objects.for_course(course.pk)[2]
         self.assertEqual(float(course_group.average_grade), 86.2108)
-        self.assertEqual(round(float(course_group.trend), 10), -0.0009202767)
+        self.assertEqual(round(float(course_group.trend), 10), -0.001048497)
         self.assertEqual(float(course.current_grade), 90.6358)
         self.assertEqual(round(float(course.trend), 10), 0.0039735045)
         self.assertEqual(float(category.average_grade), 91.5)
