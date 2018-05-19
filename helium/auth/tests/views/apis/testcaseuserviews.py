@@ -241,7 +241,7 @@ class TestCaseUserViews(APITestCase):
             'username': user.username,
             'password': 'test_pass_1!'
         }
-        response = self.client.delete(reverse('auth_user_detail'), json.dumps(data),
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
                                       content_type='application/json')
 
         # THEN
@@ -261,7 +261,7 @@ class TestCaseUserViews(APITestCase):
             'username': user.username,
             'password': 'wrong_pass'
         }
-        response = self.client.delete(reverse('auth_user_detail'), json.dumps(data),
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
                                       content_type='application/json')
 
         # THEN

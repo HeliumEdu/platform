@@ -16,6 +16,14 @@ class UserDeleteForm(forms.Form):
         self.user = user
         super().__init__(*args, **kwargs)
 
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+
+        if self.user.email != email:
+            raise forms.ValidationError("The given email does not match.")
+
+        return email
+
     def clean_password(self):
         password = self.cleaned_data.get("password")
 

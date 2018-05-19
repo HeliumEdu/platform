@@ -71,6 +71,38 @@ class UserVerifySchema(AutoSchema):
         super().__init__(manual_fields=manual_fields)
 
 
+class UserDeleteSchema(AutoSchema):
+    def __init__(self, manual_fields=None):
+        if manual_fields is None:
+            manual_fields = []
+
+        manual_fields += [
+            coreapi.Field(
+                "username",
+                required=True,
+                location="form",
+                schema=coreschema.String(title='username',
+                                         description='The username for the user.')
+            ),
+            coreapi.Field(
+                "email",
+                required=True,
+                location="form",
+                schema=coreschema.String(title='email',
+                                         description='The email for the user.')
+            ),
+            coreapi.Field(
+                "password",
+                required=True,
+                location="form",
+                schema=coreschema.String(title='password',
+                                         description='The password for the user.')
+            ),
+        ]
+
+        super().__init__(manual_fields=manual_fields)
+
+
 class UserForgotSchema(AutoSchema):
     def __init__(self, manual_fields=None):
         if manual_fields is None:
