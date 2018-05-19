@@ -9,7 +9,7 @@ from helium.common.utils import metricutils
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.12'
+__version__ = '1.4.17'
 
 logger = logging.getLogger(__name__)
 
@@ -83,4 +83,4 @@ def verify_email(request):
 
         return Response()
     except get_user_model().DoesNotExist:
-        raise NotFound()
+        raise NotFound('User not found.')

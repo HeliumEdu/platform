@@ -7,11 +7,11 @@ from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceVie
     UserForgotResourceView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
-from helium.auth.views.apis.userviews import UserApiDetailView
+from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__version__ = '1.4.17'
 
 urlpatterns = [
     # URLs for Django's auto-generated, session-based login views for ease of API navigation
@@ -42,6 +42,7 @@ urlpatterns = [
     ##############################
     # User
     path('auth/user/', UserApiDetailView.as_view(), name='auth_user_detail'),
+    path('auth/user/delete/', UserDeleteResourceView.as_view(), name='auth_user_resource_delete'),
     path('auth/user/profile/', UserProfileApiDetailView.as_view(),
          name='auth_user_profile_detail'),
     path('auth/user/settings/', UserSettingsApiDetailView.as_view(),

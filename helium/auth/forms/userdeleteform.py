@@ -2,7 +2,7 @@ from django import forms
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.17'
 
 
 class UserDeleteForm(forms.Form):
@@ -15,6 +15,14 @@ class UserDeleteForm(forms.Form):
     def __init__(self, user, *args, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+
+        if self.user.email != email:
+            raise forms.ValidationError("The given email does not match.")
+
+        return email
 
     def clean_password(self):
         password = self.cleaned_data.get("password")
