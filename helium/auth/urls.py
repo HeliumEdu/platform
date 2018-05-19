@@ -11,7 +11,7 @@ from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResour
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__version__ = '1.4.17'
 
 urlpatterns = [
     # URLs for Django's auto-generated, session-based login views for ease of API navigation
