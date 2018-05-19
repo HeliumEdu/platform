@@ -2,11 +2,13 @@ import logging
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.forms.userdeleteform import UserDeleteForm
+from helium.auth.schemas import UserDeleteSchema
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
@@ -27,9 +29,6 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     put:
     Update the authenticated user instance. This endpoint only updates the fields given (i.e. no need to PATCH
     for partials data).
-
-    delete:
-    Delete the authenticated user instance.
     """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
@@ -55,6 +54,21 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         logger.info('User {} updated'.format(user.get_username()))
 
         return Response(serializer.data)
+
+
+class UserDeleteResourceView(HeliumAPIView):
+    """
+    delete:
+    Delete the given user instance.
+    """
+    serializer_class = UserSerializer
+    schema = UserDeleteSchema()
+
+    def get_object(self):
+        try:
+            return get_user_model().objects.get(username=self.request.data['username'])
+        except get_user_model().DoesNotExist:
+            raise NotFound('User not found.')
 
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
