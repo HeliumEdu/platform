@@ -1,5 +1,6 @@
 import logging
 
+from django import forms
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.exceptions import NotFound
@@ -16,7 +17,7 @@ from helium.common.views.views import HeliumAPIView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.17'
+__version__ = '1.4.18'
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,9 @@ class UserDeleteResourceView(HeliumAPIView):
 
     def get_object(self):
         try:
+            if 'username' not in self.request.data:
+                raise forms.ValidationError("'username' is required")
+
             return get_user_model().objects.get(username=self.request.data['username'])
         except get_user_model().DoesNotExist:
             raise NotFound('User not found.')
