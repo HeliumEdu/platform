@@ -12,7 +12,7 @@ from rest_framework.viewsets import ViewSet
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.9'
+__version__ = '1.4.19'
 
 
 def _run_checks(plugins):
