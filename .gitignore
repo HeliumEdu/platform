@@ -16,3 +16,4 @@ docs/_static
 docs/_templates
 celerybeat*
 maintenance_mode_state.txt
+src

@@ -6,7 +6,7 @@ from health_check.plugins import plugin_dir
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.9'
+__version__ = '1.4.19'
 
 
 class CommonConfig(AppConfig):
@@ -28,7 +28,7 @@ class CommonConfig(AppConfig):
                                  {
                                      'description': 'The caching service is critical for a fully operational system'
                                  }))
-        plugin_dir.register(type('Task Processing', (CeleryHealthCheck,),
+        plugin_dir.register(type('TaskProcessing', (CeleryHealthCheck,),
                                  {
                                      'description': 'Grade calculation, emails, text messages, and other '
                                                     'deferred tasks',
