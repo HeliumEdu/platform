@@ -5,24 +5,33 @@ from concurrent.futures import ThreadPoolExecutor
 import psutil
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
-from rest_framework import status
-from rest_framework.viewsets import ViewSet
-
 from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
 from health_check.plugins import plugin_dir
+from rest_framework import status
+from rest_framework.viewsets import ViewSet
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.9'
 
 
-def _run(plugin):
-    plugin.run_check()
-    try:
-        return plugin.errors
-    finally:
-        from django.db import connection
-        connection.close()
+def _run_checks(plugins):
+    errors = []
+
+    def _run(plugin):
+        plugin.run_check()
+        try:
+            return plugin.errors
+        finally:
+            from django.db import connection
+            connection.close()
+
+    with ThreadPoolExecutor(max_workers=len(plugins) or 1) as executor:
+        for plugin, ers in zip(plugins, executor.map(_run, plugins)):
+            if plugin.critical:
+                errors.extend(ers)
+
+    return errors
 
 
 def _build_components_status(plugins):
@@ -51,17 +60,12 @@ class StatusResourceView(ViewSet):
 
     @never_cache
     def status(self, request, *args, **kwargs):
-        errors = []
-
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
             for plugin_class, options in plugin_dir._registry
         ), key=lambda plugin: plugin.identifier())
 
-        with ThreadPoolExecutor(max_workers=len(plugins) or 1) as executor:
-            for plugin, error in zip(plugins, executor.map(_run, plugins)):
-                if plugin.critical:
-                    errors.extend(error)
+        errors = _run_checks(plugins)
 
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR if errors else status.HTTP_200_OK
 
@@ -84,8 +88,6 @@ class HealthResourceView(ViewSet):
 
     @never_cache
     def health(self, request, *args, **kwargs):
-        errors = []
-
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
             for plugin_class, options in plugin_dir._registry
@@ -93,10 +95,7 @@ class HealthResourceView(ViewSet):
         plugins.append(DiskUsage())
         plugins.append(MemoryUsage())
 
-        with ThreadPoolExecutor(max_workers=len(plugins) or 1) as executor:
-            for plugin, error in zip(plugins, executor.map(_run, plugins)):
-                if plugin.critical:
-                    errors.extend(error)
+        errors = _run_checks(plugins)
 
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR if errors else status.HTTP_200_OK
 
