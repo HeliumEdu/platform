@@ -28,7 +28,7 @@ class CommonConfig(AppConfig):
                                  {
                                      'description': 'The caching service is critical for a fully operational system'
                                  }))
-        plugin_dir.register(type('Task Processing', (CeleryHealthCheck,),
+        plugin_dir.register(type('TaskProcessing', (CeleryHealthCheck,),
                                  {
                                      'description': 'Grade calculation, emails, text messages, and other '
                                                     'deferred tasks',

@@ -35,6 +35,10 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += (
 # Django configuration
 #############################
 
+# Project configuration
+
+SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'True') == 'True'
+
 # Security
 
 INTERNAL_IPS = (
