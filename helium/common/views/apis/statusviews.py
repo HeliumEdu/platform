@@ -6,6 +6,7 @@ import psutil
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
+from health_check.exceptions import HealthCheckException
 from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import ViewSet
@@ -36,17 +37,16 @@ def _run_checks(plugins):
 
 def _build_components_status(plugins):
     components = {}
-    highest_severity = 999
+    system_level = HealthCheckException.level
     system_status = 'operational'
     for p in plugins:
         components[str(p.identifier())] = {
-            "status": p.sensitive_status(),
+            "status": p.severity[1],
             "description": p.description,
-            "took": round(p.time_taken, 4)
+            "took": round(getattr(p, 'time_taken', -1), 4)
         }
-        plugin_severity = p.highest_severity()
-        if plugin_severity < highest_severity:
-            highest_severity = plugin_severity
+        if p.critical and p.severity[0] < system_level:
+            system_level = p.severity[0]
             system_status = components[str(p.identifier())]["status"]
 
     return components, system_status

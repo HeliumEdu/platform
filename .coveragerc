@@ -9,6 +9,7 @@ omit =
     */tests/**
     */migrations/**
     helium/common/utils/metricutils.py
+    helium/common/cache/locmemkeys.py
 
 [report]
 fail_under = 90
