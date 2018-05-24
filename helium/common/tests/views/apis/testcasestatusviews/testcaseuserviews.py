@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.17'
+__version__ = '1.4.20'
 
 
 class TestCaseStatusViews(APITestCase):
