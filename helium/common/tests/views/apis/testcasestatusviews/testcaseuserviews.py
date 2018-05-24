@@ -17,7 +17,7 @@ class TestCaseStatusViews(APITestCase):
         response = self.client.get(reverse('resource_status'))
 
         # THEN
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(content['components']), 5)
         self.assertEqual(content['status'], 'operational')
@@ -28,7 +28,7 @@ class TestCaseStatusViews(APITestCase):
         response = self.client.get(reverse('resource_health'))
 
         # THEN
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(content['components']), 7)
         self.assertEqual(content['status'], 'operational')

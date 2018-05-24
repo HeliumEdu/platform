@@ -30,7 +30,7 @@ class TestCasePrivateViews(CacheTestCase):
         response = self.client.get(reverse("feed_private_events_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
-        calendar = icalendar.Calendar.from_ical(response.content)
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], event1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], "Comments: {}".format(event1.comments))
@@ -65,7 +65,7 @@ class TestCasePrivateViews(CacheTestCase):
         response = self.client.get(reverse("feed_private_homework_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
-        calendar = icalendar.Calendar.from_ical(response.content)
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], homework1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
@@ -104,7 +104,7 @@ class TestCasePrivateViews(CacheTestCase):
             reverse("feed_private_courseschedules_ical", kwargs={"slug": user1.settings.private_slug}))
 
         # THEN
-        calendar = icalendar.Calendar.from_ical(response.content)
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 106)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], course1.title)
         self.assertEqual(str(calendar.subcomponents[0]['DTSTART'].dt), '2017-01-06 02:30:00-08:00')
