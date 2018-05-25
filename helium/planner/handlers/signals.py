@@ -5,12 +5,12 @@ from django.dispatch import receiver
 
 from helium.planner.models import Category, Course, Event, Homework, CourseSchedule
 from helium.planner.services import coursescheduleservice
-from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade, \
-    adjust_reminder_times
+from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
+    adjust_reminder_times, recalculate_course_group_grade
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.16'
+__version__ = '1.4.21'
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def save_category(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def delete_category(sender, instance, **kwargs):
-    recalculate_course_grade.delay(instance.course.pk)
+    recalculate_category_grades_for_course.delay(instance.course.pk)
 
 
 @receiver(post_delete, sender=Homework)
