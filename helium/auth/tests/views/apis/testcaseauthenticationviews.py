@@ -80,6 +80,7 @@ class TestCaseAuthenticationViews(TestCase):
                                     content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(get_user_model().objects.filter(username='my_test_user').exists())
         self.assertIn('email', response.data)
 

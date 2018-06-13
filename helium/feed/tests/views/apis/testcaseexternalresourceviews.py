@@ -59,6 +59,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
             reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0]['title'], 'test1')
         self.assertEqual(response.data[0]['all_day'], False)
@@ -97,6 +98,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
                 reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
 
             # THEN
+            self.assertEqual(response_db.status_code, status.HTTP_200_OK)
+            self.assertEqual(response_cached.status_code, status.HTTP_200_OK)
             self.assertEqual(_create_events_from_calendar.call_count, 0)
             self.assertEqual(len(response_db.data), len(response_cached.data))
             self.assertEqual(response_db.data[0]['title'], response_cached.data[0]['title'])

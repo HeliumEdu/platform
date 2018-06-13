@@ -49,6 +49,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
             CourseSchedule.objects.filter(pk=course_schedule.pk, course__course_group__user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -108,8 +109,9 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
-        self.client.get(reverse('planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courseschedules_events',
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_many_mock.call_count, 0)
 
         # WHEN
@@ -119,8 +121,9 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         course_schedule.mon_start_time = datetime.time(2, 00, 0)
         course_schedule.save()
 
-        self.client.get(reverse('planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courseschedules_events',
                                 kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_many_mock.call_count, 0)

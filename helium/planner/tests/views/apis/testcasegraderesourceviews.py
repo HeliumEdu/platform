@@ -55,6 +55,7 @@ class TestCaseEventViews(APITestCase):
         response = self.client.get(reverse('planner_resource_grades'))
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data['course_groups']), 2)
         self.assertEquals(len(response.data['course_groups'][0]['courses']), 1)
         self.assertEquals(len(response.data['course_groups'][1]['courses']), 1)

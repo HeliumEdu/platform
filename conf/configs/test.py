@@ -44,7 +44,7 @@ else:
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
     from conf.configs import dev
 
     CACHES = dev.CACHES

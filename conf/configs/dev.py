@@ -96,7 +96,7 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
     CACHES = {
         'default': {
             'BACKEND': 'helium.common.cache.locmemkeys.LocMemKeysCache',
@@ -141,5 +141,12 @@ PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+if os.environ.get('USE_IN_MEMORY_WORKER', 'True') == 'True':
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+else:
+    from conf.configs import deploy
+
+    CELERY_BROKER_URL = deploy.CELERY_BROKER_URL
+    CELERY_RESULT_BACKEND = deploy.CELERY_RESULT_BACKEND
+    CELERY_TASK_SOFT_TIME_LIMIT = deploy.CELERY_TASK_SOFT_TIME_LIMIT

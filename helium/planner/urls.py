@@ -10,7 +10,7 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
-from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView
+from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView, EventsApiDeleteResourceView
 from helium.planner.views.apis.graderesourceviews import GradesApiResourceView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
     CourseGroupCourseHomeworkApiDetailView
@@ -87,6 +87,7 @@ urlpatterns = [
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
+    path('planner/events/delete/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}), name='planner_events_resource_delete'),
 
     # Homework
     path('planner/homework/', UserHomeworkApiListView.as_view(), name='planner_homework_list'),
