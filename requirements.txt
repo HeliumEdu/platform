@@ -11,7 +11,7 @@ django-filter==1.1.0
 django-maintenance-mode==0.9.0
 django-pipeline==1.6.14
 django-cors-headers==2.2.0
-celery[redis]==4.1.0
+celery[redis]==4.1.1
 django-redis==4.9.0
 statsd==3.2.2
 datadog==0.20.0

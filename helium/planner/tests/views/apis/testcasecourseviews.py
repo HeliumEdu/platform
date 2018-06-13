@@ -241,6 +241,7 @@ class TestCaseCourseViews(APITestCase):
         self.assertTrue(Course.objects.filter(pk=course.pk, course_group__user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -341,6 +342,7 @@ class TestCaseCourseViews(APITestCase):
 
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

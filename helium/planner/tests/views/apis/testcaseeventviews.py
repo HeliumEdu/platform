@@ -274,6 +274,7 @@ class TestCaseEventViews(APITestCase):
         self.assertTrue(Event.objects.filter(pk=event.pk, user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -310,6 +311,7 @@ class TestCaseEventViews(APITestCase):
         self.assertIn('start', response.data)
 
     def test_not_found(self):
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
@@ -322,12 +324,14 @@ class TestCaseEventViews(APITestCase):
         # THEN
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
 
     def test_range_query(self):
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user,
                                        start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
@@ -342,20 +346,46 @@ class TestCaseEventViews(APITestCase):
                                                 start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
                                                 end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
+        # WHEN
         response = self.client.get(
             reverse('planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
                                                                                 quote(event4.end.isoformat())))
 
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
     def test_title_search_query(self):
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user, title='test1')
         eventhelper.given_event_exists(user, title='test2')
 
+        # WHEN
         response = self.client.get(reverse('planner_events_list') + '?search=test1')
 
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], event.title)
+
+    def test_events_for_user(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
+        eventhelper.given_event_exists(user1)
+        eventhelper.given_event_exists(user2)
+        eventhelper.given_event_exists(user2)
+        eventhelper.given_event_exists(user2)
+        self.assertEqual(Event.objects.count(), 4)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_events_resource_delete'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(Event.objects.for_user(user2.pk).count(), 0)
+
+

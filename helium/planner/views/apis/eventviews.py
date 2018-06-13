@@ -1,10 +1,12 @@
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
@@ -124,3 +126,25 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         logger.info('Event {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
 
         return response
+
+
+class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
+    """
+    delete_all:
+    Delete all events for the authenticated user.
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        if hasattr(self.request, 'user'):
+            user = self.request.user
+            return user.events.all()
+        else:
+            Event.objects.none()
+
+    def delete_all(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        queryset.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

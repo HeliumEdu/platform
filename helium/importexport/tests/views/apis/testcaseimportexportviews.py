@@ -48,21 +48,22 @@ class TestCaseImportExportViews(APITestCase):
             data = {
                 'file[]': [fp]
             }
-            self.client.post(
+            response1 = self.client.post(
                 reverse('importexport_resource_import'),
                 data)
+            self.assertEqual(response1.status_code, status.HTTP_200_OK)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
         with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
             data = {
                 'file[]': [fp]
             }
-            response = self.client.post(
+            response2 = self.client.post(
                 reverse('importexport_resource_import'),
                 data)
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
@@ -323,12 +324,14 @@ class TestCaseImportExportViews(APITestCase):
 
     def test_user_registration_imports_example_schedule(self):
         # WHEN
-        self.client.post(reverse('auth_user_resource_register'),
-                         json.dumps({'email': 'test@test.com', 'username': 'my_test_user', 'password': 'test_pass_1!',
-                                     'time_zone': 'America/Chicago'}),
-                         content_type='application/json')
+        response = self.client.post(reverse('auth_user_resource_register'),
+                                    json.dumps({'email': 'test@test.com', 'username': 'my_test_user',
+                                                'password': 'test_pass_1!',
+                                                'time_zone': 'America/Chicago'}),
+                                    content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)

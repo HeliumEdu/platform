@@ -7,4 +7,12 @@ make install migrate -C ${DIR}/..
 
 source ${PLATFORM_VENV}/bin/activate
 
-python ${DIR}/../manage.py runserver
+if [ $1 = "--with-worker" ]; then
+    cd ${DIR}/..
+
+    USE_IN_MEMORY_WORKER=False python manage.py runserver & USE_IN_MEMORY_WORKER=False python -m celery beat -A conf --loglevel=INFO & USE_IN_MEMORY_WORKER=False python -m celery worker -A conf --loglevel=INFO
+
+    trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+else
+    python ${DIR}/../manage.py runserver
+fi

@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime, timedelta
 
+from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -70,3 +72,16 @@ def delete_user(user_id):
         logger.info('User {} does not exist. Nothing to do.'.format(user_id))
 
         return
+
+
+@app.task
+def expire_auth_tokens():
+    from rest_framework.authtoken.models import Token
+
+    Token.objects.filter(created__gte=datetime.now() - timedelta(days=30)).delete()
+
+
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
+    # Add schedule to check for expired auth tokens periodically
+    sender.add_periodic_task(crontab(hour=5, minute=0), expire_auth_tokens.s())

@@ -389,6 +389,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertTrue(Homework.objects.for_user(user1.pk).filter(pk=homework.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
