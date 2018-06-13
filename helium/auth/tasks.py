@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+import pytz
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -78,7 +79,7 @@ def delete_user(user_id):
 def expire_auth_tokens():
     from rest_framework.authtoken.models import Token
 
-    Token.objects.filter(created__gte=datetime.now() - timedelta(days=30)).delete()
+    Token.objects.filter(created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)).delete()
 
 
 @app.on_after_finalize.connect
