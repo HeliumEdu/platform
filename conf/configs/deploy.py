@@ -6,9 +6,8 @@ import os
 
 from boto.s3.connection import OrdinaryCallingFormat
 
+from conf.configs import common
 from conf.settings import PROJECT_ID
-from .common import DEFAULT_TEMPLATES, DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PROJECT_NAME, ADMIN_EMAIL_ADDRESS, \
-    DEBUG, PIPELINE
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -19,16 +18,22 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 # Application definition
 
-INSTALLED_APPS = DEFAULT_INSTALLED_APPS
+INSTALLED_APPS = common.INSTALLED_APPS
 
-MIDDLEWARE = DEFAULT_MIDDLEWARE
+MIDDLEWARE = common.MIDDLEWARE + (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+)
 
-TEMPLATES = DEFAULT_TEMPLATES
+TEMPLATES = common.TEMPLATES
 
-if DEBUG:
+if common.DEBUG:
     TEMPLATES[0]['OPTIONS']['context_processors'] += (
         'django.template.context_processors.debug',
     )
+
+# API configuration
+
+common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framework.post_exception_handler'
 
 #############################
 # Django configuration
@@ -44,9 +49,16 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 # Logging
 
-if not DEBUG:
+ROLLBAR = {
+    'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'environment': 'development' if common.DEBUG else 'production',
+    'branch': 'master',
+    'root': BASE_DIR,
+}
+
+if not common.DEBUG:
     ADMINS = (
-        (PROJECT_NAME, ADMIN_EMAIL_ADDRESS),
+        (common.PROJECT_NAME, common.ADMIN_EMAIL_ADDRESS),
     )
     MANAGERS = ADMINS
 
@@ -60,6 +72,18 @@ LOGGING = {
         },
     },
     'handlers': {
+        'rollbar': {
+            'level': 'WARN',
+            'class': 'rollbar.logger.RollbarHandler',
+            'filters': ['require_debug_false'],
+            'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+            'environment': 'production',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
         'django_log': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -75,11 +99,6 @@ LOGGING = {
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
         },
         'platform_auth_log': {
             'level': 'INFO',
@@ -124,7 +143,7 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['django_log', 'mail_admins'],
+            'handlers': ['django_log', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -133,23 +152,23 @@ LOGGING = {
             'level': 'ERROR',
         },
         'helium.auth': {
-            'handlers': ['platform_auth_log', 'mail_admins'],
+            'handlers': ['platform_auth_log', 'rollbar'],
             'level': 'INFO',
         },
         'helium.common': {
-            'handlers': ['platform_common_log', 'mail_admins'],
+            'handlers': ['platform_common_log', 'rollbar'],
             'level': 'INFO',
         },
         'helium.feed': {
-            'handlers': ['platform_feed_log', 'mail_admins'],
+            'handlers': ['platform_feed_log', 'rollbar'],
             'level': 'INFO',
         },
         'helium.importexport': {
-            'handlers': ['platform_importexport_log', 'mail_admins'],
+            'handlers': ['platform_importexport_log', 'rollbar'],
             'level': 'INFO',
         },
         'helium.planner': {
-            'handlers': ['platform_planner_log', 'mail_admins'],
+            'handlers': ['platform_planner_log', 'rollbar'],
             'level': 'INFO',
         },
     }
@@ -193,8 +212,8 @@ if SERVE_LOCAL:
 
     # Pipelines
 
-    PIPELINE['CSS_COMPRESSOR'] = None
-    PIPELINE['JS_COMPRESSOR'] = None
+    common.PIPELINE['CSS_COMPRESSOR'] = None
+    common.PIPELINE['JS_COMPRESSOR'] = None
 else:
     # Storages
     INSTALLED_APPS += (
