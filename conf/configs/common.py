@@ -43,7 +43,7 @@ TWILIO_SMS_FROM = os.environ.get('PLATFORM_TWILIO_SMS_FROM')
 # Default lists for host-specific configurations
 #############################
 
-DEFAULT_INSTALLED_APPS = (
+INSTALLED_APPS = (
     # Django modules
     'django.contrib.admin',
     'django.contrib.auth',
@@ -70,7 +70,7 @@ DEFAULT_INSTALLED_APPS = (
     'helium.planner',
 )
 
-DEFAULT_MIDDLEWARE = (
+MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,7 +81,7 @@ DEFAULT_MIDDLEWARE = (
     'maintenance_mode.middleware.MaintenanceModeMiddleware',
 )
 
-DEFAULT_TEMPLATES = [{
+TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
     'APP_DIRS': True,
     'OPTIONS': {

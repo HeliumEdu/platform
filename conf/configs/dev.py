@@ -5,8 +5,8 @@ Settings specific to a development environment using Django's `runserver` comman
 import os
 import warnings
 
+from conf.configs import common
 from conf.settings import PROJECT_ID
-from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -17,15 +17,15 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 # Application definition
 
-INSTALLED_APPS = DEFAULT_INSTALLED_APPS + (
+INSTALLED_APPS = common.INSTALLED_APPS + (
     'debug_toolbar',
 )
 
-MIDDLEWARE = DEFAULT_MIDDLEWARE + (
+MIDDLEWARE = common.MIDDLEWARE + (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-TEMPLATES = DEFAULT_TEMPLATES
+TEMPLATES = common.TEMPLATES
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += (
     'django.template.context_processors.debug',
@@ -136,8 +136,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Pipelines
 
-PIPELINE['CSS_COMPRESSOR'] = None
-PIPELINE['JS_COMPRESSOR'] = None
+common.PIPELINE['CSS_COMPRESSOR'] = None
+common.PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
