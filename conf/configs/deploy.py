@@ -79,11 +79,6 @@ LOGGING = {
             'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
             'environment': 'production',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
-        },
         'django_log': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
