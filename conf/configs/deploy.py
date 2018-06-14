@@ -21,7 +21,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 INSTALLED_APPS = common.INSTALLED_APPS
 
 MIDDLEWARE = common.MIDDLEWARE + (
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 )
 
 TEMPLATES = common.TEMPLATES
