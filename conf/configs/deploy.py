@@ -51,7 +51,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 ROLLBAR = {
     'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
-    'environment': 'development' if common.DEBUG else 'production',
+    'environment': os.environ.get('ENVIRONMENT'),
     'branch': 'master',
     'root': BASE_DIR,
 }
@@ -71,13 +71,16 @@ LOGGING = {
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
     'handlers': {
         'rollbar': {
             'level': 'WARN',
             'class': 'rollbar.logger.RollbarHandler',
             'filters': ['require_debug_false'],
-            'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
-            'environment': 'production',
         },
         'django_log': {
             'level': 'ERROR',
