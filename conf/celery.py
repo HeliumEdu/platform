@@ -1,7 +1,6 @@
 """
 Initialize Celery with Django configuration.
 """
-
 import os
 
 from celery import Celery
@@ -19,7 +18,7 @@ app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'True':
+if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'True' and hasattr(settings, 'ROLLBAR'):
     import rollbar
 
     rollbar.init(**settings.ROLLBAR)
@@ -33,5 +32,5 @@ if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'Tr
 
 
     @task_failure.connect
-    def handle_task_failure(**kw):
-        rollbar.report_exc_info(extra_data=kw)
+    def handle_task_failure(**kwargs):
+        rollbar.report_exc_info(extra_data=kwargs)
