@@ -11,7 +11,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.22'
 
 
 class TestCaseCourseGroupViews(APITestCase):

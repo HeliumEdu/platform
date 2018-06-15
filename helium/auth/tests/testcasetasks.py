@@ -12,7 +12,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.21'
+__version__ = '1.4.22'
 
 
 class TestCaseTasks(APITestCase):

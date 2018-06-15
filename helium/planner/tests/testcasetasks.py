@@ -5,7 +5,7 @@ from helium.planner.tasks import email_reminders, text_reminders
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.21'
+__version__ = '1.4.22'
 
 
 class TestCasePlannerTasks(TestCase):
