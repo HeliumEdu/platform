@@ -55,6 +55,7 @@ INSTALLED_APPS = (
     'django.contrib.sitemaps',
     # Health modules
     'health_check',
+    'health_check.db',
     # Third-party modules
     'maintenance_mode',
     'pipeline',
