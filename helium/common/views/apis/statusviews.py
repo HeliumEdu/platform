@@ -1,12 +1,13 @@
 import copy
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 import psutil
 from django.http import JsonResponse
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
-from health_check.exceptions import HealthCheckException
 from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import ViewSet
@@ -37,15 +38,15 @@ def _run_checks(plugins):
 
 def _build_components_status(plugins):
     components = {}
-    system_level = HealthCheckException.level
-    system_status = 'operational'
+    system_level = sys.maxsize
+    system_status = _('operational')
     for p in plugins:
         components[str(p.identifier())] = {
-            "status": p.severity[1],
+            "status": p.severity[1] if p.errors else _('operational'),
             "description": p.description,
             "took": round(getattr(p, 'time_taken', -1), 4)
         }
-        if p.critical and p.severity[0] < system_level:
+        if p.critical and p.errors and p.severity[0] < system_level:
             system_level = p.severity[0]
             system_status = components[str(p.identifier())]["status"]
 

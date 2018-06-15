@@ -14,6 +14,8 @@ class CommonConfig(AppConfig):
     verbose_name = 'Common'
 
     def ready(self):
+        plugin_dir.reset()
+
         from health_check.db.backends import DatabaseBackend
         from health_check.cache.backends import CacheBackend
         from health_check.contrib.celery.backends import CeleryHealthCheck
