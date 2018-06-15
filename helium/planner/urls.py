@@ -22,7 +22,7 @@ from helium.planner.views.apis.reminderviews import RemindersApiListView, Remind
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__version__ = '1.4.22'
 
 urlpatterns = [
     ##############################

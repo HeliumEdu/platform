@@ -17,7 +17,7 @@ from helium.planner.serializers.eventserializer import EventSerializer, EventExt
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.22'
 
 logger = logging.getLogger(__name__)
 
