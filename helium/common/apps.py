@@ -6,7 +6,7 @@ from health_check.plugins import plugin_dir
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.19'
+__version__ = '1.4.23'
 
 
 class CommonConfig(AppConfig):
@@ -14,6 +14,8 @@ class CommonConfig(AppConfig):
     verbose_name = 'Common'
 
     def ready(self):
+        plugin_dir.reset()
+
         from health_check.db.backends import DatabaseBackend
         from health_check.cache.backends import CacheBackend
         from health_check.contrib.celery.backends import CeleryHealthCheck
