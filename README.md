@@ -87,6 +87,16 @@ bin/runserver
 
 A development server will be started at http://localhost:8000.
 
+Additionally, this project also contains a worker that executes asynchronous or scheduled tasks, and the above server
+can be started with this worker as well. When developing locally, it is less necessary to run this worker
+(when `ENVIRONMENT` is "dev", tasks are executed synchronously), but it may still be useful, especially for testing
+scheduled tasks, so a standalone executable is provided for convenience. To start the server with the worker, ensure
+Redis is installed locally and instead execute:
+
+```
+bin/runserver --with-worker
+```
+
 Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
 before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
 

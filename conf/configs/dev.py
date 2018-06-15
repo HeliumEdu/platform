@@ -5,27 +5,27 @@ Settings specific to a development environment using Django's `runserver` comman
 import os
 import warnings
 
+from conf.configs import common
 from conf.settings import PROJECT_ID
-from .common import DEFAULT_MIDDLEWARE, DEFAULT_INSTALLED_APPS, PIPELINE, DEFAULT_TEMPLATES
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.19'
+__version__ = '1.4.22'
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
 
 # Application definition
 
-INSTALLED_APPS = DEFAULT_INSTALLED_APPS + (
+INSTALLED_APPS = common.INSTALLED_APPS + (
     'debug_toolbar',
 )
 
-MIDDLEWARE = DEFAULT_MIDDLEWARE + (
+MIDDLEWARE = common.MIDDLEWARE + (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-TEMPLATES = DEFAULT_TEMPLATES
+TEMPLATES = common.TEMPLATES
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += (
     'django.template.context_processors.debug',
@@ -96,7 +96,7 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
     CACHES = {
         'default': {
             'BACKEND': 'helium.common.cache.locmemkeys.LocMemKeysCache',
@@ -136,10 +136,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Pipelines
 
-PIPELINE['CSS_COMPRESSOR'] = None
-PIPELINE['JS_COMPRESSOR'] = None
+common.PIPELINE['CSS_COMPRESSOR'] = None
+common.PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+if os.environ.get('USE_IN_MEMORY_WORKER', 'True') == 'True':
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+else:
+    from conf.configs import deploy
+
+    CELERY_BROKER_URL = deploy.CELERY_BROKER_URL
+    CELERY_RESULT_BACKEND = deploy.CELERY_RESULT_BACKEND
+    CELERY_TASK_SOFT_TIME_LIMIT = deploy.CELERY_TASK_SOFT_TIME_LIMIT

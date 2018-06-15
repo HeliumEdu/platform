@@ -11,7 +11,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.22'
 
 
 class TestCaseAuthenticationViews(TestCase):
@@ -80,6 +80,7 @@ class TestCaseAuthenticationViews(TestCase):
                                     content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(get_user_model().objects.filter(username='my_test_user').exists())
         self.assertIn('email', response.data)
 

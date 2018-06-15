@@ -11,7 +11,7 @@ django-filter==1.1.0
 django-maintenance-mode==0.9.0
 django-pipeline==1.6.14
 django-cors-headers==2.2.0
-celery[redis]==4.1.0
+celery[redis]==4.1.1
 django-redis==4.9.0
 statsd==3.2.2
 datadog==0.20.0
@@ -29,4 +29,5 @@ Pygments==2.2.0
 Markdown==2.6.11
 Sphinx==1.7.4
 psutil==5.4.5
+rollbar==0.14.0
 -e git+git://github.com/alexdlaird/django-health-check.git@alaird-3.5.4#egg=django-health-check

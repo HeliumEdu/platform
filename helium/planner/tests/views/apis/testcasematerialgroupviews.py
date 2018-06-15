@@ -10,7 +10,7 @@ from helium.planner.tests.helpers import materialgrouphelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.22'
 
 
 class TestCaseMaterialGroupViews(APITestCase):
@@ -165,6 +165,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

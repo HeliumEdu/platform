@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__version__ = '1.4.22'
 
 
 class TestCaseUserSettingsViews(APITestCase):
@@ -43,6 +43,7 @@ class TestCaseUserSettingsViews(APITestCase):
                                    content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['show_getting_started'])
         self.assertEqual(response.data['time_zone'], 'America/Chicago')
         user = get_user_model().objects.get(pk=user.id)

@@ -15,7 +15,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homewo
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.22'
 
 
 class TestCaseReminderViews(APITestCase):
@@ -318,6 +318,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertTrue(Reminder.objects.filter(pk=event_reminder.pk, user_id=user1.pk).exists())
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -391,6 +392,7 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         for response in responses:
             if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

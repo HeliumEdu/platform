@@ -1,15 +1,15 @@
 """
 Initialize Celery with Django configuration.
 """
-
 import os
 
 from celery import Celery
+from celery.signals import task_failure
 from django.conf import settings
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__version__ = '1.4.22'
 
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
@@ -17,3 +17,20 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'True' and hasattr(settings, 'ROLLBAR'):
+    import rollbar
+
+    rollbar.init(**settings.ROLLBAR)
+
+
+    def celery_base_data_hook(request, data):
+        data['framework'] = 'celery'
+
+
+    rollbar.BASE_DATA_HOOK = celery_base_data_hook
+
+
+    @task_failure.connect
+    def handle_task_failure(**kwargs):
+        rollbar.report_exc_info(extra_data=kwargs)
