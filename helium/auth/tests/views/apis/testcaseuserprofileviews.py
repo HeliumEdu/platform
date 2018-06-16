@@ -5,6 +5,7 @@ from django.urls import reverse
 from mock import mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from twilio.base.exceptions import TwilioRestException
 
 from helium.auth.tests.helpers import userhelper
 from helium.common.services.phoneservice import HeliumPhoneError
@@ -29,9 +30,9 @@ class TestCaseUserProfileViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @mock.patch('helium.common.tasks.send_sms')
+    @mock.patch('helium.common.services.phoneservice.client.api.account.messages.create')
     @mock.patch('helium.auth.serializers.userprofileserializer.verify_number', return_value='+15555555555')
-    def test_put_user_profile(self, mock_verify_number, mock_send_sms):
+    def test_put_user_profile(self, mock_verify_number, mock_sms_messages_create):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertIsNone(user.profile.phone)
@@ -46,7 +47,7 @@ class TestCaseUserProfileViews(APITestCase):
 
         # THEN
         mock_verify_number.assert_called_once()
-        mock_send_sms.assert_called_once()
+        mock_sms_messages_create.assert_called_once()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
         self.assertEqual(response.data['phone_changing'], '+15555555555')

@@ -32,7 +32,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
     # skip it
     try:
         gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
-    except IntegrityError as ex:
+    except IntegrityError as ex:  # pragma: no cover
         if retries < _INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
@@ -56,7 +56,7 @@ def recalculate_course_grade(course_id, retries=0):
         gradingservice.recalculate_course_grade(course)
 
         recalculate_course_group_grade(course.course_group.pk)
-    except IntegrityError as ex:
+    except IntegrityError as ex:  # pragma: no cover
         if retries < _INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
@@ -77,7 +77,7 @@ def recalculate_category_grades_for_course(course_id, retries=0):
 
         for category in course.categories.iterator():
             recalculate_category_grade(category.pk)
-    except IntegrityError as ex:
+    except IntegrityError as ex:  # pragma: no cover
         if retries < _INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning(
@@ -103,7 +103,7 @@ def recalculate_category_grade(category_id, retries=0):
         gradingservice.recalculate_category_grade(category)
 
         recalculate_course_grade(category.course.pk)
-    except IntegrityError as ex:
+    except IntegrityError as ex:  # pragma: no cover
         if retries < _INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
