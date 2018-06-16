@@ -5,7 +5,6 @@ from django.urls import reverse
 from mock import mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from twilio.base.exceptions import TwilioRestException
 
 from helium.auth.tests.helpers import userhelper
 from helium.common.services.phoneservice import HeliumPhoneError
