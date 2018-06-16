@@ -98,3 +98,25 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(user.get_username(), 'test_user')
         self.assertTrue(user.is_active)
+
+    def test_verification_bad_request(self):
+        # GIVEN
+        user = userhelper.given_an_inactive_user_exists()
+
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_verify') + '?code={}'.format(user.verification_code))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        user = get_user_model().objects.get(email=user.email)
+        self.assertIn("'username' and 'password' must be given", response.data[0])
+        self.assertFalse(user.is_active)
+
+    def test_verification_not_found(self):
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_verify') + '?username={}&code={}'.format('not-a-user', 'not-a-real-code'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

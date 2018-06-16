@@ -23,15 +23,21 @@ class TestCaseAuthToken(APITestCase):
             'username': user.get_username(),
             'password': 'test_pass_1!'
         }
-        response = self.client.post(reverse('auth_token_resource_obtain'),
-                                    json.dumps(data),
-                                    content_type='application/json')
+        response1 = self.client.post(reverse('auth_token_resource_obtain'),
+                                     json.dumps(data),
+                                     content_type='application/json')
+        response2 = self.client.post(reverse('auth_token_resource_obtain'),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertIn('token', response.data)
+        self.assertEquals(response1.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response1.data)
         user = get_user_model().objects.get(username=user.get_username())
         self.assertIsNotNone(user.last_login)
+        # A reobtained token should delete the first token and reissue
+        self.assertEquals(response1.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response1.data['token'], response2.data['token'])
 
     def test_token_fail_no_password(self):
         # GIVEN
