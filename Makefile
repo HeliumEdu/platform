@@ -11,7 +11,7 @@ env:
 virtualenv:
 	@if [ ! -d "$(PLATFORM_VENV)" ]; then \
 		python3 -m pip install virtualenv; \
-        python3 -m virtualenv $(PLATFORM_VENV); \
+		python3 -m virtualenv $(PLATFORM_VENV); \
 	fi
 
 install: env virtualenv
