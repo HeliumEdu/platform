@@ -82,7 +82,7 @@ LOGGING = {
             'class': 'rollbar.logger.RollbarHandler',
             'filters': ['require_debug_false'],
         },
-        'django_log': {
+        'django': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/django.log'.format(PROJECT_ID),
@@ -90,7 +90,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'health_check_log': {
+        'health_check': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/health_check.log'.format(PROJECT_ID),
@@ -98,7 +98,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_auth_log': {
+        'platform_auth': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/platform_auth.log'.format(PROJECT_ID),
@@ -106,7 +106,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_common_log': {
+        'platform_common': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/platform_common.log'.format(PROJECT_ID),
@@ -114,7 +114,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_feed_log': {
+        'platform_feed': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/platform_feed.log'.format(PROJECT_ID),
@@ -122,7 +122,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_importexport_log': {
+        'platform_importexport': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/platform_importexport.log'.format(PROJECT_ID),
@@ -130,7 +130,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_planner_log': {
+        'platform_planner': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/{}/platform_planner.log'.format(PROJECT_ID),
@@ -141,32 +141,32 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['django_log', 'rollbar'],
+            'handlers': ['django', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
         'health-check': {
-            'handlers': ['health_check_log'],
+            'handlers': ['health_check', 'rollbar'],
             'level': 'ERROR',
         },
         'helium.auth': {
-            'handlers': ['platform_auth_log', 'rollbar'],
+            'handlers': ['platform_auth', 'rollbar'],
             'level': 'INFO',
         },
         'helium.common': {
-            'handlers': ['platform_common_log', 'rollbar'],
+            'handlers': ['platform_common', 'rollbar'],
             'level': 'INFO',
         },
         'helium.feed': {
-            'handlers': ['platform_feed_log', 'rollbar'],
+            'handlers': ['platform_feed', 'rollbar'],
             'level': 'INFO',
         },
         'helium.importexport': {
-            'handlers': ['platform_importexport_log', 'rollbar'],
+            'handlers': ['platform_importexport', 'rollbar'],
             'level': 'INFO',
         },
         'helium.planner': {
-            'handlers': ['platform_planner_log', 'rollbar'],
+            'handlers': ['platform_planner', 'rollbar'],
             'level': 'INFO',
         },
     }
