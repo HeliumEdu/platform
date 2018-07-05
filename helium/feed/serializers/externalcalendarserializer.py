@@ -8,7 +8,7 @@ from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.25'
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +34,12 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             try:
                 icalexternalcalendarservice.validate_url(url)
             except HeliumICalError:
-                logger.info("Unable to validate external ICAL URL {}, so disabling the calendar.")
+                logger.info("Unable to validate external ICAL URL {}, so disabling the calendar.".format(url))
 
                 if self.instance:
                     self.instance.shown_on_calendar = False
                     self.instance.save()
-                else:
-                    attrs['shown_on_calendar'] = False
+
+                attrs['shown_on_calendar'] = False
 
         return attrs
