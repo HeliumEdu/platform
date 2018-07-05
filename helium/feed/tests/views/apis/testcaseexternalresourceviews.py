@@ -112,3 +112,20 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
             self.assertEqual(response_db.data[0]['comments'], response_cached.data[0]['comments'])
             self.assertEqual(response_db.data[0]['user'], response_cached.data[0]['user'])
             self.assertEqual(response_db.data[0]['calendar_item_type'], response_cached.data[0]['calendar_item_type'])
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_external_calendar_invalid_ical(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("valid ICAL", response.data[0])
+        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.pk)
+        self.assertFalse(external_calendar.shown_on_calendar)
