@@ -118,7 +118,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen,
+                                                    status.HTTP_400_BAD_REQUEST)
 
         # WHEN
         response = self.client.get(
