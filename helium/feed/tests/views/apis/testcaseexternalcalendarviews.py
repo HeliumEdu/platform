@@ -13,7 +13,7 @@ from helium.feed.tests.helpers import externalcalendarhelper, icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.25'
 
 
 class TestCaseExternalCalendarViews(APITestCase):
