@@ -1,4 +1,5 @@
 import json
+import os
 
 import mock
 from django.urls import reverse
@@ -8,7 +9,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
-from helium.feed.tests.helpers import externalcalendarhelper
+from helium.feed.tests.helpers import externalcalendarhelper, icalfeedhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -193,6 +194,48 @@ class TestCaseExternalCalendarViews(APITestCase):
         # WHEN
         data = {
             'url': 'http://www.not-a-valid-ical-url.com/nope',
+            # Intentionally NOT changing these value
+            'title': external_calendar.title
+        }
+        response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+                                   json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['url'], data['url'])
+        self.assertFalse(response.data['shown_on_calendar'])
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_create_invalid_ical(self, mock_urlopen):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'url': 'http://www.example.com/bad-ical',
+            'color': '#7bd148',
+            'shown_on_calendar': True
+        }
+        response = self.client.post(reverse('feed_externalcalendars_list'), json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['url'], data['url'])
+        self.assertFalse(response.data['shown_on_calendar'])
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_update_invalid_ical(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+
+        # WHEN
+        data = {
+            'url': 'http://www.example.com/bad-ical',
             # Intentionally NOT changing these value
             'title': external_calendar.title
         }

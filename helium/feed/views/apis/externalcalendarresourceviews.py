@@ -1,5 +1,6 @@
 import logging
 
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -8,6 +9,7 @@ from helium.common.views.views import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.services import icalexternalcalendarservice
+from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
@@ -39,8 +41,14 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
     def get(self, request, *args, **kwargs):
         external_calendar = self.get_object()
 
-        # TODO: add support for filtering
-        events = icalexternalcalendarservice.calendar_to_events(external_calendar)
+        try:
+            # TODO: add support for filtering
+            events = icalexternalcalendarservice.calendar_to_events(external_calendar)
+        except HeliumICalError as ex:
+            external_calendar.shown_on_calendar = False
+            external_calendar.save()
+
+            raise ValidationError(ex)
 
         serializer = self.get_serializer(events, many=True)
 
