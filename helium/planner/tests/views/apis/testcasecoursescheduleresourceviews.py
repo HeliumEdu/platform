@@ -15,7 +15,7 @@ __copyright__ = 'Copyright 2018, Helium Edu'
 __version__ = '1.4.22'
 
 
-class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
+class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
     def test_courseschedule_event_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
