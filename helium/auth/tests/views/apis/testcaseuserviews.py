@@ -43,6 +43,7 @@ class TestCaseUserViews(APITestCase):
         self.assertNotIn('phone_verification_code', response.data['profile'])
         self.assertEqual(user.profile.phone, response.data['profile']['phone'])
         self.assertEqual(user.profile.user.pk, response.data['profile']['user'])
+        self.assertEqual(user.settings.time_zone, response.data['settings']['time_zone'])
         self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
         self.assertEqual(user.settings.week_starts_on, response.data['settings']['week_starts_on'])
         self.assertEqual(user.settings.all_day_offset, response.data['settings']['all_day_offset'])
