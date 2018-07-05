@@ -11,7 +11,7 @@ from helium.common.services.phoneservice import HeliumPhoneError
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__version__ = '1.4.24'
 
 
 class TestCaseUserProfileViews(APITestCase):
