@@ -8,17 +8,28 @@ from django.core.cache import cache
 from django.utils.timezone import make_aware
 
 from helium.common import enums
+from helium.common.utils.commonutils import HeliumError
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.3'
+__version__ = '1.4.24'
 
 logger = logging.getLogger(__name__)
 
 
+class HeliumCourseScheduleError(HeliumError):
+    pass
+
+
 def _get_start_time_for_weekday(course_schedule, weekday):
+    if 0 < weekday > 6:
+        raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
+
+    if course_schedule.days_of_week[weekday] != "1":
+        return None
+
     if weekday == 0:
         return course_schedule.sun_start_time
     elif weekday == 1:
@@ -36,6 +47,12 @@ def _get_start_time_for_weekday(course_schedule, weekday):
 
 
 def _get_end_time_for_weekday(course_schedule, weekday):
+    if 0 < weekday > 6:
+        raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
+
+    if course_schedule.days_of_week[weekday] != "1":
+        return None
+
     if weekday == 0:
         return course_schedule.sun_end_time
     elif weekday == 1:

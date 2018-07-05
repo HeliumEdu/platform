@@ -11,7 +11,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.23'
+__version__ = '1.4.24'
 
 # ############################
 # Project configuration
@@ -52,7 +52,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'django.contrib.sitemaps',
     # Health modules
     'health_check',
     'health_check.db',

@@ -22,7 +22,7 @@ from helium.planner.views.apis.reminderviews import RemindersApiListView, Remind
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.22'
+__version__ = '1.4.24'
 
 urlpatterns = [
     ##############################
@@ -87,7 +87,8 @@ urlpatterns = [
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
-    path('planner/events/delete/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}), name='planner_events_resource_delete'),
+    path('planner/events/delete/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
+         name='planner_events_resource_delete'),
 
     # Homework
     path('planner/homework/', UserHomeworkApiListView.as_view(), name='planner_homework_list'),

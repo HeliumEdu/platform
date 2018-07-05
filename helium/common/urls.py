@@ -3,12 +3,12 @@ from django.views.generic import RedirectView
 from rest_framework.documentation import include_docs_urls
 
 from helium.common.admin import admin_site
-from helium.common.views.apis.statusviews import HealthResourceView, StatusResourceView
 from helium.common.views.apis.infoviews import InfoResourceView
+from helium.common.views.apis.statusviews import HealthResourceView, StatusResourceView
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.9'
+__version__ = '1.4.24'
 
 urlpatterns = [
     # Base URL
