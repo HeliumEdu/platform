@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
 [![codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
+[![Updates](https://pyup.io/repos/github/HeliumEdu/platform/shield.svg)](https://pyup.io/repos/github/HeliumEdu/platform/)
+[![Python 3](https://pyup.io/repos/github/HeliumEdu/platform/python-3-shield.svg)](https://pyup.io/repos/github/HeliumEdu/platform/)
+
 
 
 # Helium Platform Project
