@@ -6,7 +6,6 @@ django-dotenv==1.4.2
 django-debug-toolbar==1.9.1
 django-storages==1.6.6
 djangorestframework==3.8.2
-coreschema==0.0.4
 django-filter==1.1.0
 django-maintenance-mode==0.9.0
 django-pipeline==1.6.14
@@ -18,7 +17,6 @@ datadog==0.20.0
 boto==2.48.0
 twilio==6.13.0
 pyOpenSSL==17.5.0
-pycrypto==2.6.1
 Pillow==5.1.0
 icalendar==4.0.1
 python-dateutil==2.7.2
