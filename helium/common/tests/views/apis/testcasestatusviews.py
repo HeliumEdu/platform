@@ -10,7 +10,7 @@ from helium.common.tests.helpers import commonhelper
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.22'
+__version__ = '1.4.27'
 
 
 class TestCaseStatusViews(APITestCase):
