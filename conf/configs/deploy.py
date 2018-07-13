@@ -145,6 +145,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'django.security': {
+            'handlers': ['django', 'rollbar'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'health-check': {
             'handlers': ['health_check', 'rollbar'],
             'level': 'ERROR',
