@@ -11,7 +11,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.31'
+__version__ = '1.4.32'
 
 # ############################
 # Project configuration
@@ -129,6 +129,10 @@ MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IG
 MAINTENANCE_MODE_IGNORE_TESTS = True
 
 MAINTENANCE_MODE_IGNORE_URLS = ('^/admin',)
+
+# Healthcheck
+
+HEALTHCHECK_CELERY_TIMEOUT = 10
 
 # API configuration
 
