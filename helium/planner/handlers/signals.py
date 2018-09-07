@@ -10,7 +10,7 @@ from helium.planner.tasks import recalculate_category_grades_for_course, recalcu
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.21'
+__version__ = '1.4.33'
 
 logger = logging.getLogger(__name__)
 
