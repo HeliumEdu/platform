@@ -41,7 +41,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
         else:
             raise ex
     except CourseGroup.DoesNotExist:
-        pass
+        logger.info("CourseGroup {} does not exist. Nothing to do.".format(course_group_id))
 
 
 @app.task
@@ -65,7 +65,7 @@ def recalculate_course_grade(course_id, retries=0):
         else:
             raise ex
     except Course.DoesNotExist:
-        pass
+        logger.info("Course {} does not exist. Nothing to do.".format(course_id))
 
 
 @app.task
@@ -88,7 +88,7 @@ def recalculate_category_grades_for_course(course_id, retries=0):
         else:
             raise ex
     except Course.DoesNotExist:
-        pass
+        logger.info("Course {} does not exist. Nothing to do.".format(course_id))
 
 
 @app.task
@@ -112,7 +112,7 @@ def recalculate_category_grade(category_id, retries=0):
         else:
             raise ex
     except Category.DoesNotExist:
-        pass
+        logger.info("Category {} does not exist. Nothing to do.".format(category_id))
 
 
 @app.task

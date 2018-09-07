@@ -46,7 +46,7 @@ def delete_homework(sender, instance, **kwargs):
         if instance.category:
             recalculate_category_grade.delay(instance.category.pk)
     except Category.DoesNotExist:
-        pass
+        logger.info("Category does not exist for Homework {}. Nothing to do.".format(instance.pk))
 
 
 @receiver(post_save, sender=Event)
