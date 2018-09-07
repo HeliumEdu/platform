@@ -10,7 +10,7 @@ from helium.planner.tasks import recalculate_category_grades_for_course, recalcu
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.21'
+__version__ = '1.4.33'
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def delete_homework(sender, instance, **kwargs):
         if instance.category:
             recalculate_category_grade.delay(instance.category.pk)
     except Category.DoesNotExist:
-        pass
+        logger.info("Category does not exist for Homework {}. Nothing to do.".format(instance.pk))
 
 
 @receiver(post_save, sender=Event)
