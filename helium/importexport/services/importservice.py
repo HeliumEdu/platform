@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.planner.models import CourseGroup, Course, Homework, Event
+from helium.planner.models import CourseGroup, Course, Homework, Event, Category
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -21,7 +21,7 @@ from helium.planner.serializers.materialgroupserializer import MaterialGroupSeri
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
-from helium.planner.tasks import adjust_reminder_times
+from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
@@ -363,3 +363,6 @@ def import_example_schedule(user):
     import_user(request, json_str)
 
     _adjust_schedule_relative_today(user)
+
+    for category in Category.objects.for_user(user.pk).iterator():
+        recalculate_category_grade.delay(category.pk)
