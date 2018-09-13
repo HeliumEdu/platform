@@ -6,6 +6,7 @@ from urllib.request import urlopen, URLError
 import icalendar
 import pytz
 from dateutil import parser
+from django.conf import settings
 from django.core import validators
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -19,7 +20,7 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.10'
+__version__ = '1.4.35'
 
 logger = logging.getLogger(__name__)
 
@@ -103,8 +104,8 @@ def _create_events_from_calendar(external_calendar, calendar):
 
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
-    if len(events_json.encode('utf-8')) <= 3000000:
-        cache.set(_get_cache_prefix(external_calendar), events_json, 300)
+    if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
+        cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL)
 
     return events
 

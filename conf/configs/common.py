@@ -11,7 +11,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = 'Alex Laird'
 __copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.34'
+__version__ = '1.4.35'
 
 # ############################
 # Project configuration
@@ -104,6 +104,20 @@ TEMPLATES = [{
 # Project configuration
 
 SERVE_LOCAL = False
+
+AUTH_TOKEN_EXPIRE_FREQUENCY_HOUR = 5
+
+AUTH_TOKEN_TTL_DAYS = 30
+
+FEED_MAX_CACHEABLE_SIZE = 3000000
+
+FEED_CACHE_TTL = 300
+
+DB_INTEGRITY_RETRIES = 2
+
+DB_INTEGRITY_RETRY_DELAY = 2
+
+REMINDERS_FREQUENCY_SEC = 30
 
 # Application definition
 
