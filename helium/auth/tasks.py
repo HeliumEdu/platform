@@ -79,10 +79,11 @@ def delete_user(user_id):
 def expire_auth_tokens():
     from rest_framework.authtoken.models import Token
 
-    Token.objects.filter(created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)).delete()
+    Token.objects.filter(
+        created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.AUTH_TOKEN_TTL_DAYS)).delete()
 
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(crontab(hour=5, minute=0), expire_auth_tokens.s())
+    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRE_FREQUENCY_HOUR, minute=0), expire_auth_tokens.s())
