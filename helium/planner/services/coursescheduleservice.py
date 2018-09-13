@@ -18,54 +18,62 @@ __version__ = '1.4.24'
 
 logger = logging.getLogger(__name__)
 
+_SUNDAY = 0
+_MONDAY = 1
+_TUESDAY = 2
+_WEDNESDAY = 3
+_THURSDAY = 4
+_FRIDAY = 5
+_SATURDAY = 6
+
 
 class HeliumCourseScheduleError(HeliumError):
     pass
 
 
 def _get_start_time_for_weekday(course_schedule, weekday):
-    if 0 < weekday > 6:
+    if _SUNDAY < weekday > _SATURDAY:
         raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
 
     if course_schedule.days_of_week[weekday] != "1":
         return None
 
-    if weekday == 0:
+    if weekday == _SUNDAY:
         return course_schedule.sun_start_time
-    elif weekday == 1:
+    elif weekday == _MONDAY:
         return course_schedule.mon_start_time
-    elif weekday == 2:
+    elif weekday == _TUESDAY:
         return course_schedule.tue_start_time
-    elif weekday == 3:
+    elif weekday == _WEDNESDAY:
         return course_schedule.wed_start_time
-    elif weekday == 4:
+    elif weekday == _THURSDAY:
         return course_schedule.thu_start_time
-    elif weekday == 5:
+    elif weekday == _FRIDAY:
         return course_schedule.fri_start_time
-    elif weekday == 6:
+    elif weekday == _SATURDAY:
         return course_schedule.sat_start_time
 
 
 def _get_end_time_for_weekday(course_schedule, weekday):
-    if 0 < weekday > 6:
+    if _SUNDAY < weekday > _SATURDAY:
         raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
 
     if course_schedule.days_of_week[weekday] != "1":
         return None
 
-    if weekday == 0:
+    if weekday == _SUNDAY:
         return course_schedule.sun_end_time
-    elif weekday == 1:
+    elif weekday == _MONDAY:
         return course_schedule.mon_end_time
-    elif weekday == 2:
+    elif weekday == _TUESDAY:
         return course_schedule.tue_end_time
-    elif weekday == 3:
+    elif weekday == _WEDNESDAY:
         return course_schedule.wed_end_time
-    elif weekday == 4:
+    elif weekday == _THURSDAY:
         return course_schedule.thu_end_time
-    elif weekday == 5:
+    elif weekday == _FRIDAY:
         return course_schedule.fri_end_time
-    elif weekday == 6:
+    elif weekday == _SATURDAY:
         return course_schedule.sat_end_time
 
 

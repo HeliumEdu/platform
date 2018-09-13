@@ -20,9 +20,6 @@ __version__ = '1.4.33'
 
 logger = logging.getLogger(__name__)
 
-_INTEGRITY_RETRIES = 2
-_INTEGRITY_RETRY_DELAY = 2
-
 
 @app.task
 def recalculate_course_group_grade(course_group_id, retries=0):
@@ -33,11 +30,12 @@ def recalculate_course_group_grade(course_group_id, retries=0):
     try:
         gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
     except IntegrityError as ex:  # pragma: no cover
-        if retries < _INTEGRITY_RETRIES:
+        if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
 
-            recalculate_course_group_grade.apply_async((course_group_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+            recalculate_course_group_grade.apply_async((course_group_id, retries + 1),
+                                                       countdown=settings.INTEGRITY_RETRY_BACKOFF)
         else:
             raise ex
     except CourseGroup.DoesNotExist:
@@ -57,11 +55,11 @@ def recalculate_course_grade(course_id, retries=0):
 
         recalculate_course_group_grade(course.course_group.pk)
     except IntegrityError as ex:  # pragma: no cover
-        if retries < _INTEGRITY_RETRIES:
+        if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
 
-            recalculate_course_grade.apply_async((course_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+            recalculate_course_grade.apply_async((course_id, retries + 1), countdown=settings.INTEGRITY_RETRY_BACKOFF)
         else:
             raise ex
     except Course.DoesNotExist:
@@ -78,13 +76,13 @@ def recalculate_category_grades_for_course(course_id, retries=0):
         for category in course.categories.iterator():
             recalculate_category_grade(category.pk)
     except IntegrityError as ex:  # pragma: no cover
-        if retries < _INTEGRITY_RETRIES:
+        if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning(
                 "Integrity error occurred, delaying before retrying `recalculate_category_grades_for_course` task")
 
             recalculate_category_grades_for_course.apply_async((course_id, retries + 1),
-                                                               countdown=_INTEGRITY_RETRY_DELAY)
+                                                               countdown=settings.INTEGRITY_RETRY_BACKOFF)
         else:
             raise ex
     except Course.DoesNotExist:
@@ -104,11 +102,12 @@ def recalculate_category_grade(category_id, retries=0):
 
         recalculate_course_grade(category.course.pk)
     except IntegrityError as ex:  # pragma: no cover
-        if retries < _INTEGRITY_RETRIES:
+        if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
 
-            recalculate_category_grade.apply_async((category_id, retries + 1), countdown=_INTEGRITY_RETRY_DELAY)
+            recalculate_category_grade.apply_async((category_id, retries + 1),
+                                                   countdown=settings.INTEGRITY_RETRY_BACKOFF)
         else:
             raise ex
     except Category.DoesNotExist:
@@ -205,7 +204,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule for email reminders every ten seconds
-    sender.add_periodic_task(10.0, email_reminders.s())
+    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, email_reminders.s())
 
     # Add schedule for text reminders every ten seconds
-    sender.add_periodic_task(10.0, text_reminders.s())
+    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, text_reminders.s())
