@@ -3,16 +3,14 @@
 [![Updates](https://pyup.io/repos/github/HeliumEdu/platform/shield.svg)](https://pyup.io/repos/github/HeliumEdu/platform/)
 [![Python 3](https://pyup.io/repos/github/HeliumEdu/platform/python-3-shield.svg)](https://pyup.io/repos/github/HeliumEdu/platform/)
 
-
-
 # Helium Platform Project
 
 ## Prerequisites
 
-* Python (>= 3.5)
-* Pip (>= 9.0)
-* MySQL (>= 5.7)
-* Redis (>= 3.2)
+  - Python (>= 3.5)
+  - Pip (>= 9.0)
+  - MySQL (>= 5.7)
+  - Redis (>= 3.2)
 
 ## Getting Started
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
@@ -20,7 +18,7 @@ The Platform is developed using Python and [Django](https://www.djangoproject.co
 ### Project Setup
 To setup the Python/Django Platform build environment, execute:
 
-```
+```sh
 make install
 ```
 
@@ -29,7 +27,7 @@ unfamiliar with how this works, [read up on Virtualenv here](https://virtualenv.
 is, virtualenv creates isolated environments for each project's dependencies. To activate and use this environment when
 developing, execute:
 
-```
+```sh
 source .venv/bin/activate
 ```
 
@@ -39,20 +37,20 @@ virtualenv before executing).
 To ensure the database is in sync with the latest schema, database migrations are generated and run with Django. To
 run migrations, execute:
 
-```
+```sh
 make migrate
 ```
 
 Once migrations have been run, you can create a super user, which is a standard user that also has access to the
 /admin site.
 
-```
+```sh
 python manage.py createsuperuser
 ```
 
 Before commits are made, be sure to run tests and check the generated coverage report.
 
-```
+```sh
 make test
 ```
 
@@ -64,11 +62,11 @@ separately, functioning on separate nodes for scalability.
 The project's base configuration is defined under `conf`. Application-specific configuration variables should have their application name as their
 prefix.
 
-* auth
-* common
-* feed
-* importexport
-* planner
+  - auth
+  - common
+  - feed
+  - importexport
+  - planner
 
 ### Vagrant Development
 To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy#readme)
@@ -84,7 +82,7 @@ directions above), you should have the `ENVIRONMENT` environment variable set to
 
 Now you're all set! To start the development server, execute:
 
-```
+```sh
 bin/runserver
 ```
 
@@ -96,7 +94,7 @@ can be started with this worker as well. When developing locally, it is less nec
 scheduled tasks, so a standalone executable is provided for convenience. To start the server with the worker, ensure
 Redis is installed locally and instead execute:
 
-```
+```sh
 bin/runserver --with-worker
 ```
 
