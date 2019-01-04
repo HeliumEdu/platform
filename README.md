@@ -86,7 +86,7 @@ Now you're all set! To start the development server, execute:
 bin/runserver
 ```
 
-A development server will be started at http://localhost:8000.
+A development server will be started at <http://localhost:8000>.
 
 Additionally, this project also contains a worker that executes asynchronous or scheduled tasks, and the above server
 can be started with this worker as well. When developing locally, it is less necessary to run this worker

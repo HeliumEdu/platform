@@ -1,10 +1,10 @@
 # Import/Export Application
 
 ## Dependencies
-* auth
-* feed
-* common
-* planner
+- auth
+- feed
+- common
+- planner
 
 ## Overview
 This module serves to provide import/export endpoints and functionality for the Platform.
