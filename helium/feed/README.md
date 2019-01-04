@@ -1,9 +1,9 @@
 # Feed Application
 
 ## Dependencies
-* auth
-* common
-* planner
+- auth
+- common
+- planner
 
 ## Overview
 This module serves to feed external dependencies (for instance, calendars) into the Platform and make internal feeds
