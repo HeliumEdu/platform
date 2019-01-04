@@ -7,10 +7,10 @@
 
 ## Prerequisites
 
-  - Python (>= 3.5)
-  - Pip (>= 9.0)
-  - MySQL (>= 5.7)
-  - Redis (>= 3.2)
+- Python (>= 3.5)
+- Pip (>= 9.0)
+- MySQL (>= 5.7)
+- Redis (>= 3.2)
 
 ## Getting Started
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
@@ -62,11 +62,11 @@ separately, functioning on separate nodes for scalability.
 The project's base configuration is defined under `conf`. Application-specific configuration variables should have their application name as their
 prefix.
 
-  - auth
-  - common
-  - feed
-  - importexport
-  - planner
+- auth
+- common
+- feed
+- importexport
+- planner
 
 ### Vagrant Development
 To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy#readme)
