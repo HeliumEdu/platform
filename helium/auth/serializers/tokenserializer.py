@@ -1,13 +1,13 @@
 import logging
 
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.compat import authenticate
 from rest_framework.exceptions import ValidationError
 
 __author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__copyright__ = 'Copyright 2019, Helium Edu'
+__version__ = '1.4.36'
 
 logger = logging.getLogger(__name__)
 
