@@ -6,7 +6,7 @@ from helium.planner.models import Course
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.37"
+__version__ = "1.4.38"
 
 
 def given_course_exists(course_group, title='Test Course', room='DNC 201', credits=5, color='#4986e7',

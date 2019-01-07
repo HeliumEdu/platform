@@ -9,7 +9,7 @@ from django.conf import settings
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.37"
+__version__ = "1.4.38"
 
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
