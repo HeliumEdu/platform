@@ -8,9 +8,9 @@ from helium.planner.models import CourseGroup, Course, Category
 from helium.planner.services import gradingservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.21'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class TestCaseGradingService(TestCase):

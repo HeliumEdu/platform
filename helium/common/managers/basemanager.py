@@ -3,9 +3,9 @@ from abc import abstractmethod
 
 from django.db import models
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

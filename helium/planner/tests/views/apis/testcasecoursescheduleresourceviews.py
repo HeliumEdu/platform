@@ -10,9 +10,9 @@ from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.22'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):

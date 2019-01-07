@@ -2,9 +2,9 @@ import logging
 
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.0'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

@@ -6,9 +6,9 @@ from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.16'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class Homework(BaseCalendar):

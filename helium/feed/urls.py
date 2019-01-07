@@ -6,9 +6,9 @@ from helium.feed.views.apis.privateresourceviews import PrivateEnableResourceVie
 from helium.feed.views.privateviews import PrivateEventsICALResourceView, PrivateHomeworkICALResourceView, \
     PrivateCourseSchedulesICALResourceView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     ##############################

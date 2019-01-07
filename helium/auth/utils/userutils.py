@@ -2,9 +2,9 @@ from random import randint
 
 from django.contrib.auth import get_user_model
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.0'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 def generate_phone_verification_code():

@@ -10,9 +10,9 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.common.admin import admin_site, BaseModelAdmin
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.5'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class AdminUserCreationForm(UserCreationForm):

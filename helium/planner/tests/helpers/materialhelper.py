@@ -1,9 +1,9 @@
 from helium.common import enums
 from helium.planner.models import Material
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 def given_material_exists(material_group, title='Test Material', status=enums.SHIPPED, condition=enums.BROKEN,

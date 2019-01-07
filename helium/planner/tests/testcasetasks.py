@@ -3,9 +3,9 @@ from mock import mock
 
 from helium.planner.tasks import email_reminders, text_reminders
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.22'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class TestCasePlannerTasks(TestCase):

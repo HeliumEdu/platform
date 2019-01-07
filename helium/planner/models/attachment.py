@@ -8,9 +8,9 @@ from helium.common.utils.commonutils import HeliumError
 from helium.planner.managers.attachmentmanager import AttachmentManager
 from helium.planner.utils.attachmentutils import get_path_for_attachment
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.14'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class AttachmentError(HeliumError):

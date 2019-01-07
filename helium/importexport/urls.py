@@ -3,9 +3,9 @@ from django.urls import path
 from helium.importexport.views.apis.exportviews import ExportResourceView
 from helium.importexport.views.apis.importviews import ImportResourceView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     # Import/Export URLs

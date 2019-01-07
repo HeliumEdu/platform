@@ -6,9 +6,9 @@ from django.template.loader import get_template
 
 from helium.common.utils import metricutils
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.3.8'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class HeliumError(Exception):

@@ -11,9 +11,9 @@ import helium.feed.urls
 import helium.importexport.urls
 import helium.planner.urls
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     # Include app-specific URL files

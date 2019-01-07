@@ -11,9 +11,9 @@ from helium.planner.models import CourseGroup
 from helium.planner.schemas import CourseGroupDetailSchema
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

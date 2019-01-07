@@ -5,9 +5,9 @@ from django.utils import timezone
 
 from helium.planner.models import Homework
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.2.1'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 def given_homework_exists(course, title='Test Homework', all_day=False, show_end_time=True,

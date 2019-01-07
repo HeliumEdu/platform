@@ -10,9 +10,9 @@ from helium.auth.serializers.usersettingsserializer import UserSettingsSerialize
 from helium.auth.services import authservice
 from helium.common.views.views import HeliumAPIView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.10'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

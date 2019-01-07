@@ -2,9 +2,9 @@ from django.conf import settings
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.sites import AdminSite
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.4'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class PlatformAdminSite(AdminSite):

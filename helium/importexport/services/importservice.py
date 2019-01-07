@@ -23,9 +23,9 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.34'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

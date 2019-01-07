@@ -3,9 +3,9 @@ import os
 from mock import mock
 from rest_framework import status
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.0'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 def given_urlopen_mock_from_file(filename, mock_urlopen, status_code=status.HTTP_200_OK):
