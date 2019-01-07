@@ -4,7 +4,7 @@ from django.contrib.admin.sites import AdminSite
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.37"
+__version__ = "1.4.38"
 
 
 class PlatformAdminSite(AdminSite):

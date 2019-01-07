@@ -7,7 +7,7 @@ from helium.planner.models import Event
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.37"
+__version__ = "1.4.38"
 
 
 def given_event_exists(user, title='Test Event', all_day=False, show_end_time=True,

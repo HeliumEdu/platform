@@ -8,7 +8,7 @@ from helium.common.views.apis.statusviews import HealthResourceView, StatusResou
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.37"
+__version__ = "1.4.38"
 
 urlpatterns = [
     # Base URL
