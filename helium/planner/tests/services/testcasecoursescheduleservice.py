@@ -7,9 +7,9 @@ from helium.planner.services import coursescheduleservice
 from helium.planner.services.coursescheduleservice import HeliumCourseScheduleError
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.24'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class TestCaseCourseScheduleService(TestCase):

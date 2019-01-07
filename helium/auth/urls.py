@@ -9,9 +9,9 @@ from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
 from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.17'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     # URLs for Django's auto-generated, session-based login views for ease of API navigation

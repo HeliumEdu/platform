@@ -5,9 +5,9 @@ from django.db.models import Count, Q, Case, When
 
 from helium.common.managers.basemanager import BaseQuerySet, BaseManager
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.0.1'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

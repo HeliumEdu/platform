@@ -7,9 +7,9 @@ from celery import Celery
 from celery.signals import task_failure
 from django.conf import settings
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.22'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')

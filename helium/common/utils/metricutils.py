@@ -18,9 +18,9 @@ if settings.DATADOG_API_KEY:
 
     DATADOG_METRICS = True
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.6'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):

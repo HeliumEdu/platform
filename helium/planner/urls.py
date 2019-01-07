@@ -20,9 +20,9 @@ from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDet
     MaterialGroupMaterialsApiListView
 from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.24'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     ##############################

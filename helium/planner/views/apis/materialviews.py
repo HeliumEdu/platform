@@ -12,9 +12,9 @@ from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 from helium.planner.serializers.materialserializer import MaterialSerializer
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.2'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 

@@ -6,9 +6,9 @@ from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
 from helium.common.views.apis.statusviews import HealthResourceView, StatusResourceView
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.24'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 urlpatterns = [
     # Base URL

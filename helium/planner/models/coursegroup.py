@@ -6,9 +6,9 @@ from django.db import models
 from helium.common.models import BaseModel
 from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.16'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class CourseGroup(BaseModel):

@@ -3,8 +3,8 @@ import re
 from django.core.cache.backends.locmem import LocMemCache
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2018, Helium Edu"
-__version__ = '1.4.4'
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 
 class LocMemKeysCache(LocMemCache):

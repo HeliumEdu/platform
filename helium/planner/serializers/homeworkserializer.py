@@ -7,9 +7,9 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.tasks import recalculate_category_grade
 
-__author__ = 'Alex Laird'
-__copyright__ = 'Copyright 2018, Helium Edu'
-__version__ = '1.4.14'
+__author__ = "Alex Laird"
+__copyright__ = "Copyright 2019, Helium Edu"
+__version__ = "1.4.37"
 
 logger = logging.getLogger(__name__)
 
