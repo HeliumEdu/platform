@@ -17,9 +17,8 @@ class LocMemKeysCache(LocMemCache):
         pattern = re.compile(self.make_key(search))
 
         keys = []
-        with self._lock.reader():
-            for key, value in self._cache.items():
-                if pattern.match(key):
-                    keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
+        for key, value in self._cache.items():
+            if pattern.match(key):
+                keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
 
         return keys
