@@ -4,7 +4,7 @@ from django.core.cache.backends.locmem import LocMemCache
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__version__ = "1.4.39"
 
 
 class LocMemKeysCache(LocMemCache):
@@ -17,9 +17,8 @@ class LocMemKeysCache(LocMemCache):
         pattern = re.compile(self.make_key(search))
 
         keys = []
-        with self._lock.reader():
-            for key, value in self._cache.items():
-                if pattern.match(key):
-                    keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
+        for key, value in self._cache.items():
+            if pattern.match(key):
+                keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
 
         return keys

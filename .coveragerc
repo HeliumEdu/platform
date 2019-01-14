@@ -18,8 +18,8 @@ exclude_lines =
     pragma: no cover
     def __repr__
     if self\.debug
-    if settings.DEBUG
-    if settings.DISABLE_EMAILS
+    if settings\.DEBUG
+    if settings\.DISABLE_EMAILS
     raise AssertionError
     raise NotImplementedError
     if 0:
