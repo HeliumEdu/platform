@@ -7,7 +7,7 @@ make install migrate -C ${DIR}/..
 
 source ${PLATFORM_VENV}/bin/activate
 
-if [ $1 = "--with-worker" ]; then
+if [[ $1 = "--with-worker" ]]; then
     cd ${DIR}/..
 
     USE_IN_MEMORY_WORKER=False python manage.py runserver & USE_IN_MEMORY_WORKER=False python -m celery beat -A conf --loglevel=INFO & USE_IN_MEMORY_WORKER=False PLATFORM_WORKER_MODE=True python -m celery worker -A conf --loglevel=INFO
