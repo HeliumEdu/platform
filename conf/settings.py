@@ -15,7 +15,7 @@ import sys
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__version__ = "1.4.43"
 
 # Are we running on the dev server
 DEV_SERVER = False
@@ -43,6 +43,7 @@ else:
     import dotenv
 
     dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), True)
+    os.environ['ENVIRONMENT'] = 'test'
 
 # Initialize some global settings
 locals()['DEV_SERVER'] = DEV_SERVER
