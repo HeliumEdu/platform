@@ -1,9 +1,11 @@
+import os
 import re
 
 from django.conf import settings
 from statsd.defaults.django import statsd
 
 DATADOG_METRICS = False
+DATADOG_TAGS = None
 if settings.DATADOG_API_KEY:
     from datadog import initialize
 
@@ -17,6 +19,7 @@ if settings.DATADOG_API_KEY:
     from datadog import statsd as datadog_statsd
 
     DATADOG_METRICS = True
+    DATADOG_TAGS = ['env:{}'.format(os.environ.get('ENVIRONMENT'))]
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
@@ -32,7 +35,7 @@ def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
 
     statsd.incr("platform.{}".format(metric))
     if DATADOG_METRICS:
-        datadog_statsd.increment("platform.{}".format(metric))
+        datadog_statsd.increment("platform.{}".format(metric), tags=DATADOG_TAGS)
 
 
 def request_start(request):
@@ -55,10 +58,10 @@ def request_stop(metrics, response):
     statsd.incr("{}.{}".format(metrics['Request-Metric-ID'], response.status_code))
 
     if DATADOG_METRICS:
-        datadog_statsd.increment(metrics['Request-Metric-ID'])
-        datadog_statsd.increment("{}.{}".format(metrics['Request-Metric-ID'], response.status_code))
+        datadog_statsd.increment(metrics['Request-Metric-ID'], tags=DATADOG_TAGS)
+        datadog_statsd.increment("{}.{}".format(metrics['Request-Metric-ID'], response.status_code), tags=DATADOG_TAGS)
 
-        datadog_statsd.timing(metrics['Request-Metric-ID'], metrics['Request-Timer'].ms)
+        datadog_statsd.timing(metrics['Request-Metric-ID'], metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
 
     metrics.pop('Request-Timer')
 
