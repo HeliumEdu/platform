@@ -43,6 +43,7 @@ else:
     import dotenv
 
     dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), True)
+    os.environ['ENVIRONMENT'] = 'test'
 
 # Initialize some global settings
 locals()['DEV_SERVER'] = DEV_SERVER
