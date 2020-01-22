@@ -7,8 +7,8 @@ from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2020, Helium Edu"
+__version__ = "1.4.45"
 
 
 # class TestCasePrivateFeedResourceViews(APITestCase, CacheTestCase):
