@@ -73,7 +73,12 @@ def _create_events_from_calendar(external_calendar, calendar):
             time_zone = pytz.timezone(component.get("TZID"))
         elif component.name == "VEVENT":
             start = component.get("DTSTART").dt
-            end = component.get("DTEND").dt
+            if component.get("DTEND") is not None:
+                end = component.get("DTEND").dt
+            elif component.get("DURATION") is not None:
+                end = start + component.get("DURATION").dt
+            else:
+                end = datetime.datetime.combine(start, datetime.time.max)
             all_day = not isinstance(start, datetime.datetime)
             show_end_time = isinstance(start, datetime.datetime)
 
