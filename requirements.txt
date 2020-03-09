@@ -1,5 +1,5 @@
 coverage==4.5.1
-codecov==2.0.15
+codecov==2.0.16
 pytz==2018.7
 django==2.2.10
 django-dotenv==1.4.2
