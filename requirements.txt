@@ -1,5 +1,5 @@
 coverage==4.5.1
-codecov==2.0.16
+codecov==2.0.22
 pytz==2018.7
 django==2.2.11
 django-dotenv==1.4.2
@@ -9,7 +9,7 @@ djangorestframework==3.9.1
 django-filter==2.0.0
 django-maintenance-mode==0.11.0
 django-pipeline==1.6.14
-django-cors-headers==2.4.0
+django-cors-headers==3.0.2
 celery[redis]==4.2.1
 django-redis==4.10.0
 statsd==3.3.0
