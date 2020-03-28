@@ -89,6 +89,9 @@ bin/runserver
 
 A development server will be started at <http://localhost:8000>.
 
+If the `USE_NGROK` environment variable is set when a dev server is started (using `runserver`, [pyngrok](https://github.com/alexdlaird/pyngrok)
+will be used to open a `ngrok` tunnel.
+
 Additionally, this project also contains a worker that executes asynchronous or scheduled tasks, and the above server
 can be started with this worker as well. When developing locally, it is less necessary to run this worker
 (when `ENVIRONMENT` is "dev", tasks are executed synchronously), but it may still be useful, especially for testing
