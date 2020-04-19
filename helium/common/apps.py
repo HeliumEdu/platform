@@ -72,4 +72,3 @@ class CommonConfig(AppConfig):
 
             # Update any base URLs or webhooks to use the public ngrok URL
             settings.PROJECT_HOST = public_url
-            CommonConfig.init_webhooks(public_url)
