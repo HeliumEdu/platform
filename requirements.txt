@@ -11,7 +11,7 @@ django-maintenance-mode==0.11.0
 django-pipeline==1.6.14
 django-cors-headers==3.0.2
 celery[redis]==4.2.1
-django-redis==4.10.0
+django-redis==4.12.1
 statsd==3.3.0
 datadog==0.23.0
 boto==2.49.0
