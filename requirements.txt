@@ -16,7 +16,7 @@ statsd==3.3.0
 datadog==0.23.0
 boto==2.49.0
 twilio==6.22.1
-pyOpenSSL==18.0.0
+pyOpenSSL==19.1.0
 Pillow==7.0.0
 icalendar==4.0.3
 python-dateutil==2.7.5
