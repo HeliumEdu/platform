@@ -13,7 +13,7 @@ django-cors-headers==3.0.2
 celery[redis]==4.2.1
 django-redis==4.10.0
 statsd==3.3.0
-datadog==0.23.0
+datadog==0.36.0
 boto==2.49.0
 twilio==6.22.1
 pyOpenSSL==18.0.0
