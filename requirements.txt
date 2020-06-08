@@ -8,7 +8,7 @@ django-storages==1.7.1
 djangorestframework==3.9.1
 django-filter==2.0.0
 django-maintenance-mode==0.11.0
-django-pipeline==1.6.14
+django-pipeline==2.0.4
 django-cors-headers==3.0.2
 celery[redis]==4.2.1
 django-redis==4.10.0
