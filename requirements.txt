@@ -15,7 +15,7 @@ django-redis==4.10.0
 statsd==3.3.0
 datadog==0.23.0
 boto==2.49.0
-twilio==6.22.1
+twilio==6.41.0
 pyOpenSSL==18.0.0
 Pillow==7.0.0
 icalendar==4.0.3
