@@ -8,7 +8,7 @@
 
 ## Prerequisites
 
-- Python (>= 3.5)
+- Python (>= 3.6)
 - Pip (>= 9.0)
 - MySQL (>= 5.7)
 - Redis (>= 3.2)
