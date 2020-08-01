@@ -12,4 +12,5 @@ install:
 script:
 - make env test
 after_success:
+- source .venv/bin/activate
 - codecov
