@@ -6,6 +6,8 @@
 
 # Helium Platform Project
 
+<p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
+
 ## Prerequisites
 
 - Python (>= 3.6)
