@@ -27,6 +27,6 @@ Pygments==2.7.0
 Markdown==3.2.2
 Sphinx==3.2.1
 psutil==5.7.2
-rollbar==0.15.0
+rollbar==0.15.1
 -e git+git://github.com/alexdlaird/django-health-check.git@alaird-3.5.6#egg=django-health-check
 pyngrok==4.1.12
