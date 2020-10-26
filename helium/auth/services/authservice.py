@@ -33,7 +33,7 @@ def forgot_password(request):
         user.set_password(password)
         user.save()
 
-        logger.info('Reset password for user with email {}'.format(user.email))
+        logger.info(f'Reset password for user with email {user.email}')
 
         metricutils.increment('action.user.password-reset', request)
 
@@ -66,7 +66,7 @@ def verify_email(request):
 
             metricutils.increment('action.user.verified', request)
 
-            logger.info('Completed registration and verification for user {}'.format(user.username))
+            logger.info(f'Completed registration and verification for user {user.username}')
 
             if request.GET.get('welcome-email', 'true') == 'true':
                 send_registration_email.delay(user.email)
@@ -79,7 +79,7 @@ def verify_email(request):
 
             metricutils.increment('action.user.email-changed', request)
 
-            logger.info('Verified new email for user {}'.format(user.username))
+            logger.info(f'Verified new email for user {user.username}')
 
         return Response()
     except get_user_model().DoesNotExist:

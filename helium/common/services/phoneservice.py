@@ -32,7 +32,7 @@ def verify_number(phone):
     try:
         cleaned_phone = re.sub("[()\-+\s]", "", phone)
 
-        logger.info("Asking Twilio to validate {}".format(cleaned_phone))
+        logger.info(f"Asking Twilio to validate {cleaned_phone}")
 
         number = client.lookups.phone_numbers(cleaned_phone).fetch()
 

@@ -33,7 +33,7 @@ class HeliumCourseScheduleError(HeliumError):
 
 def _get_start_time_for_weekday(course_schedule, weekday):
     if _SUNDAY < weekday > _SATURDAY:
-        raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
+        raise HeliumCourseScheduleError(f'"{weekday}" is an invalid weekday value. Allowed values are [0-6].')
 
     if course_schedule.days_of_week[weekday] != "1":
         return None
@@ -56,7 +56,7 @@ def _get_start_time_for_weekday(course_schedule, weekday):
 
 def _get_end_time_for_weekday(course_schedule, weekday):
     if _SUNDAY < weekday > _SATURDAY:
-        raise HeliumCourseScheduleError('"{}" is an invalid weekday value. Allowed values are [0-6].'.format(weekday))
+        raise HeliumCourseScheduleError(f'"{weekday}" is an invalid weekday value. Allowed values are [0-6].')
 
     if course_schedule.days_of_week[weekday] != "1":
         return None
@@ -80,10 +80,10 @@ def _get_end_time_for_weekday(course_schedule, weekday):
 def _get_comments(course):
     title = course.title
     if course.website:
-        title = "<a href=\"{}\">{}</a>".format(course.website, title)
+        title = f"<a href=\"{course.website}\">{title}</a>"
 
     if not course.is_online and course.room:
-        return "{} in {}".format(title, course.room)
+        return f"{title} in {course.room}"
     elif course.website:
         return title
     else:
@@ -91,7 +91,7 @@ def _get_comments(course):
 
 
 def _get_cache_prefix(course):
-    return "users:{}:courses:{}:coursescheduleevents:".format(course.get_user().pk, course.pk)
+    return f"users:{course.get_user().pk}:courses:{course.pk}:coursescheduleevents:"
 
 
 def _get_events_from_cache(cached_keys):

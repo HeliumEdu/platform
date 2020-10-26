@@ -85,7 +85,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('CourseSchedule {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

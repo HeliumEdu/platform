@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 def send_text(phone, message):
     if settings.DISABLE_EMAILS:
         logger.warning(
-            'Emails disabled. Text with message "{}" to {} not sent.'.format(message, phone))
+            f'Emails disabled. Text with message "{message}" to {phone} not sent.')
         return
 
-    logger.info('Sending text with message "{}" to {}'.format(message, phone))
+    logger.info(f'Sending text with message "{message}" to {phone}')
 
     send_sms(phone, message)
 

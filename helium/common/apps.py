@@ -63,12 +63,12 @@ class CommonConfig(AppConfig):
 
             # Get the dev server port (defaults to 8000 for Django, can be overridden with the
             # last arg when calling `runserver`)
-            addrport = urlparse('http://{}'.format(sys.argv[-1]))
+            addrport = urlparse(f'http://{sys.argv[-1]}')
             port = addrport.port if addrport.netloc and addrport.port else 8000
 
             # Open a ngrok tunnel to the dev server
             public_url = ngrok.connect(port).rstrip("/")
-            print('ngrok tunnel "{}" -> "http://127.0.0.1:{}/"'.format(public_url, port))
+            print(f'ngrok tunnel "{public_url}" -> "http://127.0.0.1:{port}/"')
 
             # Update any base URLs or webhooks to use the public ngrok URL
             settings.PROJECT_HOST = public_url

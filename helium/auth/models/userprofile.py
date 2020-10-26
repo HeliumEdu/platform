@@ -28,7 +28,7 @@ class UserProfile(BaseModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.pk, self.user.get_username())
+        return f'{self.pk} ({self.user.get_username()})'
 
     def get_user(self):
         return self.user

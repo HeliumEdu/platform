@@ -52,7 +52,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info('User {} updated'.format(user.get_username()))
+        logger.info(f'User {user.get_username()} updated')
 
         return Response(serializer.data)
 
@@ -80,7 +80,7 @@ class UserDeleteResourceView(HeliumAPIView):
         form = UserDeleteForm(user=user, data=request.data)
 
         if form.is_valid():
-            logger.info('User {} deleted'.format(user.get_username()))
+            logger.info(f'User {user.get_username()} deleted')
 
             delete_user.delay(form.user.pk)
 
