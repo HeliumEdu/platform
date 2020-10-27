@@ -122,7 +122,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Material {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Material {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

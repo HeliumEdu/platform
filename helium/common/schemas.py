@@ -27,7 +27,7 @@ class BaseIDSchema(AutoSchema):
                 required=True,
                 location="path",
                 schema=coreschema.Integer(title='id',
-                                          description='A unique integer value identifying this {}.'.format(model_name))
+                                          description=f'A unique integer value identifying this {model_name}.')
             ),
         ]
 

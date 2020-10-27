@@ -37,7 +37,7 @@ class BaseCalendar(BaseModel):
         ordering = ('start',)
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
+        return f'{self.title} ({self.get_user().get_username()})'
 
     @property
     def calendar_item_type(self):

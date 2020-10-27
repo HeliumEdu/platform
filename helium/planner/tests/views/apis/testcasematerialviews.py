@@ -337,7 +337,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group, courses=[course1, course2])
 
         response = self.client.get(
-            reverse('planner_materials_list') + '?courses={}&courses={}'.format(course1.pk, course2.pk))
+            reverse('planner_materials_list') + f'?courses={course1.pk}&courses={course2.pk}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

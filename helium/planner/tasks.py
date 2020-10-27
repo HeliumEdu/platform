@@ -39,7 +39,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
         else:
             raise ex
     except CourseGroup.DoesNotExist:
-        logger.info("CourseGroup {} does not exist. Nothing to do.".format(course_group_id))
+        logger.info(f"CourseGroup {course_group_id} does not exist. Nothing to do.")
 
 
 @app.task
@@ -63,7 +63,7 @@ def recalculate_course_grade(course_id, retries=0):
         else:
             raise ex
     except Course.DoesNotExist:
-        logger.info("Course {} does not exist. Nothing to do.".format(course_id))
+        logger.info(f"Course {course_id} does not exist. Nothing to do.")
 
 
 @app.task
@@ -86,7 +86,7 @@ def recalculate_category_grades_for_course(course_id, retries=0):
         else:
             raise ex
     except Course.DoesNotExist:
-        logger.info("Course {} does not exist. Nothing to do.".format(course_id))
+        logger.info(f"Course {course_id} does not exist. Nothing to do.")
 
 
 @app.task
@@ -111,13 +111,13 @@ def recalculate_category_grade(category_id, retries=0):
         else:
             raise ex
     except Category.DoesNotExist:
-        logger.info("Category {} does not exist. Nothing to do.".format(category_id))
+        logger.info(f"Category {category_id} does not exist. Nothing to do.")
 
 
 @app.task
 def adjust_reminder_times(calendar_item_id, calendar_item_type):
     for reminder in Reminder.objects.for_calendar_item(calendar_item_id, calendar_item_type).iterator():
-        logger.info('Adjusting start_of_range for reminder {}.'.format(reminder.pk))
+        logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
         # Forcing a reminder to save will recalculate its start_of_range, if necessary
         reminder.save()
@@ -148,12 +148,12 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
     try:
         reminder = Reminder.objects.get(pk=reminder_id)
     except Reminder.DoesNotExist:
-        logger.info('Reminder {} does not exist. Nothing to do.'.format(reminder_id))
+        logger.info(f'Reminder {reminder_id} does not exist. Nothing to do.')
 
         return
 
     if settings.DISABLE_EMAILS:
-        logger.warning('Emails disabled. Reminder {} not being sent.'.format(reminder.pk))
+        logger.warning(f'Emails disabled. Reminder {reminder.pk} not being sent.')
         return
 
     try:
@@ -162,11 +162,11 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
         elif calendar_item_type == enums.HOMEWORK:
             calendar_item = Homework.objects.get(pk=calendar_item_id)
         else:
-            logger.info('Nothing to do here, as a calendar_item_type of {} does not exist.'.format(calendar_item_type))
+            logger.info(f'Nothing to do here, as a calendar_item_type of {calendar_item_type} does not exist.')
 
             return
     except (Event.DoesNotExist, Homework.DoesNotExist):
-        logger.info('calendar_item_id {} does not exist. Nothing to do.'.format(calendar_item_id))
+        logger.info(f'calendar_item_id {calendar_item_id} does not exist. Nothing to do.')
 
         return
 
@@ -176,7 +176,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
         settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
     end = timezone.localtime(calendar_item.end).strftime(
         settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-    normalized_datetime = '{} to {}'.format(start, end) if calendar_item.show_end_time else start
+    normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
 
     normalized_materials = None
     if reminder.homework:

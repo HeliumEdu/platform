@@ -85,7 +85,7 @@ LOGGING = {
         'django': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/django.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/django.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -93,7 +93,7 @@ LOGGING = {
         'health_check': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/health_check.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/health_check.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -101,7 +101,7 @@ LOGGING = {
         'platform_auth': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_auth.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/platform_auth.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -109,7 +109,7 @@ LOGGING = {
         'platform_common': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_common.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/platform_common.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -117,7 +117,7 @@ LOGGING = {
         'platform_feed': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_feed.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/platform_feed.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -125,7 +125,7 @@ LOGGING = {
         'platform_importexport': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_importexport.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/platform_importexport.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -133,7 +133,7 @@ LOGGING = {
         'platform_planner': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/{}/platform_planner.log'.format(PROJECT_ID),
+            'filename': f'/var/log/{PROJECT_ID}/platform_planner.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -228,15 +228,15 @@ else:
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
     AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
     AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
-    AWS_S3_CUSTOM_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
-    STATIC_URL = "https://{}/".format(AWS_S3_CUSTOM_DOMAIN)
+    AWS_S3_CUSTOM_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
     # Media
 
     DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
     AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
-    AWS_S3_MEDIA_DOMAIN = 's3.amazonaws.com/{}'.format(AWS_STORAGE_BUCKET_NAME)
-    MEDIA_URL = "https://{}/".format(AWS_S3_MEDIA_DOMAIN)
+    AWS_S3_MEDIA_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
+    MEDIA_URL = f"https://{AWS_S3_MEDIA_DOMAIN}/"
 
 # Celery
 

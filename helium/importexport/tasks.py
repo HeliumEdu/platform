@@ -18,7 +18,7 @@ def import_example_schedule(user_id):
     try:
         user = get_user_model().objects.get(pk=user_id)
     except get_user_model().DoesNotExist:
-        logger.info('User {} does not exist. Nothing to do.'.format(user_id))
+        logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         return
 

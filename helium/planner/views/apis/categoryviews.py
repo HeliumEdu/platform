@@ -109,7 +109,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Category {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

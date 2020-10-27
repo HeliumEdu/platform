@@ -73,7 +73,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['all_day'], False)
         self.assertEqual(response.data[0]['show_end_time'], True)
         self.assertEqual(response.data[0]['comments'],
-                         '<a href="{}">{}</a> in {}'.format(course.website, course.title, course.room))
+                         f'<a href="{course.website}">{course.title}</a> in {course.room}')
 
     def test_get_course_schedule_cached(self):
         # GIVEN

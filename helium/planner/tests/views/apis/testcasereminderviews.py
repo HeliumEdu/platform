@@ -62,8 +62,8 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         response1 = self.client.get(reverse('planner_reminders_list'))
-        response2 = self.client.get(reverse('planner_reminders_list') + '?homework={}'.format(homework4.pk))
-        response3 = self.client.get(reverse('planner_reminders_list') + '?event={}'.format(event2.pk))
+        response2 = self.client.get(reverse('planner_reminders_list') + f'?homework={homework4.pk}')
+        response3 = self.client.get(reverse('planner_reminders_list') + f'?event={event2.pk}')
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -307,8 +307,8 @@ class TestCaseReminderViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('planner_reminders_list') + '?event={}'.format(event.pk)),
-            self.client.get(reverse('planner_reminders_list') + '?homework={}'.format(homework.pk)),
+            self.client.get(reverse('planner_reminders_list') + f'?event={event.pk}'),
+            self.client.get(reverse('planner_reminders_list') + f'?homework={homework.pk}'),
             self.client.get(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
             self.client.put(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
             self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk}))
@@ -414,7 +414,7 @@ class TestCaseReminderViews(APITestCase):
         reminderhelper.given_reminder_exists(user, homework=homework2)
 
         response = self.client.get(
-            reverse('planner_reminders_list') + '?start_of_range__lte={}'.format(quote(timezone.now().isoformat())))
+            reverse('planner_reminders_list') + f'?start_of_range__lte={quote(timezone.now().isoformat())}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)

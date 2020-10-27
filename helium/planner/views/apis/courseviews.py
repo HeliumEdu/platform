@@ -115,7 +115,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Course {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Course {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

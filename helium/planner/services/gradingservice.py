@@ -112,7 +112,7 @@ def recalculate_course_group_grade(course_group):
 
     trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
-    logger.debug('Course Group {} trend recalculated to {}'.format(course_group.pk, course_group.trend))
+    logger.debug(f'Course Group {course_group.pk} trend recalculated to {course_group.trend}')
 
     CourseGroup.objects.filter(pk=course_group.pk).update(average_grade=average_grade, trend=trend)
 
@@ -185,7 +185,7 @@ def recalculate_course_grade(course):
 
     trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
-    logger.debug('Course {} trend recalculated to {}'.format(course.pk, course.trend))
+    logger.debug(f'Course {course.pk} trend recalculated to {course.trend}')
 
     Course.objects.filter(pk=course.pk).update(current_grade=current_grade, trend=trend)
 

@@ -116,7 +116,7 @@ class TestCaseUserViews(APITestCase):
         user.save()
 
         response = self.client.get(
-            reverse('auth_user_resource_verify') + '?username={}&code={}'.format(user.username, user.verification_code))
+            reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

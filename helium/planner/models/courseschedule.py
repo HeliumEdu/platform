@@ -57,7 +57,7 @@ class CourseSchedule(BaseModel):
     objects = CourseScheduleManager()
 
     def __str__(self):  # pragma: no cover
-        return str('{}-{} ({})'.format(self.course.title, self.pk, self.get_user().get_username()))
+        return str(f'{self.course.title}-{self.pk} ({self.get_user().get_username()})')
 
     def get_user(self):
         return self.course.get_user()
