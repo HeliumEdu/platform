@@ -43,7 +43,7 @@ def _import_external_calendars(external_calendars, user):
                 }
             })
 
-    logger.info("Imported {} external calendars.".format(len(external_calendars)))
+    logger.info(f"Imported {len(external_calendars)} external calendars.")
 
 
 def _import_course_groups(course_groups, user):
@@ -62,7 +62,7 @@ def _import_course_groups(course_groups, user):
                 }
             })
 
-    logger.info("Imported {} course groups.".format(len(course_groups)))
+    logger.info(f"Imported {len(course_groups)} course groups.")
 
     return course_group_remap
 
@@ -85,7 +85,7 @@ def _import_courses(courses, course_group_remap):
                 }
             })
 
-    logger.info("Imported {} courses.".format(len(courses)))
+    logger.info(f"Imported {len(courses)} courses.")
 
     return course_remap
 
@@ -105,7 +105,7 @@ def _import_course_schedules(course_schedules, course_remap):
                 }
             })
 
-    logger.info("Imported {} course schedules.".format(len(course_schedules)))
+    logger.info(f"Imported {len(course_schedules)} course schedules.")
 
 
 def _import_categories(categories, request, course_remap):
@@ -126,7 +126,7 @@ def _import_categories(categories, request, course_remap):
                 }
             })
 
-    logger.info("Imported {} categories.".format(len(categories)))
+    logger.info(f"Imported {len(categories)} categories.")
 
     return category_remap
 
@@ -147,7 +147,7 @@ def _import_material_groups(material_groups, user):
                 }
             })
 
-    logger.info("Imported {} material groups.".format(len(material_groups)))
+    logger.info(f"Imported {len(material_groups)} material groups.")
 
     return material_group_remap
 
@@ -172,7 +172,7 @@ def _import_materials(materials, material_group_remap, course_remap):
                 }
             })
 
-    logger.info("Imported {} materials.".format(len(materials)))
+    logger.info(f"Imported {len(materials)} materials.")
 
     return material_remap
 
@@ -193,7 +193,7 @@ def _import_events(events, user):
                 }
             })
 
-    logger.info("Imported {} events.".format(len(events)))
+    logger.info(f"Imported {len(events)} events.")
 
     return event_remap
 
@@ -220,7 +220,7 @@ def _import_homework(homework, course_remap, category_remap, material_remap):
                 }
             })
 
-    logger.info("Imported {} homework.".format(len(homework)))
+    logger.info(f"Imported {len(homework)} homework.")
 
     return homework_remap
 
@@ -243,7 +243,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
                 }
             })
 
-    logger.info("Imported {} reminders.".format(len(reminders)))
+    logger.info(f"Imported {len(reminders)} reminders.")
 
 
 @transaction.atomic
@@ -292,9 +292,9 @@ def _adjust_schedule_relative_today(user):
         days_ahead += 7
     first_monday = start_of_current_month + datetime.timedelta(days_ahead)
 
-    logger.info('Start of month adjusted to {}'.format(start_of_current_month))
-    logger.info('Start of week adjusted ahead {} days'.format(days_ahead))
-    logger.info('First Monday set to {}'.format(first_monday))
+    logger.info(f'Start of month adjusted to {start_of_current_month}')
+    logger.info(f'Start of week adjusted ahead {days_ahead} days')
+    logger.info(f'First Monday set to {first_monday}')
 
     for course_group in CourseGroup.objects.for_user(user.pk).iterator():
         delta = (course_group.end_date - course_group.start_date).days

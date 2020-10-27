@@ -32,7 +32,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
     def validate_attachment(self, attachment):
         if attachment.size > settings.MAX_UPLOAD_SIZE:
             raise ValidationError(
-                'The uploaded file exceeds the max upload size of {}.'.format(filesizeformat(settings.MAX_UPLOAD_SIZE)))
+                f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.')
 
         return attachment
 

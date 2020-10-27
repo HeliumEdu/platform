@@ -32,7 +32,7 @@ class HeliumICalError(HeliumError):
 
 
 def _get_cache_prefix(external_calendar):
-    return "users:{}:externalcalendars:{}:events".format(external_calendar.get_user().pk, external_calendar.pk)
+    return f"users:{external_calendar.get_user().pk}:externalcalendars:{external_calendar.pk}:events"
 
 
 def _get_events_from_cache(external_calendar, cached_value):
@@ -134,15 +134,15 @@ def validate_url(url):
 
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
-        logger.info("The URL is invalid: {}".format(ex))
+        logger.info(f"The URL is invalid: {ex}")
 
         raise HeliumICalError(ex.message)
     except URLError as ex:
-        logger.info("The URL is not reachable: {}".format(ex))
+        logger.info(f"The URL is not reachable: {ex}")
 
         raise HeliumICalError("The URL is not reachable.")
     except ValueError as ex:
-        logger.info("The URL did not return a valid ICAL feed: {}".format(ex))
+        logger.info(f"The URL did not return a valid ICAL feed: {ex}")
 
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 

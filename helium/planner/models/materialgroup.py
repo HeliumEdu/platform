@@ -24,7 +24,7 @@ class MaterialGroup(BaseModel):
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
+        return f'{self.title} ({self.get_user().get_username()})'
 
     def get_user(self):
         return self.user

@@ -26,8 +26,8 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     :param bcc: A list of email addresses to which to BCC
     :return:
     """
-    plaintext = get_template('{}.txt'.format(template_name))
-    html = get_template('{}.html'.format(template_name))
+    plaintext = get_template(f'{template_name}.txt')
+    html = get_template(f'{template_name}.html')
     text_content = plaintext.render(context)
     html_content = html.render(context)
 

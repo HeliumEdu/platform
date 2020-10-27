@@ -78,7 +78,7 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         data = {
-            'username': '  {}  '.format(user.email),
+            'username': f'  {user.email}  ',
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_resource_obtain'),

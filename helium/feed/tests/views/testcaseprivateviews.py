@@ -33,13 +33,13 @@ class TestCasePrivateViews(CacheTestCase):
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], event1.title)
-        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], "Comments: {}".format(event1.comments))
+        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], f"Comments: {event1.comments}")
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, event1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, event1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], event1.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, event2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
-        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], "Comments: {}".format(event2.comments))
+        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], f"Comments: {event2.comments}")
 
     def test_homework_feed(self):
         # GIVEN
@@ -110,4 +110,4 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(str(calendar.subcomponents[0]['DTSTART'].dt), '2017-01-06 02:30:00-08:00')
         self.assertEqual(str(calendar.subcomponents[0]['DTEND'].dt), '2017-01-06 05:00:00-08:00')
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         'Comments: <a href="{}">{}</a> in {}'.format(course1.website, course1.title, course1.room))
+                         f'Comments: <a href="{course1.website}">{course1.title}</a> in {course1.room}')

@@ -19,10 +19,10 @@ def read(file):
 
     ext = os.path.splitext(file.name)[1].lstrip('.')
     if ext not in settings.FILE_TYPES:
-        raise ValidationError('File type "{}" not supported.'.format(ext))
+        raise ValidationError(f'File type "{ext}" not supported.')
 
     if file.size > settings.MAX_UPLOAD_SIZE:
         raise ValidationError(
-            'The uploaded file exceeds the max upload size of {}.'.format(filesizeformat(settings.MAX_UPLOAD_SIZE)))
+            f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.')
 
     return json_str

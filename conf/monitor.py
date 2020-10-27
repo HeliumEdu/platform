@@ -25,8 +25,8 @@ _lock = threading.Lock()
 def _restart(path):
     _queue.put(True)
     prefix = 'monitor (pid=%d):' % os.getpid()
-    print('{} Change detected to "{}".'.format(prefix, path))
-    print('{} Triggering process restart.'.format(prefix))
+    print(f'{prefix} Change detected to "{path}".')
+    print(f'{prefix} Triggering process restart.')
     os.kill(os.getpid(), signal.SIGINT)
 
 
@@ -121,7 +121,7 @@ def start(interval=0.5):
     global _running
     _lock.acquire()
     if not _running:
-        print('Monitoring codebase for changes: (pid={})'.format(os.getpid()))
+        print(f'Monitoring codebase for changes: (pid={os.getpid()})')
         _running = True
         _thread.start()
     _lock.release()

@@ -19,21 +19,21 @@ logger = logging.getLogger(__name__)
 def _create_calendar(user):
     calendar = icalendar.Calendar()
 
-    calendar.add("PRODID", "-//Helium Edu//{}//EN".format(settings.PROJECT_VERSION))
+    calendar.add("PRODID", f"-//Helium Edu//{settings.PROJECT_VERSION}//EN")
     calendar.add("VERSION", "2.0")
     calendar.add("CALSCALE", "GREGORIAN")
     calendar.add("METHOD", "PUBLISH")
-    calendar.add("X-WR-CALNAME", "{} for {}".format(settings.PROJECT_NAME, user.username))
-    calendar.add("X-WR-CALDESC", "{} for {}".format(settings.PROJECT_NAME, user.username))
+    calendar.add("X-WR-CALNAME", f"{settings.PROJECT_NAME} for {user.username}")
+    calendar.add("X-WR-CALDESC", f"{settings.PROJECT_NAME} for {user.username}")
 
     return calendar
 
 
 def _create_event_description(event):
-    description = "Comments: {}".format(event.comments)
+    description = f"Comments: {event.comments}"
 
     if event.url:
-        description = "URL: {}\n".format(event.url) + description
+        description = f"URL: {event.url}\n" + description
 
     return description
 
@@ -41,26 +41,26 @@ def _create_event_description(event):
 def _create_homework_description(homework):
     class_info = homework.course.title
     if homework.category and homework.category.title != "Uncategorized":
-        class_info = "{} for {}".format(homework.category.title, class_info)
+        class_info = f"{homework.category.title} for {class_info}"
     if homework.course.room:
-        class_info += " in {}".format(homework.course.room)
+        class_info += f" in {homework.course.room}"
 
     materials = []
     for material in homework.materials.iterator():
         materials.append(material.title)
 
-    description = "Class Info: {}\n".format(class_info)
+    description = f"Class Info: {class_info}\n"
 
     if len(materials) > 0:
-        description += "Materials: {}\n".format(",".join(materials))
+        description += f"Materials: {','.join(materials)}\n"
 
     if homework.url:
-        description += "URL: {}\n".format(homework.url)
+        description += f"URL: {homework.url}\n"
 
     if homework.completed and homework.current_grade != "-1/100":
-        description += "Grade: {}\n".format(homework.current_grade)
+        description += f"Grade: {homework.current_grade}\n"
 
-    description += "Comments: {}".format(homework.comments)
+    description += f"Comments: {homework.comments}"
 
     return description
 
@@ -78,7 +78,7 @@ def events_to_private_ical_feed(user):
 
     for event in user.events.iterator():
         calendar_event = icalendar.Event()
-        calendar_event["UID"] = "he-{}-{}".format(user.pk, event.pk)
+        calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
         calendar_event["SUMMARY"] = event.title
         calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:
@@ -109,7 +109,7 @@ def homework_to_private_ical_feed(user):
 
     for homework in Homework.objects.for_user(user.pk).iterator():
         calendar_event = icalendar.Event()
-        calendar_event["UID"] = "he-{}-{}".format(user.pk, homework.pk)
+        calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
         calendar_event["SUMMARY"] = homework.title
         calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
         if not homework.all_day:
@@ -147,7 +147,7 @@ def courseschedules_to_private_ical_feed(user):
 
     for event in events:
         calendar_event = icalendar.Event()
-        calendar_event["UID"] = "he-{}-{}".format(user.pk, event.pk)
+        calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
         calendar_event["SUMMARY"] = event.title
         calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
         if not event.all_day:

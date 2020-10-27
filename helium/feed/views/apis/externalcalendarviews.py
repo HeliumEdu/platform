@@ -50,7 +50,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'ExternalCalendar {} created for user {}'.format(response.data['id'], request.user.get_username()))
+            f"ExternalCalendar {response.data['id']} created for user {request.user.get_username()}")
 
         return response
 
@@ -86,7 +86,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         response = self.update(request, *args, **kwargs)
 
         logger.info(
-            'ExternalCalendar {} update for user {}'.format(kwargs['pk'], request.user.get_username()))
+            f"ExternalCalendar {kwargs['pk']} update for user {request.user.get_username()}")
 
         return response
 
@@ -94,6 +94,6 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'ExternalCalendar {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+            f"ExternalCalendar {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response

@@ -59,7 +59,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
 
         response = self.create(request, *args, **kwargs)
 
-        logger.info('Reminder {} created for user {}'.format(response.data['id'], request.user.get_username()))
+        logger.info(f"Reminder {response.data['id']} created for user {request.user.get_username()}")
 
         return response
 
@@ -105,20 +105,20 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
     def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Reminder {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Reminder {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Reminder {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response

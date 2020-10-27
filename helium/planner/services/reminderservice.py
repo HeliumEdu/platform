@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def get_subject(reminder):
     if reminder.homework:
         calendar_item = reminder.homework
-        subject = '{} in {}'.format(calendar_item.title, calendar_item.course.title)
+        subject = f'{calendar_item.title} in {calendar_item.course.title}'
     elif reminder.event:
         calendar_item = reminder.event
         subject = calendar_item.title
@@ -28,7 +28,7 @@ def get_subject(reminder):
 
     start = timezone.localtime(calendar_item.start).strftime(
         settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-    subject += ' on {}'.format(start)
+    subject += f' on {start}'
 
     return subject
 
@@ -41,7 +41,7 @@ def process_email_reminders():
             subject = get_subject(reminder)
 
             if not subject:
-                logger.warning('Reminder {} was not processed, as it appears to be orphaned.'.format(reminder.pk))
+                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
                 continue
 
             if reminder.event:
@@ -51,10 +51,10 @@ def process_email_reminders():
                 calendar_item_id = reminder.homework.pk
                 calendar_item_type = enums.HOMEWORK
             else:
-                logger.warning('Reminder {} was not for a homework or event. Nothing to do.'.format(reminder.pk))
+                logger.warning(f'Reminder {reminder.pk} was not for a homework or event. Nothing to do.')
                 continue
 
-            logger.info('Sending email reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
+            logger.info(f'Sending email reminder {reminder.pk} for user {reminder.get_user().pk}')
 
             metricutils.increment('task.reminder.queue.email')
 
@@ -74,13 +74,13 @@ def process_text_reminders():
 
         if reminder.get_user().profile.phone and reminder.get_user().profile.phone_verified:
             subject = get_subject(reminder)
-            message = '({}) {}'.format(subject, reminder.message)
+            message = f'({subject}) {reminder.message}'
 
             if not subject:
-                logger.warning('Reminder {} was not processed, as it appears to be orphaned'.format(reminder.pk))
+                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
                 continue
 
-            logger.info('Sending text reminder {} for user {}'.format(reminder.pk, reminder.get_user().pk))
+            logger.info(f'Sending text reminder {reminder.pk} for user {reminder.get_user().pk}')
 
             metricutils.increment('task.reminder.queue.text')
 

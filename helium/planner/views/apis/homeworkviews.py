@@ -146,7 +146,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Homework {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Homework {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
@@ -160,13 +160,13 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Homework {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Homework {kwargs['pk']} patched for user {request.user.get_username()}")
 
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Homework {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Homework {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response

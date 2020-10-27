@@ -24,8 +24,8 @@ def validate_fraction(value):
         d = decimal.Decimal(split[1].strip())
 
         if n > sys.maxsize or d > sys.maxsize:
-            raise ValidationError('Values must be less than or equal to {}.'.format(sys.maxsize))
+            raise ValidationError(f'Values must be less than or equal to {sys.maxsize}.')
 
-        return '{}/{}'.format(commonutils.remove_exponent(n.normalize()), commonutils.remove_exponent(d.normalize()))
+        return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
     except:
         raise ValidationError('The fraction must contain valid integers.')

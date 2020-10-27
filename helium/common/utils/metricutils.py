@@ -19,7 +19,7 @@ if settings.DATADOG_API_KEY:
     from datadog import statsd as datadog_statsd
 
     DATADOG_METRICS = True
-    DATADOG_TAGS = ['env:{}'.format(os.environ.get('ENVIRONMENT'))]
+    DATADOG_TAGS = [f"env:{os.environ.get('ENVIRONMENT')}"]
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
@@ -33,13 +33,13 @@ def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
     if request and ignore_anonymous and not request.user.is_authenticated:
         return
 
-    statsd.incr("platform.{}".format(metric))
+    statsd.incr(f"platform.{metric}")
     if DATADOG_METRICS:
-        datadog_statsd.increment("platform.{}".format(metric), tags=DATADOG_TAGS)
+        datadog_statsd.increment(f"platform.{metric}", tags=DATADOG_TAGS)
 
 
 def request_start(request):
-    metric_id = "platform.request.{}.{}".format(re.sub("[^a-zA-Z]+", "", request.path), request.method)
+    metric_id = f"platform.request.{re.sub('[^a-zA-Z]+', '', request.path)}.{request.method}"
     timer = statsd.timer(metric_id, rate=1)
     timer.start()
 
@@ -55,11 +55,11 @@ def request_stop(metrics, response):
     metrics['Request-Metric-Millis'] = metrics['Request-Timer'].ms
 
     statsd.incr(metrics['Request-Metric-ID'])
-    statsd.incr("{}.{}".format(metrics['Request-Metric-ID'], response.status_code))
+    statsd.incr(f"{metrics['Request-Metric-ID']}.{response.status_code}")
 
     if DATADOG_METRICS:
         datadog_statsd.increment(metrics['Request-Metric-ID'], tags=DATADOG_TAGS)
-        datadog_statsd.increment("{}.{}".format(metrics['Request-Metric-ID'], response.status_code), tags=DATADOG_TAGS)
+        datadog_statsd.increment(f"{metrics['Request-Metric-ID']}.{response.status_code}", tags=DATADOG_TAGS)
 
         datadog_statsd.timing(metrics['Request-Metric-ID'], metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
 

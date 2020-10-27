@@ -43,7 +43,7 @@ class Attachment(BaseModel):
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.title, self.get_user().get_username())
+        return f'{self.title} ({self.get_user().get_username()})'
 
     def get_user(self):
         if self.course:
@@ -53,7 +53,7 @@ class Attachment(BaseModel):
         elif self.homework:
             return self.homework.get_user()
 
-        raise AttachmentError('Attachment {} is not associated with any models.'.format(self.pk))
+        raise AttachmentError(f'Attachment {self.pk} is not associated with any models.')
 
     def save(self, *args, **kwargs):
         """

@@ -34,7 +34,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             try:
                 icalexternalcalendarservice.validate_url(url)
             except HeliumICalError:
-                logger.info("Unable to validate external ICAL URL {}, so disabling the calendar.".format(url))
+                logger.info(f"Unable to validate external ICAL URL {url}, so disabling the calendar.")
 
                 if self.instance:
                     self.instance.shown_on_calendar = False
