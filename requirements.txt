@@ -23,7 +23,7 @@ python-dateutil==2.8.1
 mock==3.0.5
 mysqlclient==2.0.1
 coreapi==2.3.3
-Pygments==2.7.2
+Pygments==2.7.3
 Markdown==3.3.3
 Sphinx==3.3.1
 psutil==5.7.3
