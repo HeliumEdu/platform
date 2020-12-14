@@ -15,13 +15,13 @@ django-redis==4.12.1
 statsd==3.3.0
 datadog==0.39.0
 boto==2.49.0
-twilio==6.49.0
+twilio==6.50.0
 pyOpenSSL==20.0.0
 Pillow==8.0.1
 icalendar==4.0.7
 python-dateutil==2.8.1
-mock==3.0.5
-mysqlclient==2.0.1
+mock==4.0.3
+mysqlclient==2.0.2
 coreapi==2.3.3
 Pygments==2.7.3
 Markdown==3.3.3
