@@ -1,8 +1,7 @@
-[![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
+[![Build Status](https://travis-ci.com/HeliumEdu/platform.svg?branch=master)](https://travis-ci.com/HeliumEdu/platform)
 [![codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
 ![image](https://img.shields.io/badge/python-%203.6%20|%203.7%20|%203.8%20-blue)
 ![GitHub](https://img.shields.io/github/license/heliumedu/platform)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/alexdlaird)
 
 # Helium Platform Project
 
