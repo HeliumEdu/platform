@@ -1,4 +1,4 @@
-coverage==5.3.1
+coverage==5.4
 codecov==2.1.11
 pytz==2021.1
 django==2.2.13
