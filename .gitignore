@@ -10,7 +10,7 @@ db.sqlite3-journal
 *.log
 .env
 .venv
-htmlcov
+_build
 docs/_build
 docs/_static
 docs/_templates
