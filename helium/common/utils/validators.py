@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError
 from helium.common.utils import commonutils
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 def validate_fraction(value):

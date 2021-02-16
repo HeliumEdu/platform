@@ -9,8 +9,8 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class TestCaseAuthToken(APITestCase):

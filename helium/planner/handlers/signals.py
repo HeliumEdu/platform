@@ -9,8 +9,8 @@ from helium.planner.tasks import recalculate_category_grades_for_course, recalcu
     adjust_reminder_times, recalculate_course_group_grade
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

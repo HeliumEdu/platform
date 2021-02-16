@@ -7,8 +7,8 @@ from helium.feed.services import icalexternalcalendarservice
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

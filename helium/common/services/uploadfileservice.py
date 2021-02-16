@@ -6,8 +6,8 @@ from django.template.defaultfilters import filesizeformat
 from rest_framework.exceptions import ValidationError
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

@@ -14,8 +14,8 @@ import os
 import sys
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.43"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 # Are we running on the dev server
 DEV_SERVER = False
