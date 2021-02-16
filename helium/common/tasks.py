@@ -7,8 +7,8 @@ from helium.common.services.phoneservice import send_sms
 from helium.common.utils import metricutils
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 def send_text(phone, message):
     if settings.DISABLE_EMAILS:
         logger.warning(
-            'Emails disabled. Text with message "{}" to {} not sent.'.format(message, phone))
+            f'Emails disabled. Text with message "{message}" to {phone} not sent.')
         return
 
-    logger.info('Sending text with message "{}" to {}'.format(message, phone))
+    logger.info(f'Sending text with message "{message}" to {phone}')
 
     send_sms(phone, message)
 

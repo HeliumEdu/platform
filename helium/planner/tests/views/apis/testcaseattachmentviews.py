@@ -9,8 +9,8 @@ from helium.planner.models import Attachment
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper, eventhelper, homeworkhelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class TestCaseAttachmentViews(APITestCase):
@@ -63,9 +63,9 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         response1 = self.client.get(reverse('planner_attachments_list'))
-        response2 = self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course3.pk))
-        response3 = self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event2.pk))
-        response4 = self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework2.pk))
+        response2 = self.client.get(reverse('planner_attachments_list') + f'?course={course3.pk}')
+        response3 = self.client.get(reverse('planner_attachments_list') + f'?event={event2.pk}')
+        response4 = self.client.get(reverse('planner_attachments_list') + f'?homework={homework2.pk}')
 
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
@@ -241,9 +241,9 @@ class TestCaseAttachmentViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('planner_attachments_list') + '?course={}'.format(course1.pk)),
-            self.client.get(reverse('planner_attachments_list') + '?event={}'.format(event.pk)),
-            self.client.get(reverse('planner_attachments_list') + '?homework={}'.format(homework.pk)),
+            self.client.get(reverse('planner_attachments_list') + f'?course={course1.pk}'),
+            self.client.get(reverse('planner_attachments_list') + f'?event={event.pk}'),
+            self.client.get(reverse('planner_attachments_list') + f'?homework={homework.pk}'),
             self.client.delete(reverse('planner_attachments_detail', kwargs={'pk': attachment1.pk}))
         ]
 

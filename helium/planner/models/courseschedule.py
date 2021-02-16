@@ -7,8 +7,8 @@ from helium.common.models import BaseModel
 from helium.planner.managers.courseschedulemanager import CourseScheduleManager
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class CourseSchedule(BaseModel):
@@ -57,7 +57,7 @@ class CourseSchedule(BaseModel):
     objects = CourseScheduleManager()
 
     def __str__(self):  # pragma: no cover
-        return str('{}-{} ({})'.format(self.course.title, self.pk, self.get_user().get_username()))
+        return str(f'{self.course.title}-{self.pk} ({self.get_user().get_username()})')
 
     def get_user(self):
         return self.course.get_user()

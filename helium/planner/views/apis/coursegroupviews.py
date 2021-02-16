@@ -12,8 +12,8 @@ from helium.planner.schemas import CourseGroupDetailSchema
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
+        logger.info(f"CourseGroup {response.data['id']} created for user {request.user.get_username()}")
 
         return response
 
@@ -85,13 +85,13 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"CourseGroup {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('CourseGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"CourseGroup {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response

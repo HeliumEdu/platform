@@ -8,8 +8,8 @@ from twilio.rest import Client
 from helium.common.utils.commonutils import HeliumError
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def verify_number(phone):
     try:
         cleaned_phone = re.sub("[()\-+\s]", "", phone)
 
-        logger.info("Asking Twilio to validate {}".format(cleaned_phone))
+        logger.info(f"Asking Twilio to validate {cleaned_phone}")
 
         number = client.lookups.phone_numbers(cleaned_phone).fetch()
 

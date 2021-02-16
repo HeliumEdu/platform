@@ -9,8 +9,8 @@ from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,6 @@ class UserProfileApiDetailView(HeliumAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info('Profile updated for user {}'.format(user.get_username()))
+        logger.info(f'Profile updated for user {user.get_username()}')
 
         return Response(serializer.data)

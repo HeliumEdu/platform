@@ -7,8 +7,8 @@ from helium.common.utils import metricutils
 from helium.importexport.services import importservice
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def import_example_schedule(user_id):
     try:
         user = get_user_model().objects.get(pk=user_id)
     except get_user_model().DoesNotExist:
-        logger.info('User {} does not exist. Nothing to do.'.format(user_id))
+        logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         return
 

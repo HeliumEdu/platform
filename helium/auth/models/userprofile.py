@@ -7,8 +7,8 @@ from helium.auth.utils.userutils import generate_phone_verification_code
 from helium.common.models import BaseModel
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class UserProfile(BaseModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE)
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.pk, self.user.get_username())
+        return f'{self.pk} ({self.user.get_username()})'
 
     def get_user(self):
         return self.user

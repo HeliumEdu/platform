@@ -8,8 +8,8 @@ from rest_framework.exceptions import ValidationError
 from helium.planner.models import Attachment, Course, Homework, Event
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
     def validate_attachment(self, attachment):
         if attachment.size > settings.MAX_UPLOAD_SIZE:
             raise ValidationError(
-                'The uploaded file exceeds the max upload size of {}.'.format(filesizeformat(settings.MAX_UPLOAD_SIZE)))
+                f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.')
 
         return attachment
 

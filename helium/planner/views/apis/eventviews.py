@@ -16,8 +16,8 @@ from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('Event {} created for user {}'.format(response.data['id'], request.user.get_username()))
+        logger.info(f"Event {response.data['id']} created for user {request.user.get_username()}")
 
         return response
 
@@ -109,21 +109,21 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Event {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Event {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
     def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info('Event {} patched for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Event {kwargs['pk']} patched for user {request.user.get_username()}")
 
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Event {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Event {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response
 

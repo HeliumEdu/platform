@@ -14,8 +14,8 @@ from helium.planner.schemas import SubCourseGroupListSchema, CourseDetailSchema
 from helium.planner.serializers.courseserializer import CourseSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Course {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Course {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

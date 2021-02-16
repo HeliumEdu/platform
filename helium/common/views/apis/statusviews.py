@@ -13,8 +13,8 @@ from rest_framework import status
 from rest_framework.viewsets import ViewSet
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 def _run_checks(plugins):
@@ -106,8 +106,8 @@ class HealthResourceView(ViewSet):
             {
                 "components": components,
                 "uptime": round(time.time() - psutil.boot_time(), 2),
-                "disk_usage": '{}%'.format(psutil.disk_usage('/').percent),
-                "memory_available": '{} MB'.format(int(psutil.virtual_memory().available / 1024 / 1024)),
+                "disk_usage": f"{psutil.disk_usage('/').percent}%",
+                "memory_available": f'{int(psutil.virtual_memory().available / 1024 / 1024)} MB',
                 "status": system_status
             },
             status=status_code

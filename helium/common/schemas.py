@@ -5,8 +5,8 @@ import coreschema
 from rest_framework.schemas import AutoSchema
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BaseIDSchema(AutoSchema):
                 required=True,
                 location="path",
                 schema=coreschema.Integer(title='id',
-                                          description='A unique integer value identifying this {}.'.format(model_name))
+                                          description=f'A unique integer value identifying this {model_name}.')
             ),
         ]
 

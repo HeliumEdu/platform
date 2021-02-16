@@ -14,8 +14,8 @@ import os
 import sys
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.43"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 # Are we running on the dev server
 DEV_SERVER = False
@@ -51,9 +51,9 @@ PROJECT_ID = os.environ.get('PROJECT_ID')
 locals()['PROJECT_ID'] = PROJECT_ID
 
 # Load conf properties into the local scope
-print('Using conf.configs.{}'.format(conf))
+print(f'Using conf.configs.{conf}')
 common_conf_module = __import__('conf.configs.common', globals(), locals(), [PROJECT_ID])
-conf_module = __import__('conf.configs.{}'.format(conf), globals(), locals(), [PROJECT_ID])
+conf_module = __import__(f'conf.configs.{conf}', globals(), locals(), [PROJECT_ID])
 
 # Load common conf properties into the local scope
 for setting in dir(common_conf_module):

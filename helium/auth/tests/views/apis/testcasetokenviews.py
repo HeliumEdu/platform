@@ -9,8 +9,8 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class TestCaseAuthToken(APITestCase):
@@ -78,7 +78,7 @@ class TestCaseAuthToken(APITestCase):
 
         # WHEN
         data = {
-            'username': '  {}  '.format(user.email),
+            'username': f'  {user.email}  ',
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_resource_obtain'),

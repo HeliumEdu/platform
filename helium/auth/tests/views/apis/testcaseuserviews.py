@@ -9,8 +9,8 @@ from helium.auth.models import UserSettings, UserProfile
 from helium.auth.tests.helpers import userhelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class TestCaseUserViews(APITestCase):
@@ -116,7 +116,7 @@ class TestCaseUserViews(APITestCase):
         user.save()
 
         response = self.client.get(
-            reverse('auth_user_resource_verify') + '?username={}&code={}'.format(user.username, user.verification_code))
+            reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

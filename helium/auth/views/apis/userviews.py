@@ -16,8 +16,8 @@ from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info('User {} updated'.format(user.get_username()))
+        logger.info(f'User {user.get_username()} updated')
 
         return Response(serializer.data)
 
@@ -80,7 +80,7 @@ class UserDeleteResourceView(HeliumAPIView):
         form = UserDeleteForm(user=user, data=request.data)
 
         if form.is_valid():
-            logger.info('User {} deleted'.format(user.get_username()))
+            logger.info(f'User {user.get_username()} deleted')
 
             delete_user.delay(form.user.pk)
 

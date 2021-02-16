@@ -9,8 +9,8 @@ from helium.common import enums
 from helium.common.models import BaseModel
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class UserSettings(BaseModel):
         verbose_name_plural = 'User settings'
 
     def __str__(self):  # pragma: no cover
-        return '{} ({})'.format(self.pk, self.user.get_username())
+        return f'{self.pk} ({self.user.get_username()})'
 
     def get_user(self):
         return self.user

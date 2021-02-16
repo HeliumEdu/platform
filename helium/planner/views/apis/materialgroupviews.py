@@ -11,8 +11,8 @@ from helium.planner.schemas import MaterialGroupDetailSchema
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} created for user {}'.format(response.data['id'], request.user.get_username()))
+        logger.info(f"MaterialGroup {response.data['id']} created for user {request.user.get_username()}")
 
         return response
 
@@ -83,13 +83,13 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"MaterialGroup {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('MaterialGroup {} deleted for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"MaterialGroup {kwargs['pk']} deleted for user {request.user.get_username()}")
 
         return response

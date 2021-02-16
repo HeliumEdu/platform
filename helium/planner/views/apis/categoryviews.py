@@ -12,8 +12,8 @@ from helium.planner.schemas import CategoryDetailSchema, SubCourseListSchema
 from helium.planner.serializers.categoryserializer import CategorySerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
-        logger.info('Category {} updated for user {}'.format(kwargs['pk'], request.user.get_username()))
+        logger.info(f"Category {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 

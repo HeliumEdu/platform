@@ -10,8 +10,8 @@ from helium.planner.models import Material
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, materialgrouphelper, materialhelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 
 class TestCaseMaterialViews(APITestCase):
@@ -337,7 +337,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group, courses=[course1, course2])
 
         response = self.client.get(
-            reverse('planner_materials_list') + '?courses={}&courses={}'.format(course1.pk, course2.pk))
+            reverse('planner_materials_list') + f'?courses={course1.pk}&courses={course2.pk}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

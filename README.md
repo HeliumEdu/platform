@@ -1,14 +1,15 @@
-[![Build Status](https://travis-ci.org/HeliumEdu/platform.svg?branch=master)](https://travis-ci.org/HeliumEdu/platform)
-[![codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
-[![image](https://img.shields.io/pypi/pyversions/pyngrok.svg)](https://pypi.org/project/pyngrok/)
-[![PyPI license](https://img.shields.io/pypi/l/pyngrok.svg)](https://pypi.org/project/pyngrok/)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/alexdlaird)
+[![CI/CD](https://github.com/heliumedu/platform/workflows/CI/CD/badge.svg)](https://github.com/heliumedu/platform/actions?query=workflow%3ACI%2FCD)
+[![Codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
+![Python Versions](https://img.shields.io/badge/python-%203.6%20|%203.7%20|%203.8%20-blue)
+![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
 
 # Helium Platform Project
 
+<p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
+
 ## Prerequisites
 
-- Python (>= 3.5)
+- Python (>= 3.6)
 - Pip (>= 9.0)
 - MySQL (>= 5.7)
 - Redis (>= 3.2)
@@ -88,6 +89,9 @@ bin/runserver
 ```
 
 A development server will be started at <http://localhost:8000>.
+
+If the `USE_NGROK` environment variable is set when a dev server is started (using `runserver`, [pyngrok](https://github.com/alexdlaird/pyngrok)
+will be used to open a `ngrok` tunnel.
 
 Additionally, this project also contains a worker that executes asynchronous or scheduled tasks, and the above server
 can be started with this worker as well. When developing locally, it is less necessary to run this worker
