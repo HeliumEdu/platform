@@ -8,8 +8,8 @@ from helium.auth.tasks import send_password_reset_email, send_registration_email
 from helium.common.utils import metricutils
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2021, Helium Edu"
+__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
