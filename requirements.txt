@@ -24,7 +24,7 @@ mock==4.0.3
 mysqlclient==2.0.3
 coreapi==2.3.3
 Pygments==2.8.0
-Markdown==3.3.3
+Markdown==3.3.4
 Sphinx==3.5.1
 psutil==5.8.0
 rollbar==0.15.2
