@@ -17,7 +17,7 @@ datadog==0.40.1
 boto==2.49.0
 twilio==6.53.0
 pyOpenSSL==20.0.1
-Pillow==8.2.0
+Pillow==8.3.2
 icalendar==4.0.7
 python-dateutil==2.8.1
 mock==4.0.3
