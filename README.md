@@ -18,6 +18,8 @@
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
 
 ### Project Setup
+If developing on Mac, first [install Homebrew](https://docs.brew.sh/Installation) and install MySQL with `brew install mysql`.
+
 To setup the Python/Django Platform build environment, execute:
 
 ```sh
