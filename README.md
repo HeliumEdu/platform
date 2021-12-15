@@ -1,6 +1,6 @@
 [![CI/CD](https://github.com/heliumedu/platform/workflows/CI/CD/badge.svg)](https://github.com/heliumedu/platform/actions?query=workflow%3ACI%2FCD)
 [![Codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
-![Python Versions](https://img.shields.io/badge/python-%203.6%20|%203.7%20|%203.8%20-blue)
+![Python Versions](https://img.shields.io/badge/python-%203.6%20|%203.7%20|%203.8%20|%203.9%20-blue)
 ![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
 
 # Helium Platform Project
