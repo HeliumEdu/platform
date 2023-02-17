@@ -75,6 +75,9 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['comments'],
                          f'<a href="{course.website}">{course.title}</a> in {course.room}')
 
+        self.assertEqual(response.data[-1]['start'], '2017-05-08T10:30:00Z')
+        self.assertEqual(response.data[-1]['end'], '2017-05-08T11:00:00Z')
+
     def test_get_course_schedule_cached(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
