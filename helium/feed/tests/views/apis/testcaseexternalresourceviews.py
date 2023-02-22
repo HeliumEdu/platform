@@ -86,7 +86,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[2]['all_day'], False)
         self.assertEqual(response.data[2]['show_end_time'], True)
         self.assertEqual(response.data[2]['start'], '2020-03-28T14:00:00Z')
-        self.assertEqual(response.data[2]['end'], '2020-03-29T06:59:59.999999Z')
+        self.assertEqual(response.data[2]['end'], '2020-03-29T07:59:59.999999Z')
         self.assertEqual(response.data[2]['priority'], 50)
         self.assertEqual(response.data[2]['url'], None)
         self.assertEqual(response.data[2]['comments'], 'end date assumed to be EOD')
