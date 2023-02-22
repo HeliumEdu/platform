@@ -13,8 +13,8 @@ from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.50"
 
 logger = logging.getLogger(__name__)
 

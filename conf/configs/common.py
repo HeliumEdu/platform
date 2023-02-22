@@ -10,8 +10,8 @@ from corsheaders.defaults import default_headers
 from conf.settings import PROJECT_ID
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.49"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.50"
 
 # ############################
 # Project configuration
