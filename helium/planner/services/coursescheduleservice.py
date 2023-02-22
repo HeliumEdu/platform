@@ -136,10 +136,19 @@ def _create_events_from_course_schedules(course, course_schedules):
                                                          enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
                 end_time = _get_end_time_for_weekday(course_schedule,
                                                      enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
-                start = make_aware(datetime.datetime.combine(day, start_time),
-                                   pytz.timezone(course.get_user().settings.time_zone)).astimezone(pytz.utc)
-                end = make_aware(datetime.datetime.combine(day, end_time),
-                                 pytz.timezone(course.get_user().settings.time_zone)).astimezone(pytz.utc)
+
+                start = pytz.timezone(course.get_user().settings.time_zone).localize(
+                    datetime.datetime.combine(day, start_time))
+                if start.dst():
+                    start = (start + datetime.timedelta(hours=1))
+                start = start.astimezone(pytz.utc)
+
+                end = pytz.timezone(course.get_user().settings.time_zone).localize(
+                    datetime.datetime.combine(day, end_time))
+                if end.dst():
+                    end = (end + datetime.timedelta(hours=1))
+                end = end.astimezone(pytz.utc)
+
                 comments = _get_comments(course)
 
                 unique_str = str(course.get_user().pk) + str(
