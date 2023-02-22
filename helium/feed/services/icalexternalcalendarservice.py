@@ -19,8 +19,8 @@ from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.50"
 
 logger = logging.getLogger(__name__)
 
@@ -86,12 +86,16 @@ def _create_events_from_calendar(external_calendar, calendar):
                 start = datetime.datetime.combine(start, datetime.time.min)
             if timezone.is_naive(start):
                 start = timezone.make_aware(start, time_zone)
+                if start.dst():
+                    start = (start + datetime.timedelta(hours=1))
             start = start.astimezone(pytz.utc)
 
             if all_day:
                 end = datetime.datetime.combine(end, datetime.time.min)
             if timezone.is_naive(end):
                 end = timezone.make_aware(end, time_zone)
+                if end.dst():
+                    end = (end + datetime.timedelta(hours=1))
             end = end.astimezone(pytz.utc)
 
             event = Event(id=len(events),

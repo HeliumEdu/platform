@@ -11,8 +11,8 @@ from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.50"
 
 
 class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
@@ -74,6 +74,9 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['show_end_time'], True)
         self.assertEqual(response.data[0]['comments'],
                          f'<a href="{course.website}">{course.title}</a> in {course.room}')
+
+        self.assertEqual(response.data[-1]['start'], '2017-05-08T10:30:00Z')
+        self.assertEqual(response.data[-1]['end'], '2017-05-08T11:00:00Z')
 
     def test_get_course_schedule_cached(self):
         # GIVEN
