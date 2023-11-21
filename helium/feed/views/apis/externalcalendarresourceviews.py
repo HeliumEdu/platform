@@ -16,8 +16,8 @@ from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.51"
 
 logger = logging.getLogger(__name__)
 
