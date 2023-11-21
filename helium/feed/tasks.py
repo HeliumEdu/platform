@@ -13,7 +13,7 @@ __version__ = "1.4.51"
 logger = logging.getLogger(__name__)
 
 
-@app.task(bind=True)
+@app.task
 def reindex_external_calendars():
     metrics = metricutils.task_start("reindex_external_calendars")
 
