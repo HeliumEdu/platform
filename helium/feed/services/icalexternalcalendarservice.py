@@ -35,7 +35,7 @@ def _get_cache_prefix(external_calendar):
     return f"users:{external_calendar.get_user().pk}:externalcalendars:{external_calendar.pk}:events"
 
 
-def _get_events_from_cache(external_calendar, cached_value):
+def _get_events_from_cache(external_calendar, cached_value, start=None, end=None):
     events = []
     invalid_data = False
 
@@ -52,7 +52,9 @@ def _get_events_from_cache(external_calendar, cached_value):
                           calendar_item_type=event['calendar_item_type'],
                           url=event['url'],
                           comments=event['comments'])
-            events.append(event)
+
+            if (start is None or end is None) or (event.start >= start and event.end < end):
+                events.append(event)
     except:
         invalid_data = True
 
@@ -63,8 +65,9 @@ def _get_events_from_cache(external_calendar, cached_value):
     return events, not invalid_data
 
 
-def _create_events_from_calendar(external_calendar, calendar):
+def _create_events_from_calendar(external_calendar, calendar, start=None, end=None):
     events = []
+    events_filtered = []
 
     time_zone = pytz.timezone(external_calendar.get_user().settings.time_zone)
 
@@ -72,38 +75,38 @@ def _create_events_from_calendar(external_calendar, calendar):
         if component.name == "VTIMEZONE":
             time_zone = pytz.timezone(component.get("TZID"))
         elif component.name == "VEVENT":
-            start = component.get("DTSTART").dt
+            dt_start = component.get("DTSTART").dt
             if component.get("DTEND") is not None:
-                end = component.get("DTEND").dt
+                dt_end = component.get("DTEND").dt
             elif component.get("DURATION") is not None:
-                end = start + component.get("DURATION").dt
+                dt_end = dt_start + component.get("DURATION").dt
             else:
-                end = datetime.datetime.combine(start, datetime.time.max)
-            all_day = not isinstance(start, datetime.datetime)
-            show_end_time = isinstance(start, datetime.datetime)
+                dt_end = datetime.datetime.combine(dt_start, datetime.time.max)
+            all_day = not isinstance(dt_start, datetime.datetime)
+            show_end_time = isinstance(dt_start, datetime.datetime)
 
             if all_day:
-                start = datetime.datetime.combine(start, datetime.time.min)
-            if timezone.is_naive(start):
-                start = timezone.make_aware(start, time_zone)
-                if start.dst():
-                    start = (start + datetime.timedelta(hours=1))
-            start = start.astimezone(pytz.utc)
+                dt_start = datetime.datetime.combine(dt_start, datetime.time.min)
+            if timezone.is_naive(dt_start):
+                dt_start = timezone.make_aware(dt_start, time_zone)
+                if dt_start.dst():
+                    dt_start = (dt_start + datetime.timedelta(hours=1))
+            dt_start = dt_start.astimezone(pytz.utc)
 
             if all_day:
-                end = datetime.datetime.combine(end, datetime.time.min)
-            if timezone.is_naive(end):
-                end = timezone.make_aware(end, time_zone)
-                if end.dst():
-                    end = (end + datetime.timedelta(hours=1))
-            end = end.astimezone(pytz.utc)
+                dt_end = datetime.datetime.combine(dt_end, datetime.time.min)
+            if timezone.is_naive(dt_end):
+                dt_end = timezone.make_aware(dt_end, time_zone)
+                if dt_end.dst():
+                    dt_end = (dt_end + datetime.timedelta(hours=1))
+            dt_end = dt_end.astimezone(pytz.utc)
 
             event = Event(id=len(events),
                           title=component.get("SUMMARY"),
                           all_day=all_day,
                           show_end_time=show_end_time,
-                          start=start,
-                          end=end,
+                          start=dt_start,
+                          end=dt_end,
                           url=component.get("URL"),
                           comments=component.get("DESCRIPTION"),
                           user=external_calendar.get_user(),
@@ -111,12 +114,15 @@ def _create_events_from_calendar(external_calendar, calendar):
 
             events.append(event)
 
+            if (start is None or end is None) or (event.start >= start and event.end < end):
+                events_filtered.append(event)
+
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL)
 
-    return events
+    return events_filtered
 
 
 def validate_url(url):
@@ -151,12 +157,14 @@ def validate_url(url):
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 
-def calendar_to_events(external_calendar):
+def calendar_to_events(external_calendar, start=None, end=None):
     """
     For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
     resources.
 
     :param external_calendar: The external calendar source that is referenced by the calendar object.
+    :param start: The earliest date by which to filter results.
+    :param end: The latest date by which to filter results.
     :return: A list of event resources.
     """
     events = []
@@ -164,11 +172,11 @@ def calendar_to_events(external_calendar):
     cached = False
     cached_value = cache.get(_get_cache_prefix(external_calendar))
     if cached_value:
-        events, cached = _get_events_from_cache(external_calendar, cached_value)
+        events, cached = _get_events_from_cache(external_calendar, cached_value, start, end)
 
     if not cached:
         calendar = validate_url(external_calendar.url)
 
-        events = _create_events_from_calendar(external_calendar, calendar)
+        events = _create_events_from_calendar(external_calendar, calendar, start, end)
 
     return events
