@@ -61,9 +61,34 @@ def request_stop(metrics, response):
         datadog_statsd.increment(metrics['Request-Metric-ID'], tags=DATADOG_TAGS)
         datadog_statsd.increment(f"{metrics['Request-Metric-ID']}.{response.status_code}", tags=DATADOG_TAGS)
 
-        datadog_statsd.timing(metrics['Request-Metric-ID'], metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
+        datadog_statsd.timing(metrics['Request-Metric-ID'] + ".time", metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
 
     metrics.pop('Request-Timer')
 
     for name, value in metrics.items():
         response._headers[name] = (name, str(value))
+
+def task_start(task_name):
+    metric_id = "platform.task.{}".format(task_name)
+    timer = statsd.timer(metric_id, rate=1)
+    timer.start()
+
+    return {
+        'Task-Timer': timer,
+        'Task-Metric-ID': metric_id,
+        'Task-Metric-Start': int(round(timer._start_time * 1000))
+    }
+
+
+def task_stop(metrics):
+    metrics['Task-Timer'].stop()
+    metrics['Task-Metric-Millis'] = metrics['Task-Timer'].ms
+
+    statsd.incr(metrics['Task-Metric-ID'])
+
+    if DATADOG_METRICS:
+        datadog_statsd.increment(metrics['Task-Metric-ID'], tags=DATADOG_TAGS)
+
+        datadog_statsd.timing(metrics['Task-Metric-ID'] + ".time", metrics['Task-Timer'].ms, tags=DATADOG_TAGS)
+
+    metrics.pop('Task-Timer')

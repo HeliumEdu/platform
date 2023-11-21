@@ -15,12 +15,13 @@ from rest_framework import status
 
 from helium.common import enums
 from helium.common.utils.commonutils import HeliumError
+from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.50"
+__version__ = "1.4.51"
 
 logger = logging.getLogger(__name__)
 
@@ -180,3 +181,20 @@ def calendar_to_events(external_calendar, start=None, end=None):
         events = _create_events_from_calendar(external_calendar, calendar, start, end)
 
     return events
+
+
+def reindex_stale_caches():
+    for external_calendar in ExternalCalendar.objects.all().iterator():
+        cached = False
+        cached_value = cache.get(_get_cache_prefix(external_calendar))
+        if cached_value:
+            events, cached = _get_events_from_cache(external_calendar, cached_value)
+
+        if not cached:
+            logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
+
+            calendar = validate_url(external_calendar.url)
+
+            _create_events_from_calendar(external_calendar, calendar)
+
+    logger.info("Done reindexing stale caches")
