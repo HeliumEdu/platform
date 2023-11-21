@@ -90,16 +90,20 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
                 dt_start = datetime.datetime.combine(dt_start, datetime.time.min)
             if timezone.is_naive(dt_start):
                 dt_start = timezone.make_aware(dt_start, time_zone)
-                if dt_start.dst():
-                    dt_start = (dt_start + datetime.timedelta(hours=1))
+            else:
+                dt_start = dt_start.astimezone(time_zone)
+            if dt_start.dst():
+                dt_start = (dt_start + datetime.timedelta(hours=1))
             dt_start = dt_start.astimezone(pytz.utc)
 
             if all_day:
                 dt_end = datetime.datetime.combine(dt_end, datetime.time.min)
             if timezone.is_naive(dt_end):
                 dt_end = timezone.make_aware(dt_end, time_zone)
-                if dt_end.dst():
-                    dt_end = (dt_end + datetime.timedelta(hours=1))
+            else:
+                dt_end = dt_end.astimezone(time_zone)
+            if dt_end.dst():
+                dt_end = (dt_end + datetime.timedelta(hours=1))
             dt_end = dt_end.astimezone(pytz.utc)
 
             event = Event(id=len(events),
