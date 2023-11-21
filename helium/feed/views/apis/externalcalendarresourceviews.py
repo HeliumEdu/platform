@@ -1,4 +1,7 @@
 import logging
+from datetime import timezone
+
+from dateutil import parser
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -40,10 +43,13 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
 
     def get(self, request, *args, **kwargs):
         external_calendar = self.get_object()
+        start = parser.parse(request.query_params["start__gte"]).astimezone(
+            timezone.utc) if "start__gte" in request.query_params else None
+        end = parser.parse(request.query_params["end__lt"]).astimezone(
+            timezone.utc) if "end__lt" in request.query_params else None
 
         try:
-            # TODO: add support for filtering
-            events = icalexternalcalendarservice.calendar_to_events(external_calendar)
+            events = icalexternalcalendarservice.calendar_to_events(external_calendar, start, end)
         except HeliumICalError as ex:
             external_calendar.shown_on_calendar = False
             external_calendar.save()
