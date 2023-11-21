@@ -22,8 +22,8 @@ if settings.DATADOG_API_KEY:
     DATADOG_TAGS = [f"env:{os.environ.get('ENVIRONMENT')}"]
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.51"
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
@@ -61,9 +61,34 @@ def request_stop(metrics, response):
         datadog_statsd.increment(metrics['Request-Metric-ID'], tags=DATADOG_TAGS)
         datadog_statsd.increment(f"{metrics['Request-Metric-ID']}.{response.status_code}", tags=DATADOG_TAGS)
 
-        datadog_statsd.timing(metrics['Request-Metric-ID'], metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
+        datadog_statsd.timing(metrics['Request-Metric-ID'] + ".time", metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
 
     metrics.pop('Request-Timer')
 
     for name, value in metrics.items():
         response._headers[name] = (name, str(value))
+
+def task_start(task_name):
+    metric_id = "platform.task.{}".format(task_name)
+    timer = statsd.timer(metric_id, rate=1)
+    timer.start()
+
+    return {
+        'Task-Timer': timer,
+        'Task-Metric-ID': metric_id,
+        'Task-Metric-Start': int(round(timer._start_time * 1000))
+    }
+
+
+def task_stop(metrics):
+    metrics['Task-Timer'].stop()
+    metrics['Task-Metric-Millis'] = metrics['Task-Timer'].ms
+
+    statsd.incr(metrics['Task-Metric-ID'])
+
+    if DATADOG_METRICS:
+        datadog_statsd.increment(metrics['Task-Metric-ID'], tags=DATADOG_TAGS)
+
+        datadog_statsd.timing(metrics['Task-Metric-ID'] + ".time", metrics['Task-Timer'].ms, tags=DATADOG_TAGS)
+
+    metrics.pop('Task-Timer')

@@ -11,7 +11,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.50"
+__version__ = "1.4.51"
 
 # ############################
 # Project configuration
@@ -111,13 +111,16 @@ AUTH_TOKEN_TTL_DAYS = 30
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
-FEED_CACHE_TTL = 300
+# Cache feeds for 3 hours
+FEED_CACHE_TTL = 60 * 60 * 3
 
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY = 2
 
 REMINDERS_FREQUENCY_SEC = 30
+
+EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC = 600
 
 # Application definition
 
@@ -164,7 +167,8 @@ REST_FRAMEWORK = {
         'anon': '100/min',
         'user': '1000/min'
     },
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
 }
 
 # Internationalization

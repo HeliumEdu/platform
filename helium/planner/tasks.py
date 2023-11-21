@@ -15,8 +15,8 @@ from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.51"
 
 logger = logging.getLogger(__name__)
 
@@ -203,8 +203,8 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Add schedule for email reminders every ten seconds
+    # Add schedule for email reminders periodically
     sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, email_reminders.s())
 
-    # Add schedule for text reminders every ten seconds
+    # Add schedule for text reminders periodically
     sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, text_reminders.s())
