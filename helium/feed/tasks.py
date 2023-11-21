@@ -19,6 +19,7 @@ def reindex_external_calendars():
 
     icalexternalcalendarservice.reindex_stale_caches()
 
+    # A metrics monitor should exist for this, average runtime should not exceed EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC
     metricutils.task_stop(metrics)
 
 

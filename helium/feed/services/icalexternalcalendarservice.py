@@ -188,7 +188,7 @@ def calendar_to_events(external_calendar, start=None, end=None):
 
 
 def reindex_stale_caches():
-    for external_calendar in ExternalCalendar.objects.all().iterator():
+    for external_calendar in ExternalCalendar.objects.filter(shown_on_calendar=True).iterator():
         cached = False
         cached_value = cache.get(_get_cache_prefix(external_calendar))
         if cached_value:
@@ -197,8 +197,14 @@ def reindex_stale_caches():
         if not cached:
             logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
 
-            calendar = validate_url(external_calendar.url)
+            try:
+                calendar = validate_url(external_calendar.url)
 
-            _create_events_from_calendar(external_calendar, calendar)
+                _create_events_from_calendar(external_calendar, calendar)
+            except HeliumICalError:
+                logger.info("URL invalid, disabling calendar {}".format(external_calendar.pk))
+
+                external_calendar.shown_on_calendar = False
+                external_calendar.save()
 
     logger.info("Done reindexing stale caches")
