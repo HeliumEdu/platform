@@ -52,7 +52,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 ROLLBAR = {
     'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
     'environment': os.environ.get('ENVIRONMENT'),
-    'branch': 'master',
+    'branch': 'main',
     'root': BASE_DIR,
 }
 
