@@ -10,8 +10,8 @@ from conf.configs import common
 from conf.settings import PROJECT_ID
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.55"
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
