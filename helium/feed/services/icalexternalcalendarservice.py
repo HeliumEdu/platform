@@ -191,10 +191,9 @@ def calendar_to_events(external_calendar, start=None, end=None):
 
 
 def reindex_stale_caches():
-    begin_filter_window = timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_TTL - (60 * 10))
     count = 0
-    for external_calendar in ExternalCalendar.objects.filter(shown_on_calendar=True,
-                                                             last_index__lte=begin_filter_window).iterator():
+    for external_calendar in ExternalCalendar.objects.needs_recached(
+            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
