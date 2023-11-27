@@ -127,6 +127,9 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL)
 
+        external_calendar.last_index = timezone.now()
+        external_calendar.save()
+
     return events_filtered
 
 
@@ -188,8 +191,7 @@ def calendar_to_events(external_calendar, start=None, end=None):
 
 
 def reindex_stale_caches():
-    now = timezone.now()
-    begin_filter_window = now - datetime.timedelta(seconds=settings.FEED_CACHE_TTL - (60 * 10))
+    begin_filter_window = timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_TTL - (60 * 10))
     count = 0
     for external_calendar in ExternalCalendar.objects.filter(shown_on_calendar=True,
                                                              last_index__lte=begin_filter_window).iterator():
@@ -202,14 +204,11 @@ def reindex_stale_caches():
 
             _create_events_from_calendar(external_calendar, calendar)
 
-            external_calendar.last_index = now
-
             count += 1
         except HeliumICalError:
             logger.info("URL invalid, disabling calendar {}".format(external_calendar.pk))
 
             external_calendar.shown_on_calendar = False
-
-        external_calendar.save()
+            external_calendar.save()
 
     logger.info("Done reindexing {} stale caches".format(count))
