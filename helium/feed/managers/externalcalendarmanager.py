@@ -1,5 +1,7 @@
 import logging
 
+from django.db.models import Q
+
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 __author__ = "Alex Laird"
@@ -16,6 +18,11 @@ class ExternalCalendarQuerySet(BaseQuerySet):
     def for_user(self, user_id):
         return self.filter(user_id=user_id)
 
+    def needs_recached(self, start):
+        return self.filter(Q(last_index__lte=start) |
+                           Q(last_index__isblank=True) |
+                           Q(last_index__isnull=True)).filter(shown_on_calendar=True)
+
 
 class ExternalCalendarManager(BaseManager):
     def get_queryset(self):
@@ -26,3 +33,6 @@ class ExternalCalendarManager(BaseManager):
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
+
+    def needs_recached(self, start):
+        return self.get_queryset().needs_recached(start)
