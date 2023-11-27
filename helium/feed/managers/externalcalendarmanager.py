@@ -20,7 +20,6 @@ class ExternalCalendarQuerySet(BaseQuerySet):
 
     def needs_recached(self, start):
         return self.filter(Q(last_index__lte=start) |
-                           Q(last_index__isblank=True) |
                            Q(last_index__isnull=True)).filter(shown_on_calendar=True)
 
 
