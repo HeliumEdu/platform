@@ -8,8 +8,8 @@ from helium.common.models.base import BaseModel
 from helium.feed.managers.externalcalendarmanager import ExternalCalendarManager
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.56"
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,9 @@ class ExternalCalendar(BaseModel):
 
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
                                             default=True, db_index=True)
+
+    last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',
+                                      blank=True, null=True, db_index=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 
