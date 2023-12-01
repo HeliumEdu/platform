@@ -1,4 +1,4 @@
-[![Build](https://github.com/heliumedu/platform/workflows/build.yml/badge.svg)](https://github.com/heliumedu/platform/actions/workflows/build.yml)
+[![Build](https://github.com/heliumedu/platform/actions/workflows/build.yml/badge.svg)](https://github.com/heliumedu/platform/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
 ![Python Versions](https://img.shields.io/badge/python-%203.6%20|%203.7%20|%203.8%20|%203.9%20-blue)
 ![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
