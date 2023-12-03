@@ -11,7 +11,7 @@ from conf.settings import PROJECT_ID
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.56"
+__version__ = "1.4.57"
 
 # ############################
 # Project configuration
