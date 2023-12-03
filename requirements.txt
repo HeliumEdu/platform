@@ -18,7 +18,7 @@ twilio==6.53.0
 pyOpenSSL==20.0.1
 Pillow==10.1.0
 icalendar==4.0.7
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 mock==4.0.3
 mysqlclient==2.0.3
 coreapi==2.3.3
