@@ -5,8 +5,8 @@ from django.db.models import Q
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.57"
 
 logger = logging.getLogger(__name__)
 
