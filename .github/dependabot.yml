@@ -5,5 +5,3 @@ updates:
     schedule:
       interval: "daily"
       time: "15:00"
-    allow:
-      - dependency-name: "pyngrok"
