@@ -1,7 +1,8 @@
 import datetime
 
+from unittest import mock
+
 from django.urls import reverse
-from mock import mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -113,7 +114,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
         response = self.client.get(reverse('planner_resource_courseschedules_events',
-                                kwargs={'course_group': course_group.pk, 'course': course.pk}))
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_many_mock.call_count, 0)
 
@@ -125,7 +126,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         course_schedule.save()
 
         response = self.client.get(reverse('planner_resource_courseschedules_events',
-                                kwargs={'course_group': course_group.pk, 'course': course.pk}))
+                                           kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -1,4 +1,4 @@
-from mock import mock
+from unittest import mock
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
