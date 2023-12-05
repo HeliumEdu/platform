@@ -1,6 +1,7 @@
 import os
 
-from mock import mock
+from unittest import mock
+
 from rest_framework import status
 
 __author__ = "Alex Laird"

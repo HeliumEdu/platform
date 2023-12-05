@@ -1,5 +1,6 @@
 from django.test import TestCase
-from mock import mock
+
+from unittest import mock
 
 from helium.planner.tasks import email_reminders, text_reminders
 

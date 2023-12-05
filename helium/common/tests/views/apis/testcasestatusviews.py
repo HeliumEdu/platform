@@ -1,8 +1,9 @@
 import json
 
+from unittest import mock
+
 from django.db import IntegrityError
 from django.urls import reverse
-from mock import mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 
