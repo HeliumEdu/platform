@@ -5,20 +5,20 @@ from django.conf import settings
 
 from pipeline.storage import PipelineMixin
 
-from storages.backends.s3boto import S3BotoStorage
+from storages.backends.s3boto3 import S3Boto3Storage
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2019, Helium Edu"
 __version__ = "1.4.38"
 
 
-class S3StaticPipelineStorage(PipelineMixin, S3BotoStorage):
+class S3StaticPipelineStorage(PipelineMixin, S3Boto3Storage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
 
-class S3MediaPipelineStorage(PipelineMixin, S3BotoStorage):
+class S3MediaPipelineStorage(PipelineMixin, S3Boto3Storage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bucket_name = settings.AWS_MEDIA_STORAGE_BUCKET_NAME
