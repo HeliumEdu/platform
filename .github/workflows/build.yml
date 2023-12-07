@@ -43,3 +43,16 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           directory: ./_build/coverage
+
+  automerge:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - uses: fastify/github-action-merge-dependabot@v3
+        with:
+          target: minor
