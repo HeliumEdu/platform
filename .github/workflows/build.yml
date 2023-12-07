@@ -45,7 +45,7 @@ jobs:
           directory: ./_build/coverage
 
   automerge:
-    name: Auto Approve
+    name: "Auto Approve"
     needs: build
     runs-on: ubuntu-latest
 
