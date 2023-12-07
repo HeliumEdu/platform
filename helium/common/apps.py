@@ -22,7 +22,7 @@ class CommonConfig(AppConfig):
         from health_check.db.backends import DatabaseBackend
         from health_check.cache.backends import CacheBackend
         from health_check.contrib.celery.backends import CeleryHealthCheck
-        from health_check.contrib.s3boto_storage.backends import S3BotoStorageHealthCheck
+        from health_check.contrib.s3boto3_storage.backends import S3Boto3StorageHealthCheck
         from health_check.contrib.twilio.backends import TwilioHealthCheck
 
         plugin_dir.register(type('Database', (DatabaseBackend,),
@@ -48,7 +48,7 @@ class CommonConfig(AppConfig):
                                  }))
 
         if not settings.SERVE_LOCAL:
-            plugin_dir.register(type('AWS', (S3BotoStorageHealthCheck,),
+            plugin_dir.register(type('AWS', (S3Boto3StorageHealthCheck,),
                                      {
                                          'critical': False,
                                          'description': 'Attachment and other file storage'

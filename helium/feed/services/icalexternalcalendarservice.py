@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from helium.common import enums
+from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
@@ -21,7 +22,7 @@ from helium.planner.serializers.eventserializer import EventSerializer
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.56"
+__version__ = "1.4.57"
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +130,11 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
 
         external_calendar.last_index = timezone.now()
         external_calendar.save()
+    else:
+        logger.warning("Cache size {} exceeded max, External Calendar {}".format(len(events_json.encode('utf-8')),
+                                                                                 external_calendar.pk))
+
+        metricutils.increment('task.cache.max-size-exceeded')
 
     return events_filtered
 
@@ -191,10 +197,10 @@ def calendar_to_events(external_calendar, start=None, end=None):
 
 
 def reindex_stale_caches():
-    begin_filter_window = timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_TTL - (60 * 10))
-    count = 0
-    for external_calendar in ExternalCalendar.objects.filter(shown_on_calendar=True,
-                                                             last_index__lte=begin_filter_window).iterator():
+    reindexed = []
+
+    for external_calendar in ExternalCalendar.objects.needs_recached(
+            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
@@ -204,11 +210,11 @@ def reindex_stale_caches():
 
             _create_events_from_calendar(external_calendar, calendar)
 
-            count += 1
+            reindexed.append(external_calendar)
         except HeliumICalError:
             logger.info("URL invalid, disabling calendar {}".format(external_calendar.pk))
 
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-    logger.info("Done reindexing {} stale caches".format(count))
+    logger.info("Done reindexing {} stale caches".format(len(reindexed)))
