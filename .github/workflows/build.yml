@@ -45,6 +45,7 @@ jobs:
           directory: ./_build/coverage
 
   automerge:
+    name: Auto Approve
     needs: build
     runs-on: ubuntu-latest
 
@@ -56,3 +57,4 @@ jobs:
       - uses: fastify/github-action-merge-dependabot@v3
         with:
           target: minor
+          use-github-auto-merge: true
