@@ -18,7 +18,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
-    @mock.patch('health_check.contrib.s3boto_storage.backends.S3BotoStorageHealthCheck.check_status')
+    @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
     @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
     def test_status(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
         # WHEN
@@ -36,7 +36,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.db.models.TestModel.objects.create')
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
-    @mock.patch('health_check.contrib.s3boto_storage.backends.S3BotoStorageHealthCheck.check_status')
+    @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
     @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
     def test_status_critical_fails(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
         # GIVEN
@@ -58,7 +58,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
-    @mock.patch('health_check.contrib.s3boto_storage.backends.S3BotoStorageHealthCheck.check_status')
+    @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
     @mock.patch('health_check.contrib.twilio.backends.urlopen')
     def test_status_uncritical_fails(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
         # GIVEN
