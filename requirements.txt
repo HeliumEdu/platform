@@ -13,7 +13,7 @@ celery[redis]==5.3.6
 django-redis==4.12.1
 statsd==4.0.1
 datadog==0.47.0
-boto3==1.33.12
+boto3==1.33.13
 twilio==8.10.3
 pyOpenSSL==23.3.0
 Pillow==10.1.0
