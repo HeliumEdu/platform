@@ -19,7 +19,7 @@ pyOpenSSL==23.3.0
 Pillow==10.1.0
 icalendar==5.0.11
 python-dateutil==2.8.2
-mysqlclient==2.2.0
+mysqlclient==2.2.1
 coreapi==2.3.3
 Pygments==2.17.2
 Markdown==3.5.1
