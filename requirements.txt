@@ -5,7 +5,7 @@ django-dotenv==1.4.2
 django-debug-toolbar==3.2.1
 django-storages==1.12.3
 djangorestframework==3.13.1
-django-filter==2.4.0
+django-filter==23.5
 django-maintenance-mode==0.21.0
 django-pipeline==2.1.0
 django-cors-headers==3.7.0
