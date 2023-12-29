@@ -1,5 +1,6 @@
 import logging
 
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -26,11 +27,16 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        course = Course.objects.get(pk=self.kwargs['course'])
-        course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
+        try:
+            course = Course.objects.get(pk=self.kwargs['course'])
+            course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
 
-        events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
+            events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
 
-        serializer = EventSerializer(events, many=True)
+            serializer = EventSerializer(events, many=True)
 
-        return Response(serializer.data)
+            return Response(serializer.data)
+        except Course.DoesNotExist:
+            raise NotFound('Course not found.')
+        except CourseSchedule.DoesNotExist:
+            raise NotFound('CourseSchedule not found.')
