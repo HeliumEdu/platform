@@ -1,5 +1,6 @@
 import logging
 
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -10,8 +11,8 @@ from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+__copyright__ = "Copyright 2023, Helium Edu"
+__version__ = "1.4.58"
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +27,16 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        course = Course.objects.get(pk=self.kwargs['course'])
-        course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
+        try:
+            course = Course.objects.get(pk=self.kwargs['course'])
+            course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
 
-        events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
+            events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
 
-        serializer = EventSerializer(events, many=True)
+            serializer = EventSerializer(events, many=True)
 
-        return Response(serializer.data)
+            return Response(serializer.data)
+        except Course.DoesNotExist:
+            raise NotFound('Course not found.')
+        except CourseSchedule.DoesNotExist:
+            raise NotFound('CourseSchedule not found.')
