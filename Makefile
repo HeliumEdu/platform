@@ -17,7 +17,7 @@ virtualenv:
 install: env virtualenv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python -m pip install -r requirements.txt; \
+		python -m pip install -r requirements.txt -r requirements-dev.txt; \
 	)
 
 nopyc:
