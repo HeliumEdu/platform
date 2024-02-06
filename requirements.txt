@@ -1,6 +1,6 @@
 coverage==7.4.1
 pytz==2024.1
-django==3.2.23
+django==4.2.9
 django-dotenv==1.4.2
 django-debug-toolbar==4.3.0
 django-storages==1.14.2
@@ -27,4 +27,4 @@ Sphinx==7.2.6
 psutil==5.9.8
 rollbar==1.0.0
 pyngrok==7.1.0
--e git+https://github.com/alexdlaird/django-health-check.git@alaird-4.0.0#egg=django-health-check
+-e git+https://github.com/alexdlaird/django-health-check.git@alaird-4.0.1#egg=django-health-check
