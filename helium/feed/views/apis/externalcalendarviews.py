@@ -29,7 +29,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
     """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('shown_on_calendar',)
+    filterset_fields = ('shown_on_calendar',)
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
