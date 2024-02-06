@@ -40,7 +40,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
-    filter_fields = ('course', 'event', 'homework',)
+    filterset_fields = ('course', 'event', 'homework',)
     schema = AttachmentListSchema()
 
     def get_queryset(self):

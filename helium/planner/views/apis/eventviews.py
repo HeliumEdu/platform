@@ -36,7 +36,7 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = EventFilter
+    filterset_class = EventFilter
     search_fields = ('title',)
     order_fields = ('title', 'start', 'priority',)
 
