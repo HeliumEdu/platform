@@ -1,4 +1,4 @@
-.PHONY: all env virtualenv install build build-migrations migrate test
+.PHONY: all env virtualenv install nopyc clean build build-migrations migrate test
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
@@ -19,6 +19,13 @@ install: env virtualenv
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt; \
 	)
+
+nopyc:
+	find . -name '*.pyc' | xargs rm -f || true
+	find . -name __pycache__ | xargs rm -rf || true
+
+clean: nopyc
+	rm -rf _build $(PLATFORM_VENV)
 
 build: virtualenv
 	@( \
