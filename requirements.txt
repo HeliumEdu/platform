@@ -21,10 +21,6 @@ icalendar==5.0.11
 python-dateutil==2.8.2
 mysqlclient==2.2.3
 coreapi==2.3.3
-Pygments==2.17.2
-Markdown==3.5.2
-Sphinx==7.2.6
 psutil==5.9.8
 rollbar==1.0.0
-pyngrok==7.1.0
 -e git+https://github.com/alexdlaird/django-health-check.git@alaird-4.0.1#egg=django-health-check
