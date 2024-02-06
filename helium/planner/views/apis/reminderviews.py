@@ -13,8 +13,8 @@ from helium.planner.schemas import ReminderDetailSchema
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2024, Helium Edu"
+__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_class = ReminderFilter
+    filterset_class = ReminderFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

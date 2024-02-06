@@ -16,8 +16,8 @@ from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2024, Helium Edu"
+__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = EventFilter
+    filterset_class = EventFilter
     search_fields = ('title',)
     order_fields = ('title', 'start', 'priority',)
 

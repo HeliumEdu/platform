@@ -12,8 +12,8 @@ from helium.planner.schemas import CourseGroupDetailSchema
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
+__copyright__ = "Copyright 2024, Helium Edu"
+__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
-    filter_class = CourseGroupFilter
+    filterset_class = CourseGroupFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

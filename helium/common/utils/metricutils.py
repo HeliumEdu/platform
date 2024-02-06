@@ -22,8 +22,8 @@ if settings.DATADOG_API_KEY:
     DATADOG_TAGS = [f"env:{os.environ.get('ENVIRONMENT')}"]
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.51"
+__copyright__ = "Copyright 2024, Helium Edu"
+__version__ = "1.5.0"
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
@@ -66,7 +66,7 @@ def request_stop(metrics, response):
     metrics.pop('Request-Timer')
 
     for name, value in metrics.items():
-        response._headers[name] = (name, str(value))
+        response.headers[name] = (name, str(value))
 
 def task_start(task_name):
     metric_id = "platform.task.{}".format(task_name)
