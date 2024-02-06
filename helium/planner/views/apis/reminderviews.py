@@ -32,7 +32,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     """
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
-    filter_class = ReminderFilter
+    filterset_class = ReminderFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

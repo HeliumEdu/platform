@@ -27,7 +27,7 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
-    filter_class = CourseFilter
+    filterset_class = CourseFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -54,7 +54,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner)
-    filter_class = CourseFilter
+    filterset_class = CourseFilter
     schema = SubCourseGroupListSchema()
 
     def get_queryset(self):

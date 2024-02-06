@@ -31,7 +31,7 @@ class UserHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_class = HomeworkFilter
+    filterset_class = HomeworkFilter
     search_fields = ('title', 'comments', 'category__title', 'course__title',)
     order_fields = ('title', 'start', 'completed', 'priority', 'category__title', 'course__title',)
     schema = SubCourseListSchema()
@@ -62,7 +62,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
     """
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
-    filter_class = HomeworkFilter
+    filterset_class = HomeworkFilter
     schema = SubCourseListSchema()
 
     def get_queryset(self):

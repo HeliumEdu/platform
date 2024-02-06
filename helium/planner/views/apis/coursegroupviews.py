@@ -30,7 +30,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     """
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
-    filter_class = CourseGroupFilter
+    filterset_class = CourseGroupFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

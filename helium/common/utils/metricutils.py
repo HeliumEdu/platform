@@ -66,7 +66,7 @@ def request_stop(metrics, response):
     metrics.pop('Request-Timer')
 
     for name, value in metrics.items():
-        response._headers[name] = (name, str(value))
+        response.headers[name] = (name, str(value))
 
 def task_start(task_name):
     metric_id = "platform.task.{}".format(task_name)

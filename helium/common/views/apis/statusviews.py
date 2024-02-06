@@ -5,7 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import psutil
 from django.http import JsonResponse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
 from health_check.plugins import plugin_dir
@@ -59,7 +60,7 @@ class StatusResourceView(ViewSet):
     Check the status of the system and its dependencies.
     """
 
-    @never_cache
+    @method_decorator(never_cache)
     def status(self, request, *args, **kwargs):
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
@@ -87,7 +88,7 @@ class HealthResourceView(ViewSet):
     Check the health of this node and its dependencies.
     """
 
-    @never_cache
+    @method_decorator(never_cache)
     def health(self, request, *args, **kwargs):
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
