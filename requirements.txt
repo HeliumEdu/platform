@@ -1,6 +1,6 @@
 coverage==7.4.1
 pytz==2024.1
-django==4.2.9
+django==5.0.2
 django-dotenv==1.4.2
 django-debug-toolbar==4.3.0
 django-storages==1.14.2
