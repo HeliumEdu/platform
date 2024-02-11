@@ -69,7 +69,7 @@ def request_stop(metrics, response):
         response.headers[name] = (name, str(value))
 
 def task_start(task_name):
-    metric_id = "platform.task.{}".format(task_name)
+    metric_id = f"platform.task.{task_name}"
     timer = statsd.timer(metric_id, rate=1)
     timer.start()
 
