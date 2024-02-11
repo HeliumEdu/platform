@@ -33,7 +33,7 @@ build: install
 		python manage.py collectstatic --noinput; \
 	)
 
-build-migrations: env virtualenv install
+build-migrations: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py makemigrations; \
