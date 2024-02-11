@@ -64,8 +64,8 @@ def process_email_reminders():
             reminder.sent = True
             reminder.save()
         else:
-            logger.warning('Reminder {} was not processed, as the account appears to be inactive for user {}'.format(
-                reminder.pk, reminder.get_user().pk))
+            logger.warning(
+                f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {reminder.get_user().pk}')
 
 
 def process_text_reminders():
@@ -91,7 +91,6 @@ def process_text_reminders():
             reminder.save()
         else:
             logger.warning(
-                'Reminder {} was not processed, as the phone and carrier are no longer set for user {}'.format(
-                    reminder.pk, reminder.get_user().pk))
+                f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {reminder.get_user().pk}')
 
         timezone.deactivate()

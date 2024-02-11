@@ -73,8 +73,8 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
-                                                                          request.user.get_username()))
+        logger.info(
+            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
 
         return response
 
@@ -126,11 +126,9 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
                 h.save()
 
                 logger.info(
-                    'Homework {} category set to Uncategorized {} for user {}'.format(h.pk, uncategorized.pk,
-                                                                                      request.user.get_username()))
+                    f'Homework {h.pk} category set to Uncategorized {uncategorized.pk} for user {request.user.get_username()}')
 
         logger.info(
-            'Category {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
-                                                                    request.user.get_username()))
+            f"Category {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.get_username()}")
 
         return response

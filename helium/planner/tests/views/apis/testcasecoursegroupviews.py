@@ -240,9 +240,8 @@ class TestCaseCourseGroupViews(APITestCase):
                                                     end_date=datetime.date(2017, 8, 15))
 
         response = self.client.get(
-            reverse('planner_coursegroups_list') + '?start_date__gte={}&end_date__lte={}'.format(
-                course_group2.start_date.isoformat(),
-                course_group3.end_date.isoformat()))
+            reverse(
+                'planner_coursegroups_list') + f'?start_date__gte={course_group2.start_date.isoformat()}&end_date__lte={course_group3.end_date.isoformat()}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

@@ -76,8 +76,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group'],
-                                                                     self.request.user.get_username()))
+            f"Course {response.data['id']} created in CourseGroup {kwargs['course_group']} for user {self.request.user.get_username()}")
 
         return response
 
@@ -122,7 +121,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],
-                                                                               request.user.get_username()))
+        logger.info(
+            f"Course {kwargs['pk']} deleted from CourseGroup {kwargs['course_group']} for user {request.user.get_username()}")
 
         return response

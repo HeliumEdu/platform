@@ -41,8 +41,7 @@ def forgot_password(request):
 
         request.session.modified = True
     except get_user_model().DoesNotExist:
-        logger.info('A visitor tried to reset the password for an unknown email address of {}'.format(
-            request.data['email']))
+        logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
 
     return Response()
 

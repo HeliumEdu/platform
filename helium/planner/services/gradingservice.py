@@ -91,9 +91,8 @@ def recalculate_course_group_grade(course_group):
 
     average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
 
-    logger.debug('Course Group {} average grade recalculated to {} with {} courses'.format(course_group.pk,
-                                                                                           course_group.average_grade,
-                                                                                           len(course_grades)))
+    logger.debug(
+        f'Course Group {course_group.pk} average grade recalculated to {course_group.average_grade} with {len(course_grades)} courses')
 
     homework_grades = Homework.objects.for_course_group(course_group.pk).graded().values_list('current_grade',
                                                                                               flat=True)
@@ -157,14 +156,13 @@ def recalculate_course_grade(course):
     for category in category_totals.values():
         if course_has_weighted_grading:
             grade_by_weight = (((category['total_earned'] / category['total_possible']) * (
-                float(category['instance'].weight) / 100)) * 100)
+                    float(category['instance'].weight) / 100)) * 100)
 
             category_earned += grade_by_weight
             category_possible += float(category['instance'].weight)
 
             logger.debug(
-                'Course triggered category {} recalculation of grade_by_weight to {}'.format(category['instance'].pk,
-                                                                                             grade_by_weight))
+                f'Course triggered category {category["instance"].pk} recalculation of grade_by_weight to {grade_by_weight}')
         else:
             category_earned += total_earned
             category_possible += total_possible
@@ -179,9 +177,8 @@ def recalculate_course_grade(course):
     else:
         current_grade = -1
 
-    logger.debug('Course {} current grade recalculated to {} with {} homework'.format(course.pk,
-                                                                                      course.current_grade,
-                                                                                      course.num_homework))
+    logger.debug(
+        f'Course {course.pk} current grade recalculated to {course.current_grade} with {course.num_homework} homework')
 
     trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
@@ -207,11 +204,7 @@ def recalculate_category_grade(category):
     trend = commonutils.calculate_trend(range(len(grade_series)), grade_series)
 
     logger.debug(
-        'Category {} average grade recalculated to {} with {} grade_by_weight for {} homework'.format(category.pk,
-                                                                                                      category.average_grade,
-                                                                                                      category.grade_by_weight,
-                                                                                                      len(
-                                                                                                          grade_series)))
+        f'Category {category.pk} average grade recalculated to {category.average_grade} with {category.grade_by_weight} grade_by_weight for {len(grade_series)} homework')
 
     # Update the values in the datastore, circumventing signals
     Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)

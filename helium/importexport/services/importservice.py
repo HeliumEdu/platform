@@ -346,8 +346,7 @@ def _adjust_schedule_relative_today(user):
 
         coursescheduleservice.clear_cached_course_schedule(course)
 
-    logger.info('Dates adjusted on imported example schedule relative to the start of the month for new user {}'.format(
-        user.pk))
+    logger.info(f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
 
     timezone.deactivate()
 
