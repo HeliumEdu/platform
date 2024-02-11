@@ -203,7 +203,7 @@ def reindex_stale_caches():
             timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
-        logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
+        logger.info(f"Reindexing External Calendar {external_calendar.pk}")
 
         try:
             calendar = validate_url(external_calendar.url)
@@ -212,9 +212,9 @@ def reindex_stale_caches():
 
             reindexed.append(external_calendar)
         except HeliumICalError:
-            logger.info("URL invalid, disabling calendar {}".format(external_calendar.pk))
+            logger.info(f"URL invalid, disabling calendar {external_calendar.pk}")
 
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-    logger.info("Done reindexing {} stale caches".format(len(reindexed)))
+    logger.info(f"Done reindexing {len(reindexed)} stale caches")
