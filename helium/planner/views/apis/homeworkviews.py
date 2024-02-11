@@ -94,8 +94,8 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
 
         response = self.create(request, *args, **kwargs)
 
-        logger.info('Category {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
-                                                                          request.user.get_username()))
+        logger.info(
+            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
 
         return response
 

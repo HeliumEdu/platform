@@ -80,9 +80,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'Material {} created in MaterialGroup {} for user {}'.format(response.data['id'],
-                                                                         request.data['material_group'],
-                                                                         request.user.get_username()))
+            f"Material {response.data['id']} created in MaterialGroup {request.data['material_group']} for user {request.user.get_username()}")
 
         return response
 
@@ -130,7 +128,6 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'Material {} deleted from MaterialGroup {} for user {}'.format(kwargs['pk'], kwargs['material_group'],
-                                                                           request.user.get_username()))
+            f"Material {kwargs['pk']} deleted from MaterialGroup {kwargs['material_group']} for user {request.user.get_username()}")
 
         return response

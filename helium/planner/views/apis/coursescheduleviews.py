@@ -48,8 +48,8 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
 
-        logger.info('CourseSchedule {} created in Course {} for user {}'.format(response.data['id'], kwargs['course'],
-                                                                                request.user.get_username()))
+        logger.info(
+            f"CourseSchedule {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
 
         return response
 
@@ -93,7 +93,6 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'CourseSchedule {} deleted from Course {} for user {}'.format(kwargs['pk'], kwargs['course'],
-                                                                          request.user.get_username()))
+            f"CourseSchedule {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.get_username()}")
 
         return response

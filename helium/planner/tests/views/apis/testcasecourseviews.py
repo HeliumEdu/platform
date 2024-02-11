@@ -366,9 +366,8 @@ class TestCaseCourseViews(APITestCase):
 
         response = self.client.get(
             reverse('planner_coursegroups_courses_list',
-                    kwargs={'course_group': course_group.pk}) + '?start_date__gte={}&end_date__lte={}'.format(
-                course2.start_date.isoformat(),
-                course3.end_date.isoformat()))
+                    kwargs={
+                        'course_group': course_group.pk}) + f'?start_date__gte={course2.start_date.isoformat()}&end_date__lte={course3.end_date.isoformat()}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

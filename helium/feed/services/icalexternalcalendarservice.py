@@ -131,8 +131,9 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
         external_calendar.last_index = timezone.now()
         external_calendar.save()
     else:
-        logger.warning("Cache size {} exceeded max, External Calendar {}".format(len(events_json.encode('utf-8')),
-                                                                                 external_calendar.pk))
+        logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
+            max_cache_size=len(events_json.encode('utf-8')),
+            id=external_calendar.pk))
 
         metricutils.increment('task.cache.max-size-exceeded')
 

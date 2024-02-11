@@ -89,5 +89,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.phone != phone and phone:
             instance.phone_verification_code = generate_phone_verification_code()
 
-            send_text.delay(phone, 'Enter this verification code on Helium\'s "Settings" page: {}'.format(
-                instance.phone_verification_code))
+            send_text.delay(phone, f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')

@@ -529,9 +529,8 @@ class TestCaseHomeworkViews(APITestCase):
                                                                                tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('planner_homework_list') + '?start__gte={}&end__lt={}'.format(
-                quote(homework2.start.isoformat()),
-                quote(homework4.end.isoformat())))
+            reverse(
+                'planner_homework_list') + f'?start__gte={quote(homework2.start.isoformat())}&end__lt={quote(homework4.end.isoformat())}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
