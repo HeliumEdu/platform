@@ -27,7 +27,7 @@ nopyc:
 clean: nopyc
 	rm -rf _build $(PLATFORM_VENV)
 
-build: virtualenv
+build: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py collectstatic --noinput; \
@@ -39,13 +39,13 @@ build-migrations: env virtualenv install
 		python manage.py makemigrations; \
 	)
 
-migrate: virtualenv
+migrate: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py migrate; \
 	)
 
-test: virtualenv
+test: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m coverage run --source='.' manage.py test && python -m coverage html -d _build/coverage && python -m coverage xml -o _build/coverage/coverage.xml; \
