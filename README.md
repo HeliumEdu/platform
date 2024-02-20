@@ -1,15 +1,14 @@
-[![Build](https://github.com/heliumedu/platform/actions/workflows/build.yml/badge.svg)](https://github.com/heliumedu/platform/actions/workflows/build.yml)
-[![Codecov](https://codecov.io/gh/HeliumEdu/platform/branch/master/graph/badge.svg)](https://codecov.io/gh/HeliumEdu/platform)
-![Python Versions](https://img.shields.io/badge/python-%203.10%20|%203.11%20-blue)
-![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
+<p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
 
 # Helium Platform Project
 
-<p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
+![Python Versions](https://img.shields.io/badge/python-%203.10%20|%203.11%20-blue)
+[![Coverage](https://img.shields.io/codecov/c/github/HeliumEdu/platform)](https://codecov.io/gh/HeliumEdu/platform)
+[![Build](https://img.shields.io/github/actions/workflow/status/HeliumEdu/platform/build.yml)](https://github.com/HeliumEdu/platform/actions/workflows/build.yml)
+![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
 
 ## Prerequisites
 
-- Python (>= 3.10)
 - MySQL (>= 8)
 - Redis (>= 5)
 
