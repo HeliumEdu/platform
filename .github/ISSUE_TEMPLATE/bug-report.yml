@@ -9,7 +9,7 @@ body:
     value: |
       Please we aware that Helium is free and is not under active development. Though [supporting the project financially](https://github.com/sponsors/alexdlaird) is appreciated (since Helium has operating costs, even though it is free to use), we make no guarantees bug reports will be looked at or considered.
 
-      Though this project is not under active development, we are happy to review pull requests submitted by the community to resolve bugs, so submitting a report of your experience may still be helpful to us and others.
+      Though this project is not under active development, we are still happy to review pull requests submitted by the community to resolve bugs, so submitting a report of your experience may still be helpful to us and others.
 
 - type: checkboxes
   id: ack
@@ -40,7 +40,7 @@ body:
 - type: input
   id: username
   attributes:
-    label: Username
+    label: Helium Username
     placeholder: contact@alexlaird.com
   validations:
     required: true
