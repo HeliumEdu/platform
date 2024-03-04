@@ -2,7 +2,7 @@
 Settings specific to a development environment using Django's `runserver` command, reading values from `.env`.
 """
 
-__copyright__ = "Copyright 2018, Helium Edu"
+__copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 

@@ -2,7 +2,7 @@
 Settings specific to prod-like deployable code, reading values from system environment variables.
 """
 
-__copyright__ = "Copyright 2018, Helium Edu"
+__copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
