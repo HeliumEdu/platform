@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import logging
 
@@ -8,10 +12,6 @@ from django.utils import timezone
 
 from helium.planner.models import Homework, Course
 from helium.planner.services import coursescheduleservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

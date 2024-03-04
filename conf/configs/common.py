@@ -2,16 +2,16 @@
 Settings common to all deployment methods.
 """
 
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import os
 import socket
 
 from corsheaders.defaults import default_headers
 
 from conf.settings import PROJECT_ID
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 # ############################
 # Project configuration

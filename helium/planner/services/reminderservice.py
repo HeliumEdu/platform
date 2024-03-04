@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 import pytz
@@ -8,10 +12,6 @@ from helium.common import enums
 from helium.common.tasks import send_text
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

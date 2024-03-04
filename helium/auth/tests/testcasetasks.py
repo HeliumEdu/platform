@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import json
 from datetime import datetime, timedelta
 
@@ -9,10 +13,6 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tasks import expire_auth_tokens
 from helium.auth.tests.helpers import userhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseTasks(APITestCase):

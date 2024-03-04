@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 import uuid
 
@@ -9,10 +13,6 @@ from django.dispatch import receiver
 
 from helium.auth.managers.usermanager import UserManager
 from helium.common.models import BaseModel
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

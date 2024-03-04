@@ -1,13 +1,13 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import sys
 from celery import current_app
 from django.apps import AppConfig
 from django.conf import settings
 from health_check.plugins import plugin_dir
 from urllib.parse import urlparse
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class CommonConfig(AppConfig):

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import json
 
 from django.urls import reverse
@@ -7,10 +11,6 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Category
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseCategoryViews(APITestCase):

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import sys
 
 from django.conf import settings as config
@@ -10,10 +14,6 @@ import helium.common.urls
 import helium.feed.urls
 import helium.importexport.urls
 import helium.planner.urls
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 urlpatterns = [
     # Include app-specific URL files

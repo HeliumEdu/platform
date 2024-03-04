@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -5,10 +9,6 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2020, Helium Edu"
-__version__ = "1.4.45"
 
 
 # class TestCasePrivateFeedResourceViews(APITestCase, CacheTestCase):

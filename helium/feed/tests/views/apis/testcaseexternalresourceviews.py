@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import os
 from unittest import mock
 
@@ -11,10 +15,6 @@ from helium.common.tests.test import CacheTestCase
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.feed.tests.helpers import icalfeedhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.51"
 
 
 class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
