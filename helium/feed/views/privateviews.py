@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.contrib.auth import get_user_model
@@ -5,10 +9,6 @@ from django.http import HttpResponse, HttpResponseNotFound
 
 from helium.common.views.views import HeliumAPIView
 from helium.feed.services import icalprivateservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework import permissions
 from rest_framework.exceptions import NotFound
 
 from helium.planner.models import Course, CourseGroup, MaterialGroup, Event, Homework, Category, Material
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

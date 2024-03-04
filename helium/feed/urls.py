@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.urls import path
 
 from helium.feed.views.apis.externalcalendarresourceviews import ExternalCalendarAsEventsResourceView
@@ -5,10 +9,6 @@ from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiLis
 from helium.feed.views.apis.privateresourceviews import PrivateEnableResourceView, PrivateDisableResourceView
 from helium.feed.views.privateviews import PrivateEventsICALResourceView, PrivateHomeworkICALResourceView, \
     PrivateCourseSchedulesICALResourceView
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 urlpatterns = [
     ##############################

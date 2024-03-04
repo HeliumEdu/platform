@@ -1,12 +1,12 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.db import models
 
 from helium.common import enums
 from helium.common.models import BaseModel
 from helium.planner.managers.categorymanager import CategoryManager
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class Category(BaseModel):

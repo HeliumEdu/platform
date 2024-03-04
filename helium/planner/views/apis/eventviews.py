@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,10 +18,6 @@ from helium.planner.filters import EventFilter
 from helium.planner.models import Event
 from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 

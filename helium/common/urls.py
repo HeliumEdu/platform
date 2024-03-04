@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.urls import re_path, path
 from django.views.generic import RedirectView
 from rest_framework.documentation import include_docs_urls
@@ -5,10 +9,6 @@ from rest_framework.documentation import include_docs_urls
 from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
 from helium.common.views.apis.statusviews import HealthResourceView, StatusResourceView
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 urlpatterns = [
     # Base URL

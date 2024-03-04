@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import json
 
 from unittest import mock
@@ -8,10 +12,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.common.tests.helpers import commonhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseStatusViews(APITestCase):

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.conf import settings
@@ -6,10 +10,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.planner.models import Attachment, Course, Homework, Event
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

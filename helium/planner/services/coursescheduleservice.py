@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 import logging
@@ -5,16 +9,11 @@ import logging
 import pytz
 from dateutil import parser
 from django.core.cache import cache
-from django.utils.timezone import make_aware
 
 from helium.common import enums
 from helium.common.utils.commonutils import HeliumError
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.50"
 
 logger = logging.getLogger(__name__)
 

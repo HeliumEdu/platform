@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.urls import path
 
 from helium.planner.views.apis.attachmentviews import AttachmentsApiListView, AttachmentsApiDetailView
@@ -19,10 +23,6 @@ from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListVi
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
     MaterialGroupMaterialsApiListView
 from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 urlpatterns = [
     ##############################

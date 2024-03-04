@@ -1,13 +1,13 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 import os
 
 from django.conf import settings
 from django.template.defaultfilters import filesizeformat
 from rest_framework.exceptions import ValidationError
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

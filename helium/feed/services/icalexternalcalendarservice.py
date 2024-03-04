@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 import logging
@@ -19,10 +23,6 @@ from helium.common.utils.commonutils import HeliumError
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.57"
 
 logger = logging.getLogger(__name__)
 

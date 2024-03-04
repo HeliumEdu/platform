@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django import forms
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin, password_validation
@@ -9,10 +13,6 @@ from rest_framework.authtoken.models import Token
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.common.admin import admin_site, BaseModelAdmin
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class AdminUserCreationForm(UserCreationForm):
