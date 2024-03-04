@@ -1,9 +1,9 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.feed.models import ExternalCalendar
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class ExternalCalendarAdmin(BaseModelAdmin):

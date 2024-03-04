@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
@@ -11,10 +15,6 @@ from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 from helium.planner.serializers.materialserializer import MaterialSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 

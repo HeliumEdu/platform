@@ -1,15 +1,16 @@
 """
 Storages for funneling Pipelines to storage destinations.
 """
+
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.conf import settings
 
 from pipeline.storage import PipelineMixin
 
 from storages.backends.s3boto3 import S3Boto3Storage
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class S3StaticPipelineStorage(PipelineMixin, S3Boto3Storage):

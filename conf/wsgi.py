@@ -1,11 +1,11 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import os
 
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
 

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework import status
@@ -11,10 +15,6 @@ from helium.planner import permissions
 from helium.planner.models import Attachment
 from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 

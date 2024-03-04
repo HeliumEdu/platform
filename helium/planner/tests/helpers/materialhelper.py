@@ -1,9 +1,9 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from helium.common import enums
 from helium.planner.models import Material
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 def given_material_exists(material_group, title='Test Material', status=enums.SHIPPED, condition=enums.BROKEN,

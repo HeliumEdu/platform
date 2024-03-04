@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.conf import settings
@@ -5,10 +9,6 @@ from django.conf import settings
 from conf.celery import app
 from helium.common.utils import metricutils
 from helium.feed.services import icalexternalcalendarservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.51"
 
 logger = logging.getLogger(__name__)
 

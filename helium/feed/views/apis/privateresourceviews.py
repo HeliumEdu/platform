@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.urls import reverse
@@ -6,10 +10,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete
@@ -7,10 +11,6 @@ from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
 from helium.planner.managers.attachmentmanager import AttachmentManager
 from helium.planner.utils.attachmentutils import get_path_for_attachment
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class AttachmentError(HeliumError):
