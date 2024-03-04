@@ -1,13 +1,13 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 
 from dateutil import parser
 from django.utils import timezone
 
 from helium.planner.models import Homework
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 def given_homework_exists(course, title='Test Homework', all_day=False, show_end_time=True,

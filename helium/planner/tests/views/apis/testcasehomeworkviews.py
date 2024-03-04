@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 from urllib.parse import quote
@@ -12,10 +16,6 @@ from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, categoryhelper, \
     materialgrouphelper, materialhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseHomeworkViews(APITestCase):

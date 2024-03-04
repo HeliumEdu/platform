@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 import pytz
@@ -13,10 +17,6 @@ from helium.planner.models import CourseGroup, Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.51"
 
 logger = logging.getLogger(__name__)
 

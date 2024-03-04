@@ -1,8 +1,8 @@
-from helium.planner.models import Category
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
 
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+from helium.planner.models import Category
 
 
 def given_category_exists(course, title='Test Category 1', weight=0, color='#4986e7'):

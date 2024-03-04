@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import json
 
 from django.contrib.auth import get_user_model
@@ -8,10 +12,6 @@ from rest_framework import status
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class TestCaseAuthenticationViews(TestCase):

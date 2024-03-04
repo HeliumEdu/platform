@@ -1,13 +1,13 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.conf import settings
 from django.db import models
 
 from helium.common import enums
 from helium.planner.managers.eventmanager import EventManager
 from helium.planner.models.basecalendar import BaseCalendar
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class Event(BaseCalendar):

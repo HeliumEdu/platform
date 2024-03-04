@@ -2,16 +2,16 @@
 Detects changes and restarts the WSGI daemon process. Should only be used in development.
 """
 
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import atexit
 import os
 import queue
 import signal
 import sys
 import threading
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 _interval = 1.0
 _times = {}

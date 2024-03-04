@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
@@ -11,10 +15,6 @@ from helium.planner.filters import ReminderFilter
 from helium.planner.models import Reminder
 from helium.planner.schemas import ReminderDetailSchema
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 

@@ -1,16 +1,9 @@
-import os
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
 
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Attachment
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper, eventhelper, homeworkhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.51"
 
 
 class TestCaseDocs(APITestCase):

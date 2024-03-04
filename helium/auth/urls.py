@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
@@ -8,10 +12,6 @@ from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceVie
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
 from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 urlpatterns = [
     # URLs for Django's auto-generated, session-based login views for ease of API navigation

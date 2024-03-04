@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.db import models
 
 from helium.common import enums
@@ -5,10 +9,6 @@ from helium.common.utils.validators import validate_fraction
 from helium.planner.managers.homeworkmanager import HomeworkManager
 from helium.planner.models import Category
 from helium.planner.models.basecalendar import BaseCalendar
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class Homework(BaseCalendar):

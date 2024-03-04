@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import os
 import re
 
@@ -20,10 +24,6 @@ if settings.DATADOG_API_KEY:
 
     DATADOG_METRICS = True
     DATADOG_TAGS = [f"env:{os.environ.get('ENVIRONMENT')}"]
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
@@ -67,6 +67,7 @@ def request_stop(metrics, response):
 
     for name, value in metrics.items():
         response.headers[name] = (name, str(value))
+
 
 def task_start(task_name):
     metric_id = f"platform.task.{task_name}"

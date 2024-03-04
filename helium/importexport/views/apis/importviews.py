@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.http import HttpResponse
@@ -8,10 +12,6 @@ from helium.auth.serializers.userserializer import UserSerializer
 from helium.common.services import uploadfileservice
 from helium.common.views.views import HeliumAPIView
 from helium.importexport.services import importservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

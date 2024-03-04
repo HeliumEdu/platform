@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from decimal import Decimal
 
 from django.conf import settings
@@ -5,10 +9,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
 from helium.common.utils import metricutils
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class HeliumError(Exception):

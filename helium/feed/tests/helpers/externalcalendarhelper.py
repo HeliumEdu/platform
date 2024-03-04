@@ -1,8 +1,8 @@
-from helium.feed.models import ExternalCalendar
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
 
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+from helium.feed.models import ExternalCalendar
 
 
 def given_external_calendar_exists(user, title='My Calendar', url='http://go.com/valid-ical-feed', color='#fad165',

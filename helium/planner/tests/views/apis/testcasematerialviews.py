@@ -1,3 +1,7 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import json
 
 from django.urls import reverse
@@ -8,10 +12,6 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Material
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, materialgrouphelper, materialhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class TestCaseMaterialViews(APITestCase):

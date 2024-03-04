@@ -1,12 +1,12 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.db.models import Q
 
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.57"
 
 logger = logging.getLogger(__name__)
 

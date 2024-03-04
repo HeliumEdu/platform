@@ -1,9 +1,9 @@
+__copyright__ = "Copyright 2018, Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 def given_an_inactive_user_exists(username='test_user', email='user@test.com', password='test_pass_1!'):
