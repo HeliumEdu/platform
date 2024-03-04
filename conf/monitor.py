@@ -2,7 +2,7 @@
 Detects changes and restarts the WSGI daemon process. Should only be used in development.
 """
 
-__copyright__ = "Copyright 2018, Helium Edu"
+__copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
