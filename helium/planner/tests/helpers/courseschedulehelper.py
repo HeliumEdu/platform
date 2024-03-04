@@ -1,12 +1,12 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 
 from dateutil import parser
 
 from helium.planner.models import CourseSchedule
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 def given_course_schedule_exists(course, days_of_week='0101010',

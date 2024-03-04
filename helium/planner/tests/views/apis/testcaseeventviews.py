@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 from urllib.parse import quote
@@ -12,10 +16,6 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Event
 from helium.planner.tests.helpers import eventhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseEventViews(APITestCase):
@@ -348,8 +348,8 @@ class TestCaseEventViews(APITestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('planner_events_list') + '?start__gte={}&end__lt={}'.format(quote(event2.start.isoformat()),
-                                                                                quote(event4.end.isoformat())))
+            reverse(
+                'planner_events_list') + f'?start__gte={quote(event2.start.isoformat())}&end__lt={quote(event4.end.isoformat())}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -387,5 +387,3 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(Event.objects.for_user(user2.pk).count(), 0)
-
-

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
@@ -12,10 +16,6 @@ from helium.planner.models import Course
 from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.schemas import SubCourseGroupListSchema, CourseDetailSchema
 from helium.planner.serializers.courseserializer import CourseSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'Course {} created in CourseGroup {} for user {}'.format(response.data['id'], kwargs['course_group'],
-                                                                     self.request.user.get_username()))
+            f"Course {response.data['id']} created in CourseGroup {kwargs['course_group']} for user {self.request.user.get_username()}")
 
         return response
 
@@ -122,7 +121,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info('Course {} deleted from CourseGroup {} for user {}'.format(kwargs['pk'], kwargs['course_group'],
-                                                                               request.user.get_username()))
+        logger.info(
+            f"Course {kwargs['pk']} deleted from CourseGroup {kwargs['course_group']} for user {request.user.get_username()}")
 
         return response

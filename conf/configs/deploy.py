@@ -2,16 +2,14 @@
 Settings specific to prod-like deployable code, reading values from system environment variables.
 """
 
-import os
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
 
-from boto.s3.connection import OrdinaryCallingFormat
+import os
 
 from conf.configs import common
 from conf.settings import PROJECT_ID
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.55"
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -226,7 +224,6 @@ else:
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
     AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
     AWS_S3_CUSTOM_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"

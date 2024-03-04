@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 import logging
@@ -16,10 +20,6 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
     Homework, Reminder
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 

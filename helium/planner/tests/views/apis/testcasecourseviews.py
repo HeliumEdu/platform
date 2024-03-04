@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 
@@ -8,10 +12,6 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Course
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseCourseViews(APITestCase):
@@ -366,9 +366,8 @@ class TestCaseCourseViews(APITestCase):
 
         response = self.client.get(
             reverse('planner_coursegroups_courses_list',
-                    kwargs={'course_group': course_group.pk}) + '?start_date__gte={}&end_date__lte={}'.format(
-                course2.start_date.isoformat(),
-                course3.end_date.isoformat()))
+                    kwargs={
+                        'course_group': course_group.pk}) + f'?start_date__gte={course2.start_date.isoformat()}&end_date__lte={course3.end_date.isoformat()}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

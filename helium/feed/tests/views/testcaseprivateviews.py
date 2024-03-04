@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 import icalendar
@@ -7,10 +11,6 @@ from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     homeworkhelper, eventhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -69,19 +69,14 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], homework1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         'Class Info: {}\nGrade: {}\nComments: {}'.format(homework1.course.title,
-                                                                          homework1.current_grade,
-                                                                          homework1.comments))
+                         f'Class Info: {homework1.course.title}\nGrade: {homework1.current_grade}\nComments: {homework1.comments}')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, homework1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, homework1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], homework2.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, homework2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, homework2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
-                         'Class Info: {} for {} in {}\nComments: {}'.format(homework2.category.title,
-                                                                            homework2.course.title,
-                                                                            homework2.course.room,
-                                                                            homework2.comments))
+                         f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}\nComments: {homework2.comments}')
 
     def test_courseschedules_feed(self):
         # GIVEN

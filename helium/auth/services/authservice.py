@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.contrib.auth import get_user_model
@@ -6,10 +10,6 @@ from rest_framework.response import Response
 
 from helium.auth.tasks import send_password_reset_email, send_registration_email
 from helium.common.utils import metricutils
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,7 @@ def forgot_password(request):
 
         request.session.modified = True
     except get_user_model().DoesNotExist:
-        logger.info('A visitor tried to reset the password for an unknown email address of {}'.format(
-            request.data['email']))
+        logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
 
     return Response()
 

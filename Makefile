@@ -1,4 +1,4 @@
-.PHONY: all env virtualenv install build build-migrations migrate test
+.PHONY: all env virtualenv install nopyc clean build build-migrations migrate test
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
@@ -17,28 +17,35 @@ virtualenv:
 install: env virtualenv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python -m pip install -r requirements.txt; \
+		python -m pip install -r requirements.txt -r requirements-dev.txt; \
 	)
 
-build: virtualenv
+nopyc:
+	find . -name '*.pyc' | xargs rm -f || true
+	find . -name __pycache__ | xargs rm -rf || true
+
+clean: nopyc
+	rm -rf _build $(PLATFORM_VENV)
+
+build: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py collectstatic --noinput; \
 	)
 
-build-migrations: env virtualenv install
+build-migrations: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py makemigrations; \
 	)
 
-migrate: virtualenv
+migrate: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python manage.py migrate; \
 	)
 
-test: virtualenv
+test: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m coverage run --source='.' manage.py test && python -m coverage html -d _build/coverage && python -m coverage xml -o _build/coverage/coverage.xml; \

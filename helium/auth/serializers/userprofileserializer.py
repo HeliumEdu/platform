@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework import serializers
@@ -6,10 +10,6 @@ from helium.auth.models import UserProfile
 from helium.auth.utils.userutils import generate_phone_verification_code
 from helium.common.services.phoneservice import verify_number, HeliumPhoneError
 from helium.common.tasks import send_text
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 logger = logging.getLogger(__name__)
 
@@ -89,5 +89,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.phone != phone and phone:
             instance.phone_verification_code = generate_phone_verification_code()
 
-            send_text.delay(phone, 'Enter this verification code on Helium\'s "Settings" page: {}'.format(
-                instance.phone_verification_code))
+            send_text.delay(phone, f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')

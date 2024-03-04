@@ -1,12 +1,12 @@
-from django.test import TestCase
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
 
 from unittest import mock
 
-from helium.planner.tasks import email_reminders, text_reminders
+from django.test import TestCase
 
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
+from helium.planner.tasks import email_reminders, text_reminders
 
 
 class TestCasePlannerTasks(TestCase):

@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from django.conf import settings
@@ -6,10 +10,6 @@ from django.db import models
 from helium.common import enums
 from helium.common.models.base import BaseModel
 from helium.feed.managers.externalcalendarmanager import ExternalCalendarManager
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.56"
 
 logger = logging.getLogger(__name__)
 

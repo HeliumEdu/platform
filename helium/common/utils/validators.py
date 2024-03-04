@@ -1,13 +1,13 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import decimal
 import sys
 
 from django.core.exceptions import ValidationError
 
 from helium.common.utils import commonutils
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 def validate_fraction(value):

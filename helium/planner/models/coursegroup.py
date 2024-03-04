@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 
 from django.conf import settings
@@ -5,10 +9,6 @@ from django.db import models
 
 from helium.common.models import BaseModel
 from helium.planner.managers.coursegroupmanager import CourseGroupManager
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 
 class CourseGroup(BaseModel):

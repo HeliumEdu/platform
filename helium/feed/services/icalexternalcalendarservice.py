@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 import logging
@@ -19,10 +23,6 @@ from helium.common.utils.commonutils import HeliumError
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.57"
 
 logger = logging.getLogger(__name__)
 
@@ -131,8 +131,9 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
         external_calendar.last_index = timezone.now()
         external_calendar.save()
     else:
-        logger.warning("Cache size {} exceeded max, External Calendar {}".format(len(events_json.encode('utf-8')),
-                                                                                 external_calendar.pk))
+        logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
+            max_cache_size=len(events_json.encode('utf-8')),
+            id=external_calendar.pk))
 
         metricutils.increment('task.cache.max-size-exceeded')
 
@@ -203,7 +204,7 @@ def reindex_stale_caches():
             timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
-        logger.info("Reindexing External Calendar {}".format(external_calendar.pk))
+        logger.info(f"Reindexing External Calendar {external_calendar.pk}")
 
         try:
             calendar = validate_url(external_calendar.url)
@@ -212,9 +213,9 @@ def reindex_stale_caches():
 
             reindexed.append(external_calendar)
         except HeliumICalError:
-            logger.info("URL invalid, disabling calendar {}".format(external_calendar.pk))
+            logger.info(f"URL invalid, disabling calendar {external_calendar.pk}")
 
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-    logger.info("Done reindexing {} stale caches".format(len(reindexed)))
+    logger.info(f"Done reindexing {len(reindexed)} stale caches")

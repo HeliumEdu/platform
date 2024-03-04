@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
@@ -11,10 +15,6 @@ from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 from helium.planner.serializers.materialserializer import MaterialSerializer
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2021, Helium Edu"
-__version__ = "1.4.46"
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            'Material {} created in MaterialGroup {} for user {}'.format(response.data['id'],
-                                                                         request.data['material_group'],
-                                                                         request.user.get_username()))
+            f"Material {response.data['id']} created in MaterialGroup {request.data['material_group']} for user {request.user.get_username()}")
 
         return response
 
@@ -130,7 +128,6 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            'Material {} deleted from MaterialGroup {} for user {}'.format(kwargs['pk'], kwargs['material_group'],
-                                                                           request.user.get_username()))
+            f"Material {kwargs['pk']} deleted from MaterialGroup {kwargs['material_group']} for user {request.user.get_username()}")
 
         return response

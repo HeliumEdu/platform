@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import logging
 
 from rest_framework.exceptions import NotFound
@@ -9,10 +13,6 @@ from helium.planner.models import Course, CourseSchedule
 from helium.planner.schemas import CourseScheduleDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Helium Edu"
-__version__ = "1.4.58"
 
 logger = logging.getLogger(__name__)
 

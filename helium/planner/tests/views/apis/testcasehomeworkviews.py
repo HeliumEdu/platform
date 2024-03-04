@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import datetime
 import json
 from urllib.parse import quote
@@ -12,10 +16,6 @@ from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, categoryhelper, \
     materialgrouphelper, materialhelper
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2019, Helium Edu"
-__version__ = "1.4.38"
 
 
 class TestCaseHomeworkViews(APITestCase):
@@ -529,9 +529,8 @@ class TestCaseHomeworkViews(APITestCase):
                                                                                tzinfo=timezone.utc))
 
         response = self.client.get(
-            reverse('planner_homework_list') + '?start__gte={}&end__lt={}'.format(
-                quote(homework2.start.isoformat()),
-                quote(homework4.end.isoformat())))
+            reverse(
+                'planner_homework_list') + f'?start__gte={quote(homework2.start.isoformat())}&end__lt={quote(homework4.end.isoformat())}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

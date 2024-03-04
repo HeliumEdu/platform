@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.5.1"
+
 import copy
 import sys
 import time
@@ -12,10 +16,6 @@ from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
 from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import ViewSet
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Helium Edu"
-__version__ = "1.5.0"
 
 
 def _run_checks(plugins):
