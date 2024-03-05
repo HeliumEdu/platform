@@ -13,13 +13,13 @@ celery[redis]==5.3.6
 statsd==4.0.1
 mysqlclient==2.2.4
 datadog==0.48.0
-boto3==1.34.53
+boto3==1.34.54
 twilio==9.0.0
 pyOpenSSL==24.0.0
 Pillow==10.2.0
 icalendar==5.0.11
 pytz==2024.1
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
 psutil==5.9.8
 rollbar==1.0.0
 -e git+https://github.com/alexdlaird/django-health-check.git@alaird-4.0.1#egg=django-health-check
