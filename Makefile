@@ -48,6 +48,5 @@ migrate: install
 test: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		coverage run manage.py test; \
-		coverage report && coverage html && coverage xml; \
+		coverage run manage.py test && coverage report && coverage html && coverage xml; \
 	)
