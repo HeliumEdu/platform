@@ -25,7 +25,7 @@ nopyc:
 	find . -name __pycache__ | xargs rm -rf || true
 
 clean: nopyc
-	rm -rf _build $(PLATFORM_VENV)
+	rm -rf build $(PLATFORM_VENV)
 
 build: install
 	@( \
@@ -48,5 +48,6 @@ migrate: install
 test: install
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python -m coverage run --source='.' manage.py test && python -m coverage html -d _build/coverage && python -m coverage xml -o _build/coverage/coverage.xml; \
+		coverage run manage.py test; \
+		coverage report && coverage html && coverage xml; \
 	)
