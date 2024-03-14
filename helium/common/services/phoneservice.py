@@ -18,10 +18,9 @@ class HeliumPhoneError(HeliumError):
     pass
 
 
-client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
-
 def send_sms(phone, message):
+    client = _get_client()
+
     client.api.account.messages.create(
         to=phone,
         from_=settings.TWILIO_SMS_FROM,
@@ -29,13 +28,19 @@ def send_sms(phone, message):
 
 
 def verify_number(phone):
+    client = _get_client()
+
     try:
         cleaned_phone = re.sub("[()\-+\s]", "", phone)
 
         logger.info(f"Asking Twilio to validate {cleaned_phone}")
 
-        number = client.lookups.phone_numbers(cleaned_phone).fetch()
+        number = client.lookups.v1.phone_numbers(cleaned_phone).fetch()
 
         return number.phone_number
     except TwilioRestException:
         raise HeliumPhoneError("Oops, that looks like an invalid phone number.")
+
+
+def _get_client():
+    return Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
