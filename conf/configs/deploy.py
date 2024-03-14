@@ -8,6 +8,10 @@ __version__ = "1.5.1"
 
 import os
 
+import botocore
+import botocore.session
+from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
+
 from conf.configs import common
 from conf.settings import PROJECT_ID
 
@@ -240,3 +244,16 @@ else:
 CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
+
+# Load secrets from AWS Secret Manager
+
+client = botocore.session.get_session().create_client('secretsmanager')
+cache_config = SecretCacheConfig()
+cache = SecretCache(config=cache_config, client=client)
+secret = cache.get_secret_string(os.environ.get('PLATFORM_AWS_SECRET_MANAGER_SECRET_NAME'))
+
+EMAIL_HOST_USER = secret.get_secret_string('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = secret.get_secret_string('EMAIL_HOST_PASSWORD')
+
+TWILIO_ACCOUNT_SID = secret.get_secret_string('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = secret.get_secret_string('TWILIO_AUTH_TOKEN')
