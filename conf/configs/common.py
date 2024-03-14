@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright 2024, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 
 import os
 import socket
@@ -275,3 +275,7 @@ PIPELINE = {
 
 DATADOG_API_KEY = os.environ.get('PROJECT_DATADOG_API_KEY', None)
 DATADOG_APP_KEY = os.environ.get('PROJECT_DATADOG_APP_KEY', None)
+
+# Server
+
+USE_NGROK = os.environ.get("USE_NGROK", "False") == "True" and os.environ.get("RUN_MAIN", None) != "true"

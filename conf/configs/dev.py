@@ -4,7 +4,7 @@ Settings specific to a development environment using Django's `runserver` comman
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 
 import os
 import warnings
@@ -150,7 +150,3 @@ else:
     CELERY_BROKER_URL = deploy.CELERY_BROKER_URL
     CELERY_RESULT_BACKEND = deploy.CELERY_RESULT_BACKEND
     CELERY_TASK_SOFT_TIME_LIMIT = deploy.CELERY_TASK_SOFT_TIME_LIMIT
-
-# Server
-
-USE_NGROK = os.environ.get('USE_NGROK', 'False') == 'True' and os.environ.get('RUN_MAIN', None) != 'true'
