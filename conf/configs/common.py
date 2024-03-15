@@ -11,6 +11,7 @@ import socket
 
 from corsheaders.defaults import default_headers
 
+from conf.secretcache import get_secret
 from conf.settings import PROJECT_ID
 
 # ############################
@@ -30,13 +31,13 @@ PROJECT_VERSION = __version__
 
 # AWS S3
 
-AWS_S3_ACCESS_KEY_ID = os.environ.get('PLATFORM_AWS_S3_ACCESS_KEY_ID')
-AWS_S3_SECRET_ACCESS_KEY = os.environ.get('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
+AWS_S3_ACCESS_KEY_ID = get_secret('PLATFORM_AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = get_secret('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
 
 # Twilio
 
-TWILIO_ACCOUNT_SID = os.environ.get('PLATFORM_TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_ACCOUNT_SID = get_secret('PLATFORM_TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = get_secret('PLATFORM_TWILIO_AUTH_TOKEN')
 TWILIO_SMS_FROM = os.environ.get('PLATFORM_TWILIO_SMS_FROM')
 
 #############################
@@ -205,8 +206,8 @@ EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
 
-EMAIL_HOST_USER = os.environ.get('PLATFORM_EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('PLATFORM_EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = get_secret('PLATFORM_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_secret('PLATFORM_EMAIL_HOST_PASSWORD')
 
 # Authentication
 
@@ -229,12 +230,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-SECRET_KEY = os.environ.get('PLATFORM_SECRET_KEY')
+SECRET_KEY = get_secret('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = os.environ.get('PLATFORM_CSRF_COOKIE_SECURE', 'True') == 'True'
 SESSION_COOKIE_SECURE = os.environ.get('PLATFORM_SESSION_COOKIE_SECURE', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS').split(' ')
-CSRF_MIDDLEWARE_SECRET = os.environ.get('PLATFORM_CSRF_MIDDLEWARE_SECRET')
-CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST').split(' ')
+ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS', '').split(' ')
+CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST', '').split(' ')
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
@@ -273,8 +273,8 @@ PIPELINE = {
 
 # Metrics
 
-DATADOG_API_KEY = os.environ.get('PROJECT_DATADOG_API_KEY', None)
-DATADOG_APP_KEY = os.environ.get('PROJECT_DATADOG_APP_KEY', None)
+DATADOG_API_KEY = get_secret('PROJECT_DATADOG_API_KEY')
+DATADOG_APP_KEY = get_secret('PROJECT_DATADOG_APP_KEY')
 
 # Server
 

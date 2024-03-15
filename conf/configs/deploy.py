@@ -6,14 +6,10 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
-import json
 import os
 
-import botocore
-import botocore.session
-from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
-
 from conf.configs import common
+from conf.secretcache import get_secret
 from conf.settings import PROJECT_ID
 
 # Define the base working directory of the application
@@ -53,7 +49,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 # Logging
 
 ROLLBAR = {
-    'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'access_token': get_secret('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
     'environment': os.environ.get('ENVIRONMENT'),
     'branch': 'main',
     'root': BASE_DIR,
@@ -199,8 +195,8 @@ DATABASES = {
         'NAME': os.environ.get('PLATFORM_DB_NAME'),
         'ENGINE': 'django.db.backends.mysql',
         'HOST': os.environ.get('PLATFORM_DB_HOST'),
-        'USER': os.environ.get('PLATFORM_DB_USER'),
-        'PASSWORD': os.environ.get('PLATFORM_DB_PASSWORD'),
+        'USER': get_secret('PLATFORM_DB_USER'),
+        'PASSWORD': get_secret('PLATFORM_DB_PASSWORD'),
     }
 }
 
@@ -245,17 +241,3 @@ else:
 CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
-
-# Load secrets from AWS Secret Manager
-
-client = botocore.session.get_session().create_client('secretsmanager', os.environ.get('PLATFORM_AWS_SECRET_MANAGER_REGION'))
-cache_config = SecretCacheConfig()
-cache = SecretCache(config=cache_config, client=client)
-secret_str = cache.get_secret_string(os.environ.get('PLATFORM_AWS_SECRET_MANAGER_SECRET_NAME'))
-secret = json.loads(secret_str)
-
-EMAIL_HOST_USER = secret.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = secret.get('EMAIL_HOST_PASSWORD')
-
-TWILIO_ACCOUNT_SID = secret.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = secret.get('TWILIO_AUTH_TOKEN')

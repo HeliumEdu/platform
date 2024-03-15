@@ -27,10 +27,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
 )
 
-# Security
-
-CSRF_MIDDLEWARE_SECRET = None
-
 # Logging
 
 DEBUG = False
