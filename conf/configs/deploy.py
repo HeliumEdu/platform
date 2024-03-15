@@ -6,6 +6,7 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
+import json
 import os
 
 import botocore
@@ -247,13 +248,14 @@ CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
 
 # Load secrets from AWS Secret Manager
 
-client = botocore.session.get_session().create_client('secretsmanager')
+client = botocore.session.get_session().create_client('secretsmanager', os.environ.get('PLATFORM_AWS_SECRET_MANAGER_REGION'))
 cache_config = SecretCacheConfig()
 cache = SecretCache(config=cache_config, client=client)
-secret = cache.get_secret_string(os.environ.get('PLATFORM_AWS_SECRET_MANAGER_SECRET_NAME'))
+secret_str = cache.get_secret_string(os.environ.get('PLATFORM_AWS_SECRET_MANAGER_SECRET_NAME'))
+secret = json.loads(secret_str)
 
-EMAIL_HOST_USER = secret.get_secret_string('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = secret.get_secret_string('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = secret.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = secret.get('EMAIL_HOST_PASSWORD')
 
-TWILIO_ACCOUNT_SID = secret.get_secret_string('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = secret.get_secret_string('TWILIO_AUTH_TOKEN')
+TWILIO_ACCOUNT_SID = secret.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = secret.get('TWILIO_AUTH_TOKEN')
