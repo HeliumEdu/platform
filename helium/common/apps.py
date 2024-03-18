@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 
 import os
 import sys
@@ -15,7 +15,6 @@ from health_check.plugins import plugin_dir
 class CommonConfig(AppConfig):
     name = 'helium.common'
     verbose_name = 'Common'
-    default_auto_field = 'django.db.models.BigAutoField'
 
     def ready(self):
         self.init_ngrok()
