@@ -4,11 +4,12 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.6.0"
 
 import os
 
 from conf.configs import common
+from conf.secretcache import get_secret
 from conf.settings import PROJECT_ID
 
 # Define the base working directory of the application
@@ -48,7 +49,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 # Logging
 
 ROLLBAR = {
-    'access_token': os.environ.get('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'access_token': get_secret('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
     'environment': os.environ.get('ENVIRONMENT'),
     'branch': 'main',
     'root': BASE_DIR,
@@ -194,8 +195,8 @@ DATABASES = {
         'NAME': os.environ.get('PLATFORM_DB_NAME'),
         'ENGINE': 'django.db.backends.mysql',
         'HOST': os.environ.get('PLATFORM_DB_HOST'),
-        'USER': os.environ.get('PLATFORM_DB_USER'),
-        'PASSWORD': os.environ.get('PLATFORM_DB_PASSWORD'),
+        'USER': get_secret('PLATFORM_DB_USER'),
+        'PASSWORD': get_secret('PLATFORM_DB_PASSWORD'),
     }
 }
 
