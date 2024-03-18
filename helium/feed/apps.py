@@ -8,3 +8,4 @@ from django.apps import AppConfig
 class FeedConfig(AppConfig):
     name = 'helium.feed'
     verbose_name = 'Feed'
+    default_auto_field = 'django.db.models.BigAutoField'

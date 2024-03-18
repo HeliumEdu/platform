@@ -8,3 +8,4 @@ from django.apps import AppConfig
 class ImportExportConfig(AppConfig):
     name = 'helium.importexport'
     verbose_name = 'Import/Export'
+    default_auto_field = 'django.db.models.BigAutoField'

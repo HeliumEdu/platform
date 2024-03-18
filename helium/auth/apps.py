@@ -9,3 +9,4 @@ class AuthConfig(AppConfig):
     name = 'helium.auth'
     label = 'helium_auth'
     verbose_name = 'Authentication'
+    default_auto_field = 'django.db.models.BigAutoField'
