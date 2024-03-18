@@ -3,12 +3,13 @@ __license__ = "MIT"
 __version__ = "1.6.0"
 
 from django import forms
+
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from rest_framework.authtoken import admin as drf_admin
-from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.models import TokenProxy
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
@@ -130,4 +131,4 @@ class TokenAdmin(drf_admin.TokenAdmin):
 admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
-admin_site.register(Token, TokenAdmin)
+admin_site.register(TokenProxy, TokenAdmin)
