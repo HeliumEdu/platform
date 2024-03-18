@@ -15,6 +15,7 @@ from health_check.plugins import plugin_dir
 class CommonConfig(AppConfig):
     name = 'helium.common'
     verbose_name = 'Common'
+    default_auto_field = 'django.db.models.BigAutoField'
 
     def ready(self):
         self.init_ngrok()
