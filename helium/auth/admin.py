@@ -3,11 +3,11 @@ __license__ = "MIT"
 __version__ = "1.5.1"
 
 from django import forms
-from django.contrib.admin import ModelAdmin
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
+from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import Token
 
 from helium.auth.models import UserProfile
@@ -103,11 +103,18 @@ class UserProfileAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class TokenAdmin(ModelAdmin):
+class TokenAdmin(drf_admin.TokenAdmin):
+    raw_id_fields = ('user',)
     list_display = ['key', 'created', 'get_user']
     search_fields = ('key', 'user__email', 'user__username')
     ordering = ('user__username',)
-    readonly_fields = ('user', 'created')
+    autocomplete_fields = ('user',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ('created', 'user',)
+
+        return self.readonly_fields
 
     def get_user(self, obj):
         if obj.user:

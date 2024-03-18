@@ -10,7 +10,15 @@ from helium.planner.models import CourseGroup, Course, Category, Attachment, Mat
 class AttachmentAdmin(BaseModelAdmin):
     list_display = ('title', 'get_attachment', 'size', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('user__username',)
-    readonly_fields = ('course', 'event', 'homework', 'user',)
+    autocomplete_fields = ('course', 'event', 'homework', 'user')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('course', 'event', 'homework', 'user')
+
+        return readonly_fields + self.readonly_fields
 
     def get_attachment(self, obj):
         return obj.attachment
@@ -29,7 +37,15 @@ class CourseGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'start_date', 'end_date', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
-    readonly_fields = ('user',)
+    autocomplete_fields = ('user',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('user',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_user(self, obj):
         if obj.get_user():
@@ -44,7 +60,15 @@ class CourseGroupAdmin(BaseModelAdmin):
 class CourseAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'created_at', 'start_date', 'end_date', 'get_user',)
     search_fields = ('title', 'course_group__user__username',)
-    readonly_fields = ('course_group',)
+    autocomplete_fields = ('course_group',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('course_group',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_course_group(self, obj):
         return obj.course_group.title
@@ -65,7 +89,15 @@ class CourseAdmin(BaseModelAdmin):
 class CategoryAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'updated_at', 'weight', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
-    readonly_fields = ('course',)
+    autocomplete_fields = ('course',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('course',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_course(self, obj):
         return obj.course.title
@@ -89,7 +121,15 @@ class CategoryAdmin(BaseModelAdmin):
 class EventAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'user__username',)
-    readonly_fields = ('user',)
+    autocomplete_fields = ('user',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('user',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_user(self, obj):
         return obj.get_user().username
@@ -101,7 +141,15 @@ class EventAdmin(BaseModelAdmin):
 class HomeworkAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'created_at', 'start', 'end', 'get_user',)
     search_fields = ('title', 'course__course_group__user__username',)
-    readonly_fields = ('category', 'materials', 'course',)
+    autocomplete_fields = ('category', 'materials', 'course')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('category', 'materials', 'course')
+
+        return readonly_fields + self.readonly_fields
 
     def get_course(self, obj):
         return obj.course.title
@@ -126,7 +174,15 @@ class MaterialGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'updated_at', 'shown_on_calendar', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
-    readonly_fields = ('user',)
+    autocomplete_fields = ('user',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('user',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_user(self, obj):
         if obj.get_user():
@@ -141,7 +197,15 @@ class MaterialGroupAdmin(BaseModelAdmin):
 class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('title', 'material_group__user__username',)
-    readonly_fields = ('material_group', 'courses',)
+    autocomplete_fields = ('material_group', 'courses',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('material_group', 'courses')
+
+        return readonly_fields + self.readonly_fields
 
     def get_material_group(self, obj):
         return obj.material_group.title
@@ -162,7 +226,15 @@ class MaterialAdmin(BaseModelAdmin):
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'updated_at', 'get_user',)
     search_fields = ('title', 'user__username',)
-    readonly_fields = ('event', 'homework', 'user',)
+    autocomplete_fields = ('event', 'homework', 'user')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('event', 'homework', 'user')
+
+        return readonly_fields + self.readonly_fields
 
     def get_user(self, obj):
         return obj.get_user().username
