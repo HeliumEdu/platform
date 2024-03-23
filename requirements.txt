@@ -9,11 +9,11 @@ django-cors-headers==4.3.1
 coreapi==2.3.3
 celery==5.3.6
 statsd==4.0.1
-datadog==0.49.0
+datadog==0.49.1
 twilio==9.0.2
 pyOpenSSL==24.1.0
 Pillow==10.2.0
-icalendar==5.0.11
+icalendar==5.0.12
 pytz==2024.1
 python-dateutil==2.9.0.post0
 psutil==5.9.8
