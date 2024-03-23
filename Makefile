@@ -1,4 +1,4 @@
-.PHONY: all env virtualenv install nopyc clean build build-migrations migrate test
+.PHONY: all env virtualenv install install-dev nopyc clean build build-migrations migrate test
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
@@ -15,6 +15,12 @@ virtualenv:
 	fi
 
 install: env virtualenv
+	@( \
+		source $(PLATFORM_VENV)/bin/activate; \
+		python -m pip install -r requirements.txt -r requirements-deploy.txt; \
+	)
+
+install-dev: env virtualenv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt -r requirements-dev.txt; \
@@ -45,7 +51,7 @@ migrate: install
 		python manage.py migrate; \
 	)
 
-test: install
+test: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run manage.py test && coverage report && coverage html && coverage xml; \
