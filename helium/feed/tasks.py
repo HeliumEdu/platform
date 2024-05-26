@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.6.3"
 
 import logging
 
@@ -13,7 +13,7 @@ from helium.feed.services import icalexternalcalendarservice
 logger = logging.getLogger(__name__)
 
 
-@app.task
+@app.task(soft_time_limit=settings.CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT)
 def reindex_external_calendars():
     metrics = metricutils.task_start("reindex_external_calendars")
 
