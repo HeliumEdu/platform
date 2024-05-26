@@ -13,7 +13,7 @@ from helium.feed.services import icalexternalcalendarservice
 logger = logging.getLogger(__name__)
 
 
-@app.task
+@app.task(soft_time_limit=60*5)
 def reindex_external_calendars():
     metrics = metricutils.task_start("reindex_external_calendars")
 
