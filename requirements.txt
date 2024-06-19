@@ -10,7 +10,7 @@ coreapi==2.3.3
 celery[redis]==5.4.0
 statsd==4.0.1
 datadog==0.49.1
-twilio==9.1.1
+twilio==9.2.0
 pyOpenSSL==24.1.0
 Pillow==10.3.0
 icalendar==5.0.12
