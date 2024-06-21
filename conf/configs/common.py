@@ -234,6 +234,7 @@ SECRET_KEY = get_secret('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = os.environ.get('PLATFORM_CSRF_COOKIE_SECURE', 'True') == 'True'
 SESSION_COOKIE_SECURE = os.environ.get('PLATFORM_SESSION_COOKIE_SECURE', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS', '').split(' ')
+CSRF_TRUSTED_ORIGINS = [PROJECT_APP_HOST, PROJECT_API_HOST]
 CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST', '').split(' ')
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
