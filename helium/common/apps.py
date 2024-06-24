@@ -16,8 +16,6 @@ class CommonConfig(AppConfig):
     name = 'helium.common'
     verbose_name = 'Common'
 
-    PROJECT_API_HOST = settings.PROJECT_API_HOST
-
     def ready(self):
         self.init_ngrok()
 
@@ -71,6 +69,3 @@ class CommonConfig(AppConfig):
             # Open a ngrok tunnel to the dev server
             public_url = ngrok.connect(port).public_url
             print(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
-
-            # Update any base URLs or webhooks to use the public ngrok URL
-            self.PROJECT_API_HOST = public_url
