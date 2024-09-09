@@ -4,7 +4,7 @@ Settings specific to a development environment using Django's `runserver` comman
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.2"
+__version__ = "1.6.4"
 
 import os
 import warnings
@@ -44,6 +44,16 @@ SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'True') == 'True'
 INTERNAL_IPS = (
     '127.0.0.1',
 )
+
+ALLOWED_HOSTS = common.ALLOWED_HOSTS + [
+    '.ngrok.io',
+    '.ngrok.app'
+]
+
+CSRF_TRUSTED_ORIGINS = common.CSRF_TRUSTED_ORIGINS + [
+    'https://*.ngrok.io',
+    'https://*.ngrok.app'
+]
 
 # Logging
 

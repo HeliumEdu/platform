@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.1"
+__version__ = "1.6.4"
 
 import os
 import sys
@@ -69,6 +69,3 @@ class CommonConfig(AppConfig):
             # Open a ngrok tunnel to the dev server
             public_url = ngrok.connect(port).public_url
             print(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
-
-            # Update any base URLs or webhooks to use the public ngrok URL
-            settings.PROJECT_HOST = public_url
