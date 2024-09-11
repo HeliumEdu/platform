@@ -14,7 +14,7 @@ twilio==9.3.0
 pyOpenSSL==24.2.1
 Pillow==10.4.0
 icalendar==5.0.13
-pytz==2024.1
+pytz==2024.2
 python-dateutil==2.9.0.post0
 psutil==6.0.0
 aws-secretsmanager-caching==1.1.3
