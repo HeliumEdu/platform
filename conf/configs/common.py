@@ -20,10 +20,14 @@ from conf.settings import PROJECT_ID
 
 # Project information
 
-PROJECT_NAME = os.environ.get('PROJECT_NAME')
-PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
-PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST')
-PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST')
+PROJECT_NAME = "Helium Student Planner"
+PROJECT_TAGLINE = "Lightening Your Course Load"
+PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST', 'http://localhost:3000')
+PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST', 'http://localhost:8000')
+
+PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST.replace("http://", "").replace("https://", "")
+if ":" in PROJECT_APP_HOST_STRIPPED:
+    PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST_STRIPPED.split(":")[0]
 
 # Version information
 
@@ -138,7 +142,8 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = os.environ.get('PROJECT_SUPPORT_URL')
+SUPPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/wiki"
+BUG_REPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml"
 
 # Maintenance mode
 
@@ -198,13 +203,13 @@ MAX_UPLOAD_SIZE = 10485760
 
 DISABLE_EMAILS = os.environ.get('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 
-ADMIN_EMAIL_ADDRESS = os.environ.get('PROJECT_ADMIN_EMAIL')
+ADMIN_EMAIL_ADDRESS = 'admin@heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
-EMAIL_PORT = os.environ.get('PLATFORM_EMAIL_PORT')
-EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
+EMAIL_PORT = 587
+EMAIL_ADDRESS = 'contact@heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
-EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
+EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
 
 EMAIL_HOST_USER = get_secret('PLATFORM_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = get_secret('PLATFORM_EMAIL_HOST_PASSWORD')
@@ -231,11 +236,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Security
 
 SECRET_KEY = get_secret('PLATFORM_SECRET_KEY')
-CSRF_COOKIE_SECURE = os.environ.get('PLATFORM_CSRF_COOKIE_SECURE', 'True') == 'True'
-SESSION_COOKIE_SECURE = os.environ.get('PLATFORM_SESSION_COOKIE_SECURE', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS', '').split(' ')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+ALLOWED_HOSTS = ["localhost", PROJECT_APP_HOST_STRIPPED]
 CSRF_TRUSTED_ORIGINS = [PROJECT_APP_HOST, PROJECT_API_HOST]
-CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST', '').split(' ')
+CORS_ORIGIN_WHITELIST = ["http://localhost:3000", PROJECT_APP_HOST]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )

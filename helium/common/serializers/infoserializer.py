@@ -20,4 +20,6 @@ class InfoSerializer(serializers.Serializer):
 
     support_url = serializers.URLField()
 
+    bug_report_url = serializers.URLField()
+
     max_upload_size = serializers.IntegerField()

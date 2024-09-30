@@ -26,6 +26,7 @@ class InfoResourceView(ViewSet):
             'version': settings.PROJECT_VERSION,
             'support_email': settings.EMAIL_ADDRESS,
             'support_url': settings.SUPPORT_REDIRECT_URL,
+            'bug_report_url': settings.BUG_REPORT_REDIRECT_URL,
             'max_upload_size': settings.MAX_UPLOAD_SIZE
         })
 

@@ -20,4 +20,5 @@ class TestCaseInfoViews(APITestCase):
         self.assertEqual(settings.PROJECT_VERSION, response.data['version'])
         self.assertEqual(settings.EMAIL_ADDRESS, response.data['support_email'])
         self.assertEqual(settings.SUPPORT_REDIRECT_URL, response.data['support_url'])
+        self.assertEqual(settings.BUG_REPORT_REDIRECT_URL, response.data['bug_report_url'])
         self.assertEqual(settings.MAX_UPLOAD_SIZE, response.data['max_upload_size'])
