@@ -56,3 +56,10 @@ test: install-dev
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run manage.py test && coverage report && coverage html && coverage xml; \
 	)
+
+build-docker:
+	docker build -t helium-platform .
+	docker tag helium-platform:latest helium:platform
+
+run-docker: env
+	docker compose --env-file .env up -d

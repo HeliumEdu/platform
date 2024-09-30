@@ -32,18 +32,18 @@ PASSWORD_HASHERS = (
 DEBUG = False
 
 if os.environ.get('TEST_LOGGING', 'False') == 'True':
-    from conf.configs import dev
+    from conf.configs import local
 
-    LOGGING = dev.LOGGING
+    LOGGING = local.LOGGING
 else:
     logging.disable(logging.ERROR)
 
 # Cache
 
 if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
-    from conf.configs import dev
+    from conf.configs import local
 
-    CACHES = dev.CACHES
+    CACHES = local.CACHES
 else:
     from conf.configs import deploy
 
@@ -53,7 +53,7 @@ else:
 # Database
 
 if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
-    from conf.configs import dev
+    from conf.configs import local
 
     DATABASES = dev.DATABASES
 else:

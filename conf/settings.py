@@ -3,7 +3,7 @@ This generic settings builder reads the appropriate configuration file for diffe
 
 Note that the system environment variable ENVIRONMENT should be set to a slug that matches the deployed environment.
 
-* If ENVIRONMENT is set to `dev`, `dev.py` will be used for configuration, using values from `.env`
+* If ENVIRONMENT is set to `dev`, `local.py` will be used for configuration, using values from `.env`
 * If ENVIRONMENT is not `dev`, `deploy.py` will be used for configuration, using system environment variables
 * If `test` is passed as an argument, ENVIRONMENT is ignored and `test.py` is used for configuration, reading from `.env`
 
@@ -20,20 +20,22 @@ import sys
 # Are we running on the dev server
 DEV_SERVER = False
 
+dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+
 if 'test' not in sys.argv:
-    if os.environ.get('ENVIRONMENT') == 'dev' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
-        conf = 'dev'
+    if os.environ.get('ENVIRONMENT') == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
+        conf = 'local'
         if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
             DEV_SERVER = True
     else:
         conf = 'deploy'
 
-    if conf == 'dev':
+    if conf == 'local':
         print('Loading .env file')
 
         import dotenv
 
-        dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), True)
+        dotenv.read_dotenv(dotenv_path, True)
 # If we're running tests, run a streamlined settings file for efficiency
 else:
     conf = 'test'
@@ -42,12 +44,12 @@ else:
 
     import dotenv
 
-    dotenv.read_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), True)
+    dotenv.read_dotenv(dotenv_path, True)
     os.environ['ENVIRONMENT'] = 'test'
 
 # Initialize some global settings
 locals()['DEV_SERVER'] = DEV_SERVER
-PROJECT_ID = os.environ.get('PROJECT_ID')
+PROJECT_ID = "helium"
 locals()['PROJECT_ID'] = PROJECT_ID
 
 # Load conf properties into the local scope

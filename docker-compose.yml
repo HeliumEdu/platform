@@ -1,0 +1,61 @@
+services:
+  db:
+    image: mysql:8.0-bookworm
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      MYSQL_USER: ${PLATFORM_DB_USER}
+      MYSQL_DATABASE: platform_dev
+    restart: always
+    container_name: db
+  cache:
+    image: redis:7.2-bookworm
+    restart: always
+    container_name: cache
+  storage:
+    image: localstack/localstack
+    container_name: storage
+  collectstatic:
+    image: helium:platform
+    environment:
+      ENVIRONMENT: "dev"
+      PLATFORM_AWS_S3_ACCESS_KEY_ID: ${PLATFORM_AWS_S3_ACCESS_KEY_ID}
+      PLATFORM_AWS_S3_SECRET_ACCESS_KEY: ${PLATFORM_AWS_S3_SECRET_ACCESS_KEY}
+    restart: no
+    entrypoint: [ "/usr/local/venvs/platform/bin/python", "manage.py", "collectstatic", "--noinput" ]
+    depends_on:
+      - storage
+  migrate:
+    image: helium:platform
+    environment:
+      ENVIRONMENT: "dev"
+      PLATFORM_DB_HOST: ${PLATFORM_DB_HOST}
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_PASSWORD: ${PLATFORM_DB_PASSWORD}
+    restart: no
+    entrypoint: [ "/usr/local/venvs/platform/bin/python", "manage.py", "migrate" ]
+    depends_on:
+      - db
+  server:
+    image: helium:platform
+    environment:
+      ENVIRONMENT: "dev"
+      PLATFORM_AWS_S3_ACCESS_KEY_ID: ${PLATFORM_AWS_S3_ACCESS_KEY_ID}
+      PLATFORM_AWS_S3_SECRET_ACCESS_KEY: ${PLATFORM_AWS_S3_SECRET_ACCESS_KEY}
+      PLATFORM_TWILIO_ACCOUNT_SID: ${PLATFORM_TWILIO_ACCOUNT_SID}
+      PLATFORM_TWILIO_AUTH_TOKEN: ${PLATFORM_TWILIO_AUTH_TOKEN}
+      PLATFORM_TWILIO_SMS_FROM: ${PLATFORM_TWILIO_SMS_FROM}
+      PLATFORM_SECRET_KEY: ${PLATFORM_SECRET_KEY}
+      PLATFORM_REDIS_HOST: ${PLATFORM_REDIS_HOST}
+      PLATFORM_DB_HOST: ${PLATFORM_DB_HOST}
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_PASSWORD: ${PLATFORM_DB_PASSWORD}
+    ports:
+      - 80:80
+    container_name: helium_platform
+    depends_on:
+      - db
+      - cache
+      - storage
+      - collectstatic
+      - migrate

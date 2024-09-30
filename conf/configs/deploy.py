@@ -30,6 +30,8 @@ if common.DEBUG:
         'django.template.context_processors.debug',
     )
 
+ENVIRONMENT = os.environ.get('ENVIRONMENT')
+
 # API configuration
 
 common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framework.post_exception_handler'
@@ -97,42 +99,10 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
         },
-        'platform_auth': {
+        'platform': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_auth.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_common': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_common.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_feed': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_feed.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_importexport': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_importexport.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_planner': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_planner.log',
+            'filename': f'/var/log/{PROJECT_ID}/platform.log',
             'maxBytes': 50000000,
             'backupCount': 3,
             'formatter': 'standard',
@@ -154,23 +124,23 @@ LOGGING = {
             'level': 'ERROR',
         },
         'helium.auth': {
-            'handlers': ['platform_auth', 'rollbar'],
+            'handlers': ['platform', 'rollbar'],
             'level': 'INFO',
         },
         'helium.common': {
-            'handlers': ['platform_common', 'rollbar'],
+            'handlers': ['platform', 'rollbar'],
             'level': 'INFO',
         },
         'helium.feed': {
-            'handlers': ['platform_feed', 'rollbar'],
+            'handlers': ['platform', 'rollbar'],
             'level': 'INFO',
         },
         'helium.importexport': {
-            'handlers': ['platform_importexport', 'rollbar'],
+            'handlers': ['platform', 'rollbar'],
             'level': 'INFO',
         },
         'helium.planner': {
-            'handlers': ['platform_planner', 'rollbar'],
+            'handlers': ['platform', 'rollbar'],
             'level': 'INFO',
         },
     }
@@ -192,7 +162,7 @@ CACHES = {
 
 DATABASES = {
     'default': {
-        'NAME': os.environ.get('PLATFORM_DB_NAME'),
+        'NAME': f'platform_{ENVIRONMENT}',
         'ENGINE': 'django.db.backends.mysql',
         'HOST': os.environ.get('PLATFORM_DB_HOST'),
         'USER': get_secret('PLATFORM_DB_USER'),
@@ -225,7 +195,7 @@ else:
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
+    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
     AWS_S3_CUSTOM_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
