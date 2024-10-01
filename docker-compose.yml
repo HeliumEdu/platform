@@ -23,8 +23,6 @@ services:
   server:
     image: helium:platform
     env_file: .env
-    environment:
-      - PYTHONUNBUFFERED=1
     volumes:
       - type: bind
         source: ./.env
