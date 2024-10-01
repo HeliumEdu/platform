@@ -19,7 +19,9 @@ USER www-data
 COPY container/supervisord.conf /etc/supervisor
 COPY container/apache.conf /etc/apache2/sites-enabled/000-default.conf
 COPY container/celerybeat.conf /etc/supervisor/conf.d
-COPY container/celeryworker.conf /etc/supervisor/conf.d
+COPY container/celeryworker_1.conf /etc/supervisor/conf.d
+COPY container/celeryworker_2.conf /etc/supervisor/conf.d
+COPY container/docker-entrypoint.sh /usr/local/bin
 
 WORKDIR /app
 

@@ -29,14 +29,7 @@ services:
         target: /app/.env
     ports:
       - 80:80
-    entrypoint: [ "/bin/sh","-c" ]
-    command:
-      - |
-        sleep 15
-        /usr/local/venvs/platform/bin/python manage.py collectstatic --noinput
-        /usr/local/venvs/platform/bin/python manage.py migrate
-        chown -R www-data:www-data /var/log/helium /var/log/apache2 
-        service supervisor start; apache2ctl -D FOREGROUND
+    entrypoint: "sh /usr/local/bin/docker-entrypoint.sh"
     container_name: helium_platform
     depends_on:
       - db
