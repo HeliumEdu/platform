@@ -11,7 +11,7 @@ import socket
 
 from corsheaders.defaults import default_headers
 
-from conf.secretcache import get_secret
+from conf.configcache import config
 from conf.settings import PROJECT_ID
 
 # ############################
@@ -22,8 +22,8 @@ from conf.settings import PROJECT_ID
 
 PROJECT_NAME = "Helium Student Planner"
 PROJECT_TAGLINE = "Lightening Your Course Load"
-PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST', 'http://localhost:3000')
-PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST', 'http://localhost:8000')
+PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000')
+PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000')
 
 PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST.replace("http://", "").replace("https://", "")
 if ":" in PROJECT_APP_HOST_STRIPPED:
@@ -35,14 +35,14 @@ PROJECT_VERSION = __version__
 
 # AWS S3
 
-AWS_S3_ACCESS_KEY_ID = get_secret('PLATFORM_AWS_S3_ACCESS_KEY_ID')
-AWS_S3_SECRET_ACCESS_KEY = get_secret('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
+AWS_S3_ACCESS_KEY_ID = config('PLATFORM_AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = config('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
 
 # Twilio
 
-TWILIO_ACCOUNT_SID = get_secret('PLATFORM_TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = get_secret('PLATFORM_TWILIO_AUTH_TOKEN')
-TWILIO_SMS_FROM = os.environ.get('PLATFORM_TWILIO_SMS_FROM')
+TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
 
 #############################
 # Default lists for host-specific configurations
@@ -61,7 +61,6 @@ INSTALLED_APPS = (
     'health_check',
     'health_check.db',
     # Third-party modules
-    'maintenance_mode',
     'pipeline',
     'rest_framework',
     'rest_framework.authtoken',
@@ -83,7 +82,6 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'maintenance_mode.middleware.MaintenanceModeMiddleware',
 )
 
 TEMPLATES = [{
@@ -98,7 +96,7 @@ TEMPLATES = [{
             'django.contrib.messages.context_processors.messages',
             'django.template.context_processors.request',
         ],
-        'debug': os.environ.get('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
+        'debug': config('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
     },
 }]
 
@@ -144,16 +142,6 @@ HOSTNAME = socket.gethostname()
 
 SUPPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/wiki"
 BUG_REPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml"
-
-# Maintenance mode
-
-MAINTENANCE_MODE_IGNORE_STAFF = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_STAFF', 'False') == 'True'
-
-MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_SUPERUSER', 'True') == 'True'
-
-MAINTENANCE_MODE_IGNORE_TESTS = True
-
-MAINTENANCE_MODE_IGNORE_URLS = ('^/admin',)
 
 # Healthcheck
 
@@ -201,7 +189,7 @@ MAX_UPLOAD_SIZE = 10485760
 
 # Email settings
 
-DISABLE_EMAILS = os.environ.get('PROJECT_DISABLE_EMAILS', 'False') == 'True'
+DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 
 ADMIN_EMAIL_ADDRESS = 'admin@heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
@@ -211,8 +199,8 @@ EMAIL_ADDRESS = 'contact@heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
 
-EMAIL_HOST_USER = get_secret('PLATFORM_EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_secret('PLATFORM_EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config('PLATFORM_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
 
 # Authentication
 
@@ -235,7 +223,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-SECRET_KEY = get_secret('PLATFORM_SECRET_KEY')
+SECRET_KEY = config('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = ["localhost", PROJECT_APP_HOST_STRIPPED]
@@ -247,7 +235,7 @@ CORS_ALLOW_HEADERS = default_headers + (
 
 # Logging
 
-DEBUG = os.environ.get('PLATFORM_DEBUG', 'False') == 'True'
+DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
 
 # Static files (CSS, JavaScript, Images)
 
@@ -279,9 +267,9 @@ PIPELINE = {
 
 # Metrics
 
-DATADOG_API_KEY = get_secret('PROJECT_DATADOG_API_KEY')
-DATADOG_APP_KEY = get_secret('PROJECT_DATADOG_APP_KEY')
+DATADOG_API_KEY = config('PROJECT_DATADOG_API_KEY')
+DATADOG_APP_KEY = config('PROJECT_DATADOG_APP_KEY')
 
 # Server
 
-USE_NGROK = os.environ.get("USE_NGROK", "False") == "True" and os.environ.get("RUN_MAIN", None) != "true"
+USE_NGROK = config("USE_NGROK", "False") == "True" and os.environ.get("RUN_MAIN", None) != "true"

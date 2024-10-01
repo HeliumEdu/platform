@@ -9,10 +9,17 @@ RUN apt install -y supervisor
 RUN apt install -y npm
 RUN npm install yuglify -g
 
-RUN mkdir -p /var/log/helium /var/log/supervisor
-RUN mkdir /usr/local/venvs
+RUN mkdir -p /var/log/helium
+RUN mkdir -p /usr/local/venvs
+RUN chown -R www-data:www-data /var/log/apache2 /var/log/helium
+RUN chown -R www-data:www-data /usr/local/venvs
 
-COPY heliumedu.apache.conf /etc/apache2/sites-enabled/000-default.conf
+USER www-data
+
+COPY container/supervisord.conf /etc/supervisor
+COPY container/apache.conf /etc/apache2/sites-enabled/000-default.conf
+COPY container/celerybeat.conf /etc/supervisor/conf.d
+COPY container/celeryworker.conf /etc/supervisor/conf.d
 
 WORKDIR /app
 
@@ -25,19 +32,8 @@ COPY requirements-deploy.txt .
 RUN virtualenv /usr/local/venvs/platform
 RUN /usr/local/venvs/platform/bin/python -m pip install -r requirements.txt -r requirements-deploy.txt
 
-RUN ln -sf /dev/stdout /var/log/apache2/access.log
-RUN ln -sf /dev/stderr /var/log/apache2/error.log
-
-#RUN ln -sf /dev/stdout /var/log/helium/django.log
-#RUN ln -sf /dev/stdout /var/log/helium/health_check.log
-#RUN ln -sf /dev/stdout /var/log/helium/platform.log
-
-RUN ln -sf /dev/stdout /var/log/supervisor/celerybeat.log
-RUN ln -sf /dev/stdout /var/log/supervisor/celeryworker_1.log
-RUN ln -sf /dev/stdout /var/log/supervisor/celeryworker_2.log
-
-RUN chown www-data:www-data -R /var/log/helium
-
 EXPOSE 80
 
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+USER root
+
+CMD ["service", "supervisor", "start;", "apache2ctl", "-D", "FOREGROUND"]

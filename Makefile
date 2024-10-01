@@ -8,6 +8,9 @@ all: env virtualenv install build migrate test
 env:
 	cp -n .env.example .env | true
 
+docker-env:
+	cp -n .env.docker.example .env | true
+
 virtualenv:
 	@if [ ! -d "$(PLATFORM_VENV)" ]; then \
 		python3 -m pip install virtualenv; \
@@ -61,5 +64,5 @@ build-docker:
 	docker build -t helium-platform .
 	docker tag helium-platform:latest helium:platform
 
-run-docker: env
-	docker compose --env-file .env up -d
+run-docker: docker-env
+	docker compose up -d

@@ -12,6 +12,8 @@ from celery import Celery
 from celery.signals import task_failure
 from django.conf import settings
 
+from conf.configcache import config
+
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 
@@ -19,7 +21,7 @@ app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'True' and hasattr(settings, 'ROLLBAR'):
+if not settings.DEBUG and config('PLATFORM_WORKER_MODE', 'False') == 'True' and hasattr(settings, 'ROLLBAR'):
     import rollbar
 
     rollbar.init(**settings.ROLLBAR)

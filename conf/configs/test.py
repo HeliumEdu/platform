@@ -31,7 +31,7 @@ PASSWORD_HASHERS = (
 
 DEBUG = False
 
-if os.environ.get('TEST_LOGGING', 'False') == 'True':
+if config('TEST_LOGGING', 'False') == 'True':
     from conf.configs import local
 
     LOGGING = local.LOGGING
@@ -40,7 +40,7 @@ else:
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
+if config('USE_IN_MEMORY_CACHE', 'True') == 'True':
     from conf.configs import local
 
     CACHES = local.CACHES
@@ -52,7 +52,7 @@ else:
 
 # Database
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+if config('USE_IN_MEMORY_DB', 'True') == 'True':
     from conf.configs import local
 
     DATABASES = dev.DATABASES
