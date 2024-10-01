@@ -14,38 +14,23 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
-import os
 import sys
+
+from conf.configcache import config
 
 # Are we running on the dev server
 DEV_SERVER = False
 
-dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-
 if 'test' not in sys.argv:
-    if os.environ.get('ENVIRONMENT') == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
+    if config('ENVIRONMENT') == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
         conf = 'local'
         if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
             DEV_SERVER = True
     else:
         conf = 'deploy'
-
-    if conf == 'local':
-        print('Loading .env file')
-
-        import dotenv
-
-        dotenv.read_dotenv(dotenv_path, True)
 # If we're running tests, run a streamlined settings file for efficiency
 else:
     conf = 'test'
-
-    print('Loading .env file')
-
-    import dotenv
-
-    dotenv.read_dotenv(dotenv_path, True)
-    os.environ['ENVIRONMENT'] = 'test'
 
 # Initialize some global settings
 locals()['DEV_SERVER'] = DEV_SERVER

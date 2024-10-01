@@ -9,7 +9,7 @@ __version__ = "1.6.3"
 import os
 
 from conf.configs import common
-from conf.secretcache import get_secret
+from conf.configcache import config
 from conf.settings import PROJECT_ID
 
 # Define the base working directory of the application
@@ -30,8 +30,6 @@ if common.DEBUG:
         'django.template.context_processors.debug',
     )
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT')
-
 # API configuration
 
 common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framework.post_exception_handler'
@@ -42,7 +40,7 @@ common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framew
 
 # Project configuration
 
-SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
+SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 # Security
 
@@ -51,8 +49,8 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 # Logging
 
 ROLLBAR = {
-    'access_token': get_secret('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
-    'environment': os.environ.get('ENVIRONMENT'),
+    'access_token': config('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'environment': config('ENVIRONMENT'),
     'branch': 'main',
     'root': BASE_DIR,
 }
@@ -151,7 +149,7 @@ LOGGING = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('PLATFORM_REDIS_HOST'),
+        'LOCATION': config('PLATFORM_REDIS_HOST'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -162,11 +160,11 @@ CACHES = {
 
 DATABASES = {
     'default': {
-        'NAME': f'platform_{ENVIRONMENT}',
+        'NAME': f'platform_{config('ENVIRONMENT')}',
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': os.environ.get('PLATFORM_DB_HOST'),
-        'USER': get_secret('PLATFORM_DB_USER'),
-        'PASSWORD': get_secret('PLATFORM_DB_PASSWORD'),
+        'HOST': config('PLATFORM_DB_HOST'),
+        'USER': config('PLATFORM_DB_USER'),
+        'PASSWORD': config('PLATFORM_DB_PASSWORD'),
     }
 }
 
@@ -192,23 +190,28 @@ else:
         'storages',
     )
 
+    # Used by collectstatic
+    AWS_S3_ENDPOINT_URL = config('PLATFORM_AWS_S3_ENDPOINT_URL', None)
+    # Used when generating static URLs
+    S3_ENDPOINT_URL = config('PLATFORM_S3_ENDPOINT_URL', 's3.amazonaws.com')
+
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
-    AWS_S3_CUSTOM_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{config('ENVIRONMENT')}.static'
+    AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
     # Media
 
     DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
-    AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
-    AWS_S3_MEDIA_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
-    MEDIA_URL = f"https://{AWS_S3_MEDIA_DOMAIN}/"
+    AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{config('ENVIRONMENT')}.media'
+    AWS_S3_MEDIA_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
+    MEDIA_URL = f'https://{AWS_S3_MEDIA_DOMAIN}/'
 
 # Celery
 
-CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
-CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
-CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
-CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)
+CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
+CELERY_RESULT_BACKEND = config('PLATFORM_REDIS_HOST')
+CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
+CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)

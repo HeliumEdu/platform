@@ -31,7 +31,7 @@ def verify_number(phone):
     client = _get_client()
 
     try:
-        cleaned_phone = re.sub("[()\-+\s]", "", phone)
+        cleaned_phone = re.sub("[()\\-+\\s]", "", phone)
 
         logger.info(f"Asking Twilio to validate {cleaned_phone}")
 

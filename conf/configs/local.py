@@ -9,6 +9,7 @@ __version__ = "1.5.2"
 import os
 import warnings
 
+from conf.configcache import config
 from conf.configs import common
 from conf.settings import PROJECT_ID
 
@@ -37,7 +38,7 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += (
 
 # Project configuration
 
-SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'True') == 'True'
+SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'True') == 'True'
 
 # Security
 
@@ -106,7 +107,7 @@ warnings.filterwarnings('error', r"DateTimeField .* received a naive datetime", 
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
+if config('USE_IN_MEMORY_CACHE', 'True') == 'True':
     CACHES = {
         'default': {
             'BACKEND': 'helium.common.cache.locmemkeys.LocMemKeysCache',
@@ -121,7 +122,7 @@ else:
 
 # Database
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
+if config('USE_IN_MEMORY_DB', 'True') == 'True':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -151,7 +152,7 @@ common.PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
-if os.environ.get('USE_IN_MEMORY_WORKER', 'True') == 'True':
+if config('USE_IN_MEMORY_WORKER', 'True') == 'True':
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
 else:
