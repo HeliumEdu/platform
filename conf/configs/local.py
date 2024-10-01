@@ -11,7 +11,6 @@ import warnings
 
 from conf.configcache import config
 from conf.configs import common
-from conf.settings import PROJECT_ID
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -94,7 +93,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'ERROR',
         },
-        str(PROJECT_ID): {
+        'helium': {
             'handlers': ['console'],
             'level': 'DEBUG',
         }
