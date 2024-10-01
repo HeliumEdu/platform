@@ -7,10 +7,10 @@ __license__ = "MIT"
 __version__ = "1.6.3"
 
 import os
+import sys
 
 from conf.configs import common
 from conf.configcache import config
-from conf.settings import PROJECT_ID
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -81,66 +81,32 @@ LOGGING = {
             'class': 'rollbar.logger.RollbarHandler',
             'filters': ['require_debug_false'],
         },
-        'django': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/django.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'health_check': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/health_check.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform': {
+        'console': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'standard'
+        }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['django', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
         'django.security': {
-            'handlers': ['django', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
         'health-check': {
-            'handlers': ['health_check', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
         },
-        'helium.auth': {
-            'handlers': ['platform', 'rollbar'],
+        'helium': {
+            'handlers': ['console', 'rollbar'],
             'level': 'INFO',
-        },
-        'helium.common': {
-            'handlers': ['platform', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.feed': {
-            'handlers': ['platform', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.importexport': {
-            'handlers': ['platform', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.planner': {
-            'handlers': ['platform', 'rollbar'],
-            'level': 'INFO',
-        },
+        }
     }
 }
 

@@ -5,19 +5,19 @@ RUN apt install -y python-is-python3 python3-pip python3-virtualenv python3-setu
 RUN apt install -y libapache2-mod-wsgi-py3 python3-mysqldb pkg-config default-libmysqlclient-dev
 RUN apt install -y libjpeg-dev zlib1g-dev
 RUN apt install -y supervisor
+RUN apt install -y vim
 
 RUN apt install -y npm
 RUN npm install yuglify -g
 
-RUN mkdir -p /var/log/helium
 RUN mkdir -p /usr/local/venvs
-RUN chown -R www-data:www-data /var/log/apache2 /var/log/helium
 RUN chown -R www-data:www-data /usr/local/venvs
 
 USER www-data
 
 COPY container/supervisord.conf /etc/supervisor
-COPY container/apache.conf /etc/apache2/sites-enabled/000-default.conf
+COPY container/apache-site.conf /etc/apache2/sites-enabled/000-default.conf
+COPY container/apache-envvars /etc/apache2/envvars
 COPY container/celerybeat.conf /etc/supervisor/conf.d
 COPY container/celeryworker_1.conf /etc/supervisor/conf.d
 COPY container/celeryworker_2.conf /etc/supervisor/conf.d
