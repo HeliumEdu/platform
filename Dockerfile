@@ -39,4 +39,7 @@ EXPOSE 80
 
 USER root
 
+RUN touch celerybeat-schedule.db
+RUN chown ubuntu:ubuntu celerybeat-schedule.db
+
 CMD ["supervisord", "-n", "&", "apache2ctl", "-D", "FOREGROUND"]
