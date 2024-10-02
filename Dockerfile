@@ -18,8 +18,7 @@ COPY container/supervisord.conf /etc/supervisor
 COPY container/apache-site.conf /etc/apache2/sites-enabled/000-default.conf
 COPY container/apache-envvars /etc/apache2/envvars
 COPY container/celerybeat.conf /etc/supervisor/conf.d
-COPY container/celeryworker_1.conf /etc/supervisor/conf.d
-COPY container/celeryworker_2.conf /etc/supervisor/conf.d
+COPY container/celeryworker.conf /etc/supervisor/conf.d
 COPY container/docker-entrypoint.sh /usr/local/bin
 
 WORKDIR /app
@@ -30,8 +29,14 @@ COPY manage.py .
 COPY requirements.txt .
 COPY requirements-deploy.txt .
 
-RUN virtualenv /usr/local/venvs/platform
-RUN /usr/local/venvs/platform/bin/python -m pip install -r requirements.txt -r requirements-deploy.txt
+ENV PYTHONUNBUFFERED=1
+ENV PLATFORM_VENV=/usr/local/venvs/platform
+
+RUN virtualenv $PLATFORM_VENV
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=bind,source=requirements.txt,target=requirements.txt \
+    --mount=type=bind,source=requirements-deploy.txt,target=requirements-deploy.txt \
+    $PLATFORM_VENV/bin/python -m pip install -r requirements.txt -r requirements-deploy.txt
 
 EXPOSE 80
 
