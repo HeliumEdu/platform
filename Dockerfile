@@ -26,8 +26,6 @@ WORKDIR /app
 COPY conf conf
 COPY helium helium
 COPY manage.py .
-COPY requirements.txt .
-COPY requirements-deploy.txt .
 
 ENV PYTHONUNBUFFERED=1
 ENV PLATFORM_VENV=/usr/local/venvs/platform
