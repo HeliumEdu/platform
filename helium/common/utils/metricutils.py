@@ -3,8 +3,6 @@ __license__ = "MIT"
 __version__ = "1.5.1"
 
 import re
-
-from django import conf
 from django.conf import settings
 from statsd.defaults.django import statsd
 
@@ -23,7 +21,7 @@ if settings.DATADOG_API_KEY:
     from datadog import statsd as datadog_statsd
 
     DATADOG_METRICS = True
-    DATADOG_TAGS = [f"env:{conf.ENVIRONMENT}"]
+    DATADOG_TAGS = [f"env:{settings.ENVIRONMENT}"]
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
