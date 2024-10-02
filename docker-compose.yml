@@ -23,7 +23,7 @@ services:
       - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
     container_name: helium_storage
   server:
-    image: helium:platform
+    image: helium/platform
     env_file: .env
     volumes:
       - type: bind
