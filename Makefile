@@ -1,4 +1,4 @@
-.PHONY: all env virtualenv install install-dev nopyc clean build build-migrations migrate test
+.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv

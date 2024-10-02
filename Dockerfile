@@ -5,7 +5,6 @@ RUN apt install -y python-is-python3 python3-pip python3-virtualenv python3-setu
 RUN apt install -y libapache2-mod-wsgi-py3 python3-mysqldb pkg-config default-libmysqlclient-dev
 RUN apt install -y libjpeg-dev zlib1g-dev
 RUN apt install -y supervisor
-RUN apt install -y vim
 
 RUN apt install -y npm
 RUN npm install yuglify -g
