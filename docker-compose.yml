@@ -37,7 +37,7 @@ services:
       - |
         /usr/local/venvs/platform/bin/python manage.py collectstatic --noinput
         /usr/local/venvs/platform/bin/python manage.py migrate
-        supervisord -n & apache2ctl -D FOREGROUND
+        sh /usr/local/bin/docker-entrypoint.sh
     container_name: helium_platform
     depends_on:
       - db

@@ -19,6 +19,7 @@ COPY container/apache-site.conf /etc/apache2/sites-enabled/000-default.conf
 COPY container/apache-envvars /etc/apache2/envvars
 COPY container/celerybeat.conf /etc/supervisor/conf.d
 COPY container/celeryworker.conf /etc/supervisor/conf.d
+COPY container/docker-entrypoint.sh /usr/local/bin
 
 WORKDIR /app
 
@@ -42,4 +43,5 @@ USER root
 RUN touch celerybeat-schedule.db
 RUN chown ubuntu:ubuntu celerybeat-schedule.db
 
-CMD ["supervisord", "-n", "&", "apache2ctl", "-D", "FOREGROUND"]
+CMD ["sh", "/usr/local/bin/docker-entrypoint.sh"]
+
