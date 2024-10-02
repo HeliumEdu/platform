@@ -1,4 +1,3 @@
-import json
 import os
 
 import boto3
@@ -10,5 +9,7 @@ s3_client = boto3.client(
     aws_secret_access_key="test"
 )
 
-s3_client.create_bucket(Bucket="heliumedu.dev.static")
-s3_client.create_bucket(Bucket="heliumedu.dev.media")
+ENVIRONMENT = os.environ.get("ENVIRONMENT").lower()
+
+s3_client.create_bucket(Bucket=f"heliumedu.{ENVIRONMENT}.static")
+s3_client.create_bucket(Bucket=f"heliumedu.{ENVIRONMENT}.media")

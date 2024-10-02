@@ -20,14 +20,19 @@ from conf.settings import PROJECT_ID
 
 # Project information
 
-PROJECT_NAME = "Helium Student Planner"
-PROJECT_TAGLINE = "Lightening Your Course Load"
-PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'https://www.heliumedu.com')
-PROJECT_API_HOST = config('PROJECT_API_HOST', 'https://api.heliumedu.com')
+ENVIRONMENT = config('ENVIRONMENT').lower()
 
-PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST.replace("http://", "").replace("https://", "")
-if ":" in PROJECT_APP_HOST_STRIPPED:
-    PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST_STRIPPED.split(":")[0]
+PROJECT_NAME = 'Helium Student Planner'
+PROJECT_TAGLINE = 'Lightening Your Course Load'
+
+if 'local' in ENVIRONMENT:
+    PROJECT_APP_HOST = 'http://localhost:3000'
+    PROJECT_API_HOST = 'http://localhost:8000'
+else:
+    prefix = f'{ENVIRONMENT}.' if 'prod' in ENVIRONMENT else ''
+
+    PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{prefix}heliumedu.com')
+    PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{prefix}heliumedu.com')
 
 # Version information
 
@@ -223,15 +228,35 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
+STRIPPED_PROJECT_API_HOST = PROJECT_API_HOST.lstrip("http://").lstrip("https://")
+if ":" in STRIPPED_PROJECT_API_HOST:
+    STRIPPED_PROJECT_API_HOST = STRIPPED_PROJECT_API_HOST.split(":")[0]
+
 SECRET_KEY = config('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-ALLOWED_HOSTS = ["localhost", PROJECT_APP_HOST_STRIPPED]
-CSRF_TRUSTED_ORIGINS = [PROJECT_APP_HOST, PROJECT_API_HOST]
-CORS_ORIGIN_WHITELIST = ["http://localhost:3000", PROJECT_APP_HOST]
+ALLOWED_HOSTS = [
+    'localhost',
+    STRIPPED_PROJECT_API_HOST
+]
+CSRF_TRUSTED_ORIGINS = [
+    PROJECT_APP_HOST,
+    PROJECT_API_HOST
+]
+CORS_ORIGIN_WHITELIST = [
+    PROJECT_APP_HOST,
+    PROJECT_API_HOST
+]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
+
+STRIPPED_PROJECT_APP_HOST = PROJECT_APP_HOST.lstrip("http://").lstrip("https://").lstrip("www.")
+if ":" in STRIPPED_PROJECT_APP_HOST:
+    STRIPPED_PROJECT_APP_HOST = STRIPPED_PROJECT_APP_HOST.split(":")[0]
+if 'local' not in ENVIRONMENT:
+    CSRF_TRUSTED_ORIGINS += f"https://www.{STRIPPED_PROJECT_APP_HOST}"
+    CORS_ORIGIN_WHITELIST += f"https://www.{STRIPPED_PROJECT_APP_HOST}"
 
 # Logging
 
