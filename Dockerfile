@@ -19,7 +19,6 @@ COPY container/apache-site.conf /etc/apache2/sites-enabled/000-default.conf
 COPY container/apache-envvars /etc/apache2/envvars
 COPY container/celerybeat.conf /etc/supervisor/conf.d
 COPY container/celeryworker.conf /etc/supervisor/conf.d
-COPY container/docker-entrypoint.sh /usr/local/bin
 
 WORKDIR /app
 
@@ -40,4 +39,4 @@ EXPOSE 80
 
 USER root
 
-CMD ["sh", "/usr/local/bin/docker-entrypoint.sh"]
+CMD ["supervisord", "-n", "&", "apache2ctl", "-D", "FOREGROUND"]
