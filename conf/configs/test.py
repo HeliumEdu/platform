@@ -9,6 +9,7 @@ __version__ = "1.6.0"
 import logging
 import os
 
+from conf.configcache import config
 from conf.configs import common
 
 # Define the base working directory of the application
@@ -55,7 +56,7 @@ else:
 if config('USE_IN_MEMORY_DB', 'True') == 'True':
     from conf.configs import local
 
-    DATABASES = dev.DATABASES
+    DATABASES = local.DATABASES
 else:
     from conf.configs import deploy
 

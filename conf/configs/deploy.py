@@ -11,6 +11,7 @@ import sys
 
 from conf.configs import common
 from conf.configcache import config
+from conf.configs.common import ENVIRONMENT
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -50,7 +51,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 ROLLBAR = {
     'access_token': config('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
-    'environment': config('ENVIRONMENT'),
+    'environment': ENVIRONMENT,
     'branch': 'main',
     'root': BASE_DIR,
 }
@@ -126,7 +127,7 @@ CACHES = {
 
 DATABASES = {
     'default': {
-        'NAME': f'platform_{config('ENVIRONMENT')}',
+        'NAME': f'platform_{ENVIRONMENT}',
         'ENGINE': 'django.db.backends.mysql',
         'HOST': config('PLATFORM_DB_HOST'),
         'USER': config('PLATFORM_DB_USER'),
@@ -164,14 +165,14 @@ else:
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{config('ENVIRONMENT')}.static'
+    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
     AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
     # Media
 
     DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
-    AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{config('ENVIRONMENT')}.media'
+    AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.media'
     AWS_S3_MEDIA_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
     MEDIA_URL = f'https://{AWS_S3_MEDIA_DOMAIN}/'
 

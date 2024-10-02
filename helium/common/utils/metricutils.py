@@ -2,13 +2,11 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
-import os
 import re
 
+from django import conf
 from django.conf import settings
 from statsd.defaults.django import statsd
-
-from conf.configcache import config
 
 DATADOG_METRICS = False
 DATADOG_TAGS = None
@@ -25,7 +23,7 @@ if settings.DATADOG_API_KEY:
     from datadog import statsd as datadog_statsd
 
     DATADOG_METRICS = True
-    DATADOG_TAGS = [f"env:{config('ENVIRONMENT')}"]
+    DATADOG_TAGS = [f"env:{conf.ENVIRONMENT}"]
 
 
 def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):

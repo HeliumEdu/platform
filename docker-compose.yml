@@ -4,7 +4,7 @@ services:
     platform: linux/amd64
     environment:
       MYSQL_ROOT_PASSWORD: "password"
-      MYSQL_DATABASE: "platform_dev"
+      MYSQL_DATABASE: "platform_dev-local"
       MYSQL_USER: "helium"
       MYSQL_PASSWORD: "helium"
     restart: always
@@ -15,6 +15,8 @@ services:
     container_name: helium_cache
   storage:
     image: localstack/localstack
+    environment:
+      ENVIRONMENT: "dev-local"
     ports:
       - 4566:4566
     volumes:
