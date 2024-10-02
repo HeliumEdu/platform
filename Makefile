@@ -61,8 +61,8 @@ test: install-dev
 	)
 
 build-docker:
-	docker build -t helium-platform .
-	docker tag helium-platform:latest helium:platform
+	docker build -t helium/platform .
+	docker tag helium/platform:latest helium/platform
 
 run-docker: docker-env
 	docker compose up -d
