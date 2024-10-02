@@ -37,4 +37,4 @@ EXPOSE 80
 
 USER root
 
-CMD ["service", "supervisor", "start;", "apache2ctl", "-D", "FOREGROUND"]
+CMD ["sh", "/usr/local/bin/docker-entrypoint.sh"]

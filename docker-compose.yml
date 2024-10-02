@@ -31,7 +31,13 @@ services:
         target: /app/.env
     ports:
       - 8000:80
-    entrypoint: "sh /usr/local/bin/docker-entrypoint.sh"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        /usr/local/venvs/platform/bin/python manage.py collectstatic --noinput
+        /usr/local/venvs/platform/bin/python manage.py migrate
+        sh /usr/local/bin/docker-entrypoint.sh
     container_name: helium_platform
     depends_on:
       - db
