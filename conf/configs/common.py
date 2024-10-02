@@ -22,8 +22,8 @@ from conf.settings import PROJECT_ID
 
 PROJECT_NAME = "Helium Student Planner"
 PROJECT_TAGLINE = "Lightening Your Course Load"
-PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000')
-PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000')
+PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'https://www.heliumedu.com')
+PROJECT_API_HOST = config('PROJECT_API_HOST', 'https://api.heliumedu.com')
 
 PROJECT_APP_HOST_STRIPPED = PROJECT_APP_HOST.replace("http://", "").replace("https://", "")
 if ":" in PROJECT_APP_HOST_STRIPPED:
