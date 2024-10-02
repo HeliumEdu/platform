@@ -28,7 +28,7 @@ services:
         source: ./.env
         target: /app/.env
     ports:
-      - 80:80
+      - 8000:80
     entrypoint: "sh /usr/local/bin/docker-entrypoint.sh"
     container_name: helium_platform
     depends_on:
