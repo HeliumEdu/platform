@@ -64,5 +64,11 @@ build-docker:
 	docker build -t helium/platform .
 	docker tag helium/platform:latest helium/platform
 
+	docker build -f Dockerfile-api -t helium/platform-api .
+	docker tag helium/platform-api:latest helium/platform-api
+
+	docker build -f Dockerfile-worker -t helium/platform-worker .
+	docker tag helium/platform-worker:latest helium/platform-worker
+
 run-docker: docker-env
 	docker compose up -d
