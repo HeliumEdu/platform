@@ -51,13 +51,25 @@ try:
     from urllib import urlopen
     import json
 
-    response = urlopen("http://169.254.169.254/latest/meta-data/public-ipv4")
-    instance_ip = response.read().decode('utf-8')
+    metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
+    response = urlopen(metadata_uri)
+    data = json.loads(response.read().decode('utf-8'))
+    container_search = [x for x in data['Containers'] if x['Name'] == 'helium_platform_api'][0]
+
+    if len(container_search) > 0:
+        container_meta = container_search[0]
+    else:
+        # Fall back to the pause container
+        container_meta = data['Containers'][0]
+
+    private_ip = container_meta['Networks'][0]['IPv4Addresses'][0]
     ALLOWED_HOSTS = common.ALLOWED_HOSTS + (
-        instance_ip
+        private_ip
     )
+
+    print(f"INFO: Added AWS private IP {private_ip} to ALLOWED_HOSTS")
 except Exception:
-    print("INFO: No public AWS IP added to ALLOWED_HOSTS, ignore if not running on AWS")
+    print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
 
 # Logging
 
