@@ -1,0 +1,14 @@
+FROM helium/platform
+
+RUN apt-get install -y apache2 libapache2-mod-wsgi-py3 npm
+RUN npm install yuglify -g
+
+COPY container/apache-000-default.conf /etc/apache2/sites-enabled/000-default.conf
+COPY container/apache-ports.conf /etc/apache2/ports.conf
+COPY container/apache-mod-servername.conf /etc/apache2/mods-enabled/servername.conf
+
+EXPOSE 8000
+
+ENV APACHE_RUN_USER=ubuntu
+
+CMD ["apache2ctl", "-D", "FOREGROUND"]

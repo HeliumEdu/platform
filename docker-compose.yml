@@ -22,8 +22,8 @@ services:
     volumes:
       - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
     container_name: helium_storage
-  server:
-    image: helium/platform
+  api:
+    image: helium/platform-api
     env_file: .env
     volumes:
       - type: bind
@@ -37,8 +37,20 @@ services:
       - |
         /usr/local/venvs/platform/bin/python manage.py collectstatic --noinput
         /usr/local/venvs/platform/bin/python manage.py migrate
-        sh /usr/local/bin/docker-entrypoint.sh
-    container_name: helium_platform
+        apache2ctl -D FOREGROUND
+    container_name: helium_platform_api
+    depends_on:
+      - db
+      - cache
+      - storage
+  worker:
+    image: helium/platform-worker
+    env_file: .env
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+    container_name: helium_platform_worker
     depends_on:
       - db
       - cache

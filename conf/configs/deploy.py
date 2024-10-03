@@ -47,6 +47,18 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
+try:
+    from urllib import urlopen
+    import json
+
+    response = urlopen("http://169.254.169.254/latest/meta-data/public-ipv4")
+    instance_ip = response.read().decode('utf-8')
+    ALLOWED_HOSTS = common.ALLOWED_HOSTS + (
+        instance_ip
+    )
+except Exception:
+    print("INFO: No public AWS IP added to ALLOWED_HOSTS, ignore if not running on AWS")
+
 # Logging
 
 ROLLBAR = {
@@ -182,3 +194,4 @@ CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = config('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
 CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
