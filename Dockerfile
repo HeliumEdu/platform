@@ -16,6 +16,7 @@ USER www-data
 
 COPY container/supervisord.conf /etc/supervisor
 COPY container/apache-site.conf /etc/apache2/sites-enabled/000-default.conf
+COPY container/apache-ports.conf /etc/apache2/ports.conf
 COPY container/apache-envvars /etc/apache2/envvars
 COPY container/celerybeat.conf /etc/supervisor/conf.d
 COPY container/celeryworker.conf /etc/supervisor/conf.d
@@ -36,7 +37,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements-deploy.txt,target=requirements-deploy.txt \
     $PLATFORM_VENV/bin/python -m pip install -r requirements.txt -r requirements-deploy.txt
 
-EXPOSE 80
+EXPOSE 8000
 
 USER root
 

@@ -30,7 +30,7 @@ services:
         source: ./.env
         target: /app/.env
     ports:
-      - 8000:80
+      - 8000:8000
     command:
       - /bin/bash
       - -c
