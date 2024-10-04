@@ -63,7 +63,7 @@ if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
         print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
     except Exception as e:
         import traceback
-        print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS: " + str(e) + " ----- " + traceback.format_exc())
+        print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
 
 # Logging
 
