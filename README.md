@@ -14,7 +14,7 @@
 - Redis (>= 5)
 
 ## Getting Started
-The Platform is developed using Python and [Django](https://www.djangoproject.com).
+The `platform` is developed using Python and [Django](https://www.djangoproject.com).
 
 This project is configured to work with a [Virtualenv](https://virtualenv.pypa.io/en/stable) within a
 [Docker](https://www.docker.com/) container.
