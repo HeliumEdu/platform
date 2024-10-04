@@ -47,29 +47,23 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
-try:
-    from urllib import urlopen
-    import json
+if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
+    try:
+        from urllib.request import urlopen
+        import json
 
-    metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
-    response = urlopen(metadata_uri)
-    data = json.loads(response.read().decode('utf-8'))
-    container_search = [x for x in data['Containers'] if x['Name'] == 'helium_platform_api'][0]
+        api_container_name = os.environ.get('PLATFORM_API_CONTAINER_NAME', 'helium_platform_api')
 
-    if len(container_search) > 0:
-        container_meta = container_search[0]
-    else:
-        # Fall back to the pause container
-        container_meta = data['Containers'][0]
+        metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI_V4')
+        response = urlopen(metadata_uri)
+        data = json.loads(response.read().decode('utf-8'))
+        private_ips = data['Networks'][0]['IPv4Addresses']
+        ALLOWED_HOSTS = common.ALLOWED_HOSTS + private_ips
 
-    private_ip = container_meta['Networks'][0]['IPv4Addresses'][0]
-    ALLOWED_HOSTS = common.ALLOWED_HOSTS + (
-        private_ip
-    )
-
-    print(f"INFO: Added AWS private IP {private_ip} to ALLOWED_HOSTS")
-except Exception:
-    print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
+        print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
+    except Exception as e:
+        import traceback
+        print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS: " + str(e) + " ----- " + traceback.format_exc())
 
 # Logging
 
@@ -123,6 +117,10 @@ LOGGING = {
             'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
+        },
+        "django.security.DisallowedHost": {
+            "handlers": ['console'],
+            "propagate": False,
         },
         'health-check': {
             'handlers': ['console', 'rollbar'],
