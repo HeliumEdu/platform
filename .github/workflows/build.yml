@@ -36,7 +36,7 @@ jobs:
         run: make install
       - name: Test platform
         run: make test
-      - name: Test Docker Build
+      - name: Test Docker build
         if: matrix.python-version == '3.11'
         run: make build-docker
       - name: Upload coverage
