@@ -36,5 +36,5 @@ if config.DEBUG or 'test' in sys.argv:
     urlpatterns += [
         re_path(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
             'document_root': config.MEDIA_ROOT
-        })
+        }),
     ]
