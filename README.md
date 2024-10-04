@@ -9,60 +9,44 @@
 
 ## Prerequisites
 
+- Docker
 - MySQL (>= 8)
 - Redis (>= 5)
 
 ## Getting Started
 The Platform is developed using Python and [Django](https://www.djangoproject.com).
 
-### Project Setup
-If developing on Mac, first [install Homebrew](https://docs.brew.sh/Installation) and install MySQL with `brew install mysql`.
-
-To setup the Python/Django Platform build environment, execute:
-
-```sh
-make install
-```
-
-This project is configured to work with a Virtualenv which has now been setup in the `.venv` folder. If you're
-unfamiliar with how this works, [read up on Virtualenv here](https://virtualenv.pypa.io/en/stable). The short version
-is, virtualenv creates isolated environments for each project's dependencies. To activate and use this environment when
-developing, execute:
-
-```sh
-source .venv/bin/activate
-```
-
-All commands below will now be run within the virtualenv (though `make` commands will always automatically enter the
-virtualenv before executing).
-
-To ensure the database is in sync with the latest schema, database migrations are generated and run with Django. To
-run migrations, execute:
-
-```sh
-make migrate
-```
-
-Once migrations have been run, you can create a super user, which is a standard user that also has access to the
-/admin site.
-
-```sh
-python manage.py createsuperuser
-```
-
-Before commits are made, be sure to run tests and check the generated coverage report.
-
-```sh
-make test
-```
+This project is configured to work with a [Virtualenv](https://virtualenv.pypa.io/en/stable) within a
+[Docker](https://www.docker.com/) container.
 
 ## Development
-### Modules
-The Platform project is split up into several modules, all contained within this repository. They are independent modules that can be deployed
-separately, functioning on separate nodes for scalability.
+### Docker Setup
+To provision the Docker container with the Python/Django `platform` build and all dependencies, execute:
 
-The project's base configuration is defined under `conf`. Application-specific configuration variables should have their application name as their
-prefix.
+```sh
+bin/runserver
+```
+
+This builds and starts two containers, one for the API (named `helium_platform_api`), and one for the Worker
+(named `helium_platform_worker`). Once running, the `platform` API is available at http://localhost:8000, and the
+`platform` Worker is running to execute async and scheduled tasks. The shell of containers can be accessed using their
+name, like:
+
+```shell
+docker exec -it helium_platform_api bash
+```
+
+Inside the `platform` container, the venv is mapped to the env var `PLATFORM_VENV`. If you want to run commands against
+Django, for instance to run database migrations, execute commands like:
+
+```sh
+$PLATFORM_VENV/bin/python manage.py migrate
+$PLATFORM_VENV/bin/python manage.py createsuperuser
+```
+
+### Project Information
+The `platform` is split up into several modules, all contained within this repository.  The base configuration is
+defined under `conf`. The applications within this project are:
 
 - auth
 - common
@@ -70,48 +54,36 @@ prefix.
 - importexport
 - planner
 
-### Vagrant Development
-To emulate a prod-like environment, use the Vagrant box. It's setup is described more thoroughly in the [deploy](https://github.com/HeliumEdu/deploy#readme)
-project. This is the recommended way to develop and test for production as this environment is provisioned in the same way other prod-like
-environments are deployed and interacts with related projects as necessary.
+There are also some special environment variables that can be set in development or deployment of the project:
 
-As the Vagrant environment does take a bit more time to setup (even though the setup is largely automated) and can consume more developer
-and system resources, the local development environment described below is the quickest and easiest way to get up and running.
+- `ENVIRONMENT`
+  - `dev-local` provisions hosts as `localhost`
+  - `local` provisions hosts as `localhost` for use outside of Docker (ex. when using Django's `runserver` command) 
+  - `prod` provisions hosts to be suffixed with `heliumedu.com`
+  - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
+- `PLATFORM_WORKER_MODE`
+  - Set to `True` to start `platform` as a Worker node rather than an API node
+- `USE_NGROK`
+  - When `ENVIRONMENT` is `local` and the `platform` is started outside of Docker using Django's `runserver`, [pyngrok](https://github.com/alexdlaird/pyngrok) will be used to open a `ngrok` tunnel and provide a real hostname.
 
-### Local Development
-This is the simplest way to get started with minimal effort. To get going (assuming you have followed the "Getting Started"
-directions above), you should have the `ENVIRONMENT` environment variable set to "dev".
+These and other environment variables can be configured in the `.env` file. This is also where credentials to
+third-party services (for example, AWS services like SES) can be set. Do NOT commit real credentials to third-party
+services, even in example files.
 
-Now you're all set! To start the development server, execute:
-
-```sh
-bin/runserver
-```
-
-A development server will be started at <http://localhost:8000>.
-
-If the `USE_NGROK` environment variable is set when a dev server is started (using `runserver`, [pyngrok](https://github.com/alexdlaird/pyngrok)
-will be used to open a `ngrok` tunnel.
-
-Additionally, this project also contains a worker that executes asynchronous or scheduled tasks, and the above server
-can be started with this worker as well. When developing locally, it is less necessary to run this worker
-(when `ENVIRONMENT` is "dev", tasks are executed synchronously), but it may still be useful, especially for testing
-scheduled tasks, so a standalone executable is provided for convenience. To start the server with the worker, ensure
-Redis is installed locally and instead execute:
+Before commits are made, be sure to run tests and check the generated coverage report.
 
 ```sh
-bin/runserver --with-worker
+make test
 ```
-
-Note that credentials to third-party services (for example, AWS services like SES) need to be set in the `.env` file
-before those services will work properly. Do NOT commit real credentials to third-party services, even in example files.
 
 ### Frontend
-The frontend is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
+The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
+Using Docker, the `frontend` and `platform` containers can be started alongside each other using to fully emulate
+a production environment using [the deploy project](https://github.com/HeliumEdu/deploy).
 
-Note that the frontend was previously bundled, rendered, and served as a part of this project, but it was pulled out
+Note that the `frontend` was previously bundled, rendered, and served as a part of this project, but it was pulled out
 into its own project with the with `1.4.0` release. For reference, checkout the `1.3.8` tag or download it [here](https://github.com/HeliumEdu/platform/releases/tag/1.3.8)
-to see how this was previously done. 
+to see how this was previously done.
 
 ### Documentation
 
