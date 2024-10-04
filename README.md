@@ -93,4 +93,4 @@ to see how this was previously done.
 ### Documentation
 
 Auto-generated API documentation is accessible via any environment at /docs. Additional documentation can be found
-on the [Platform Wiki](https://github.com/HeliumEdu/platform/wiki).
+on the [Platform Wiki](https://github.com/HeliumEdu/platform/wiki/Helium-Platform-Documentation).
