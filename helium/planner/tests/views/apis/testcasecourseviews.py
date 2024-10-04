@@ -147,7 +147,7 @@ class TestCaseCourseViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         course = Course.objects.get(pk=course.pk)
         coursehelper.verify_course_matches_data(self, course, response.data)
 

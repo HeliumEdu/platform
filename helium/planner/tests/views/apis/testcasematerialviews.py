@@ -137,7 +137,7 @@ class TestCaseMaterialViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         material = Material.objects.get(pk=material.pk)
         materialhelper.verify_material_matches_data(self, material, response.data)
 

@@ -217,7 +217,7 @@ class TestCaseReminderViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         reminder = Reminder.objects.get(pk=reminder.pk)
         reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
 

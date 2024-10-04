@@ -160,7 +160,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         course_schedule = CourseSchedule.objects.get(pk=course_schedule.pk)
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 

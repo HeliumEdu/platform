@@ -133,8 +133,8 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Homework.objects.count(), 1)
         homework = Homework.objects.get(pk=response.data['id'])
-        self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -169,8 +169,8 @@ class TestCaseHomeworkViews(APITestCase):
 
         start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
         end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
-        self.assertEquals(homework.start.isoformat(), start.isoformat())
-        self.assertEquals(homework.end.isoformat(), end.isoformat())
+        self.assertEqual(homework.start.isoformat(), start.isoformat())
+        self.assertEqual(homework.end.isoformat(), end.isoformat())
 
     def test_get_homework_by_id(self):
         # GIVEN
@@ -223,7 +223,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         homework = Homework.objects.get(pk=homework.pk)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
@@ -270,8 +270,8 @@ class TestCaseHomeworkViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homework = Homework.objects.get(pk=homework.pk)
-        self.assertEquals(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEquals(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -299,8 +299,8 @@ class TestCaseHomeworkViews(APITestCase):
 
         start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
         end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
-        self.assertEquals(homework.start.isoformat(), start.isoformat())
-        self.assertEquals(homework.end.isoformat(), end.isoformat())
+        self.assertEqual(homework.start.isoformat(), start.isoformat())
+        self.assertEqual(homework.end.isoformat(), end.isoformat())
 
     def test_delete_homework_by_id(self):
         # GIVEN
