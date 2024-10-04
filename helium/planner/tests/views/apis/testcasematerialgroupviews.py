@@ -98,7 +98,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         material_group = MaterialGroup.objects.get(pk=material_group.pk)
         materialgrouphelper.verify_material_group_matches_data(self, material_group, response.data)
 

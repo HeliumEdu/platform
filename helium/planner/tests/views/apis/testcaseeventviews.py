@@ -104,8 +104,8 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 1)
         event = Event.objects.get(pk=response.data['id'])
-        self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -134,8 +134,8 @@ class TestCaseEventViews(APITestCase):
 
         start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
         end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
-        self.assertEquals(event.start.isoformat(), start.isoformat())
-        self.assertEquals(event.end.isoformat(), end.isoformat())
+        self.assertEqual(event.start.isoformat(), start.isoformat())
+        self.assertEqual(event.end.isoformat(), end.isoformat())
 
     def test_get_event_by_id(self):
         # GIVEN
@@ -173,7 +173,7 @@ class TestCaseEventViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         event = Event.objects.get(pk=event.pk)
         eventhelper.verify_event_matches_data(self, event, response.data)
 
@@ -214,8 +214,8 @@ class TestCaseEventViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         event = Event.objects.get(pk=event.pk)
-        self.assertEquals(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEquals(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -240,8 +240,8 @@ class TestCaseEventViews(APITestCase):
 
         start = timezone.make_aware(parser.parse(data['start']), pytz.utc)
         end = timezone.make_aware(parser.parse(data['end']), pytz.utc)
-        self.assertEquals(event.start.isoformat(), start.isoformat())
-        self.assertEquals(event.end.isoformat(), end.isoformat())
+        self.assertEqual(event.start.isoformat(), start.isoformat())
+        self.assertEqual(event.end.isoformat(), end.isoformat())
 
     def test_delete_event_by_id(self):
         # GIVEN

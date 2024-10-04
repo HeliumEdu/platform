@@ -31,12 +31,12 @@ class TestCaseAuthToken(APITestCase):
                                      content_type='application/json')
 
         # THEN
-        self.assertEquals(response1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertIn('token', response1.data)
         user = get_user_model().objects.get(username=user.get_username())
         self.assertIsNotNone(user.last_login)
         # A reobtained token should delete the first token and reissue
-        self.assertEquals(response1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response1.data['token'], response2.data['token'])
 
     def test_token_fail_no_password(self):
@@ -52,7 +52,7 @@ class TestCaseAuthToken(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('password', response.data)
 
     def test_token_with_email_success(self):
@@ -69,7 +69,7 @@ class TestCaseAuthToken(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('token', response.data)
 
     def test_token_with_whitespace_success(self):
@@ -86,7 +86,7 @@ class TestCaseAuthToken(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('token', response.data)
 
     def test_revoke_token(self):
