@@ -14,6 +14,7 @@
 - Redis (>= 5)
 
 ## Getting Started
+
 The `platform` is developed using Python and [Django](https://www.djangoproject.com).
 
 This project is configured to work with a [Virtualenv](https://virtualenv.pypa.io/en/stable) within a
@@ -22,6 +23,7 @@ for development includes [LocalStack](https://www.localstack.cloud/) to emulate 
 
 ## Development
 ### Docker Setup
+
 To provision the Docker container with the Python/Django `platform` build and all dependencies, execute:
 
 ```sh
@@ -46,6 +48,7 @@ $PLATFORM_VENV/bin/python manage.py createsuperuser
 ```
 
 ### Project Information
+
 The `platform` is split up into several modules, all contained within this repository.  The base configuration is
 defined under `conf`. The applications within this project are:
 
@@ -78,6 +81,7 @@ make test
 ```
 
 ### Frontend
+
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
 Using Docker, the `frontend` and `platform` containers can be started alongside each other using to fully emulate
 a production environment using [the deploy project](https://github.com/HeliumEdu/deploy).
