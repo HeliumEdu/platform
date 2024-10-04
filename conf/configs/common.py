@@ -29,7 +29,7 @@ if 'local' in ENVIRONMENT:
     PROJECT_APP_HOST = 'http://localhost:3000'
     PROJECT_API_HOST = 'http://localhost:8000'
 else:
-    prefix = f'{ENVIRONMENT}.' if 'prod' in ENVIRONMENT else ''
+    prefix = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
 
     PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{prefix}heliumedu.com')
     PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{prefix}heliumedu.com')
