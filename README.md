@@ -17,7 +17,8 @@
 The `platform` is developed using Python and [Django](https://www.djangoproject.com).
 
 This project is configured to work with a [Virtualenv](https://virtualenv.pypa.io/en/stable) within a
-[Docker](https://www.docker.com/) container.
+[Docker](https://www.docker.com/) container. Once provisioned, development can be done offline, as the container built
+for development includes [LocalStack](https://www.localstack.cloud/) to emulate AWS services locally.
 
 ## Development
 ### Docker Setup
