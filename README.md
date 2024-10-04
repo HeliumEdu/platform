@@ -33,7 +33,7 @@ This builds and starts two containers, one for the API (named `helium_platform_a
 name, like:
 
 ```shell
-docker exec -it helium_platform_api bash
+docker exec -it helium_platform_api /bin/bash
 ```
 
 Inside the `platform` container, the venv is mapped to the env var `PLATFORM_VENV`. If you want to run commands against
