@@ -21,6 +21,8 @@ from conf.settings import PROJECT_ID
 
 ENVIRONMENT = config('ENVIRONMENT').lower()
 
+AWS_REGION = config('AWS_REGION', 'us-east-1')
+
 PROJECT_NAME = 'Helium Student Planner'
 PROJECT_TAGLINE = 'Lightening Your Course Load'
 
@@ -201,7 +203,7 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_ADDRESS = 'contact@heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
-EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
+EMAIL_HOST = config('PLATFORM_EMAIL_HOST', f'email-smtp.{AWS_REGION}.amazonaws.com')
 
 EMAIL_HOST_USER = config('PLATFORM_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
