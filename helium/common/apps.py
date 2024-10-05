@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.4"
+__version__ = "1.7.0"
 
 import os
 import sys
