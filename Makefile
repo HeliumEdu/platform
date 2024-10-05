@@ -2,6 +2,8 @@
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
+AWS_REGION ?= us-east-1
+TAG_VERSION ?= latest
 
 all: env virtualenv install build migrate test
 
@@ -62,13 +64,22 @@ test: install-dev
 
 build-docker:
 	docker build -t helium/platform .
-	docker tag helium/platform:latest helium/platform
+	docker tag helium/platform:$(TAG_VERSION) helium/platform
 
 	docker build -f Dockerfile-api -t helium/platform-api .
-	docker tag helium/platform-api:latest helium/platform-api
+	docker tag helium/platform-api:$(TAG_VERSION) helium/platform-api
 
 	docker build -f Dockerfile-worker -t helium/platform-worker .
-	docker tag helium/platform-worker:latest helium/platform-worker
+	docker tag helium/platform-worker:$(TAG_VERSION) helium/platform-worker
 
 run-docker: docker-env
 	docker compose up -d
+
+push-docker:
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
+
+	docker tag helium/platform-api:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(TAG_VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(AWS_ACCOUNT_ID)
+
+	docker tag helium/platform-worker:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-worker:$(TAG_VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-worker:$(AWS_ACCOUNT_ID)
