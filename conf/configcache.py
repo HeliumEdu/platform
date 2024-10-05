@@ -13,7 +13,7 @@ if use_aws_secrets_manager:
                                                           'us-east-1')
     cache_config = SecretCacheConfig()
     cache = SecretCache(config=cache_config, client=client)
-    secret_str = cache.get_secret_string(f'helium/{settings.ENVIRONMENT}')
+    secret_str = cache.get_secret_string(f'{settings.ENVIRONMENT}/helium')
     aws_secrets = json.loads(secret_str)
 
 
