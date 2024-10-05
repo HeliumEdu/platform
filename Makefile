@@ -63,14 +63,11 @@ test: install-dev
 	)
 
 build-docker:
-	docker build -t helium/platform .
-	docker tag helium/platform:$(TAG_VERSION) helium/platform
+	docker build -t helium/platform:latest -t helium/platform:$(TAG_VERSION) .
 
-	docker build -f Dockerfile-api -t helium/platform-api .
-	docker tag helium/platform-api:$(TAG_VERSION) helium/platform-api
+	docker build -f Dockerfile-api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
 
-	docker build -f Dockerfile-worker -t helium/platform-worker .
-	docker tag helium/platform-worker:$(TAG_VERSION) helium/platform-worker
+	docker build -f Dockerfile-worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
 
 run-docker: docker-env
 	docker compose up -d
