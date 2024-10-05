@@ -8,7 +8,6 @@ __version__ = "1.6.5"
 
 import os
 import socket
-
 from corsheaders.defaults import default_headers
 
 from conf.configcache import config
@@ -256,6 +255,16 @@ if ":" in STRIPPED_PROJECT_APP_HOST:
 if 'local' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
     CORS_ORIGIN_WHITELIST += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
+
+if 'prod' not in ENVIRONMENT:
+    ALLOWED_HOSTS += [
+        '.ngrok.io',
+        '.ngrok.app'
+    ]
+    CSRF_TRUSTED_ORIGINS += [
+        'https://*.ngrok.io',
+        'https://*.ngrok.app'
+    ]
 
 # Logging
 

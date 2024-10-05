@@ -4,15 +4,16 @@ import os
 import botocore.session
 from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
 from decouple import config as decouple_config
+from django.conf import settings
 
-secret_manager_secret_name = os.environ.get("PLATFORM_AWS_SECRET_MANAGER_SECRET_NAME")
+use_aws_secrets_manager = os.environ.get('USE_AWS_SECRETS_MANAGER', 'False') == 'True'
 aws_secrets = {}
-if secret_manager_secret_name:
+if use_aws_secrets_manager:
     client = botocore.session.get_session().create_client('secretsmanager',
                                                           'us-east-1')
     cache_config = SecretCacheConfig()
     cache = SecretCache(config=cache_config, client=client)
-    secret_str = cache.get_secret_string(secret_manager_secret_name)
+    secret_str = cache.get_secret_string(f'helium/{settings.ENVIRONMENT}')
     aws_secrets = json.loads(secret_str)
 
 

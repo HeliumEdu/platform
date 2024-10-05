@@ -45,15 +45,9 @@ INTERNAL_IPS = (
     '127.0.0.1',
 )
 
-ALLOWED_HOSTS = common.ALLOWED_HOSTS + [
-    '.ngrok.io',
-    '.ngrok.app'
-]
+ALLOWED_HOSTS = common.ALLOWED_HOSTS
 
-CSRF_TRUSTED_ORIGINS = common.CSRF_TRUSTED_ORIGINS + [
-    'https://*.ngrok.io',
-    'https://*.ngrok.app'
-]
+CSRF_TRUSTED_ORIGINS = common.CSRF_TRUSTED_ORIGINS
 
 # Logging
 
