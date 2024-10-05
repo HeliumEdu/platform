@@ -1,12 +1,17 @@
-.PHONY: all env virtualenv install install-dev nopyc clean build build-migrations migrate test
+.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
+AWS_REGION ?= us-east-1
+TAG_VERSION ?= latest
 
 all: env virtualenv install build migrate test
 
 env:
 	cp -n .env.example .env | true
+
+docker-env:
+	cp -n .env.docker.example .env | true
 
 virtualenv:
 	@if [ ! -d "$(PLATFORM_VENV)" ]; then \
@@ -56,3 +61,22 @@ test: install-dev
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run manage.py test && coverage report && coverage html && coverage xml; \
 	)
+
+build-docker:
+	docker build -t helium/platform:latest -t helium/platform:$(TAG_VERSION) .
+
+	docker build -f Dockerfile-api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
+
+	docker build -f Dockerfile-worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
+
+run-docker: docker-env
+	docker compose up -d
+
+publish-docker:
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
+
+	docker tag helium/platform-api:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(TAG_VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(TAG_VERSION)
+
+	docker tag helium/platform-worker:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-worker:$(TAG_VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-worker:$(TAG_VERSION)

@@ -4,11 +4,12 @@ Settings specific to running tests, reading values from `.env`.
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 
 import logging
 import os
 
+from conf.configcache import config
 from conf.configs import common
 
 # Define the base working directory of the application
@@ -31,19 +32,19 @@ PASSWORD_HASHERS = (
 
 DEBUG = False
 
-if os.environ.get('TEST_LOGGING', 'False') == 'True':
-    from conf.configs import dev
+if config('TEST_LOGGING', 'False') == 'True':
+    from conf.configs import local
 
-    LOGGING = dev.LOGGING
+    LOGGING = local.LOGGING
 else:
     logging.disable(logging.ERROR)
 
 # Cache
 
-if os.environ.get('USE_IN_MEMORY_CACHE', 'True') == 'True':
-    from conf.configs import dev
+if config('USE_IN_MEMORY_CACHE', 'True') == 'True':
+    from conf.configs import local
 
-    CACHES = dev.CACHES
+    CACHES = local.CACHES
 else:
     from conf.configs import deploy
 
@@ -52,10 +53,10 @@ else:
 
 # Database
 
-if os.environ.get('USE_IN_MEMORY_DB', 'True') == 'True':
-    from conf.configs import dev
+if config('USE_IN_MEMORY_DB', 'True') == 'True':
+    from conf.configs import local
 
-    DATABASES = dev.DATABASES
+    DATABASES = local.DATABASES
 else:
     from conf.configs import deploy
 

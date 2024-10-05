@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import json
 
@@ -98,7 +98,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         material_group = MaterialGroup.objects.get(pk=material_group.pk)
         materialgrouphelper.verify_material_group_matches_data(self, material_group, response.data)
 

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import sys
 
@@ -36,5 +36,5 @@ if config.DEBUG or 'test' in sys.argv:
     urlpatterns += [
         re_path(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
             'document_root': config.MEDIA_ROOT
-        })
+        }),
     ]

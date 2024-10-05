@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mysql:8.0
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "platform_dev-local"
+      MYSQL_USER: "helium"
+      MYSQL_PASSWORD: "helium"
+    restart: always
+    container_name: helium_db
+  cache:
+    image: redis:7.2
+    restart: always
+    container_name: helium_cache
+  storage:
+    image: localstack/localstack
+    environment:
+      ENVIRONMENT: "dev-local"
+    ports:
+      - 4566:4566
+    volumes:
+      - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
+    container_name: helium_storage
+  api:
+    image: helium/platform-api
+    env_file: .env
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+    ports:
+      - 8000:8000
+    command:
+      - /bin/bash
+      - -c
+      - |
+        /usr/local/venvs/platform/bin/python manage.py collectstatic --noinput
+        /usr/local/venvs/platform/bin/python manage.py migrate
+        apache2ctl -D FOREGROUND
+    container_name: helium_platform_api
+    depends_on:
+      - db
+      - cache
+      - storage
+  worker:
+    image: helium/platform-worker
+    env_file: .env
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+    container_name: helium_platform_worker
+    depends_on:
+      - db
+      - cache
+      - storage

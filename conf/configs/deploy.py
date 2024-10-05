@@ -4,13 +4,14 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.3"
+__version__ = "1.7.0"
 
 import os
+import sys
 
 from conf.configs import common
-from conf.secretcache import get_secret
-from conf.settings import PROJECT_ID
+from conf.configcache import config
+from conf.configs.common import ENVIRONMENT
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -40,17 +41,35 @@ common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framew
 
 # Project configuration
 
-SERVE_LOCAL = os.environ.get('PROJECT_SERVE_LOCAL', 'False') == 'True'
+SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 # Security
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
+if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
+    try:
+        from urllib.request import urlopen
+        import json
+
+        api_container_name = os.environ.get('PLATFORM_API_CONTAINER_NAME', 'helium_platform_api')
+
+        metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI_V4')
+        response = urlopen(metadata_uri)
+        data = json.loads(response.read().decode('utf-8'))
+        private_ips = data['Networks'][0]['IPv4Addresses']
+        ALLOWED_HOSTS = common.ALLOWED_HOSTS + private_ips
+
+        print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
+    except Exception as e:
+        import traceback
+        print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
+
 # Logging
 
 ROLLBAR = {
-    'access_token': get_secret('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
-    'environment': os.environ.get('ENVIRONMENT'),
+    'access_token': config('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'environment': ENVIRONMENT,
     'branch': 'main',
     'root': BASE_DIR,
 }
@@ -81,98 +100,36 @@ LOGGING = {
             'class': 'rollbar.logger.RollbarHandler',
             'filters': ['require_debug_false'],
         },
-        'django': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/django.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'health_check': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/health_check.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_auth': {
+        'console': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_auth.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_common': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_common.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_feed': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_feed.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_importexport': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_importexport.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
-        'platform_planner': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'/var/log/{PROJECT_ID}/platform_planner.log',
-            'maxBytes': 50000000,
-            'backupCount': 3,
-            'formatter': 'standard',
-        },
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'standard'
+        }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['django', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
         'django.security': {
-            'handlers': ['django', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
             'propagate': False,
         },
+        "django.security.DisallowedHost": {
+            "handlers": ['console'],
+            "propagate": False,
+        },
         'health-check': {
-            'handlers': ['health_check', 'rollbar'],
+            'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
         },
-        'helium.auth': {
-            'handlers': ['platform_auth', 'rollbar'],
+        'helium': {
+            'handlers': ['console', 'rollbar'],
             'level': 'INFO',
-        },
-        'helium.common': {
-            'handlers': ['platform_common', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.feed': {
-            'handlers': ['platform_feed', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.importexport': {
-            'handlers': ['platform_importexport', 'rollbar'],
-            'level': 'INFO',
-        },
-        'helium.planner': {
-            'handlers': ['platform_planner', 'rollbar'],
-            'level': 'INFO',
-        },
+        }
     }
 }
 
@@ -181,7 +138,7 @@ LOGGING = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('PLATFORM_REDIS_HOST'),
+        'LOCATION': config('PLATFORM_REDIS_HOST'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -192,11 +149,11 @@ CACHES = {
 
 DATABASES = {
     'default': {
-        'NAME': os.environ.get('PLATFORM_DB_NAME'),
+        'NAME': f'platform_{ENVIRONMENT}',
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': os.environ.get('PLATFORM_DB_HOST'),
-        'USER': get_secret('PLATFORM_DB_USER'),
-        'PASSWORD': get_secret('PLATFORM_DB_PASSWORD'),
+        'HOST': config('PLATFORM_DB_HOST'),
+        'USER': config('PLATFORM_DB_USER'),
+        'PASSWORD': config('PLATFORM_DB_PASSWORD'),
     }
 }
 
@@ -222,23 +179,29 @@ else:
         'storages',
     )
 
+    # Used by collectstatic
+    AWS_S3_ENDPOINT_URL = config('PLATFORM_AWS_S3_ENDPOINT_URL', None)
+    # Used when generating static URLs
+    S3_ENDPOINT_URL = config('PLATFORM_S3_ENDPOINT_URL', 's3.amazonaws.com')
+
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_STATIC_BUCKET_NAME')
-    AWS_S3_CUSTOM_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
+    AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
     # Media
 
     DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
-    AWS_MEDIA_STORAGE_BUCKET_NAME = os.environ.get('PLATFORM_AWS_S3_MEDIA_BUCKET_NAME')
-    AWS_S3_MEDIA_DOMAIN = f's3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}'
-    MEDIA_URL = f"https://{AWS_S3_MEDIA_DOMAIN}/"
+    AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.media'
+    AWS_S3_MEDIA_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
+    MEDIA_URL = f'https://{AWS_S3_MEDIA_DOMAIN}/'
 
 # Celery
 
-CELERY_BROKER_URL = os.environ.get('PLATFORM_REDIS_HOST')
-CELERY_RESULT_BACKEND = os.environ.get('PLATFORM_REDIS_HOST')
-CELERY_TASK_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_TASK_TIMEOUT', 60)
-CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = os.environ.get('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)
+CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
+CELERY_RESULT_BACKEND = config('PLATFORM_REDIS_HOST')
+CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
+CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

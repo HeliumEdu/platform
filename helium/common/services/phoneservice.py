@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.3"
+__version__ = "1.7.0"
 
 import logging
 import re
@@ -31,7 +31,7 @@ def verify_number(phone):
     client = _get_client()
 
     try:
-        cleaned_phone = re.sub("[()\-+\s]", "", phone)
+        cleaned_phone = re.sub("[()\\-+\\s]", "", phone)
 
         logger.info(f"Asking Twilio to validate {cleaned_phone}")
 

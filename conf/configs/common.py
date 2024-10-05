@@ -2,16 +2,15 @@
 Settings common to all deployment methods.
 """
 
-__copyright__ = "Copyright 2024, Helium Edu"
+__copyright__ = "Copyright 2024, {'ansibleCopyrightNameVar': 'project_developer', 'ansibleRelativeDir': 'ansible', 'branchName': 'main', 'copyrightName': 'Helium Edu', 'gitProject': 'git@github.com:HeliumEdu', 'hostProvisionCommand': 'sudo apt-get update && sudo apt-get install -y python && sudo apt-get -y autoremove', 'projects': ['platform', 'frontend', 'ci-tests'], 'projectsRelativeDir': 'projects', 'remoteName': 'origin', 'serverBinFilename': 'bin/runserver', 'updateCopyrightYear': False, 'versionInfo': {'path': 'conf/configs/common.py', 'project': 'platform'}}"
 __license__ = "MIT"
-__version__ = "1.6.5"
+__version__ = "1.7.0"
 
 import os
 import socket
-
 from corsheaders.defaults import default_headers
 
-from conf.secretcache import get_secret
+from conf.configcache import config
 from conf.settings import PROJECT_ID
 
 # ############################
@@ -20,10 +19,21 @@ from conf.settings import PROJECT_ID
 
 # Project information
 
-PROJECT_NAME = os.environ.get('PROJECT_NAME')
-PROJECT_TAGLINE = os.environ.get('PROJECT_TAGLINE')
-PROJECT_APP_HOST = os.environ.get('PROJECT_APP_HOST')
-PROJECT_API_HOST = os.environ.get('PROJECT_API_HOST')
+ENVIRONMENT = config('ENVIRONMENT').lower()
+
+AWS_REGION = config('AWS_REGION', 'us-east-1')
+
+PROJECT_NAME = 'Helium Student Planner'
+PROJECT_TAGLINE = 'Lightening Your Course Load'
+
+if 'local' in ENVIRONMENT:
+    PROJECT_APP_HOST = 'http://localhost:3000'
+    PROJECT_API_HOST = 'http://localhost:8000'
+else:
+    prefix = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
+
+    PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{prefix}heliumedu.com')
+    PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{prefix}heliumedu.com')
 
 # Version information
 
@@ -31,14 +41,14 @@ PROJECT_VERSION = __version__
 
 # AWS S3
 
-AWS_S3_ACCESS_KEY_ID = get_secret('PLATFORM_AWS_S3_ACCESS_KEY_ID')
-AWS_S3_SECRET_ACCESS_KEY = get_secret('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
+AWS_S3_ACCESS_KEY_ID = config('PLATFORM_AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = config('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
 
 # Twilio
 
-TWILIO_ACCOUNT_SID = get_secret('PLATFORM_TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = get_secret('PLATFORM_TWILIO_AUTH_TOKEN')
-TWILIO_SMS_FROM = os.environ.get('PLATFORM_TWILIO_SMS_FROM')
+TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
 
 #############################
 # Default lists for host-specific configurations
@@ -57,7 +67,6 @@ INSTALLED_APPS = (
     'health_check',
     'health_check.db',
     # Third-party modules
-    'maintenance_mode',
     'pipeline',
     'rest_framework',
     'rest_framework.authtoken',
@@ -79,7 +88,6 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'maintenance_mode.middleware.MaintenanceModeMiddleware',
 )
 
 TEMPLATES = [{
@@ -94,7 +102,7 @@ TEMPLATES = [{
             'django.contrib.messages.context_processors.messages',
             'django.template.context_processors.request',
         ],
-        'debug': os.environ.get('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
+        'debug': config('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
     },
 }]
 
@@ -138,17 +146,8 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = os.environ.get('PROJECT_SUPPORT_URL')
-
-# Maintenance mode
-
-MAINTENANCE_MODE_IGNORE_STAFF = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_STAFF', 'False') == 'True'
-
-MAINTENANCE_MODE_IGNORE_SUPERUSER = os.environ.get('PLATFORM_MAINTENANCE_MODE_IGNORE_SUPERUSER', 'True') == 'True'
-
-MAINTENANCE_MODE_IGNORE_TESTS = True
-
-MAINTENANCE_MODE_IGNORE_URLS = ('^/admin',)
+SUPPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/wiki"
+BUG_REPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml"
 
 # Healthcheck
 
@@ -196,18 +195,18 @@ MAX_UPLOAD_SIZE = 10485760
 
 # Email settings
 
-DISABLE_EMAILS = os.environ.get('PROJECT_DISABLE_EMAILS', 'False') == 'True'
+DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 
-ADMIN_EMAIL_ADDRESS = os.environ.get('PROJECT_ADMIN_EMAIL')
+ADMIN_EMAIL_ADDRESS = 'admin@heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
-EMAIL_PORT = os.environ.get('PLATFORM_EMAIL_PORT')
-EMAIL_ADDRESS = os.environ.get('PROJECT_CONTACT_EMAIL')
+EMAIL_PORT = 587
+EMAIL_ADDRESS = 'contact@heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
-EMAIL_HOST = os.environ.get('PLATFORM_EMAIL_HOST')
+EMAIL_HOST = config('PLATFORM_EMAIL_HOST', f'email-smtp.{AWS_REGION}.amazonaws.com')
 
-EMAIL_HOST_USER = get_secret('PLATFORM_EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_secret('PLATFORM_EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config('PLATFORM_EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
 
 # Authentication
 
@@ -230,19 +229,48 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-SECRET_KEY = get_secret('PLATFORM_SECRET_KEY')
-CSRF_COOKIE_SECURE = os.environ.get('PLATFORM_CSRF_COOKIE_SECURE', 'True') == 'True'
-SESSION_COOKIE_SECURE = os.environ.get('PLATFORM_SESSION_COOKIE_SECURE', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('PLATFORM_ALLOWED_HOSTS', '').split(' ')
-CSRF_TRUSTED_ORIGINS = [PROJECT_APP_HOST, PROJECT_API_HOST]
-CORS_ORIGIN_WHITELIST = os.environ.get('PLATFORM_CORS_ORIGIN_WHITELIST', '').split(' ')
+STRIPPED_PROJECT_API_HOST = PROJECT_API_HOST.lstrip("http://").lstrip("https://")
+if ":" in STRIPPED_PROJECT_API_HOST:
+    STRIPPED_PROJECT_API_HOST = STRIPPED_PROJECT_API_HOST.split(":")[0]
+
+SECRET_KEY = config('PLATFORM_SECRET_KEY')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    STRIPPED_PROJECT_API_HOST
+]
+CSRF_TRUSTED_ORIGINS = [
+    PROJECT_APP_HOST,
+]
+CORS_ORIGIN_WHITELIST = [
+    PROJECT_APP_HOST,
+]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
 
+STRIPPED_PROJECT_APP_HOST = PROJECT_APP_HOST.lstrip("http://").lstrip("https://").lstrip("www.")
+if ":" in STRIPPED_PROJECT_APP_HOST:
+    STRIPPED_PROJECT_APP_HOST = STRIPPED_PROJECT_APP_HOST.split(":")[0]
+if 'local' not in ENVIRONMENT:
+    CSRF_TRUSTED_ORIGINS += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
+    CORS_ORIGIN_WHITELIST += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
+
+if 'prod' not in ENVIRONMENT:
+    ALLOWED_HOSTS += [
+        '.ngrok.io',
+        '.ngrok.app'
+    ]
+    CSRF_TRUSTED_ORIGINS += [
+        'https://*.ngrok.io',
+        'https://*.ngrok.app'
+    ]
+
 # Logging
 
-DEBUG = os.environ.get('PLATFORM_DEBUG', 'False') == 'True'
+DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
 
 # Static files (CSS, JavaScript, Images)
 
@@ -274,9 +302,9 @@ PIPELINE = {
 
 # Metrics
 
-DATADOG_API_KEY = get_secret('PROJECT_DATADOG_API_KEY')
-DATADOG_APP_KEY = get_secret('PROJECT_DATADOG_APP_KEY')
+DATADOG_API_KEY = config('PROJECT_DATADOG_API_KEY')
+DATADOG_APP_KEY = config('PROJECT_DATADOG_APP_KEY')
 
 # Server
 
-USE_NGROK = os.environ.get("USE_NGROK", "False") == "True" and os.environ.get("RUN_MAIN", None) != "true"
+USE_NGROK = config("USE_NGROK", "False") == "True" and os.environ.get("RUN_MAIN", None) != "true"

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import datetime
 import json
@@ -217,7 +217,7 @@ class TestCaseReminderViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         reminder = Reminder.objects.get(pk=reminder.pk)
         reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
 

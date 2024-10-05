@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import json
 import os
@@ -106,7 +106,7 @@ class TestCaseExternalCalendarViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 

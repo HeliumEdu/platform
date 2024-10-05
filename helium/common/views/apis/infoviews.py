@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import logging
 
@@ -26,6 +26,7 @@ class InfoResourceView(ViewSet):
             'version': settings.PROJECT_VERSION,
             'support_email': settings.EMAIL_ADDRESS,
             'support_url': settings.SUPPORT_REDIRECT_URL,
+            'bug_report_url': settings.BUG_REPORT_REDIRECT_URL,
             'max_upload_size': settings.MAX_UPLOAD_SIZE
         })
 

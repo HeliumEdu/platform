@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import json
 
@@ -15,7 +15,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 class TestCaseCourseViews(APITestCase, CacheTestCase):
     def test_course_schedule_login_required(self):
         # GIVEN
@@ -160,7 +160,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(data, response.data)
+        self.assertEqual(response.data, response.data | data)
         course_schedule = CourseSchedule.objects.get(pk=course_schedule.pk)
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 

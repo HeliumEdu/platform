@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 import json
 from datetime import datetime, timedelta
@@ -50,7 +50,7 @@ class TestCaseTasks(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Token.objects.count(), 3)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + response.data['token'])
         self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_200_OK)
