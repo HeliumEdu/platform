@@ -14,15 +14,14 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.5.1"
 
+import os
 import sys
-
-from conf.configcache import config
 
 # Are we running on the dev server
 DEV_SERVER = False
 
 if 'test' not in sys.argv:
-    if config('ENVIRONMENT') == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
+    if os.environ.get('ENVIRONMENT').lower() == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
         conf = 'local'
         if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
             DEV_SERVER = True
