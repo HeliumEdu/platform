@@ -19,7 +19,7 @@ from conf.settings import PROJECT_ID
 
 # Project information
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT').lower()
+ENVIRONMENT = config('ENVIRONMENT').lower()
 
 AWS_REGION = config('AWS_REGION', 'us-east-1')
 

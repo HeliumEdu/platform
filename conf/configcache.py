@@ -11,7 +11,7 @@ if use_aws_secrets_manager:
                                                           os.environ.get("AWS_REGION", "us-east-1"))
     cache_config = SecretCacheConfig()
     cache = SecretCache(config=cache_config, client=client)
-    environ = os.environ.get('ENVIRONMENT').lower()
+    environ = decouple_config('ENVIRONMENT').lower()
     secret_str = cache.get_secret_string(f'{environ}/helium')
     aws_secrets = json.loads(secret_str)
 
