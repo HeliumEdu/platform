@@ -17,11 +17,13 @@ __version__ = "1.7.0"
 import os
 import sys
 
+from decouple import config
+
 # Are we running on the dev server
 DEV_SERVER = False
 
 if 'test' not in sys.argv:
-    if os.environ.get('ENVIRONMENT').lower() == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
+    if config('ENVIRONMENT').lower() == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
         conf = 'local'
         if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
             DEV_SERVER = True
