@@ -3,7 +3,6 @@ __license__ = "MIT"
 __version__ = "1.5.1"
 
 import json
-
 from unittest import mock
 
 from django.db import IntegrityError
