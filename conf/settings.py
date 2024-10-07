@@ -12,7 +12,7 @@ All configuration files first read `common.py` before applying deployment-specif
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 
 import sys
 
