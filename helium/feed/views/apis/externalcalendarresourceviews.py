@@ -6,7 +6,6 @@ import logging
 from datetime import timezone
 
 from dateutil import parser
-
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response

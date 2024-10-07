@@ -3,7 +3,6 @@ __license__ = "MIT"
 __version__ = "1.6.1"
 
 from django import forms
-
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm

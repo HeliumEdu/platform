@@ -3,6 +3,7 @@ __license__ = "MIT"
 __version__ = "1.7.0"
 
 import re
+
 from django.conf import settings
 from statsd.defaults.django import statsd
 

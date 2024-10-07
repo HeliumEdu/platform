@@ -12,8 +12,6 @@ from celery import Celery
 from celery.signals import task_failure
 from django.conf import settings
 
-from conf.configcache import config
-
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 
