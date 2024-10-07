@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.1"
+__version__ = "1.7.2"
 
 from django import forms
 from django.contrib.auth import admin, password_validation
