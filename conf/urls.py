@@ -31,7 +31,7 @@ if config.DEBUG:
         re_path(r'^__debug__/', include(debug_toolbar.urls)),
     ]
 
-if config.DEBUG or 'test' in sys.argv:
+if (config.DEBUG or 'test' in sys.argv) and config.MEDIA_URL:
     # Ensure media files are shown properly when using a dev server
     urlpatterns += [
         re_path(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
