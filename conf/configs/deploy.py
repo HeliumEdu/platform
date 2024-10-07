@@ -4,13 +4,13 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.7.2"
 
 import os
 import sys
 
-from conf.configs import common
 from conf.configcache import config
+from conf.configs import common
 from conf.configs.common import ENVIRONMENT
 
 # Define the base working directory of the application
@@ -195,8 +195,8 @@ else:
 
     DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
     AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.media'
-    AWS_S3_MEDIA_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
-    MEDIA_URL = f'https://{AWS_S3_MEDIA_DOMAIN}/'
+    AWS_S3_MEDIA_DOMAIN = None
+    MEDIA_URL = None
 
 # Celery
 

@@ -4,15 +4,13 @@ Initialize Celery with Django configuration.
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.7.2"
 
 import os
 
 from celery import Celery
 from celery.signals import task_failure
 from django.conf import settings
-
-from conf.configcache import config
 
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')

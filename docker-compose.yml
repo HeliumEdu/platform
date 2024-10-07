@@ -7,10 +7,14 @@ services:
       MYSQL_DATABASE: "platform_dev-local"
       MYSQL_USER: "helium"
       MYSQL_PASSWORD: "helium"
+    ports:
+      - 3306:3306
     restart: always
     container_name: helium_db
   cache:
     image: redis:7.2
+    ports:
+      - 6379:6379
     restart: always
     container_name: helium_cache
   storage:

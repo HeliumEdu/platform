@@ -1,8 +1,9 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.7.2"
 
 import re
+
 from django.conf import settings
 from statsd.defaults.django import statsd
 
