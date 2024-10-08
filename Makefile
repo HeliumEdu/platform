@@ -11,7 +11,11 @@ env:
 	cp -n .env.example .env | true
 
 docker-env:
-	cp -n .env.docker.example .env | true
+	@if [ ! -f ".env" ]; then \
+		cp -n .env.docker.example .env | true; \
+		echo "--> Adding local S3 'storage' hostname to /etc/hosts"; \
+		sudo sh -c "grep -qxF '127.0.0.1 storage' /etc/hosts || echo '127.0.0.1 storage' >> /etc/hosts"; \
+	fi
 
 virtualenv:
 	@if [ ! -d "$(PLATFORM_VENV)" ]; then \

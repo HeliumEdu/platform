@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright 2024, {'ansibleCopyrightNameVar': 'project_developer', 'ansibleRelativeDir': 'ansible', 'branchName': 'main', 'copyrightName': 'Helium Edu', 'gitProject': 'git@github.com:HeliumEdu', 'hostProvisionCommand': 'sudo apt-get update && sudo apt-get install -y python && sudo apt-get -y autoremove', 'projects': ['platform', 'frontend', 'ci-tests'], 'projectsRelativeDir': 'projects', 'remoteName': 'origin', 'serverBinFilename': 'bin/runserver', 'updateCopyrightYear': False, 'versionInfo': {'path': 'conf/configs/common.py', 'project': 'platform'}}"
 __license__ = "MIT"
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 
 import os
 import socket
@@ -13,6 +13,7 @@ from corsheaders.defaults import default_headers
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
+from conf.utils import strip_scheme
 
 # ############################
 # Project configuration
@@ -230,7 +231,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-STRIPPED_PROJECT_API_HOST = PROJECT_API_HOST.lstrip("http://").lstrip("https://")
+STRIPPED_PROJECT_API_HOST = strip_scheme(PROJECT_API_HOST)
 if ":" in STRIPPED_PROJECT_API_HOST:
     STRIPPED_PROJECT_API_HOST = STRIPPED_PROJECT_API_HOST.split(":")[0]
 
@@ -244,15 +245,17 @@ ALLOWED_HOSTS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     PROJECT_APP_HOST,
+    PROJECT_API_HOST
 ]
 CORS_ORIGIN_WHITELIST = [
     PROJECT_APP_HOST,
+    PROJECT_API_HOST
 ]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
 
-STRIPPED_PROJECT_APP_HOST = PROJECT_APP_HOST.lstrip("http://").lstrip("https://").lstrip("www.")
+STRIPPED_PROJECT_APP_HOST = strip_scheme(PROJECT_APP_HOST).removeprefix("www.")
 if ":" in STRIPPED_PROJECT_APP_HOST:
     STRIPPED_PROJECT_APP_HOST = STRIPPED_PROJECT_APP_HOST.split(":")[0]
 if 'local' not in ENVIRONMENT:

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.3"
 
 import re
 
@@ -19,6 +19,6 @@ class LocMemKeysCache(LocMemCache):
         keys = []
         for key, value in self._cache.items():
             if pattern.match(key):
-                keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
+                keys.append(key.removeprefix(':' + str(self.version)).removeprefix(':' + str(self.key_prefix)))
 
         return keys
