@@ -19,6 +19,6 @@ class LocMemKeysCache(LocMemCache):
         keys = []
         for key, value in self._cache.items():
             if pattern.match(key):
-                keys.append(key.lstrip(':' + str(self.version)).lstrip(':' + str(self.key_prefix)))
+                keys.append(key.removeprefix(':' + str(self.version)).removeprefix(':' + str(self.key_prefix)))
 
         return keys
