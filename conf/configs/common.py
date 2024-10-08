@@ -13,6 +13,7 @@ from corsheaders.defaults import default_headers
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
+from conf.utils import strip_scheme
 
 # ############################
 # Project configuration
@@ -230,7 +231,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-STRIPPED_PROJECT_API_HOST = PROJECT_API_HOST.lstrip("http://").lstrip("https://")
+STRIPPED_PROJECT_API_HOST = strip_scheme(PROJECT_API_HOST)
 if ":" in STRIPPED_PROJECT_API_HOST:
     STRIPPED_PROJECT_API_HOST = STRIPPED_PROJECT_API_HOST.split(":")[0]
 
@@ -252,7 +253,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
 
-STRIPPED_PROJECT_APP_HOST = PROJECT_APP_HOST.lstrip("http://").lstrip("https://").lstrip("www.")
+STRIPPED_PROJECT_APP_HOST = strip_scheme(PROJECT_APP_HOST).removeprefix("www.")
 if ":" in STRIPPED_PROJECT_APP_HOST:
     STRIPPED_PROJECT_APP_HOST = STRIPPED_PROJECT_APP_HOST.split(":")[0]
 if 'local' not in ENVIRONMENT:

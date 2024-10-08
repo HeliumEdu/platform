@@ -12,6 +12,7 @@ import sys
 from conf.configcache import config
 from conf.configs import common
 from conf.configs.common import ENVIRONMENT
+from conf.utils import strip_scheme
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -62,7 +63,6 @@ if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
 
         print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
     except Exception as e:
-        import traceback
         print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
 
 # Logging
@@ -179,10 +179,8 @@ else:
         'storages',
     )
 
-    # Used by collectstatic
     AWS_S3_ENDPOINT_URL = config('PLATFORM_AWS_S3_ENDPOINT_URL', None)
-    # Used when generating static URLs
-    S3_ENDPOINT_URL = config('PLATFORM_S3_ENDPOINT_URL', 's3.amazonaws.com')
+    S3_ENDPOINT_URL = strip_scheme(AWS_S3_ENDPOINT_URL or 's3.amazonaws.com')
 
     # Static
 
@@ -203,5 +201,5 @@ else:
 CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = config('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
-CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60*5)
+CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60 * 5)
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
