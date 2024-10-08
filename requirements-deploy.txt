@@ -1,4 +1,4 @@
-django-storages==1.14.3
+django-storages==1.14.4
 boto3==1.35.34
 mysqlclient==2.2.4
 django-redis==5.4.0
