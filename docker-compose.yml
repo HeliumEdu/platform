@@ -18,7 +18,7 @@ services:
     restart: always
     container_name: helium_cache
   storage:
-    image: localstack/localstack
+    image: localstack/localstack:s3-latest
     environment:
       ENVIRONMENT: "dev-local"
     ports:
