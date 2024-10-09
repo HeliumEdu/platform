@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.4"
 
 import logging
 import uuid
@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 class User(AbstractBaseUser, BaseModel):
     username = models.CharField(help_text='A unique name used to login to the system.',
                                 max_length=255, unique=True,
-                                validators=[validators.RegexValidator(r'^[\w.@+-]+$',
+                                validators=[validators.RegexValidator(r'^[\w.+-]+$',
                                                                       'Enter a valid username, which means less than '
                                                                       '30 characters consisting of letters, numbers, '
-                                                                      'or these symbols: @+-_.',
+                                                                      'or these symbols: +-_.',
                                                                       'invalid'), ],
                                 error_messages={'unique': "Sorry, that username is already in use."})
 
