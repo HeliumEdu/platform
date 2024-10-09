@@ -8,12 +8,13 @@ __version__ = "1.7.3"
 
 import os
 import socket
+from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
-from conf.utils import strip_scheme
+from conf.utils import strip_www
 
 # ############################
 # Project configuration
@@ -231,36 +232,29 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Security
 
-STRIPPED_PROJECT_API_HOST = strip_scheme(PROJECT_API_HOST)
-if ":" in STRIPPED_PROJECT_API_HOST:
-    STRIPPED_PROJECT_API_HOST = STRIPPED_PROJECT_API_HOST.split(":")[0]
-
 SECRET_KEY = config('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    STRIPPED_PROJECT_API_HOST
+    urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
 CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:3000',
     PROJECT_APP_HOST,
+    strip_www(PROJECT_APP_HOST),
     PROJECT_API_HOST
 ]
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:3000',
     PROJECT_APP_HOST,
+    strip_www(PROJECT_APP_HOST),
     PROJECT_API_HOST
 ]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
-
-STRIPPED_PROJECT_APP_HOST = strip_scheme(PROJECT_APP_HOST).removeprefix("www.")
-if ":" in STRIPPED_PROJECT_APP_HOST:
-    STRIPPED_PROJECT_APP_HOST = STRIPPED_PROJECT_APP_HOST.split(":")[0]
-if 'local' not in ENVIRONMENT:
-    CSRF_TRUSTED_ORIGINS += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
-    CORS_ORIGIN_WHITELIST += (f"https://www.{STRIPPED_PROJECT_APP_HOST}",)
 
 if 'local' in ENVIRONMENT:
     ALLOWED_HOSTS += [
@@ -271,6 +265,10 @@ if 'local' in ENVIRONMENT:
         'https://*.ngrok.io',
         'https://*.ngrok.app'
     ]
+
+print(ALLOWED_HOSTS)
+print(CSRF_TRUSTED_ORIGINS)
+print(CORS_ALLOWED_ORIGINS)
 
 # Logging
 
