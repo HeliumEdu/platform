@@ -266,10 +266,6 @@ if 'local' in ENVIRONMENT:
         'https://*.ngrok.app'
     ]
 
-print(ALLOWED_HOSTS)
-print(CSRF_TRUSTED_ORIGINS)
-print(CORS_ALLOWED_ORIGINS)
-
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
