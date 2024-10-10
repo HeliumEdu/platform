@@ -6,4 +6,4 @@ COPY container/supervisord.conf /etc/supervisor
 COPY container/supervisor-celerybeat.conf /etc/supervisor/conf.d/celerybeat.conf
 COPY container/supervisor-celeryworker.conf /etc/supervisor/conf.d/celeryworker.conf
 
-CMD ["supervisord", "-c", "//etc/supervisor/supervisord.conf", "-n"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf", "-n"]
