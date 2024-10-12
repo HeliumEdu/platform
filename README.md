@@ -67,6 +67,8 @@ There are also some special environment variables that can be set in development
   - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
 - `PLATFORM_WORKER_MODE`
   - Set to `True` to start `platform` as a Worker node rather than an API node
+- `PLATFORM_WORKER_BEAT_MODE`
+  - Used in conjunction `PLATFORM_WORKER_MODE`, set to `True` to the Worker as  Beat scheduler (only one should ever be running in the fleet)
 - `USE_AWS_SECRETS_MANAGER`
   - Set to `True` to use AWS Secrets Manager before falling back to environment variables
 - `USE_NGROK`

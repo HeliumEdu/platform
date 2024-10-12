@@ -65,9 +65,10 @@ ENV PATH="/venv/bin:$PATH"
 
 WORKDIR /app
 
-COPY container/supervisord.conf /etc/supervisor
-COPY container/supervisor-celerybeat.conf /etc/supervisor/conf.d/celerybeat.conf
+COPY container/supervisord.conf /etc/supervisor/
 COPY container/supervisor-celeryworker.conf /etc/supervisor/conf.d/celeryworker.conf
+COPY container/supervisor-celerybeat.conf /etc/supervisor/conf.d/celerybeat.conf.disabled
+COPY container/docker-worker-entrypoint.sh /docker-entrypoint.sh
 
 RUN chown -R ubuntu:ubuntu .
 
@@ -76,4 +77,4 @@ COPY --chown=ubuntu:ubuntu helium helium
 COPY --chown=ubuntu:ubuntu manage.py .
 COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf", "-n"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
