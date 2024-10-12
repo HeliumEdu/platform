@@ -10,6 +10,7 @@
 ## Prerequisites
 
 - Docker
+- Python (>= 3.10)
 - MySQL (>= 8)
 - Redis (>= 5)
 
@@ -39,12 +40,11 @@ name, like:
 docker exec -it helium_platform_api /bin/bash
 ```
 
-Inside the `platform` container, the venv is mapped to the env var `PLATFORM_VENV`. If you want to run commands against
-Django, for instance to run database migrations, execute commands like:
+Inside the `platform` container, you can run Django commands against the app, like:
 
 ```sh
-$PLATFORM_VENV/bin/python manage.py migrate
-$PLATFORM_VENV/bin/python manage.py createsuperuser
+python manage.py migrate
+python manage.py createsuperuser
 ```
 
 ### Project Information
@@ -67,6 +67,8 @@ There are also some special environment variables that can be set in development
   - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
 - `PLATFORM_WORKER_MODE`
   - Set to `True` to start `platform` as a Worker node rather than an API node
+- `PLATFORM_WORKER_BEAT_MODE`
+  - Used in conjunction `PLATFORM_WORKER_MODE`, set to `True` to the Worker as  Beat scheduler (only one should ever be running in the fleet)
 - `USE_AWS_SECRETS_MANAGER`
   - Set to `True` to use AWS Secrets Manager before falling back to environment variables
 - `USE_NGROK`
