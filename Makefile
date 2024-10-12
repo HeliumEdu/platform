@@ -1,11 +1,11 @@
-.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker
+.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker publish-docker
 
 SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
 AWS_REGION ?= us-east-1
 TAG_VERSION ?= latest
 
-all: env virtualenv install build migrate test
+all: env virtualenv install build migrate test build-docker
 
 env:
 	cp -n .env.example .env | true
@@ -67,11 +67,9 @@ test: install-dev
 	)
 
 build-docker:
-	docker build -t helium/platform:latest -t helium/platform:$(TAG_VERSION) .
+	docker build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
 
-	docker build -f Dockerfile-api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
-
-	docker build -f Dockerfile-worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
+	docker build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
 
 run-docker: docker-env
 	docker compose up -d
