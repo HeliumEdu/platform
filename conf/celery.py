@@ -4,9 +4,10 @@ Initialize Celery with Django configuration.
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.8"
+__version__ = "1.7.10"
 
 import os
+import sys
 
 from celery.signals import task_failure
 from django.conf import settings
@@ -20,7 +21,7 @@ app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-if not settings.DEBUG and os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'True' and hasattr(settings, 'ROLLBAR'):
+if 'celery' in sys.argv[0] and hasattr(settings, 'ROLLBAR'):
     import rollbar
 
     rollbar.init(**settings.ROLLBAR)

@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.3"
+__version__ = "1.7.10"
 
 import os
 import sys
@@ -48,7 +48,7 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
-if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
+if 'celery' not in sys.argv[0]:
     try:
         from urllib.request import urlopen
         import json
