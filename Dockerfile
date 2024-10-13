@@ -17,12 +17,33 @@ RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-dep
 
 ######################################################################
 
+FROM ubuntu:22.04 AS platform_resource
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends python3-mysqldb npm
+RUN npm install yuglify -g
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/venv/bin:$PATH"
+
+WORKDIR /app
+
+COPY container/docker-resource-entrypoint.sh /docker-entrypoint.sh
+
+COPY --chown=ubuntu:ubuntu conf conf
+COPY --chown=ubuntu:ubuntu helium helium
+COPY --chown=ubuntu:ubuntu manage.py .
+COPY --from=build --chown=ubuntu:ubuntu /venv /venv
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+######################################################################
+
 FROM ubuntu:22.04 AS platform_api
 
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev npm
-RUN apt-get install -y --reinstall ca-certificates
-RUN npm install yuglify -g
+RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
@@ -55,8 +76,7 @@ CMD ["apache2ctl", "-D", "FOREGROUND"]
 FROM ubuntu:22.04 AS platform_worker
 
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev
-RUN apt-get install -y --reinstall ca-certificates
+RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
