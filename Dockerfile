@@ -20,9 +20,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-dep
 FROM ubuntu:22.04 AS platform_api
 
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev npm
-RUN apt-get install -y --reinstall ca-certificates
-RUN npm install yuglify -g
+RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
@@ -55,8 +53,7 @@ CMD ["apache2ctl", "-D", "FOREGROUND"]
 FROM ubuntu:22.04 AS platform_worker
 
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev
-RUN apt-get install -y --reinstall ca-certificates
+RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
