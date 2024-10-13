@@ -39,6 +39,8 @@ services:
       - /bin/bash
       - -c
       - |
+        apt-get install -y npm
+        npm install yuglify -g
         /venv/bin/python manage.py collectstatic --noinput
         /venv/bin/python manage.py migrate
         apache2ctl -D FOREGROUND
