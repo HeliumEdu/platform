@@ -67,6 +67,8 @@ test: install-dev
 	)
 
 build-docker:
+	docker build --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) .
+
 	docker build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
 
 	docker build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
@@ -76,6 +78,9 @@ run-docker: docker-env
 
 publish-docker:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
+
+	docker tag helium/platform-resource:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-resource:$(TAG_VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-resource:$(TAG_VERSION)
 
 	docker tag helium/platform-api:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(TAG_VERSION)
 	docker push $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-api:$(TAG_VERSION)
