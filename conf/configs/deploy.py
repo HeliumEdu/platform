@@ -48,7 +48,7 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
-if os.environ.get('PLATFORM_WORKER_MODE', 'False') == 'False':
+if 'celery' not in sys.argv[0]:
     try:
         from urllib.request import urlopen
         import json

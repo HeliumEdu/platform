@@ -52,8 +52,7 @@ services:
   worker:
     image: helium/platform-worker
     environment:
-        PLATFORM_WORKER_BEAT_MODE: "True"
-        PLATFORM_BEAT_AND_WORKER_ENABLED: "True"
+        PLATFORM_BEAT_AND_WORKER_MODE: "True"
     env_file: .env
     volumes:
       - type: bind
