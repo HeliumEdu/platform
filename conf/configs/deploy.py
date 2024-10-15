@@ -122,7 +122,7 @@ LOGGING = {
             "handlers": ['console'],
             "propagate": False,
         },
-        'health-check': {
+        'health_check': {
             'handlers': ['console', 'rollbar'],
             'level': 'ERROR',
         },
