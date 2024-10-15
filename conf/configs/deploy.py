@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.10"
+__version__ = "1.7.11"
 
 import os
 import sys
@@ -118,7 +118,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        "django.security.DisallowedHost": {
+        'django.security.DisallowedHost': {
+            "handlers": ['console'],
+            "propagate": False,
+        },
+        "health_check.exceptions.ServiceWarning": {
             "handlers": ['console'],
             "propagate": False,
         },
