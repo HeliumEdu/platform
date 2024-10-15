@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.11"
+__version__ = "1.7.12"
 
 import os
 import sys
@@ -122,13 +122,9 @@ LOGGING = {
             "handlers": ['console'],
             "propagate": False,
         },
-        "health_check.exceptions.ServiceWarning": {
-            "handlers": ['console'],
-            "propagate": False,
-        },
         'health-check': {
-            'handlers': ['console', 'rollbar'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'WARN',
         },
         'helium': {
             'handlers': ['console', 'rollbar'],
