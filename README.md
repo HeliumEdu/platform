@@ -85,8 +85,11 @@ make test
 ### Frontend
 
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
-Using Docker, the `frontend` and `platform` containers can be started alongside each other using to fully emulate
-a production environment using [the deploy project](https://github.com/HeliumEdu/deploy).
+Using Docker, the `frontend` and `platform` containers can be started alongside each other using to almost entirely
+emulate a prod-like environment locally using [the deploy project](https://github.com/HeliumEdu/deploy). For
+functionality that still requires Internet-connected external services (ex. emails and text reminders), provision
+[the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/deploy/tree/main/terraform/environments/dev-local),
+which is meant to work alongside local Docker development. 
 
 Note that the `frontend` was previously bundled, rendered, and served as a part of this project, but it was pulled out
 into its own project with the with `1.4.0` release. For reference, checkout the `1.3.8` tag or download it [here](https://github.com/HeliumEdu/platform/releases/tag/1.3.8)
