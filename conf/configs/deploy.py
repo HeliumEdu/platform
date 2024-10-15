@@ -118,7 +118,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        "django.security.DisallowedHost": {
+        'django.security.DisallowedHost': {
+            "handlers": ['console'],
+            "propagate": False,
+        },
+        "health_check.exceptions.ServiceWarning": {
             "handlers": ['console'],
             "propagate": False,
         },
