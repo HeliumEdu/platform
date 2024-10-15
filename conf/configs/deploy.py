@@ -122,13 +122,9 @@ LOGGING = {
             "handlers": ['console'],
             "propagate": False,
         },
-        "health_check.exceptions.ServiceWarning": {
-            "handlers": ['console'],
-            "propagate": False,
-        },
         'health-check': {
-            'handlers': ['console', 'rollbar'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'WARN',
         },
         'helium': {
             'handlers': ['console', 'rollbar'],
