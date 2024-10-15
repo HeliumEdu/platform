@@ -17,6 +17,6 @@ for var in "${VARS[@]}"
 do
   if [ -n "${var}" ]; then
     echo "--> Updating $var"
-    gsed -i "/^$var=/c\\$var=${!var}" "$DOT_ENV_PATH"
+    sed -i "/^$var=/c\\$var=${!var}" "$DOT_ENV_PATH"
   fi
 done
