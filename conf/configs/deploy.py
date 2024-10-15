@@ -123,8 +123,8 @@ LOGGING = {
             "propagate": False,
         },
         'health-check': {
-            'handlers': ['console'],
-            'level': 'WARN',
+            'handlers': ['console', 'rollbar'],
+            'level': 'ERROR',
         },
         'helium': {
             'handlers': ['console', 'rollbar'],
