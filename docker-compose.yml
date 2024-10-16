@@ -8,13 +8,11 @@ services:
       MYSQL_PASSWORD: "helium"
     ports:
       - 3306:3306
-    restart: always
     container_name: helium_db
   cache:
     image: redis:7.2
     ports:
       - 6379:6379
-    restart: always
     container_name: helium_cache
   storage:
     image: localstack/localstack:s3-latest
@@ -32,7 +30,6 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
-    restart: always
     container_name: helium_platform_resource
     depends_on:
       - db
@@ -45,7 +42,6 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
-    restart: always
     ports:
       - 8000:8000
     container_name: helium_platform_api
@@ -63,7 +59,6 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
-    restart: always
     container_name: helium_platform_worker
     depends_on:
       - resource
