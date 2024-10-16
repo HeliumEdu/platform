@@ -32,6 +32,7 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
+    restart: always
     container_name: helium_platform_resource
     depends_on:
       - db
@@ -44,6 +45,7 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
+    restart: always
     ports:
       - 8000:8000
     container_name: helium_platform_api
@@ -61,6 +63,7 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
+    restart: always
     container_name: helium_platform_worker
     depends_on:
       - resource
