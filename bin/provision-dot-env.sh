@@ -17,6 +17,8 @@ for var in "${VARS[@]}"
 do
   if [ -n "${var}" ]; then
     echo "--> Updating $var"
+    # Prefer gsed, if it's installed (required on Mac)
+    which gsed
     if [ $? -eq 0 ]; then
       sed_cmd="gsed"
     else
