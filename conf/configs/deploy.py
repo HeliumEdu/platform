@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.12"
+__version__ = "1.7.13"
 
 import os
 import sys
@@ -122,9 +122,9 @@ LOGGING = {
             "handlers": ['console'],
             "propagate": False,
         },
-        'health-check': {
-            'handlers': ['console'],
-            'level': 'WARN',
+        'health_check': {
+            'handlers': ['console', 'rollbar'],
+            'level': 'ERROR',
         },
         'helium': {
             'handlers': ['console', 'rollbar'],
@@ -181,6 +181,7 @@ else:
 
     AWS_S3_ENDPOINT_URL = config('PLATFORM_AWS_S3_ENDPOINT_URL', None)
     S3_ENDPOINT_URL = strip_scheme(AWS_S3_ENDPOINT_URL or 's3.amazonaws.com')
+    AWS_S3_REGION_NAME = common.AWS_REGION
 
     # Static
 

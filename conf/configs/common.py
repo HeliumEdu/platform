@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright 2024, {'ansibleCopyrightNameVar': 'project_developer', 'ansibleRelativeDir': 'ansible', 'branchName': 'main', 'copyrightName': 'Helium Edu', 'gitProject': 'git@github.com:HeliumEdu', 'hostProvisionCommand': 'sudo apt-get update && sudo apt-get install -y python && sudo apt-get -y autoremove', 'projects': ['platform', 'frontend', 'ci-tests'], 'projectsRelativeDir': 'projects', 'remoteName': 'origin', 'serverBinFilename': 'bin/runserver', 'updateCopyrightYear': False, 'versionInfo': {'path': 'conf/configs/common.py', 'project': 'platform'}}"
 __license__ = "MIT"
-__version__ = "1.7.12"
+__version__ = "1.7.13"
 
 import os
 import socket
@@ -23,6 +23,7 @@ from conf.utils import strip_www
 # Project information
 
 ENVIRONMENT = config('ENVIRONMENT').lower()
+ENVIRONMENT_PREFIX = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
 
 AWS_REGION = config('AWS_REGION', 'us-east-1')
 
@@ -33,10 +34,9 @@ if 'local' in ENVIRONMENT:
     PROJECT_APP_HOST = 'http://localhost:3000'
     PROJECT_API_HOST = 'http://localhost:8000'
 else:
-    prefix = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
 
-    PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{prefix}heliumedu.com')
-    PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{prefix}heliumedu.com')
+    PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
+    PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
 
 # Version information
 
@@ -200,11 +200,11 @@ MAX_UPLOAD_SIZE = 10485760
 
 DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 
-ADMIN_EMAIL_ADDRESS = 'admin@heliumedu.com'
+ADMIN_EMAIL_ADDRESS = f'admin@{ENVIRONMENT_PREFIX}heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_ADDRESS = 'contact@heliumedu.com'
+EMAIL_ADDRESS = f'contact@{ENVIRONMENT_PREFIX}heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 EMAIL_HOST = config('PLATFORM_EMAIL_HOST', f'email-smtp.{AWS_REGION}.amazonaws.com')
 

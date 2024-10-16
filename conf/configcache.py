@@ -9,7 +9,7 @@ use_aws_secrets_manager = os.environ.get('USE_AWS_SECRETS_MANAGER', 'False') == 
 aws_secrets = {}
 if use_aws_secrets_manager:
     client = botocore.session.get_session().create_client('secretsmanager',
-                                                          os.environ.get("AWS_REGION", "us-east-1"))
+                                                          os.environ.get("AWS_REGION"))
     cache_config = SecretCacheConfig()
     cache = SecretCache(config=cache_config, client=client)
     environ = decouple_config('ENVIRONMENT').lower()

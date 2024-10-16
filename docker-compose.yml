@@ -1,7 +1,6 @@
 services:
   db:
     image: mysql:8.0
-    platform: linux/amd64
     environment:
       MYSQL_ROOT_PASSWORD: "password"
       MYSQL_DATABASE: "platform_dev-local"
@@ -9,13 +8,11 @@ services:
       MYSQL_PASSWORD: "helium"
     ports:
       - 3306:3306
-    restart: always
     container_name: helium_db
   cache:
     image: redis:7.2
     ports:
       - 6379:6379
-    restart: always
     container_name: helium_cache
   storage:
     image: localstack/localstack:s3-latest
@@ -49,7 +46,6 @@ services:
       - 8000:8000
     container_name: helium_platform_api
     depends_on:
-      - resource
       - db
       - cache
       - storage
@@ -64,7 +60,6 @@ services:
         target: /app/.env
     container_name: helium_platform_worker
     depends_on:
-      - resource
       - db
       - cache
       - storage
