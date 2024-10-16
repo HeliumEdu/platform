@@ -35,7 +35,6 @@ class Course(BaseModel):
 
     trend = models.FloatField(default=None, blank=True, null=True)
 
-    # TODO: teacher details will be abstracted into a Teacher model after the open source migration is finished
     teacher_name = models.CharField(help_text='A display name for the teacher.',
                                     max_length=255, blank=True)
 
