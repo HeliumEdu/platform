@@ -18,7 +18,7 @@ do
   if [ -n "${var}" ]; then
     echo "--> Updating $var"
     # Prefer gsed, if it's installed (required on Mac)
-    which gsed
+    which gsed > /dev/null
     if [ $? -eq 0 ]; then
       sed_cmd="gsed"
     else

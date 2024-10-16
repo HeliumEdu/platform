@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.7.14"
 
 import datetime
 
@@ -35,7 +35,6 @@ class Course(BaseModel):
 
     trend = models.FloatField(default=None, blank=True, null=True)
 
-    # TODO: teacher details will be abstracted into a Teacher model after the open source migration is finished
     teacher_name = models.CharField(help_text='A display name for the teacher.',
                                     max_length=255, blank=True)
 
