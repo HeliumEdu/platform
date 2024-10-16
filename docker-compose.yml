@@ -46,7 +46,6 @@ services:
       - 8000:8000
     container_name: helium_platform_api
     depends_on:
-      - resource
       - db
       - cache
       - storage
@@ -61,7 +60,6 @@ services:
         target: /app/.env
     container_name: helium_platform_worker
     depends_on:
-      - resource
       - db
       - cache
       - storage
