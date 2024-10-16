@@ -3,7 +3,7 @@
 PARENT_PATH=$(dirname "${BASH_SOURCE[0]}")
 DOT_ENV_PATH="$PARENT_PATH/../.env"
 
-cp -n "$PARENT_PATH/../.env.docker.example" "$DOT_ENV_PATH" | true
+make -C "$PARENT_PATH/.." docker-env
 
 declare -a VARS=("PLATFORM_EMAIL_HOST_USER"
   "PLATFORM_EMAIL_HOST_PASSWORD"
