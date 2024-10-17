@@ -4,7 +4,7 @@ SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
 AWS_REGION ?= us-east-1
 TAG_VERSION ?= latest
-PLATFORM ?= linux/amd64
+PLATFORM ?= linux/arm64
 
 all: env virtualenv install build migrate test build-docker
 
