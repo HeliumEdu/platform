@@ -34,9 +34,6 @@ jobs:
       - name: Test Docker build
         run: |
           make build-docker
-          docker buildx build --target platform_resource -t helium/platform-resource:latest --load .
-          docker buildx build --target platform_api -t helium/platform-api:latest --load .
-          docker buildx build --target platform_worker -t helium/platform-worker:latest --load .
           make run-docker
       - name: Upload coverage
         uses: codecov/codecov-action@v3
