@@ -1,6 +1,6 @@
 <p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
 
-![Python Versions](https://img.shields.io/badge/python-%203.12%20)
+![Python Versions](https://img.shields.io/badge/python-%203.12%20-blue)
 [![Coverage](https://img.shields.io/codecov/c/github/HeliumEdu/platform)](https://codecov.io/gh/HeliumEdu/platform)
 [![Build](https://img.shields.io/github/actions/workflow/status/HeliumEdu/platform/build.yml)](https://github.com/HeliumEdu/platform/actions/workflows/build.yml)
 ![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
