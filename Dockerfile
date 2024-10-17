@@ -47,9 +47,6 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
 
-RUN groupadd ubuntu
-RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
-
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
@@ -80,9 +77,6 @@ FROM ubuntu:24.04 AS platform_worker
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
-
-RUN groupadd ubuntu
-RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
