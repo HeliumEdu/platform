@@ -32,7 +32,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Test Docker build
-        run: make build-docker
+        run: |
+          make build-docker
+          make run-docker
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
