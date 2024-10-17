@@ -67,11 +67,11 @@ test: install-dev
 	)
 
 build-docker:
-	docker buildx build --platform=linux/amd64,linux/arm64 --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) .
+	docker buildx build --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 --load  .
 
-	docker buildx build --platform=linux/amd64,linux/arm64 --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) .
+	docker buildx build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 --load .
 
-	docker buildx build --platform=linux/amd64,linux/arm64 --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) .
+	docker buildx build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 --load .
 
 run-docker: docker-env
 	docker compose up -d
