@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS build
 
 RUN apt-get update
 RUN apt-get install -y git python3-virtualenv python3-pip python3-setuptools pkg-config default-libmysqlclient-dev
@@ -12,16 +12,17 @@ WORKDIR /app
 COPY requirements.txt .
 COPY requirements-deploy.txt .
 
-RUN python3 -m virtualenv /venv
+RUN python -m virtualenv /venv
 RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-deploy.txt
 
 ######################################################################
 
-FROM ubuntu:22.04 AS platform_resource
+FROM ubuntu:24.04 AS platform_resource
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends python3-mysqldb npm
 RUN npm install yuglify -g
+RUN apt-get clean
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -40,10 +41,11 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 ######################################################################
 
-FROM ubuntu:22.04 AS platform_api
+FROM ubuntu:24.04 AS platform_api
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
+RUN apt-get clean
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
@@ -73,10 +75,11 @@ CMD ["apache2ctl", "-D", "FOREGROUND"]
 
 ######################################################################
 
-FROM ubuntu:22.04 AS platform_worker
+FROM ubuntu:24.04 AS platform_worker
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
+RUN apt-get clean
 
 RUN groupadd ubuntu
 RUN useradd -rm -s /bin/bash -g ubuntu -G sudo -u 1001 ubuntu
