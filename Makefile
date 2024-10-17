@@ -4,6 +4,7 @@ SHELL := /usr/bin/env bash
 PLATFORM_VENV ?= .venv
 AWS_REGION ?= us-east-1
 TAG_VERSION ?= latest
+PLATFORM ?= linux/amd64
 
 all: env virtualenv install build migrate test build-docker
 
@@ -67,13 +68,13 @@ test: install-dev
 	)
 
 build-docker:
-	docker buildx build --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 .
+	docker buildx build --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) --platform=$(PLATFORM) .
 	docker buildx build -t helium/platform-resource:latest --load .
 
-	docker buildx build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 .
+	docker buildx build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) --platform=$(PLATFORM) .
 	docker buildx build -t helium/platform-api:latest --load .
 
-	docker buildx build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) --platform=linux/amd64,linux/arm64 .
+	docker buildx build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) --platform=$(PLATFORM) .
 	docker buildx build -t helium/platform-worker:latest --load .
 
 run-docker: docker-env
