@@ -12,7 +12,7 @@ WORKDIR /app
 COPY requirements.txt .
 COPY requirements-deploy.txt .
 
-RUN python -m virtualenv /venv
+RUN python3 -m virtualenv /venv
 RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-deploy.txt
 
 ######################################################################
