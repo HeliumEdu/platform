@@ -2,9 +2,9 @@
 Settings common to all deployment methods.
 """
 
-__copyright__ = "Copyright (c) 2018 Helium Edu"
+__copyright__ = "Copyright 2024, {'ansibleCopyrightNameVar': 'project_developer', 'ansibleRelativeDir': 'ansible', 'branchName': 'main', 'copyrightName': 'Helium Edu', 'tagRootRelease': False, 'gitProject': 'git@github.com:HeliumEdu', 'hostProvisionCommand': 'sudo apt-get update && sudo apt-get install -y python && sudo apt-get -y autoremove', 'projects': ['platform', 'frontend', 'ci-tests'], 'projectsRelativeDir': 'projects', 'remoteName': 'origin', 'serverBinFilename': 'bin/runserver', 'updateCopyrightYear': False, 'versionInfo': {'path': 'conf/configs/common.py', 'project': 'platform'}}"
 __license__ = "MIT"
-__version__ = "1.7.15"
+__version__ = "1.7.16"
 
 import os
 import socket
