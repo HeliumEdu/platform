@@ -8,12 +8,10 @@ services:
       MYSQL_PASSWORD: "helium"
     ports:
       - 3306:3306
-    container_name: helium_db
   cache:
     image: redis:7.2
     ports:
       - 6379:6379
-    container_name: helium_cache
   storage:
     image: localstack/localstack:s3-latest
     environment:
@@ -22,7 +20,6 @@ services:
       - 4566:4566
     volumes:
       - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
-    container_name: helium_storage
   resource:
     image: helium/platform-resource
     env_file: .env
@@ -30,7 +27,6 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
-    container_name: helium_platform_resource
     depends_on:
       - db
       - cache
@@ -44,7 +40,6 @@ services:
         target: /app/.env
     ports:
       - 8000:8000
-    container_name: helium_platform_api
     depends_on:
       - db
       - cache
@@ -58,7 +53,6 @@ services:
       - type: bind
         source: ./.env
         target: /app/.env
-    container_name: helium_platform_worker
     depends_on:
       - db
       - cache

@@ -37,7 +37,7 @@ This builds and starts two containers, one for the API (named `helium_platform_a
 name, like:
 
 ```shell
-docker exec -it helium_platform_api /bin/bash
+docker exec -it platform-api-1 /bin/bash
 ```
 
 Inside the `platform` container, you can run Django commands against the app, like:
