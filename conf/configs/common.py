@@ -34,7 +34,6 @@ if 'local' in ENVIRONMENT:
     PROJECT_APP_HOST = 'http://localhost:3000'
     PROJECT_API_HOST = 'http://localhost:8000'
 else:
-
     PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
     PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
 
