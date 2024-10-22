@@ -8,6 +8,7 @@ __version__ = "1.7.20"
 
 import os
 import socket
+import warnings
 from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
@@ -268,6 +269,10 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
+
+# Ignore schema generation warnings, this is related to libraries that won't be updated
+warnings.filterwarnings('ignore', r"<class '.*'> is not compatible with schema generation",
+                        module=r'django_filters\.rest_framework')
 
 # Static files (CSS, JavaScript, Images)
 
