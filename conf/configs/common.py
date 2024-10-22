@@ -4,10 +4,11 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2018, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.20"
+__version__ = "1.7.21"
 
 import os
 import socket
+import warnings
 from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
@@ -34,7 +35,6 @@ if 'local' in ENVIRONMENT:
     PROJECT_APP_HOST = 'http://localhost:3000'
     PROJECT_API_HOST = 'http://localhost:8000'
 else:
-
     PROJECT_APP_HOST = config('PROJECT_APP_HOST', f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
     PROJECT_API_HOST = config('PROJECT_API_HOST', f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
 
@@ -269,6 +269,10 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
+
+# Ignore schema generation warnings, this is related to libraries that won't be updated
+warnings.filterwarnings('ignore', r"<class '.*'> is not compatible with schema generation",
+                        module=r'django_filters\.rest_framework')
 
 # Static files (CSS, JavaScript, Images)
 

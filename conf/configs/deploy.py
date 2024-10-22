@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.13"
+__version__ = "1.7.21"
 
 import os
 import sys
@@ -64,6 +64,8 @@ if 'celery' not in sys.argv[0]:
         print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
     except Exception as e:
         print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
+else:
+    ALLOWED_HOSTS = common.ALLOWED_HOSTS
 
 # Logging
 
