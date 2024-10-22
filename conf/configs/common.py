@@ -257,7 +257,6 @@ CORS_ALLOW_HEADERS = default_headers + (
 
 if 'local' in ENVIRONMENT:
     ALLOWED_HOSTS += [
-        'api',
         '.ngrok.io',
         '.ngrok.app'
     ]
