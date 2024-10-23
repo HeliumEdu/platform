@@ -270,7 +270,9 @@ if 'local' in ENVIRONMENT:
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
 
-# Ignore schema generation warnings, this is related to libraries that won't be updated
+# Ignore warnings related to schema generation; this is related to DRF migrating to OpenAPI as its standard,
+# but this project still implements CoreAPI. If this project ever refactors to OpenAPI schemas, this
+# warnings filter can be removed: https://www.django-rest-framework.org/community/3.10-announcement/#continuing-to-use-coreapi
 warnings.filterwarnings('ignore', r"<class '.*'> is not compatible with schema generation",
                         module=r'django_filters\.rest_framework')
 
