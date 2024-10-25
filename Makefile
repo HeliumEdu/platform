@@ -1,12 +1,13 @@
 .PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker stop-docker publish-docker
 
 SHELL := /usr/bin/env bash
-PLATFORM_VENV ?= .venv
+PYTHON_BIN := python
+PLATFORM_VENV ?= venv
 AWS_REGION ?= us-east-1
 TAG_VERSION ?= latest
 PLATFORM ?= linux/arm64
 
-all: env virtualenv install build migrate test build-docker
+all: build migrate test build-docker
 
 env:
 	cp -n .env.example .env | true
@@ -18,19 +19,17 @@ docker-env:
 		sudo sh -c "grep -qxF '127.0.0.1 storage' /etc/hosts || echo '127.0.0.1 storage' >> /etc/hosts"; \
 	fi
 
-virtualenv:
-	@if [ ! -d "$(PLATFORM_VENV)" ]; then \
-		python3 -m pip install virtualenv; \
-		python3 -m virtualenv $(PLATFORM_VENV); \
-	fi
+venv:
+	$(PYTHON_BIN) -m pip install virtualenv
+	$(PYTHON_BIN) -m virtualenv $(PLATFORM_VENV)
 
-install: env virtualenv
+install: env venv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt -r requirements-deploy.txt; \
 	)
 
-install-dev: env virtualenv
+install-dev: env venv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt -r requirements-dev.txt; \
@@ -80,7 +79,7 @@ run-docker: docker-env
 stop-docker:
 	docker compose stop
 
-publish-docker:
+publish-docker: build-docker
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
 
 	docker tag helium/platform-resource:$(TAG_VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com/helium/platform-resource:$(TAG_VERSION)
