@@ -3,7 +3,7 @@ django-debug-toolbar==4.4.6
 djangorestframework==3.14.0
 django-filter==24.3
 django-pipeline==3.1.0
-django-cors-headers==4.5.0
+django-cors-headers==4.6.0
 coreapi==2.3.3
 celery[redis]==5.4.0
 statsd==4.0.1
