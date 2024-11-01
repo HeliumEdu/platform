@@ -8,6 +8,10 @@ services:
       MYSQL_PASSWORD: "helium"
     ports:
       - 3306:3306
+    healthcheck:
+        test: "mysql $$MYSQL_DATABASE -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e 'SELECT 1;'"
+        timeout: 3s
+        retries: 20
   cache:
     image: redis:7.2
     ports:
@@ -28,9 +32,12 @@ services:
         source: ./.env
         target: /app/.env
     depends_on:
-      - db
-      - cache
-      - storage
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      storage:
+        condition: service_healthy
   api:
     image: helium/platform-api
     env_file: .env
@@ -41,9 +48,14 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - db
-      - cache
-      - storage
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      storage:
+        condition: service_healthy
+      resource:
+        condition: service_completed_successfully
   worker:
     image: helium/platform-worker
     environment:
@@ -54,6 +66,11 @@ services:
         source: ./.env
         target: /app/.env
     depends_on:
-      - db
-      - cache
-      - storage
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      storage:
+        condition: service_healthy
+      resource:
+        condition: service_completed_successfully
