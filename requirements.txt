@@ -1,4 +1,4 @@
-django==4.2.15
+django==5.1.4
 django-debug-toolbar==4.4.6
 djangorestframework==3.14.0
 django-filter==24.3
