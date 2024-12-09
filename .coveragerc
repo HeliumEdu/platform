@@ -8,6 +8,7 @@ omit =
     */schemas.py
     */tests/**
     */migrations/**
+    **/__init__.py
     helium/common/utils/metricutils.py
     helium/common/cache/locmemkeys.py
 
