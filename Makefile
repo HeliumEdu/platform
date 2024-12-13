@@ -63,7 +63,7 @@ migrate: install
 test: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		coverage run -m pytest -v --junitxml=build/test-results/junit.xml -o junit_family=legacy && coverage report && coverage html && coverage xml; \
+		coverage run -m pytest --junitxml=build/test-results/junit.xml -o junit_family=legacy && coverage report && coverage html && coverage xml; \
 	)
 
 build-docker:
