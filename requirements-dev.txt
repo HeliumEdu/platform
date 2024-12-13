@@ -1,2 +1,3 @@
+pytest-django
 coverage
 pyngrok

@@ -3,8 +3,8 @@ This generic settings builder reads the appropriate configuration file for diffe
 
 Note that the system environment variable ENVIRONMENT should be set to a slug that matches the deployed environment.
 
-* If ENVIRONMENT is set to `dev`, `local.py` will be used for configuration, using values from `.env`
-* If ENVIRONMENT is not `dev`, `deploy.py` will be used for configuration, using system environment variables
+* If ENVIRONMENT is set to `local`, `local.py` will be used for configuration, using values from `.env`
+* If ENVIRONMENT is not `local`, `deploy.py` will be used for configuration, using system environment variables
 * If `test` is passed as an argument, ENVIRONMENT is ignored and `test.py` is used for configuration, reading from `.env`
 
 All configuration files first read `common.py` before applying deployment-specific configurations.
@@ -21,7 +21,7 @@ from decouple import config
 # Are we running on the dev server
 DEV_SERVER = False
 
-if 'test' not in sys.argv:
+if 'test' not in sys.argv and 'pytest' not in sys.modules:
     if config('ENVIRONMENT').lower() == 'local' or (len(sys.argv) > 1 and sys.argv[1] == 'runserver'):
         conf = 'local'
         if len(sys.argv) > 1 and sys.argv[1] == 'runserver':

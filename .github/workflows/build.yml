@@ -35,7 +35,13 @@ jobs:
         run: |
           make build-docker
           make run-docker
-      - name: Upload coverage
+      - name: Upload test coverage
         uses: codecov/codecov-action@v3
         with:
           directory: ./build/coverage
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./build/test-results
