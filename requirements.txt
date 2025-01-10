@@ -17,5 +17,5 @@ python-dateutil==2.9.0.post0
 psutil==6.1.1
 aws-secretsmanager-caching==1.1.3
 python-decouple==3.8
-setuptools==75.7.0
+setuptools==75.8.0
 -e git+https://github.com/alexdlaird/django-health-check.git@4.0.2#egg=django-health-check
