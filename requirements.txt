@@ -9,7 +9,7 @@ celery[redis]==5.4.0
 statsd==4.0.1
 datadog==0.50.2
 twilio==9.4.2
-pyOpenSSL==24.3.0
+pyOpenSSL==25.0.0
 Pillow==11.1.0
 icalendar==6.1.0
 pytz==2024.2
