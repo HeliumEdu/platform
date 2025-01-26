@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-make build-docker
-make run-docker
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+make -C ${DIR}/.. build-docker
+make -C ${DIR}/.. run-docker

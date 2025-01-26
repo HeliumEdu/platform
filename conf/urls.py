@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.2"
+__version__ = "1.8.2"
 
 import sys
 
@@ -31,7 +31,7 @@ if config.DEBUG:
         re_path(r'^__debug__/', include(debug_toolbar.urls)),
     ]
 
-if (config.DEBUG or 'test' in sys.argv) and config.MEDIA_URL:
+if (config.DEBUG or 'test' in sys.argv or 'pytest' not in sys.modules) and config.MEDIA_URL:
     # Ensure media files are shown properly when using a dev server
     urlpatterns += [
         re_path(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
