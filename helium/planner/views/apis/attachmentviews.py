@@ -67,8 +67,6 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         return response
 
     def post(self, request, *args, **kwargs):
-        data = request.data.copy()
-
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
         if 'event' in request.data:
@@ -79,10 +77,10 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         response_data = []
         errors = []
         for upload in request.data.getlist('file[]'):
-            data['title'] = upload.name
-            data['attachment'] = upload
+            request.data['title'] = upload.name
+            request.data['attachment'] = upload
 
-            serializer = self.get_serializer(data=data)
+            serializer = self.get_serializer(data=request.data)
 
             if serializer.is_valid():
                 serializer.save(user=request.user)
