@@ -2,4 +2,4 @@ django-storages==1.14.3
 boto3==1.36.20
 mysqlclient==2.2.7
 django-redis==5.4.0
-rollbar==1.1.2
+rollbar==1.2.0
