@@ -55,8 +55,8 @@ def send_password_reset_email(email, temp_password):
     commonutils.send_multipart_email('email/forgot',
                                      {
                                          'password': temp_password,
-                                         'settings': f"{settings.PROJECT_APP_HOST}/settings",
-                                         'support': f"{settings.PROJECT_APP_HOST}/support",
+                                         'settings_url': f"{settings.PROJECT_APP_HOST}/settings",
+                                         'support_url': f"{settings.PROJECT_APP_HOST}/support",
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 
