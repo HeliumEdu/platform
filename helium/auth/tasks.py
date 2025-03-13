@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.8.3"
 
 import logging
 from datetime import datetime, timedelta
@@ -55,8 +55,8 @@ def send_password_reset_email(email, temp_password):
     commonutils.send_multipart_email('email/forgot',
                                      {
                                          'password': temp_password,
-                                         'settings': f"{settings.PROJECT_APP_HOST}/settings",
-                                         'support': f"{settings.PROJECT_APP_HOST}/support",
+                                         'settings_url': f"{settings.PROJECT_APP_HOST}/settings",
+                                         'support_url': f"{settings.PROJECT_APP_HOST}/support",
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 
