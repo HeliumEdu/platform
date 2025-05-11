@@ -58,7 +58,7 @@ class CommonConfig(AppConfig):
                                      }))
 
     def init_ngrok(self):
-        if settings.USE_NGROK and config("NGROK_AUTHTOKEN"):
+        if settings.USE_NGROK:
             # pyngrok will only be installed, and should only ever be initialized, in a dev environment
             from pyngrok import ngrok
 
