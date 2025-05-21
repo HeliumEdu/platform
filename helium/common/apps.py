@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.2"
+__version__ = "1.8.4"
 
 import sys
 from urllib.parse import urlparse
@@ -58,7 +58,7 @@ class CommonConfig(AppConfig):
                                      }))
 
     def init_ngrok(self):
-        if settings.USE_NGROK and config("NGROK_AUTHTOKEN"):
+        if settings.USE_NGROK:
             # pyngrok will only be installed, and should only ever be initialized, in a dev environment
             from pyngrok import ngrok
 
