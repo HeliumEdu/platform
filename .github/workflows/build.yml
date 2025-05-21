@@ -17,9 +17,8 @@ jobs:
     env:
       FORCE_COLOR: 1
       PYTHONDONTWRITEBYTECODE: 1
-      PLATFORM: linux/amd64
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm64
 
     steps:
       - uses: actions/checkout@v4
