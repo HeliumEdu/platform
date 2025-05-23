@@ -4,7 +4,7 @@ SHELL := /usr/bin/env bash
 PYTHON_BIN := python
 PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
-PLATFORM ?= linux/arm64
+PLATFORM ?= arm64
 
 all: build migrate test build-docker
 
@@ -22,7 +22,7 @@ venv:
 	$(PYTHON_BIN) -m pip install virtualenv
 	$(PYTHON_BIN) -m virtualenv $(PLATFORM_VENV)
 
-install: env venv
+install: venv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt -r requirements-deploy.txt; \
@@ -66,26 +66,28 @@ test: install-dev
 	)
 
 build-docker:
-	docker buildx build --target platform_resource -t helium/platform-resource:latest -t helium/platform-resource:$(TAG_VERSION) --platform=$(PLATFORM) --load .
+	docker buildx build --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
-	docker buildx build --target platform_api -t helium/platform-api:latest -t helium/platform-api:$(TAG_VERSION) --platform=$(PLATFORM) --load .
+	docker buildx build --target platform_api -t helium/platform-api:$(PLATFORM)-latest -t helium/platform-api:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
-	docker buildx build --target platform_worker -t helium/platform-worker:latest -t helium/platform-worker:$(TAG_VERSION) --platform=$(PLATFORM) --load .
+	docker buildx build --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
 	docker compose up -d
 
-stop-docker:
+stop-docker: docker-env
 	docker compose stop
+
+restart-docker: stop-docker run-docker
 
 publish-docker: build-docker
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/w6u3m4h5
 
-	docker tag helium/platform-resource:$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-resource:$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-resource:$(TAG_VERSION)
+	docker tag helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/w6u3m4h5/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
 
-	docker tag helium/platform-api:$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-api:$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-api:$(TAG_VERSION)
+	docker tag helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/w6u3m4h5/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
 
-	docker tag helium/platform-worker:$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-worker:$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-worker:$(TAG_VERSION)
+	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/w6u3m4h5/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
