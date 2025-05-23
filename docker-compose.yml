@@ -25,7 +25,7 @@ services:
     volumes:
       - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
   resource:
-    image: ${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource}
+    image: ${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM:-arm64}-latest}
     env_file: .env
     volumes:
       - type: bind
@@ -39,7 +39,7 @@ services:
       storage:
         condition: service_healthy
   api:
-    image: ${PLATFORM_API_IMAGE:-helium/platform-api}
+    image: ${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM:-arm64}-latest}
     env_file: .env
     volumes:
       - type: bind
@@ -57,7 +57,7 @@ services:
       resource:
         condition: service_completed_successfully
   worker:
-    image: ${PLATFORM_WORKER_IMAGE:-helium/platform-worker}
+    image: ${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM:-arm64}-latest}
     environment:
         PLATFORM_BEAT_AND_WORKER_MODE: "True"
     env_file: .env
