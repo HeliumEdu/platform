@@ -6,7 +6,10 @@
 [![Code Quality](https://app.codacy.com/project/badge/Grade/0cb1b256044e43739735987214f3a796)](https://app.codacy.com/gh/HeliumEdu/platform/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
 
-# Helium Platform Project
+# Helium Platform
+
+The backend `platform` for [Helium Edu](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
+integrating with the API can be found [here](https://api.heliumedu.com/docs/).
 
 ## Prerequisites
 
@@ -86,8 +89,8 @@ make test
 ### Frontend
 
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
-Using Docker, the `frontend` and `platform` containers can be started alongside each other using to almost entirely
-emulate a prod-like environment locally using [the deploy project](https://github.com/HeliumEdu/deploy). For
+Using Docker, the `frontend` and `platform` containers can be started alongside each other to almost entirely
+emulate a `prod`-like environment locally using [the `deploy` project](https://github.com/HeliumEdu/deploy). For
 functionality that still requires Internet-connected external services (ex. emails and text messages), provision
 [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/deploy/tree/main/terraform/environments/dev-local),
 which is meant to work alongside local Docker development. 
