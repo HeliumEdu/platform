@@ -51,7 +51,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-A superuser extends a basic Helium user, but also has access to [the admin site](http://localhost:8000/admin).
+A superuser extends a basic user (as if you registered from [the website](http://localhost:3000/register)), but also has access to [the admin site](http://localhost:8000/admin).
 
 ### Project Information
 
