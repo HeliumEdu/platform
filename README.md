@@ -51,6 +51,8 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
+A superuser extends a basic Helium user, but also has access to [the admin site](http://localhost:8000/admin).
+
 ### Project Information
 
 The `platform` is split up into several modules, all contained within this repository.  The base configuration is
