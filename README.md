@@ -11,6 +11,8 @@
 The backend `platform` for [Helium Edu](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
 integrating with the API can be found [here](https://api.heliumedu.com/docs/).
 
+Released container images are published to [Helium's AWS ECR](https://gallery.ecr.aws/w6u3m4h5/).
+
 ## Prerequisites
 
 - Docker
@@ -27,6 +29,7 @@ This project is configured to work with a [Virtualenv](https://virtualenv.pypa.i
 for development includes [LocalStack](https://www.localstack.cloud/) to emulate AWS services locally.
 
 ## Development
+
 ### Docker Setup
 
 To provision the Docker container with the Python/Django `platform` build and all dependencies, execute:
@@ -53,6 +56,11 @@ python manage.py createsuperuser
 
 A superuser extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)), but
 also has access to [the admin site](http://localhost:8000/admin).
+
+#### Image Architecture
+
+By default, the Docker image will be built for `linux/arm64`. To build a native image on an `x86` architecture
+instead, set `PLATFORM=linux/amd64`.
 
 ### Project Information
 

@@ -190,7 +190,11 @@ else:
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
     AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
     AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    if 'local' in ENVIRONMENT:
+        AWS_S3_URL_PROTOCOL = "http:"
+        STATIC_URL = f'{AWS_S3_URL_PROTOCOL}//{AWS_S3_CUSTOM_DOMAIN}/'
+    else:
+        STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
     # Media
 

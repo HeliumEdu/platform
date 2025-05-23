@@ -22,7 +22,7 @@ venv:
 	$(PYTHON_BIN) -m pip install virtualenv
 	$(PYTHON_BIN) -m virtualenv $(PLATFORM_VENV)
 
-install: env venv
+install: venv
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python -m pip install -r requirements.txt -r requirements-deploy.txt; \
@@ -75,8 +75,10 @@ build-docker:
 run-docker: docker-env
 	docker compose up -d
 
-stop-docker:
+stop-docker: docker-env
 	docker compose stop
+
+restart-docker: stop-docker run-docker
 
 publish-docker: build-docker
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/w6u3m4h5
