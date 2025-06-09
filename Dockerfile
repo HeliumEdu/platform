@@ -12,8 +12,8 @@ WORKDIR /app
 COPY requirements.txt .
 COPY requirements-deploy.txt .
 
-# Since /venv/bin is the first thing on the PATH, once we installed the /venv, all subsequent
-# usage of python will use the venv
+# Since /venv/bin is the first thing on the PATH, once we've installed in to /venv, all subsequent
+# usage of python will use the one installed in /venv
 RUN python3 -m virtualenv /venv
 RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-deploy.txt
 
