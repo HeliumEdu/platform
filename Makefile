@@ -81,13 +81,13 @@ stop-docker: docker-env
 restart-docker: stop-docker run-docker
 
 publish-docker: build-docker
-	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/w6u3m4h5
+	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
 
-	docker tag helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
+	docker tag helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
 
-	docker tag helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
+	docker tag helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(TAG_VERSION)
 
-	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/w6u3m4h5/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
-	docker push public.ecr.aws/w6u3m4h5/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
+	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
+	docker push public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
