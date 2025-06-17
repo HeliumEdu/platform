@@ -11,7 +11,7 @@
 The backend `platform` for [Helium Edu](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
 integrating with the API can be found [here](https://api.heliumedu.com/docs/).
 
-Released container images are published to [Helium's AWS ECR](https://gallery.ecr.aws/w6u3m4h5/).
+Released container images are published to [Helium's AWS ECR](https://gallery.ecr.aws/heliumedu/).
 
 ## Prerequisites
 
@@ -60,7 +60,7 @@ also has access to [the admin site](http://localhost:8000/admin).
 #### Image Architecture
 
 By default, the Docker image will be built for `linux/arm64`. To build a native image on an `x86` architecture
-instead, set `PLATFORM=linux/amd64`.
+instead, set `PLATFORM=amd64`.
 
 ### Project Information
 
