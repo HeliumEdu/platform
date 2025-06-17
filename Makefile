@@ -4,7 +4,7 @@ SHELL := /usr/bin/env bash
 PYTHON_BIN := python
 PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
-PLATFORM ?= arm64
+PLATFORM ?= amd64
 
 all: build migrate test build-docker
 
