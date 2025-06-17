@@ -1,6 +1,6 @@
 FROM ubuntu:24.04 AS build
 
-RUN apt-get update
+RUN apt-get --fix-missing update
 RUN apt-get install -y git python3-virtualenv python3-pip python3-setuptools pkg-config default-libmysqlclient-dev
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -21,7 +21,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-dep
 
 FROM ubuntu:24.04 AS platform_resource
 
-RUN apt-get update
+RUN apt-get --fix-missing update
 RUN apt-get install -y --no-install-recommends python3-mysqldb npm
 RUN npm install yuglify -g
 RUN apt-get clean
@@ -45,7 +45,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 FROM ubuntu:24.04 AS platform_api
 
-RUN apt-get update
+RUN apt-get --fix-missing update
 RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
 
@@ -76,7 +76,7 @@ CMD ["apache2ctl", "-D", "FOREGROUND"]
 
 FROM ubuntu:24.04 AS platform_worker
 
-RUN apt-get update
+RUN apt-get --fix-missing update
 RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
 
