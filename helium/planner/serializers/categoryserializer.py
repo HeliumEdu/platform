@@ -23,6 +23,23 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = (
             'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
 
+    def validate_title(self, title):
+        """
+        Ensure the title is unique within the course.
+
+        :param title: the title to be validated
+        """
+        if self.instance:
+            pk = self.instance.pk
+        else:
+            pk = None
+        course_id = self.context['request'].parser_context['kwargs']['course']
+
+        if Category.objects.for_course(course_id).exclude(pk=pk).filter(title=title):
+           raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
+
+        return title
+
     def validate_weight(self, weight):
         """
         Validate the weight of the incoming Category, ensuring it doesn't cause the parent course's cumulative
