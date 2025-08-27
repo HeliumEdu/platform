@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.5"
 
 import logging
 import random
@@ -22,6 +22,23 @@ class CategorySerializer(serializers.ModelSerializer):
             'num_homework', 'num_homework_graded',)
         read_only_fields = (
             'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_graded',)
+
+    def validate_title(self, title):
+        """
+        Ensure the title is unique within the course.
+
+        :param title: the title to be validated
+        """
+        if self.instance:
+            pk = self.instance.pk
+        else:
+            pk = None
+        course_id = self.context['request'].parser_context['kwargs']['course']
+
+        if Category.objects.for_course(course_id).exclude(pk=pk).filter(title=title):
+           raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
+
+        return title
 
     def validate_weight(self, weight):
         """

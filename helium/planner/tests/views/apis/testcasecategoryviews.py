@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.5"
 
 import json
 
@@ -369,3 +369,27 @@ class TestCaseCategoryViews(APITestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('not found', response.data['detail'].lower())
+
+    def test_create_category_title_already_exists(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+
+        # WHEN
+        data = {
+            'title': category.title,
+            'weight': 25,
+            'color': '#7bd148'
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_categories_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('course already has a category named', response.data['title'][0])
+        self.assertEqual(Category.objects.count(), 1)

@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.2"
+__version__ = "1.10.5"
 
 import os
 import sys
@@ -156,6 +156,9 @@ DATABASES = {
         'HOST': config('PLATFORM_DB_HOST'),
         'USER': config('PLATFORM_DB_USER'),
         'PASSWORD': config('PLATFORM_DB_PASSWORD'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
 
