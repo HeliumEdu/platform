@@ -391,4 +391,5 @@ class TestCaseCategoryViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('course already has a category named', response.data['title'][0])
         self.assertEqual(Category.objects.count(), 1)
