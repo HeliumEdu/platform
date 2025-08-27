@@ -156,6 +156,9 @@ DATABASES = {
         'HOST': config('PLATFORM_DB_HOST'),
         'USER': config('PLATFORM_DB_USER'),
         'PASSWORD': config('PLATFORM_DB_PASSWORD'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
 
