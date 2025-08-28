@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.8.3"
+__version__ = "1.10.8"
 
 import logging
 from datetime import datetime, timedelta
