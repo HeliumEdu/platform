@@ -9,7 +9,7 @@ from dateutil import parser
 from helium.planner.models import CourseGroup
 
 
-def given_course_group_exists(user, title='Test Course Group', start_date=datetime.date(2017, 1, 6),
+def given_course_group_exists(user, title='🍂 Test Course Group', start_date=datetime.date(2017, 1, 6),
                               end_date=datetime.date(2017, 5, 8),
                               shown_on_calendar=True):
     course_group = CourseGroup.objects.create(title=title,

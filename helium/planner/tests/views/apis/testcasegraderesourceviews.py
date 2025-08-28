@@ -10,7 +10,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
 
-class TestCaseEventViews(APITestCase):
+class TestCaseGradeResourceViews(APITestCase):
     def test_grade_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -84,7 +84,7 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(grade_points[2][1], 66.6667)
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][0])
-        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
+        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
                           75.0)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0]['categories'][0])
@@ -93,7 +93,7 @@ class TestCaseEventViews(APITestCase):
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][1])
-        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
+        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
                           50.0)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0]['categories'][1])

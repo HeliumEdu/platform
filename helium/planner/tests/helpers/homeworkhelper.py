@@ -10,7 +10,7 @@ from django.utils import timezone
 from helium.planner.models import Homework
 
 
-def given_homework_exists(course, title='Test Homework', all_day=False, show_end_time=True,
+def given_homework_exists(course, title='💻 Test Homework', all_day=False, show_end_time=True,
                           start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
                           end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc),
                           priority=65, comments='A comment on a homework.', current_grade='-1/100', completed=False,

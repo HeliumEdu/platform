@@ -117,6 +117,7 @@ class TestCaseMaterialViews(APITestCase):
         material_group1 = materialgrouphelper.given_material_group_exists(user)
         material_group2 = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group1, courses=[course1])
+        self.assertEqual(material.title, '📘 Test Material')
 
         # WHEN
         data = {

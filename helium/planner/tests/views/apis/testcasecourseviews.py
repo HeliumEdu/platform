@@ -124,6 +124,7 @@ class TestCaseCourseViews(APITestCase):
         course_group1 = coursegrouphelper.given_course_group_exists(user)
         course_group2 = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group1)
+        self.assertEqual(course.title, '🧪 Test Course')
 
         # WHEN
         data = {
