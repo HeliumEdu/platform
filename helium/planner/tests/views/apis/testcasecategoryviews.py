@@ -149,6 +149,7 @@ class TestCaseCategoryViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
+        self.assertEqual(category.title, '📊 Test Category 1')
 
         # WHEN
         data = {

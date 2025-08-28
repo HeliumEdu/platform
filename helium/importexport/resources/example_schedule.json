@@ -3,7 +3,7 @@
   "course_groups": [
     {
       "id": 4,
-      "title": "Example Semester",
+      "title": "🍂 Example Semester",
       "start_date": "2017-12-25",
       "end_date": "2018-01-25",
       "shown_on_calendar": true,
@@ -21,7 +21,7 @@
   "courses": [
     {
       "id": 7,
-      "title": "American History",
+      "title": "🇺🇸 American History",
       "room": "HSC 405",
       "credits": "3.00",
       "color": "#4986e7",
@@ -64,7 +64,7 @@
     },
     {
       "id": 8,
-      "title": "Computer Science",
+      "title": "💻 Computer Science",
       "room": "ENS 102",
       "credits": "3.00",
       "color": "#16a765",
@@ -149,7 +149,7 @@
   "categories": [
     {
       "id": 37,
-      "title": "Exam",
+      "title": "📊 Exam",
       "weight": "15.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -161,7 +161,7 @@
     },
     {
       "id": 38,
-      "title": "Final Exam",
+      "title": "📚 Final Exam",
       "weight": "30.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -173,7 +173,7 @@
     },
     {
       "id": 39,
-      "title": "Final Exam",
+      "title": "📚 Final Exam",
       "weight": "30.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -185,7 +185,7 @@
     },
     {
       "id": 40,
-      "title": "Homework",
+      "title": "🙇🏽‍♂️ Homework",
       "weight": "5.00",
       "average_grade": "80.0000",
       "grade_by_weight": "28.6250",
@@ -197,7 +197,7 @@
     },
     {
       "id": 41,
-      "title": "Midterm",
+      "title": "📖 Midterm",
       "weight": "25.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -209,7 +209,7 @@
     },
     {
       "id": 42,
-      "title": "Midterm",
+      "title": "📖 Midterm",
       "weight": "20.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -221,7 +221,7 @@
     },
     {
       "id": 43,
-      "title": "Project",
+      "title": "📽️ Project",
       "weight": "25.00",
       "average_grade": "80.0000",
       "grade_by_weight": "24.6250",
@@ -233,7 +233,7 @@
     },
     {
       "id": 44,
-      "title": "Quiz",
+      "title": "📈 Quiz",
       "weight": "15.00",
       "average_grade": "91.5000",
       "grade_by_weight": "40.7861",
@@ -245,7 +245,7 @@
     },
     {
       "id": 45,
-      "title": "Quiz",
+      "title": "📈 Quiz",
       "weight": "5.00",
       "average_grade": "92.5000",
       "grade_by_weight": "4.6250",
@@ -257,7 +257,7 @@
     },
     {
       "id": 46,
-      "title": "Reading",
+      "title": "📘 Reading",
       "weight": "10.00",
       "average_grade": "85.2778",
       "grade_by_weight": "8.5278",
@@ -269,7 +269,7 @@
     },
     {
       "id": 47,
-      "title": "Writing Assignment",
+      "title": "📝 Writing Assignment",
       "weight": "20.00",
       "average_grade": "92.6667",
       "grade_by_weight": "27.0611",
@@ -283,13 +283,7 @@
   "material_groups": [
     {
       "id": 7,
-      "title": "Example Textbooks",
-      "shown_on_calendar": true,
-      "user": 1
-    },
-    {
-      "id": 6,
-      "title": "Textbooks",
+      "title": "📚 Example Textbooks",
       "shown_on_calendar": true,
       "user": 1
     }

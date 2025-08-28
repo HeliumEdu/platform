@@ -90,7 +90,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        self.assertEqual(external_calendar.title, 'My Calendar')
+        self.assertEqual(external_calendar.title, '📅 My Calendar')
         self.assertTrue(external_calendar.shown_on_calendar)
 
         # WHEN

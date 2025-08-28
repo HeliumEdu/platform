@@ -199,6 +199,7 @@ class TestCaseHomeworkViews(APITestCase):
         material1 = materialhelper.given_material_exists(material_group)
         material2 = materialhelper.given_material_exists(material_group)
         homework = homeworkhelper.given_homework_exists(course, category=category1, materials=[material1])
+        self.assertEqual(homework.title, '💻 Test Homework')
 
         # WHEN
         data = {

@@ -117,6 +117,6 @@ class TestCaseCourseScheduleService(TestCase):
         comments3 = coursescheduleservice._get_comments(course)
 
         # THEN
-        self.assertEqual(comments1, '<a href="http://mycourse.com">Test Course</a> in DNC 201')
-        self.assertEqual(comments2, '<a href="http://mycourse.com">Test Course</a>')
+        self.assertEqual(comments1, '<a href="http://mycourse.com">🧪 Test Course</a> in DNC 201')
+        self.assertEqual(comments2, '<a href="http://mycourse.com">🧪 Test Course</a>')
         self.assertEqual(comments3, '')
