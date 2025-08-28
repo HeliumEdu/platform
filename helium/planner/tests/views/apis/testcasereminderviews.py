@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.7"
 
 import datetime
 import json
@@ -201,6 +201,7 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
+        self.assertEqual(reminder.title, '🌴 Test Reminder')
 
         # WHEN
         data = {

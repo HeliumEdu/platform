@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.5"
+__version__ = "1.10.7"
 
 import json
 
@@ -149,6 +149,7 @@ class TestCaseCategoryViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
+        self.assertEqual(category.title, '📊 Test Category 1')
 
         # WHEN
         data = {

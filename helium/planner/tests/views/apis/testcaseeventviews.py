@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.7"
 
 import datetime
 import json
@@ -154,6 +154,7 @@ class TestCaseEventViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
+        self.assertEqual(event.title, '🏀 Test Event')
 
         # WHEN
         data = {

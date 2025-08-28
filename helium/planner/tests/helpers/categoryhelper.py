@@ -1,11 +1,11 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 from helium.planner.models import Category
 
 
-def given_category_exists(course, title='Test Category 1', weight=0, color='#4986e7'):
+def given_category_exists(course, title='📊 Test Category 1', weight=0, color='#4986e7'):
     category = Category.objects.create(title=title,
                                        weight=weight,
                                        color=color,

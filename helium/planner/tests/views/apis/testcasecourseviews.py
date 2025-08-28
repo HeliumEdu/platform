@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.7"
 
 import datetime
 import json
@@ -124,6 +124,7 @@ class TestCaseCourseViews(APITestCase):
         course_group1 = coursegrouphelper.given_course_group_exists(user)
         course_group2 = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group1)
+        self.assertEqual(course.title, '🧪 Test Course')
 
         # WHEN
         data = {

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 import datetime
 
@@ -117,6 +117,6 @@ class TestCaseCourseScheduleService(TestCase):
         comments3 = coursescheduleservice._get_comments(course)
 
         # THEN
-        self.assertEqual(comments1, '<a href="http://mycourse.com">Test Course</a> in DNC 201')
-        self.assertEqual(comments2, '<a href="http://mycourse.com">Test Course</a>')
+        self.assertEqual(comments1, '<a href="http://mycourse.com">🧪 Test Course</a> in DNC 201')
+        self.assertEqual(comments2, '<a href="http://mycourse.com">🧪 Test Course</a>')
         self.assertEqual(comments3, '')

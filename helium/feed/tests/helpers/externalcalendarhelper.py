@@ -1,11 +1,11 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 from helium.feed.models import ExternalCalendar
 
 
-def given_external_calendar_exists(user, title='My Calendar', url='http://go.com/valid-ical-feed', color='#fad165',
+def given_external_calendar_exists(user, title='📅 My Calendar', url='http://go.com/valid-ical-feed', color='#fad165',
                                    shown_on_calendar=True):
     external_calendar = ExternalCalendar.objects.create(title=title,
                                                         url=url,

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.7"
 
 import json
 import os
@@ -90,7 +90,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        self.assertEqual(external_calendar.title, 'My Calendar')
+        self.assertEqual(external_calendar.title, '📅 My Calendar')
         self.assertTrue(external_calendar.shown_on_calendar)
 
         # WHEN

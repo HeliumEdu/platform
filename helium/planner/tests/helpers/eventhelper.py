@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 import datetime
 
@@ -10,7 +10,7 @@ from django.utils import timezone
 from helium.planner.models import Event
 
 
-def given_event_exists(user, title='Test Event', all_day=False, show_end_time=True,
+def given_event_exists(user, title='🏀 Test Event', all_day=False, show_end_time=True,
                        start=datetime.datetime(2017, 5, 8, 12, 0, 0, tzinfo=timezone.utc),
                        end=datetime.datetime(2017, 5, 8, 14, 0, 0, tzinfo=timezone.utc),
                        priority=75, comments='A comment on an event.', owner_id='12345'):

@@ -1,11 +1,11 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 from helium.planner.models import MaterialGroup
 
 
-def given_material_group_exists(user, title='Test Material Group', shown_on_calendar=True):
+def given_material_group_exists(user, title='📚 Test Material Group', shown_on_calendar=True):
     material_group = MaterialGroup.objects.create(title=title,
                                                   shown_on_calendar=shown_on_calendar,
                                                   user=user)

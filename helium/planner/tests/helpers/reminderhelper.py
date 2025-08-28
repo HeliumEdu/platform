@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 from dateutil import parser
 
@@ -8,7 +8,7 @@ from helium.common import enums
 from helium.planner.models import Reminder
 
 
-def given_reminder_exists(user, title='Test Reminder', message='You need to do something now.', offset=15,
+def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to do something now.', offset=15,
                           offset_type=enums.MINUTES, type=enums.TEXT, sent=False, event=None, homework=None):
     reminder = Reminder.objects.create(title=title,
                                        message=message,

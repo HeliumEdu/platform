@@ -1,12 +1,12 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.7"
 
 from helium.common import enums
 from helium.planner.models import Material
 
 
-def given_material_exists(material_group, title='Test Material', status=enums.SHIPPED, condition=enums.BROKEN,
+def given_material_exists(material_group, title='📘 Test Material', status=enums.SHIPPED, condition=enums.BROKEN,
                           website='http://www.material.com', price='9.99', details='Return by 7/1',
                           courses=None):
     if courses is None:

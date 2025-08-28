@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.10.7"
 
 import datetime
 import json
@@ -199,6 +199,7 @@ class TestCaseHomeworkViews(APITestCase):
         material1 = materialhelper.given_material_exists(material_group)
         material2 = materialhelper.given_material_exists(material_group)
         homework = homeworkhelper.given_homework_exists(course, category=category1, materials=[material1])
+        self.assertEqual(homework.title, '💻 Test Homework')
 
         # WHEN
         data = {
