@@ -2,7 +2,7 @@
   "external_calendars": [
     {
       "id": 1,
-      "title": "My Calendar",
+      "title": "📅 My Calendar",
       "url": "http://go.com/valid-ical-feed",
       "color": "#fad165",
       "shown_on_calendar": true,
@@ -12,7 +12,7 @@
   "course_groups": [
     {
       "id": 1,
-      "title": "Test Course Group",
+      "title": "🍂 Test Course Group",
       "start_date": "2017-01-06",
       "end_date": "2017-05-08",
       "shown_on_calendar": true,
@@ -28,7 +28,7 @@
     },
     {
       "id": 2,
-      "title": "Test Course Group",
+      "title": "🍂 Test Course Group",
       "start_date": "2017-01-06",
       "end_date": "2017-05-08",
       "shown_on_calendar": true,
@@ -46,7 +46,7 @@
   "courses": [
     {
       "id": 1,
-      "title": "Test Course",
+      "title": "🧪 Test Course",
       "room": "",
       "credits": "5.00",
       "color": "#4986e7",
@@ -71,7 +71,7 @@
     },
     {
       "id": 2,
-      "title": "Test Course",
+      "title": "🧪 Test Course",
       "room": "DNC 201",
       "credits": "5.00",
       "color": "#4986e7",
@@ -138,7 +138,7 @@
   "categories": [
     {
       "id": 2,
-      "title": "Test Category 1",
+      "title": "📊 Test Category 1",
       "weight": "0.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -164,7 +164,7 @@
   "material_groups": [
     {
       "id": 1,
-      "title": "Test Material Group",
+      "title": "📚 Test Material Group",
       "shown_on_calendar": true,
       "user": 1
     }
@@ -172,7 +172,7 @@
   "materials": [
     {
       "id": 1,
-      "title": "Test Material",
+      "title": "📘 Test Material",
       "status": 3,
       "condition": 7,
       "website": "http://www.material.com",
@@ -185,7 +185,7 @@
   "events": [
     {
       "id": 1,
-      "title": "Test Event",
+      "title": "🏀 Test Event",
       "all_day": false,
       "show_end_time": true,
       "start": "2017-05-08T12:00:00Z",
@@ -202,7 +202,7 @@
     },
     {
       "id": 2,
-      "title": "Test Event",
+      "title": "🏀 Test Event",
       "all_day": false,
       "show_end_time": true,
       "start": "2017-05-08T12:00:00Z",
@@ -219,7 +219,7 @@
   "homework": [
     {
       "id": 1,
-      "title": "Test Homework",
+      "title": "💻 Test Homework",
       "all_day": false,
       "show_end_time": true,
       "start": "2017-05-08T16:00:00Z",
@@ -242,7 +242,7 @@
     },
     {
       "id": 2,
-      "title": "Test Homework",
+      "title": "💻 Test Homework",
       "all_day": false,
       "show_end_time": true,
       "start": "2017-05-08T16:00:00Z",

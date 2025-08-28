@@ -84,7 +84,7 @@ class TestCaseMaterialGroupViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
-        self.assertEqual(material_group.title, 'Test Material Group')
+        self.assertEqual(material_group.title, '📚 Test Material Group')
         self.assertTrue(material_group.shown_on_calendar)
 
         # WHEN
