@@ -136,6 +136,10 @@ REMINDERS_FREQUENCY_SEC = 30
 
 EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC = 60
 
+PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 10
+# Purge users that never finish setting up their account after 7 days
+UNVERIFIED_USER_TTL_DAYS = 7
+
 # Application definition
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
