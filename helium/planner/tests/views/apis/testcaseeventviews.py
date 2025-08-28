@@ -154,6 +154,7 @@ class TestCaseEventViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
+        self.assertEqual(event.title, '🏀 Test Event')
 
         # WHEN
         data = {

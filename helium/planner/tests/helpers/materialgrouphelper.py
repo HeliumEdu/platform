@@ -5,7 +5,7 @@ __version__ = "1.5.1"
 from helium.planner.models import MaterialGroup
 
 
-def given_material_group_exists(user, title='Test Material Group', shown_on_calendar=True):
+def given_material_group_exists(user, title='📚 Test Material Group', shown_on_calendar=True):
     material_group = MaterialGroup.objects.create(title=title,
                                                   shown_on_calendar=shown_on_calendar,
                                                   user=user)

@@ -100,7 +100,7 @@ class TestCaseCourseGroupViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        self.assertEqual(course_group.title, 'Test Course Group')
+        self.assertEqual(course_group.title, '🍂 Test Course Group')
         self.assertTrue(course_group.shown_on_calendar)
 
         # WHEN
@@ -125,7 +125,7 @@ class TestCaseCourseGroupViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        self.assertEqual(course_group.title, 'Test Course Group')
+        self.assertEqual(course_group.title, '🍂 Test Course Group')
         self.assertTrue(course_group.shown_on_calendar)
 
         # WHEN

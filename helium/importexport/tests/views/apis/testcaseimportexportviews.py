@@ -85,7 +85,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(len(homework), 4)
         self.assertEqual(len(reminders), 4)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendars[1],
-                                                                    {'id': 2, 'title': 'My Calendar',
+                                                                    {'id': 2, 'title': '📅 My Calendar',
                                                                      'url': 'http://go.com/valid-ical-feed',
                                                                      'color': '#fad165', 'shown_on_calendar': False,
                                                                      'user': user.pk})
@@ -94,7 +94,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                                     'end_date': '2017-05-08',
                                                                                     'private_slug': None,
                                                                                     'shown_on_calendar': True,
-                                                                                    'title': 'Test Course Group',
+                                                                                    'title': '🍂 Test Course Group',
                                                                                     'trend': None,
                                                                                     'user': user.pk})
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'average_grade': -1.0,
@@ -102,10 +102,10 @@ class TestCaseImportExportViews(APITestCase):
                                                                                     'end_date': '2017-05-08',
                                                                                     'private_slug': None,
                                                                                     'shown_on_calendar': True,
-                                                                                    'title': 'Test Course Group',
+                                                                                    'title': '🍂 Test Course Group',
                                                                                     'trend': None,
                                                                                     'user': user.pk})
-        coursehelper.verify_course_matches_data(self, courses[2], {'title': 'Test Course', 'room': '',
+        coursehelper.verify_course_matches_data(self, courses[2], {'title': '🧪 Test Course', 'room': '',
                                                                    'credits': 5.0, 'color': '#4986e7',
                                                                    'website': 'http://mycourse.com', 'is_online': False,
                                                                    'current_grade': 66.6667, 'trend': None,
@@ -114,7 +114,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                    'start_date': '2017-01-06', 'end_date': '2017-05-08',
                                                                    'course_group': course_groups[2].pk})
         coursehelper.verify_course_matches_data(self, courses[3],
-                                                {'title': 'Test Course', 'room': 'DNC 201', 'credits': 5.0,
+                                                {'title': '🧪 Test Course', 'room': 'DNC 201', 'credits': 5.0,
                                                  'color': '#4986e7', 'website': 'http://mycourse.com',
                                                  'is_online': False, 'current_grade': -1.0, 'trend': None,
                                                  'private_slug': None, 'teacher_name': 'My Teacher',
@@ -153,45 +153,45 @@ class TestCaseImportExportViews(APITestCase):
                                                                                         'sat_start_time': '12:00:00',
                                                                                         'sat_end_time': '12:00:00',
                                                                                         'course': courses[3].pk})
-        categoryhelper.verify_category_matches_data(self, categories[1],
-                                                    {'title': 'Test Category 1', 'weight': 0.0, 'color': '#4986e7',
+        categoryhelper.verify_category_matches_data(self, categories[3],
+                                                    {'title': '📊 Test Category 1', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': -1.0, 'grade_by_weight': 0.0, 'trend': None,
                                                      'course': courses[3].pk})
-        categoryhelper.verify_category_matches_data(self, categories[3],
+        categoryhelper.verify_category_matches_data(self, categories[1],
                                                     {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
                                                      'course': courses[2].pk})
         materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
-                                                               {'title': 'Test Material Group',
+                                                               {'title': '📚 Test Material Group',
                                                                 'shown_on_calendar': True, 'user': user.pk})
         materialhelper.verify_material_matches_data(self, materials[1],
-                                                    {'title': 'Test Material', 'status': 3, 'condition': 7,
+                                                    {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
                                                      'details': 'Return by 7/1',
                                                      'material_group': material_groups[1].pk, 'courses': []})
         eventhelper.verify_event_matches_data(self, events[2],
-                                              {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
+                                              {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
                                                'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
-                                              {'title': 'Test Event', 'all_day': False, 'show_end_time': True,
+                                              {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
                                                'owner_id': None, 'user': user.pk})
         homeworkhelper.verify_homework_matches_data(self, homework[2],
-                                                    {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
+                                                    {'title': '💻 Test Homework', 'all_day': False, 'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
                                                      'comments': 'A comment on a homework.', 'current_grade': '20/30',
-                                                     'completed': True, 'category': categories[3].pk,
+                                                     'completed': True, 'category': categories[1].pk,
                                                      'course': courses[2].pk, 'materials': [materials[1].pk]})
         homeworkhelper.verify_homework_matches_data(self, homework[3],
-                                                    {'title': 'Test Homework', 'all_day': False, 'show_end_time': True,
+                                                    {'title': '💻 Test Homework', 'all_day': False, 'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
                                                      'comments': 'A comment on a homework.', 'current_grade': '-1/100',
-                                                     'completed': False, 'category': categories[1].pk,
+                                                     'completed': False, 'category': categories[3].pk,
                                                      'course': courses[3].pk, 'materials': []})
         reminderhelper.verify_reminder_matches_data(self, reminders[2], {'id': 1, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
@@ -316,8 +316,8 @@ class TestCaseImportExportViews(APITestCase):
         coursehelper.verify_course_matches_data(self, course2, data['courses'][1])
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule1, data['course_schedules'][0])
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule2, data['course_schedules'][1])
-        categoryhelper.verify_category_matches_data(self, category1, data['categories'][1])
-        categoryhelper.verify_category_matches_data(self, category2, data['categories'][0])
+        categoryhelper.verify_category_matches_data(self, category1, data['categories'][0])
+        categoryhelper.verify_category_matches_data(self, category2, data['categories'][1])
         homeworkhelper.verify_homework_matches_data(self, homework1, data['homework'][0])
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
@@ -338,7 +338,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 2)
         self.assertEqual(CourseSchedule.objects.count(), 2)
         self.assertEqual(Category.objects.count(), 11)
-        self.assertEqual(MaterialGroup.objects.count(), 2)
+        self.assertEqual(MaterialGroup.objects.count(), 1)
         self.assertEqual(Material.objects.count(), 4)
         self.assertEqual(Homework.objects.count(), 22)
         self.assertEqual(Reminder.objects.count(), 5)
@@ -358,7 +358,7 @@ class TestCaseImportExportViews(APITestCase):
 
         course_group = CourseGroup.objects.all()[0]
         course = Course.objects.for_course_group(course_group.pk)[0]
-        category = Category.objects.for_course(course.pk)[2]
+        category = Category.objects.for_course(course.pk)[0]
         self.assertEqual(float(course_group.average_grade), 86.2108)
         self.assertEqual(round(float(course_group.trend), 10), -0.0009202767)
         self.assertEqual(float(course.current_grade), 90.6358)
