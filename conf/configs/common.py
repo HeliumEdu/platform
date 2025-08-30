@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2018, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.13"
+__version__ = "1.10.14"
 
 import os
 import socket
@@ -117,7 +117,7 @@ TEMPLATES = [{
 
 SERVE_LOCAL = False
 
-AUTH_TOKEN_EXPIRE_FREQUENCY_HOUR = 5
+AUTH_TOKEN_EXPIRY_HOUR = 5
 
 AUTH_TOKEN_TTL_DAYS = 30
 
@@ -136,7 +136,7 @@ REMINDERS_FREQUENCY_SEC = 30
 
 EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC = 60
 
-PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 10
+PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 10
 # Purge users that never finish setting up their account after 7 days
 UNVERIFIED_USER_TTL_DAYS = 7
 
