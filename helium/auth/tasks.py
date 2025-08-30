@@ -86,8 +86,8 @@ def expire_auth_tokens():
 @app.task
 def purge_unverified_users():
     for user in get_user_model().objects.filter(
-            created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS),
-            is_active=False):
+            is_active=False,
+            created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS)):
         logger.info(
             f'Deleting user {user.username}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
@@ -97,6 +97,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRE_FREQUENCY_HOUR, minute=0), expire_auth_tokens.s())
+    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRY_HOUR, minute=0), expire_auth_tokens.s())
     # Add schedule to purge verifies that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
