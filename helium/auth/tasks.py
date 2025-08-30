@@ -98,5 +98,5 @@ def purge_unverified_users():
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
     sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRY_HOUR, minute=0), expire_auth_tokens.s())
-    # Add schedule to purge verifies that don't finish setting up their account
+    # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
