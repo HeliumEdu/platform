@@ -16,7 +16,8 @@ class EventFilter(filters.FilterSet):
         model = Event
         fields = {
             'start': ['exact', 'gte'],
-            'end': ['exact', 'lt']
+            'end': ['exact', 'lt'],
+            'title': ['exact'],
         }
 
 
@@ -28,6 +29,7 @@ class HomeworkFilter(filters.FilterSet):
             'end': ['exact', 'lt'],
             'completed': ['exact'],
             'category': ['exact'],
+            'title': ['exact'],
         }
 
 
@@ -38,6 +40,7 @@ class CourseGroupFilter(filters.FilterSet):
             'shown_on_calendar': ['exact'],
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
+            'title': ['exact'],
         }
 
 
@@ -47,6 +50,7 @@ class CourseFilter(filters.FilterSet):
         fields = {
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
+            'title': ['exact'],
         }
 
 
@@ -59,4 +63,5 @@ class ReminderFilter(filters.FilterSet):
             'type': ['exact'],
             'sent': ['exact'],
             'start_of_range': ['lte'],
+            'title': ['exact'],
         }
