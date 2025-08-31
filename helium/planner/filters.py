@@ -6,7 +6,7 @@ import logging
 
 from django_filters import rest_framework as filters
 
-from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder
+from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,15 @@ class CourseFilter(filters.FilterSet):
         fields = {
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
+            'title': ['exact'],
+        }
+
+
+class CategoryFilter(filters.FilterSet):
+    class Meta:
+        model = Category
+        fields = {
+            'course': ['exact'],
             'title': ['exact'],
         }
 
