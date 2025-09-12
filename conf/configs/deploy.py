@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.5"
+__version__ = "1.10.17"
 
 import os
 import sys
@@ -211,5 +211,5 @@ else:
 CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
 CELERY_RESULT_BACKEND = config('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
-CELERY_TASK_CALENDAR_SYNC_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_CALENDAR_SYNC_TASK_TIMEOUT', 60 * 5)
+CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_REINDEX_FEEDS_TIMEOUT', 60 * 5)
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

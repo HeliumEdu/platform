@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2018, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.16"
+__version__ = "1.10.17"
 
 import os
 import socket
@@ -123,20 +123,18 @@ AUTH_TOKEN_TTL_DAYS = 30
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
-# Cache feeds for 3 hours
 FEED_CACHE_TTL = 60 * 60 * 3
 # Refresh cache 10 mins before it expires
 FEED_CACHE_REFRESH_TTL = FEED_CACHE_TTL - (60 * 10)
+REINDEX_FEED_FREQUENCY_SEC = 75
 
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY = 2
 
-REMINDERS_FREQUENCY_SEC = 30
+REMINDERS_FREQUENCY_SEC = 60
 
-EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC = 60
-
-PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 10
+PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 12
 # Purge users that never finish setting up their account after 7 days
 UNVERIFIED_USER_TTL_DAYS = 7
 
