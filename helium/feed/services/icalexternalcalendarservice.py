@@ -197,14 +197,14 @@ def calendar_to_events(external_calendar, start=None, end=None):
     return events
 
 
-def reindex_stale_caches():
+def reindex_stale_feed_caches():
     reindexed = []
 
     for external_calendar in ExternalCalendar.objects.needs_recached(
             timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
-        logger.info(f"Reindexing External Calendar {external_calendar.pk}")
+        logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")
 
         try:
             calendar = validate_url(external_calendar.url)
