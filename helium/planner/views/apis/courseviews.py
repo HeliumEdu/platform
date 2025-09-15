@@ -14,7 +14,6 @@ from helium.planner import permissions
 from helium.planner.filters import CourseFilter
 from helium.planner.models import Course
 from helium.planner.permissions import IsCourseGroupOwner
-from helium.planner.schemas import SubCourseGroupListSchema, CourseDetailSchema
 from helium.planner.serializers.courseserializer import CourseSerializer
 
 logger = logging.getLogger(__name__)
@@ -55,7 +54,6 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner)
     filterset_class = CourseFilter
-    schema = SubCourseGroupListSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -94,7 +92,6 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
     """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
-    schema = CourseDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

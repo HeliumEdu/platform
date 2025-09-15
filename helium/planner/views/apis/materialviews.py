@@ -13,7 +13,6 @@ from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
-from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 from helium.planner.serializers.materialserializer import MaterialSerializer
 
 logger = logging.getLogger(__name__)
@@ -56,7 +55,6 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsMaterialGroupOwner)
-    schema = SubMaterialGroupListSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -98,7 +96,6 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
     """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
-    schema = MaterialDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
-from helium.auth.schemas import UserRegisterSchema, UserVerifySchema, UserForgotSchema
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
@@ -23,7 +22,6 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     Register a new user.
     """
     serializer_class = UserSerializer
-    schema = UserRegisterSchema()
 
     def register(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
@@ -47,7 +45,6 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
     Verify an email address for the user instance associated with the username and verification code.
     """
     serializer_class = UserSerializer
-    schema = UserVerifySchema()
 
     def verify_email(self, request, *args, **kwargs):
         response = authservice.verify_email(request)
@@ -61,7 +58,6 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
     Reset the password for the user instance associated with the given email.
     """
     serializer_class = UserSerializer
-    schema = UserForgotSchema()
 
     def forgot_password(self, request, *args, **kwargs):
         response = authservice.forgot_password(request)

@@ -16,7 +16,6 @@ from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event
-from helium.planner.schemas import EventDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 
 logger = logging.getLogger(__name__)
@@ -86,7 +85,6 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     """
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = EventDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
