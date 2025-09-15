@@ -16,7 +16,6 @@ from helium.planner import permissions
 from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
-from helium.planner.schemas import SubCourseListSchema, HomeworkDetailSchema
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ class UserHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     filterset_class = HomeworkFilter
     search_fields = ('title', 'comments', 'category__title', 'course__title',)
     order_fields = ('title', 'start', 'completed', 'priority', 'category__title', 'course__title',)
-    schema = SubCourseListSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -63,7 +61,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     filterset_class = HomeworkFilter
-    schema = SubCourseListSchema()
+    # schema = SubCourseListSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -117,7 +115,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
     """
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
-    schema = HomeworkDetailSchema()
+    # schema = HomeworkDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

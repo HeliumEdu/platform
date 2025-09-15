@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.forms.userdeleteform import UserDeleteForm
-from helium.auth.schemas import UserDeleteSchema
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
@@ -63,7 +62,6 @@ class UserDeleteResourceView(HeliumAPIView):
     Delete the given user instance.
     """
     serializer_class = UserSerializer
-    schema = UserDeleteSchema()
 
     def get_object(self):
         try:

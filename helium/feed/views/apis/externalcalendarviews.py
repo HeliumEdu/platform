@@ -11,7 +11,6 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 from helium.feed.models import ExternalCalendar
-from helium.feed.schemas import ExternalCalendarIDSchema
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
 logger = logging.getLogger(__name__)
@@ -68,7 +67,6 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
     """
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = ExternalCalendarIDSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

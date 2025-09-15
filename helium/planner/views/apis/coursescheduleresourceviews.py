@@ -10,7 +10,6 @@ from rest_framework.response import Response
 
 from helium.common.views.views import HeliumAPIView
 from helium.planner.models import Course, CourseSchedule
-from helium.planner.schemas import CourseScheduleDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
 
@@ -23,7 +22,6 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
     Return all course schedules as a list of event instances.
     """
     permission_classes = (IsAuthenticated,)
-    schema = CourseScheduleDetailSchema()
 
     def get(self, request, *args, **kwargs):
         user = self.request.user

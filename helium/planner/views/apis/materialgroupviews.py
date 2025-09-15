@@ -11,7 +11,6 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 from helium.planner.models import MaterialGroup
-from helium.planner.schemas import MaterialGroupDetailSchema
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 
 logger = logging.getLogger(__name__)
@@ -66,7 +65,6 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
     """
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = MaterialGroupDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):

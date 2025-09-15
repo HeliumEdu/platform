@@ -13,7 +13,6 @@ from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Attachment
-from helium.planner.schemas import AttachmentListSchema, AttachmentDetailSchema
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 
 logger = logging.getLogger(__name__)
@@ -41,7 +40,6 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
     filterset_fields = ('course', 'event', 'homework',)
-    schema = AttachmentListSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
@@ -111,7 +109,6 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
     """
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    schema = AttachmentDetailSchema()
 
     def get_queryset(self):
         if hasattr(self.request, 'user'):
