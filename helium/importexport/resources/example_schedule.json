@@ -3,7 +3,7 @@
   "course_groups": [
     {
       "id": 4,
-      "title": "🍂 Example Semester",
+      "title": "Example Semester",
       "start_date": "2017-12-25",
       "end_date": "2018-01-25",
       "shown_on_calendar": true,
@@ -21,11 +21,11 @@
   "courses": [
     {
       "id": 7,
-      "title": "🇺🇸 American History",
+      "title": "World History 🌎",
       "room": "HSC 405",
       "credits": "3.00",
       "color": "#4986e7",
-      "website": "http://en.wikipedia.org/wiki/History_of_the_United_States",
+      "website": "https://www.worldhistory.org/",
       "is_online": false,
       "current_grade": "90.6358",
       "trend": 0.0039735044860502375,
@@ -64,7 +64,7 @@
     },
     {
       "id": 8,
-      "title": "💻 Computer Science",
+      "title": "Computer Science 💻",
       "room": "ENS 102",
       "credits": "3.00",
       "color": "#16a765",
@@ -149,7 +149,7 @@
   "categories": [
     {
       "id": 37,
-      "title": "📊 Exam",
+      "title": "Exam 📊",
       "weight": "15.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -161,7 +161,7 @@
     },
     {
       "id": 38,
-      "title": "📚 Final Exam",
+      "title": "Final Exam 📖",
       "weight": "30.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -173,7 +173,7 @@
     },
     {
       "id": 39,
-      "title": "📚 Final Exam",
+      "title": "Final Exam 👨🏽‍💻",
       "weight": "30.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -185,7 +185,7 @@
     },
     {
       "id": 40,
-      "title": "🙇🏽‍♂️ Homework",
+      "title": "Homework 🙇🏼‍♂️",
       "weight": "5.00",
       "average_grade": "80.0000",
       "grade_by_weight": "28.6250",
@@ -197,7 +197,7 @@
     },
     {
       "id": 41,
-      "title": "📖 Midterm",
+      "title": "Midterm 📖",
       "weight": "25.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -209,7 +209,7 @@
     },
     {
       "id": 42,
-      "title": "📖 Midterm",
+      "title": "Midterm 🗂️",
       "weight": "20.00",
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
@@ -221,7 +221,7 @@
     },
     {
       "id": 43,
-      "title": "📽️ Project",
+      "title": "Project 👨🏽‍💻",
       "weight": "25.00",
       "average_grade": "80.0000",
       "grade_by_weight": "24.6250",
@@ -233,7 +233,7 @@
     },
     {
       "id": 44,
-      "title": "📈 Quiz",
+      "title": "Quiz 📈",
       "weight": "15.00",
       "average_grade": "91.5000",
       "grade_by_weight": "40.7861",
@@ -245,7 +245,7 @@
     },
     {
       "id": 45,
-      "title": "📈 Quiz",
+      "title": "Quiz 📈",
       "weight": "5.00",
       "average_grade": "92.5000",
       "grade_by_weight": "4.6250",
@@ -257,7 +257,7 @@
     },
     {
       "id": 46,
-      "title": "📘 Reading",
+      "title": "Reading 📘",
       "weight": "10.00",
       "average_grade": "85.2778",
       "grade_by_weight": "8.5278",
@@ -269,7 +269,7 @@
     },
     {
       "id": 47,
-      "title": "📝 Writing Assignment",
+      "title": "Writing Assignment 📝",
       "weight": "20.00",
       "average_grade": "92.6667",
       "grade_by_weight": "27.0611",
@@ -283,7 +283,7 @@
   "material_groups": [
     {
       "id": 7,
-      "title": "📚 Example Textbooks",
+      "title": "Example Textbooks",
       "shown_on_calendar": true,
       "user": 1
     }
@@ -291,12 +291,12 @@
   "materials": [
     {
       "id": 13,
-      "title": "American Dreams",
+      "title": "Civilizations Past and Present, Combined Volume, 13th edition",
       "status": 2,
       "condition": 0,
-      "website": "http://www.amazon.com/American-Dreams-Longman-Topics-Reader/dp/0205520790",
+      "website": "https://www.pearson.com/en-us/subject-catalog/p/civilizations-past-and-present-combined-volume/P200000002807/9780137498444",
       "price": "$27.01",
-      "details": "<div><strong>ISBN:</strong> 978-0205520794</div>",
+      "details": "<div><strong>ISBN:</strong> 978-0137498444</div>",
       "material_group": 7,
       "courses": [
         7
@@ -330,12 +330,12 @@
     },
     {
       "id": 16,
-      "title": "Uncle Tom's Cabin",
+      "title": "Sapiens: A Brief History of Humankind",
       "status": 1,
       "condition": 0,
       "website": "",
       "price": "",
-      "details": "<b>ISBN</b>:&nbsp;<span style=\"color: rgb(51, 51, 51); font-family: Arial, sans-serif; line-height: 19px;\">978-0486440286</span>",
+      "details": "<b>ISBN</b>:&nbsp;<span style=\"color: rgb(51, 51, 51); font-family: Arial, sans-serif; line-height: 19px;\">978-0062316097</span>",
       "material_group": 7,
       "courses": [
         7
