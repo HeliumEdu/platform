@@ -357,8 +357,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(reminder.start_of_range.date(), reminder.homework.start.date())
 
         course_group = CourseGroup.objects.all()[0]
-        course = Course.objects.for_course_group(course_group.pk)[0]
-        category = Category.objects.for_course(course.pk)[0]
+        course = Course.objects.for_course_group(course_group.pk)[1]
+        category = Category.objects.for_course(course.pk)[2]
         self.assertEqual(float(course_group.average_grade), 86.2108)
         self.assertEqual(round(float(course_group.trend), 10), -0.0009202767)
         self.assertEqual(float(course.current_grade), 90.6358)
