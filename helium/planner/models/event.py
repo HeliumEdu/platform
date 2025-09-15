@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 from django.conf import settings
 from django.db import models
@@ -31,5 +31,5 @@ class Event(BaseCalendar):
         return self.user
 
     @property
-    def calendar_item_type(self):
+    def calendar_item_type(self) -> int:
         return self.__calendar_item_type

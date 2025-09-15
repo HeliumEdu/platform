@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 from django.db import models
 
@@ -38,7 +38,7 @@ class Homework(BaseCalendar):
         return self.course.get_user()
 
     @property
-    def calendar_item_type(self):
+    def calendar_item_type(self) -> int:
         return enums.HOMEWORK
 
     def save(self, *args, **kwargs):

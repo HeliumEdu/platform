@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 import os
 
@@ -299,4 +299,4 @@ class TestCaseAttachmentViews(APITestCase):
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('not found', response.data['detail'].lower())
+                self.assertIn('matches the given query', response.data['detail'].lower())

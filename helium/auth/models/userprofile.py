@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 import logging
 
@@ -20,7 +20,7 @@ class UserProfile(BaseModel):
     phone_changing = models.CharField(max_length=50, blank=True, null=True)
 
     phone_verification_code = models.PositiveIntegerField(
-        help_text='The code sent to `phone` when registering or changing a phone number',
+        help_text='The code sent to `phone` when registering or changing a phone number.',
         default=generate_phone_verification_code)
 
     phone_verified = models.BooleanField(default=False)

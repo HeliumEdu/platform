@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 import logging
 
@@ -22,7 +22,7 @@ class ExternalCalendar(BaseModel):
                           max_length=3000)
 
     color = models.CharField(
-        help_text='A valid hex color code choice to determine the color items will be shown on the calendar',
+        help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',

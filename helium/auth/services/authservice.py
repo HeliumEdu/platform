@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 import logging
 
@@ -82,4 +82,4 @@ def verify_email(request):
 
         return Response()
     except get_user_model().DoesNotExist:
-        raise NotFound('User not found.')
+        raise NotFound('No User matches the given query.')

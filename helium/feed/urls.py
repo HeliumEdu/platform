@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.27"
 
 from django.urls import path
 
@@ -14,11 +14,11 @@ urlpatterns = [
     ##############################
     # Unauthenticated URLs
     ##############################
-    path('feed/private/<slug>/events.ics', PrivateEventsICALResourceView.as_view(),
+    path('feed/private/<str:slug>/events.ics', PrivateEventsICALResourceView.as_view(),
          name='feed_private_events_ical'),
-    path('feed/private/<slug>/homework.ics', PrivateHomeworkICALResourceView.as_view(),
+    path('feed/private/<str:slug>/homework.ics', PrivateHomeworkICALResourceView.as_view(),
          name='feed_private_homework_ical'),
-    path('feed/private/<slug>/courseschedules.ics', PrivateCourseSchedulesICALResourceView.as_view(),
+    path('feed/private/<str:slug>/courseschedules.ics', PrivateCourseSchedulesICALResourceView.as_view(),
          name='feed_private_courseschedules_ical'),
 
     ##############################
