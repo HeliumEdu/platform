@@ -72,7 +72,7 @@ class UserDeleteResourceView(HeliumAPIView):
 
             return get_user_model().objects.get(username=self.request.data['username'])
         except get_user_model().DoesNotExist:
-            raise NotFound('User not found.')
+            raise NotFound('No User matches the given query.')
 
     def delete(self, request, *args, **kwargs):
         user = self.get_object()

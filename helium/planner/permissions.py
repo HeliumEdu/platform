@@ -44,34 +44,34 @@ class IsMaterialGroupOwner(permissions.BasePermission):
 
 def check_course_group_permission(user_id, course_group_id):
     if not CourseGroup.objects.exists_for_user(course_group_id, user_id):
-        raise NotFound('CourseGroup not found.')
+        raise NotFound('No CourseGroup matches the given query.')
 
 
 def check_course_permission(user_id, course_id):
     if not Course.objects.exists_for_user(course_id, user_id):
-        raise NotFound('Course not found.')
+        raise NotFound('No Course matches the given query.')
 
 
 def check_material_group_permission(user_id, material_group_id):
     if not MaterialGroup.objects.exists_for_user(material_group_id, user_id):
-        raise NotFound('MaterialGroup not found.')
+        raise NotFound('No MaterialGroup matches the given query.')
 
 
 def check_event_permission(user_id, event_id):
     if not Event.objects.exists_for_user(event_id, user_id):
-        raise NotFound('Event not found.')
+        raise NotFound('No Event matches the given query.')
 
 
 def check_homework_permission(user_id, homework_id):
     if not Homework.objects.exists_for_user(homework_id, user_id):
-        raise NotFound('Homework not found.')
+        raise NotFound('No Homework matches the given query.')
 
 
 def check_category_permission(user_id, category_id):
     if not Category.objects.exists_for_user(category_id, user_id):
-        raise NotFound('Category not found.')
+        raise NotFound('No Category matches the given query.')
 
 
 def check_material_permission(user_id, material_id):
     if not Material.objects.exists_for_user(material_id, user_id):
-        raise NotFound('Material not found.')
+        raise NotFound('No Material matches the given query.')
