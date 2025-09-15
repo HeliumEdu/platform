@@ -65,6 +65,13 @@ test: install-dev
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
 	)
 
+run-devserver: install-dev
+	@( \
+		source $(PLATFORM_VENV)/bin/activate; \
+		ENVIRONMENT=local python manage.py migrate; \
+		ENVIRONMENT=local python manage.py runserver; \
+	)
+
 build-docker:
 	docker buildx build --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
