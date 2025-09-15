@@ -20,18 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 class ExportResourceView(ViewSet, HeliumAPIView):
-    """
-    export_data:
-    Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of
-    `attachment; filename=Helium_<username>.json`, so if the request is initiated from an HTML form, the response will
-    be a downloadable file in a browser.
-
-    The exported data for each model type will match that of the documented APIs.
-    """
     queryset = get_user_model().objects.all()
+    serializer_class = ExportSerializer
     permission_classes = (IsAuthenticated,)
 
     def export_data(self, request, *args, **kwargs):
+        """
+        Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of
+        `attachment; filename=Helium_<username>.json`, so if the request is initiated from an HTML form, the response
+        will be a downloadable file in a browser.
+
+        The exported data for each model type will match that of the documented APIs.
+        """
         user = self.request.user
 
         serializer = ExportSerializer({

@@ -13,22 +13,17 @@ from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
-from helium.planner.schemas import SubMaterialGroupListSchema, MaterialDetailSchema
 from helium.planner.serializers.materialserializer import MaterialSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all material instances for the authenticated user.
-    """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             materials = Material.objects.for_user(user.pk)
             # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
@@ -39,33 +34,29 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all material instances for the authenticated user.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
 
 
 class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
-    """
-    get:
-    Return a list of all material instances for the given material group.
-
-    post:
-    Create a new material instance for the given material group.
-
-    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
-    """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsMaterialGroupOwner)
-    schema = SubMaterialGroupListSchema()
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
         else:
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all material instances for the given material group.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -74,6 +65,9 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         serializer.save(material_group_id=self.kwargs['material_group'])
 
     def post(self, request, *args, **kwargs):
+        """
+        Create a new material instance for the given material group.
+        """
         for course_id in request.data.get('courses', []):
             permissions.check_course_permission(request.user.pk, course_id)
 
@@ -86,33 +80,28 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
 
 
 class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    """
-    get:
-    Return the given material instance.
-
-    put:
-    Update the given material instance.
-
-    delete:
-    Delete the given material instance.
-    """
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
-    schema = MaterialDetailSchema()
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
         else:
             return Material.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the given material instance.
+        """
         response = self.retrieve(request, *args, **kwargs)
 
         return response
 
     def put(self, request, *args, **kwargs):
+        """
+        Update the given material instance.
+        """
         if 'material_group' in request.data:
             permissions.check_material_group_permission(request.user.pk, request.data['material_group'])
         for course_id in request.data.get('courses', []):
@@ -125,6 +114,9 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         return response
 
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the given material instance.
+        """
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

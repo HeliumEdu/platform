@@ -10,7 +10,6 @@ from rest_framework.response import Response
 
 from helium.common.views.views import HeliumAPIView
 from helium.planner.models import Course, CourseSchedule
-from helium.planner.schemas import CourseScheduleDetailSchema
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
 
@@ -18,14 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class CourseScheduleAsEventsResourceView(HeliumAPIView):
-    """
-    get:
-    Return all course schedules as a list of event instances.
-    """
+    serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
-    schema = CourseScheduleDetailSchema()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return all course schedules as a list of event instances.
+        """
         user = self.request.user
         try:
             course = Course.objects.get(pk=self.kwargs['course'])
@@ -37,6 +35,6 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
 
             return Response(serializer.data)
         except Course.DoesNotExist:
-            raise NotFound('Course not found.')
+            raise NotFound('No Course matches the given query.')
         except CourseSchedule.DoesNotExist:
-            raise NotFound('CourseSchedule not found.')
+            raise NotFound('No CourseSchedule matches the given query.')

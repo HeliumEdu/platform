@@ -1,4 +1,4 @@
-.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test build-docker run-docker stop-docker restart-docker publish-docker
+.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -47,10 +47,10 @@ build: install
 		python manage.py collectstatic --noinput; \
 	)
 
-build-migrations: install
+build-migrations: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python manage.py makemigrations; \
+		ENVIRONMENT=local python manage.py makemigrations; \
 	)
 
 migrate: install

@@ -12,10 +12,12 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
+from rest_framework.serializers import BaseSerializer
+
 from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
 from health_check.plugins import plugin_dir
 from rest_framework import status
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import GenericViewSet
 
 
 def _run_checks(plugins):
@@ -54,14 +56,12 @@ def _build_components_status(plugins):
     return components, system_status
 
 
-class StatusResourceView(ViewSet):
-    """
-    status:
-    Check the status of the system and its dependencies.
-    """
-
+class StatusResourceView(GenericViewSet):
     @method_decorator(never_cache)
     def status(self, request, *args, **kwargs):
+        """
+        Check the status of the system and its dependencies.
+        """
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
             for plugin_class, options in plugin_dir._registry
@@ -82,14 +82,12 @@ class StatusResourceView(ViewSet):
         )
 
 
-class HealthResourceView(ViewSet):
-    """
-    health:
-    Check the health of this node and its dependencies.
-    """
-
+class HealthResourceView(GenericViewSet):
     @method_decorator(never_cache)
     def health(self, request, *args, **kwargs):
+        """
+        Check the health of this node and its dependencies.
+        """
         plugins = sorted((
             plugin_class(**copy.deepcopy(options))
             for plugin_class, options in plugin_dir._registry

@@ -369,7 +369,7 @@ class TestCaseCategoryViews(APITestCase):
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('not found', response.data['detail'].lower())
+                self.assertIn('matches the given query', response.data['detail'].lower())
 
     def test_create_category_title_already_exists(self):
         # GIVEN

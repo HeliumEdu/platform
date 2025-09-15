@@ -35,7 +35,7 @@ class User(AbstractBaseUser, BaseModel):
     is_active = models.BooleanField(default=False)
 
     verification_code = models.SlugField(
-        help_text='The code sent to `email` when registering or changing an email address',
+        help_text='The code sent to `email` when registering or changing an email address.',
         default=uuid.uuid4, unique=True)
 
     is_superuser = models.BooleanField(default=False)

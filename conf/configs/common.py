@@ -16,6 +16,7 @@ from corsheaders.defaults import default_headers
 from conf.configcache import config
 from conf.settings import PROJECT_ID
 from conf.utils import strip_www
+from helium.common import enums
 
 # ############################
 # Project configuration
@@ -73,6 +74,8 @@ INSTALLED_APPS = (
     'pipeline',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'django_filters',
     'corsheaders',
     # Project modules
@@ -175,7 +178,20 @@ REST_FRAMEWORK = {
         'user': '1000/min'
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': "Helium API Documentation",
+    'VERSION': PROJECT_VERSION,
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'ENUM_NAME_OVERRIDES': {
+        'ColorEnum': enums.ALLOWED_COLORS,
+        'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
+        'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
+    }
 }
 
 # Internationalization
@@ -271,12 +287,6 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
-
-# Ignore warnings related to schema generation; this is related to DRF migrating to OpenAPI as its standard,
-# but this project still implements CoreAPI. If this project ever refactors to OpenAPI schemas, this
-# warnings filter can be removed: https://www.django-rest-framework.org/community/3.10-announcement/#continuing-to-use-coreapi
-warnings.filterwarnings('ignore', r"<class '.*'> is not compatible with schema generation",
-                        module=r'django_filters\.rest_framework')
 
 # Static files (CSS, JavaScript, Images)
 

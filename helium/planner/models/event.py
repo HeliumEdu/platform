@@ -31,5 +31,5 @@ class Event(BaseCalendar):
         return self.user
 
     @property
-    def calendar_item_type(self):
+    def calendar_item_type(self) -> int:
         return self.__calendar_item_type
