@@ -20,49 +20,42 @@ logger = logging.getLogger(__name__)
 
 
 class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all course instances for the authenticated user, including course schedule details.
-    """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
     filterset_class = CourseFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Course.objects.for_user(user.pk)
         else:
-            Course.objects.none()
+            return Course.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all course instances for the authenticated user, including course schedule details.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
 
 
 class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
-    """
-    get:
-    Return a list of all course instances, including course schedule details, for the given course group.
-
-    post:
-    Create a new course instance for the given course group.
-
-    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
-    """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner)
     filterset_class = CourseFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
         else:
             return Course.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all course instances, including course schedule details, for the given course group.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -71,6 +64,9 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         serializer.save(course_group_id=self.kwargs['course_group'])
 
     def post(self, request, *args, **kwargs):
+        """
+        Create a new course instance for the given course group.
+        """
         response = self.create(request, *args, **kwargs)
 
         logger.info(
@@ -80,32 +76,28 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
 
 
 class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    """
-    get:
-    Return the given course instance, including course schedule details.
-
-    put:
-    Update the given course instance.
-
-    delete:
-    Delete the given course instance.
-    """
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group'])
         else:
-            Course.objects.none()
+            return Course.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the given course instance, including course schedule details.
+        """
         response = self.retrieve(request, *args, **kwargs)
 
         return response
 
     def put(self, request, *args, **kwargs):
+        """
+        Update the given course instance.
+        """
         if 'course_group' in request.data:
             permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
 
@@ -116,6 +108,9 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         return response
 
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the given course instance.
+        """
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(

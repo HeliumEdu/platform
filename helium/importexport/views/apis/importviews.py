@@ -17,19 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class ImportResourceView(ViewSet, HeliumAPIView):
-    """
-    import_data:
-    Import the resources for the authenticated user from the the uploaded files. Multiple files can be imported at once
-    passed in the `file[]` field.
-
-    The maximum file size for each upload is 10M.
-
-    Each model will be imported in a schema matching that of the documented APIs.
-    """
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
 
     def import_data(self, request, *args, **kwargs):
+        """
+        Import the resources for the authenticated user from the uploaded files. Multiple files can be imported at
+        once passed in the `file[]` field.
+
+        The maximum file size for each upload is 10M.
+
+        Each model will be imported in a schema matching that of the documented APIs.
+        """
         for upload in request.data.getlist('file[]'):
             json_str = uploadfileservice.read(upload).decode('utf-8')
 

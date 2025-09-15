@@ -21,24 +21,23 @@ logger = logging.getLogger(__name__)
 
 
 class ExternalCalendarAsEventsResourceView(HeliumAPIView):
-    """
-    get:
-    Return an external calendar's ICAL feed items as a list of event instances.
-
-    The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
-    guaranteed to be consistent across calls.
-    """
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return user.external_calendars.all()
         else:
             return ExternalCalendar.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return an external calendar's ICAL feed items as a list of event instances.
+
+        The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
+        guaranteed to be consistent across calls.
+        """
         external_calendar = self.get_object()
         start = parser.parse(request.query_params["start__gte"]).astimezone(
             timezone.utc) if "start__gte" in request.query_params else None

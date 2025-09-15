@@ -19,7 +19,7 @@ class Category(BaseModel):
         max_digits=5, decimal_places=2)
 
     color = models.CharField(
-        help_text='A valid hex color code choice to determine the color items will be shown on the calendar',
+        help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     average_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
@@ -47,13 +47,13 @@ class Category(BaseModel):
         return self.course.course_group.get_user()
 
     @property
-    def num_homework(self):
+    def num_homework(self) -> int:
         return self.homework.count()
 
     @property
-    def num_homework_completed(self):
+    def num_homework_completed(self) -> int:
         return self.homework.completed().count()
 
     @property
-    def num_homework_graded(self):
+    def num_homework_graded(self) -> int:
         return self.homework.graded().count()

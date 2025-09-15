@@ -40,5 +40,5 @@ class BaseCalendar(BaseModel):
         return f'{self.title} ({self.get_user().get_username()})'
 
     @property
-    def calendar_item_type(self):
+    def calendar_item_type(self) -> int:
         raise NotImplementedError

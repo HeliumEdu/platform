@@ -8,10 +8,13 @@ import uuid
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from rest_framework import serializers
+from rest_framework.fields import CharField
 
+from helium.auth.models import UserSettings
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
+from helium.common import enums
 from helium.importexport.tasks import import_example_schedule
 
 logger = logging.getLogger(__name__)
@@ -92,3 +95,24 @@ class UserSerializer(serializers.ModelSerializer):
         import_example_schedule.delay(instance.pk)
 
         return instance
+
+
+class UserCreateSerializer(serializers.Serializer):
+    username = serializers.CharField(help_text=get_user_model()._meta.get_field('username').help_text)
+
+    email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
+
+    password = serializers.CharField(help_text=get_user_model()._meta.get_field('password').help_text)
+
+    time_zone = serializers.ChoiceField(choices=enums.TIME_ZONE_CHOICES,
+                                        help_text=UserSettings._meta.get_field('time_zone').help_text)
+
+
+class UserVerifySerializer(serializers.Serializer):
+    username = serializers.CharField(help_text='The username for the user.')
+
+    code = serializers.CharField(help_text=get_user_model()._meta.get_field('verification_code').help_text)
+
+
+class UserForgotSerializer(serializers.Serializer):
+    email = serializers.CharField(help_text='The email for the user.')

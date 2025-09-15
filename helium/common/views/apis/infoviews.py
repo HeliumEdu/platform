@@ -6,20 +6,20 @@ import logging
 
 from django.conf import settings
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from helium.common.serializers.infoserializer import InfoSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class InfoResourceView(ViewSet):
-    """
-    info:
-    Return version and configuration information about the app.
-    """
+class InfoResourceView(GenericViewSet):
+    serializer_class = InfoSerializer
 
     def info(self, request, *args, **kwargs):
+        """
+        Return version and configuration information about the app.
+        """
         serializer = InfoSerializer({
             'name': settings.PROJECT_NAME,
             'tagline': settings.PROJECT_TAGLINE,

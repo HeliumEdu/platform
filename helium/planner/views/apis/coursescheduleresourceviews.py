@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class CourseScheduleAsEventsResourceView(HeliumAPIView):
-    """
-    get:
-    Return all course schedules as a list of event instances.
-    """
+    serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
+        """
+        Return all course schedules as a list of event instances.
+        """
         user = self.request.user
         try:
             course = Course.objects.get(pk=self.kwargs['course'])

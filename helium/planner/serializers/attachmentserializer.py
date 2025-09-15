@@ -8,6 +8,8 @@ from django.conf import settings
 from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import FileField, IntegerField
+from rest_framework.relations import RelatedField
 
 from helium.planner.models import Attachment, Course, Homework, Event
 
@@ -45,3 +47,10 @@ class AttachmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only one of `course`, `event`, or `homework` may be given.")
 
         return attrs
+
+
+class AttachmentCreateSerializer(serializers.Serializer):
+    file = FileField(required=True, read_only=False, help_text='A multipart list of files to upload.')
+    course = IntegerField(help_text=Attachment._meta.get_field('course').help_text)
+    event = IntegerField(help_text=Attachment._meta.get_field('event').help_text)
+    homework = IntegerField(help_text=Attachment._meta.get_field('homework').help_text)

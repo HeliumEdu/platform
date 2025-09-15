@@ -22,13 +22,13 @@ class Course(BaseModel):
                                   max_digits=4, decimal_places=2)
 
     color = models.CharField(
-        help_text='A valid hex color code choice to determine the color events will be shown on the calendar',
+        help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
     website = models.URLField(help_text='A valid URL.', max_length=3000, blank=True, null=True)
 
     is_online = models.BooleanField(
-        help_text='Whether or not the course is online (and thus may have times associated with it)',
+        help_text='Whether or not the course is online (and thus may have times associated with it).',
         default=False)
 
     current_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
@@ -61,25 +61,25 @@ class Course(BaseModel):
         return self.course_group.get_user()
 
     @property
-    def num_days(self):
+    def num_days(self) -> int:
         return (self.end_date - self.start_date).days
 
     @property
-    def num_days_completed(self):
+    def num_days_completed(self) -> int:
         return (datetime.datetime.now().date() - self.start_date).days
 
     @property
-    def has_weighted_grading(self):
+    def has_weighted_grading(self) -> bool:
         return Course.objects.has_weighted_grading(self.pk)
 
     @property
-    def num_homework(self):
+    def num_homework(self) -> int:
         return self.homework.count()
 
     @property
-    def num_homework_completed(self):
+    def num_homework_completed(self) -> int:
         return self.homework.completed().count()
 
     @property
-    def num_homework_graded(self):
+    def num_homework_graded(self) -> int:
         return self.homework.graded().count()
