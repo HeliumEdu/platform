@@ -5,6 +5,7 @@ __version__ = "1.5.1"
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainSlidingView, TokenRefreshSlidingView
 
 from helium.auth.views.apis.tokenresourceviews import ObtainTokenResourceView, DestroyTokenResourceView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
@@ -36,6 +37,8 @@ urlpatterns = [
     path('auth/token/', ObtainTokenResourceView.as_view(), name='auth_token_resource_obtain'),
     path('auth/token/revoke/', DestroyTokenResourceView.as_view({'delete': 'revoke'}),
          name='auth_token_resource_revoke'),
+    path('auth/mobile/token/', TokenObtainSlidingView.as_view(), name='auth_mobile_token_resource_obtain'),
+    path('auth/mobile/token/refresh/', TokenRefreshSlidingView.as_view(), name='auth_mobile_token_resource_refresh'),
 
     ##############################
     # Authenticated URLs
