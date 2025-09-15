@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(help_text="The username or email for the user.",
+    username = serializers.CharField(help_text="The username for the user.",
                                      label="Username")
 
     password = serializers.CharField(help_text="The password for the user.",

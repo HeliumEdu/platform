@@ -52,6 +52,9 @@ class UserSettings(BaseModel):
 
     private_slug = models.SlugField(blank=True, null=True)
 
+    mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
+                                                      choices=enums.VIEW_CHOICES, default=enums.WEEK)
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 
     class Meta:
