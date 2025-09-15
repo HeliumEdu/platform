@@ -15,13 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserSettingsApiDetailView(HeliumAPIView):
-    """
-    put:
-    Update the authenticated user's settings. This endpoint only updates the fields given (i.e. no need to PATCH
-    for partials data).
-
-    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
-    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSettingsSerializer
     permission_classes = (IsAuthenticated,)
@@ -30,6 +23,10 @@ class UserSettingsApiDetailView(HeliumAPIView):
         return self.request.user
 
     def put(self, request, *args, **kwargs):
+        """
+        Update the authenticated user's settings. This endpoint only updates the fields given (i.e. no need to PATCH
+        for partials data).
+        """
         user = self.get_object()
 
         serializer = self.get_serializer(user.settings, data=request.data, partial=True)

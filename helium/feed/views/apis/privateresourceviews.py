@@ -5,28 +5,31 @@ __version__ = "1.5.1"
 import logging
 
 from django.urls import reverse
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import GenericViewSet
 
+from helium.auth.serializers.userserializer import UserSerializer
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateEnableResourceView(ViewSet):
-    """
-    enable:
-    Enable the private feed URLs for the authenticated user. It is safe to make this request multiple times, and if
-    private feeds are already enabled, the response will simply contain links to the feeds.
-    """
+class PrivateEnableResourceView(GenericViewSet):
     permission_classes = (IsAuthenticated,)
+    serializer_class = PrivateFeedSerializer
 
     def get_queryset(self):
         user = self.request.user
         return user.external_calendars.all()
 
     def enable(self, request, *args, **kwargs):
+        """
+        Enable the private feed URLs for the authenticated user. It is safe to make this request multiple times, and if
+        private feeds are already enabled, the response will simply contain links to the feeds.
+        """
         user = self.request.user
 
         user.settings.enable_private_slug()
@@ -41,14 +44,17 @@ class PrivateEnableResourceView(ViewSet):
         return Response(serializer.data)
 
 
-class PrivateDisableResourceView(ViewSet):
-    """
-    disable:
-    Disable the private feed URLs for the authenticated user.
-    """
+class PrivateDisableResourceView(GenericViewSet):
     permission_classes = (IsAuthenticated,)
+    serializer_class = PrivateFeedSerializer
 
+    @extend_schema(
+        responses={status.HTTP_204_NO_CONTENT: None}
+    )
     def disable(self, request, *args, **kwargs):
+        """
+        Disable the private feed URLs for the authenticated user.
+        """
         user = self.request.user
 
         user.settings.disable_private_slug()

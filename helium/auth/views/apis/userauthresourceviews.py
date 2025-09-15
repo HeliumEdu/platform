@@ -5,10 +5,11 @@ __version__ = "1.5.1"
 import logging
 
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
-from helium.auth.serializers.userserializer import UserSerializer
+from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.views.views import HeliumAPIView
@@ -17,13 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
-    """
-    register:
-    Register a new user.
-    """
     serializer_class = UserSerializer
 
+    @extend_schema(
+        request=UserCreateSerializer
+    )
     def register(self, request, *args, **kwargs):
+        """
+        Register a new user.
+        """
         response = self.create(request, *args, **kwargs)
 
         if 'time_zone' in request.data:
@@ -40,26 +43,33 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
 
 
 class UserVerifyResourceView(ViewSet, HeliumAPIView):
-    """
-    verify_email:
-    Verify an email address for the user instance associated with the username and verification code.
-    """
     serializer_class = UserSerializer
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('username', description='The username for the user.'),
+            OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
+        ]
+    )
     def verify_email(self, request, *args, **kwargs):
+        """
+        Verify an email address for the user instance associated with the username and verification code.
+        """
         response = authservice.verify_email(request)
 
         return response
 
 
 class UserForgotResourceView(ViewSet, HeliumAPIView):
-    """
-    forgot_password:
-    Reset the password for the user instance associated with the given email.
-    """
     serializer_class = UserSerializer
 
+    @extend_schema(
+        request=UserForgotSerializer
+    )
     def forgot_password(self, request, *args, **kwargs):
+        """
+        Reset the password for the user instance associated with the given email.
+        """
         response = authservice.forgot_password(request)
 
         return response

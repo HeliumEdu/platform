@@ -16,6 +16,7 @@ from corsheaders.defaults import default_headers
 from conf.configcache import config
 from conf.settings import PROJECT_ID
 from conf.utils import strip_www
+from helium.common import enums
 
 # ############################
 # Project configuration
@@ -186,6 +187,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'ENUM_NAME_OVERRIDES': {
+        'ColorEnum': enums.ALLOWED_COLORS,
+        'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
+        'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
+    }
 }
 
 # Internationalization
@@ -281,12 +287,6 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
-
-# Ignore warnings related to schema generation; this is related to DRF migrating to OpenAPI as its standard,
-# but this project still implements CoreAPI. If this project ever refactors to OpenAPI schemas, this
-# warnings filter can be removed: https://www.django-rest-framework.org/community/3.10-announcement/#continuing-to-use-coreapi
-warnings.filterwarnings('ignore', r"<class '.*'> is not compatible with schema generation",
-                        module=r'django_filters\.rest_framework')
 
 # Static files (CSS, JavaScript, Images)
 

@@ -19,51 +19,42 @@ logger = logging.getLogger(__name__)
 
 
 class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
-    """
-    get:
-    Return a list of all category instances for the authenticated user.
-    """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
     filterset_class = CategoryFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Category.objects.for_user(user.pk)
         else:
-            Category.objects.none()
+            return Category.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all category instances for the authenticated user.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
 
 
 class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
-    """
-    get:
-    Return a list of all category instances for the given course.
-
-    post:
-    Create a new category instance for the given course.
-
-    Note that all weights associated with a single course cannot exceed a value of 100.
-
-    For more details pertaining to choice field values, [see here](https://github.com/HeliumEdu/platform/wiki#choices).
-    """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     filterset_class = CategoryFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
         else:
-            Category.objects.none()
+            return Category.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return a list of all category instances for the given course.
+        """
         response = self.list(request, *args, **kwargs)
 
         return response
@@ -72,6 +63,11 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
         serializer.save(course_id=self.kwargs['course'])
 
     def post(self, request, *args, **kwargs):
+        """
+        Create a new category instance for the given course.
+
+        Note that all weights associated with a single course cannot exceed a value of 100.
+        """
         response = self.create(request, *args, **kwargs)
 
         logger.info(
@@ -81,32 +77,28 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
 
 
 class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    """
-    get:
-    Return the given category instance.
-
-    put:
-    Update the given category instance.
-
-    delete:
-    Delete the given category instance.
-    """
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user'):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course'])
         else:
-            Category.objects.none()
+            return Category.objects.none()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the given category instance.
+        """
         response = self.retrieve(request, *args, **kwargs)
 
         return response
 
     def put(self, request, *args, **kwargs):
+        """
+        Update the given category instance.
+        """
         response = self.update(request, *args, **kwargs)
 
         logger.info(f"Category {kwargs['pk']} updated for user {request.user.get_username()}")
@@ -114,6 +106,9 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         return response
 
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the given category instance.
+        """
         category = self.get_object()
         homework = list(category.homework.all())
 

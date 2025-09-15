@@ -14,14 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class PrivateEventsICALResourceView(HeliumAPIView):
-    """
-    :get
-    Return a list of all event instances for the authenticated user formatted for an ICAL stream. The response will
-    contain a `Content-Disposition` of `attachment; filename=Helium_<username>_events.ics`, so if the request is
-    initiated from an HTML form, the response will be a downloadable file in a browser.
-    """
-
     def get(self, request, slug):
+        """
+        Return a list of all event instances for the authenticated user formatted for an ICAL stream. The response will
+        contain a `Content-Disposition` of `attachment; filename=Helium_<username>_events.ics`, so if the request is
+        initiated from an HTML form, the response will be a downloadable file in a browser.
+        """
         try:
             user = get_user_model().objects.get_by_private_slug(slug)
 
@@ -36,14 +34,12 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 
 
 class PrivateHomeworkICALResourceView(HeliumAPIView):
-    """
-    :get
-    Return a list of all homework instances for the authenticated user formatted for an ICAL stream. The response will
-    contain a `Content-Disposition` of `attachment; filename=Helium_<username>_homework.ics`, so if the request is
-    initiated from an HTML form, the response will be a downloadable file in a browser.
-    """
-
     def get(self, request, slug):
+        """
+        Return a list of all homework instances for the authenticated user formatted for an ICAL stream. The response
+        will contain a `Content-Disposition` of `attachment; filename=Helium_<username>_homework.ics`, so if the
+        request is initiated from an HTML form, the response will be a downloadable file in a browser.
+        """
         try:
             user = get_user_model().objects.get_by_private_slug(slug)
 
@@ -58,14 +54,13 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 
 
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
-    """
-    :get
-    Return a list of all course schedule instances for the authenticated user formatted for an ICAL stream. The
-    response will contain a `Content-Disposition` of `attachment; filename=Helium_<username>_coursescheduleevents.ics`,
-    so if the request is initiated from an HTML form, the response will be a downloadable file in a browser.
-    """
-
     def get(self, request, slug):
+        """
+        Return a list of all course schedule instances for the authenticated user formatted for an ICAL stream. The
+        response will contain a `Content-Disposition` of
+        `attachment; filename=Helium_<username>_coursescheduleevents.ics`, so if the request is initiated from an HTML
+        form, the response will be a downloadable file in a browser.
+        """
         try:
             user = get_user_model().objects.get_by_private_slug(slug)
 

@@ -22,14 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
-    """
-    get:
-    Return the authenticated user instance, including profile and settings details.
-
-    put:
-    Update the authenticated user instance. This endpoint only updates the fields given (i.e. no need to PATCH
-    for partials data).
-    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsOwner)
@@ -38,6 +30,9 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         return self.request.user
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the authenticated user instance, including profile and settings details.
+        """
         user = self.get_object()
 
         serializer = self.get_serializer(user)
@@ -45,6 +40,10 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
+        """
+        Update the authenticated user instance. This endpoint only updates the fields given (i.e. no need to PATCH
+        for partials data).
+        """
         user = self.get_object()
 
         serializer = self.get_serializer(user, data=request.data, partial=True)
@@ -57,10 +56,6 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
 
 
 class UserDeleteResourceView(HeliumAPIView):
-    """
-    delete:
-    Delete the given user instance.
-    """
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -73,6 +68,10 @@ class UserDeleteResourceView(HeliumAPIView):
             raise NotFound('No User matches the given query.')
 
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the given user instance. The request body should include `username`, `email`, and `password` for the
+        request to succeed.
+        """
         user = self.get_object()
 
         form = UserDeleteForm(user=user, data=request.data)
