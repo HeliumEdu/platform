@@ -1,10 +1,11 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.21"
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from helium.auth.views.apis.tokenresourceviews import ObtainTokenResourceView, DestroyTokenResourceView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
@@ -36,6 +37,8 @@ urlpatterns = [
     path('auth/token/', ObtainTokenResourceView.as_view(), name='auth_token_resource_obtain'),
     path('auth/token/revoke/', DestroyTokenResourceView.as_view({'delete': 'revoke'}),
          name='auth_token_resource_revoke'),
+    path('auth/mobile/token/', TokenObtainPairView.as_view(), name='auth_mobile_token_resource_obtain'),
+    path('auth/mobile/token/refresh/', TokenRefreshView.as_view(), name='auth_mobile_token_resource_refresh'),
 
     ##############################
     # Authenticated URLs

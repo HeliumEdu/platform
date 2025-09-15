@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.21"
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
 
@@ -204,10 +204,12 @@ DAY_OF_WEEK_CHOICES = (
 POPUP = 0
 EMAIL = 1
 TEXT = 2
+PUSH = 3
 REMINDER_TYPE_CHOICES = (
     (POPUP, 'Popup'),
     (EMAIL, 'Email'),
-    (TEXT, 'Text')
+    (TEXT, 'Text'),
+    (PUSH, 'Push')
 )
 
 MINUTES = 0

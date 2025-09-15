@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.17"
+__version__ = "1.10.21"
 
 import os
 import sys
@@ -46,6 +46,7 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 
 # Security
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 if 'celery' not in sys.argv[0]:

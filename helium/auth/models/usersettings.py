@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.21"
 
 import logging
 import time
@@ -51,6 +51,9 @@ class UserSettings(BaseModel):
         default=True)
 
     private_slug = models.SlugField(blank=True, null=True)
+
+    mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
+                                                      choices=enums.VIEW_CHOICES, default=enums.WEEK)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 

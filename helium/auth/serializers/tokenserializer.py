@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.21"
 
 import logging
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(help_text="The username or email for the user.",
+    username = serializers.CharField(help_text="The username for the user.",
                                      label="Username")
 
     password = serializers.CharField(help_text="The password for the user.",
