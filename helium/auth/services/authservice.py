@@ -82,4 +82,4 @@ def verify_email(request):
 
         return Response()
     except get_user_model().DoesNotExist:
-        raise NotFound('User not found.')
+        raise NotFound('No User matches the given query.')

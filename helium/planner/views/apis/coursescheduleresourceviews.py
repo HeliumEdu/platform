@@ -37,6 +37,6 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
 
             return Response(serializer.data)
         except Course.DoesNotExist:
-            raise NotFound('Course not found.')
+            raise NotFound('No Course matches the given query.')
         except CourseSchedule.DoesNotExist:
-            raise NotFound('CourseSchedule not found.')
+            raise NotFound('No CourseSchedule matches the given query.')
