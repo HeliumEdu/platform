@@ -14,6 +14,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
+from helium.auth.models.usermobiletoken import UserMobileToken
 from helium.common.admin import admin_site, BaseModelAdmin
 
 
@@ -66,6 +67,25 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
         return self.readonly_fields
 
 
+class UserProfileAdmin(BaseModelAdmin):
+    list_display = ['phone', 'phone_verified', 'get_user']
+    search_fields = ('user__email', 'user__username')
+    ordering = ('user__username',)
+    readonly_fields = ('user',)
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_user(self, obj):
+        if obj.user:
+            return obj.user.get_username()
+        else:
+            return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
+
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['time_zone', 'default_view', 'receive_emails_from_admin', 'get_user']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
@@ -86,14 +106,10 @@ class UserSettingsAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['phone', 'phone_verified', 'get_user']
+class UserMobileTokenAdmin(BaseModelAdmin):
+    list_display = ['token', 'get_user']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
-    readonly_fields = ('user',)
-
-    def has_add_permission(self, request):
-        return False
 
     def get_user(self, obj):
         if obj.user:
@@ -130,8 +146,9 @@ class TokenAdmin(drf_admin.TokenAdmin):
 
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
-admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
+admin_site.register(UserSettings, UserSettingsAdmin)
+admin_site.register(UserMobileToken, UserMobileTokenAdmin)
 admin_site.register(TokenProxy, TokenAdmin)
 admin_site.register(OutstandingToken, OutstandingTokenAdmin)
 admin_site.register(BlacklistedToken, BlacklistedTokenAdmin)
