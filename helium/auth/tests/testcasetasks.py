@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.8"
+__version__ = "1.10.32"
 
 import json
 from datetime import datetime, timedelta
@@ -47,7 +47,7 @@ class TestCaseTasks(APITestCase):
             'username': user3.email,
             'password': 'test_pass_1!'
         }
-        response = self.client.post(reverse('auth_token_resource_obtain'),
+        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
                                     json.dumps(data),
                                     content_type='application/json')
 

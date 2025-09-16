@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.28"
+__version__ = "1.10.32"
 
 import json
 
@@ -27,7 +27,7 @@ class TestCaseAuthenticationViews(TestCase):
         temp_pass = response.context['password']
 
         # THEN
-        response = self.client.post(reverse('auth_token_resource_obtain'),
+        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
                                     json.dumps({'username': user.get_username(), 'password': temp_pass}),
                                     content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -58,7 +58,7 @@ class TestCaseAuthenticationViews(TestCase):
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response1.data['settings']['time_zone'], 'America/Chicago')
-        response2 = self.client.post(reverse('auth_token_resource_obtain'),
+        response2 = self.client.post(reverse('auth_legacy_token_resource_obtain'),
                                      json.dumps({'username': 'my_test_user', 'password': 'test_pass_1!'}),
                                      content_type='application/json')
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
