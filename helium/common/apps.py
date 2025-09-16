@@ -1,16 +1,17 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.8.4"
+__version__ = "1.10.34"
 
 import sys
 from urllib.parse import urlparse
 
+import firebase_admin
 from celery import current_app
 from django.apps import AppConfig
 from django.conf import settings
-from health_check.plugins import plugin_dir
+from firebase_admin import credentials
 
-from conf.configcache import config
+from health_check.plugins import plugin_dir
 
 
 class CommonConfig(AppConfig):
@@ -19,6 +20,8 @@ class CommonConfig(AppConfig):
 
     def ready(self):
         self.init_ngrok()
+
+        self.init_firebase()
 
         plugin_dir.reset()
 
@@ -70,3 +73,7 @@ class CommonConfig(AppConfig):
             # Open a ngrok tunnel to the dev server
             public_url = ngrok.connect(port).public_url
             print(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
+
+    def init_firebase(self):
+        if settings.FIREBASE_CREDENTIALS:
+            firebase_admin.initialize_app(credential=credentials.Certificate(settings.FIREBASE_CREDENTIALS))

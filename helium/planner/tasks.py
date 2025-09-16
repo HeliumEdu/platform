@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.10.34"
 
 import logging
 
@@ -134,11 +134,20 @@ def email_reminders():
 
 @app.task
 def text_reminders():
-    if settings.DISABLE_EMAILS:
-        logger.warning('Emails disabled. Text reminders not being sent.')
+    if settings.DISABLE_TEXTS:
+        logger.warning('Texts disabled. Text reminders not being sent.')
         return
 
     reminderservice.process_text_reminders()
+
+
+@app.task
+def push_reminders():
+    if settings.DISABLE_PUSH:
+        logger.warning('Push disabled. Text reminders not being sent.')
+        return
+
+    reminderservice.process_push_reminders()
 
 
 @app.task

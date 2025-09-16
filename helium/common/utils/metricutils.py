@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.2"
+__version__ = "1.10.34"
 
 import re
 
@@ -25,7 +25,7 @@ if settings.DATADOG_API_KEY:
     DATADOG_TAGS = [f"env:{settings.ENVIRONMENT}"]
 
 
-def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
+def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False, value=1):
     if request and ignore_staff and request.user.is_authenticated and request.user.is_staff:
         return
 
@@ -34,7 +34,7 @@ def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False):
 
     statsd.incr(f"platform.{metric}")
     if DATADOG_METRICS:
-        datadog_statsd.increment(f"platform.{metric}", tags=DATADOG_TAGS)
+        datadog_statsd.increment(f"platform.{metric}", value=value, tags=DATADOG_TAGS)
 
 
 def request_start(request):
