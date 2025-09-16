@@ -8,7 +8,6 @@ import time
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
-from django_mysql.models import ListTextField
 
 from helium.common import enums
 from helium.common.models import BaseModel
