@@ -119,7 +119,7 @@ class TestCaseUserViews(APITestCase):
             reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
@@ -237,9 +237,6 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            # Trying to change email to match user1's email
-            'email': user.email,
-            'username': user.username,
             'password': 'test_pass_1!'
         }
         response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
@@ -257,9 +254,6 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            # Trying to change email to match user1's email
-            'email': user.email,
-            'username': user.username,
             'password': 'wrong_pass'
         }
         response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
@@ -267,4 +261,6 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('password', response.data)
+        self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
+        self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
+        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())

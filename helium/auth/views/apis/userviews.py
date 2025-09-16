@@ -4,15 +4,12 @@ __version__ = "1.10.27"
 
 import logging
 
-from django import forms
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from helium.auth.forms.userdeleteform import UserDeleteForm
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
@@ -57,15 +54,10 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
 
 class UserDeleteResourceView(HeliumAPIView):
     serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self):
-        try:
-            if 'username' not in self.request.data:
-                raise forms.ValidationError("'username' is required")
-
-            return get_user_model().objects.get(username=self.request.data['username'])
-        except get_user_model().DoesNotExist:
-            raise NotFound('No User matches the given query.')
+        return self.request.user
 
     def delete(self, request, *args, **kwargs):
         """
@@ -74,17 +66,14 @@ class UserDeleteResourceView(HeliumAPIView):
         """
         user = self.get_object()
 
-        form = UserDeleteForm(user=user, data=request.data)
+        if 'password' not in request.data:
+            return Response({'password': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
 
-        if form.is_valid():
-            logger.info(f'User {user.get_username()} deleted')
+        if not user.check_password(request.data['password']):
+            return Response({'password': ['The password is incorrect.']}, status=status.HTTP_400_BAD_REQUEST)
 
-            delete_user.delay(form.user.pk)
+        logger.info(f'User {user.get_username()} will be deleted')
 
-            data = None
-            status_code = status.HTTP_204_NO_CONTENT
-        else:
-            data = dict(list(form.errors.items()))
-            status_code = status.HTTP_400_BAD_REQUEST
+        delete_user.delay(user.pk)
 
-        return Response(data, status=status_code)
+        return Response(status=status.HTTP_204_NO_CONTENT)
