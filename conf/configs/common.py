@@ -53,6 +53,22 @@ TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
 TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
 
+# Firebase
+
+FIREBASE_CREDENTIALS = {
+    'type': 'service_account',
+    'project_id': config('PLATFORM_FIREBASE_PROJECT_ID'),
+    'private_key_id': config('PLATFORM_FIREBASE_PRIVATE_KEY_ID'),
+    'private_key': config('PLATFORM_FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+    'client_email': config('PLATFORM_FIREBASE_CLIENT_EMAIL'),
+    'client_id': config('PLATFORM_FIREBASE_CLIENT_ID'),
+    'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+    'token_uri': config('PLATFORM_FIREBASE_TOKEN_URI'),
+    'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
+    'client_x509_cert_url': config('PLATFORM_FIREBASE_CLIENT_X509_CERT_URL'),
+    'universe_domain': 'googleapis.com'
+} if config('PLATFORM_FIREBASE_PROJECT_ID') else None
+
 #############################
 # Default lists for host-specific configurations
 #############################
