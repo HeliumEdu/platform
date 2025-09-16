@@ -18,7 +18,7 @@ class HeliumPhoneError(HeliumError):
     pass
 
 
-def send_text(phone, message):
+def send_sms(phone, message):
     client = _get_client()
 
     client.api.account.messages.create(

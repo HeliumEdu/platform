@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.common import enums
-from helium.common.tasks import send_text, send_push
+from helium.common.tasks import send_text, send_pushes
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
 
@@ -119,9 +119,9 @@ def process_push_reminders():
         if len(push_tokens) > 0:
             metricutils.increment('task.reminder.queue.push', len(push_tokens))
 
-            send_push.delay(push_tokens,
-                            subject,
-                            message)
+            send_pushes.delay(push_tokens,
+                              subject,
+                              message)
         else:
             logger.warning(
                 f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {reminder.get_user().pk}')

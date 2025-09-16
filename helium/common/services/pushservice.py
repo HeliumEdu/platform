@@ -4,13 +4,12 @@ __version__ = "1.7.0"
 
 import logging
 
-import firebase_admin
 from firebase_admin import messaging
 
 logger = logging.getLogger(__name__)
 
 
-def send_push(push_tokens, subject, message):
+def send_notifications(push_tokens, subject, message):
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=subject,
