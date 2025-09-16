@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.6.1"
+__version__ = "1.10.33"
 
 from django.apps import AppConfig
 from django.db import models
