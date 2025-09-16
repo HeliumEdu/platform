@@ -14,7 +14,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
-from helium.auth.models.usermobiletoken import UserMobileToken
+from helium.auth.models.userpushtoken import UserPushToken
 from helium.common.admin import admin_site, BaseModelAdmin
 
 
@@ -106,8 +106,8 @@ class UserSettingsAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class UserMobileTokenAdmin(BaseModelAdmin):
-    list_display = ['token', 'get_user']
+class UserPushTokenAdmin(BaseModelAdmin):
+    list_display = ['device_id', 'token', 'get_user']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
 
@@ -148,7 +148,7 @@ class TokenAdmin(drf_admin.TokenAdmin):
 admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
-admin_site.register(UserMobileToken, UserMobileTokenAdmin)
+admin_site.register(UserPushToken, UserPushTokenAdmin)
 admin_site.register(TokenProxy, TokenAdmin)
 admin_site.register(OutstandingToken, OutstandingTokenAdmin)
 admin_site.register(BlacklistedToken, BlacklistedTokenAdmin)
