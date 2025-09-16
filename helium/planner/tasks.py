@@ -134,11 +134,20 @@ def email_reminders():
 
 @app.task
 def text_reminders():
-    if settings.DISABLE_EMAILS:
-        logger.warning('Emails disabled. Text reminders not being sent.')
+    if settings.DISABLE_TEXTS:
+        logger.warning('Texts disabled. Text reminders not being sent.')
         return
 
     reminderservice.process_text_reminders()
+
+
+@app.task
+def push_reminders():
+    if settings.DISABLE_PUSH:
+        logger.warning('Push disabled. Text reminders not being sent.')
+        return
+
+    reminderservice.process_push_reminders()
 
 
 @app.task
