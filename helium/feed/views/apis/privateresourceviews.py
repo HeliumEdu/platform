@@ -11,7 +11,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from helium.auth.serializers.userserializer import UserSerializer
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 logger = logging.getLogger(__name__)
@@ -59,4 +58,4 @@ class PrivateDisableResourceView(GenericViewSet):
 
         user.settings.disable_private_slug()
 
-        return Response()
+        return Response(status=status.HTTP_204_NO_CONTENT)
