@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.2"
+__version__ = "1.10.29"
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
