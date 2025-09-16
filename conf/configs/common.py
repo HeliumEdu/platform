@@ -8,7 +8,6 @@ __version__ = "1.10.31"
 
 import os
 import socket
-import warnings
 from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
@@ -73,8 +72,9 @@ INSTALLED_APPS = (
     # Third-party modules
     'pipeline',
     'rest_framework',
-    'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
+    # The legacy authtoken app can be removed once the frontend is migrated to use JWTs
+    'rest_framework.authtoken',
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'django_filters',
@@ -180,6 +180,11 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SIMPLE_JWT = {
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True
 }
 
 SPECTACULAR_SETTINGS = {

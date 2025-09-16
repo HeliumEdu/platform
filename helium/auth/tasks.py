@@ -9,6 +9,8 @@ import pytz
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from conf.celery import app
 from helium.common.utils import commonutils
@@ -68,7 +70,13 @@ def delete_user(user_id):
     try:
         user = get_user_model().objects.get(pk=user_id)
 
+        outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
+        blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
+
         user.delete()
+
+        for token in outstanding_tokens + blacklisted_tokens:
+            token.delete()
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
@@ -77,7 +85,7 @@ def delete_user(user_id):
 
 @app.task
 def expire_auth_tokens():
-    from rest_framework.authtoken.models import Token
+    OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
     Token.objects.filter(
         created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.AUTH_TOKEN_TTL_DAYS)).delete()
@@ -87,7 +95,8 @@ def expire_auth_tokens():
 def purge_unverified_users():
     for user in get_user_model().objects.filter(
             is_active=False,
-            created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS)):
+            created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
+                days=settings.UNVERIFIED_USER_TTL_DAYS)):
         logger.info(
             f'Deleting user {user.username}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
