@@ -8,8 +8,6 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 from helium.auth.managers.usermanager import UserManager
 from helium.common.models import BaseModel
@@ -93,13 +91,3 @@ class User(AbstractBaseUser, BaseModel):
         :return: True if the user is an admin, False otherwise
         """
         return self.is_superuser
-
-
-@receiver(post_save, sender=User)
-def post_save_user(sender, instance, created, **kwargs):
-    """
-    After a user is created, one-to-one references to profile and settings models must be created to finish
-    provisioning the new user.
-    """
-    if created:
-        UserManager.create_references(instance)
