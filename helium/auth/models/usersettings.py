@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.29"
+__version__ = "1.10.30"
 
 import logging
 import time
@@ -8,7 +8,6 @@ import time
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
-from django_mysql.models import ListTextField
 
 from helium.common import enums
 from helium.common.models import BaseModel
