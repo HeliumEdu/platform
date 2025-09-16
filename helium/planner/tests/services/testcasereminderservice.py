@@ -80,3 +80,35 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
         self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
         self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminders(self, mock_send_notifications):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        event1 = eventhelper.given_event_exists(user)
+        event2 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime.now().replace(
+                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    days=1),
+                                                end=datetime.datetime.now().replace(
+                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    days=1, hours=1))
+        reminder1 = reminderhelper.given_reminder_exists(user, event=event1, type=enums.PUSH)
+        reminder2 = reminderhelper.given_reminder_exists(user, homework=homework, type=enums.PUSH)
+        # This reminder is ignored, as we're not yet in its send window
+        reminder3 = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event2)
+        # Sent reminders are ignored
+        reminderhelper.given_reminder_exists(user, sent=True, event=event1)
+
+        # WHEN
+        reminderservice.process_push_reminders()
+
+        # THEN
+        self.assertEqual(mock_send_notifications.call_count, 2)
+        self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
+        self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
+        self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
