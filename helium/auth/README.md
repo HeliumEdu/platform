@@ -14,3 +14,5 @@ The following project variables must be defined in the parent project's configur
 - `PROJECT_EMAIL`
 - `ADMIN_EMAIL_ADDRESS`
 - `DISABLE_EMAILS`
+- `DISABLE_TEXTS`
+- `DISABLE_PUSH`
