@@ -4,8 +4,6 @@ __version__ = "1.5.1"
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
@@ -62,12 +60,3 @@ class Attachment(BaseModel):
         self.size = self.attachment.size if self.attachment else 0
 
         super().save(*args, **kwargs)
-
-
-@receiver(post_delete, sender=Attachment)
-def delete_attachment(sender, instance, **kwargs):
-    """
-    Delete the associated file in storage, if it exists.
-    """
-    if instance.attachment:
-        instance.attachment.delete(False)
