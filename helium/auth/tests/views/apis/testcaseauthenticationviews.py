@@ -23,7 +23,7 @@ class TestCaseAuthenticationViews(TestCase):
         response = self.client.put(reverse('auth_user_resource_forgot'),
                                    json.dumps({'email': user.email}),
                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         temp_pass = response.context['password']
 
         # THEN
@@ -42,7 +42,7 @@ class TestCaseAuthenticationViews(TestCase):
                                    content_type='application/json')
 
         # WHEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_registration_success(self):
         # WHEN
@@ -93,7 +93,7 @@ class TestCaseAuthenticationViews(TestCase):
             reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user = get_user_model().objects.get(email=user.email)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(user.get_username(), 'test_user')

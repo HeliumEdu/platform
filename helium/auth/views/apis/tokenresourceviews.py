@@ -49,4 +49,4 @@ class DestroyTokenResourceView(ViewSet, HeliumAPIView):
         """
         request.user.auth_token.delete()
 
-        return Response()
+        return Response(status=status.HTTP_204_NO_CONTENT)
