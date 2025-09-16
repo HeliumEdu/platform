@@ -1,10 +1,11 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.10.28"
 
 import logging
 
 from django.contrib.auth import get_user_model
+from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
@@ -43,7 +44,7 @@ def forgot_password(request):
     except get_user_model().DoesNotExist:
         logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
 
-    return Response()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def verify_email(request):
@@ -80,6 +81,6 @@ def verify_email(request):
 
             logger.info(f'Verified new email for user {user.username}')
 
-        return Response()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     except get_user_model().DoesNotExist:
         raise NotFound('No User matches the given query.')

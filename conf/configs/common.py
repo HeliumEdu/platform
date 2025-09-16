@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2018, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.10.28"
 
 import os
 import socket
@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'pipeline',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'django_filters',
