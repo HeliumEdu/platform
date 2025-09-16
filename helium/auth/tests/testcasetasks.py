@@ -47,7 +47,7 @@ class TestCaseTasks(APITestCase):
             'username': user3.email,
             'password': 'test_pass_1!'
         }
-        response = self.client.post(reverse('auth_token_resource_obtain'),
+        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
                                     json.dumps(data),
                                     content_type='application/json')
 

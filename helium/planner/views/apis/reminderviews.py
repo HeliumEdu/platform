@@ -32,8 +32,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
 
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a GET are
-        serialized to a depth of two to avoid the need for redundant API calls.
+        Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a
+        GET are serialized to a depth of two to avoid the need for redundant API calls.
         """
         self.serializer_class = ReminderExtendedSerializer
 
