@@ -55,6 +55,9 @@ class UserSettings(BaseModel):
     mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
                                                       choices=enums.VIEW_CHOICES, default=enums.WEEK)
 
+    firebase_token = models.CharField(help_text='A valid Firebase token for user push notifications.',
+                                      blank=True, null=True, max_length=4096)
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 
     class Meta:
