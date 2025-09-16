@@ -9,6 +9,8 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
+from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
@@ -131,3 +133,5 @@ admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(TokenProxy, TokenAdmin)
+admin_site.register(OutstandingToken, OutstandingTokenAdmin)
+admin_site.register(BlacklistedToken, BlacklistedTokenAdmin)

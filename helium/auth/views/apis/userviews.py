@@ -61,7 +61,7 @@ class UserDeleteResourceView(HeliumAPIView):
 
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given user instance. The request body should include `username`, `email`, and `password` for the
+        Delete the given user instance. The request body should include the authenticated user's `password` for the
         request to succeed.
         """
         user = self.get_object()
