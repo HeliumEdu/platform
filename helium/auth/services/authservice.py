@@ -21,7 +21,7 @@ def forgot_password(request):
     the email exists in the system or not, the same response "success" will be shown the user.
 
     :param request: the request being processed
-    :return: a 200 Response upon success
+    :return: a 204 Response upon success
     """
     if 'email' not in request.data:
         raise ValidationError("'email' is required")
@@ -52,7 +52,7 @@ def verify_email(request):
     Process the code for the given user, verifying their email address and marking them as active (if not already).
 
     :param request: the request being processed
-    :return: a 200 Response upon success
+    :return: a 204 Response upon success
     """
     if 'username' not in request.GET or 'code' not in request.GET:
         raise ValidationError("'username' and 'password' must be given as query parameters")

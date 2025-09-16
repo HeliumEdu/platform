@@ -9,6 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from helium.auth.tests.helpers import userhelper
 
@@ -38,6 +39,24 @@ class TestCaseAuthToken(APITestCase):
         self.assertIsNone(user.last_login)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response1.data['access'], response2.data['access'])
+        self.assertEqual(OutstandingToken.objects.count(), 2)
+        token1 = OutstandingToken.objects.get(token=response1.data['refresh'])
+        self.assertEqual(token1.user, user)
+
+    def test_delete_user_deletes_token(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'password': 'test_pass_1!'
+        }
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
+                                      content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(OutstandingToken.objects.count(), 0)
 
     def test_token_fail_no_password(self):
         # GIVEN
@@ -54,6 +73,7 @@ class TestCaseAuthToken(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('password', response.data)
+        self.assertEqual(OutstandingToken.objects.count(), 0)
 
     def test_token_with_email_success(self):
         # GIVEN
@@ -100,13 +120,17 @@ class TestCaseAuthToken(APITestCase):
             "refresh": user.refresh
         }
         response = self.client.post(reverse('auth_token_refresh'),
-                                     json.dumps(data),
-                                     content_type='application/json')
+                                    json.dumps(data),
+                                    content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
         self.assertNotEqual(response.data['access'], user.access)
+        self.assertNotEqual(response.data['refresh'], user.refresh)
+        self.assertEqual(OutstandingToken.objects.count(), 2)
+        self.assertEqual(BlacklistedToken.objects.count(), 1)
 
     def test_blacklist_token(self):
         # GIVEN
@@ -126,6 +150,8 @@ class TestCaseAuthToken(APITestCase):
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(OutstandingToken.objects.count(), 1)
+        self.assertEqual(BlacklistedToken.objects.count(), 1)
 
     def test_login_invalid_user(self):
         # GIVEN
@@ -145,6 +171,7 @@ class TestCaseAuthToken(APITestCase):
         for response in responses:
             self.assertContains(response, 'No active account found',
                                 status_code=status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(OutstandingToken.objects.count(), 0)
 
     def test_authenticated_view_success(self):
         # GIVEN
@@ -183,6 +210,21 @@ class TestCaseAuthToken(APITestCase):
         # A reobtained token should delete the first token and reissue
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response1.data['token'], response2.data['token'])
+
+    def test_legacy_delete_user_deletes_token(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_legacy_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'password': 'test_pass_1!'
+        }
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
+                                      content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Token.objects.count(), 0)
 
     def test_legacy_token_fail_no_password(self):
         # GIVEN

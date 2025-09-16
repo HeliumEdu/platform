@@ -7,7 +7,7 @@ import logging
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from helium.planner.models import Category, Course, Event, Homework, CourseSchedule
+from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_group_grade
@@ -60,3 +60,12 @@ def save_homework(sender, instance, **kwargs):
         recalculate_category_grade.delay(instance.category.pk)
 
     adjust_reminder_times.delay(instance.pk, instance.calendar_item_type)
+
+
+@receiver(post_delete, sender=Attachment)
+def delete_attachment(sender, instance, **kwargs):
+    """
+    Delete the associated file in storage, if it exists.
+    """
+    if instance.attachment:
+        instance.attachment.delete(False)
