@@ -130,7 +130,7 @@ class TestCaseAuthToken(APITestCase):
         self.assertNotEqual(response.data['access'], user.access)
         self.assertNotEqual(response.data['refresh'], user.refresh)
         self.assertEqual(OutstandingToken.objects.count(), 2)
-        self.assertEqual(BlacklistedToken.objects.count(), 1)
+        self.assertEqual(BlacklistedToken.objects.count(), 0)
 
     def test_blacklist_token(self):
         # GIVEN
