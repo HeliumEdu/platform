@@ -201,7 +201,7 @@ def reindex_stale_feed_caches():
     reindexed = []
 
     for external_calendar in ExternalCalendar.objects.needs_recached(
-            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
+            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")
