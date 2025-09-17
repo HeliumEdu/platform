@@ -91,8 +91,6 @@ INSTALLED_APPS = (
     'pipeline',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    # The legacy authtoken app can be removed once the frontend is migrated to use JWTs
-    'rest_framework.authtoken',
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'django_filters',
@@ -139,9 +137,7 @@ TEMPLATES = [{
 
 SERVE_LOCAL = False
 
-AUTH_TOKEN_EXPIRY_HOUR = 5
-
-AUTH_TOKEN_TTL_DAYS = 30
+AUTH_TOKEN_PURGE_HOUR = 5
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
@@ -207,8 +203,9 @@ if ACCESS_TOKEN_TTL_MINUTES < 2:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 2")
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=ACCESS_TOKEN_TTL_DAYS),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=ACCESS_TOKEN_TTL_DAYS),
+    'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenSerializer',
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }

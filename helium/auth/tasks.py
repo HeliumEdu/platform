@@ -9,7 +9,6 @@ import pytz
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from conf.celery import app
@@ -84,11 +83,8 @@ def delete_user(user_id):
 
 
 @app.task
-def expire_auth_tokens():
+def purge_expired_tokens():
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
-
-    Token.objects.filter(
-        created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.AUTH_TOKEN_TTL_DAYS)).delete()
 
 
 @app.task
@@ -106,6 +102,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRY_HOUR, minute=0), expire_auth_tokens.s())
+    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_PURGE_HOUR, minute=0), purge_expired_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
