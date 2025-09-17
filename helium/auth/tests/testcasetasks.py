@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from helium.auth.tasks import purge_unverified_users, expire_and_blacklist_auth_tokens
+from helium.auth.tasks import purge_unverified_users, purge_and_blacklist_tokens
 from helium.auth.tests.helpers import userhelper
 
 
@@ -35,7 +35,7 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_200_OK)
 
         # WHEN
-        expire_and_blacklist_auth_tokens()
+        purge_and_blacklist_tokens()
 
         # THEN
         self.assertEqual(Token.objects.count(), 2)

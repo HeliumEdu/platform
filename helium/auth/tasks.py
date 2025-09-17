@@ -83,7 +83,7 @@ def delete_user(user_id):
 
 
 @app.task
-def expire_and_blacklist_auth_tokens():
+def purge_and_blacklist_tokens():
     # TODO: check for users with multiple refresh tokens, and when identified, blacklist all but the most recent one
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
@@ -106,6 +106,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(settings.AUTH_TOKEN_EXPIRY_FREQUENCY_SEC, expire_and_blacklist_auth_tokens.s())
+    sender.add_periodic_task(settings.AUTH_TOKEN_EXPIRY_FREQUENCY_SEC, purge_and_blacklist_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
