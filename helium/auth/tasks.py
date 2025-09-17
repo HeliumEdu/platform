@@ -13,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from conf.celery import app
+from conf.configs.common import AUTH_TOKEN_EXPIRY_FREQUENCY_SEC
 from helium.common.utils import commonutils
 
 logger = logging.getLogger(__name__)
@@ -84,7 +85,8 @@ def delete_user(user_id):
 
 
 @app.task
-def expire_auth_tokens():
+def expire_and_blacklist_auth_tokens():
+    # TODO: check for users with multiple refresh tokens, and when identified, blacklist all but the most recent one
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
     Token.objects.filter(
@@ -106,6 +108,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRY_HOUR, minute=0), expire_auth_tokens.s())
+    sender.add_periodic_task(crontab(AUTH_TOKEN_EXPIRY_FREQUENCY_SEC, expire_and_blacklist_auth_tokens.s()
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
