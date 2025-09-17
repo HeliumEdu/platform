@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.17"
+__version__ = "1.10.35"
 
 import datetime
 import json
