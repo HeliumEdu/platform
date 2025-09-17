@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.17"
+__version__ = "1.10.35"
 
 import datetime
 import json
@@ -126,7 +126,7 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
-        cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL)
+        cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
 
         external_calendar.last_index = timezone.now()
         external_calendar.save()
@@ -201,7 +201,7 @@ def reindex_stale_feed_caches():
     reindexed = []
 
     for external_calendar in ExternalCalendar.objects.needs_recached(
-            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL)).iterator():
+            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS)).iterator():
         cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")

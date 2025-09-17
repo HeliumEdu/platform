@@ -4,10 +4,11 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2018, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.34"
+__version__ = "1.10.35"
 
 import os
 import socket
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
@@ -143,9 +144,9 @@ AUTH_TOKEN_TTL_DAYS = 30
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
-FEED_CACHE_TTL = 60 * 60 * 3
-# Refresh cache 10 mins before it expires
-FEED_CACHE_REFRESH_TTL = FEED_CACHE_TTL - (60 * 10)
+FEED_CACHE_TTL_SECONDS = 60 * 60 * 3
+# Refresh cache before it expires
+FEED_CACHE_REFRESH_TTL_SECONDS = FEED_CACHE_TTL_SECONDS - (60 * 10)
 REINDEX_FEED_FREQUENCY_SEC = 75
 
 DB_INTEGRITY_RETRIES = 2
@@ -199,6 +200,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '15'))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }

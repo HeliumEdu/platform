@@ -40,22 +40,22 @@ bin/runserver
 
 This builds and starts two containers, one for the API (named `helium_platform_api`), and one for the Worker
 (named `helium_platform_worker`). Once running, the `platform` API is available at http://localhost:8000, and the
-`platform` Worker is running to execute async and scheduled tasks. The shell of containers can be accessed using their
-name, like:
+`platform` Worker is running to execute async and scheduled tasks.
+
+To create a superuser, you can run:
+
+```sh
+docker exec -it platform-api-1 python manage.py createsuperuser
+```
+
+A superuser extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)), and
+also has access to [the admin site](http://localhost:8000/admin).
+
+The shell of containers can be accessed using their name, like:
 
 ```shell
 docker exec -it platform-api-1 /bin/bash
 ```
-
-Inside the `platform` container, you can run Django commands against the app, like:
-
-```sh
-python manage.py migrate
-python manage.py createsuperuser
-```
-
-A superuser extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)), but
-also has access to [the admin site](http://localhost:8000/admin).
 
 #### Image Architecture
 
