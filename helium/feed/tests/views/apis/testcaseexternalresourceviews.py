@@ -105,7 +105,6 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    @unittest.skip("Skipping, as recurring external events are currently not supported")
     def test_get_external_calendar_as_events_with_recurring(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -118,7 +117,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 6)
+        self.assertEqual(len(response.data), 4)
+        # TODO: when recurring event support is implemented, this will actually have 6 items
         self.assertEqual(response.data[0]['title'], 'Some Timed Event at 9am CT Inside DST')
         self.assertEqual(response.data[0]['all_day'], False)
         self.assertEqual(response.data[0]['show_end_time'], True)
@@ -143,7 +143,16 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[2]['priority'], 50)
         self.assertEqual(response.data[2]['user'], user.pk)
         self.assertEqual(response.data[2]['calendar_item_type'], enums.EXTERNAL)
-        # TODO: add items 3, 4, and 5, which are recurring events, but this is currently not supported
+        # This is a "removed" member of the recurring group (the time is different than the recurring group), which
+        # means it has been turned in to its own custom event, apart from the recurrence
+        self.assertEqual(response.data[3]['title'], 'Daily Timed Event')
+        self.assertEqual(response.data[3]['all_day'], False)
+        self.assertEqual(response.data[3]['show_end_time'], True)
+        self.assertEqual(response.data[3]['start'], '2025-08-29T13:00:00Z')
+        self.assertEqual(response.data[3]['end'], '2025-08-29T14:00:00Z')
+        self.assertEqual(response.data[3]['priority'], 50)
+        self.assertEqual(response.data[3]['user'], user.pk)
+        self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_get_external_calendar_cached(self, mock_urlopen):
