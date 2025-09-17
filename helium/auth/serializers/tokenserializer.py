@@ -5,14 +5,15 @@ __version__ = "1.10.21"
 import logging
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.settings import api_settings
 
 logger = logging.getLogger(__name__)
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(TokenObtainPairSerializer):
     username = serializers.CharField(help_text="The username for the user.",
                                      label="Username")
 
@@ -34,18 +35,18 @@ class TokenSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Oops! We don\'t recognize that account. Check to make sure you '
                                                   'entered your credentials properly.', code='authorization')
 
-            attrs['username'] = username
-            attrs['user'] = user
-
-            if not attrs['user'].is_active:
-                raise ValidationError(
+            if not user.is_active or not api_settings.USER_AUTHENTICATION_RULE(user):
+                raise serializers.ValidationError(
                     'Sorry, your account is not active. Check your to see if you received a verification email after '
                     'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
                     'this out!')
 
-            attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
-            if not created:
-                attrs['token'].delete()
-                attrs['token'], created = Token.objects.get_or_create(user=attrs['user'])
+            refresh = self.get_token(user)
+
+            attrs["refresh"] = str(refresh)
+            attrs["access"] = str(refresh.access_token)
+
+            if api_settings.UPDATE_LAST_LOGIN:
+                update_last_login(None, user)
 
         return attrs

@@ -7,7 +7,6 @@ import json
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
@@ -169,8 +168,8 @@ class TestCaseAuthToken(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertContains(response, 'No active account found',
-                                status_code=status.HTTP_401_UNAUTHORIZED)
+            self.assertContains(response, 'don\'t recognize that account',
+                                status_code=status.HTTP_400_BAD_REQUEST)
         self.assertEqual(OutstandingToken.objects.count(), 0)
 
     def test_authenticated_view_success(self):
@@ -185,125 +184,3 @@ class TestCaseAuthToken(APITestCase):
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-
-    def test_legacy_token_success(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.get_username(),
-            'password': 'test_pass_1!'
-        }
-        response1 = self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                                     json.dumps(data),
-                                     content_type='application/json')
-        response2 = self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                                     json.dumps(data),
-                                     content_type='application/json')
-
-        # THEN
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertIn('token', response1.data)
-        user = get_user_model().objects.get(username=user.get_username())
-        self.assertIsNotNone(user.last_login)
-        # A reobtained token should delete the first token and reissue
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(response1.data['token'], response2.data['token'])
-
-    def test_legacy_delete_user_deletes_token(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_legacy_authenticated(self.client)
-
-        # WHEN
-        data = {
-            'password': 'test_pass_1!'
-        }
-        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
-                                      content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Token.objects.count(), 0)
-
-    def test_legacy_token_fail_no_password(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.get_username(),
-        }
-        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('password', response.data)
-
-    def test_legacy_token_with_email_success(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.email,
-            'password': 'test_pass_1!'
-        }
-        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('token', response.data)
-
-    def test_legacy_token_with_whitespace_success(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': f'  {user.email}  ',
-            'password': 'test_pass_1!'
-        }
-        response = self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('token', response.data)
-
-    def test_legacy_revoke_token(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_legacy_authenticated(self.client)
-
-        # WHEN
-        response1 = self.client.delete(reverse('auth_legacy_token_resource_revoke'))
-        response2 = self.client.get(reverse('auth_user_detail'))
-
-        # THEN
-        self.assertEqual(response1.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(Token.objects.count(), 0)
-
-    def test_legacy_login_invalid_user(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        responses = [
-            self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                             json.dumps({'username': 'not-a-user', 'password': 'test_pass_1!'}),
-                             content_type='application/json'),
-            self.client.post(reverse('auth_legacy_token_resource_obtain'),
-                             json.dumps({'username': user.get_username(), 'password': 'wrong_pass'}),
-                             content_type='application/json')
-        ]
-
-        # THEN
-        for response in responses:
-            self.assertContains(response, 'recognize that account',
-                                status_code=status.HTTP_400_BAD_REQUEST)

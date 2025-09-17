@@ -6,7 +6,6 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework.authtoken.models import Token
 
 from helium.auth.models.userpushtoken import UserPushToken
 
@@ -45,16 +44,6 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
 
     user.access = response.data['access']
     user.refresh = response.data['refresh']
-
-    return user
-
-
-def given_a_user_exists_and_is_legacy_authenticated(client, username='test_user', email='user@test.com',
-                                                    password='test_pass_1!'):
-    user = given_a_user_exists(username, email, password)
-    token = Token.objects.create(user=user)
-
-    client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     return user
 
