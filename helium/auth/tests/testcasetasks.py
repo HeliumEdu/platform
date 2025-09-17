@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
-from helium.auth.tasks import purge_expired_tokens, purge_unverified_users
+from helium.auth.tasks import purge_unverified_users, purge_and_blacklist_tokens
 from helium.auth.tests.helpers import userhelper
 
 
@@ -37,7 +37,7 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_403_FORBIDDEN)
 
         # WHEN
-        purge_expired_tokens()
+        purge_and_blacklist_tokens()
 
         # THEN
         self.assertEqual(OutstandingToken.objects.count(), 2)
