@@ -3,6 +3,7 @@ __license__ = "MIT"
 __version__ = "1.5.1"
 
 import os
+import unittest
 from unittest import mock
 
 from django.urls import reverse
@@ -100,6 +101,56 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[3]['priority'], 50)
         self.assertEqual(response.data[3]['url'], None)
         self.assertEqual(response.data[3]['comments'], 'end date 2 hours later')
+        self.assertEqual(response.data[3]['user'], user.pk)
+        self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_external_calendar_as_events_with_recurring(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample_with_recurring.ics'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+        # TODO: when recurring event support is implemented, this will actually have 6 items
+        self.assertEqual(response.data[0]['title'], 'Some Timed Event at 9am CT Inside DST')
+        self.assertEqual(response.data[0]['all_day'], False)
+        self.assertEqual(response.data[0]['show_end_time'], True)
+        self.assertEqual(response.data[0]['start'], '2023-10-15T15:00:00Z')
+        self.assertEqual(response.data[0]['end'], '2023-10-15T16:00:00Z')
+        self.assertEqual(response.data[0]['priority'], 50)
+        self.assertEqual(response.data[0]['user'], user.pk)
+        self.assertEqual(response.data[0]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[1]['title'], 'An All Day Event')
+        self.assertEqual(response.data[1]['all_day'], True)
+        self.assertEqual(response.data[1]['show_end_time'], False)
+        self.assertEqual(response.data[1]['start'], '2023-11-21T06:00:00Z')
+        self.assertEqual(response.data[1]['end'], '2023-11-22T06:00:00Z')
+        self.assertEqual(response.data[1]['priority'], 50)
+        self.assertEqual(response.data[1]['user'], user.pk)
+        self.assertEqual(response.data[1]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[2]['title'], 'Some Timed Event at 9am CT Outside DST')
+        self.assertEqual(response.data[2]['all_day'], False)
+        self.assertEqual(response.data[2]['show_end_time'], True)
+        self.assertEqual(response.data[2]['start'], '2023-11-10T15:00:00Z')
+        self.assertEqual(response.data[2]['end'], '2023-11-10T16:00:00Z')
+        self.assertEqual(response.data[2]['priority'], 50)
+        self.assertEqual(response.data[2]['user'], user.pk)
+        self.assertEqual(response.data[2]['calendar_item_type'], enums.EXTERNAL)
+        # This is a "removed" member of the recurring group (the time is different than the recurring group), which
+        # means it has been turned in to its own custom event, apart from the recurrence
+        self.assertEqual(response.data[3]['title'], 'Daily Timed Event')
+        self.assertEqual(response.data[3]['all_day'], False)
+        self.assertEqual(response.data[3]['show_end_time'], True)
+        self.assertEqual(response.data[3]['start'], '2025-08-29T13:00:00Z')
+        self.assertEqual(response.data[3]['end'], '2025-08-29T14:00:00Z')
+        self.assertEqual(response.data[3]['priority'], 50)
         self.assertEqual(response.data[3]['user'], user.pk)
         self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
 
