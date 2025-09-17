@@ -1,4 +1,4 @@
-.PHONY: all env docker-env virtualenv install install-dev nopyc clean build build-migrations migrate test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
+.PHONY: all env docker-env virtualenv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -6,7 +6,7 @@ PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
 PLATFORM ?= arm64
 
-all: build migrate test build-docker
+all: test build-docker run-docker
 
 env:
 	cp -n .env.example .env | true
@@ -41,10 +41,10 @@ nopyc:
 clean: nopyc
 	rm -rf build $(PLATFORM_VENV)
 
-build: install
+build-dev: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python manage.py collectstatic --noinput; \
+		ENVIRONMENT=local python manage.py collectstatic --noinput; \
 	)
 
 build-migrations: install-dev
@@ -53,10 +53,10 @@ build-migrations: install-dev
 		ENVIRONMENT=local python manage.py makemigrations; \
 	)
 
-migrate: install
+migrate-dev: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python manage.py migrate; \
+		ENVIRONMENT=local python manage.py migrate; \
 	)
 
 test: install-dev
@@ -65,12 +65,11 @@ test: install-dev
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
 	)
 
-run-devserver: install-dev
+run-devserver: build-dev migrate-dev
 	# This will start a local dev server, outside of Docker. This can be useful during active development, so images
 	# don't need to be rebuilt to validate each change.
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
-		ENVIRONMENT=local python manage.py migrate; \
 		ENVIRONMENT=local python manage.py runserver; \
 	)
 
