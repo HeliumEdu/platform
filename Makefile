@@ -66,6 +66,8 @@ test: install-dev
 	)
 
 run-devserver: install-dev
+	# This will start a local dev server, outside of Docker. This can be useful during active development, so images
+	# don't need to be rebuilt to validate each change.
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		ENVIRONMENT=local python manage.py migrate; \
