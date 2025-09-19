@@ -1,4 +1,4 @@
-.PHONY: all env docker-env virtualenv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
