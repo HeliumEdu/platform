@@ -77,3 +77,36 @@ class UserDeleteResourceView(HeliumAPIView):
         delete_user.delay(user.pk)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserDeleteInactiveResourceView(HeliumAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return get_user_model().objects.get(username=self.request.data['username'])
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete the given user instance. The request body should include the authenticated user's `password` for the
+        request to succeed.
+        """
+        if 'username' not in request.data:
+            return Response({'username': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'password' not in request.data:
+            return Response({'password': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = self.get_object()
+
+        if user.is_active:
+            return Response({'non_field_errors': ['This endpoint can only be used to cleanup user accounts that '
+                                                  'were never activated.']}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(request.data['password']):
+            return Response({'password': ['The password is incorrect.']}, status=status.HTTP_401_UNAUTHORIZED)
+
+        logger.info(f'User {user.get_username()} will be deleted')
+
+        delete_user.delay(user.pk)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
