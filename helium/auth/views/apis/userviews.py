@@ -87,8 +87,8 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
 
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given user instance. The request body should include the authenticated user's `password` for the
-        request to succeed.
+        Delete an inactive user instance. The request body should include the `username` and `password`, and this route
+        can only be used to delete users that never finished setting up their account.
         """
         if 'username' not in request.data:
             return Response({'username': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
