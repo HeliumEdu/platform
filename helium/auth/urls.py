@@ -1,13 +1,12 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.32"
+__version__ = "1.11.0"
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
-from helium.auth.views.apis.tokenresourceviews import ObtainTokenResourceView, DestroyTokenResourceView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
@@ -38,10 +37,6 @@ urlpatterns = [
     path('auth/token/', TokenObtainPairView.as_view(), name='auth_token_obtain'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='auth_token_refresh'),
     path('auth/token/blacklist/', TokenBlacklistView.as_view(), name='auth_token_blacklist'),
-    # Endpoints for legacy tokens, still used by the website, but will be removed once it is updated to use JWT tokens
-    path('auth/legacy/token/', ObtainTokenResourceView.as_view(), name='auth_legacy_token_resource_obtain'),
-    path('auth/legacy/token/revoke/', DestroyTokenResourceView.as_view({'delete': 'revoke'}),
-         name='auth_legacy_token_resource_revoke'),
 
     ##############################
     # Authenticated URLs

@@ -1,16 +1,16 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.33"
+__version__ = "1.11.0"
 
 import logging
 from datetime import datetime, timedelta
 
 import pytz
-from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
+from django.db.models import Q, Count
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.common.utils import commonutils
@@ -84,11 +84,12 @@ def delete_user(user_id):
 
 
 @app.task
-def expire_auth_tokens():
+def purge_and_blacklist_tokens():
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
-    Token.objects.filter(
-        created__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.AUTH_TOKEN_TTL_DAYS)).delete()
+    for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
+        for token in user.outstandingtoken_set.order_by('-created_at')[1:].iterator():
+            RefreshToken(token.token).blacklist()
 
 
 @app.task
@@ -106,6 +107,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(crontab(hour=settings.AUTH_TOKEN_EXPIRY_HOUR, minute=0), expire_auth_tokens.s())
+    sender.add_periodic_task(settings.AUTH_TOKEN_EXPIRY_FREQUENCY_SEC, purge_and_blacklist_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
