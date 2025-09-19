@@ -8,7 +8,9 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q, Count
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.common.utils import commonutils
@@ -84,7 +86,10 @@ def delete_user(user_id):
 @app.task
 def purge_and_blacklist_tokens():
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
-    # TODO: check for users with multiple refresh tokens, and when identified, blacklist all but the most recent one
+
+    for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
+        for token in user.outstandingtoken_set.order_by('-created_at')[1:].iterator():
+            RefreshToken(token.token).blacklist()
 
 
 @app.task
