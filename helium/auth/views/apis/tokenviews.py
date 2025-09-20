@@ -1,0 +1,23 @@
+__copyright__ = "Copyright (c) 2018 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.10.28"
+
+import logging
+
+from rest_framework_simplejwt import views
+
+from helium.common.views.views import HeliumAPIView
+
+logger = logging.getLogger(__name__)
+
+
+class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
+    pass
+
+
+class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
+    pass
+
+
+class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
+    pass
