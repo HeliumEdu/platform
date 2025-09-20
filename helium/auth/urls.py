@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.0"
+__version__ = "1.11.1"
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
