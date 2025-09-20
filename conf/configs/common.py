@@ -90,6 +90,8 @@ INSTALLED_APPS = (
     # Third-party modules
     'pipeline',
     'rest_framework',
+    # This is no longer used in favor of JWT tokens, but is maintained for backwards compatibility
+    'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     'drf_spectacular_sidecar',
