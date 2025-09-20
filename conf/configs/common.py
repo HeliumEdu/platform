@@ -80,6 +80,8 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     # Health modules
@@ -103,8 +105,11 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
@@ -113,9 +118,11 @@ TEMPLATES = [{
     'APP_DIRS': True,
     'OPTIONS': {
         'context_processors': [
+            'django.contrib.auth.context_processors.auth',
             'django.template.context_processors.media',
             'django.template.context_processors.static',
             'django.template.context_processors.tz',
+            'django.contrib.messages.context_processors.messages',
             'django.template.context_processors.request',
         ],
         'debug': config('PLATFORM_TEMPLATE_DEBUG', 'False') == 'True'
@@ -151,6 +158,7 @@ UNVERIFIED_USER_TTL_DAYS = 7
 
 # Application definition
 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 AUTH_USER_MODEL = 'helium_auth.User'
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/docs'
@@ -272,6 +280,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 SECRET_KEY = config('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
