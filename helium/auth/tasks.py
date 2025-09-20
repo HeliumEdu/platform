@@ -88,7 +88,7 @@ def purge_and_blacklist_tokens():
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
     for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
-        for token in user.outstandingtoken_set.order_by('-created_at')[1:].iterator():
+        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False).order_by('-created_at')[1:].iterator():
             RefreshToken(token.token).blacklist()
 
 
