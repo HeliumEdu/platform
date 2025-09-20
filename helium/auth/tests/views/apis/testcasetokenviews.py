@@ -216,5 +216,5 @@ class TestCaseAuthToken(APITestCase):
         response2 = self.client.get(reverse('auth_user_detail'))
 
         # THEN
-        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)

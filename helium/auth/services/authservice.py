@@ -39,8 +39,6 @@ def forgot_password(request):
         metricutils.increment('action.user.password-reset', request)
 
         send_password_reset_email.delay(user.email, password)
-
-        request.session.modified = True
     except get_user_model().DoesNotExist:
         logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
 
