@@ -27,7 +27,7 @@ class TestCaseUserProfileViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('helium.common.services.phoneservice._get_client')
     @mock.patch('helium.auth.serializers.userprofileserializer.verify_number', return_value='+15555555555')
