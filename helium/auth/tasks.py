@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Count
+from django.db.models import Count
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
-from helium.common.utils import commonutils
+from helium.common.utils import commonutils, metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,8 @@ def delete_user(user_id):
 
         for token in outstanding_tokens + blacklisted_tokens:
             token.delete()
+
+        metricutils.increment('task.user.deleted')
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
@@ -88,8 +90,11 @@ def purge_and_blacklist_tokens():
     OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
     for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
-        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False).order_by('-created_at')[1:].iterator():
+        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False) \
+                .order_by('-created_at')[1:].iterator():
             RefreshToken(token.token).blacklist()
+
+            metricutils.increment('task.token.blacklisted')
 
 
 @app.task
@@ -102,6 +107,8 @@ def purge_unverified_users():
             f'Deleting user {user.username}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
         user.delete()
+
+        metricutils.increment('task.purge.unverified-user')
 
 
 @app.on_after_finalize.connect
