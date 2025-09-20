@@ -5,8 +5,8 @@ __version__ = "1.11.1"
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
+from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
