@@ -33,6 +33,8 @@ def send_verification_email(email, username, verification_code):
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
+    metricutils.increment('task.email.verification.sent')
+
 
 @app.task
 def send_registration_email(email):
@@ -46,6 +48,8 @@ def send_registration_email(email):
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
+
+    metricutils.increment('task.email.registration.sent')
 
 
 @app.task
@@ -61,6 +65,8 @@ def send_password_reset_email(email, temp_password):
                                          'support_url': f"{settings.PROJECT_APP_HOST}/support",
                                      },
                                      'Your Helium Password Has Been Reset', [email])
+
+    metricutils.increment('task.email.password-reset.sent')
 
 
 @app.task
@@ -87,7 +93,10 @@ def delete_user(user_id):
 
 @app.task
 def purge_and_blacklist_tokens():
-    OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+    deleted, num_deleted = OutstandingToken.objects.filter(
+        expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+
+    metricutils.increment('task.token.purged', num_deleted)
 
     for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
         for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False) \
