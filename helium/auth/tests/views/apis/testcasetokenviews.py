@@ -3,7 +3,9 @@ __license__ = "MIT"
 __version__ = "1.11.0"
 
 import json
+from datetime import timedelta, datetime
 
+import pytz
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -41,6 +43,38 @@ class TestCaseAuthToken(APITestCase):
         self.assertEqual(OutstandingToken.objects.count(), 2)
         token1 = OutstandingToken.objects.get(token=response1.data['refresh'])
         self.assertEqual(token1.user, user)
+
+    def test_token_update_last_login(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.last_login = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=1)
+        user.save()
+        last_login = user.last_login
+
+        # WHEN
+        data = {
+            'username': user.get_username(),
+            'password': 'test_pass_1!'
+        }
+        self.client.post(reverse('auth_token_obtain'),
+                         json.dumps(data),
+                         content_type='application/json')
+
+        # THEN
+        self.assertEqual(get_user_model().objects.get(pk=user.pk).last_login, last_login)
+
+        # WHEN
+        data = {
+            'username': user.get_username(),
+            'password': 'test_pass_1!',
+            'last_login_now': True
+        }
+        self.client.post(reverse('auth_token_obtain'),
+                         json.dumps(data),
+                         content_type='application/json')
+
+        # THEN
+        self.assertNotEqual(get_user_model().objects.get(pk=user.pk).last_login, last_login)
 
     def test_delete_user_deletes_token(self):
         # GIVEN
