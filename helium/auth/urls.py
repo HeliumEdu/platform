@@ -1,12 +1,12 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.1"
+__version__ = "1.11.3"
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
+from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView

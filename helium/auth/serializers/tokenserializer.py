@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.2"
+__version__ = "1.11.3"
 
 import logging
 
@@ -9,6 +9,8 @@ from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
+
+from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ class TokenSerializer(TokenObtainPairSerializer):
             attrs["access"] = str(refresh.access_token)
 
             if api_settings.UPDATE_LAST_LOGIN or self.context.get('request').data.get('last_login_now', False):
+                metricutils.increment('action.user.login')
                 update_last_login(None, user)
 
         return attrs

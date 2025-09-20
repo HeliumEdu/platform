@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.2"
+__version__ = "1.11.3"
 
 import logging
 from datetime import datetime, timedelta
@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Count
+from django.db.models import Count
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
-from helium.common.utils import commonutils
+from helium.common.utils import commonutils, metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ def send_verification_email(email, username, verification_code):
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
+    metricutils.increment('task.email.verification.sent')
+
 
 @app.task
 def send_registration_email(email):
@@ -46,6 +48,8 @@ def send_registration_email(email):
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
+
+    metricutils.increment('task.email.registration.sent')
 
 
 @app.task
@@ -62,6 +66,8 @@ def send_password_reset_email(email, temp_password):
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 
+    metricutils.increment('task.email.password-reset.sent')
+
 
 @app.task
 def delete_user(user_id):
@@ -77,6 +83,8 @@ def delete_user(user_id):
 
         for token in outstanding_tokens + blacklisted_tokens:
             token.delete()
+
+        metricutils.increment('task.user.deleted')
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
@@ -85,11 +93,17 @@ def delete_user(user_id):
 
 @app.task
 def purge_and_blacklist_tokens():
-    OutstandingToken.objects.filter(expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+    deleted, num_deleted = OutstandingToken.objects.filter(
+        expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+
+    metricutils.increment('task.token.purged', num_deleted)
 
     for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
-        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False).order_by('-created_at')[1:].iterator():
+        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False) \
+                .order_by('-created_at')[1:].iterator():
             RefreshToken(token.token).blacklist()
+
+            metricutils.increment('task.token.blacklisted')
 
 
 @app.task
@@ -102,6 +116,8 @@ def purge_unverified_users():
             f'Deleting user {user.username}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
         user.delete()
+
+        metricutils.increment('task.purge.unverified-user')
 
 
 @app.on_after_finalize.connect
