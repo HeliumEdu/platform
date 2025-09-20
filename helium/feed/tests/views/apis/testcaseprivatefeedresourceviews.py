@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.29"
+__version__ = "1.11.2"
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -23,7 +23,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_enable_private_url(self):
         # GIVEN

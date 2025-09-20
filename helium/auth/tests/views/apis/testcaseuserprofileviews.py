@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.3"
+__version__ = "1.11.2"
 
 import json
 from unittest import mock
@@ -27,7 +27,7 @@ class TestCaseUserProfileViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('helium.common.services.phoneservice._get_client')
     @mock.patch('helium.auth.serializers.userprofileserializer.verify_number', return_value='+15555555555')

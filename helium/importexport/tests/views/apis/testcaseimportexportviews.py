@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.22"
+__version__ = "1.11.2"
 
 import datetime
 import json
@@ -37,7 +37,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_import_success(self):
         # GIVEN

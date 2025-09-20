@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.0"
+__version__ = "1.11.2"
 
 import logging
 
@@ -46,7 +46,7 @@ class TokenSerializer(TokenObtainPairSerializer):
             attrs["refresh"] = str(refresh)
             attrs["access"] = str(refresh.access_token)
 
-            if api_settings.UPDATE_LAST_LOGIN:
+            if api_settings.UPDATE_LAST_LOGIN or self.context.get('request').data.get('last_login_now', False):
                 update_last_login(None, user)
 
         return attrs

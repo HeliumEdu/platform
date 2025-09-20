@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.11.2"
 
 import json
 
@@ -15,7 +15,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.11.2"
 class TestCaseCourseViews(APITestCase, CacheTestCase):
     def test_course_schedule_login_required(self):
         # GIVEN
@@ -40,7 +40,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_course_schedules(self):
         # GIVEN

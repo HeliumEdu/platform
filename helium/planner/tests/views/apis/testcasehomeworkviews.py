@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.11.2"
 
 import datetime
 import json
@@ -40,7 +40,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_homework(self):
         user1 = userhelper.given_a_user_exists()
