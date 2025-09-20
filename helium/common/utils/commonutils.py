@@ -35,8 +35,6 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-    metricutils.increment('action.email.sent')
-
 
 def remove_exponent(d):
     """
