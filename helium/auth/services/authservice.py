@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def forgot_password(request):
     """
-    Generate a new password and send an email to the email specified in the request. For security purposes, whether
+    Generate a new password and send an email to the address specified in the request. For security purposes, whether
     the email exists in the system or not, the same response "success" will be shown the user.
 
     :param request: the request being processed
@@ -65,9 +65,9 @@ def verify_email(request):
             logger.info(f'Completed registration and verification for user {user.username}')
 
             if request.GET.get('welcome-email', 'true') == 'true':
-                send_registration_email.delay(user.email)
-
                 metricutils.increment('action.user.verified', request)
+
+                send_registration_email.delay(user.email)
             else:
                 logger.info('Welcome email not sent, flag disabled')
         elif user.email_changing:
