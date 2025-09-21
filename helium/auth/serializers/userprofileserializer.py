@@ -10,6 +10,7 @@ from helium.auth.models import UserProfile
 from helium.auth.utils.userutils import generate_phone_verification_code
 from helium.common.services.phoneservice import verify_number, HeliumPhoneError
 from helium.common.tasks import send_text
+from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +42,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def validate_phone_verification_code(self, phone_verification_code):
         """
-        Ensure the email the user isn't already taken by another user.
+        Ensure the phone verification code matches our records.
 
-        :param phone_verification_code: the new email address
+        :param phone_verification_code: the verification code
         """
         if phone_verification_code != self.instance.phone_verification_code:
             raise serializers.ValidationError("The verification code does not match our records")
@@ -54,6 +55,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         # Manually process fields that require shuffling before relying on the serializer's internals to save the rest
         if 'phone_verification_code' in validated_data and validated_data.get('phone_verification_code'):
             self.__process_phone_verification_code(instance, validated_data)
+
+            metricutils.increment('action.user.phone-changed')
         elif 'phone' in validated_data and not validated_data.get('phone'):
             self.__clear_phone_fields(instance, validated_data)
         else:
