@@ -116,7 +116,7 @@ def purge_and_blacklist_tokens():
 
 @app.task
 def purge_unverified_users():
-    metrics = metricutils.task_start("push_unverified_users")
+    metrics = metricutils.task_start("purge_unverified_users")
 
     for user in get_user_model().objects.filter(
             is_active=False,
