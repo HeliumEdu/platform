@@ -153,7 +153,7 @@ DB_INTEGRITY_RETRY_DELAY = 2
 REMINDERS_FREQUENCY_SEC = 60
 
 PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 12
-# Purge users that never finish setting up their account after 7 days
+# Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
 
 # Application definition
