@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.5"
+__version__ = "1.11.7"
 
 import logging
 from datetime import datetime, timedelta
@@ -116,7 +116,7 @@ def purge_and_blacklist_tokens():
 
 @app.task
 def purge_unverified_users():
-    metrics = metricutils.task_start("push_unverified_users")
+    metrics = metricutils.task_start("purge_unverified_users")
 
     for user in get_user_model().objects.filter(
             is_active=False,

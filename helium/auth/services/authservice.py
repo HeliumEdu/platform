@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.5"
+__version__ = "1.11.7"
 
 import logging
 
@@ -36,9 +36,9 @@ def forgot_password(request):
 
         logger.info(f'Reset password for user with email {user.email}')
 
-        metricutils.increment('action.user.password-reset', request)
-
         send_password_reset_email.delay(user.email, password)
+
+        metricutils.increment('action.user.password-reset', request)
     except get_user_model().DoesNotExist:
         logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
 
@@ -75,9 +75,9 @@ def verify_email(request):
             user.email_changing = None
             user.save()
 
-            metricutils.increment('action.user.email-changed', request)
-
             logger.info(f'Verified new email for user {user.username}')
+
+            metricutils.increment('action.user.email-changed', request)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     except get_user_model().DoesNotExist:
