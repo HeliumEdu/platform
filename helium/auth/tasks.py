@@ -71,6 +71,8 @@ def send_password_reset_email(email, temp_password):
 
 @app.task
 def delete_user(user_id):
+    metrics = metricutils.task_start("delete_user")
+
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
@@ -90,13 +92,17 @@ def delete_user(user_id):
 
         return
 
+    metricutils.task_stop(metrics)
+
 
 @app.task
 def purge_and_blacklist_tokens():
+    metrics = metricutils.task_start("purge_and_blacklist_tokens")
+
     deleted, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
-    metricutils.increment('task.token.purged', num_deleted)
+    metricutils.increment('task.token.purged', value=num_deleted)
 
     for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
         for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False) \
@@ -105,9 +111,13 @@ def purge_and_blacklist_tokens():
 
             metricutils.increment('task.token.blacklisted')
 
+    metricutils.task_stop(metrics)
+
 
 @app.task
 def purge_unverified_users():
+    metrics = metricutils.task_start("push_unverified_users")
+
     for user in get_user_model().objects.filter(
             is_active=False,
             created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
@@ -118,6 +128,8 @@ def purge_unverified_users():
         user.delete()
 
         metricutils.increment('task.purge.unverified-user')
+
+    metricutils.task_stop(metrics)
 
 
 @app.on_after_finalize.connect

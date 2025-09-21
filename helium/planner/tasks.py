@@ -205,7 +205,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                      },
                                      subject, [email])
 
-    metricutils.increment('action.reminder.sent.email')
+    metricutils.increment('task.email.reminder.sent')
 
     timezone.deactivate()
 

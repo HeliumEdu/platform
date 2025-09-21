@@ -21,8 +21,6 @@ def send_text(phone, message):
             f'Texts disabled. Text with message "{message}" to {phone} not sent.')
         return
 
-    logger.info(f'Sending text with message "{message}" to {phone}')
-
     send_sms(phone, message)
 
     metricutils.increment('task.text.sent')
@@ -34,8 +32,6 @@ def send_pushes(push_tokens, username, subject, message):
         logger.warning(
             f'Push disabled. Push with message "{message}" to {username} not sent.')
         return
-
-    logger.info(f'Sending push with message "{message}" to {username}')
 
     send_notifications(push_tokens, subject, message)
 
