@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.34"
+__version__ = "1.11.5"
 
 import logging
 
@@ -205,7 +205,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                      },
                                      subject, [email])
 
-    metricutils.increment('action.reminder.sent.email')
+    metricutils.increment('task.email.reminder.sent')
 
     timezone.deactivate()
 

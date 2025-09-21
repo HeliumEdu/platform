@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.11.5"
 
 import logging
 
@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def import_example_schedule(user_id):
+    metrics = metricutils.task_start("import_example_schedule")
+
     try:
         user = get_user_model().objects.get(pk=user_id)
     except get_user_model().DoesNotExist:
@@ -25,3 +27,5 @@ def import_example_schedule(user_id):
     importservice.import_example_schedule(user)
 
     metricutils.increment('task.user.example-imported')
+
+    metricutils.task_stop(metrics)
