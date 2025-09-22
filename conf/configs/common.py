@@ -137,7 +137,7 @@ TEMPLATES = [{
 
 SERVE_LOCAL = False
 
-AUTH_TOKEN_EXPIRY_FREQUENCY_SEC = 60 * 60
+ACCESS_TOKEN_EXPIRY_FREQUENCY_SEC = 60 * 60
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
@@ -148,13 +148,15 @@ REINDEX_FEED_FREQUENCY_SEC = 75
 
 DB_INTEGRITY_RETRIES = 2
 
-DB_INTEGRITY_RETRY_DELAY = 2
+DB_INTEGRITY_RETRY_DELAY_SECS = 2
 
 REMINDERS_FREQUENCY_SEC = 60
 
 PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 12
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
+
+BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 
 # Application definition
 
@@ -203,8 +205,10 @@ if ACCESS_TOKEN_TTL_MINUTES < 3:
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=ACCESS_TOKEN_TTL_DAYS),
-    'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenSerializer',
-    'ROTATE_REFRESH_TOKENS': True
+    'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenObtainSerializer',
+    'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True
 }
 
 SPECTACULAR_SETTINGS = {

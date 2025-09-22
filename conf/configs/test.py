@@ -15,6 +15,10 @@ from conf.configs import common
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
 
+# Project configuration
+
+BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 0
+
 # Application definition
 
 INSTALLED_APPS = common.INSTALLED_APPS

@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Count
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -96,20 +95,20 @@ def delete_user(user_id):
 
 
 @app.task
-def purge_and_blacklist_tokens():
-    metrics = metricutils.task_start("purge_and_blacklist_tokens")
+def blacklist_refresh_token(token):
+    RefreshToken(token).blacklist()
+
+    metricutils.increment('task.token.refresh.blacklisted')
+
+
+@app.task
+def purge_access_tokens():
+    metrics = metricutils.task_start("purge_access_tokens")
 
     deleted, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
-    metricutils.increment('task.token.purged', value=num_deleted)
-
-    for user in get_user_model().objects.annotate(num_tokens=Count('outstandingtoken')).filter(num_tokens__gt=1):
-        for token in user.outstandingtoken_set.exclude(blacklistedtoken__isnull=False) \
-                .order_by('-created_at')[1:].iterator():
-            RefreshToken(token.token).blacklist()
-
-            metricutils.increment('task.token.blacklisted')
+    metricutils.increment('task.token.access.purged', value=num_deleted)
 
     metricutils.task_stop(metrics)
 
@@ -134,7 +133,7 @@ def purge_unverified_users():
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Add schedule to check for expired auth tokens periodically
-    sender.add_periodic_task(settings.AUTH_TOKEN_EXPIRY_FREQUENCY_SEC, purge_and_blacklist_tokens.s())
+    # Add schedule to check for expired access tokens periodically
+    sender.add_periodic_task(settings.ACCESS_TOKEN_EXPIRY_FREQUENCY_SEC, purge_access_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())

@@ -35,7 +35,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
 
             recalculate_course_group_grade.apply_async((course_group_id, retries + 1),
-                                                       countdown=settings.INTEGRITY_RETRY_BACKOFF)
+                                                       countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
     except CourseGroup.DoesNotExist:
@@ -59,7 +59,8 @@ def recalculate_course_grade(course_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
 
-            recalculate_course_grade.apply_async((course_id, retries + 1), countdown=settings.INTEGRITY_RETRY_BACKOFF)
+            recalculate_course_grade.apply_async((course_id, retries + 1),
+                                                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
     except Course.DoesNotExist:
@@ -82,7 +83,7 @@ def recalculate_category_grades_for_course(course_id, retries=0):
                 "Integrity error occurred, delaying before retrying `recalculate_category_grades_for_course` task")
 
             recalculate_category_grades_for_course.apply_async((course_id, retries + 1),
-                                                               countdown=settings.INTEGRITY_RETRY_BACKOFF)
+                                                               countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
     except Course.DoesNotExist:
@@ -107,7 +108,7 @@ def recalculate_category_grade(category_id, retries=0):
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
 
             recalculate_category_grade.apply_async((category_id, retries + 1),
-                                                   countdown=settings.INTEGRITY_RETRY_BACKOFF)
+                                                   countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
     except Category.DoesNotExist:

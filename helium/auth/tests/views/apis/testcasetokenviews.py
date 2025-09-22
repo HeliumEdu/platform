@@ -3,6 +3,7 @@ __license__ = "MIT"
 __version__ = "1.11.2"
 
 import json
+import time
 from datetime import timedelta, datetime
 
 import pytz
@@ -15,7 +16,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from helium.auth.tests.helpers import userhelper
 
 
-class TestCaseAuthToken(APITestCase):
+class TestCaseTokenViews(APITestCase):
     def test_token_success(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -163,7 +164,7 @@ class TestCaseAuthToken(APITestCase):
         self.assertNotEqual(response.data['access'], user.access)
         self.assertNotEqual(response.data['refresh'], user.refresh)
         self.assertEqual(OutstandingToken.objects.count(), 2)
-        self.assertEqual(BlacklistedToken.objects.count(), 0)
+        self.assertEqual(BlacklistedToken.objects.count(), 1)
 
     def test_blacklist_token(self):
         # GIVEN
@@ -185,6 +186,44 @@ class TestCaseAuthToken(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(OutstandingToken.objects.count(), 1)
         self.assertEqual(BlacklistedToken.objects.count(), 1)
+
+    def test_blacklist_tokens(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
+        user3 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user3',
+                                                                    email='test3@email.com')
+
+        # THEN
+        self.assertEqual(self.client.post(reverse('auth_token_refresh'),
+                                          json.dumps({"refresh": user1.refresh}),
+                                          content_type='application/json').status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.post(reverse('auth_token_refresh'),
+                                          json.dumps({"refresh": user2.refresh}),
+                                          content_type='application/json').status_code, status.HTTP_200_OK)
+        self.assertEqual(OutstandingToken.objects.count(), 5)
+        self.assertEqual(BlacklistedToken.objects.count(), 2)
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user1.refresh).exists())
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user2.refresh).exists())
+        self.assertFalse(BlacklistedToken.objects.filter(token__token=user3.refresh).exists())
+
+        # THEN
+        self.assertEqual(self.client.post(reverse('auth_token_refresh'),
+                                          json.dumps({"refresh": user1.refresh}),
+                                          content_type='application/json').status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(self.client.post(reverse('auth_token_refresh'),
+                                          json.dumps({"refresh": user2.refresh}),
+                                          content_type='application/json').status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(self.client.post(reverse('auth_token_refresh'),
+                                          json.dumps({"refresh": user3.refresh}),
+                                          content_type='application/json').status_code, status.HTTP_200_OK)
+        # Ensure all but the three current tokens are blacklisted
+        self.assertEqual(OutstandingToken.objects.count(), 6)
+        self.assertEqual(BlacklistedToken.objects.count(), 3)
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user1.refresh).exists())
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user2.refresh).exists())
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user3.refresh).exists())
 
     def test_login_invalid_user(self):
         # GIVEN
