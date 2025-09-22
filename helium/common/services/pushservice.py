@@ -6,6 +6,8 @@ import logging
 
 from firebase_admin import messaging
 
+from helium.common.utils import metricutils
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,3 +21,5 @@ def send_notifications(push_tokens, subject, message):
     )
 
     messaging.send_each_for_multicast(message)
+
+    metricutils.increment('action.push.sent')

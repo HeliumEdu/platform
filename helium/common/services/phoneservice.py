@@ -9,6 +9,7 @@ from django.conf import settings
 from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client
 
+from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ def send_sms(phone, message):
         to=phone,
         from_=settings.TWILIO_SMS_FROM,
         body=message)
+
+    metricutils.increment('action.text.sent')
 
 
 def verify_number(phone):
