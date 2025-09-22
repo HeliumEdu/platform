@@ -12,6 +12,7 @@ from datetime import timedelta
 from urllib.parse import urlparse
 
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
@@ -195,9 +196,15 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+ACCESS_TOKEN_TTL_MINUTES = int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))
+ACCESS_TOKEN_TTL_DAYS = int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))
+
+if ACCESS_TOKEN_TTL_MINUTES < 3:
+    raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=ACCESS_TOKEN_TTL_DAYS),
     'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenObtainSerializer',
     'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
     'ROTATE_REFRESH_TOKENS': True,
