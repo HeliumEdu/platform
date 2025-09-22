@@ -4,7 +4,7 @@ Settings specific to running tests, reading values from `.env`.
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.11.10"
 
 import logging
 import os
@@ -14,6 +14,10 @@ from conf.configs import common
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
+
+# Project configuration
+
+BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 0
 
 # Application definition
 
