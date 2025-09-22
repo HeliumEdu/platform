@@ -1,10 +1,12 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.34"
+__version__ = "1.11.8"
 
 import logging
 
 from firebase_admin import messaging
+
+from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -19,3 +21,5 @@ def send_notifications(push_tokens, subject, message):
     )
 
     messaging.send_each_for_multicast(message)
+
+    metricutils.increment('action.push.sent')

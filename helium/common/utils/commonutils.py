@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.3"
+__version__ = "1.11.8"
 
 from decimal import Decimal
 
@@ -34,6 +34,8 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+    metricutils.increment('action.email.sent')
 
 
 def remove_exponent(d):

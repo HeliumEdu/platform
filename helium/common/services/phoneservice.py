@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.0"
+__version__ = "1.11.8"
 
 import logging
 import re
@@ -9,6 +9,7 @@ from django.conf import settings
 from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client
 
+from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ def send_sms(phone, message):
         to=phone,
         from_=settings.TWILIO_SMS_FROM,
         body=message)
+
+    metricutils.increment('action.text.sent')
 
 
 def verify_number(phone):
