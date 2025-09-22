@@ -2,25 +2,21 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.11.0"
 
-import json
-import time
 from datetime import datetime, timedelta
 
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from helium.auth.tasks import purge_unverified_users, purge_access_tokens
+from helium.auth.tasks import purge_unverified_users, purge_refresh_tokens
 from helium.auth.tests.helpers import userhelper
 
 
 class TestCaseTasks(APITestCase):
-    def test_purge_tokens(self):
+    def test_purge_refresh_tokens(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         token1 = OutstandingToken.objects.get(token=user1.refresh)
@@ -39,7 +35,7 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(BlacklistedToken.objects.count(), 2)
 
         # WHEN
-        purge_access_tokens()
+        purge_refresh_tokens()
 
         # THEN
         self.assertEqual(OutstandingToken.objects.count(), 1)
