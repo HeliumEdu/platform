@@ -102,13 +102,13 @@ def blacklist_refresh_token(token):
 
 
 @app.task
-def purge_access_tokens():
-    metrics = metricutils.task_start("purge_access_tokens")
+def purge_refresh_tokens():
+    metrics = metricutils.task_start("purge_refresh_tokens")
 
     deleted, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
-    metricutils.increment('task.token.access.purged', value=num_deleted)
+    metricutils.increment('task.token.refresh.purged', value=num_deleted)
 
     metricutils.task_stop(metrics)
 
@@ -134,6 +134,6 @@ def purge_unverified_users():
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired access tokens periodically
-    sender.add_periodic_task(settings.ACCESS_TOKEN_EXPIRY_FREQUENCY_SEC, purge_access_tokens.s())
+    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
