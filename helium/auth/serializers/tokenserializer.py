@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
 
@@ -37,11 +38,11 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
                                 username=username, password=password)
 
             if not user:
-                raise serializers.ValidationError('Oops! We don\'t recognize that account. Check to make sure you '
-                                                  'entered your credentials properly.', code='authorization')
+                raise AuthenticationFailed('Oops! We don\'t recognize that account. Check to make sure you '
+                                           'entered your credentials properly.')
 
-            if not user.is_active or not api_settings.USER_AUTHENTICATION_RULE(user):
-                raise serializers.ValidationError(
+            if not api_settings.USER_AUTHENTICATION_RULE(user):
+                raise PermissionDenied(
                     'Sorry, your account is not active. Check your to see if you received a verification email after '
                     'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
                     'this out!')
@@ -70,10 +71,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                 )
         ):
             if not api_settings.USER_AUTHENTICATION_RULE(user):
-                raise AuthenticationFailed(
-                    self.error_messages["no_active_account"],
-                    "no_active_account",
-                )
+                raise PermissionDenied('Sorry, your account is no longer active.')
 
         data = {"access": str(refresh.access_token)}
 
