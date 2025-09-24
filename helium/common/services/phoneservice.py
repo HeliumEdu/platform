@@ -27,6 +27,8 @@ def send_sms(phone, message):
         from_=settings.TWILIO_SMS_FROM,
         body=message)
 
+    logger.debug(f"SMS sent to {phone}")
+
     metricutils.increment('action.text.sent')
 
 
@@ -42,6 +44,8 @@ def verify_number(phone):
 
         return number.phone_number
     except TwilioRestException:
+        logger.info(f"Number {phone} did not pass validation")
+
         raise HeliumPhoneError("Oops, that looks like an invalid phone number.")
 
 

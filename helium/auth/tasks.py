@@ -33,6 +33,8 @@ def send_verification_email(email, username, verification_code):
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
+    logger.debug(f"Verification email with code \"{verification_code}\" sent to {username}")
+
     metricutils.increment('task.email.verification.sent')
 
 
@@ -48,6 +50,8 @@ def send_registration_email(email):
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
+
+    logger.debug(f"Registration email sent to {email}")
 
     metricutils.increment('task.email.registration.sent')
 
@@ -65,6 +69,8 @@ def send_password_reset_email(email, temp_password):
                                          'support_url': f"{settings.PROJECT_APP_HOST}/support",
                                      },
                                      'Your Helium Password Has Been Reset', [email])
+
+    logger.debug(f"Password reset email sent to {email}")
 
     metricutils.increment('task.email.password-reset.sent')
 

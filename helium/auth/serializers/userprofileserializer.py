@@ -56,6 +56,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if 'phone_verification_code' in validated_data and validated_data.get('phone_verification_code'):
             self.__process_phone_verification_code(instance, validated_data)
 
+            logger.debug(f"User {instance.user} has verified their phone number as {instance.phone}")
+
             metricutils.increment('action.user.phone-changed')
         elif 'phone' in validated_data and not validated_data.get('phone'):
             self.__clear_phone_fields(instance, validated_data)
@@ -92,4 +94,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.phone != phone and phone:
             instance.phone_verification_code = generate_phone_verification_code()
 
-            send_text.delay(phone, f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')
+            send_text.delay(phone,
+                            f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')
+
+            logger.debug(f"Verification text with code \"{instance.phone_verification_code}\" sent to {instance.phone}")

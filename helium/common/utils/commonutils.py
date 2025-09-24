@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.11.8"
 
+import logging
 from decimal import Decimal
 
 from django.conf import settings
@@ -9,6 +10,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
 from helium.common.utils import metricutils
+
+logger = logging.getLogger(__name__)
 
 
 class HeliumError(Exception):
@@ -34,6 +37,8 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+    logger.debug(f"Sent email from {settings.DEFAULT_FROM_EMAIL} to {to} with subject \"{subject}\"")
 
     metricutils.increment('action.email.sent')
 

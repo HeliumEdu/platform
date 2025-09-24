@@ -5,7 +5,8 @@ __version__ = "1.10.27"
 import logging
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
+from rest_framework.exceptions import NotFound
 
 from helium.common.views.views import HeliumAPIView
 from helium.feed.services import icalprivateservice
@@ -30,7 +31,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
             response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '_events.ics'
             return response
         except get_user_model().DoesNotExist:
-            return HttpResponseNotFound()
+            raise NotFound()
 
 
 class PrivateHomeworkICALResourceView(HeliumAPIView):
@@ -50,7 +51,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
             response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '_homework.ics'
             return response
         except get_user_model().DoesNotExist:
-            return HttpResponseNotFound()
+            raise NotFound()
 
 
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
@@ -72,4 +73,4 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
                                               'filename=Helium_' + user.username + '_coursescheduleevents.ics'
             return response
         except get_user_model().DoesNotExist:
-            return HttpResponseNotFound()
+            raise NotFound()
