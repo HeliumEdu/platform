@@ -250,11 +250,11 @@ DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 DISABLE_TEXTS = config('PROJECT_DISABLE_TEXTS', 'False') == 'True'
 DISABLE_PUSH = config('PROJECT_DISABLE_PUSH', 'False') == 'True'
 
-ADMIN_EMAIL_ADDRESS = f'admin@{ENVIRONMENT_PREFIX}heliumedu.com'
+ADMIN_EMAIL_ADDRESS = f'support@heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_ADDRESS = f'contact@{ENVIRONMENT_PREFIX}heliumedu.com'
+EMAIL_ADDRESS = f'contact@heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 EMAIL_HOST = config('PLATFORM_EMAIL_HOST', f'email-smtp.{AWS_REGION}.amazonaws.com')
 
