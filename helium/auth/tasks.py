@@ -4,6 +4,7 @@ __version__ = "1.11.11"
 
 import logging
 from datetime import datetime, timedelta
+from tokenize import TokenError
 
 import pytz
 from django.conf import settings
@@ -96,9 +97,12 @@ def delete_user(user_id):
 
 @app.task
 def blacklist_refresh_token(token):
-    RefreshToken(token).blacklist()
+    try:
+        RefreshToken(token).blacklist()
 
-    metricutils.increment('task.token.refresh.blacklisted')
+        metricutils.increment('task.token.refresh.blacklisted')
+    except TokenError:
+        logger.info('Skipping, token is already blacklisted.')
 
 
 @app.task
