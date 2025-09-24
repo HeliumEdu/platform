@@ -242,7 +242,7 @@ class TestCaseTokenViews(APITestCase):
         # THEN
         for response in responses:
             self.assertContains(response, 'don\'t recognize that account',
-                                status_code=status.HTTP_400_BAD_REQUEST)
+                                status_code=status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(OutstandingToken.objects.count(), 0)
 
     def test_authenticated_view_success(self):
