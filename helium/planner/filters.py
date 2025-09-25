@@ -1,12 +1,12 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.16"
+__version__ = "1.11.13"
 
 import logging
 
 from django_filters import rest_framework as filters
 
-from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category
+from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category, Material, MaterialGroup
 
 logger = logging.getLogger(__name__)
 
@@ -72,5 +72,21 @@ class ReminderFilter(filters.FilterSet):
             'type': ['exact'],
             'sent': ['exact'],
             'start_of_range': ['lte'],
+            'title': ['exact'],
+        }
+
+
+class MaterialGroupFilter(filters.FilterSet):
+    class Meta:
+        model = MaterialGroup
+        fields = {
+            'title': ['exact'],
+        }
+
+
+class MaterialFilter(filters.FilterSet):
+    class Meta:
+        model = Material
+        fields = {
             'title': ['exact'],
         }

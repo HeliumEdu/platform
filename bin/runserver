@@ -2,5 +2,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-make -C ${DIR}/.. build-docker
-make -C ${DIR}/.. run-docker
+make -C ${DIR}/.. build-docker run-docker

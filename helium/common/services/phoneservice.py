@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.8"
+__version__ = "1.11.13"
 
 import logging
 import re
@@ -27,6 +27,8 @@ def send_sms(phone, message):
         from_=settings.TWILIO_SMS_FROM,
         body=message)
 
+    logger.debug(f"SMS sent to {phone}")
+
     metricutils.increment('action.text.sent')
 
 
@@ -42,6 +44,8 @@ def verify_number(phone):
 
         return number.phone_number
     except TwilioRestException:
+        logger.info(f"Number {phone} did not pass validation")
+
         raise HeliumPhoneError("Oops, that looks like an invalid phone number.")
 
 

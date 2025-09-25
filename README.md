@@ -35,21 +35,21 @@ for development includes [LocalStack](https://www.localstack.cloud/) to emulate 
 To provision the Docker container with the Python/Django `platform` build and all dependencies, execute:
 
 ```sh
-bin/runserver
+make
 ```
 
-This builds and starts two containers, one for the API (named `helium_platform_api`), and one for the Worker
-(named `helium_platform_worker`). Once running, the `platform` API is available at http://localhost:8000, and the
+This builds and starts two containers, one for the API (named `platform-api-1`), and one for the Worker
+(named `platform-worker-1`). Once running, the `platform` API is available at http://localhost:8000, and the
 `platform` Worker is running to execute async and scheduled tasks.
 
-To create a superuser, you can run:
+To create an admin user, you can run:
 
 ```sh
 docker exec -it platform-api-1 python manage.py createsuperuser
 ```
 
-A superuser extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)), and
-also has access to [the admin site](http://localhost:8000/admin).
+An admin extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)) with
+access to [the admin site](http://localhost:8000/admin).
 
 The shell of containers can be accessed using their name, like:
 

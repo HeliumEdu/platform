@@ -1,9 +1,10 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.11"
+__version__ = "1.11.13"
 
 import logging
 from datetime import datetime, timedelta
+from tokenize import TokenError
 
 import pytz
 from django.conf import settings
@@ -32,6 +33,8 @@ def send_verification_email(email, username, verification_code):
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
+    logger.debug(f"Verification email with code \"{verification_code}\" sent to {username}")
+
     metricutils.increment('task.email.verification.sent')
 
 
@@ -47,6 +50,8 @@ def send_registration_email(email):
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
                                      'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
+
+    logger.debug(f"Registration email sent to {email}")
 
     metricutils.increment('task.email.registration.sent')
 
@@ -64,6 +69,8 @@ def send_password_reset_email(email, temp_password):
                                          'support_url': f"{settings.PROJECT_APP_HOST}/support",
                                      },
                                      'Your Helium Password Has Been Reset', [email])
+
+    logger.debug(f"Password reset email sent to {email}")
 
     metricutils.increment('task.email.password-reset.sent')
 
@@ -96,9 +103,12 @@ def delete_user(user_id):
 
 @app.task
 def blacklist_refresh_token(token):
-    RefreshToken(token).blacklist()
+    try:
+        RefreshToken(token).blacklist()
 
-    metricutils.increment('task.token.refresh.blacklisted')
+        metricutils.increment('task.token.refresh.blacklisted')
+    except TokenError:
+        logger.info('Skipping, token is already blacklisted.')
 
 
 @app.task
