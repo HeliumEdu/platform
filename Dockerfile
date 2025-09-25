@@ -3,6 +3,7 @@ FROM ubuntu:24.04 AS build
 RUN apt-get --fix-missing update
 RUN apt-get install -y git python3-virtualenv python3-pip python3-setuptools pkg-config default-libmysqlclient-dev
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
@@ -26,6 +27,7 @@ RUN apt-get install -y --no-install-recommends python3-mysqldb npm
 RUN npm install yuglify -g
 RUN apt-get clean
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
@@ -49,6 +51,7 @@ RUN apt-get --fix-missing update
 RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
@@ -80,6 +83,7 @@ RUN apt-get --fix-missing update
 RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
 RUN apt-get clean
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
