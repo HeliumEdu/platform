@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
 from helium.planner import permissions
+from helium.planner.filters import MaterialFilter
 from helium.planner.models import Material
 from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.serializers.materialserializer import MaterialSerializer
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = MaterialFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
@@ -45,6 +47,7 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
 class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsMaterialGroupOwner)
+    filterset_class = MaterialFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
@@ -82,6 +85,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
 class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
+    filterset_class = MaterialFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
