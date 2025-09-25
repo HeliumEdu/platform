@@ -20,11 +20,11 @@ DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVI
 
 def increment(metric, request=None, response=None, value=1, extra_tags=None):
     try:
-        tags = DATADOG_BASE_TAGS.copy() + extra_tags if extra_tags else []
+        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
         if request:
-            tags.extend(
-                [f"method:{request.method}", f"authenticated:{str(request.user.is_authenticated).lower()}"])
+            tags.extend([f"method:{request.method}",
+                         f"authenticated:{str(request.user.is_authenticated).lower()}"])
             if request.user.is_authenticated:
                 tags.append(f"staff:{str(request.user.is_staff).lower()}")
             if 'User-Agent' in request.headers:
@@ -32,7 +32,21 @@ def increment(metric, request=None, response=None, value=1, extra_tags=None):
         if response:
             tags.append(f"status_code:{response.status_code}")
 
-        statsd.increment(f"platform.{metric}", value=value, tags=tags)
+        metric_id = f"platform.{metric}"
+        statsd.increment(metric_id, value=value, tags=tags)
+
+        logger.debug(f"Metric: {metric_id} incremented {value}, with tags {tags}")
+    except Exception as e:
+        logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
+def timing(metric, value, extra_tags=None):
+    try:
+        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+
+        metric_id = f"platform.{metric}"
+        statsd.timing(metric_id, value=value, tags=tags)
+        logger.debug(f"Metric: {metric_id} took {value}, emitted with tags {tags}")
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
@@ -43,23 +57,19 @@ def request_start(request):
 
         return {
             'Request-Metric-ID': metric_id,
-            'Request-Metric-Start': int(round(time.time() * 1000)),
-            'Request-Method': request.method
+            'Request-Metric-Start': int(round(time.time() * 1000))
         }
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def request_stop(metrics, response):
+def request_stop(metrics, request, response):
     try:
         metrics['Request-Metric-Millis'] = int(time.time() * 1000) - metrics['Request-Metric-Start']
 
-        increment(metrics['Request-Metric-ID'], response=response,
-                  extra_tags=[f"method:{metrics['Request-Method']}"])
-        statsd.timing(f"platform.{metrics['Request-Metric-ID']}.time", metrics['Request-Metric-Millis'],
-                      tags=DATADOG_BASE_TAGS)
+        increment(metrics['Request-Metric-ID'], request=request, response=response)
+        timing(metrics['Request-Metric-ID'], metrics['Request-Metric-Millis'])
 
-        metrics.pop('Request-Method', None)
         for name, value in metrics.items():
             response.headers[name] = (name, str(value))
     except Exception as e:
@@ -83,7 +93,6 @@ def task_stop(metrics):
         metrics['Task-Metric-Millis'] = int(time.time() * 1000) - metrics['Task-Metric-Start']
 
         increment(metrics['Task-Metric-ID'])
-        statsd.timing(f"platform.{metrics['Task-Metric-ID']}.time", metrics['Task-Metric-Millis'],
-                      tags=DATADOG_BASE_TAGS)
+        timing(metrics['Task-Metric-ID'], metrics['Task-Metric-Millis'])
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
