@@ -5,7 +5,6 @@ __version__ = "1.10.34"
 import re
 
 from django.conf import settings
-from statsd.defaults.django import statsd
 
 DATADOG_METRICS = False
 DATADOG_TAGS = None
@@ -19,50 +18,53 @@ if settings.DATADOG_API_KEY:
 
     initialize(**options)
 
-    from datadog import statsd as datadog_statsd
-
     DATADOG_METRICS = True
-    DATADOG_TAGS = [f"env:{settings.ENVIRONMENT}"]
+    DATADOG_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
+
+from datadog import statsd
 
 
-def increment(metric, request=None, ignore_staff=True, ignore_anonymous=False, value=1):
-    if request and ignore_staff and request.user.is_authenticated and request.user.is_staff:
-        return
-
-    if request and ignore_anonymous and not request.user.is_authenticated:
-        return
-
-    statsd.incr(f"platform.{metric}")
+def increment(metric, request=None, response=None, value=1):
     if DATADOG_METRICS:
-        datadog_statsd.increment(f"platform.{metric}", value=value, tags=DATADOG_TAGS)
+        if request:
+            DATADOG_TAGS.extend(
+                [f"method:{request.method}", f"authenticated:{str(request.user.is_authenticated).lower()}"])
+            if request.user.is_authenticated:
+                DATADOG_TAGS.append(f"staff:{str(request.user.is_staff).lower()}")
+            if 'User-Agent' in request.headers:
+                DATADOG_TAGS.append(f"user-agent:{request.headers.get('User-Agent')}")
+        if response:
+            DATADOG_TAGS.append(f"status_code:{response.status_code}")
+
+        statsd.increment(f"platform.{metric}", value=value, tags=DATADOG_TAGS)
 
 
 def request_start(request):
-    metric_id = f"platform.request.{re.sub('[^a-zA-Z]+', '', request.path)}.{request.method}"
-    timer = statsd.timer(metric_id, rate=1)
+    metric_id = f"platform.request.{re.sub('[^a-zA-Z]+', '', request.path)}"
+    timer = statsd.histogram(metric_id, sample_rate=1)
     timer.start()
 
     return {
         'Request-Timer': timer,
         'Request-Metric-ID': metric_id,
-        'Request-Metric-Start': int(round(timer._start_time * 1000))
+        'Request-Metric-Start': int(round(timer._start_time * 1000)),
+        'Request-Method': request.method
     }
 
 
 def request_stop(metrics, response):
-    metrics['Request-Timer'].stop()
-    metrics['Request-Metric-Millis'] = metrics['Request-Timer'].ms
-
-    statsd.incr(metrics['Request-Metric-ID'])
-    statsd.incr(f"{metrics['Request-Metric-ID']}.{response.status_code}")
-
     if DATADOG_METRICS:
-        datadog_statsd.increment(metrics['Request-Metric-ID'], tags=DATADOG_TAGS)
-        datadog_statsd.increment(f"{metrics['Request-Metric-ID']}.{response.status_code}", tags=DATADOG_TAGS)
+        metrics['Request-Timer'].stop()
+        metrics['Request-Metric-Millis'] = metrics['Request-Timer'].ms
 
-        datadog_statsd.timing(metrics['Request-Metric-ID'] + ".time", metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
+        increment(metrics['Request-Metric-ID'], response=response)
+        increment(f"{metrics['Request-Metric-ID']}.{response.status_code}", metrics['Request-Timer'])
 
-    metrics.pop('Request-Timer')
+        statsd.timing(metrics['Request-Metric-ID'] + ".time", metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
+        statsd.timing(metrics['Request-Metric-ID'] + ".time", metrics['Request-Timer'].ms, tags=DATADOG_TAGS)
+
+    metrics.pop('Request-Timer', None)
+    metrics.pop('Request-Method', None)
 
     for name, value in metrics.items():
         response.headers[name] = (name, str(value))
@@ -70,7 +72,7 @@ def request_stop(metrics, response):
 
 def task_start(task_name):
     metric_id = f"platform.task.{task_name}"
-    timer = statsd.timer(metric_id, rate=1)
+    timer = statsd.histogram(metric_id, sample_rate=1)
     timer.start()
 
     return {
@@ -81,14 +83,10 @@ def task_start(task_name):
 
 
 def task_stop(metrics):
-    metrics['Task-Timer'].stop()
-    metrics['Task-Metric-Millis'] = metrics['Task-Timer'].ms
-
-    statsd.incr(metrics['Task-Metric-ID'])
-
     if DATADOG_METRICS:
-        datadog_statsd.increment(metrics['Task-Metric-ID'], tags=DATADOG_TAGS)
+        metrics['Task-Timer'].stop()
+        metrics['Task-Metric-Millis'] = metrics['Task-Timer'].ms
 
-        datadog_statsd.timing(metrics['Task-Metric-ID'] + ".time", metrics['Task-Timer'].ms, tags=DATADOG_TAGS)
+        increment(metrics['Task-Metric-ID'])
 
-    metrics.pop('Task-Timer')
+        statsd.timing(metrics['Task-Metric-ID'] + ".time", metrics['Task-Timer'].ms, tags=DATADOG_TAGS)
