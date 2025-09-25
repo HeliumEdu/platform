@@ -26,6 +26,6 @@ class HeliumAPIView(GenericAPIView):
         response = super().finalize_response(request, response, *args, **kwargs)
 
         if self.__request_metrics:
-            metricutils.request_stop(self.__request_metrics, response)
+            metricutils.request_stop(self.__request_metrics, request, response)
 
         return response
