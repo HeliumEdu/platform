@@ -9,7 +9,7 @@ class InternalServerErrorMiddleware(MiddlewareMixin):
     def process_exception(self, request, exception):
         metric_id = f"request.{re.sub('[^a-zA-Z]+', '', request.path)}"
 
-        metricutils.increment(metric_id, request,
+        metricutils.increment(metric_id, request=request,
                               extra_tags=[f"status_code:500"])
 
         return None
