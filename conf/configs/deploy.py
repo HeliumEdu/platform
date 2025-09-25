@@ -131,7 +131,7 @@ LOGGING = {
         },
         'helium': {
             'handlers': ['console', 'rollbar'],
-            'level': 'INFO',
+            'level': config('PLATFORM_LOG_LEVEL', 'INFO'),
         }
     }
 }

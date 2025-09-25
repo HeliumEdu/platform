@@ -111,6 +111,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'helium.common.middleware.InternalServerErrorMiddleware',
 )
 
 TEMPLATES = [{
@@ -250,7 +251,7 @@ DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 DISABLE_TEXTS = config('PROJECT_DISABLE_TEXTS', 'False') == 'True'
 DISABLE_PUSH = config('PROJECT_DISABLE_PUSH', 'False') == 'True'
 
-ADMIN_EMAIL_ADDRESS = f'admin@{ENVIRONMENT_PREFIX}heliumedu.com'
+ADMIN_EMAIL_ADDRESS = f'support@{ENVIRONMENT_PREFIX}heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
@@ -350,8 +351,7 @@ PIPELINE = {
 
 # Metrics
 
-DATADOG_API_KEY = config('PROJECT_DATADOG_API_KEY')
-DATADOG_APP_KEY = config('PROJECT_DATADOG_APP_KEY')
+DATADOG_STATSD_HOST = config('PROJECT_DATADOG_STATSD_HOST', 'localhost')
 
 # Server
 

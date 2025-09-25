@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.10.27"
 
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import re_path, path
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -13,6 +14,9 @@ from helium.common.views.apis.statusviews import HealthResourceView, StatusResou
 urlpatterns = [
     # Base URL
     re_path(r'^$', RedirectView.as_view(url='/docs'), name='home'),
+
+    # Static redirects
+    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico')), name='favicon'),
 
     # URLs for auto-generated resources
     path('admin/', admin_site.urls, name='admin'),

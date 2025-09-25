@@ -6,6 +6,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -83,7 +84,10 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
-        return get_user_model().objects.get(username=self.request.data['username'])
+        try:
+            return get_user_model().objects.get(username=self.request.data['username'])
+        except get_user_model().DoesNotExist:
+            raise NotFound('No User matches the given query.')
 
     def delete(self, request, *args, **kwargs):
         """
