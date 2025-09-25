@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.5.1"
+__version__ = "1.11.19"
 
 import logging
 
@@ -26,6 +26,6 @@ class HeliumAPIView(GenericAPIView):
         response = super().finalize_response(request, response, *args, **kwargs)
 
         if self.__request_metrics:
-            metricutils.request_stop(self.__request_metrics, response)
+            metricutils.request_stop(self.__request_metrics, request, response)
 
         return response
