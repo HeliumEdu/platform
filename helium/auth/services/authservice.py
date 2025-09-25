@@ -40,7 +40,7 @@ def forgot_password(request):
 
         metricutils.increment('action.user.password-reset', request)
     except get_user_model().DoesNotExist:
-        logger.info(f'A visitor tried to reset the password for an unknown email address of {request.data["email"]}')
+        logger.info(f'A user tried to reset their password, but the given email address is unknown')
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -65,9 +65,9 @@ def verify_email(request):
             logger.info(f'Completed registration and verification for user {user.username}')
 
             if request.GET.get('welcome-email', 'true') == 'true':
-                metricutils.increment('action.user.verified', request)
-
                 send_registration_email.delay(user.email)
+
+                metricutils.increment('action.user.verified', request)
             else:
                 logger.info('Welcome email not sent, flag disabled')
         elif user.email_changing:

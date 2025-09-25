@@ -6,7 +6,7 @@ import logging
 
 from django_filters import rest_framework as filters
 
-from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category
+from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category, Material, MaterialGroup
 
 logger = logging.getLogger(__name__)
 
@@ -72,5 +72,21 @@ class ReminderFilter(filters.FilterSet):
             'type': ['exact'],
             'sent': ['exact'],
             'start_of_range': ['lte'],
+            'title': ['exact'],
+        }
+
+
+class MaterialGroupFilter(filters.FilterSet):
+    class Meta:
+        model = MaterialGroup
+        fields = {
+            'title': ['exact'],
+        }
+
+
+class MaterialFilter(filters.FilterSet):
+    class Meta:
+        model = Material
+        fields = {
             'title': ['exact'],
         }

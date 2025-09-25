@@ -7,8 +7,7 @@ django-filter==24.3
 django-pipeline==4.0.0
 django-cors-headers==4.7.0
 celery[redis]==5.4.0
-statsd==4.0.1
-datadog==0.51.0
+datadog==0.52.1
 twilio==9.5.0
 firebase-admin==7.1.0
 pyOpenSSL==25.0.0
