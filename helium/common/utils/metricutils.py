@@ -46,7 +46,7 @@ def timing(metric, value, extra_tags=None):
 
         metric_id = f"platform.{metric}"
         statsd.timing(metric_id, value=value, tags=tags)
-        logger.debug(f"Metric: {metric_id} took {value}, emitted with tags {tags}")
+        logger.debug(f"Metric: {metric_id} took {value}ms, emitted with tags {tags}")
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 

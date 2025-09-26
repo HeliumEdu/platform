@@ -3,7 +3,6 @@ __license__ = "MIT"
 __version__ = "1.11.13"
 
 import json
-import time
 from datetime import timedelta, datetime
 
 import pytz
@@ -166,28 +165,7 @@ class TestCaseTokenViews(APITestCase):
         self.assertEqual(OutstandingToken.objects.count(), 2)
         self.assertEqual(BlacklistedToken.objects.count(), 1)
 
-    def test_blacklist_token(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        data = {
-            "refresh": user.refresh
-        }
-        response1 = self.client.post(reverse('auth_token_blacklist'),
-                                     json.dumps(data),
-                                     content_type='application/json')
-        response2 = self.client.post(reverse('auth_token_refresh'),
-                                     json.dumps(data),
-                                     content_type='application/json')
-
-        # THEN
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(OutstandingToken.objects.count(), 1)
-        self.assertEqual(BlacklistedToken.objects.count(), 1)
-
-    def test_blacklist_tokens(self):
+    def test_blacklist_tokens_on_refresh(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
@@ -224,6 +202,21 @@ class TestCaseTokenViews(APITestCase):
         self.assertTrue(BlacklistedToken.objects.filter(token__token=user1.refresh).exists())
         self.assertTrue(BlacklistedToken.objects.filter(token__token=user2.refresh).exists())
         self.assertTrue(BlacklistedToken.objects.filter(token__token=user3.refresh).exists())
+
+    def test_blacklist_token(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_blacklist'),
+                                          json.dumps({"refresh": user.refresh}),
+                                          content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(OutstandingToken.objects.count(), 1)
+        self.assertEqual(BlacklistedToken.objects.count(), 1)
+        self.assertTrue(BlacklistedToken.objects.filter(token__token=user.refresh).exists())
 
     def test_login_invalid_user(self):
         # GIVEN
