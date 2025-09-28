@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.19"
+__version__ = "1.11.20"
 
 import logging
 import re
@@ -46,7 +46,7 @@ def timing(metric, value, extra_tags=None):
 
         metric_id = f"platform.{metric}"
         statsd.timing(metric_id, value=value, tags=tags)
-        logger.debug(f"Metric: {metric_id} took {value}, emitted with tags {tags}")
+        logger.debug(f"Metric: {metric_id} took {value}ms, emitted with tags {tags}")
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
