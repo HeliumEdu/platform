@@ -11,5 +11,5 @@ s3_client = boto3.client(
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT").lower()
 
-s3_client.create_bucket(Bucket=f"heliumedu.{ENVIRONMENT}.static")
+s3_client.create_bucket(Bucket=f"heliumedu.{ENVIRONMENT}.platform.static")
 s3_client.create_bucket(Bucket=f"heliumedu.{ENVIRONMENT}.media")
