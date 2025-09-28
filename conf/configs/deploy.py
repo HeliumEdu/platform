@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.13"
+__version__ = "1.11.22"
 
 import os
 import sys
@@ -192,7 +192,7 @@ else:
     # Static
 
     STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
-    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.static'
+    AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.platform.static'
     AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
     if 'local' in ENVIRONMENT:
         AWS_S3_URL_PROTOCOL = "http:"
