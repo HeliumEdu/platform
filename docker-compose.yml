@@ -27,10 +27,6 @@ services:
   resource:
     image: ${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM:-arm64}-latest}
     env_file: .env
-    volumes:
-      - type: bind
-        source: ./.env
-        target: /app/.env
     depends_on:
       db:
         condition: service_healthy
@@ -41,10 +37,6 @@ services:
   api:
     image: ${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM:-arm64}-latest}
     env_file: .env
-    volumes:
-      - type: bind
-        source: ./.env
-        target: /app/.env
     ports:
       - 8000:8000
     depends_on:
@@ -61,10 +53,6 @@ services:
     environment:
         PLATFORM_BEAT_AND_WORKER_MODE: "True"
     env_file: .env
-    volumes:
-      - type: bind
-        source: ./.env
-        target: /app/.env
     depends_on:
       db:
         condition: service_healthy
