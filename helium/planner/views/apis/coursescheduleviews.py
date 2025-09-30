@@ -4,6 +4,7 @@ __version__ = "1.10.27"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -39,6 +40,11 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     def perform_create(self, serializer):
         serializer.save(course_id=self.kwargs['course'])
 
+    @extend_schema(
+        responses={
+            201: CourseScheduleSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new course schedule instance for the given course.

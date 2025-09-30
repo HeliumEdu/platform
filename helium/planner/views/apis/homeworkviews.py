@@ -5,6 +5,7 @@ __version__ = "1.10.27"
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -78,6 +79,11 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
     def perform_create(self, serializer):
         serializer.save(course_id=self.kwargs['course'])
 
+    @extend_schema(
+        responses={
+            201: HomeworkSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new homework instance for the given course.
