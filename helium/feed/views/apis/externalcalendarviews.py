@@ -4,6 +4,7 @@ __version__ = "1.10.27"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, RetrieveModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -39,6 +40,11 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        responses={
+            201: ExternalCalendarSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new external calendar instance for the authenticated user.

@@ -4,6 +4,7 @@ __version__ = "1.11.13"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -67,6 +68,11 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     def perform_create(self, serializer, *args, **kwargs):
         serializer.save(material_group_id=self.kwargs['material_group'])
 
+    @extend_schema(
+        responses={
+            201: MaterialSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new material instance for the given material group.

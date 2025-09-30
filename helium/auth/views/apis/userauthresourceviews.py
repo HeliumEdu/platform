@@ -21,7 +21,11 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
     @extend_schema(
-        request=UserCreateSerializer
+        request=UserCreateSerializer,
+        responses={
+            201: UserSerializer
+
+        }
     )
     def register(self, request, *args, **kwargs):
         """
@@ -49,7 +53,10 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
         parameters=[
             OpenApiParameter('username', description='The username for the user.'),
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
-        ]
+        ],
+        responses={
+            202: UserSerializer
+        }
     )
     def verify_email(self, request, *args, **kwargs):
         """
@@ -64,7 +71,10 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
     @extend_schema(
-        request=UserForgotSerializer
+        request=UserForgotSerializer,
+        responses={
+            202: UserSerializer
+        }
     )
     def forgot_password(self, request, *args, **kwargs):
         """

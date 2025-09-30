@@ -4,6 +4,7 @@ __version__ = "1.10.32"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -44,6 +45,11 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        responses={
+            201: ReminderSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new reminder instance for the authenticated user.

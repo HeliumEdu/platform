@@ -4,6 +4,7 @@ __version__ = "1.10.32"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -40,6 +41,11 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        responses={
+            201: UserPushTokenSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new push token instance for the authenticated user.

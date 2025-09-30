@@ -5,6 +5,7 @@ __version__ = "1.10.27"
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -55,6 +56,11 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        responses={
+            201: EventSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new event instance for the authenticated user.
