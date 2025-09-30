@@ -21,7 +21,7 @@ def forgot_password(request):
     the email exists in the system or not, the same response "success" will be shown the user.
 
     :param request: the request being processed
-    :return: a 204 Response upon success
+    :return: a 202 Response upon success
     """
     if 'email' not in request.data:
         raise ValidationError("'email' is required")
@@ -42,7 +42,7 @@ def forgot_password(request):
     except get_user_model().DoesNotExist:
         logger.info(f'A user tried to reset their password, but the given email address is unknown')
 
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_202_ACCEPTED)
 
 
 def verify_email(request):
@@ -50,7 +50,7 @@ def verify_email(request):
     Process the code for the given user, verifying their email address and marking them as active (if not already).
 
     :param request: the request being processed
-    :return: a 204 Response upon success
+    :return: a 202 Response upon success
     """
     if 'username' not in request.GET or 'code' not in request.GET:
         raise ValidationError("'username' and 'password' must be given as query parameters")
@@ -79,6 +79,6 @@ def verify_email(request):
 
             metricutils.increment('action.user.email-changed', request=request)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         raise NotFound('No User matches the given query.')

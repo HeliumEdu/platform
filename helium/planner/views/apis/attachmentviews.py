@@ -41,7 +41,10 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         return response
 
     @extend_schema(
-        request=AttachmentCreateSerializer
+        request=AttachmentCreateSerializer,
+        responses={
+            201: AttachmentSerializer
+        }
     )
     def post(self, request, *args, **kwargs):
         """
