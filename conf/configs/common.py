@@ -172,7 +172,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/wiki"
+SUPPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/issues"
 BUG_REPORT_REDIRECT_URL = "https://github.com/HeliumEdu/platform/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml"
 
 # Healthcheck
