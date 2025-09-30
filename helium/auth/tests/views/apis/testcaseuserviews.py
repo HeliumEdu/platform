@@ -119,7 +119,7 @@ class TestCaseUserViews(APITestCase):
             reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         user = get_user_model().objects.get(pk=user.id)
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
