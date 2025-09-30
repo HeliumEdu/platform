@@ -1,9 +1,10 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.13"
+__version__ = "1.11.38"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -40,6 +41,11 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        responses={
+            201: MaterialGroupSerializer
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Create a new material group instance for the authenticated user.

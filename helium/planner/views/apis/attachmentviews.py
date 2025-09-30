@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.11.38"
 
 import logging
 
@@ -41,7 +41,10 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         return response
 
     @extend_schema(
-        request=AttachmentCreateSerializer
+        request=AttachmentCreateSerializer,
+        responses={
+            201: AttachmentSerializer
+        }
     )
     def post(self, request, *args, **kwargs):
         """
