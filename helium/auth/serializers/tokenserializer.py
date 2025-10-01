@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.47"
+__version__ = "1.11.48"
 
 import logging
 
@@ -58,7 +58,8 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
 
                 logger.debug(f"User {username} has been logged in")
 
-                metricutils.increment('action.user.login', self.context.get('request'))
+                self.context.get('request').user = user
+                metricutils.increment('action.user.login', request=self.context.get('request'))
 
         return attrs
 
