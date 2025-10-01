@@ -58,7 +58,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
             logger.debug(f"User {instance.user} has verified their phone number as {instance.phone}")
 
-            metricutils.increment('action.user.phone-changed', self.context.get('request'))
+            self.context.get('request').user = instance.user
+            metricutils.increment('action.user.phone-changed', request=self.context.get('request'))
         elif 'phone' in validated_data and not validated_data.get('phone'):
             self.__clear_phone_fields(instance, validated_data)
         else:
