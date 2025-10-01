@@ -4,11 +4,11 @@ __version__ = "1.11.13"
 
 import logging
 from datetime import datetime, timedelta
-from tokenize import TokenError
 
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 

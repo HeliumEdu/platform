@@ -8,6 +8,7 @@ import rest_framework_simplejwt.serializers as jwt_serializers
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
+from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
@@ -57,7 +58,7 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
 
                 logger.debug(f"User {username} has been logged in")
 
-                metricutils.increment('action.user.login')
+                metricutils.increment('action.user.login', self.context.get('request'))
 
         return attrs
 
@@ -90,3 +91,16 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
             data["refresh"] = str(refresh)
 
         return data
+
+
+class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh"])
+
+        try:
+            refresh.blacklist()
+        except AttributeError:
+            pass
+        except IntegrityError:
+            logger.warning("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
+        return {}
