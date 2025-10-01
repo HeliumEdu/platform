@@ -1,14 +1,14 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.13"
+__version__ = "1.11.47"
 
 import logging
 from datetime import datetime, timedelta
-from tokenize import TokenError
 
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
