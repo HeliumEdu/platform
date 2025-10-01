@@ -172,7 +172,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = "https://heliumedu.freshdesk.com/support"
+SUPPORT_REDIRECT_URL = "https://heliumedu.freshdesk.com"
 
 # Healthcheck
 
