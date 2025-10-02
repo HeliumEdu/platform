@@ -6,6 +6,7 @@ import logging
 
 import pytz
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -40,6 +41,8 @@ def recalculate_course_group_grade(course_group_id, retries=0):
                                                        countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
+    except get_user_model().DoesNotExist:
+        logger.info(f"User does not exist. Nothing to do.")
     except CourseGroup.DoesNotExist:
         logger.info(f"CourseGroup {course_group_id} does not exist. Nothing to do.")
 
@@ -65,6 +68,8 @@ def recalculate_course_grade(course_id, retries=0):
                                                  countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
+    except get_user_model().DoesNotExist:
+        logger.info(f"User does not exist. Nothing to do.")
     except Course.DoesNotExist:
         logger.info(f"Course {course_id} does not exist. Nothing to do.")
 
@@ -113,6 +118,8 @@ def recalculate_category_grade(category_id, retries=0):
                                                    countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
+    except get_user_model().DoesNotExist:
+        logger.info(f"User does not exist. Nothing to do.")
     except Category.DoesNotExist:
         logger.info(f"Category {category_id} does not exist. Nothing to do.")
 
@@ -184,31 +191,34 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
 
     timezone.activate(pytz.timezone(reminder.user.settings.time_zone))
 
-    start = timezone.localtime(calendar_item.start).strftime(
-        settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-    end = timezone.localtime(calendar_item.end).strftime(
-        settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-    normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
+    try:
+        start = timezone.localtime(calendar_item.start).strftime(
+            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+        end = timezone.localtime(calendar_item.end).strftime(
+            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+        normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
 
-    normalized_materials = None
-    if reminder.homework:
-        normalized_materials = calendar_item.materials.values_list('title', flat=True)
-        normalized_materials = ', '.join(normalized_materials)
+        normalized_materials = None
+        if reminder.homework:
+            normalized_materials = calendar_item.materials.values_list('title', flat=True)
+            normalized_materials = ', '.join(normalized_materials)
 
-    comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
+        comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
 
-    commonutils.send_multipart_email('email/reminder',
-                                     {
-                                         'PROJECT_NAME': settings.PROJECT_NAME,
-                                         'reminder': reminder,
-                                         'calendar_item': calendar_item,
-                                         'normalized_datetime': normalized_datetime,
-                                         'normalized_materials': normalized_materials,
-                                         'comments': comments,
-                                     },
-                                     subject, [email])
+        commonutils.send_multipart_email('email/reminder',
+                                         {
+                                             'PROJECT_NAME': settings.PROJECT_NAME,
+                                             'reminder': reminder,
+                                             'calendar_item': calendar_item,
+                                             'normalized_datetime': normalized_datetime,
+                                             'normalized_materials': normalized_materials,
+                                             'comments': comments,
+                                         },
+                                         subject, [email])
 
-    metricutils.increment('task.email.reminder.sent', user=reminder.user)
+        metricutils.increment('task.email.reminder.sent', user=reminder.user)
+    except:
+        logger.error("An unknown error occurred.", exc_info=True)
 
     timezone.deactivate()
 

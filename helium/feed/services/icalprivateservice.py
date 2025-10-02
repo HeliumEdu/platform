@@ -74,23 +74,25 @@ def events_to_private_ical_feed(user):
     """
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    calendar = _create_calendar(user)
+    try:
+        calendar = _create_calendar(user)
 
-    for event in user.events.iterator():
-        calendar_event = icalendar.Event()
-        calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
-        calendar_event["SUMMARY"] = event.title
-        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
-        if not event.all_day:
-            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
-            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
-        else:
-            calendar_event["DTSTART"] = icalendar.vDate(event.start)
-            calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = _create_event_description(event)
+        for event in user.events.iterator():
+            calendar_event = icalendar.Event()
+            calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
+            calendar_event["SUMMARY"] = event.title
+            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
+            if not event.all_day:
+                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
+                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
+            else:
+                calendar_event["DTSTART"] = icalendar.vDate(event.start)
+                calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+            calendar_event["DESCRIPTION"] = _create_event_description(event)
 
-        calendar.add_component(calendar_event)
-
+            calendar.add_component(calendar_event)
+    except:
+        logger.error("An unknown error occurred.", exc_info=True)
     timezone.deactivate()
 
     return calendar.to_ical()
@@ -105,22 +107,25 @@ def homework_to_private_ical_feed(user):
     """
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    calendar = _create_calendar(user)
+    try:
+        calendar = _create_calendar(user)
 
-    for homework in Homework.objects.for_user(user.pk).iterator():
-        calendar_event = icalendar.Event()
-        calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
-        calendar_event["SUMMARY"] = homework.title
-        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
-        if not homework.all_day:
-            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(homework.start))
-            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(homework.end))
-        else:
-            calendar_event["DTSTART"] = icalendar.vDate(homework.start)
-            calendar_event["DTEND"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = _create_homework_description(homework)
+        for homework in Homework.objects.for_user(user.pk).iterator():
+            calendar_event = icalendar.Event()
+            calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
+            calendar_event["SUMMARY"] = homework.title
+            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
+            if not homework.all_day:
+                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(homework.start))
+                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(homework.end))
+            else:
+                calendar_event["DTSTART"] = icalendar.vDate(homework.start)
+                calendar_event["DTEND"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
+            calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
-        calendar.add_component(calendar_event)
+            calendar.add_component(calendar_event)
+    except:
+        logger.error("An unknown error occurred.", exc_info=True)
 
     timezone.deactivate()
 
@@ -145,20 +150,23 @@ def courseschedules_to_private_ical_feed(user):
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
 
-    for event in events:
-        calendar_event = icalendar.Event()
-        calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
-        calendar_event["SUMMARY"] = event.title
-        calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
-        if not event.all_day:
-            calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
-            calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
-        else:
-            calendar_event["DTSTART"] = icalendar.vDate(event.start)
-            calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-        calendar_event["DESCRIPTION"] = _create_event_description(event)
+    try:
+        for event in events:
+            calendar_event = icalendar.Event()
+            calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
+            calendar_event["SUMMARY"] = event.title
+            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
+            if not event.all_day:
+                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
+                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
+            else:
+                calendar_event["DTSTART"] = icalendar.vDate(event.start)
+                calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+            calendar_event["DESCRIPTION"] = _create_event_description(event)
 
-        calendar.add_component(calendar_event)
+            calendar.add_component(calendar_event)
+    except:
+        logger.error("An unknown error occurred.", exc_info=True)
 
     timezone.deactivate()
 

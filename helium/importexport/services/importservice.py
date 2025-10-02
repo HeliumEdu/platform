@@ -286,67 +286,70 @@ def import_user(request, json_str):
 def _adjust_schedule_relative_today(user):
     timezone.activate(user.settings.time_zone)
 
-    start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    days_ahead = 0 - start_of_current_month.weekday()
-    if days_ahead <= 0:
-        days_ahead += 7
-    first_monday = start_of_current_month + datetime.timedelta(days_ahead)
+    try:
+        start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        days_ahead = 0 - start_of_current_month.weekday()
+        if days_ahead <= 0:
+            days_ahead += 7
+        first_monday = start_of_current_month + datetime.timedelta(days_ahead)
 
-    logger.info(f'Start of month adjusted to {start_of_current_month}')
-    logger.info(f'Start of week adjusted ahead {days_ahead} days')
-    logger.info(f'First Monday set to {first_monday}')
+        logger.info(f'Start of month adjusted to {start_of_current_month}')
+        logger.info(f'Start of week adjusted ahead {days_ahead} days')
+        logger.info(f'First Monday set to {first_monday}')
 
-    for course_group in CourseGroup.objects.for_user(user.pk).iterator():
-        delta = (course_group.end_date - course_group.start_date).days
-        CourseGroup.objects.filter(pk=course_group.pk).update(
-            start_date=start_of_current_month,
-            end_date=start_of_current_month + datetime.timedelta(days=delta))
+        for course_group in CourseGroup.objects.for_user(user.pk).iterator():
+            delta = (course_group.end_date - course_group.start_date).days
+            CourseGroup.objects.filter(pk=course_group.pk).update(
+                start_date=start_of_current_month,
+                end_date=start_of_current_month + datetime.timedelta(days=delta))
 
-    for homework in Homework.objects.for_user(user.pk).iterator():
-        course = homework.course
-        delta = (homework.start.date() - course.start_date).days
-        Homework.objects.filter(pk=homework.pk).update(
-            start=(first_monday + datetime.timedelta(days=delta)).replace(
-                hour=homework.start.time().hour,
-                minute=homework.start.time().minute,
-                second=0,
-                microsecond=0,
-                tzinfo=timezone.utc),
-            end=(first_monday + datetime.timedelta(days=delta)).replace(
-                hour=homework.end.time().hour,
-                minute=homework.end.time().minute,
-                second=0,
-                microsecond=0,
-                tzinfo=timezone.utc))
+        for homework in Homework.objects.for_user(user.pk).iterator():
+            course = homework.course
+            delta = (homework.start.date() - course.start_date).days
+            Homework.objects.filter(pk=homework.pk).update(
+                start=(first_monday + datetime.timedelta(days=delta)).replace(
+                    hour=homework.start.time().hour,
+                    minute=homework.start.time().minute,
+                    second=0,
+                    microsecond=0,
+                    tzinfo=timezone.utc),
+                end=(first_monday + datetime.timedelta(days=delta)).replace(
+                    hour=homework.end.time().hour,
+                    minute=homework.end.time().minute,
+                    second=0,
+                    microsecond=0,
+                    tzinfo=timezone.utc))
 
-        adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
+            adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
 
-    for event in Event.objects.for_user(user.pk).iterator():
-        start_of_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        delta = (event.start.date() - start_of_month.date()).days
-        Event.objects.filter(pk=event.pk).update(
-            start=(first_monday + datetime.timedelta(days=delta)).replace(
-                hour=event.start.time().hour,
-                minute=event.start.time().minute,
-                second=0,
-                microsecond=0,
-                tzinfo=timezone.utc),
-            end=(first_monday + datetime.timedelta(days=delta)).replace(
-                hour=event.end.time().hour,
-                minute=event.end.time().minute,
-                second=0,
-                microsecond=0,
-                tzinfo=timezone.utc))
+        for event in Event.objects.for_user(user.pk).iterator():
+            start_of_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            delta = (event.start.date() - start_of_month.date()).days
+            Event.objects.filter(pk=event.pk).update(
+                start=(first_monday + datetime.timedelta(days=delta)).replace(
+                    hour=event.start.time().hour,
+                    minute=event.start.time().minute,
+                    second=0,
+                    microsecond=0,
+                    tzinfo=timezone.utc),
+                end=(first_monday + datetime.timedelta(days=delta)).replace(
+                    hour=event.end.time().hour,
+                    minute=event.end.time().minute,
+                    second=0,
+                    microsecond=0,
+                    tzinfo=timezone.utc))
 
-    for course in Course.objects.for_user(user.pk).iterator():
-        delta = (course.end_date - course.start_date).days
-        Course.objects.filter(pk=course.pk).update(
-            start_date=start_of_current_month,
-            end_date=start_of_current_month + datetime.timedelta(days=delta))
+        for course in Course.objects.for_user(user.pk).iterator():
+            delta = (course.end_date - course.start_date).days
+            Course.objects.filter(pk=course.pk).update(
+                start_date=start_of_current_month,
+                end_date=start_of_current_month + datetime.timedelta(days=delta))
 
-        coursescheduleservice.clear_cached_course_schedule(course)
+            coursescheduleservice.clear_cached_course_schedule(course)
 
-    logger.info(f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
+        logger.info(f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
+    except:
+        logger.error("An unknown error occurred.", exc_info=True)
 
     timezone.deactivate()
 

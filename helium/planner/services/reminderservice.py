@@ -38,92 +38,102 @@ def process_email_reminders():
     from helium.planner.tasks import send_email_reminder
 
     for reminder in Reminder.objects.with_type(enums.EMAIL).unsent().for_today().iterator():
-        timezone.activate(pytz.timezone(reminder.get_user().settings.time_zone))
+        user = reminder.get_user()
 
-        if reminder.get_user().email and reminder.get_user().is_active:
-            subject = get_subject(reminder)
+        timezone.activate(pytz.timezone(user.settings.time_zone))
 
-            if not subject:
-                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
-            else:
-                if reminder.event:
-                    calendar_item_id = reminder.event.pk
-                    calendar_item_type = enums.EVENT
-                elif reminder.homework:
-                    calendar_item_id = reminder.homework.pk
-                    calendar_item_type = enums.HOMEWORK
+        try:
+            if user.email and user.is_active:
+                subject = get_subject(reminder)
+
+                if not subject:
+                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
                 else:
-                    logger.warning(f'Reminder {reminder.pk} was not for a homework or event. Nothing to do.')
-                    continue
+                    if reminder.event:
+                        calendar_item_id = reminder.event.pk
+                        calendar_item_type = enums.EVENT
+                    elif reminder.homework:
+                        calendar_item_id = reminder.homework.pk
+                        calendar_item_type = enums.HOMEWORK
+                    else:
+                        logger.warning(f'Reminder {reminder.pk} was not for a homework or event. Nothing to do.')
+                        continue
 
-                logger.info(f'Sending email reminder {reminder.pk} for user {reminder.get_user().pk}')
+                    logger.info(f'Sending email reminder {reminder.pk} for user {user.pk}')
 
-                metricutils.increment('task.reminder.queue.email', user=reminder.user)
+                    metricutils.increment('task.reminder.queue.email', user=user)
 
-                send_email_reminder.delay(reminder.get_user().email, subject, reminder.pk, calendar_item_id,
-                                          calendar_item_type)
-        else:
-            logger.warning(
-                f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {reminder.get_user().pk}')
+                    send_email_reminder.delay(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type)
+            else:
+                logger.warning(
+                    f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
 
-        reminder.sent = True
-        reminder.save()
+            reminder.sent = True
+            reminder.save()
+        except:
+            logger.error("An unknown error occurred.", exc_info=True)
 
         timezone.deactivate()
 
 
 def process_text_reminders():
     for reminder in Reminder.objects.with_type(enums.TEXT).unsent().for_today().iterator():
-        timezone.activate(pytz.timezone(reminder.get_user().settings.time_zone))
+        user = reminder.get_user()
 
-        if reminder.get_user().profile.phone and reminder.get_user().profile.phone_verified:
-            subject = get_subject(reminder)
-            message = f'({subject}) {reminder.message}'
+        timezone.activate(pytz.timezone(user.settings.time_zone))
 
-            if not subject:
-                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
+        try:
+            if user.profile.phone and user.profile.phone_verified:
+                subject = get_subject(reminder)
+                message = f'({subject}) {reminder.message}'
+
+                if not subject:
+                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
+                else:
+                    logger.info(f'Sending text reminder {reminder.pk} for user {user.pk}')
+
+                    metricutils.increment('task.reminder.queue.text', user=user)
+
+                    send_text.delay(user.profile.phone, message)
             else:
-                logger.info(f'Sending text reminder {reminder.pk} for user {reminder.get_user().pk}')
+                logger.warning(
+                    f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
 
-                metricutils.increment('task.reminder.queue.text', user=reminder.user)
-
-                send_text.delay(reminder.get_user().profile.phone,
-                                message)
-        else:
-            logger.warning(
-                f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {reminder.get_user().pk}')
-
-        reminder.sent = True
-        reminder.save()
+            reminder.sent = True
+            reminder.save()
+        except:
+            logger.error("An unknown error occurred.", exc_info=True)
 
         timezone.deactivate()
 
 
 def process_push_reminders():
     for reminder in Reminder.objects.with_type(enums.PUSH).unsent().for_today().iterator():
-        timezone.activate(pytz.timezone(reminder.get_user().settings.time_zone))
+        user = reminder.get_user()
 
-        subject = get_subject(reminder)
+        timezone.activate(pytz.timezone(user.settings.time_zone))
 
-        if not subject:
-            logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
-        else:
-            logger.info(f'Sending pushes for reminder {reminder.pk} for user {reminder.get_user().pk}')
+        try:
+            subject = get_subject(reminder)
 
-            push_tokens = list(UserPushToken.objects.filter(user=reminder.get_user()).values_list('token', flat=True))
-
-            if len(push_tokens) > 0:
-                metricutils.increment('task.reminder.queue.push', value=len(push_tokens), user=reminder.user)
-
-                send_pushes.delay(push_tokens,
-                                  reminder.get_user().username,
-                                  subject,
-                                  reminder.message)
+            if not subject:
+                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
             else:
-                logger.warning(
-                    f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {reminder.get_user().pk}')
+                logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
 
-        reminder.sent = True
-        reminder.save()
+                push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
+
+                if len(push_tokens) > 0:
+                    metricutils.increment('task.reminder.queue.push', value=len(push_tokens), user=reminder.user)
+
+                    send_pushes.delay(push_tokens, user.username, subject, reminder.message)
+                else:
+                    logger.warning(
+                        f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
+
+            reminder.sent = True
+            reminder.save()
+        except:
+            logger.error("An unknown error occurred.", exc_info=True)
 
         timezone.deactivate()
