@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.13"
+__version__ = "1.11.54"
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import re_path, path
