@@ -1,4 +1,4 @@
-__copyright__ = "Copyright (c) 2018 Helium Edu"
+__copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.11.49"
 
