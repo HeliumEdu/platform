@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.51"
+__version__ = "1.11.52"
 
 import logging
 
@@ -66,10 +66,10 @@ def verify_email(request):
 
             if request.GET.get('welcome-email', 'true') == 'true':
                 send_registration_email.delay(user.email)
-
-                metricutils.increment('action.user.verified', request=request, user=user)
             else:
                 logger.info('Welcome email not sent, flag disabled')
+
+            metricutils.increment('action.user.verified', request=request, user=user)
         elif user.email_changing:
             user.email = user.email_changing
             user.email_changing = None
