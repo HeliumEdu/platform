@@ -1,4 +1,4 @@
-__copyright__ = "Copyright (c) 2018 Helium Edu"
+__copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.11.2"
 
@@ -13,9 +13,6 @@ from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
-__copyright__ = "Copyright (c) 2018 Helium Edu"
-__license__ = "MIT"
-__version__ = "1.11.2"
 class TestCaseCourseViews(APITestCase, CacheTestCase):
     def test_course_schedule_login_required(self):
         # GIVEN
