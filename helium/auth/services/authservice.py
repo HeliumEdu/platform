@@ -38,8 +38,7 @@ def forgot_password(request):
 
         send_password_reset_email.delay(user.email, password)
 
-        request.user = user
-        metricutils.increment('action.user.password-reset', request=request)
+        metricutils.increment('action.user.password-reset', request=request, user=user)
     except get_user_model().DoesNotExist:
         logger.info(f'A user tried to reset their password, but the given email address is unknown')
 
@@ -68,8 +67,7 @@ def verify_email(request):
             if request.GET.get('welcome-email', 'true') == 'true':
                 send_registration_email.delay(user.email)
 
-                request.user = user
-                metricutils.increment('action.user.verified', request=request)
+                metricutils.increment('action.user.verified', request=request, user=user)
             else:
                 logger.info('Welcome email not sent, flag disabled')
         elif user.email_changing:
@@ -79,8 +77,7 @@ def verify_email(request):
 
             logger.info(f'Verified new email for user {user.username}')
 
-            request.user = user
-            metricutils.increment('action.user.email-changed', request=request)
+            metricutils.increment('action.user.email-changed', request=request, user=user)
 
         return Response(status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
