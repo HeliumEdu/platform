@@ -4,7 +4,7 @@ Initialize Celery with Django configuration.
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.7.10"
+__version__ = "1.11.54"
 
 import os
 import sys
