@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.27"
+__version__ = "1.11.51"
 
 import copy
 import sys
@@ -18,6 +18,8 @@ from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
 from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet
+
+from helium.common.views.views import HeliumAPIView
 
 
 def _run_checks(plugins):
@@ -56,7 +58,7 @@ def _build_components_status(plugins):
     return components, system_status
 
 
-class StatusResourceView(GenericViewSet):
+class StatusResourceView(GenericViewSet, HeliumAPIView):
     @method_decorator(never_cache)
     def status(self, request, *args, **kwargs):
         """
@@ -82,7 +84,7 @@ class StatusResourceView(GenericViewSet):
         )
 
 
-class HealthResourceView(GenericViewSet):
+class HealthResourceView(GenericViewSet, HeliumAPIView):
     @method_decorator(never_cache)
     def health(self, request, *args, **kwargs):
         """

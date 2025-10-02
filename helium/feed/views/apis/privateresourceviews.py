@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.10.28"
+__version__ = "1.11.51"
 
 import logging
 
@@ -11,12 +11,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from helium.common.views.views import HeliumAPIView
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateEnableResourceView(GenericViewSet):
+class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
 
@@ -43,7 +44,7 @@ class PrivateEnableResourceView(GenericViewSet):
         return Response(serializer.data)
 
 
-class PrivateDisableResourceView(GenericViewSet):
+class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
 
