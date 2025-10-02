@@ -21,13 +21,8 @@ DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVI
 def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
     if user:
         user = user
-    elif request:
-        if hasattr(request, 'user'):
-            user = request.user
-        elif hasattr(request, 'context'):
-            user = request.context.get('user', None)
-        else:
-            user = None
+    elif request and hasattr(request, 'user'):
+        user = request.user
     else:
         user = None
 
