@@ -18,16 +18,26 @@ DATADOG_METRICS = True
 DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
 
 
-def increment(metric, request=None, response=None, value=1, extra_tags=None):
+def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
+    if user:
+        user = user
+    elif request and hasattr(request, 'context'):
+        user = request.context.get('user', None)
+    else:
+        user = None
+
     try:
         tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
+        if user:
+            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
+            if user.is_authenticated:
+                is_staff = user.is_staff or user.email.endswith("heliumedu.com") or user.email.endswith("heliumedu.dev")
+                tags.append(f"staff:{str(is_staff).lower()}")
+
         if request:
-            tags.extend([f"method:{request.method}",
-                         f"authenticated:{str(request.user.is_authenticated).lower()}"])
-            if request.user.is_authenticated:
-                tags.append(f"staff:{str(request.user.is_staff).lower()}")
-            if 'User-Agent' in request.headers:
+            tags.append(f"method:{request.method}")
+            if request.headers and 'User-Agent' in request.headers:
                 tags.append(f"user_agent:{request.headers.get('User-Agent')}")
         if response:
             tags.append(f"status_code:{response.status_code}")

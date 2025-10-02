@@ -66,9 +66,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'username': 'new_username',
-            # Intentionally NOT changing these value
-            'email': user.email
+            'username': 'new_username'
         }
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -91,9 +89,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'email': 'new@email.com',
-            # Intentionally NOT changing these value
-            'username': user.username
+            'email': 'new@email.com'
         }
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -202,8 +198,7 @@ class TestCaseUserViews(APITestCase):
         # WHEN
         data = {
             # Trying to change username to match user1's email
-            'username': user1.username,
-            'email': user2.email
+            'username': user1.username
         }
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -211,6 +206,20 @@ class TestCaseUserViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('username', response.data)
+
+    def test_reserved_username_not_in_helium_domain(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'username': 'heliumedu-cluster-hello'
+        }
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertContains(response, 'username is reserved', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_email_already_exists(self):
         # GIVEN
@@ -221,8 +230,7 @@ class TestCaseUserViews(APITestCase):
         # WHEN
         data = {
             # Trying to change email to match user1's email
-            'email': user1.email,
-            'username': user2.username
+            'email': user1.email
         }
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
