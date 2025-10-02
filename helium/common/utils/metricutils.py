@@ -1,6 +1,6 @@
-__copyright__ = "Copyright (c) 2018 Helium Edu"
+__copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.53"
+__version__ = "1.11.54"
 
 import logging
 import re
@@ -21,13 +21,8 @@ DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVI
 def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
     if user:
         user = user
-    elif request:
-        if hasattr(request, 'user'):
-            user = request.user
-        elif hasattr(request, 'context'):
-            user = request.context.get('user', None)
-        else:
-            user = None
+    elif request and hasattr(request, 'user'):
+        user = request.user
     else:
         user = None
 
