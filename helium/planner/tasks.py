@@ -23,12 +23,14 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def recalculate_course_group_grade(course_group_id, retries=0):
-    metricutils.increment('task.grading.recalculate.course-group')
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
-        gradingservice.recalculate_course_group_grade(CourseGroup.objects.get(pk=course_group_id))
+        course_group = CourseGroup.objects.get(pk=course_group_id)
+
+        metricutils.increment('task.grading.recalculate.course-group', user=course_group.user)
+        gradingservice.recalculate_course_group_grade(course_group)
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -44,12 +46,12 @@ def recalculate_course_group_grade(course_group_id, retries=0):
 
 @app.task
 def recalculate_course_grade(course_id, retries=0):
-    metricutils.increment('task.grading.recalculate.course')
-
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         course = Course.objects.get(pk=course_id)
+
+        metricutils.increment('task.grading.recalculate.course', user=course.get_user())
 
         gradingservice.recalculate_course_grade(course)
 
@@ -92,12 +94,12 @@ def recalculate_category_grades_for_course(course_id, retries=0):
 
 @app.task
 def recalculate_category_grade(category_id, retries=0):
-    metricutils.increment('task.grading.recalculate.category')
-
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         category = Category.objects.get(pk=category_id)
+
+        metricutils.increment('task.grading.recalculate.category', user=category.get_user())
 
         gradingservice.recalculate_category_grade(category)
 
@@ -206,7 +208,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                      },
                                      subject, [email])
 
-    metricutils.increment('task.email.reminder.sent')
+    metricutils.increment('task.email.reminder.sent', user=reminder.user)
 
     timezone.deactivate()
 
