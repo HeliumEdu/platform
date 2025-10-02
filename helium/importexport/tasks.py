@@ -26,6 +26,6 @@ def import_example_schedule(user_id):
 
     importservice.import_example_schedule(user)
 
-    metricutils.increment('task.user.example-imported')
+    metricutils.increment('task.user.example-imported', user=user)
 
     metricutils.task_stop(metrics)

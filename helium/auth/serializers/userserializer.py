@@ -8,7 +8,6 @@ import uuid
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from rest_framework import serializers
-from rest_framework.fields import CharField
 
 from helium.auth.models import UserSettings
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
@@ -36,6 +35,16 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings',)
         read_only_fields = ('email_changing',)
+
+    def validate(self, attrs):
+        email = attrs.get('email', self.instance.email if self.instance else None)
+        username = attrs.get('username', self.instance.username if self.instance else None)
+
+        if (username.startswith("heliumedu-cluster") and
+                not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
+            raise serializers.ValidationError("Sorry, this is username is reserved for Helium staff.")
+
+        return attrs
 
     def validate_email(self, email):
         """
