@@ -58,8 +58,7 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
 
                 logger.debug(f"User {username} has been logged in")
 
-                self.context.get('request').user = user
-                metricutils.increment('action.user.login', request=self.context.get('request'))
+                metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
 
         return attrs
 
