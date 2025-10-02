@@ -19,6 +19,8 @@ from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet
 
+from helium.common.views.views import HeliumAPIView
+
 
 def _run_checks(plugins):
     errors = []
@@ -56,7 +58,7 @@ def _build_components_status(plugins):
     return components, system_status
 
 
-class StatusResourceView(GenericViewSet):
+class StatusResourceView(GenericViewSet, HeliumAPIView):
     @method_decorator(never_cache)
     def status(self, request, *args, **kwargs):
         """
@@ -82,7 +84,7 @@ class StatusResourceView(GenericViewSet):
         )
 
 
-class HealthResourceView(GenericViewSet):
+class HealthResourceView(GenericViewSet, HeliumAPIView):
     @method_decorator(never_cache)
     def health(self, request, *args, **kwargs):
         """

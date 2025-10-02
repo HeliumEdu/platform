@@ -11,12 +11,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from helium.common.views.views import HeliumAPIView
 from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateEnableResourceView(GenericViewSet):
+class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
 
@@ -43,7 +44,7 @@ class PrivateEnableResourceView(GenericViewSet):
         return Response(serializer.data)
 
 
-class PrivateDisableResourceView(GenericViewSet):
+class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
 

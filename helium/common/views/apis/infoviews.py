@@ -9,11 +9,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from helium.common.serializers.infoserializer import InfoSerializer
+from helium.common.views.views import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 
 
-class InfoResourceView(GenericViewSet):
+class InfoResourceView(GenericViewSet, HeliumAPIView):
     serializer_class = InfoSerializer
 
     def info(self, request, *args, **kwargs):
