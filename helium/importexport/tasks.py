@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.5"
+__version__ = "1.11.49"
 
 import logging
 
@@ -26,6 +26,6 @@ def import_example_schedule(user_id):
 
     importservice.import_example_schedule(user)
 
-    metricutils.increment('task.user.example-imported')
+    metricutils.increment('task.user.example-imported', user=user)
 
     metricutils.task_stop(metrics)

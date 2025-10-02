@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.47"
+__version__ = "1.11.49"
 
 import logging
 from datetime import datetime, timedelta
@@ -92,7 +92,7 @@ def delete_user(user_id):
         for token in outstanding_tokens + blacklisted_tokens:
             token.delete()
 
-        metricutils.increment('task.user.deleted')
+        metricutils.increment('task.user.deleted', user=user)
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 

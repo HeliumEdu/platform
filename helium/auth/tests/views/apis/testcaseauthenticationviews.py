@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2018 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.38"
+__version__ = "1.11.49"
 
 import json
 
@@ -82,6 +82,37 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(get_user_model().objects.filter(username='my_test_user').exists())
         self.assertIn('email', response.data)
+
+    def test_registration_succeeds_reserved_usernames_in_helium_domain(self):
+        # WHEN
+        response1 = self.client.post(reverse('auth_user_resource_register'),
+                                     json.dumps({'email': 'heliumedu-cluster+1@heliumedu.dev',
+                                                 'username': 'heliumedu-cluster-1',
+                                                 'password': 'test_pass_1!',
+                                                 'time_zone': 'America/Chicago'}),
+                                     content_type='application/json')
+        response2 = self.client.post(reverse('auth_user_resource_register'),
+                                     json.dumps({'email': 'heliumedu-cluster+2@heliumedu.com',
+                                                 'username': 'heliumedu-cluster-2',
+                                                 'password': 'test_pass_1!',
+                                                 'time_zone': 'America/Chicago'}),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
+
+    def test_registration_fails_reserved_username_not_in_helium_domain(self):
+        # WHEN
+        response = self.client.post(reverse('auth_user_resource_register'),
+                                    json.dumps({'email': 'test@otherdomain.com',
+                                                'username': 'heliumedu-cluster-1',
+                                                'password': 'test_pass_1!',
+                                                'time_zone': 'America/Chicago'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertContains(response, 'username is reserved', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_verification_success(self):
         # GIVEN
