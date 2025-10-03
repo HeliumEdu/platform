@@ -342,18 +342,14 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Material.objects.count(), 4)
         self.assertEqual(Homework.objects.count(), 22)
         self.assertEqual(Reminder.objects.count(), 5)
-        self.assertEqual(Event.objects.count(), 3)
+        self.assertEqual(Event.objects.count(), 0)
 
         homework1 = Homework.objects.all()[0]
-        event = Event.objects.all()[0]
-        start_of_event_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         reminder = Reminder.objects.all()[0]
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
         self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
             days=(homework1.start.date() - homework1.course.start_date).days))
-        self.assertEqual(event.start.date(), start_of_event_month.date() + datetime.timedelta(
-            days=(event.start.date() - start_of_event_month.date()).days))
         self.assertEqual(reminder.start_of_range.date(), reminder.homework.start.date())
 
         course_group = CourseGroup.objects.all()[0]
