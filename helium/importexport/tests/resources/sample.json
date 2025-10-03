@@ -1,291 +1,291 @@
 {
-  "external_calendars": [
-    {
-      "id": 1,
-      "title": "📅 My Calendar",
-      "url": "http://go.com/valid-ical-feed",
-      "color": "#fad165",
-      "shown_on_calendar": true,
-      "user": 1
-    }
-  ],
-  "course_groups": [
-    {
-      "id": 1,
-      "title": "🍂 Test Course Group",
-      "start_date": "2017-01-06",
-      "end_date": "2017-05-08",
-      "shown_on_calendar": true,
-      "average_grade": "66.6667",
-      "trend": null,
-      "private_slug": null,
-      "user": 1,
-      "num_days": 122,
-      "num_days_completed": 399,
-      "num_homework": 1,
-      "num_homework_completed": 1,
-      "num_homework_graded": 1
-    },
-    {
-      "id": 2,
-      "title": "🍂 Test Course Group",
-      "start_date": "2017-01-06",
-      "end_date": "2017-05-08",
-      "shown_on_calendar": true,
-      "average_grade": "-1.0000",
-      "trend": null,
-      "private_slug": null,
-      "user": 1,
-      "num_days": 122,
-      "num_days_completed": 399,
-      "num_homework": 1,
-      "num_homework_completed": 0,
-      "num_homework_graded": 0
-    }
-  ],
-  "courses": [
-    {
-      "id": 1,
-      "title": "🧪 Test Course",
-      "room": "",
-      "credits": "5.00",
-      "color": "#4986e7",
-      "website": "http://mycourse.com",
-      "is_online": false,
-      "current_grade": "66.6667",
-      "trend": null,
-      "teacher_name": "My Teacher",
-      "teacher_email": "teacher@email.com",
-      "start_date": "2017-01-06",
-      "end_date": "2017-05-08",
-      "schedules": [
-        1
-      ],
-      "course_group": 1,
-      "num_days": 122,
-      "num_days_completed": 399,
-      "has_weighted_grading": false,
-      "num_homework": 1,
-      "num_homework_completed": 1,
-      "num_homework_graded": 1
-    },
-    {
-      "id": 2,
-      "title": "🧪 Test Course",
-      "room": "DNC 201",
-      "credits": "5.00",
-      "color": "#4986e7",
-      "website": "http://mycourse.com",
-      "is_online": false,
-      "current_grade": "-1.0000",
-      "trend": null,
-      "teacher_name": "My Teacher",
-      "teacher_email": "teacher@email.com",
-      "start_date": "2017-01-06",
-      "end_date": "2017-05-08",
-      "schedules": [
-        2
-      ],
-      "course_group": 2,
-      "num_days": 122,
-      "num_days_completed": 399,
-      "has_weighted_grading": false,
-      "num_homework": 1,
-      "num_homework_completed": 0,
-      "num_homework_graded": 0
-    }
-  ],
-  "course_schedules": [
-    {
-      "id": 1,
-      "days_of_week": "0101010",
-      "sun_start_time": "12:00:00",
-      "sun_end_time": "12:00:00",
-      "mon_start_time": "02:30:00",
-      "mon_end_time": "03:00:00",
-      "tue_start_time": "12:00:00",
-      "tue_end_time": "12:00:00",
-      "wed_start_time": "02:30:00",
-      "wed_end_time": "03:00:00",
-      "thu_start_time": "12:00:00",
-      "thu_end_time": "12:00:00",
-      "fri_start_time": "02:30:00",
-      "fri_end_time": "05:00:00",
-      "sat_start_time": "12:00:00",
-      "sat_end_time": "12:00:00",
-      "course": 1
-    },
-    {
-      "id": 2,
-      "days_of_week": "0101010",
-      "sun_start_time": "12:00:00",
-      "sun_end_time": "12:00:00",
-      "mon_start_time": "02:30:00",
-      "mon_end_time": "03:00:00",
-      "tue_start_time": "12:00:00",
-      "tue_end_time": "12:00:00",
-      "wed_start_time": "02:30:00",
-      "wed_end_time": "03:00:00",
-      "thu_start_time": "12:00:00",
-      "thu_end_time": "12:00:00",
-      "fri_start_time": "02:30:00",
-      "fri_end_time": "05:00:00",
-      "sat_start_time": "12:00:00",
-      "sat_end_time": "12:00:00",
-      "course": 2
-    }
-  ],
-  "categories": [
-    {
-      "id": 2,
-      "title": "📊 Test Category 1",
-      "weight": "0.00",
-      "average_grade": "-1.0000",
-      "grade_by_weight": "0.0000",
-      "trend": null,
-      "color": "#4986e7",
-      "course": 2,
-      "num_homework": 1,
-      "num_homework_graded": 0
-    },
-    {
-      "id": 1,
-      "title": "Uncategorized",
-      "weight": "0.00",
-      "average_grade": "66.6667",
-      "grade_by_weight": "0.0000",
-      "trend": null,
-      "color": "#4986e7",
-      "course": 1,
-      "num_homework": 1,
-      "num_homework_graded": 1
-    }
-  ],
-  "material_groups": [
-    {
-      "id": 1,
-      "title": "📚 Test Material Group",
-      "shown_on_calendar": true,
-      "user": 1
-    }
-  ],
-  "materials": [
-    {
-      "id": 1,
-      "title": "📘 Test Material",
-      "status": 3,
-      "condition": 7,
-      "website": "http://www.material.com",
-      "price": "9.99",
-      "details": "Return by 7/1",
-      "material_group": 1,
-      "courses": []
-    }
-  ],
-  "events": [
-    {
-      "id": 1,
-      "title": "🏀 Test Event",
-      "all_day": false,
-      "show_end_time": true,
-      "start": "2017-05-08T12:00:00Z",
-      "end": "2017-05-08T14:00:00Z",
-      "priority": 75,
-      "url": null,
-      "comments": "A comment on an event.",
-      "attachments": [],
-      "reminders": [
-        2
-      ],
-      "user": 1,
-      "calendar_item_type": 0
-    },
-    {
-      "id": 2,
-      "title": "🏀 Test Event",
-      "all_day": false,
-      "show_end_time": true,
-      "start": "2017-05-08T12:00:00Z",
-      "end": "2017-05-08T14:00:00Z",
-      "priority": 75,
-      "url": null,
-      "comments": "A comment on an event.",
-      "attachments": [],
-      "reminders": [],
-      "user": 1,
-      "calendar_item_type": 0
-    }
-  ],
-  "homework": [
-    {
-      "id": 1,
-      "title": "💻 Test Homework",
-      "all_day": false,
-      "show_end_time": true,
-      "start": "2017-05-08T16:00:00Z",
-      "end": "2017-05-08T18:00:00Z",
-      "priority": 65,
-      "url": null,
-      "comments": "A comment on a homework.",
-      "current_grade": "20/30",
-      "completed": true,
-      "category": 1,
-      "materials": [
-        1
-      ],
-      "attachments": [],
-      "reminders": [
-        1
-      ],
-      "course": 1,
-      "calendar_item_type": 1
-    },
-    {
-      "id": 2,
-      "title": "💻 Test Homework",
-      "all_day": false,
-      "show_end_time": true,
-      "start": "2017-05-08T16:00:00Z",
-      "end": "2017-05-08T18:00:00Z",
-      "priority": 65,
-      "url": null,
-      "comments": "A comment on a homework.",
-      "current_grade": "-1/100",
-      "completed": false,
-      "category": 2,
-      "materials": [],
-      "attachments": [],
-      "reminders": [],
-      "course": 2,
-      "calendar_item_type": 1
-    }
-  ],
-  "reminders": [
-    {
-      "id": 1,
-      "title": "Test Homework Reminder",
-      "message": "You need to do something now.",
-      "start_of_range": "2017-05-08T15:45:00Z",
-      "offset": 15,
-      "offset_type": 0,
-      "type": 2,
-      "sent": false,
-      "homework": 1,
-      "event": null,
-      "user": 1
-    },
-    {
-      "id": 2,
-      "title": "Test Event Reminder",
-      "message": "You need to do something now.",
-      "start_of_range": "2017-05-08T11:30:00Z",
-      "offset": 30,
-      "offset_type": 0,
-      "type": 2,
-      "sent": false,
-      "homework": null,
-      "event": 1,
-      "user": 1
-    }
-  ]
+    "external_calendars": [
+        {
+            "id": 1,
+            "title": "📅 My Calendar",
+            "url": "http://go.com/valid-ical-feed",
+            "color": "#fad165",
+            "shown_on_calendar": true,
+            "user": 1
+        }
+    ],
+    "course_groups": [
+        {
+            "id": 1,
+            "title": "🍂 Test Course Group",
+            "start_date": "2017-01-06",
+            "end_date": "2017-05-08",
+            "shown_on_calendar": true,
+            "average_grade": "66.6667",
+            "trend": null,
+            "private_slug": null,
+            "user": 1,
+            "num_days": 122,
+            "num_days_completed": 399,
+            "num_homework": 1,
+            "num_homework_completed": 1,
+            "num_homework_graded": 1
+        },
+        {
+            "id": 2,
+            "title": "🍂 Test Course Group",
+            "start_date": "2017-01-06",
+            "end_date": "2017-05-08",
+            "shown_on_calendar": true,
+            "average_grade": "-1.0000",
+            "trend": null,
+            "private_slug": null,
+            "user": 1,
+            "num_days": 122,
+            "num_days_completed": 399,
+            "num_homework": 1,
+            "num_homework_completed": 0,
+            "num_homework_graded": 0
+        }
+    ],
+    "courses": [
+        {
+            "id": 1,
+            "title": "🧪 Test Course",
+            "room": "",
+            "credits": "5.00",
+            "color": "#4986e7",
+            "website": "http://mycourse.com",
+            "is_online": false,
+            "current_grade": "66.6667",
+            "trend": null,
+            "teacher_name": "My Teacher",
+            "teacher_email": "teacher@email.com",
+            "start_date": "2017-01-06",
+            "end_date": "2017-05-08",
+            "schedules": [
+                1
+            ],
+            "course_group": 1,
+            "num_days": 122,
+            "num_days_completed": 399,
+            "has_weighted_grading": false,
+            "num_homework": 1,
+            "num_homework_completed": 1,
+            "num_homework_graded": 1
+        },
+        {
+            "id": 2,
+            "title": "🧪 Test Course",
+            "room": "DNC 201",
+            "credits": "5.00",
+            "color": "#4986e7",
+            "website": "http://mycourse.com",
+            "is_online": false,
+            "current_grade": "-1.0000",
+            "trend": null,
+            "teacher_name": "My Teacher",
+            "teacher_email": "teacher@email.com",
+            "start_date": "2017-01-06",
+            "end_date": "2017-05-08",
+            "schedules": [
+                2
+            ],
+            "course_group": 2,
+            "num_days": 122,
+            "num_days_completed": 399,
+            "has_weighted_grading": false,
+            "num_homework": 1,
+            "num_homework_completed": 0,
+            "num_homework_graded": 0
+        }
+    ],
+    "course_schedules": [
+        {
+            "id": 1,
+            "days_of_week": "0101010",
+            "sun_start_time": "12:00:00",
+            "sun_end_time": "12:00:00",
+            "mon_start_time": "02:30:00",
+            "mon_end_time": "03:00:00",
+            "tue_start_time": "12:00:00",
+            "tue_end_time": "12:00:00",
+            "wed_start_time": "02:30:00",
+            "wed_end_time": "03:00:00",
+            "thu_start_time": "12:00:00",
+            "thu_end_time": "12:00:00",
+            "fri_start_time": "02:30:00",
+            "fri_end_time": "05:00:00",
+            "sat_start_time": "12:00:00",
+            "sat_end_time": "12:00:00",
+            "course": 1
+        },
+        {
+            "id": 2,
+            "days_of_week": "0101010",
+            "sun_start_time": "12:00:00",
+            "sun_end_time": "12:00:00",
+            "mon_start_time": "02:30:00",
+            "mon_end_time": "03:00:00",
+            "tue_start_time": "12:00:00",
+            "tue_end_time": "12:00:00",
+            "wed_start_time": "02:30:00",
+            "wed_end_time": "03:00:00",
+            "thu_start_time": "12:00:00",
+            "thu_end_time": "12:00:00",
+            "fri_start_time": "02:30:00",
+            "fri_end_time": "05:00:00",
+            "sat_start_time": "12:00:00",
+            "sat_end_time": "12:00:00",
+            "course": 2
+        }
+    ],
+    "categories": [
+        {
+            "id": 2,
+            "title": "📊 Test Category 1",
+            "weight": "0.00",
+            "average_grade": "-1.0000",
+            "grade_by_weight": "0.0000",
+            "trend": null,
+            "color": "#4986e7",
+            "course": 2,
+            "num_homework": 1,
+            "num_homework_graded": 0
+        },
+        {
+            "id": 1,
+            "title": "Uncategorized",
+            "weight": "0.00",
+            "average_grade": "66.6667",
+            "grade_by_weight": "0.0000",
+            "trend": null,
+            "color": "#4986e7",
+            "course": 1,
+            "num_homework": 1,
+            "num_homework_graded": 1
+        }
+    ],
+    "material_groups": [
+        {
+            "id": 1,
+            "title": "📚 Test Material Group",
+            "shown_on_calendar": true,
+            "user": 1
+        }
+    ],
+    "materials": [
+        {
+            "id": 1,
+            "title": "📘 Test Material",
+            "status": 3,
+            "condition": 7,
+            "website": "http://www.material.com",
+            "price": "9.99",
+            "details": "Return by 7/1",
+            "material_group": 1,
+            "courses": []
+        }
+    ],
+    "events": [
+        {
+            "id": 1,
+            "title": "🏀 Test Event",
+            "all_day": false,
+            "show_end_time": true,
+            "start": "2017-05-08T12:00:00Z",
+            "end": "2017-05-08T14:00:00Z",
+            "priority": 75,
+            "url": null,
+            "comments": "A comment on an event.",
+            "attachments": [],
+            "reminders": [
+                2
+            ],
+            "user": 1,
+            "calendar_item_type": 0
+        },
+        {
+            "id": 2,
+            "title": "🏀 Test Event",
+            "all_day": false,
+            "show_end_time": true,
+            "start": "2017-05-08T12:00:00Z",
+            "end": "2017-05-08T14:00:00Z",
+            "priority": 75,
+            "url": null,
+            "comments": "A comment on an event.",
+            "attachments": [],
+            "reminders": [],
+            "user": 1,
+            "calendar_item_type": 0
+        }
+    ],
+    "homework": [
+        {
+            "id": 1,
+            "title": "💻 Test Homework",
+            "all_day": false,
+            "show_end_time": true,
+            "start": "2017-05-08T16:00:00Z",
+            "end": "2017-05-08T18:00:00Z",
+            "priority": 65,
+            "url": null,
+            "comments": "A comment on a homework.",
+            "current_grade": "20/30",
+            "completed": true,
+            "category": 1,
+            "materials": [
+                1
+            ],
+            "attachments": [],
+            "reminders": [
+                1
+            ],
+            "course": 1,
+            "calendar_item_type": 1
+        },
+        {
+            "id": 2,
+            "title": "💻 Test Homework",
+            "all_day": false,
+            "show_end_time": true,
+            "start": "2017-05-08T16:00:00Z",
+            "end": "2017-05-08T18:00:00Z",
+            "priority": 65,
+            "url": null,
+            "comments": "A comment on a homework.",
+            "current_grade": "-1/100",
+            "completed": false,
+            "category": 2,
+            "materials": [],
+            "attachments": [],
+            "reminders": [],
+            "course": 2,
+            "calendar_item_type": 1
+        }
+    ],
+    "reminders": [
+        {
+            "id": 1,
+            "title": "Test Homework Reminder",
+            "message": "You need to do something now.",
+            "start_of_range": "2017-05-08T15:45:00Z",
+            "offset": 15,
+            "offset_type": 0,
+            "type": 2,
+            "sent": false,
+            "homework": 1,
+            "event": null,
+            "user": 1
+        },
+        {
+            "id": 2,
+            "title": "Test Event Reminder",
+            "message": "You need to do something now.",
+            "start_of_range": "2017-05-08T11:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 2,
+            "sent": false,
+            "homework": null,
+            "event": 1,
+            "user": 1
+        }
+    ]
 }
