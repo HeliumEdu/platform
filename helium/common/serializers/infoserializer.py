@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.11.55"
 
 import logging
 
@@ -17,7 +17,5 @@ class InfoSerializer(serializers.Serializer):
     version = serializers.CharField()
 
     support_email = serializers.EmailField()
-
-    support_url = serializers.URLField()
 
     max_upload_size = serializers.IntegerField()

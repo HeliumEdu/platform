@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.11.55"
 
 import os
 import socket
@@ -171,8 +171,6 @@ ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
-
-SUPPORT_REDIRECT_URL = "https://heliumedu.freshdesk.com"
 
 # Healthcheck
 
