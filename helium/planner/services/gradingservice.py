@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.11.56"
 
 import logging
 
@@ -57,6 +57,7 @@ def get_grade_data(user_id):
 
         course_group['courses'] = Course.objects.for_user(user_id).for_course_group(course_group['id']).values('id',
                                                                                                                'title',
+                                                                                                               'color',
                                                                                                                'current_grade',
                                                                                                                'trend')
 
