@@ -18,6 +18,4 @@ class InfoSerializer(serializers.Serializer):
 
     support_email = serializers.EmailField()
 
-    support_url = serializers.URLField()
-
     max_upload_size = serializers.IntegerField()
