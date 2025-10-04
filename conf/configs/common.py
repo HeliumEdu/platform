@@ -172,8 +172,6 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_REDIRECT_URL = "https://heliumedu.freshdesk.com"
-
 # Healthcheck
 
 HEALTHCHECK_CELERY_TIMEOUT = 10
