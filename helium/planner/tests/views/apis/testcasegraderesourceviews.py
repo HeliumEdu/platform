@@ -70,6 +70,7 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertIn('num_homework_graded', response.data['course_groups'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0])
+        self.assertIn('color', response.data['course_groups'][0]['courses'][0])
         self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 62.5)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0])
