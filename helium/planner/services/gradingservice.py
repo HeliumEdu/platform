@@ -57,6 +57,7 @@ def get_grade_data(user_id):
 
         course_group['courses'] = Course.objects.for_user(user_id).for_course_group(course_group['id']).values('id',
                                                                                                                'title',
+                                                                                                               'color',
                                                                                                                'current_grade',
                                                                                                                'trend')
 
