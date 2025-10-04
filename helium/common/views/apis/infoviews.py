@@ -26,7 +26,6 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
             'tagline': settings.PROJECT_TAGLINE,
             'version': settings.PROJECT_VERSION,
             'support_email': settings.EMAIL_ADDRESS,
-            'support_url': settings.SUPPORT_REDIRECT_URL,
             'max_upload_size': settings.MAX_UPLOAD_SIZE
         })
 
