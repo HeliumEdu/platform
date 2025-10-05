@@ -83,7 +83,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
     def test_status_exclude_worker(self, mock_twilio, mock_s3, mock_cache, mock_db):
         # WHEN
-        response = self.client.get(reverse('resource_status') + '?worker=false')
+        response = self.client.get(reverse('resource_status') + '?TaskProcessing=false')
 
         # THEN
         content = json.loads(response.content.decode('utf-8'))
@@ -94,7 +94,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
     def test_status_worker_only(self, mock_celery):
         # WHEN
-        response = self.client.get(reverse('resource_status') + '?worker=true')
+        response = self.client.get(reverse('resource_status') + '?Database=false&Cache=false&Twilio=false&AWS=false')
 
         # THEN
         content = json.loads(response.content.decode('utf-8'))

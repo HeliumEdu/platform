@@ -67,12 +67,9 @@ class StatusResourceView(GenericViewSet, HeliumAPIView):
             for plugin_class, options in plugin_dir._registry
         ), key=lambda plugin: plugin.identifier())
 
-        worker_filter = self.request.query_params.get('worker', None)
-        if worker_filter:
-            if worker_filter == 'true':
-                plugins = [plugin for plugin in plugins if plugin.__class__.__name__ == 'TaskProcessing']
-            elif worker_filter == 'false':
-                plugins = [plugin for plugin in plugins if plugin.__class__.__name__ != 'TaskProcessing']
+        plugins = [plugin for plugin in plugins if
+                   plugin.__class__.__name__ not in self.request.query_params or self.request.query_params.get(
+                       plugin.__class__.__name__) == 'true']
 
         errors = _run_checks(plugins)
 
