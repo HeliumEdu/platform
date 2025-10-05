@@ -12,13 +12,11 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
-from rest_framework.serializers import BaseSerializer
-
-from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
-from health_check.plugins import plugin_dir
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet
 
+from health_check.contrib.psutil.backends import MemoryUsage, DiskUsage
+from health_check.plugins import plugin_dir
 from helium.common.views.views import HeliumAPIView
 
 
@@ -68,6 +66,13 @@ class StatusResourceView(GenericViewSet, HeliumAPIView):
             plugin_class(**copy.deepcopy(options))
             for plugin_class, options in plugin_dir._registry
         ), key=lambda plugin: plugin.identifier())
+
+        worker_filter = self.request.query_params.get('worker', None)
+        if worker_filter:
+            if worker_filter == 'true':
+                plugins = [plugin for plugin in plugins if plugin.__class__.__name__ == 'TaskProcessing']
+            elif worker_filter == 'false':
+                plugins = [plugin for plugin in plugins if plugin.__class__.__name__ != 'TaskProcessing']
 
         errors = _run_checks(plugins)
 
