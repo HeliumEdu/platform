@@ -77,6 +77,31 @@ class TestCaseStatusViews(APITestCase):
             if component == 'Twilio':
                 self.assertEqual(content['components'][component]['status'], 'major_outage')
 
+    @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
+    @mock.patch('health_check.cache.backends.CacheBackend.check_status')
+    @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
+    @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
+    def test_status_exclude_worker(self, mock_twilio, mock_s3, mock_cache, mock_db):
+        # WHEN
+        response = self.client.get(reverse('resource_status') + '?worker=false')
+
+        # THEN
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(content['components']), 4)
+        self.assertEqual(content['status'], 'operational')
+
+    @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
+    def test_status_worker_only(self, mock_celery):
+        # WHEN
+        response = self.client.get(reverse('resource_status') + '?worker=true')
+
+        # THEN
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(content['components']), 1)
+        self.assertEqual(content['status'], 'operational')
+
     @mock.patch('health_check.backends.BaseHealthCheckBackend.check_status')
     def test_health(self, mock_check_status):
         # WHEN
