@@ -10,23 +10,20 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from helium.common.tests.helpers import commonhelper
-
 
 class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
     @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
-    @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
-    def test_status(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
+    def test_status(self, mock_s3, mock_celery, mock_cache, mock_db):
         # WHEN
         response = self.client.get(reverse('resource_status'))
 
         # THEN
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(content['components']), 5)
+        self.assertEqual(len(content['components']), 4)
         self.assertEqual(content['status'], 'operational')
 
         for component in content['components']:
@@ -36,8 +33,7 @@ class TestCaseStatusViews(APITestCase):
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
     @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
-    @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
-    def test_status_critical_fails(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
+    def test_status_critical_fails(self, mock_s3, mock_celery, mock_cache, mock_db):
         # GIVEN
         mock_db.side_effect = IntegrityError("Database integrity error")
 
@@ -47,7 +43,7 @@ class TestCaseStatusViews(APITestCase):
         # THEN
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(len(content['components']), 5)
+        self.assertEqual(len(content['components']), 4)
         self.assertEqual(content['status'], 'minor_outage')
 
         for component in content['components']:
@@ -56,45 +52,21 @@ class TestCaseStatusViews(APITestCase):
 
     @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
     @mock.patch('health_check.cache.backends.CacheBackend.check_status')
-    @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
     @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
-    @mock.patch('health_check.contrib.twilio.backends.urlopen')
-    def test_status_uncritical_fails(self, mock_twilio, mock_s3, mock_celery, mock_cache, mock_db):
-        # GIVEN
-        commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_twilio)
-
-        # WHEN
-        response = self.client.get(reverse('resource_status'))
-
-        # THEN
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(content['components']), 5)
-        # Since this is a non-critical service, it will not cause the entire status check to fail, only the component
-        self.assertEqual(content['status'], 'operational')
-
-        for component in content['components']:
-            if component == 'Twilio':
-                self.assertEqual(content['components'][component]['status'], 'major_outage')
-
-    @mock.patch('health_check.db.backends.DatabaseBackend.check_status')
-    @mock.patch('health_check.cache.backends.CacheBackend.check_status')
-    @mock.patch('health_check.contrib.s3boto3_storage.backends.S3Boto3StorageHealthCheck.check_status')
-    @mock.patch('health_check.contrib.twilio.backends.TwilioHealthCheck.check_status')
-    def test_status_exclude_worker(self, mock_twilio, mock_s3, mock_cache, mock_db):
+    def test_status_exclude_worker(self, mock_s3, mock_cache, mock_db):
         # WHEN
         response = self.client.get(reverse('resource_status') + '?TaskProcessing=false')
 
         # THEN
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(content['components']), 4)
+        self.assertEqual(len(content['components']), 3)
         self.assertEqual(content['status'], 'operational')
 
     @mock.patch('health_check.contrib.celery.backends.CeleryHealthCheck.check_status')
     def test_status_worker_only(self, mock_celery):
         # WHEN
-        response = self.client.get(reverse('resource_status') + '?Database=false&Cache=false&Twilio=false&AWS=false')
+        response = self.client.get(reverse('resource_status') + '?Database=false&Cache=false&AWS=false')
 
         # THEN
         content = json.loads(response.content.decode('utf-8'))
@@ -110,5 +82,5 @@ class TestCaseStatusViews(APITestCase):
         # THEN
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(content['components']), 7)
+        self.assertEqual(len(content['components']), 6)
         self.assertEqual(content['status'], 'operational')
