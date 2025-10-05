@@ -66,7 +66,7 @@ def send_password_reset_email(email, temp_password):
                                      {
                                          'password': temp_password,
                                          'settings_url': f"{settings.PROJECT_APP_HOST}/settings",
-                                         'support_url': f"https://support.heliumedu.com",
+                                         'support_url': settings.SUPPORT_URL,
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 
