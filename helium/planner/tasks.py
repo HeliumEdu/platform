@@ -93,6 +93,8 @@ def recalculate_category_grades_for_course(course_id, retries=0):
                                                                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
             raise ex
+    except Category.DoesNotExist:
+        logger.info(f"Category does not exist. Nothing to do.")
     except Course.DoesNotExist:
         logger.info(f"Course {course_id} does not exist. Nothing to do.")
 
@@ -120,6 +122,10 @@ def recalculate_category_grade(category_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
+    except CourseGroup.DoesNotExist:
+        logger.info(f"CourseGroup does not exist. Nothing to do.")
+    except Course.DoesNotExist:
+        logger.info(f"Course does not exist. Nothing to do.")
     except Category.DoesNotExist:
         logger.info(f"Category {category_id} does not exist. Nothing to do.")
 

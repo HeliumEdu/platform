@@ -29,7 +29,6 @@ class CommonConfig(AppConfig):
         from health_check.cache.backends import CacheBackend
         from health_check.contrib.celery.backends import CeleryHealthCheck
         from health_check.contrib.s3boto3_storage.backends import S3Boto3StorageHealthCheck
-        from health_check.contrib.twilio.backends import TwilioHealthCheck
 
         plugin_dir.register(type('Database', (DatabaseBackend,),
                                  {
@@ -44,13 +43,6 @@ class CommonConfig(AppConfig):
                                      'description': 'Grade calculation, emails, text messages, and other '
                                                     'deferred tasks',
                                      'queues': current_app.amqp.queues
-                                 }))
-
-        plugin_dir.register(type('Twilio', (TwilioHealthCheck,),
-                                 {
-                                     'critical': False,
-                                     'description': 'Reminders and other text message notifications',
-                                     'services': ['SMS']
                                  }))
 
         if not settings.SERVE_LOCAL:
