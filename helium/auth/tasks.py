@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.57"
+__version__ = "1.11.62"
 
 import logging
 from datetime import datetime, timedelta
@@ -49,7 +49,7 @@ def send_registration_email(email):
                                          'PROJECT_NAME': settings.PROJECT_NAME,
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
-                                     'Welcome to Helium', [email], [settings.DEFAULT_FROM_EMAIL])
+                                     'Welcome to Helium', [email])
 
     logger.debug(f"Registration email sent to {email}")
 
