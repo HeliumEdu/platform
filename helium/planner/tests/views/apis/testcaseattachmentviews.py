@@ -271,7 +271,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('details', response.data)
+        self.assertIn('error occurred', response.data['details'])
         self.assertEqual(Attachment.objects.count(), 0)
 
     def test_not_found(self):
