@@ -222,7 +222,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('detail', response.data)
+        self.assertIn('Invalid JSON', response.data['details'])
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)

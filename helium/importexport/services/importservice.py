@@ -259,7 +259,7 @@ def import_user(request, json_str):
         data = json.loads(json_str)
     except ValueError as e:
         raise ValidationError({
-            'detail': e
+            'details': 'Invalid JSON.'
         })
 
     _import_external_calendars(data.get('external_calendars', []), request.user)

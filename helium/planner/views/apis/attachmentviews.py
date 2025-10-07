@@ -6,6 +6,7 @@ import logging
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -83,12 +84,12 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
             else:
                 errors.append(serializer.errors)
 
-        if len(errors) > 0:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-        elif len(response_data) > 0:
+        if len(response_data) > 0 and len(errors) == 0:
             return Response(response_data, status=status.HTTP_201_CREATED)
+        elif len(errors) > 0:
+            raise ValidationError(errors)
         else:
-            return Response({'details': 'An unknown error occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'details': 'An unknown error occurred.'})
 
 
 class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMixin):

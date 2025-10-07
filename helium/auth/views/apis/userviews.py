@@ -6,7 +6,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError, AuthenticationFailed
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -68,10 +68,10 @@ class UserDeleteResourceView(HeliumAPIView):
         user = self.get_object()
 
         if 'password' not in request.data:
-            return Response({'password': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'password': ['This field is required.']})
 
         if not user.check_password(request.data['password']):
-            return Response({'password': ['The password is incorrect.']}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'password': ['The password is incorrect.']})
 
         logger.info(f'User {user.get_username()} will be deleted')
 
@@ -95,19 +95,19 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         can only be used to delete users that never finished setting up their account.
         """
         if 'username' not in request.data:
-            return Response({'username': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'username': ['This field is required.']})
 
         if 'password' not in request.data:
-            return Response({'password': ['This field is required.']}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'password': ['This field is required.']})
 
         user = self.get_object()
 
         if user.is_active:
-            return Response({'non_field_errors': ['This endpoint can only be used to cleanup user accounts that '
-                                                  'were never activated.']}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['This endpoint can only be used to cleanup user accounts that '
+                                                  'were never activated.']})
 
         if not user.check_password(request.data['password']):
-            return Response({'password': ['The password is incorrect.']}, status=status.HTTP_401_UNAUTHORIZED)
+            raise AuthenticationFailed({'password': ['The password is incorrect.']})
 
         logger.info(f'User {user.get_username()} will be deleted')
 
