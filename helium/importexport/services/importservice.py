@@ -45,6 +45,8 @@ def _import_external_calendars(external_calendars, user):
 
     logger.info(f"Imported {len(external_calendars)} external calendars.")
 
+    return len(external_calendars)
+
 
 def _import_course_groups(course_groups, user):
     course_group_remap = {}
@@ -106,6 +108,8 @@ def _import_course_schedules(course_schedules, course_remap):
             })
 
     logger.info(f"Imported {len(course_schedules)} course schedules.")
+
+    return len(course_schedules)
 
 
 def _import_categories(categories, request, course_remap):
@@ -245,30 +249,25 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
 
     logger.info(f"Imported {len(reminders)} reminders.")
 
+    return len(reminders)
+
 
 @transaction.atomic
-def import_user(request, json_str):
+def import_user(request, data):
     """
     Parse the given JSON string and import its associated data for the given user. Each model will be imported in a
     schema matching that of the documented APIs.
 
     :param request: The request performing the import.
-    :param json_str: The JSON string that will be parsed and imported for the user.
+    :param data: The data that will be imported for the user.
     """
-    try:
-        data = json.loads(json_str)
-    except ValueError as e:
-        raise ValidationError({
-            'details': 'Invalid JSON.'
-        })
-
-    _import_external_calendars(data.get('external_calendars', []), request.user)
+    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user)
 
     course_group_remap = _import_course_groups(data.get('course_groups', []), request.user)
 
     course_remap = _import_courses(data.get('courses', []), course_group_remap)
 
-    _import_course_schedules(data.get('course_schedules', []), course_remap)
+    course_schedules_count = _import_course_schedules(data.get('course_schedules', []), course_remap)
 
     category_remap = _import_categories(data.get('categories', []), request, course_remap)
 
@@ -280,7 +279,11 @@ def import_user(request, json_str):
 
     homework_remap = _import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
-    _import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
+    reminders_count = _import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
+
+    return (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
+            len(category_remap), len(material_group_remap), len(material_remap), len(event_remap), len(homework_remap),
+            reminders_count)
 
 
 def _adjust_schedule_relative_today(user):
@@ -347,7 +350,8 @@ def _adjust_schedule_relative_today(user):
 
             coursescheduleservice.clear_cached_course_schedule(course)
 
-        logger.info(f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
+        logger.info(
+            f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
     except:
         logger.error("An unknown error occurred.", exc_info=True)
 
@@ -361,10 +365,16 @@ def import_example_schedule(user):
     example_file = open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb')
 
     json_str = example_file.read().decode('utf-8')
+    try:
+        data = json.loads(json_str)
 
-    import_user(request, json_str)
+        import_user(request, data)
 
-    _adjust_schedule_relative_today(user)
+        _adjust_schedule_relative_today(user)
 
-    for category in Category.objects.for_user(user.pk).iterator():
-        recalculate_category_grade.delay(category.pk)
+        for category in Category.objects.for_user(user.pk).iterator():
+            recalculate_category_grade.delay(category.pk)
+    except ValueError:
+        raise ValidationError({
+            'details': 'Invalid JSON.'
+        })
