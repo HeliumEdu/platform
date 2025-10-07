@@ -51,7 +51,10 @@ class TestCaseImportExportViews(APITestCase):
             response1 = self.client.post(
                 reverse('importexport_resource_import'),
                 data)
-            self.assertEqual(response1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
+             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2}, response1.data)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
         with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
@@ -64,6 +67,9 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
+             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2}, response2.data)
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
@@ -180,14 +186,16 @@ class TestCaseImportExportViews(APITestCase):
                                                'priority': 75, 'url': None, 'comments': 'A comment on an event.',
                                                'owner_id': None, 'user': user.pk})
         homeworkhelper.verify_homework_matches_data(self, homework[2],
-                                                    {'title': '💻 Test Homework', 'all_day': False, 'show_end_time': True,
+                                                    {'title': '💻 Test Homework', 'all_day': False,
+                                                     'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
                                                      'comments': 'A comment on a homework.', 'current_grade': '20/30',
                                                      'completed': True, 'category': categories[1].pk,
                                                      'course': courses[2].pk, 'materials': [materials[1].pk]})
         homeworkhelper.verify_homework_matches_data(self, homework[3],
-                                                    {'title': '💻 Test Homework', 'all_day': False, 'show_end_time': True,
+                                                    {'title': '💻 Test Homework', 'all_day': False,
+                                                     'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
                                                      'comments': 'A comment on a homework.', 'current_grade': '-1/100',
