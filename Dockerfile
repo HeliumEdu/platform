@@ -1,5 +1,7 @@
 FROM ubuntu:24.04 AS build
 
+ARG ENVIRONMENT=prod
+
 RUN apt-get --fix-missing update
 RUN apt-get install -y git python3-virtualenv python3-pip python3-setuptools pkg-config default-libmysqlclient-dev
 
@@ -17,6 +19,8 @@ COPY requirements-deploy.txt .
 # usage of python will use the one installed in /venv
 RUN python3 -m virtualenv /venv
 RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-deploy.txt
+
+RUN if [[ "$ENVIRONMENT" == "*local*" ]] ; then RUN python -m pip install --no-cache-dir -r requirements-dev.txt; fi
 
 ######################################################################
 

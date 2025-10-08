@@ -5,6 +5,7 @@ PYTHON_BIN := python
 PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
 PLATFORM ?= arm64
+ENVIRONMENT ?= prod
 
 all: test build-docker run-docker
 
@@ -74,11 +75,11 @@ run-devserver: build-dev migrate-dev
 	)
 
 build-docker:
-	docker buildx build --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
+	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
-	docker buildx build --target platform_api -t helium/platform-api:$(PLATFORM)-latest -t helium/platform-api:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
+	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_api -t helium/platform-api:$(PLATFORM)-latest -t helium/platform-api:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
-	docker buildx build --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
+	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
 	docker compose up -d
