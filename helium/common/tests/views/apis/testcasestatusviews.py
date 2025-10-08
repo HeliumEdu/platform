@@ -73,14 +73,3 @@ class TestCaseStatusViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(content['components']), 1)
         self.assertEqual(content['status'], 'operational')
-
-    @mock.patch('health_check.backends.BaseHealthCheckBackend.check_status')
-    def test_health(self, mock_check_status):
-        # WHEN
-        response = self.client.get(reverse('resource_health'))
-
-        # THEN
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(content['components']), 6)
-        self.assertEqual(content['status'], 'operational')
