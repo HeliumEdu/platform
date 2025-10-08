@@ -57,3 +57,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./build/test-results
+      - name: Dump Docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
