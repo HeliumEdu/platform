@@ -1,15 +1,14 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.0"
 
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.urls import re_path, path
+from django.urls import re_path, path, include
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
-from helium.common.views.apis.statusviews import HealthResourceView, StatusResourceView
 
 urlpatterns = [
     # Base URL
@@ -26,7 +25,6 @@ urlpatterns = [
     ##############################
     # Unauthenticated URLs
     ##############################
-    path('status/', StatusResourceView.as_view({'get': 'status'}), name='resource_status'),
-    path('health/', HealthResourceView.as_view({'get': 'health'}), name='resource_health'),
+    path(r'status/', include('health_check.urls')),
     path('info/', InfoResourceView.as_view({'get': 'info'}), name='resource_info'),
 ]

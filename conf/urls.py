@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.0"
 
 import sys
 
@@ -25,11 +25,14 @@ urlpatterns = [
 ]
 
 if config.DEBUG:
-    import debug_toolbar
+    try:
+        import debug_toolbar
 
-    urlpatterns += [
-        re_path(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+        urlpatterns += [
+            re_path(r'^__debug__/', include(debug_toolbar.urls)),
+        ]
+    except ImportError:
+        pass
 
 if (config.DEBUG or 'test' in sys.argv or 'pytest' not in sys.modules) and config.MEDIA_URL:
     # Ensure media files are shown properly when using a dev server
