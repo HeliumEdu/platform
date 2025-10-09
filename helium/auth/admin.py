@@ -66,7 +66,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
 
 class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['phone', 'phone_verified', 'get_user']
+    list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
     readonly_fields = ('user',)
@@ -80,12 +80,19 @@ class UserProfileAdmin(BaseModelAdmin):
         else:
             return ''
 
+    def get_last_login(self, obj):
+        if obj.user:
+            return obj.user.last_login
+        else:
+            return ''
+
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+    get_last_login.short_description = 'Last Login'
 
 
 class UserSettingsAdmin(BaseModelAdmin):
-    list_display = ['time_zone', 'default_view', 'receive_emails_from_admin', 'get_user']
+    list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin', 'get_last_login']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
@@ -97,15 +104,22 @@ class UserSettingsAdmin(BaseModelAdmin):
         else:
             return ''
 
+    def get_last_login(self, obj):
+        if obj.user:
+            return obj.user.last_login
+        else:
+            return ''
+
     def has_add_permission(self, request):
         return False
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+    get_last_login.short_description = 'Last Login'
 
 
 class UserPushTokenAdmin(BaseModelAdmin):
-    list_display = ['device_id', 'token', 'get_user']
+    list_display = ['get_user', 'device_id', 'token', 'get_last_login']
     search_fields = ('user__email', 'user__username')
     ordering = ('user__username',)
 
@@ -115,8 +129,15 @@ class UserPushTokenAdmin(BaseModelAdmin):
         else:
             return ''
 
+    def get_last_login(self, obj):
+        if obj.user:
+            return obj.user.last_login
+        else:
+            return ''
+
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+    get_last_login.short_description = 'Last Login'
 
 
 # Register the models in the Admin
