@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import datetime
 import json
@@ -363,7 +363,7 @@ class TestCaseEventViews(APITestCase):
         eventhelper.given_event_exists(user, title='test2')
 
         # WHEN
-        response = self.client.get(reverse('planner_events_list') + '?search=test1')
+        response = self.client.get(reverse('planner_events_list') + '?search=tEst1')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

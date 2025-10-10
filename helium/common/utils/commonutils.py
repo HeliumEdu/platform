@@ -1,7 +1,9 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
+import csv
+import io
 import logging
 from decimal import Decimal
 
@@ -83,3 +85,10 @@ def calculate_trend(series_range, series_list):
         return (sx * range_count - y * x) / d
     else:
         return None
+
+
+def split_csv(s, delimiter=',', quotechar="'"):
+    f = io.StringIO(s)
+    reader = csv.reader(f, delimiter=delimiter, quotechar=quotechar)
+    for row in reader:
+        return row

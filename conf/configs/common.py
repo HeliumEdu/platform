@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.62"
+__version__ = "1.12.8"
 
 import os
 import socket
@@ -114,7 +114,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'helium.common.middleware.InternalServerErrorMiddleware',
+    'helium.common.middleware.HeliumMiddleware',
 )
 
 TEMPLATES = [{

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import logging
 
@@ -27,7 +27,7 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filterset_class = EventFilter
-    search_fields = ('title',)
+    search_fields = ('title', 'comments')
     order_fields = ('title', 'start', 'priority',)
 
     def get_queryset(self):
