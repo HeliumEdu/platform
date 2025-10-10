@@ -43,9 +43,10 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
             timezone.utc) if "start__gte" in request.query_params else None
         end = parser.parse(request.query_params["end__lt"]).astimezone(
             timezone.utc) if "end__lt" in request.query_params else None
+        search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         try:
-            events = icalexternalcalendarservice.calendar_to_events(external_calendar, start, end)
+            events = icalexternalcalendarservice.calendar_to_events(external_calendar, start, end, search)
         except HeliumICalError as ex:
             external_calendar.shown_on_calendar = False
             external_calendar.save()

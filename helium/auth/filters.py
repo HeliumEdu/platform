@@ -4,14 +4,14 @@ __version__ = "1.11.54"
 
 import logging
 
-from django_filters import rest_framework as filters
+import django_filters
 
 from helium.auth.models.userpushtoken import UserPushToken
 
 logger = logging.getLogger(__name__)
 
 
-class UserPushTokenFilter(filters.FilterSet):
+class UserPushTokenFilter(django_filters.FilterSet):
     class Meta:
         model = UserPushToken
         fields = {
