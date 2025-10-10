@@ -3,51 +3,19 @@ __license__ = "MIT"
 __version__ = "1.11.54"
 
 import logging
-import shlex
 
 import django_filters
 from django.db.models import Q
 from django.utils import timezone
-from django_filters.constants import EMPTY_VALUES
-from django_filters.widgets import CSVWidget
 
+from helium.common.utils.commonutils import split_csv
 from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category, Material, MaterialGroup
 
 logger = logging.getLogger(__name__)
 
 
-class QuotedCSVWidget(CSVWidget):
-    def value_from_datadict(self, data, files, name):
-        value = data.get(name)
-        if value:
-            return shlex.split(value.replace(',', ' '))
-        return None
-
-
-class QuotedCharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault('widget', QuotedCSVWidget)
-        super().__init__(*args, **kwargs)
-
-    def filter(self, qs, value):
-        if value in EMPTY_VALUES:
-            return qs
-
-        return super().filter(qs, value)
-
-
-# class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
-#     def value_from_datadict(self, data, files, name):
-#         value = super().value_from_datadict(data, files, name)
-#
-#         if value is None or value == '':
-#             return []
-#
-#         unquoted_values = value.split(',')
-#
-#         decoded_values = [urllib.parse.unquote(v) for v in unquoted_values]
-#
-#         return decoded_values
+class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
+    pass
 
 
 class EventFilter(django_filters.FilterSet):
@@ -61,9 +29,9 @@ class EventFilter(django_filters.FilterSet):
 
 
 class HomeworkFilter(django_filters.FilterSet):
-    course__id = QuotedCharInFilter(field_name='course__id')
-    category__id = QuotedCharInFilter(field_name='category__id')
-    category__title = QuotedCharInFilter(field_name='category__title')
+    course__id = CharInFilter(field_name='course__id')
+    category__id = CharInFilter(field_name='category__id')
+    category__title__in = django_filters.CharFilter(method='filter_category_titles')
     shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
     overdue = django_filters.BooleanFilter(method='filter_overdue')
 
@@ -78,6 +46,9 @@ class HomeworkFilter(django_filters.FilterSet):
             'category__title': ['in'],
             'title': ['exact'],
         }
+
+    def filter_category_titles(self, queryset, name, value):
+        return queryset.filter(category__title__in=split_csv(value))
 
     def filter_shown_on_calendar(self, queryset, name, value):
         return queryset.filter(course__course_group__shown_on_calendar=value)
