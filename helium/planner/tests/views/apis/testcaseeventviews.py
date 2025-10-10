@@ -363,7 +363,7 @@ class TestCaseEventViews(APITestCase):
         eventhelper.given_event_exists(user, title='test2')
 
         # WHEN
-        response = self.client.get(reverse('planner_events_list') + '?search=test1')
+        response = self.client.get(reverse('planner_events_list') + '?search=tEst1')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

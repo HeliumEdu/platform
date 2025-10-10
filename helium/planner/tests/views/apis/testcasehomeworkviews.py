@@ -4,6 +4,7 @@ __version__ = "1.11.54"
 
 import datetime
 import json
+import urllib
 from urllib.parse import quote
 
 from dateutil import parser
@@ -563,6 +564,23 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], homework.title)
 
+    def test_filter_course_ids(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group, title='course1')
+        course2 = coursehelper.given_course_exists(course_group, title='course2')
+        course3 = coursehelper.given_course_exists(course_group, title='course3')
+        homework1 = homeworkhelper.given_homework_exists(course1, title='test1')
+        homework2 = homeworkhelper.given_homework_exists(course2, title='test2')
+        homeworkhelper.given_homework_exists(course3, title='test3')
+
+        response = self.client.get(reverse('planner_homework_list') + f'?course__id__in={course1.pk},{course2.pk}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['title'], homework1.title)
+        self.assertEqual(response.data[1]['title'], homework2.title)
+
     def test_category_search_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -571,8 +589,88 @@ class TestCaseHomeworkViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(course, title='test1', category=category)
         homeworkhelper.given_homework_exists(course, title='test2')
 
-        response = self.client.get(reverse('planner_homework_list') + '?search=testcategory')
+        response = self.client.get(reverse('planner_homework_list') + '?search=TesTCategorY')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], homework.title)
+
+    def test_filter_category_ids(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course, title='category1')
+        category2 = categoryhelper.given_category_exists(course, title='category2')
+        category3 = categoryhelper.given_category_exists(course, title='category3')
+        homework1 = homeworkhelper.given_homework_exists(course, title='test1', category=category1)
+        homework2 = homeworkhelper.given_homework_exists(course, title='test2', category=category2)
+        homeworkhelper.given_homework_exists(course, title='test3', category=category3)
+
+        response = self.client.get(
+            reverse('planner_homework_list') + f'?category__id__in={category1.pk},{category2.pk}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['title'], homework1.title)
+        self.assertEqual(response.data[1]['title'], homework2.title)
+
+    def test_filter_category_names(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course, title='category,1')
+        category2 = categoryhelper.given_category_exists(course, title='category,2')
+        category3 = categoryhelper.given_category_exists(course, title='category,3')
+        homework1 = homeworkhelper.given_homework_exists(course, title='test1', category=category1)
+        homework2 = homeworkhelper.given_homework_exists(course, title='test2', category=category2)
+        homeworkhelper.given_homework_exists(course, title='test3', category=category3)
+
+        response = self.client.get(
+            reverse('planner_homework_list') + '?'
+            + urllib.parse.quote(f'category__title__in="{category1.title}","{category2.title}"'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['title'], homework1.title)
+        self.assertEqual(response.data[1]['title'], homework2.title)
+
+    def test_filter_hidden_course_group(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=False)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course)
+
+        response = self.client.get(reverse('planner_homework_list') + '?shown_on_calendar=true')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_filter_overdue(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=False)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course,
+                                             title="overdue",
+                                             completed=False,
+                                             start=timezone.now() - datetime.timedelta(seconds=1))
+        homeworkhelper.given_homework_exists(course,
+                                             title="not overdue",
+                                             completed=True,
+                                             start=timezone.now() - datetime.timedelta(seconds=1))
+        homeworkhelper.given_homework_exists(course,
+                                             title="not overdue",
+                                             completed=False,
+                                             start=timezone.now() + datetime.timedelta(minutes=1))
+
+        response = self.client.get(reverse('planner_homework_list') + '?overdue=true')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual("overdue", response.data[0]['title'])
+
+        response = self.client.get(reverse('planner_homework_list') + '?overdue=false')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        for h in response.data:
+            self.assertEqual("not overdue", h['title'])

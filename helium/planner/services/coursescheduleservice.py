@@ -93,7 +93,7 @@ def _get_cache_prefix(course):
     return f"users:{course.get_user().pk}:courses:{course.pk}:coursescheduleevents:"
 
 
-def _get_events_from_cache(cached_keys):
+def _get_events_from_cache(cached_keys, search=None):
     events = []
     invalid_data = False
 
@@ -110,6 +110,10 @@ def _get_events_from_cache(cached_keys):
                           user_id=event['user'],
                           calendar_item_type=event['calendar_item_type'],
                           comments=event['comments'])
+
+            if search and not (search in event.title or search in event.comments):
+                continue
+
             events.append(event)
         except:
             invalid_data = True
@@ -123,7 +127,7 @@ def _get_events_from_cache(cached_keys):
     return events, not invalid_data
 
 
-def _create_events_from_course_schedules(course, course_schedules):
+def _create_events_from_course_schedules(course, course_schedules, search=None):
     events = []
     cache_prefix = _get_cache_prefix(course)
 
@@ -162,6 +166,10 @@ def _create_events_from_course_schedules(course, course_schedules):
                               user=course.get_user(),
                               calendar_item_type=enums.COURSE,
                               comments=comments)
+
+                if search and not (search in event.title or search in event.comments):
+                    continue
+
                 events.append(event)
 
                 serializer = EventSerializer(event)
@@ -186,12 +194,13 @@ def clear_cached_course_schedule(course):
     cache.delete_many(cached_keys)
 
 
-def course_schedules_to_events(course, course_schedules):
+def course_schedules_to_events(course, course_schedules, search=None):
     """
     For the given course schedule model, generate an event for each class time within the courses's start/end window.
 
     :param course: The course with a start/end date range to iterate over.
     :param course_schedules: A list of course schedules to generate the events for.
+    :param search: The search string to filter by.
     :return: A list of event resources.
     """
     events = []
@@ -199,9 +208,9 @@ def course_schedules_to_events(course, course_schedules):
     cached = False
     cached_keys = cache.keys(_get_cache_prefix(course) + "*")
     if cached_keys:
-        events, cached = _get_events_from_cache(cached_keys)
+        events, cached = _get_events_from_cache(cached_keys, search)
 
     if not cached:
-        events = _create_events_from_course_schedules(course, course_schedules)
+        events = _create_events_from_course_schedules(course, course_schedules, search)
 
     return events

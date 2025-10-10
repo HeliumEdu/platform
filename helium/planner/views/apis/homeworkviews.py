@@ -22,7 +22,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 logger = logging.getLogger(__name__)
 
 
-class UserHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
+class UserHomeworkApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
