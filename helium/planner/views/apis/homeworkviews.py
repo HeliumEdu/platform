@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import logging
 
@@ -22,7 +22,7 @@ from helium.planner.serializers.homeworkserializer import HomeworkSerializer, Ho
 logger = logging.getLogger(__name__)
 
 
-class UserHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
+class UserHomeworkApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)

@@ -1,17 +1,24 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import logging
 
-from django_filters import rest_framework as filters
+import django_filters
+from django.db.models import Q
+from django.utils import timezone
 
+from helium.common.utils.commonutils import split_csv
 from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category, Material, MaterialGroup
 
 logger = logging.getLogger(__name__)
 
 
-class EventFilter(filters.FilterSet):
+class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
+    pass
+
+
+class EventFilter(django_filters.FilterSet):
     class Meta:
         model = Event
         fields = {
@@ -21,19 +28,43 @@ class EventFilter(filters.FilterSet):
         }
 
 
-class HomeworkFilter(filters.FilterSet):
+class HomeworkFilter(django_filters.FilterSet):
+    course__id = CharInFilter(field_name='course__id')
+    category__id = CharInFilter(field_name='category__id')
+    category__title__in = django_filters.CharFilter(method='filter_category_titles')
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
+    overdue = django_filters.BooleanFilter(method='filter_overdue')
+
     class Meta:
         model = Homework
         fields = {
             'start': ['exact', 'gte'],
             'end': ['exact', 'lt'],
             'completed': ['exact'],
-            'category': ['exact'],
+            'course__id': ['in'],
+            'category__id': ['in'],
+            'category__title': ['in'],
             'title': ['exact'],
         }
 
+    def filter_category_titles(self, queryset, name, value):
+        return queryset.filter(category__title__in=split_csv(value))
 
-class CourseGroupFilter(filters.FilterSet):
+    def filter_shown_on_calendar(self, queryset, name, value):
+        return queryset.filter(course__course_group__shown_on_calendar=value)
+
+    def filter_overdue(self, queryset, name, value):
+        now = timezone.now()
+        if value:
+            return queryset.filter(completed=False, start__lt=now)
+        else:
+            return queryset.filter(
+                Q(completed=True) |
+                Q(completed=False, start__gte=now)
+            )
+
+
+class CourseGroupFilter(django_filters.FilterSet):
     class Meta:
         model = CourseGroup
         fields = {
@@ -44,7 +75,7 @@ class CourseGroupFilter(filters.FilterSet):
         }
 
 
-class CourseFilter(filters.FilterSet):
+class CourseFilter(django_filters.FilterSet):
     class Meta:
         model = Course
         fields = {
@@ -54,7 +85,7 @@ class CourseFilter(filters.FilterSet):
         }
 
 
-class CategoryFilter(filters.FilterSet):
+class CategoryFilter(django_filters.FilterSet):
     class Meta:
         model = Category
         fields = {
@@ -63,7 +94,7 @@ class CategoryFilter(filters.FilterSet):
         }
 
 
-class ReminderFilter(filters.FilterSet):
+class ReminderFilter(django_filters.FilterSet):
     class Meta:
         model = Reminder
         fields = {
@@ -76,7 +107,7 @@ class ReminderFilter(filters.FilterSet):
         }
 
 
-class MaterialGroupFilter(filters.FilterSet):
+class MaterialGroupFilter(django_filters.FilterSet):
     class Meta:
         model = MaterialGroup
         fields = {
@@ -84,7 +115,7 @@ class MaterialGroupFilter(filters.FilterSet):
         }
 
 
-class MaterialFilter(filters.FilterSet):
+class MaterialFilter(django_filters.FilterSet):
     class Meta:
         model = Material
         fields = {

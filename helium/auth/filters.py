@@ -1,17 +1,17 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import logging
 
-from django_filters import rest_framework as filters
+import django_filters
 
 from helium.auth.models.userpushtoken import UserPushToken
 
 logger = logging.getLogger(__name__)
 
 
-class UserPushTokenFilter(filters.FilterSet):
+class UserPushTokenFilter(django_filters.FilterSet):
     class Meta:
         model = UserPushToken
         fields = {

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.2"
 
 import logging
 
@@ -22,14 +22,15 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Return all course schedules as a list of event instances.
+        Return all schedules for the given course as a list of event instances.
         """
         user = self.request.user
         try:
             course = Course.objects.get(pk=self.kwargs['course'])
             course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
+            search = request.query_params["search"].lower() if "search" in request.query_params else None
 
-            events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
+            events = coursescheduleservice.course_schedules_to_events(course, course_schedules, search)
 
             serializer = EventSerializer(events, many=True)
 
