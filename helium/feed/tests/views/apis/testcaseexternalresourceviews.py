@@ -3,7 +3,6 @@ __license__ = "MIT"
 __version__ = "1.11.54"
 
 import os
-import unittest
 from unittest import mock
 
 from django.urls import reverse
@@ -109,7 +108,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample_with_recurring.ics'), mock_urlopen)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample_with_recurring.ics'),
+                                                    mock_urlopen)
 
         # WHEN
         response = self.client.get(
@@ -201,3 +201,21 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertIn("valid ICAL", response.data[0])
         external_calendar = ExternalCalendar.objects.get(pk=external_calendar.pk)
         self.assertFalse(external_calendar.shown_on_calendar)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_external_calendar_as_events_search(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk})
+            + '?search=aLL')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], 'New Year\'s Day')
+        self.assertEqual(response.data[0]['comments'], 'all day event test')
