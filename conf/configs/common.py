@@ -181,6 +181,7 @@ SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' n
 
 HEALTH_CHECK = {
     "SUBSETS": {
+        "core": ["Database", "Cache", "Storage"],
         "db": ["Database"],
         "cache": ["Cache"],
         "storage": ["Storage"],
