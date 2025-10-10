@@ -102,5 +102,5 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
         except AttributeError:
             pass
         except IntegrityError:
-            logger.warning("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
+            logger.info("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
         return {}
