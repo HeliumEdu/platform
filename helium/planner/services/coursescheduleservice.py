@@ -111,7 +111,7 @@ def _get_events_from_cache(cached_keys, search=None):
                           calendar_item_type=event['calendar_item_type'],
                           comments=event['comments'])
 
-            if search and not (search in event.title or search in event.comments):
+            if search and not (search in event.title or (event.comments and search in event.comments)):
                 continue
 
             events.append(event)
@@ -167,7 +167,7 @@ def _create_events_from_course_schedules(course, course_schedules, search=None):
                               calendar_item_type=enums.COURSE,
                               comments=comments)
 
-                if search and not (search in event.title or search in event.comments):
+                if search and not (search in event.title or (event.comments and search in event.comments)):
                     continue
 
                 events.append(event)

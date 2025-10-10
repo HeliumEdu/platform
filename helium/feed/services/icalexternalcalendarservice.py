@@ -58,7 +58,7 @@ def _get_events_from_cache(external_calendar, cached_value, start=None, end=None
             if not ((start is None or end is None) or (event.start >= start and event.end < end)):
                 continue
 
-            if search and not (search in event.title or search in event.comments):
+            if search and not (search in event.title or (event.comments and search in event.comments)):
                 continue
 
             events.append(event)
@@ -133,7 +133,7 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
             if not ((start is None or end is None) or (event.start >= start and event.end < end)):
                 continue
 
-            if search and not (search in event.title or search in event.comments):
+            if search and not (search in event.title or (event.comments and search in event.comments)):
                 continue
 
             events_filtered.append(event)
