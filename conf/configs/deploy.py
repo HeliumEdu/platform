@@ -71,7 +71,7 @@ else:
 # Logging
 
 ROLLBAR = {
-    'access_token': config('PLATFORM_ROLLBAR_CLIENT_ITEM_ACCESS_TOKEN'),
+    'access_token': config('PLATFORM_ROLLBAR_SERVER_ITEM_ACCESS_TOKEN'),
     'environment': ENVIRONMENT,
     'branch': 'main',
     'root': BASE_DIR,
