@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.11"
 
 import json
 
@@ -50,6 +50,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.show_getting_started, response.data['settings']['show_getting_started'])
         self.assertEqual(user.settings.events_color, response.data['settings']['events_color'])
         self.assertEqual(user.settings.default_reminder_offset, response.data['settings']['default_reminder_offset'])
+        self.assertEqual(user.settings.calendar_event_limit, response.data['settings']['calendar_event_limit'])
         self.assertEqual(user.settings.default_reminder_offset_type,
                          response.data['settings']['default_reminder_offset_type'])
         self.assertEqual(user.settings.default_reminder_type, response.data['settings']['default_reminder_type'])
