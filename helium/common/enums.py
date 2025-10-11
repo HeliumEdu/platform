@@ -177,11 +177,13 @@ MONTH = 0
 WEEK = 1
 DAY = 2
 LIST = 3
+AGENDA_WEEK = 4
 VIEW_CHOICES = (
     (MONTH, 'Month'),
     (WEEK, 'Week'),
     (DAY, 'Day'),
-    (LIST, 'List')
+    (LIST, 'List'),
+    (AGENDA_WEEK, 'Agenda')
 )
 
 SUNDAY = 0
