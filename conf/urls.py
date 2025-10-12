@@ -37,7 +37,7 @@ if config.DEBUG:
 if (config.DEBUG or 'test' in sys.argv or 'pytest' not in sys.modules) and config.MEDIA_URL:
     # Ensure media files are shown properly when using a dev server
     urlpatterns += [
-        re_path(r'^' + config.MEDIA_URL.lstrip('/') + '(?P<path>.*)$', static.serve, {
+        re_path(r'^' + config.MEDIA_URL.removeprefix('/') + '(?P<path>.*)$', static.serve, {
             'document_root': config.MEDIA_ROOT
         }),
     ]
