@@ -17,7 +17,7 @@ def read(file):
     for chunk in file.chunks():
         json_str += chunk
 
-    ext = os.path.splitext(file.name)[1].lstrip('.')
+    ext = os.path.splitext(file.name)[1].removeprefix('.')
     if ext not in settings.FILE_TYPES:
         raise ValidationError(f'File type "{ext}" not supported.')
 
