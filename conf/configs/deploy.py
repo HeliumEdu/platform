@@ -4,7 +4,7 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.16"
 
 import os
 import sys
@@ -71,7 +71,7 @@ else:
 # Logging
 
 ROLLBAR = {
-    'access_token': config('PLATFORM_ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN'),
+    'access_token': config('PLATFORM_ROLLBAR_SERVER_ITEM_ACCESS_TOKEN'),
     'environment': ENVIRONMENT,
     'branch': 'main',
     'root': BASE_DIR,

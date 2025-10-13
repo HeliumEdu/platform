@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.11"
 
 import logging
 import time
@@ -36,6 +36,10 @@ class UserSettings(BaseModel):
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
+
+    calendar_event_limit = models.BooleanField(
+        help_text='Whether or not calendar events should collapse to "+ more" when a day is full.',
+        default=True)
 
     default_reminder_offset_type = models.PositiveIntegerField(
         help_text='A valid default type of time offset choice when creating a new reminder.',

@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.8"
+__version__ = "1.12.20"
 
 import os
 import socket
@@ -181,6 +181,7 @@ SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' n
 
 HEALTH_CHECK = {
     "SUBSETS": {
+        "core": ["Database", "Cache", "Storage"],
         "db": ["Database"],
         "cache": ["Cache"],
         "storage": ["Storage"],

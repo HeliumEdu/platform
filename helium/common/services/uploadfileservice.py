@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.18"
 
 import logging
 import os
@@ -17,7 +17,7 @@ def read(file):
     for chunk in file.chunks():
         json_str += chunk
 
-    ext = os.path.splitext(file.name)[1].lstrip('.')
+    ext = os.path.splitext(file.name)[1].removeprefix('.')
     if ext not in settings.FILE_TYPES:
         raise ValidationError(f'File type "{ext}" not supported.')
 

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.9"
 
 import logging
 
@@ -102,5 +102,5 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
         except AttributeError:
             pass
         except IntegrityError:
-            logger.warning("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
+            logger.info("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
         return {}
