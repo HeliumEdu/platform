@@ -68,13 +68,16 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         refresh = self.token_class(attrs["refresh"])
 
         user_id = refresh.payload.get(api_settings.USER_ID_CLAIM, None)
-        if user_id and (
-                user := get_user_model().objects.get(
-                    **{api_settings.USER_ID_FIELD: user_id}
-                )
-        ):
-            if not api_settings.USER_AUTHENTICATION_RULE(user):
-                raise PermissionDenied('Sorry, your account is no longer active.')
+        try:
+            if user_id and (
+                    user := get_user_model().objects.get(
+                        **{api_settings.USER_ID_FIELD: user_id}
+                    )
+            ):
+                if not api_settings.USER_AUTHENTICATION_RULE(user):
+                    raise PermissionDenied('Sorry, your account is no longer active.')
+        except get_user_model().DoesNotExist:
+            raise PermissionDenied('Sorry, the given token does have permissions for the given account, or the account is inactive.')
 
         data = {"access": str(refresh.access_token)}
 
