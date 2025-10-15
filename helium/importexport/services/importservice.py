@@ -286,25 +286,23 @@ def import_user(request, data):
             reminders_count)
 
 
-def _adjust_schedule_relative_today(user):
+def _adjust_schedule_relative_to(user, month):
     timezone.activate(user.settings.time_zone)
 
     try:
-        start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        days_ahead = 0 - start_of_current_month.weekday()
-        if days_ahead <= 0:
-            days_ahead += 7
-        first_monday = start_of_current_month + datetime.timedelta(days_ahead)
+        start_of_month = timezone.now().replace(month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        days_ahead = 0 - start_of_month.weekday()
+        first_monday = start_of_month + datetime.timedelta(days_ahead)
 
-        logger.info(f'Start of month adjusted to {start_of_current_month}')
+        logger.info(f'Start of month adjusted to {start_of_month}')
         logger.info(f'Start of week adjusted ahead {days_ahead} days')
         logger.info(f'First Monday set to {first_monday}')
 
         for course_group in CourseGroup.objects.for_user(user.pk).iterator():
             delta = (course_group.end_date - course_group.start_date).days
             CourseGroup.objects.filter(pk=course_group.pk).update(
-                start_date=start_of_current_month,
-                end_date=start_of_current_month + datetime.timedelta(days=delta))
+                start_date=start_of_month,
+                end_date=start_of_month + datetime.timedelta(days=delta))
 
         for homework in Homework.objects.for_user(user.pk).iterator():
             course = homework.course
@@ -345,8 +343,8 @@ def _adjust_schedule_relative_today(user):
         for course in Course.objects.for_user(user.pk).iterator():
             delta = (course.end_date - course.start_date).days
             Course.objects.filter(pk=course.pk).update(
-                start_date=start_of_current_month,
-                end_date=start_of_current_month + datetime.timedelta(days=delta))
+                start_date=start_of_month,
+                end_date=start_of_month + datetime.timedelta(days=delta))
 
             coursescheduleservice.clear_cached_course_schedule(course)
 
@@ -370,7 +368,7 @@ def import_example_schedule(user):
 
         import_user(request, data)
 
-        _adjust_schedule_relative_today(user)
+        _adjust_schedule_relative_to(user, timezone.now().month)
 
         for category in Category.objects.for_user(user.pk).iterator():
             recalculate_category_grade.delay(category.pk)
