@@ -3,9 +3,10 @@ import json
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
+from django.utils import timezone
 from rest_framework.request import Request
 
-from helium.importexport.services.importservice import import_user, _adjust_schedule_relative_today
+from helium.importexport.services.importservice import import_user, _adjust_schedule_relative_to
 from helium.planner.models import Category
 from helium.planner.tasks import recalculate_category_grade
 
@@ -14,8 +15,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("user_id", type=int, help="The user ID where the schedule will be imported")
         parser.add_argument("path", type=str, help="The Helium schedule file to import")
-        parser.add_argument("--adjust-dates", action="store_true",
-                            help="Adjust dates in the imported schedule relative to today (as is done with the example schedule when a new user registers)")
+        parser.add_argument("--adjust-dates", type=int, default=-1,
+                            help="Adjust dates in the imported schedule relative this many months (the default is -1, which is what happens with the example schedule for a new user registration")
 
     def handle(self, *args, **options):
         user_id = options['user_id']
@@ -33,8 +34,8 @@ class Command(BaseCommand):
 
             import_user(request, data)
 
-            if adjust_dates:
-                _adjust_schedule_relative_today(user)
+            if adjust_dates is not None:
+                _adjust_schedule_relative_to(user, timezone.now().month + adjust_dates)
 
             for category in Category.objects.for_user(user.pk).iterator():
                 recalculate_category_grade.delay(category.pk)

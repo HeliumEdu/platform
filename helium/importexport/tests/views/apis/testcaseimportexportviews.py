@@ -7,6 +7,7 @@ import json
 import logging
 import os
 
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
@@ -340,7 +341,8 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        start_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(
+            months=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 2)
@@ -354,8 +356,8 @@ class TestCaseImportExportViews(APITestCase):
 
         homework1 = Homework.objects.all()[0]
         reminder = Reminder.objects.all()[0]
-        self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_current_month.date())
-        self.assertEqual(Course.objects.all()[0].start_date, start_of_current_month.date())
+        self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_month.date())
+        self.assertEqual(Course.objects.all()[0].start_date, start_of_month.date())
         self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
             days=(homework1.start.date() - homework1.course.start_date).days))
         self.assertEqual(reminder.start_of_range.date(), reminder.homework.start.date())
