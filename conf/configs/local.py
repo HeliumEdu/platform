@@ -11,6 +11,7 @@ import warnings
 
 from conf.configcache import config
 from conf.configs import common
+from conf.configs.common import PROJECT_NAME
 
 # Define the base working directory of the application
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
@@ -38,6 +39,11 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += (
 # Project configuration
 
 SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'True') == 'True'
+
+# Email settings
+
+EMAIL_ADDRESS = f'contact@dev-local.heliumedu.com'
+DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 
 # Security
 
