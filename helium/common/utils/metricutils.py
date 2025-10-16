@@ -78,7 +78,7 @@ def request_stop(metrics, request, response):
         metrics['Request-Metric-Millis'] = int(time.time() * 1000) - metrics['Request-Metric-Start']
 
         increment('request', request=request, response=response, extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
-        timing('request', metrics['Request-Metric-Millis'], extra_tags=f"path:{metrics['Request-Metric-ID']}")
+        timing('request', metrics['Request-Metric-Millis'], extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
 
         for name, value in metrics.items():
             response.headers[name] = (name, str(value))
@@ -103,6 +103,6 @@ def task_stop(metrics, value=1, user=None):
         metrics['Task-Metric-Millis'] = int(time.time() * 1000) - metrics['Task-Metric-Start']
 
         increment('task', user=user, value=value, extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
-        timing('task', metrics['Task-Metric-Millis'], extra_tags=metrics[f"path:{metrics['Task-Metric-ID']}"])
+        timing('task', metrics['Task-Metric-Millis'], extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
