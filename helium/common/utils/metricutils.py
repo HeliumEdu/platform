@@ -63,7 +63,7 @@ def timing(metric, value, extra_tags=None):
 
 def request_start(request):
     try:
-        metric_id = f"request{re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))}".rstrip(".")
+        metric_id = f"{re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))}".rstrip(".")
 
         return {
             'Request-Metric-ID': metric_id,
@@ -77,8 +77,8 @@ def request_stop(metrics, request, response):
     try:
         metrics['Request-Metric-Millis'] = int(time.time() * 1000) - metrics['Request-Metric-Start']
 
-        increment(metrics['Request-Metric-ID'], request=request, response=response)
-        timing(metrics['Request-Metric-ID'], metrics['Request-Metric-Millis'])
+        increment('request', request=request, response=response, extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
+        timing('request', metrics['Request-Metric-Millis'], extra_tags=f"path:{metrics['Request-Metric-ID']}")
 
         for name, value in metrics.items():
             response.headers[name] = (name, str(value))
@@ -88,7 +88,7 @@ def request_stop(metrics, request, response):
 
 def task_start(task_name):
     try:
-        metric_id = f"task.{task_name}"
+        metric_id = f"{task_name}"
 
         return {
             'Task-Metric-ID': metric_id,
@@ -102,7 +102,7 @@ def task_stop(metrics):
     try:
         metrics['Task-Metric-Millis'] = int(time.time() * 1000) - metrics['Task-Metric-Start']
 
-        increment(metrics['Task-Metric-ID'])
-        timing(metrics['Task-Metric-ID'], metrics['Task-Metric-Millis'])
+        increment('task', extra_tags=[f"path:{metrics['Task-Metric-ID']}"])
+        timing('task', metrics['Task-Metric-Millis'], extra_tags=metrics[f"path:{metrics['Task-Metric-ID']}"])
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)
