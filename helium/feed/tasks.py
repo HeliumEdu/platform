@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.12.39"
 
 import logging
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @app.task(soft_time_limit=settings.CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT)
 def reindex_feeds():
-    metrics = metricutils.task_start("reindex_feed")
+    metrics = metricutils.task_start("feed.reindex")
 
     icalexternalcalendarservice.reindex_stale_feed_caches()
 
