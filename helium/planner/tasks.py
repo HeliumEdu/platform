@@ -24,13 +24,12 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def recalculate_course_group_grade(course_group_id, retries=0):
-
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         course_group = CourseGroup.objects.get(pk=course_group_id)
 
-        metricutils.increment('task.grading.recalculate.course-group', user=course_group.user)
+        metricutils.increment('grade.recalculate.course-group', user=course_group.user)
         gradingservice.recalculate_course_group_grade(course_group)
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
@@ -54,7 +53,7 @@ def recalculate_course_grade(course_id, retries=0):
     try:
         course = Course.objects.get(pk=course_id)
 
-        metricutils.increment('task.grading.recalculate.course', user=course.get_user())
+        metricutils.increment('grade.recalculate.course', user=course.get_user())
 
         gradingservice.recalculate_course_grade(course)
 
@@ -106,7 +105,7 @@ def recalculate_category_grade(category_id, retries=0):
     try:
         category = Category.objects.get(pk=category_id)
 
-        metricutils.increment('task.grading.recalculate.category', user=category.get_user())
+        metricutils.increment('grade.recalculate.category', user=category.get_user())
 
         gradingservice.recalculate_category_grade(category)
 
@@ -222,7 +221,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                          },
                                          subject, [email])
 
-        metricutils.increment('task.email.reminder.sent', user=reminder.user)
+        metricutils.increment('task', user=reminder.user, extra_tags=['name:email.reminder.sent'])
     except:
         logger.error("An unknown error occurred.", exc_info=True)
 

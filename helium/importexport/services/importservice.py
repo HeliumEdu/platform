@@ -13,6 +13,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
+from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.planner.models import CourseGroup, Course, Homework, Event, Category
 from helium.planner.serializers.categoryserializer import CategorySerializer
@@ -280,6 +281,8 @@ def import_user(request, data):
     homework_remap = _import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
     reminders_count = _import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
+
+    metricutils.increment("user.import.schedule")
 
     return (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
             len(category_remap), len(material_group_remap), len(material_remap), len(event_remap), len(homework_remap),
