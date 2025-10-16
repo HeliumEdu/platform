@@ -61,7 +61,7 @@ def process_email_reminders():
 
                     logger.info(f'Sending email reminder {reminder.pk} for user {user.pk}')
 
-                    metricutils.increment('task.reminder.queue.email', user=user)
+                    metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
 
                     send_email_reminder.delay(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type)
             else:
@@ -92,7 +92,7 @@ def process_text_reminders():
                 else:
                     logger.info(f'Sending text reminder {reminder.pk} for user {user.pk}')
 
-                    metricutils.increment('task.reminder.queue.text', user=user)
+                    metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.text'])
 
                     send_text.delay(user.profile.phone, message)
             else:
@@ -124,7 +124,7 @@ def process_push_reminders():
                 push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
 
                 if len(push_tokens) > 0:
-                    metricutils.increment('task.reminder.queue.push', value=len(push_tokens), user=reminder.user)
+                    metricutils.increment('task', value=len(push_tokens), user=reminder.user, extra_tags=['name:reminder.queue.push'])
 
                     send_pushes.delay(push_tokens, user.username, subject, reminder.message)
                 else:
