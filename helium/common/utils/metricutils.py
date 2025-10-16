@@ -63,7 +63,7 @@ def timing(metric, value, extra_tags=None):
 
 def request_start(request):
     try:
-        metric_id = f"{re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))}".rstrip(".")
+        metric_id = re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))).strip(".")
 
         return {
             'Request-Metric-ID': metric_id,
