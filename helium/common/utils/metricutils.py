@@ -98,11 +98,11 @@ def task_start(task_name):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def task_stop(metrics):
+def task_stop(metrics, value=1, user=None):
     try:
         metrics['Task-Metric-Millis'] = int(time.time() * 1000) - metrics['Task-Metric-Start']
 
-        increment('task', extra_tags=[f"path:{metrics['Task-Metric-ID']}"])
+        increment('task', user=user, value=value, extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
         timing('task', metrics['Task-Metric-Millis'], extra_tags=metrics[f"path:{metrics['Task-Metric-ID']}"])
     except Exception as e:
         logger.error("An error occurred while emitting metrics", exc_info=True)

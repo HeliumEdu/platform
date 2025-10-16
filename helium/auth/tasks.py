@@ -35,7 +35,7 @@ def send_verification_email(email, username, verification_code):
 
     logger.debug(f"Verification email with code \"{verification_code}\" sent to {username}")
 
-    metricutils.increment('task.email.verification.sent')
+    metricutils.increment('task', extra_tags=['name:email.verification.sent'])
 
 
 @app.task
@@ -53,7 +53,7 @@ def send_registration_email(email):
 
     logger.debug(f"Registration email sent to {email}")
 
-    metricutils.increment('task.email.registration.sent')
+    metricutils.increment('task', extra_tags=['name:email.registration.sent'])
 
 
 @app.task
@@ -72,15 +72,16 @@ def send_password_reset_email(email, temp_password):
 
     logger.debug(f"Password reset email sent to {email}")
 
-    metricutils.increment('task.email.password-reset.sent')
+    metricutils.increment('task', extra_tags=['name:email.password-reset.sent'])
 
 
 @app.task
 def delete_user(user_id):
-    metrics = metricutils.task_start("delete_user")
+    metrics = metricutils.task_start("user.delete")
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
+    user = None
     try:
         user = get_user_model().objects.get(pk=user_id)
 
@@ -92,13 +93,13 @@ def delete_user(user_id):
         for token in outstanding_tokens + blacklisted_tokens:
             token.delete()
 
-        metricutils.increment('task.user.deleted', user=user)
+        value = 1
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
-        return
+        value = 0
 
-    metricutils.task_stop(metrics)
+    metricutils.task_stop(metrics, user=user, value=value)
 
 
 @app.task
@@ -106,27 +107,26 @@ def blacklist_refresh_token(token):
     try:
         RefreshToken(token).blacklist()
 
-        metricutils.increment('task.token.refresh.blacklisted')
+        metricutils.increment('task', extra_tags=['name:token.refresh.blacklist'])
     except TokenError:
         logger.info('Skipping, token is already blacklisted.')
 
 
 @app.task
 def purge_refresh_tokens():
-    metrics = metricutils.task_start("purge_refresh_tokens")
+    metrics = metricutils.task_start("token.refresh.purge")
 
     deleted, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
-    metricutils.increment('task.token.refresh.purged', value=num_deleted)
-
-    metricutils.task_stop(metrics)
+    metricutils.task_stop(metrics, value=num_deleted)
 
 
 @app.task
 def purge_unverified_users():
-    metrics = metricutils.task_start("purge_unverified_users")
+    metrics = metricutils.task_start("user.unverified.purge")
 
+    num_purged = 0
     for user in get_user_model().objects.filter(
             is_active=False,
             created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
@@ -136,9 +136,9 @@ def purge_unverified_users():
 
         user.delete()
 
-        metricutils.increment('task.purge.unverified-user')
+        num_purged += 1
 
-    metricutils.task_stop(metrics)
+    metricutils.task_stop(metrics, value=num_purged)
 
 
 @app.on_after_finalize.connect
