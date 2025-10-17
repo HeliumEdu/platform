@@ -11,7 +11,7 @@ import sys
 
 from conf.configcache import config
 from conf.configs import common
-from conf.configs.common import ENVIRONMENT, PROJECT_VERSION
+from conf.configs.common import ENVIRONMENT
 from conf.utils import strip_scheme
 
 # Define the base working directory of the application
@@ -75,7 +75,6 @@ ROLLBAR = {
     'environment': ENVIRONMENT,
     'branch': 'main',
     'root': BASE_DIR,
-    'code_version': PROJECT_VERSION
 }
 
 if not common.DEBUG:
