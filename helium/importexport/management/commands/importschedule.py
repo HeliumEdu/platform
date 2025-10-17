@@ -15,13 +15,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("user_id", type=int, help="The user ID where the schedule will be imported")
         parser.add_argument("path", type=str, help="The Helium schedule file to import")
-        parser.add_argument("--adjust-dates", type=int, default=-1,
-                            help="Adjust dates in the imported schedule relative this many months (the default is -1, which is what happens with the example schedule for a new user registration")
+        parser.add_argument("--adjust-month", type=int, default=-1,
+                            help="Adjust month in the imported schedule relative this many months (the default is -1, which is what happens with the example schedule for a new user registration")
 
     def handle(self, *args, **options):
         user_id = options['user_id']
         path = options['path']
-        adjust_dates = options['adjust_dates']
+        adjust_month = options['adjust_month']
 
         user = get_user_model().objects.get(pk=user_id)
 
@@ -34,8 +34,11 @@ class Command(BaseCommand):
 
             import_user(request, data)
 
-            if adjust_dates is not None:
-                _adjust_schedule_relative_to(user, timezone.now().month + adjust_dates)
+            if adjust_month is not None:
+                adjusted_month = timezone.now().month + adjust_month
+                if adjusted_month == 0:
+                    adjusted_month = 12
+                _adjust_schedule_relative_to(user, adjusted_month)
 
             for category in Category.objects.for_user(user.pk).iterator():
                 recalculate_category_grade.delay(category.pk)
