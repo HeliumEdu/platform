@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.30"
+__version__ = "1.13.0"
 
 import datetime
 import json
@@ -348,8 +348,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 2)
         self.assertEqual(CourseSchedule.objects.count(), 2)
         self.assertEqual(Category.objects.count(), 11)
-        self.assertEqual(MaterialGroup.objects.count(), 1)
-        self.assertEqual(Material.objects.count(), 4)
+        self.assertEqual(MaterialGroup.objects.count(), 2)
+        self.assertEqual(Material.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 22)
         self.assertEqual(Reminder.objects.count(), 5)
         self.assertEqual(Event.objects.count(), 0)
