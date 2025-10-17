@@ -68,7 +68,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login']
     search_fields = ('user__email', 'user__username')
-    ordering = ('user__username',)
+    ordering = ('-user__last_login',)
     readonly_fields = ('user',)
 
     def has_add_permission(self, request):
@@ -89,13 +89,14 @@ class UserProfileAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
     get_last_login.short_description = 'Last Login'
+    get_last_login.admin_order_field = 'user__last_login'
 
 
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'receive_emails_from_admin', 'get_last_login']
     list_filter = ['default_view', 'week_starts_on', 'receive_emails_from_admin']
     search_fields = ('user__email', 'user__username')
-    ordering = ('user__username',)
+    ordering = ('-user__last_login',)
     readonly_fields = ('user',)
 
     def get_user(self, obj):
@@ -116,12 +117,14 @@ class UserSettingsAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
     get_last_login.short_description = 'Last Login'
+    get_last_login.admin_order_field = 'user__last_login'
 
 
 class UserPushTokenAdmin(BaseModelAdmin):
     list_display = ['get_user', 'device_id', 'token', 'get_last_login']
     search_fields = ('user__email', 'user__username')
-    ordering = ('user__username',)
+    ordering = ('-user__last_login',)
+    readonly_fields = ('user',)
 
     def get_user(self, obj):
         if obj.user:
@@ -138,6 +141,7 @@ class UserPushTokenAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
     get_last_login.short_description = 'Last Login'
+    get_last_login.admin_order_field = 'user__last_login'
 
 
 # Register the models in the Admin
