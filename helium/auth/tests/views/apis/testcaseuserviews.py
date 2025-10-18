@@ -51,6 +51,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.events_color, response.data['settings']['events_color'])
         self.assertEqual(user.settings.default_reminder_offset, response.data['settings']['default_reminder_offset'])
         self.assertEqual(user.settings.calendar_event_limit, response.data['settings']['calendar_event_limit'])
+        self.assertEqual(user.settings.remember_filter_state, response.data['settings']['remember_filter_state'])
         self.assertEqual(user.settings.default_reminder_offset_type,
                          response.data['settings']['default_reminder_offset_type'])
         self.assertEqual(user.settings.default_reminder_type, response.data['settings']['default_reminder_type'])

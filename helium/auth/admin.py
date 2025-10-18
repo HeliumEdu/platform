@@ -47,8 +47,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     list_display = ('email', 'username', 'created_at', 'last_login', 'is_active')
     list_filter = (
-        'is_active', 'profile__phone_verified', 'settings__default_view', 'settings__calendar_event_limit',
-        'settings__default_reminder_type')
+        'is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
+        'settings__calendar_event_limit', 'settings__default_reminder_type')
     search_fields = ('email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
@@ -96,8 +96,8 @@ class UserProfileAdmin(BaseModelAdmin):
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'receive_emails_from_admin',
                     'get_last_login']
-    list_filter = ['default_view', 'week_starts_on', 'calendar_event_limit', 'default_reminder_type',
-                   'receive_emails_from_admin']
+    list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
+                   'default_reminder_type', 'receive_emails_from_admin']
     search_fields = ('user__email', 'user__username')
     ordering = ('-user__last_login',)
     readonly_fields = ('user',)
