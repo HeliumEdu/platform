@@ -339,10 +339,16 @@ class TestCaseImportExportViews(APITestCase):
                                                 'time_zone': 'America/Chicago'}),
                                     content_type='application/json')
 
+        # GIVEN
+        adjusted_month = timezone.now().replace(month=timezone.now().month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        days_ahead = 0 - adjusted_month.weekday()
+        if days_ahead < 0:
+            days_ahead += 7
+        first_monday = adjusted_month + datetime.timedelta(days_ahead)
+
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # TODO: fix start day to be dynamic
-        start_of_month = timezone.now().replace(day=6, hour=0, minute=0, second=0, microsecond=0) - relativedelta(
+        start_of_month = timezone.now().replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0) - relativedelta(
             months=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
