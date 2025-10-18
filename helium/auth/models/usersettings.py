@@ -54,6 +54,10 @@ class UserSettings(BaseModel):
         help_text='Whether or not the `email` on file should receive bulletin emails.',
         default=True)
 
+    remember_filter_state = models.BooleanField(
+        help_text='Remember filter states for the Calendar within a session.',
+        default=True)
+
     private_slug = models.SlugField(blank=True, null=True)
 
     mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
