@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from conf.celery import app
 from helium.common import enums
+from helium.common.models import BaseModel
 from helium.common.utils import commonutils
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course, Category, Event, Homework
@@ -24,13 +25,13 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def recalculate_course_group_grade(course_group_id, retries=0):
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     try:
         course_group = CourseGroup.objects.get(pk=course_group_id)
 
-        metricutils.increment('grade.recalculate.course-group', user=course_group.user)
         gradingservice.recalculate_course_group_grade(course_group)
+
+        metricutils.increment('grade.recalculate.course-group', user=course_group.user,
+                              extra_tags=[f"retries:{retries}"])
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -42,22 +43,20 @@ def recalculate_course_group_grade(course_group_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
-    except CourseGroup.DoesNotExist:
-        logger.info(f"CourseGroup {course_group_id} does not exist. Nothing to do.")
+    except BaseModel.DoesNotExist:
+        logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
 
 
 @app.task
 def recalculate_course_grade(course_id, retries=0):
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
+    course = None
+
     try:
         course = Course.objects.get(pk=course_id)
 
-        metricutils.increment('grade.recalculate.course', user=course.get_user())
-
         gradingservice.recalculate_course_grade(course)
 
-        recalculate_course_group_grade(course.course_group.pk)
+        metricutils.increment('grade.recalculate.course', user=course.get_user(), extra_tags=[f"retries:{retries}"])
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -69,31 +68,22 @@ def recalculate_course_grade(course_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
-    except Course.DoesNotExist:
-        logger.info(f"Course {course_id} does not exist. Nothing to do.")
+
+        course = None
+    except BaseModel.DoesNotExist:
+        logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
+
+    if course:
+        recalculate_course_group_grade(course.course_group.pk)
 
 
 @app.task
 def recalculate_category_grades_for_course(course_id, retries=0):
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     try:
         course = Course.objects.get(pk=course_id)
 
         for category in course.categories.iterator():
             recalculate_category_grade(category.pk)
-    except IntegrityError as ex:  # pragma: no cover
-        if retries < settings.DB_INTEGRITY_RETRIES:
-            # This error is common when importing schedules, as async tasks may come in different orders
-            logger.warning(
-                "Integrity error occurred, delaying before retrying `recalculate_category_grades_for_course` task")
-
-            recalculate_category_grades_for_course.apply_async((course_id, retries + 1),
-                                                               countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
-        else:
-            raise ex
-    except Category.DoesNotExist:
-        logger.info(f"Category does not exist. Nothing to do.")
     except Course.DoesNotExist:
         logger.info(f"Course {course_id} does not exist. Nothing to do.")
 
@@ -105,11 +95,11 @@ def recalculate_category_grade(category_id, retries=0):
     try:
         category = Category.objects.get(pk=category_id)
 
-        metricutils.increment('grade.recalculate.category', user=category.get_user())
-
         gradingservice.recalculate_category_grade(category)
 
         recalculate_course_grade(category.course.pk)
+
+        metricutils.increment('grade.recalculate.category', user=category.get_user(), extra_tags=[f"retries:{retries}"])
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -121,12 +111,8 @@ def recalculate_category_grade(category_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
-    except CourseGroup.DoesNotExist:
-        logger.info(f"CourseGroup does not exist. Nothing to do.")
-    except Course.DoesNotExist:
-        logger.info(f"Course does not exist. Nothing to do.")
-    except Category.DoesNotExist:
-        logger.info(f"Category {category_id} does not exist. Nothing to do.")
+    except BaseModel.DoesNotExist:
+        logger.info(f"Category {category_id}, or an associated resource, does not exist. Nothing to do.")
 
 
 @app.task
