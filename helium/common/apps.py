@@ -34,7 +34,8 @@ class CommonConfig(AppConfig):
     def init_ngrok(self):
         if settings.USE_NGROK:
             # pyngrok will only be installed, and should only ever be initialized, in a dev environment
-            from pyngrok import ngrok
+            from pyngrok import ngrok, installer
+            from pyngrok.conf import DEFAULT_NGROK_CONFIG_PATH
 
             # Get the dev server port (defaults to 8000 for Django, can be overridden with the
             # last arg when calling `runserver`)
@@ -42,7 +43,13 @@ class CommonConfig(AppConfig):
             port = addrport.port if addrport.netloc and addrport.port else 8000
 
             # Open a ngrok tunnel to the dev server
-            public_url = ngrok.connect(port).public_url
+            config = installer.get_ngrok_config(DEFAULT_NGROK_CONFIG_PATH)
+            if "tunnels" not in config or "heliumedu" not in config["tunnels"]:
+                print("ERROR:  Tunnel 'heliumedu' is not defined in the config files.")
+                print(f"ERROR:  Config files read: [{DEFAULT_NGROK_CONFIG_PATH}]")
+                sys.exit(1)
+            frontend_ngrok_domain = config["tunnels"]["heliumedu"]["domain"]
+            public_url = ngrok.connect(name="heliumedu", addr=port, domain=f"api.{frontend_ngrok_domain}").public_url
             print(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
 
     def init_firebase(self):
