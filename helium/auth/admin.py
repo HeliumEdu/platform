@@ -3,6 +3,7 @@ __license__ = "MIT"
 __version__ = "1.13.7"
 
 from django import forms
+from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
@@ -41,14 +42,32 @@ class AdminUserCreationForm(UserCreationForm):
         return self.instance
 
 
+class HasWeightedGradingFilter(SimpleListFilter):
+    title = 'Has Weighted Grading'
+    parameter_name = 'has_weighted_grading'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(course_groups__courses__categories__weight__gt=0)
+        elif self.value() == 'no':
+            return queryset.filter(course_groups__courses__categories__weight=0)
+        else:
+            return queryset
+
+
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
     list_display = ('email', 'username', 'created_at', 'last_login', 'is_active')
-    list_filter = (
-        'is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-        'settings__calendar_event_limit', 'settings__default_reminder_type')
+    list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
+                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter)
     search_fields = ('email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (

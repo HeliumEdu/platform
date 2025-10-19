@@ -7,7 +7,7 @@ from helium.feed.models import ExternalCalendar
 
 
 class ExternalCalendarAdmin(BaseModelAdmin):
-    list_display = ['title', 'url', 'color', 'shown_on_calendar', 'get_user', ]
+    list_display = ['title', 'url', 'color', 'shown_on_calendar', 'last_index', 'get_user', ]
     list_filter = ['shown_on_calendar']
     ordering = ('user__username',)
     autocomplete_fields = ('user',)
