@@ -1,13 +1,13 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.13.14"
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.feed.models import ExternalCalendar
 
 
 class ExternalCalendarAdmin(BaseModelAdmin):
-    list_display = ['title', 'url', 'color', 'shown_on_calendar', 'get_user', ]
+    list_display = ['title', 'url', 'color', 'shown_on_calendar', 'last_index', 'get_user', ]
     list_filter = ['shown_on_calendar']
     ordering = ('user__username',)
     autocomplete_fields = ('user',)
