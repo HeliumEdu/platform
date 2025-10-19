@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.11"
+__version__ = "1.13.7"
 
 import logging
 import time
@@ -52,6 +52,10 @@ class UserSettings(BaseModel):
 
     receive_emails_from_admin = models.BooleanField(
         help_text='Whether or not the `email` on file should receive bulletin emails.',
+        default=True)
+
+    remember_filter_state = models.BooleanField(
+        help_text='Remember filter states for the Calendar within a session.',
         default=True)
 
     private_slug = models.SlugField(blank=True, null=True)
