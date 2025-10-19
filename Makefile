@@ -82,6 +82,16 @@ build-docker:
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
+	@if [ -n "$$PLATFORM_RESOURCE_IMAGE" ]; then \
+        docker pull $$PLATFORM_RESOURCE_IMAGE; \
+  	fi
+	@if [ -n "$$PLATFORM_API_IMAGE" ]; then \
+        docker pull $$PLATFORM_API_IMAGE; \
+  	fi
+	@if [ -n "$$PLATFORM_WORKER_IMAGE" ]; then \
+        docker pull $$PLATFORM_WORKER_IMAGE; \
+  	fi
+
 	docker compose up -d
 
 stop-docker: docker-env
