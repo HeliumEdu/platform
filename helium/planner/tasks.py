@@ -7,12 +7,12 @@ import logging
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils import timezone
 
 from conf.celery import app
 from helium.common import enums
-from helium.common.models import BaseModel
 from helium.common.utils import commonutils
 from helium.common.utils import metricutils
 from helium.planner.models import CourseGroup, Course, Category, Event, Homework
@@ -43,7 +43,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
-    except BaseModel.DoesNotExist:
+    except ObjectDoesNotExist:
         logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
 
 
@@ -70,7 +70,7 @@ def recalculate_course_grade(course_id, retries=0):
         logger.info(f"User does not exist. Nothing to do.")
 
         course = None
-    except BaseModel.DoesNotExist:
+    except ObjectDoesNotExist:
         logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
 
     if course:
@@ -111,7 +111,7 @@ def recalculate_category_grade(category_id, retries=0):
             raise ex
     except get_user_model().DoesNotExist:
         logger.info(f"User does not exist. Nothing to do.")
-    except BaseModel.DoesNotExist:
+    except ObjectDoesNotExist:
         logger.info(f"Category {category_id}, or an associated resource, does not exist. Nothing to do.")
 
 
