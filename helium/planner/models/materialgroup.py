@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.13.15"
 
 from django.conf import settings
 from django.db import models
@@ -28,3 +28,7 @@ class MaterialGroup(BaseModel):
 
     def get_user(self):
         return self.user
+
+    @property
+    def num_materials(self) -> int:
+        return self.materials.count()

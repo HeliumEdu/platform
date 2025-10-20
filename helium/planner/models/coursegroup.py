@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.13.15"
 
 import datetime
 
@@ -62,3 +62,7 @@ class CourseGroup(BaseModel):
     @property
     def num_homework_graded(self) -> int:
         return self.courses.num_homework_graded()
+
+    @property
+    def num_attachments(self):
+        return self.courses.num_attachments()

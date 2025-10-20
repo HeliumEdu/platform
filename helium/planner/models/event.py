@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.13.15"
 
 from django.conf import settings
 from django.db import models
@@ -33,3 +33,11 @@ class Event(BaseCalendar):
     @property
     def calendar_item_type(self) -> int:
         return self.__calendar_item_type
+
+    @property
+    def num_reminders(self) -> int:
+        return self.reminders.count()
+
+    @property
+    def num_attachments(self) -> int:
+        return self.attachments.count()
