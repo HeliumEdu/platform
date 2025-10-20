@@ -6,7 +6,7 @@ import logging
 
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from helium.auth.models.userprofile import UserProfile
 from helium.auth.models.usersettings import UserSettings
@@ -20,6 +20,15 @@ class UserQuerySet(models.query.QuerySet):
 
     def phone_verification_code_used(self, phone_verification_code):
         return self.filter(profile__phone_verification_code=phone_verification_code).exists()
+
+    def num_homework(self):
+        return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
+
+    def num_events(self):
+        return self.aggregate(events_count=Count('events'))['event_count']
+
+    def num_attachments(self):
+        return self.aggregate(attachments_count=Count('attachments'))['attachments_count']
 
 
 class UserManager(BaseUserManager):
@@ -93,3 +102,12 @@ class UserManager(BaseUserManager):
 
     def phone_verification_code_used(self, phone_verification_code):
         return self.get_queryset().phone_verification_code_used(phone_verification_code)
+
+    def num_homework(self):
+        return self.get_queryset().num_homework()
+
+    def num_events(self):
+        return self.get_queryset().num_events()
+
+    def num_attachments(self):
+        return self.get_queryset().num_attachments()

@@ -91,3 +91,15 @@ class User(AbstractBaseUser, BaseModel):
         :return: True if the user is an admin, False otherwise
         """
         return self.is_superuser
+
+    @property
+    def num_homework(self) -> int:
+        return self.course_groups.num_homework()
+
+    @property
+    def num_events(self) -> int:
+        return self.events.count()
+
+    @property
+    def num_attachments(self) -> int:
+        return self.attachments.count()
