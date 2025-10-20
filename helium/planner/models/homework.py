@@ -41,6 +41,14 @@ class Homework(BaseCalendar):
     def calendar_item_type(self) -> int:
         return enums.HOMEWORK
 
+    @property
+    def num_reminders(self) -> int:
+        return self.reminders.count()
+
+    @property
+    def num_attachments(self) -> int:
+        return self.attachments.count()
+
     def save(self, *args, **kwargs):
         """
         Saves the current instance.

@@ -60,7 +60,7 @@ class AttachmentAdmin(BaseModelAdmin):
 
 
 class CourseGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'get_user',)
+    list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'num_homework', 'num_attachments', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
     autocomplete_fields = ('user',)
@@ -95,9 +95,9 @@ class HasAttachmentFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count__gt=0)
+            return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count=0)
+            return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count=0).distinct()
         else:
             return queryset
 
@@ -114,15 +114,15 @@ class CourseHasWeightedGradingFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(categories__weight__gt=0)
+            return queryset.filter(categories__weight__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.filter(categories__weight=0)
+            return queryset.filter(categories__weight=0).distinct()
         else:
             return queryset
 
 
 class CourseAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'start_date', 'get_user',)
+    list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_attachments', 'get_user',)
     list_filter = ('course_group__shown_on_calendar', CourseHasWeightedGradingFilter, HasAttachmentFilter)
     search_fields = ('title', 'course_group__user__username',)
     autocomplete_fields = ('course_group',)
@@ -163,15 +163,15 @@ class CategoryHasWeightedGradingFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(weight__gt=0)
+            return queryset.filter(weight__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.filter(weight=0)
+            return queryset.filter(weight=0).distinct()
         else:
             return queryset
 
 
 class CategoryAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'updated_at', 'weight', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'updated_at', 'weight', 'num_homework', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', CategoryHasWeightedGradingFilter)
     search_fields = ('title', 'course__course_group__user__username',)
     autocomplete_fields = ('course',)
@@ -215,15 +215,15 @@ class HasReminderFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count__gt=0)
+            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count=0)
+            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count=0).distinct()
         else:
             return queryset
 
 
 class EventAdmin(BaseModelAdmin):
-    list_display = ('title', 'start', 'get_user',)
+    list_display = ('title', 'start', 'num_reminders', 'num_attachments', 'get_user',)
     list_filter = (HasReminderFilter, HasAttachmentFilter)
     search_fields = ('title', 'user__username',)
     autocomplete_fields = ('user',)
@@ -255,15 +255,15 @@ class HomeworkHasWeightedGradingFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(course__categories__weight__gt=0)
+            return queryset.filter(course__categories__weight__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.filter(course__categories__weight=0)
+            return queryset.filter(course__categories__weight=0).distinct()
         else:
             return queryset
 
 
 class HomeworkAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'start', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'start', 'num_reminders', 'num_attachments', 'get_user',)
     list_filter = ('completed', 'course__course_group__shown_on_calendar', HomeworkHasWeightedGradingFilter,
                    HasReminderFilter, HasAttachmentFilter)
     search_fields = ('title', 'course__course_group__user__username',)
@@ -297,7 +297,7 @@ class HomeworkAdmin(BaseModelAdmin):
 
 
 class MaterialGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'shown_on_calendar', 'get_user',)
+    list_display = ('title', 'updated_at', 'shown_on_calendar', 'num_materials', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
     autocomplete_fields = ('user',)

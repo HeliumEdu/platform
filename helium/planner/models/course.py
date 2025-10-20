@@ -83,3 +83,7 @@ class Course(BaseModel):
     @property
     def num_homework_graded(self) -> int:
         return self.homework.graded().count()
+
+    @property
+    def num_attachments(self):
+        return self.attachments.count()

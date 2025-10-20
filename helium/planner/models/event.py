@@ -33,3 +33,11 @@ class Event(BaseCalendar):
     @property
     def calendar_item_type(self) -> int:
         return self.__calendar_item_type
+
+    @property
+    def num_reminders(self) -> int:
+        return self.reminders.count()
+
+    @property
+    def num_attachments(self) -> int:
+        return self.attachments.count()
