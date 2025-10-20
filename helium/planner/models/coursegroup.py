@@ -62,3 +62,7 @@ class CourseGroup(BaseModel):
     @property
     def num_homework_graded(self) -> int:
         return self.courses.num_homework_graded()
+
+    @property
+    def num_attachments(self):
+        return self.courses.num_attachments()

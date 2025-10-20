@@ -28,3 +28,7 @@ class MaterialGroup(BaseModel):
 
     def get_user(self):
         return self.user
+
+    @property
+    def num_materials(self) -> int:
+        return self.materials.count()
