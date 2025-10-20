@@ -54,9 +54,9 @@ class HasWeightedGradingFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(course_groups__courses__categories__weight__gt=0)
+            return queryset.filter(course_groups__courses__categories__weight__gt=0).distinct()
         elif self.value() == 'no':
-            return queryset.filter(course_groups__courses__categories__weight=0)
+            return queryset.filter(course_groups__courses__categories__weight=0).distinct()
         else:
             return queryset
 
@@ -65,7 +65,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'username', 'created_at', 'last_login', 'is_active')
+    list_display = ('email', 'username', 'created_at', 'last_login', 'num_homework', 'num_events', 'num_attachments',
+                    'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter)
     search_fields = ('email', 'username')

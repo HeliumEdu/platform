@@ -41,6 +41,9 @@ class CourseQuerySet(BaseQuerySet):
             homework_count=Count(Case(
                 When(Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), then=1))))['homework_count']
 
+    def num_attachments(self):
+        return self.aggregate(attachments_count=Count('attachments'))['attachments_count']
+
 
 class CourseManager(BaseManager):
     def get_queryset(self):
@@ -69,3 +72,6 @@ class CourseManager(BaseManager):
 
     def num_homework_graded(self):
         return self.get_queryset().num_homework_graded()
+
+    def num_attachments(self):
+        return self.get_queryset().num_attachments()

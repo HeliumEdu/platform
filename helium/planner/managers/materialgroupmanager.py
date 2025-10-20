@@ -4,6 +4,8 @@ __version__ = "1.11.54"
 
 import logging
 
+from django.db.models import Count
+
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,9 @@ class MaterialGroupQuerySet(BaseQuerySet):
     def for_user(self, user_id):
         return self.filter(user_id=user_id)
 
+    def num_materials(self):
+        return self.aggregate(materials_count=Count('materials'))['materials_count']
+
 
 class MaterialGroupManager(BaseManager):
     def get_queryset(self):
@@ -26,3 +31,6 @@ class MaterialGroupManager(BaseManager):
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
+
+    def num_materials(self):
+        return self.get_queryset().num_materials()
