@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.31"
+__version__ = "1.14.0"
 
 import os
 import socket
@@ -324,7 +324,7 @@ if 'local' in ENVIRONMENT:
         'https://*.ngrok.dev'
     ]
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        'https://\w+\.ngrok\.dev'
+        r"https://\w+\.ngrok\.dev"
     ]
 
 # Logging
