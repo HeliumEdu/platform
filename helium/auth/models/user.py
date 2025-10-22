@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.15"
+__version__ = "1.13.29"
 
 import logging
 import uuid
@@ -91,6 +91,18 @@ class User(AbstractBaseUser, BaseModel):
         :return: True if the user is an admin, False otherwise
         """
         return self.is_superuser
+
+    @property
+    def num_external_calendars(self) -> int:
+        return self.external_calendars.count()
+
+    @property
+    def num_course_groups(self) -> int:
+        return self.course_groups.count()
+
+    @property
+    def num_courses(self) -> int:
+        return self.course_groups.num_courses()
 
     @property
     def num_homework(self) -> int:

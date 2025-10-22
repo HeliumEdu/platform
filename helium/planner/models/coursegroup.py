@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.15"
+__version__ = "1.13.29"
 
 import datetime
 
@@ -50,6 +50,10 @@ class CourseGroup(BaseModel):
     @property
     def num_days_completed(self) -> int:
         return (datetime.datetime.now().date() - self.start_date).days
+
+    @property
+    def num_courses(self) -> int:
+        return self.courses.count()
 
     @property
     def num_homework(self) -> int:
