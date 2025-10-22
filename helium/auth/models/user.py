@@ -93,6 +93,18 @@ class User(AbstractBaseUser, BaseModel):
         return self.is_superuser
 
     @property
+    def num_external_calendars(self) -> int:
+        return self.external_calendars.count()
+
+    @property
+    def num_course_groups(self) -> int:
+        return self.course_groups.count()
+
+    @property
+    def num_courses(self) -> int:
+        return self.course_groups.num_courses()
+
+    @property
     def num_homework(self) -> int:
         return self.course_groups.num_homework()
 
