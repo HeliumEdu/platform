@@ -136,7 +136,7 @@ class Migration(migrations.Migration):
                                                                                  b'Western Wireless')], default=None,
                                                             max_length=255, null=True)),
                 ('phone_verification_code',
-                 models.PositiveIntegerField(default=helium.auth.utils.userutils.generate_phone_verification_code,
+                 models.PositiveIntegerField(default=helium.auth.utils.userutils.generate_verification_code,
                                              help_text=b'The code sent to `phone` when registering or changing an email address')),
                 ('phone_verified', models.BooleanField(default=False)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile',

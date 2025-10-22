@@ -140,7 +140,7 @@ class TestCaseAuthenticationViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         user = get_user_model().objects.get(email=user.email)
-        self.assertIn("'username' and 'password' must be given", response.data[0])
+        self.assertIn("'username' and 'code' must be given", response.data[0])
         self.assertFalse(user.is_active)
 
     def test_verification_not_found(self):

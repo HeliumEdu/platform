@@ -3,7 +3,6 @@ __license__ = "MIT"
 __version__ = "1.11.54"
 
 import logging
-import uuid
 
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
@@ -13,6 +12,7 @@ from helium.auth.models import UserSettings
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
+from helium.auth.utils.userutils import generate_verification_code
 from helium.common import enums
 from helium.importexport.tasks import import_example_schedule
 
@@ -77,7 +77,7 @@ class UserSerializer(serializers.ModelSerializer):
         if 'email' in validated_data and instance.email != validated_data.get('email'):
             instance.email_changing = validated_data.pop('email')
 
-            instance.verification_code = uuid.uuid4()
+            instance.verification_code = generate_verification_code()
 
             send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
 

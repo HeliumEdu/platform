@@ -3,13 +3,13 @@ __license__ = "MIT"
 __version__ = "1.13.29"
 
 import logging
-import uuid
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.core import validators
 from django.db import models
 
 from helium.auth.managers.usermanager import UserManager
+from helium.auth.utils.userutils import generate_verification_code
 from helium.common.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class User(AbstractBaseUser, BaseModel):
 
     verification_code = models.SlugField(
         help_text='The code sent to `email` when registering or changing an email address.',
-        default=uuid.uuid4, unique=True)
+        default=generate_verification_code)
 
     is_superuser = models.BooleanField(default=False)
 

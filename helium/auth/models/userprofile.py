@@ -7,7 +7,7 @@ import logging
 from django.conf import settings
 from django.db import models
 
-from helium.auth.utils.userutils import generate_phone_verification_code
+from helium.auth.utils.userutils import generate_verification_code
 from helium.common.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class UserProfile(BaseModel):
 
     phone_verification_code = models.PositiveIntegerField(
         help_text='The code sent to `phone` when registering or changing a phone number.',
-        default=generate_phone_verification_code)
+        default=generate_verification_code)
 
     phone_verified = models.BooleanField(default=False)
 

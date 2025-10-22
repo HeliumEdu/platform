@@ -10,6 +10,7 @@ from django.db.models import Q, Count
 
 from helium.auth.models.userprofile import UserProfile
 from helium.auth.models.usersettings import UserSettings
+from helium.auth.utils.userutils import generate_verification_code
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +18,6 @@ logger = logging.getLogger(__name__)
 class UserQuerySet(models.query.QuerySet):
     def email_used(self, user_id, email):
         return self.filter(Q(email=email) | Q(email_changing=email)).exclude(pk=user_id).exists()
-
-    def phone_verification_code_used(self, phone_verification_code):
-        return self.filter(profile__phone_verification_code=phone_verification_code).exists()
 
     def num_homework(self):
         return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
@@ -99,9 +97,6 @@ class UserManager(BaseUserManager):
 
     def email_used(self, user_id, email):
         return self.get_queryset().email_used(user_id, email)
-
-    def phone_verification_code_used(self, phone_verification_code):
-        return self.get_queryset().phone_verification_code_used(phone_verification_code)
 
     def num_homework(self):
         return self.get_queryset().num_homework()
