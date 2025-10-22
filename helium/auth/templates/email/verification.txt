@@ -1,8 +1,12 @@
+{% load l10n %}
+
 Hey!
 
-You're almost there. Click the link below to verify this email address with your Helium account!
+You're almost there. Your verification code is: {{ verification_code|unlocalize }}.
 
-{{ verify_url }}?username={{ username }}&code={{ verification_code }}
+Paste the link below in to your browser to verify this email address with Helium.
+
+{{ verify_url }}?username={{ username }}&code={{ verification_code|unlocalize }}
 
 Regards,
 The Helium Team
