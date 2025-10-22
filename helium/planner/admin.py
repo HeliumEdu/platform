@@ -60,7 +60,8 @@ class AttachmentAdmin(BaseModelAdmin):
 
 
 class CourseGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'num_homework', 'num_attachments', 'get_user',)
+    list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'num_courses', 'num_homework',
+                    'num_attachments', 'get_user',)
     list_filter = ('shown_on_calendar',)
     search_fields = ('title', 'user__username',)
     autocomplete_fields = ('user',)

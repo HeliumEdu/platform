@@ -52,6 +52,10 @@ class CourseGroup(BaseModel):
         return (datetime.datetime.now().date() - self.start_date).days
 
     @property
+    def num_courses(self) -> int:
+        return self.courses.count()
+
+    @property
     def num_homework(self) -> int:
         return self.courses.num_homework()
 
