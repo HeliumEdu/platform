@@ -82,7 +82,7 @@ build-docker:
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
-	@if (( -n "$$PLATFORM_RESOURCE_IMAGE" || -n "$$PLATFORM_API_IMAGE" || -n "$$PLATFORM_WORKER_IMAGE" )); then \
+	@if [[ -n "$$PLATFORM_RESOURCE_IMAGE" || -n "$$PLATFORM_API_IMAGE" || -n "$$PLATFORM_WORKER_IMAGE" ]]; then \
 		aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu; \
 	fi
 
