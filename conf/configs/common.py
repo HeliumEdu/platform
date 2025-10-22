@@ -324,7 +324,7 @@ if 'local' in ENVIRONMENT:
         'https://*.ngrok.dev'
     ]
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        'https://\w+\.ngrok\.dev'
+        r"https://\w+\.ngrok\.dev"
     ]
 
 # Logging
