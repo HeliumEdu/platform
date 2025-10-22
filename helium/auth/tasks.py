@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -91,7 +92,10 @@ def delete_user(user_id):
         user.delete()
 
         for token in outstanding_tokens + blacklisted_tokens:
-            token.delete()
+            try:
+                token.delete()
+            except IntegrityError:
+                logger.info('Skipping, token is already deleted.')
 
         value = 1
     except get_user_model().DoesNotExist:
