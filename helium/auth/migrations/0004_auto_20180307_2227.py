@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userprofile',
             name='phone_verification_code',
-            field=models.PositiveIntegerField(default=helium.auth.utils.userutils.generate_phone_verification_code,
+            field=models.PositiveIntegerField(default=helium.auth.utils.userutils.generate_verification_code,
                                               help_text=b'The code sent to `phone` when registering or changing a phone number'),
         ),
     ]

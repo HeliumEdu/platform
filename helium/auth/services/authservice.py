@@ -53,7 +53,7 @@ def verify_email(request):
     :return: a 202 Response upon success
     """
     if 'username' not in request.GET or 'code' not in request.GET:
-        raise ValidationError("'username' and 'password' must be given as query parameters")
+        raise ValidationError("'username' and 'code' must be given as query parameters")
 
     try:
         user = get_user_model().objects.get(username=request.GET['username'], verification_code=request.GET['code'])

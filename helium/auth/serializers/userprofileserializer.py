@@ -7,7 +7,7 @@ import logging
 from rest_framework import serializers
 
 from helium.auth.models import UserProfile
-from helium.auth.utils.userutils import generate_phone_verification_code
+from helium.auth.utils.userutils import generate_verification_code
 from helium.common.services.phoneservice import verify_number, HeliumPhoneError
 from helium.common.tasks import send_text
 from helium.common.utils import metricutils
@@ -93,7 +93,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             phone = instance.phone_changing
 
         if instance.phone != phone and phone:
-            instance.phone_verification_code = generate_phone_verification_code()
+            instance.phone_verification_code = generate_verification_code()
 
             send_text.delay(phone,
                             f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')
