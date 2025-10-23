@@ -58,6 +58,12 @@ jobs:
       - name: Trigger Terraform deployment to `dev`
         if: github.ref_name == 'main'
         run: python -m pip install requests && ./bin/trigger-ci-release.py
+      - name: Trigger cluster tests against `dev`
+        run: |
+          curl -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u $GITHB_ACCESS_TOKEN \
+          --data '{"event_type": "Triggered from `platform` CI deploy latest", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }, "inputs": { "environment":"dev"}}'
       - name: Upload test coverage
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
