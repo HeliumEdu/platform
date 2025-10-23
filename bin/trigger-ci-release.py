@@ -26,7 +26,7 @@ response = requests.post(f"https://app.terraform.io/api/v2/runs",
                                   "Content-Type": "application/vnd.api+json"},
                          data=json.dumps({"data":
                              {"attributes": {
-                                 "message": f"[heliumcli] Deploy {VERSION}",
+                                 "message": f"[heliumcli] CI deploy {VERSION}",
                                  "allow-empty-apply": "true",
                                  "auto-apply": "false",
                                  "variables": [
