@@ -23,9 +23,12 @@ jobs:
       FORCE_COLOR: 1
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
+      ENVIRONMENT: dev
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
       PLATFORM: amd64
 
     runs-on: ubuntu-latest
@@ -50,9 +53,12 @@ jobs:
         run: |
           make build-docker
           make run-docker
-      - name: Publish artifacts
+      - name: Publish Docker `latest` artifacts
         if: github.ref_name == 'main'
         run: make publish-docker
+      - name: Trigger Terraform deployment to `dev`
+        if: github.ref_name == 'main'
+        run: ./bin/trigger-ci-release
       - name: Upload test coverage
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
