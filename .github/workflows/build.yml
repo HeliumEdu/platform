@@ -52,7 +52,7 @@ jobs:
           make run-docker
       - name: Publish Docker `latest` artifacts
         if: github.ref_name == 'main'
-        run: make publish-docker
+        run: make publish
       - name: Upload test coverage
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
