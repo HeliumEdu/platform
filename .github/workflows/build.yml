@@ -79,6 +79,7 @@ jobs:
       PYTHONDONTWRITEBYTECODE: 1
       ENVIRONMENT: dev
       TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
+      DEV_ENV_ENABLED: ${{ vars.DEV_ENV_ENABLED || false }}
 
     runs-on: ubuntu-latest
 
@@ -89,10 +90,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Trigger Terraform deployment to `dev`
-        if: ${{ github.ref_name == 'main' && vars.DEV_ENV_ENABLED || 'false' == 'true' }}
+        if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
         run: python -m pip install requests && ./bin/trigger-ci-release.py
       - name: Trigger cluster tests against `dev`
-        if: ${{ github.ref_name == 'main' && vars.DEV_ENV_ENABLED || 'false' == 'true' }}
+        if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
         run: |
           curl -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
