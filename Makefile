@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish-docker
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -107,7 +107,7 @@ stop-docker: docker-env
 
 restart-docker: stop-docker run-docker
 
-publish-docker: build-docker
+publish: build-docker
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
 
 	docker tag helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION)
