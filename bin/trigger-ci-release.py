@@ -16,8 +16,6 @@ if not ENVIRONMENT or not TERRAFORM_API_TOKEN:
         "ERROR: Set all required env vars: ENVIRONMENT, TERRAFORM_API_TOKEN.")
     sys.exit(1)
 
-INFO_URI = "https://{}.heliumedu.com/info".format("api" if ENVIRONMENT == "prod" else f"api.{ENVIRONMENT}")
-
 # TODO: migrate this Terraform deployment code in to `heliumcli`, then it can be removed from deploy and platform
 
 workspaces_response = requests.get(f"https://app.terraform.io/api/v2/organizations/HeliumEdu/workspaces/{ENVIRONMENT}",
@@ -49,6 +47,8 @@ response = requests.post(f"https://app.terraform.io/api/v2/runs",
 #####################################################################
 # Wait for the Terraform apply to be live
 #####################################################################
+
+INFO_URI = "https://{}.heliumedu.com/info".format("api" if ENVIRONMENT == "prod" else f"api.{ENVIRONMENT}")
 
 current_version = None
 version_is_live = False
