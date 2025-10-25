@@ -34,6 +34,14 @@ class UserSettings(BaseModel):
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#ffad46')
 
+    grade_color = models.CharField(
+        help_text='A valid hex color code choice to determine the color grade badges will be.',
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#9a9cff')
+
+    material_color = models.CharField(
+        help_text='A valid hex color code choice to determine the color material badges will be.',
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#ffad46')
+
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
