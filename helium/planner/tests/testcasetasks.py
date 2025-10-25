@@ -6,7 +6,7 @@ from unittest import mock
 
 from django.test import TestCase
 
-from helium.planner.tasks import email_reminders, text_reminders
+from helium.planner.tasks import email_reminders, text_reminders, push_reminders
 
 
 class TestCasePlannerTasks(TestCase):
@@ -25,3 +25,11 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         mock_process_text_reminders.assert_called_once()
+
+    @mock.patch('helium.planner.services.reminderservice.process_push_reminders')
+    def test_push_reminders(self, mock_process_push_reminders):
+        # WHEN
+        push_reminders()
+
+        # THEN
+        mock_process_push_reminders.assert_called_once()
