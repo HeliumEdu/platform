@@ -259,6 +259,7 @@ SHIPPED = 3
 NEED = 4
 RECEIVED = 5
 TO_SELL = 6
+DIGITAL = 7
 MATERIAL_STATUS_CHOICES = (
     (OWNED, 'Owned'),
     (RENTED, 'Rented'),
@@ -266,7 +267,8 @@ MATERIAL_STATUS_CHOICES = (
     (SHIPPED, 'Shipped'),
     (NEED, 'Need'),
     (RECEIVED, 'Received'),
-    (TO_SELL, 'To Sell')
+    (TO_SELL, 'To Sell'),
+    (DIGITAL, 'Digital')
 )
 
 BRAND_NEW = 0
