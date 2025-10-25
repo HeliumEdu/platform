@@ -32,7 +32,7 @@ class UserSettings(BaseModel):
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#fad165')
+        max_length=7, choices=enums.ALLOWED_COLORS, default='#ff7537')
 
     grade_color = models.CharField(
         help_text='A valid hex color code choice to determine the color grade badges will be.',
