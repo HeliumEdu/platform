@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.14.7"
 
 import logging
 
@@ -22,4 +22,4 @@ def send_notifications(push_tokens, subject, message):
 
     messaging.send_each_for_multicast(message)
 
-    metricutils.increment('action.push.sent')
+    metricutils.increment('action.push.sent', value=len(push_tokens))
