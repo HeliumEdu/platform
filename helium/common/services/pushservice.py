@@ -22,4 +22,4 @@ def send_notifications(push_tokens, subject, message):
 
     messaging.send_each_for_multicast(message)
 
-    metricutils.increment('action.push.sent')
+    metricutils.increment('action.push.sent', value=len(push_tokens))
