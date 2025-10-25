@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.11"
+__version__ = "1.15.0"
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
 
@@ -259,6 +259,7 @@ SHIPPED = 3
 NEED = 4
 RECEIVED = 5
 TO_SELL = 6
+DIGITAL = 7
 MATERIAL_STATUS_CHOICES = (
     (OWNED, 'Owned'),
     (RENTED, 'Rented'),
@@ -266,7 +267,8 @@ MATERIAL_STATUS_CHOICES = (
     (SHIPPED, 'Shipped'),
     (NEED, 'Need'),
     (RECEIVED, 'Received'),
-    (TO_SELL, 'To Sell')
+    (TO_SELL, 'To Sell'),
+    (DIGITAL, 'Digital')
 )
 
 BRAND_NEW = 0

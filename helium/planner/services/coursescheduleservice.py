@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.4"
+__version__ = "1.15.0"
 
 import datetime
 import json
@@ -106,6 +106,7 @@ def _get_events_from_cache(cached_keys, search=None):
                           show_end_time=event['show_end_time'],
                           start=parser.parse(event['start']),
                           end=parser.parse(event['end']),
+                          url=event['url'],
                           owner_id=event['owner_id'],
                           user_id=event['user'],
                           calendar_item_type=event['calendar_item_type'],
@@ -162,6 +163,7 @@ def _create_events_from_course_schedules(course, course_schedules, search=None):
                               show_end_time=True,
                               start=start,
                               end=end,
+                              url=course.website,
                               owner_id=course.pk,
                               user=course.get_user(),
                               calendar_item_type=enums.COURSE,
