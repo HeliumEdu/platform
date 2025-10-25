@@ -49,6 +49,8 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.all_day_offset, response.data['settings']['all_day_offset'])
         self.assertEqual(user.settings.show_getting_started, response.data['settings']['show_getting_started'])
         self.assertEqual(user.settings.events_color, response.data['settings']['events_color'])
+        self.assertEqual(user.settings.grade_color, response.data['settings']['grade_color'])
+        self.assertEqual(user.settings.material_color, response.data['settings']['material_color'])
         self.assertEqual(user.settings.default_reminder_offset, response.data['settings']['default_reminder_offset'])
         self.assertEqual(user.settings.calendar_event_limit, response.data['settings']['calendar_event_limit'])
         self.assertEqual(user.settings.remember_filter_state, response.data['settings']['remember_filter_state'])
