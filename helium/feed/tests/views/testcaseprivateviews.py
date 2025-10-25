@@ -105,4 +105,4 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(str(calendar.subcomponents[0]['DTSTART'].dt), '2017-01-06 02:30:00-08:00')
         self.assertEqual(str(calendar.subcomponents[0]['DTEND'].dt), '2017-01-06 05:00:00-08:00')
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         f'Comments: <a href="{course1.website}">{course1.title}</a> in {course1.room}')
+                         f'URL: {course1.website}\nComments: <a href="{course1.website}">{course1.title}</a> in {course1.room}')
