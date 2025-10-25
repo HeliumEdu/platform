@@ -129,7 +129,7 @@ def process_push_reminders():
                     send_pushes.delay(push_tokens, user.username, subject, reminder.message)
                 else:
                     logger.warning(
-                        f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
+                        f'Reminder {reminder.pk} was not processed, as there are no active push tokens for user {user.pk}')
 
             reminder.sent = True
             reminder.save()
