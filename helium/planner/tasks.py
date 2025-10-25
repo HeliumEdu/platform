@@ -145,7 +145,7 @@ def text_reminders():
 @app.task
 def push_reminders():
     if settings.DISABLE_PUSH:
-        logger.warning('Push disabled. Text reminders not being sent.')
+        logger.warning('Push disabled. Push reminders not being sent.')
         return
 
     reminderservice.process_push_reminders()
@@ -221,3 +221,6 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
 
     # Add schedule for text reminders periodically
     sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, text_reminders.s())
+
+    # Add schedule for push reminders periodically
+    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, push_reminders.s())
