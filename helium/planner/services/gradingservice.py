@@ -61,14 +61,15 @@ def get_grade_points_for(query_set, has_weighted_grading):
     categories = {}
     category_totals = {}
     grade_series = []
-    for homework_id, homework_title, category_id, start, grade in query_set:
+    for homework_id, homework_title, category_id, start, current_grade in query_set:
         if category_id not in categories:
             categories[category_id] = Category.objects.get(pk=category_id)
         category = categories[category_id]
 
-        earned, possible = grade.split('/')
+        earned, possible = current_grade.split('/')
         earned = float(earned)
         possible = float(possible)
+        homework_grade = (earned / possible) * 100
         if has_weighted_grading:
             # If no weight is present, this category is ungraded
             if category.weight == 0:
@@ -86,7 +87,7 @@ def get_grade_points_for(query_set, has_weighted_grading):
             total_earned += earned
             total_possible += possible
 
-        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_title, homework_id])
+        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_id, homework_title, round(homework_grade, 4)])
 
     return grade_series
 
