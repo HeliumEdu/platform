@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.15.4"
 
 import logging
 
@@ -23,6 +23,8 @@ class GradeHolderSerializer(serializers.Serializer):
     grade_by_weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
 
     trend = serializers.FloatField()
+
+    num_homework = serializers.IntegerField()
 
     num_homework_graded = serializers.IntegerField()
 
