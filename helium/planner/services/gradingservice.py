@@ -18,8 +18,10 @@ def get_grade_points_for_course(course_id):
     # Maintain grades by category as we iterate over all homework
     category_totals = {}
     grade_series = []
-    for category_id, start, grade in Homework.objects.for_course(course_id).graded().values_list('category_id', 'start',
-                                                                                                 'current_grade'):
+    for homework_id, category_id, start, grade in Homework.objects.for_course(course_id).graded().values_list('id',
+                                                                                                              'category_id',
+                                                                                                              'start',
+                                                                                                              'current_grade'):
         category = Category.objects.get(pk=category_id)
 
         earned, possible = grade.split('/')
@@ -42,7 +44,7 @@ def get_grade_points_for_course(course_id):
             total_earned += earned
             total_possible += possible
 
-        grade_series.append([start, round((total_earned / total_possible * 100), 4)])
+        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_id])
 
     return grade_series
 
@@ -60,10 +62,13 @@ def get_grade_data(user_id):
                                                                                                                'color',
                                                                                                                'current_grade',
                                                                                                                'trend')
-
+        course_group_num_homework = 0
         for course in course_group['courses']:
+            course_db_entity = Course.objects.filter(pk=course['id'])
             course['overall_grade'] = course['current_grade']
-            course['num_homework_graded'] = Course.objects.filter(pk=course['id']).num_homework_graded()
+            course['num_homework'] = course_db_entity.num_homework()
+            course_group_num_homework += course['num_homework']
+            course['num_homework_graded'] = course_db_entity.num_homework_graded()
             course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
             course.pop('current_grade')
             course['grade_points'] = get_grade_points_for_course(course['id'])
@@ -77,9 +82,13 @@ def get_grade_data(user_id):
                                                                                                       'trend')
 
             for category in course['categories']:
+                category_db_entity = Category.objects.filter(pk=category['id'])
                 category['overall_grade'] = category['average_grade']
-                category['num_homework_graded'] = Category.objects.filter(pk=category['id']).num_homework_graded()
+                category['num_homework'] = category_db_entity.num_homework()
+                category['num_homework_graded'] = category_db_entity.num_homework_graded()
                 category.pop('average_grade')
+
+        course_group['num_homework'] = course_group_num_homework
 
     return {
         'course_groups': course_groups

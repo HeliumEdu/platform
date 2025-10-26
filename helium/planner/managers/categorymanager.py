@@ -22,7 +22,7 @@ class CategoryQuerySet(BaseQuerySet):
         return self.filter(course_id=course_id)
 
     def num_homework(self):
-        return self.aggregate(homework_count=Count('homework'), then=1)['homework_count']
+        return self.aggregate(homework_count=Count('homework'))['homework_count']
 
     def num_homework_graded(self):
         return self.aggregate(
