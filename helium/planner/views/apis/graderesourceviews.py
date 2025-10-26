@@ -28,8 +28,7 @@ class GradesApiResourceView(HeliumAPIView):
         Each entity contains at least three fields: `id`, `overall_grade`, and `grade_points`.
 
         `grade_points` represents a list of grades accumulating over time. This is a list made up of individual grade
-        points, each a tuple containing values of the format [time, grade_at_time, id], where `id` is the Homework
-        responsible for this grade point.
+        points, each a tuple containing values of the format [time, grade_at_time, homework_id, homework_title, homework_grade].
         """
         grade_data = gradingservice.get_grade_data(request.user.pk)
 

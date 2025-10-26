@@ -430,15 +430,15 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 5)
         # (25) / 1
-        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25])
         # (25 + 75) / 2
-        self.assertEqual(grade_points[1], [homework2.start, 50, homework2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 50, homework2.pk, homework2.title, 75])
         # (25 + 75 + 50) / 3
-        self.assertEqual(grade_points[2], [homework3.start, 50, homework3.pk])
+        self.assertEqual(grade_points[2], [homework3.start, 50, homework3.pk, homework3.title, 50])
         # (25 + 75 + 50 + (60/80)) / 4
-        self.assertEqual(grade_points[3], [homework4.start, 55.2632, homework4.pk])
+        self.assertEqual(grade_points[3], [homework4.start, 55.2632, homework4.pk, homework4.title, 75])
         # (25 + 75 + 50 + (60/80) + (4/5)) / 5
-        self.assertEqual(grade_points[4], [homework5.start, 55.5844, homework5.pk])
+        self.assertEqual(grade_points[4], [homework5.start, 55.5844, homework5.pk, homework5.title, 80])
 
     def test_weight_graded_points(self):
         # GIVEN
@@ -480,15 +480,15 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 5)
         # ((25 * 30)) / 30
-        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25])
         # ((25 * 30) + (75 * 50)) / 80
-        self.assertEqual(grade_points[1], [homework2.start, 56.25, homework2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 56.25, homework2.pk, homework2.title, 75])
         # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
-        self.assertEqual(grade_points[2], [homework3.start, 55, homework3.pk])
+        self.assertEqual(grade_points[2], [homework3.start, 55, homework3.pk, homework3.title, 50])
         # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30)) / 100
-        self.assertEqual(grade_points[3], [homework4.start, 59.6154, homework4.pk])
+        self.assertEqual(grade_points[3], [homework4.start, 59.6154, homework4.pk, homework4.title, 75])
         # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 10)) / 100
-        self.assertEqual(grade_points[4], [homework5.start, 62.3333, homework5.pk])
+        self.assertEqual(grade_points[4], [homework5.start, 62.3333, homework5.pk, homework5.title, 80])
 
     def test_category_changed_deleted_grade_changes(self):
         # GIVEN
