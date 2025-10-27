@@ -8,6 +8,7 @@ from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
+from django.db.models import Q
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
@@ -61,6 +62,29 @@ class HasWeightedGradingFilter(SimpleListFilter):
             return queryset
 
 
+class HasCourseScheduleFilter(SimpleListFilter):
+    title = 'Has Course Schedule'
+    parameter_name = 'has_course_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(
+                Q(course_groups__courses__schedules__isnull=False) & ~Q(
+                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
+        elif self.value() == 'no':
+            return queryset.exclude(
+                Q(course_groups__courses__schedules__isnull=False) & ~Q(
+                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
+        else:
+            return queryset
+
+
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
@@ -68,7 +92,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'username', 'created_at', 'last_login', 'num_course_groups', 'num_courses',
                     'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter)
+                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter, HasCourseScheduleFilter)
     search_fields = ('email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
