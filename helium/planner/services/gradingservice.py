@@ -87,7 +87,8 @@ def get_grade_points_for(query_set, has_weighted_grading):
             total_earned += earned
             total_possible += possible
 
-        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_id, homework_title, round(homework_grade, 4)])
+        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_id, homework_title,
+                             round(homework_grade, 4), category.pk])
 
     return grade_series
 
