@@ -3,11 +3,11 @@ __license__ = "MIT"
 __version__ = "1.13.29"
 
 from django.contrib.admin import SimpleListFilter
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
-    Reminder
+    Reminder, CourseSchedule
 
 
 class AttachmentType(SimpleListFilter):
@@ -59,10 +59,31 @@ class AttachmentAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
+class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
+    title = 'Has Course Schedule'
+    parameter_name = 'has_course_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(
+                Q(courses__schedules__isnull=False) & ~Q(courses__schedules__days_of_week="0000000")).distinct()
+        elif self.value() == 'no':
+            return queryset.exclude(
+                Q(courses__schedules__isnull=False) & ~Q(courses__schedules__days_of_week="0000000")).distinct()
+        else:
+            return queryset
+
+
 class CourseGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'num_courses', 'num_homework',
                     'num_attachments', 'get_user',)
-    list_filter = ('shown_on_calendar',)
+    list_filter = ('shown_on_calendar', CourseGroupHasCourseScheduleFilter)
     search_fields = ('title', 'user__username',)
     autocomplete_fields = ('user',)
 
@@ -82,6 +103,25 @@ class CourseGroupAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
+
+class CourseHasCourseScheduleFilter(SimpleListFilter):
+    title = 'Has Course Schedule'
+    parameter_name = 'has_course_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(Q(schedules__isnull=False) & ~Q(schedules__days_of_week="0000000")).distinct()
+        elif self.value() == 'no':
+            return queryset.exclude(Q(schedules__isnull=False) & ~Q(schedules__days_of_week="0000000")).distinct()
+        else:
+            return queryset
 
 
 class HasAttachmentFilter(SimpleListFilter):
@@ -124,7 +164,8 @@ class CourseHasWeightedGradingFilter(SimpleListFilter):
 
 class CourseAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_attachments', 'get_user',)
-    list_filter = ('course_group__shown_on_calendar', CourseHasWeightedGradingFilter, HasAttachmentFilter)
+    list_filter = ('course_group__shown_on_calendar', CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
+                   HasAttachmentFilter,)
     search_fields = ('title', 'course_group__user__username',)
     autocomplete_fields = ('course_group',)
 
@@ -141,6 +182,33 @@ class CourseAdmin(BaseModelAdmin):
 
     get_course_group.short_description = 'Course Group'
     get_course_group.admin_order_field = 'course_group__title'
+
+    def get_user(self, obj):
+        if obj.get_user():
+            return obj.get_user().get_username()
+        else:
+            return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'course_group__user__username'
+
+
+class CourseScheduleAdmin(BaseModelAdmin):
+    list_display = ('days_of_week', 'get_course', 'get_course_group', 'get_user')
+    list_filter = ('course__course_group__shown_on_calendar',)
+    search_fields = ('course__course_group__user__username',)
+
+    def get_course(self, obj):
+        return obj.course.title
+
+    get_course.short_description = 'Course'
+    get_course.admin_order_field = 'course__title'
+
+    def get_course_group(self, obj):
+        return obj.course.course_group.title
+
+    get_course_group.short_description = 'Course group'
+    get_course_group.admin_order_field = 'course__course_group__title'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -376,6 +444,7 @@ class ReminderAdmin(BaseModelAdmin):
 admin_site.register(Attachment, AttachmentAdmin)
 admin_site.register(CourseGroup, CourseGroupAdmin)
 admin_site.register(Course, CourseAdmin)
+admin_site.register(CourseSchedule, CourseScheduleAdmin)
 admin_site.register(Category, CategoryAdmin)
 admin_site.register(Event, EventAdmin)
 admin_site.register(Homework, HomeworkAdmin)
