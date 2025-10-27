@@ -504,6 +504,19 @@ class TestCaseHomeworkViews(APITestCase):
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('matches the given query', response.data['detail'].lower())
 
+    def test_filter_id(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course, title='test1')
+        homeworkhelper.given_homework_exists(course, title='test2')
+
+        response = self.client.get(reverse('planner_homework_list') + f'?id={homework.pk}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], homework.title)
+
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)

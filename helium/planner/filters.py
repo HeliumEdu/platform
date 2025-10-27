@@ -38,13 +38,14 @@ class HomeworkFilter(django_filters.FilterSet):
     class Meta:
         model = Homework
         fields = {
+            'id': ['exact'],
+            'title': ['exact'],
             'start': ['exact', 'gte'],
             'end': ['exact', 'lt'],
             'completed': ['exact'],
             'course__id': ['in'],
             'category__id': ['in'],
             'category__title': ['in'],
-            'title': ['exact'],
         }
 
     def filter_category_titles(self, queryset, name, value):
