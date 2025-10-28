@@ -92,7 +92,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'username', 'created_at', 'last_login', 'num_course_groups', 'num_courses',
                     'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter, HasCourseScheduleFilter)
+                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter,
+                   HasCourseScheduleFilter)
     search_fields = ('email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
@@ -171,13 +172,24 @@ class UserPushTokenAdmin(BaseModelAdmin):
     list_display = ['get_user', 'device_id', 'token', 'get_last_login']
     search_fields = ('user__email', 'user__username')
     ordering = ('-user__last_login',)
-    readonly_fields = ('user',)
+    autocomplete_fields = ('user',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('user',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_user(self, obj):
-        if obj.user:
-            return obj.user.get_username()
+        if obj.get_user():
+            return obj.get_user().get_username()
         else:
             return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
 
     def get_last_login(self, obj):
         if obj.user:
@@ -185,10 +197,20 @@ class UserPushTokenAdmin(BaseModelAdmin):
         else:
             return ''
 
-    get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
     get_last_login.short_description = 'Last Login'
     get_last_login.admin_order_field = 'user__last_login'
+
+
+class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
+    autocomplete_fields = ('token',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('token',)
+
+        return readonly_fields + self.readonly_fields
 
 
 # Register the models in the Admin
@@ -197,4 +219,4 @@ admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserPushToken, UserPushTokenAdmin)
 admin_site.register(OutstandingToken, OutstandingTokenAdmin)
-admin_site.register(BlacklistedToken, BlacklistedTokenAdmin)
+admin_site.register(BlacklistedToken, HeliumBlacklistedTokenAdmin)

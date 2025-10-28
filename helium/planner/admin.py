@@ -216,6 +216,15 @@ class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'get_user')
     list_filter = ('course__course_group__shown_on_calendar', HasCourseScheduleFilter)
     search_fields = ('course__course_group__user__username',)
+    autocomplete_fields = ('course',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('course',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_course(self, obj):
         return obj.course.title
