@@ -193,9 +193,28 @@ class CourseAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'course_group__user__username'
 
 
+class HasCourseScheduleFilter(SimpleListFilter):
+    title = 'Has Course Schedule'
+    parameter_name = 'has_course_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.exclude(days_of_week="0000000").distinct()
+        elif self.value() == 'no':
+            return queryset.filter(days_of_week="0000000").distinct()
+        else:
+            return queryset
+
+
 class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'get_user')
-    list_filter = ('course__course_group__shown_on_calendar',)
+    list_filter = ('course__course_group__shown_on_calendar', HasCourseScheduleFilter)
     search_fields = ('course__course_group__user__username',)
 
     def get_course(self, obj):
