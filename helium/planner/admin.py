@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.8"
+__version__ = "1.15.10"
 
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Count, Q
@@ -193,10 +193,38 @@ class CourseAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'course_group__user__username'
 
 
+class HasCourseScheduleFilter(SimpleListFilter):
+    title = 'Has Course Schedule'
+    parameter_name = 'has_course_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.exclude(days_of_week="0000000").distinct()
+        elif self.value() == 'no':
+            return queryset.filter(days_of_week="0000000").distinct()
+        else:
+            return queryset
+
+
 class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'get_user')
-    list_filter = ('course__course_group__shown_on_calendar',)
+    list_filter = ('course__course_group__shown_on_calendar', HasCourseScheduleFilter)
     search_fields = ('course__course_group__user__username',)
+    autocomplete_fields = ('course',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('course',)
+
+        return readonly_fields + self.readonly_fields
 
     def get_course(self, obj):
         return obj.course.title
