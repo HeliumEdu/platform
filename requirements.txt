@@ -1,12 +1,12 @@
 django==4.2.25
 djangorestframework==3.16.1
 djangorestframework-simplejwt==5.5.1
-drf-spectacular[sidecar]==0.28.0
-django-filter==24.3
-django-pipeline==4.1.0
 django-cors-headers==4.9.0
+django-pipeline==4.1.0
+django-filter==24.3
 django-health-check==3.20.0
 django_celery_results==2.6.0
+drf-spectacular[sidecar]==0.28.0
 celery[redis]==5.5.3
 twilio==9.8.4
 firebase-admin==7.1.0

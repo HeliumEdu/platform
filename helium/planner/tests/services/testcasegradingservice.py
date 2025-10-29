@@ -181,7 +181,7 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(category2.average_grade, 50)
         self.assertEqual(category_ungraded.average_grade, -1)
 
-    def test_weighted_grade_imbalanced(self):
+    def test_unweighted_grade_imbalanced(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -213,7 +213,7 @@ class TestCaseGradingService(TestCase):
         # 200/200 total points
         self.assertEqual(float(category3.average_grade), 100)
 
-    def test_incomplete_not_graded(self):
+    def test_unweighted_incomplete_not_graded(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -333,13 +333,14 @@ class TestCaseGradingService(TestCase):
         # WHEN
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                          current_grade='25/100')
-        homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='75/100')
+        homeworkhelper.given_homework_exists(course, category=category1, completed=True,
+                                             current_grade='75/100')
         homework3 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                          current_grade='50/100')
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # (((.5 * .3) + (0 * .6) + (0 * .1)) / .3) * 100
+        # (25 * 30) + (75 * 30) + (50 * 30) / 90
         self.assertEqual(float(course.current_grade), 50)
 
         # WHEN
@@ -348,16 +349,16 @@ class TestCaseGradingService(TestCase):
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # (((.5 * .3) + (.35 * .6) + (0 * .1)) / .9) * 100
-        self.assertEqual(float(course.current_grade), 40)
+        # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) / 150
+        self.assertEqual(float(course.current_grade), 44)
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category3, completed=True, current_grade='90/100')
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # ((.5 * .3) + (.35 * .6) + (.9 * .1)) * 100
-        self.assertEqual(float(course.current_grade), 45)
+        # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) / 160
+        self.assertEqual(float(course.current_grade), 46.875)
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='75/100')
@@ -367,8 +368,8 @@ class TestCaseGradingService(TestCase):
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # ((.5625 * .3) + (.6 * .6) + (.675 * .1)) * 100
-        self.assertEqual(float(course.current_grade), 59.6250)
+        # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (45 * 10) / 260
+        self.assertEqual(float(course.current_grade), 58.8462)
 
         # WHEN
         homework4.current_grade = '80/100'
@@ -378,8 +379,8 @@ class TestCaseGradingService(TestCase):
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # ((.5625 * .3) + (.825 * .6) + (.85 * .1)) * 100
-        self.assertEqual(float(course.current_grade), 74.875)
+        # (25 * 30) + (75 * 30) + (50 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
+        self.assertEqual(float(course.current_grade), 70.5769)
 
         # WHEN
         homework1.delete()
@@ -387,10 +388,10 @@ class TestCaseGradingService(TestCase):
 
         # THEN
         course = Course.objects.get(pk=course.pk)
-        # ((.75 * .3) + (.825 * .6) + (.85 * .1)) * 100
+        # (75 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
         self.assertEqual(float(course.current_grade), 80.5)
 
-    def test_unweight_grade_points(self):
+    def test_unweighted_grade_points(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -444,7 +445,44 @@ class TestCaseGradingService(TestCase):
         # Final grade point should also equal the overall calculated grade
         self.assertEqual(grade_points[4][1], float(course.current_grade))
 
-    def test_weight_grade_points(self):
+    def test_weighted_grade_points_1(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course, weight=30)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
+        category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
+        homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         current_grade='80/100')
+        homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         current_grade='90/100')
+        homework3 = homeworkhelper.given_homework_exists(course, category=category3, completed=True,
+                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
+                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                                         current_grade='72/100')
+        course = Course.objects.get(pk=course.pk)
+
+        # WHEN
+        grade_points = gradingservice.get_grade_points_for_course(course.pk)
+
+        # THEN
+        self.assertEqual(len(grade_points), 3)
+        # (80 * 30) / 30
+        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk])
+        # ((80 * 30) + (90 * 50)) / 80
+        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk])
+        # ((80 * 30) + (90 * 50) + (72 * 20)) / 100
+        self.assertEqual(grade_points[2], [homework3.start, 83.4, homework3.pk, homework3.title, 72, category3.pk])
+
+        # Final grade point should also equal the overall calculated grade
+        self.assertEqual(grade_points[2][1], float(course.current_grade))
+
+    def test_weighted_grade_points_2(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -490,16 +528,45 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(grade_points[1], [homework2.start, 56.25, homework2.pk, homework2.title, 75, category2.pk])
         # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
         self.assertEqual(grade_points[2], [homework3.start, 55, homework3.pk, homework3.title, 50, category3.pk])
-        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30)) / 100
+        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30)) / 130
         self.assertEqual(grade_points[3], [homework4.start, 59.6154, homework4.pk, homework4.title, 75, category1.pk])
-        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 10)) / 100
+        # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 20)) / 150
         self.assertEqual(grade_points[4], [homework5.start, 62.3333, homework5.pk, homework5.title, 80, category3.pk])
 
         # Final grade point should also equal the overall calculated grade
-        # TODO: this is off by a few decimals, likely a precision error, needs to be identified
-        # self.assertEqual(grade_points[4][1], float(course.current_grade))
+        self.assertEqual(grade_points[4][1], float(course.current_grade))
 
-    def test_category_changed_deleted_grade_changes(self):
+    def test_weighted_grade_points_total_not_100(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course, weight=30)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
+        homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         current_grade='80/100')
+        homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         current_grade='90/100')
+        course = Course.objects.get(pk=course.pk)
+
+        # WHEN
+        grade_points = gradingservice.get_grade_points_for_course(course.pk)
+
+        # THEN
+        self.assertEqual(len(grade_points), 2)
+        # ((80 * 30)) / 30
+        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk])
+        # ((80 * 30) + (90 * 50)) / 80
+        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk])
+
+        # Final grade point should also equal the overall calculated grade
+        self.assertEqual(grade_points[1][1], float(course.current_grade))
+
+    def test_category_changed_deleted_weighted_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -527,9 +594,12 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
                                              current_grade='110/130')
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
         course = Course.objects.get(pk=course.pk)
         category1 = Category.objects.get(pk=category1.pk)
-        self.assertEqual(float(course.current_grade), 77.8893)
+        # ((25/60) * 30) + ((75/80) * 50) + ((50/120) * 20) + ((60/80) * 30) + ((110/130) * 20) / 150
+        self.assertEqual(float(course_group.average_grade), 71.4209)
+        self.assertEqual(float(course.current_grade), 71.4209)
         self.assertEqual(float(category1.average_grade), 60.7143)
         self.assertEqual(float(category1.grade_by_weight), 18.2143)
 
@@ -540,8 +610,13 @@ class TestCaseGradingService(TestCase):
         category1.save()
 
         # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course = Course.objects.get(pk=course.pk)
         category1 = Category.objects.get(pk=category1.pk)
         category2 = Category.objects.get(pk=category2.pk)
+        # ((25/60) * 50) + ((75/80) * 30) + ((50/120) * 20) + ((60/80) * 50) + ((110/130) * 20) / 150
+        self.assertEqual(float(course_group.average_grade), 65.7146)
+        self.assertEqual(float(course.current_grade), 65.7146)
         self.assertEqual(float(category1.average_grade), 60.7143)
         self.assertEqual(float(category1.grade_by_weight), 30.3571)
         self.assertEqual(float(category2.average_grade), 93.75)
@@ -551,13 +626,15 @@ class TestCaseGradingService(TestCase):
         category2.delete()
 
         # THEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
         course = Course.objects.get(pk=course.pk)
         category1 = Category.objects.get(pk=category1.pk)
-        self.assertEqual(float(course.current_grade), 61.6531)
+        self.assertEqual(float(course_group.average_grade), 59.707)
+        self.assertEqual(float(course.current_grade), 59.707)
         self.assertEqual(float(category1.average_grade), 60.7143)
         self.assertEqual(float(category1.grade_by_weight), 30.3571)
 
-    def test_course_deleted_grade_changes(self):
+    def test_course_deleted_weighted_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -587,11 +664,13 @@ class TestCaseGradingService(TestCase):
                                              end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=pytz.utc),
                                              completed=True, current_grade='4/5')
         course_group = CourseGroup.objects.get(pk=course_group.pk)
-        self.assertEqual(float(course_group.average_grade), 58.006)
+        # Course 1: ((25 * 30) + (75 * 50) + ((60/80) * 30)) / 110 = 61.36
+        # Course 2: ((50 * 20) + ((4/5) * 20)) / 40 = 61.36 = 65.00
+        self.assertEqual(float(course_group.average_grade), 63.1818)
 
         # WHEN
         course2.delete()
 
         # THEN
         course_group = CourseGroup.objects.get(pk=course_group.pk)
-        self.assertEqual(float(course_group.average_grade), 64.5833)
+        self.assertEqual(float(course_group.average_grade), 61.3636)

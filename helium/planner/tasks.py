@@ -78,7 +78,7 @@ def recalculate_course_grade(course_id, retries=0):
 
 
 @app.task
-def recalculate_category_grades_for_course(course_id, retries=0):
+def recalculate_category_grades_for_course(course_id):
     try:
         course = Course.objects.get(pk=course_id)
 

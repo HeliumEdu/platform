@@ -65,13 +65,13 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(len(response.data['course_groups'][1]['courses'][0]['grade_points']), 2)
 
         self.assertIn('title', response.data['course_groups'][0])
-        self.assertEqual(float(response.data['course_groups'][0]['overall_grade']), 62.5)
+        self.assertEqual(float(response.data['course_groups'][0]['overall_grade']), 66.6667)
         self.assertIn('trend', response.data['course_groups'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0])
-        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 62.5)
+        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 66.6667)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0])
         self.assertIn('has_weighted_grading', response.data['course_groups'][0]['courses'][0])
