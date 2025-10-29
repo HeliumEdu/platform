@@ -2,12 +2,29 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.15.15"
 
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule
+from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
+
+
+@action(description="Recalculate grades for selected items")
+def recalculate_grade(modeladmin, request, queryset):
+    model_class = queryset.model
+
+    for course_group in queryset:
+        if model_class.__name__ == "CourseGroup":
+            recalculate_course_group_grade.delay(course_group.pk)
+        elif model_class.__name__ == "Course":
+            recalculate_course_grade.delay(course_group.pk)
+        elif model_class.__name__ == "Category":
+            recalculate_category_grade.delay(course_group.pk)
+
+    modeladmin.message_user(request,
+                            f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")
 
 
 class AttachmentType(SimpleListFilter):
@@ -86,6 +103,7 @@ class CourseGroupAdmin(BaseModelAdmin):
     list_filter = ('shown_on_calendar', CourseGroupHasCourseScheduleFilter)
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
+    actions = [recalculate_grade]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -163,11 +181,13 @@ class CourseHasWeightedGradingFilter(SimpleListFilter):
 
 
 class CourseAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_attachments', 'get_user',)
+    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_attachments',
+                    'get_user',)
     list_filter = ('course_group__shown_on_calendar', CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
                    HasAttachmentFilter,)
     search_fields = ('id', 'title', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
+    actions = [recalculate_grade]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -272,6 +292,7 @@ class CategoryAdmin(BaseModelAdmin):
     list_filter = ('course__course_group__shown_on_calendar', CategoryHasWeightedGradingFilter)
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
+    actions = [recalculate_grade]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -361,7 +382,8 @@ class HomeworkHasWeightedGradingFilter(SimpleListFilter):
 
 
 class HomeworkAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'start', 'updated_at', 'num_reminders', 'num_attachments', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'start', 'updated_at', 'num_reminders',
+                    'num_attachments', 'get_user',)
     list_filter = ('completed', 'course__course_group__shown_on_calendar', HomeworkHasWeightedGradingFilter,
                    HasReminderFilter, HasAttachmentFilter)
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
