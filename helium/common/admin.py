@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.15"
+__version__ = "1.15.16"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
@@ -37,9 +37,10 @@ admin_site = PlatformAdminSite()
 
 
 class TaskResultAdmin(ModelAdmin):
-    list_display = ('task_id', 'task_name', 'periodic_task_name', 'status', 'date_done')
+    list_display = ('task_id', 'task_name', 'date_done', 'status', 'worker')
     list_filter = ('status', 'date_done')
     search_fields = ('task_id', 'task_name')
+    ordering = ('-date_done',)
 
 
 admin_site.register(TaskResult, TaskResultAdmin)
