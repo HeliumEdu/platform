@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.15.15"
 
 import logging
 
@@ -25,7 +25,7 @@ class CourseScheduleManager(BaseManager):
         return CourseScheduleQuerySet(self.model, using=self._db)
 
     def exists_for_user(self, id, user_id):
-        pass
+        return self.get_queryset().exists_for_user(id, user_id)
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)

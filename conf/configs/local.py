@@ -4,7 +4,7 @@ Settings specific to a development environment using Django's `runserver` comman
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.30"
+__version__ = "1.15.15"
 
 import os
 import warnings
@@ -159,7 +159,6 @@ else:
     from conf.configs import deploy
 
     CELERY_BROKER_URL = deploy.CELERY_BROKER_URL
-    CELERY_RESULT_BACKEND = deploy.CELERY_RESULT_BACKEND
     CELERY_TASK_SOFT_TIME_LIMIT = deploy.CELERY_TASK_SOFT_TIME_LIMIT
     CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = deploy.CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT
     CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = deploy.CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP
