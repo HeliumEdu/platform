@@ -25,7 +25,7 @@ class CourseScheduleManager(BaseManager):
         return CourseScheduleQuerySet(self.model, using=self._db)
 
     def exists_for_user(self, id, user_id):
-        pass
+        return self.get_queryset().exists_for_user(id, user_id)
 
     def for_user(self, user_id):
         return self.get_queryset().for_user(user_id)
