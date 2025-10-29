@@ -94,7 +94,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter,
                    HasCourseScheduleFilter)
-    search_fields = ('email', 'username')
+    search_fields = ('id', 'email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
         (None, {
@@ -113,7 +113,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
 class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login']
-    search_fields = ('user__email', 'user__username')
+    search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_login',)
     readonly_fields = ('user',)
 
@@ -143,7 +143,7 @@ class UserSettingsAdmin(BaseModelAdmin):
                     'get_last_login']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
                    'default_reminder_type', 'receive_emails_from_admin']
-    search_fields = ('user__email', 'user__username')
+    search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_login',)
     readonly_fields = ('user',)
 
@@ -170,7 +170,7 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 class UserPushTokenAdmin(BaseModelAdmin):
     list_display = ['get_user', 'device_id', 'token', 'get_last_login']
-    search_fields = ('user__email', 'user__username')
+    search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_login',)
     autocomplete_fields = ('user',)
 
@@ -202,6 +202,8 @@ class UserPushTokenAdmin(BaseModelAdmin):
 
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
+    search_fields = ('token__jti', 'tokne__user__id', 'token__user__email', 'token__user__username')
+    ordering = ('-token__user__last_login',)
     autocomplete_fields = ('token',)
 
     def get_readonly_fields(self, request, obj=None):

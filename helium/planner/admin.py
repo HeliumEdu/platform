@@ -35,7 +35,7 @@ class AttachmentType(SimpleListFilter):
 class AttachmentAdmin(BaseModelAdmin):
     list_display = ('title', 'get_attachment', 'size', 'created_at', 'updated_at', 'get_user',)
     list_filter = (AttachmentType,)
-    search_fields = ('user__username',)
+    search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('course', 'event', 'homework', 'user')
 
     def get_readonly_fields(self, request, obj=None):
@@ -81,10 +81,10 @@ class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
 
 
 class CourseGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'created_at', 'start_date', 'shown_on_calendar', 'num_courses', 'num_homework',
+    list_display = ('title', 'updated_at', 'start_date', 'shown_on_calendar', 'num_courses', 'num_homework',
                     'num_attachments', 'get_user',)
     list_filter = ('shown_on_calendar', CourseGroupHasCourseScheduleFilter)
-    search_fields = ('title', 'user__username',)
+    search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -163,10 +163,10 @@ class CourseHasWeightedGradingFilter(SimpleListFilter):
 
 
 class CourseAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_attachments', 'get_user',)
+    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_attachments', 'get_user',)
     list_filter = ('course_group__shown_on_calendar', CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
                    HasAttachmentFilter,)
-    search_fields = ('title', 'course_group__user__username',)
+    search_fields = ('id', 'title', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -213,9 +213,9 @@ class HasCourseScheduleFilter(SimpleListFilter):
 
 
 class CourseScheduleAdmin(BaseModelAdmin):
-    list_display = ('days_of_week', 'get_course', 'get_course_group', 'get_user')
+    list_display = ('days_of_week', 'get_course', 'get_course_group', 'updated_at', 'get_user')
     list_filter = ('course__course_group__shown_on_calendar', HasCourseScheduleFilter)
-    search_fields = ('course__course_group__user__username',)
+    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -270,7 +270,7 @@ class CategoryHasWeightedGradingFilter(SimpleListFilter):
 class CategoryAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'updated_at', 'weight', 'num_homework', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', CategoryHasWeightedGradingFilter)
-    search_fields = ('title', 'course__course_group__user__username',)
+    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -320,9 +320,10 @@ class HasReminderFilter(SimpleListFilter):
 
 
 class EventAdmin(BaseModelAdmin):
-    list_display = ('title', 'start', 'num_reminders', 'num_attachments', 'get_user',)
+    list_display = ('title', 'start', 'updated_at', 'num_reminders', 'num_attachments', 'get_user',)
     list_filter = (HasReminderFilter, HasAttachmentFilter)
-    search_fields = ('title', 'user__username',)
+    search_fields = ('id', 'title', 'user__username', 'user__email')
+    ordering = ('-start',)
     autocomplete_fields = ('user',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -360,10 +361,11 @@ class HomeworkHasWeightedGradingFilter(SimpleListFilter):
 
 
 class HomeworkAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'start', 'num_reminders', 'num_attachments', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'start', 'updated_at', 'num_reminders', 'num_attachments', 'get_user',)
     list_filter = ('completed', 'course__course_group__shown_on_calendar', HomeworkHasWeightedGradingFilter,
                    HasReminderFilter, HasAttachmentFilter)
-    search_fields = ('title', 'course__course_group__user__username',)
+    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
+    ordering = ('-start',)
     autocomplete_fields = ('category', 'materials', 'course')
 
     def get_readonly_fields(self, request, obj=None):
@@ -396,7 +398,7 @@ class HomeworkAdmin(BaseModelAdmin):
 class MaterialGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'updated_at', 'shown_on_calendar', 'num_materials', 'get_user',)
     list_filter = ('shown_on_calendar',)
-    search_fields = ('title', 'user__username',)
+    search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -420,7 +422,7 @@ class MaterialGroupAdmin(BaseModelAdmin):
 class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'updated_at', 'get_user',)
     list_filter = ('material_group__shown_on_calendar',)
-    search_fields = ('title', 'material_group__user__username',)
+    search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group', 'courses',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -448,9 +450,10 @@ class MaterialAdmin(BaseModelAdmin):
 
 
 class ReminderAdmin(BaseModelAdmin):
-    list_display = ('title', 'start_of_range', 'type', 'get_user',)
+    list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
     list_filter = ('type', 'sent')
-    search_fields = ('title', 'user__username',)
+    search_fields = ('id', 'title', 'user__username', 'user__email')
+    ordering = ('-start_of_range',)
     autocomplete_fields = ('event', 'homework', 'user')
 
     def get_readonly_fields(self, request, obj=None):

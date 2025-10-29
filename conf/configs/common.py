@@ -93,6 +93,7 @@ INSTALLED_APPS = (
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'django_filters',
+    'django_celery_results',
     'corsheaders',
     # Project modules
     'helium.auth',
@@ -340,6 +341,12 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'pipeline.finders.PipelineFinder',
 )
+
+# Celery
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+CELERY_RESULT_EXPIRES = 3600 * 24 * 7
 
 # Media files
 

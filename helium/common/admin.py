@@ -5,6 +5,7 @@ __version__ = "1.11.54"
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.sites import AdminSite
+from django_celery_results.models import TaskResult, GroupResult
 
 
 class PlatformAdminSite(AdminSite):
@@ -33,3 +34,12 @@ class BaseModelAdmin(ModelAdmin):
 
 # Instantiate the Admin site
 admin_site = PlatformAdminSite()
+
+
+class TaskResultAdmin(ModelAdmin):
+    list_display = ('task_id', 'task_name', 'periodic_task_name', 'status', 'date_done')
+    list_filter = ('status', 'date_done')
+    search_fields = ('task_id', 'task_name')
+
+
+admin_site.register(TaskResult, TaskResultAdmin)
