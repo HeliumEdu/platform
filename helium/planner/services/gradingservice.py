@@ -105,15 +105,13 @@ def get_grade_data(user_id):
                      .for_user(user_id)
                      .values('id',
                              'title',
-                             'average_grade',
+                             'overall_grade',
                              'trend'))
 
     for course_group in course_groups:
-        course_group['overall_grade'] = course_group['average_grade']
         course_group['num_homework_graded'] = (Course.objects
                                                .for_course_group(course_group['id'])
                                                .num_homework_graded())
-        course_group.pop('average_grade')
         course_group['grade_points'] = get_grade_points_for_course_group(course_group['id'])
 
         course_group['courses'] = (Course.objects.for_user(user_id)
@@ -165,18 +163,18 @@ def recalculate_course_group_grade(course_group):
                      .graded()
                      .values_list('current_grade', flat=True))
     total = sum(course_grades)
-    average_grade = total / len(course_grades) if len(course_grades) > 0 else -1
+    overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
 
     grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group.pk) if points]
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
     logger.debug(f'Course Group {course_group.pk} average grade recalculated to '
-                 f'{average_grade} with {len(grade_points)} homework '
+                 f'{overall_grade} with {len(grade_points)} homework '
                  f'in {len(course_grades)} courses')
     logger.debug(f'Course Group {course_group.pk} trend recalculated to {trend}')
 
     # Update the values in the datastore, circumventing signals
-    CourseGroup.objects.filter(pk=course_group.pk).update(average_grade=average_grade, trend=trend)
+    CourseGroup.objects.filter(pk=course_group.pk).update(overall_grade=overall_grade, trend=trend)
 
 
 def recalculate_course_grade(course):
