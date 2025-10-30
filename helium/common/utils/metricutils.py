@@ -46,7 +46,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         statsd.increment(metric_id, value=value, tags=tags)
 
         logger.debug(f"Metric: {metric_id} incremented {value}, with tags {tags}")
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
@@ -57,7 +57,7 @@ def timing(metric, value, extra_tags=None):
         metric_id = f"platform.{metric}"
         statsd.timing(metric_id, value=value, tags=tags)
         logger.debug(f"Metric: {metric_id} took {value}ms, emitted with tags {tags}")
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
@@ -69,7 +69,7 @@ def request_start(request):
             'Request-Metric-ID': metric_id,
             'Request-Metric-Start': int(round(time.time() * 1000))
         }
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
@@ -81,8 +81,8 @@ def request_stop(metrics, request, response):
         timing('request.timing', metrics['Request-Metric-Millis'], extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
 
         for name, value in metrics.items():
-            response.headers[name] = (name, str(value))
-    except Exception as e:
+            response.headers[name] = value
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
@@ -94,7 +94,7 @@ def task_start(task_name):
             'Task-Metric-ID': metric_id,
             'Task-Metric-Start': int(round(time.time() * 1000))
         }
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
@@ -104,5 +104,5 @@ def task_stop(metrics, value=1, user=None):
 
         increment('task', user=user, value=value, extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
         timing('task.timing', metrics['Task-Metric-Millis'], extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
