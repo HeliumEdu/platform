@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.15.19"
 
 import logging
 
@@ -15,12 +15,12 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseGroup
         fields = (
-            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'average_grade', 'trend', 'private_slug',
+            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend', 'private_slug',
             'user',
             # Property fields (which should also be declared as read-only)
             'num_days', 'num_days_completed', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'average_grade', 'trend', 'private_slug', 'user', 'num_days', 'num_days_completed', 'num_homework',
+            'overall_grade', 'trend', 'private_slug', 'user', 'num_days', 'num_days_completed', 'num_homework',
             'num_homework_completed', 'num_homework_graded',)
 
     def validate(self, attrs):

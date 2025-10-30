@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.29"
+__version__ = "1.15.19"
 
 import datetime
 
@@ -24,7 +24,7 @@ class CourseGroup(BaseModel):
     shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
                                             default=True, db_index=True)
 
-    average_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
+    overall_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
 
     trend = models.FloatField(default=None, blank=True, null=True)
 
