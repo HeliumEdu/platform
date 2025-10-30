@@ -181,13 +181,13 @@ class TestCaseCourseGroupViews(APITestCase):
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
                                                                     email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user2)
-        average_grade = course_group.average_grade
+        overall_grade = course_group.overall_grade
         trend = course_group.trend
         private_slug = course_group.private_slug
 
         # WHEN
         data = {
-            'average_grade': 23,
+            'overall_grade': 23,
             'trend': 1.5,
             'private_slug': 'new_slug',
             'user': user1.pk,
@@ -202,7 +202,7 @@ class TestCaseCourseGroupViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         course_group = CourseGroup.objects.get(pk=course_group.id)
-        self.assertEqual(course_group.average_grade, average_grade)
+        self.assertEqual(course_group.overall_grade, overall_grade)
         self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)
         self.assertEqual(course_group.get_user().pk, user2.pk)

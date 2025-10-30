@@ -96,7 +96,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                      'url': 'http://go.com/valid-ical-feed',
                                                                      'color': '#fad165', 'shown_on_calendar': False,
                                                                      'user': user.pk})
-        coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'average_grade': 66.6667,
+        coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'overall_grade': 66.6667,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
                                                                                     'private_slug': None,
@@ -104,7 +104,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                                     'title': '🍂 Test Course Group',
                                                                                     'trend': None,
                                                                                     'user': user.pk})
-        coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'average_grade': -1.0,
+        coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'overall_grade': -1.0,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
                                                                                     'private_slug': None,
@@ -372,7 +372,7 @@ class TestCaseImportExportViews(APITestCase):
         course_group = CourseGroup.objects.all()[0]
         course = Course.objects.for_course_group(course_group.pk)[1]
         category = Category.objects.for_course(course.pk)[2]
-        self.assertEqual(float(course_group.average_grade), 86.2193)
+        self.assertEqual(float(course_group.overall_grade), 86.2193)
         self.assertEqual(round(float(course_group.trend), 10), -0.0004999191)
         self.assertEqual(float(course.current_grade), 90.3571)
         self.assertEqual(round(float(course.trend), 10), 0.0048988364)
