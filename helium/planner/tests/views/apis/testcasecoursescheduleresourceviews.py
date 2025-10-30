@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, attachmenthelper
 
 
 class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
@@ -60,6 +60,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
+        attachmenthelper.given_attachment_exists(user, course=course)
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
@@ -84,6 +85,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
+        attachmenthelper.given_attachment_exists(user, course=course)
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
@@ -104,6 +106,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
             self.assertEqual(cached_event[0]['end'], response_db.data[0]['end'])
             self.assertEqual(cached_event[0]['all_day'], response_db.data[0]['all_day'])
             self.assertEqual(cached_event[0]['show_end_time'], response_db.data[0]['show_end_time'])
+            self.assertEqual(cached_event[0]['comments'], response_db.data[0]['comments'])
             self.assertEqual(cached_event[0]['comments'], response_db.data[0]['comments'])
 
     @mock.patch('helium.planner.services.coursescheduleservice.cache.get_many')
