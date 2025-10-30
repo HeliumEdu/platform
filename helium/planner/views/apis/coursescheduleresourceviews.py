@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from helium.common.views.views import HeliumAPIView
 from helium.planner.models import Course, CourseSchedule
+from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.services import coursescheduleservice
 
@@ -33,6 +34,12 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
             events = coursescheduleservice.course_schedules_to_events(course, course_schedules, search)
 
             serializer = EventSerializer(events, many=True)
+
+            attachments = list(course.attachments.all())
+            if len(attachments) > 0:
+                attachments_serializer = AttachmentSerializer(attachments, many=True)
+                for event in serializer.data:
+                    event['attachments'] = attachments_serializer.data
 
             return Response(serializer.data)
         except Course.DoesNotExist:

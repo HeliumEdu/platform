@@ -97,20 +97,20 @@ def _get_events_from_cache(cached_keys, search=None):
     events = []
     invalid_data = False
 
-    for key, event in cache.get_many(cached_keys).items():
+    for key, event_item in cache.get_many(cached_keys).items():
         try:
-            event = json.loads(event)
-            event = Event(id=event['id'],
-                          title=event['title'],
-                          all_day=event['all_day'],
-                          show_end_time=event['show_end_time'],
-                          start=parser.parse(event['start']),
-                          end=parser.parse(event['end']),
-                          url=event['url'],
-                          owner_id=event['owner_id'],
-                          user_id=event['user'],
-                          calendar_item_type=event['calendar_item_type'],
-                          comments=event['comments'])
+            event_item = json.loads(event_item)
+            event = Event(id=event_item['id'],
+                          title=event_item['title'],
+                          all_day=event_item['all_day'],
+                          show_end_time=event_item['show_end_time'],
+                          start=parser.parse(event_item['start']),
+                          end=parser.parse(event_item['end']),
+                          url=event_item['url'],
+                          owner_id=event_item['owner_id'],
+                          user_id=event_item['user'],
+                          calendar_item_type=event_item['calendar_item_type'],
+                          comments=event_item['comments'])
 
             if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
                 continue
