@@ -53,6 +53,9 @@ def _import_course_groups(course_groups, user):
     course_group_remap = {}
 
     for course_group in course_groups:
+        # Field named remapped for legacy purposes
+        if 'average_grade' in course_group:
+            course_group['overall_grade'] = course_group['average_grade']
         serializer = CourseGroupSerializer(data=course_group)
 
         if serializer.is_valid():
