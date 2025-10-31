@@ -13,6 +13,7 @@ from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
+
 class TestCaseCourseViews(APITestCase, CacheTestCase):
     def test_course_schedule_login_required(self):
         # GIVEN

@@ -27,6 +27,7 @@ from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
+from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,10 @@ def _import_course_schedules(course_schedules, course_remap):
     for course_schedule in course_schedules:
         course_schedule['course'] = course_remap.get(course_schedule['course'], None)
 
-        serializer = CourseScheduleSerializer(data=course_schedule)
+        view = CourseGroupCourseCourseSchedulesApiListView()
+        view.kwargs = {'course': course_schedule['course']}
+        context = {'view': view}
+        serializer = CourseScheduleSerializer(data=course_schedule, context=context)
 
         if serializer.is_valid():
             serializer.save(course_id=course_schedule['course'])
