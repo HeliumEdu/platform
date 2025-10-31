@@ -363,7 +363,7 @@ class TestCaseHomeworkViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_access_object_owned_by_another_user(self):
+    def test_no_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
