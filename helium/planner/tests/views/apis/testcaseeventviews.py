@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.2"
+__version__ = "1.15.21"
 
 import datetime
 import json
@@ -258,7 +258,7 @@ class TestCaseEventViews(APITestCase):
         self.assertFalse(Event.objects.filter(pk=event.pk).exists())
         self.assertEqual(Event.objects.count(), 0)
 
-    def test_access_object_owned_by_another_user(self):
+    def test_no_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
