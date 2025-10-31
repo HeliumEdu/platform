@@ -5,6 +5,7 @@ __version__ = "1.11.54"
 import logging
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from helium.planner.models import CourseSchedule
 
@@ -19,3 +20,13 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course')
         read_only_fields = ('course',)
+
+    def validate(self, attrs):
+        if not self.instance:
+            course_id = self.context['view'].kwargs.get('course')
+
+            if CourseSchedule.objects.for_course(course_id).exists():
+                raise ValidationError(
+                    f'Course {course_id} already has a CourseSchedule and there cannot be more than one.')
+
+        return attrs

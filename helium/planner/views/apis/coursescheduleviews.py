@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
-from helium.planner.models import CourseSchedule
+from helium.planner.models import CourseSchedule, Course
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 
@@ -28,6 +28,11 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
             return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
         else:
             return CourseSchedule.objects.none()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def get(self, request, *args, **kwargs):
         """
