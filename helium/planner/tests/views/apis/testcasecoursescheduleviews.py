@@ -50,22 +50,19 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course1 = coursehelper.given_course_exists(course_group1)
         course2 = coursehelper.given_course_exists(course_group2)
         course3 = coursehelper.given_course_exists(course_group3)
-        course4 = coursehelper.given_course_exists(course_group3)
         courseschedulehelper.given_course_schedule_exists(course1)
         courseschedulehelper.given_course_schedule_exists(course2)
         courseschedulehelper.given_course_schedule_exists(course3)
-        courseschedulehelper.given_course_schedule_exists(course4)
-        courseschedulehelper.given_course_schedule_exists(course4)
 
         # WHEN
         response = self.client.get(
             reverse('planner_coursegroups_courses_courseschedules_list',
-                    kwargs={'course_group': course_group3.pk, 'course': course4.pk}))
+                    kwargs={'course_group': course_group3.pk, 'course': course3.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(CourseSchedule.objects.count(), 5)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(CourseSchedule.objects.count(), 3)
+        self.assertEqual(len(response.data), 1)
 
     def test_create_course_schedule(self):
         # GIVEN
@@ -91,7 +88,6 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             'thu_end_time': '12:00:00',
             'sat_start_time': '12:00:00',
             'sat_end_time': '12:00:00',
-            'course': course.pk,
         }
         response = self.client.post(
             reverse('planner_coursegroups_courses_courseschedules_list',
@@ -105,6 +101,42 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_schedule = CourseSchedule.objects.get(pk=response.data['id'])
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, data)
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
+
+    def test_create_course_schedule_no_many(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        data = {
+            'days_of_week': '0101010',
+            'mon_start_time': '14:30:00',
+            'mon_end_time': '15:30:00',
+            'wed_start_time': '14:30:00',
+            'wed_end_time': '15:30:00',
+            'fri_start_time': '14:30:00',
+            'fri_end_time': '15:30:00',
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'tue_start_time': '12:00:00',
+            'tue_end_time': '12:00:00',
+            'thu_start_time': '12:00:00',
+            'thu_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00'
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CourseSchedule.objects.count(), 1)
 
     def test_get_course_schedule_by_id(self):
         # GIVEN
@@ -178,7 +210,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertFalse(CourseSchedule.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(CourseSchedule.objects.count(), 0)
 
-    def test_access_object_owned_by_another_user(self):
+    def test_no_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')

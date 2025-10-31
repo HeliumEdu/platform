@@ -78,8 +78,8 @@ class TestCaseCourseViews(APITestCase):
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
             'end_date': '2015-07-09',
-            'course_group': course_group.pk,
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
+            'course_group': course_group.pk,
             'current_grade': -1,
             'trend': None,
         }
@@ -137,8 +137,7 @@ class TestCaseCourseViews(APITestCase):
             'teacher_name': 'my teacher',
             'teacher_email': 'email@teacher.com',
             'start_date': '2015-03-05',
-            'end_date': '2015-07-09',
-            'course_group': course_group2.pk
+            'end_date': '2015-07-09'
         }
         response = self.client.put(
             reverse('planner_coursegroups_courses_detail',
@@ -165,7 +164,6 @@ class TestCaseCourseViews(APITestCase):
             # Intentionally NOT changing these value
             'title': course.title,
             'credits': course.credits,
-            'course_group': course.course_group.pk,
         }
         response = self.client.put(
             reverse('planner_coursegroups_courses_detail',
@@ -217,7 +215,7 @@ class TestCaseCourseViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_access_object_owned_by_another_user(self):
+    def test_no_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
@@ -263,8 +261,7 @@ class TestCaseCourseViews(APITestCase):
             'title': course.title,
             'credits': course.credits,
             'start_date': course.start_date.isoformat(),
-            'end_date': course.end_date.isoformat(),
-            'course_group': course.course_group.pk
+            'end_date': course.end_date.isoformat()
         }
         response = self.client.put(reverse('planner_coursegroups_courses_detail',
                                            kwargs={'course_group': course_group.pk, 'pk': course.pk}),
