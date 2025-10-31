@@ -224,7 +224,7 @@ class TestCaseAttachmentViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_access_object_owned_by_another_user(self):
+    def test_no_access_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',

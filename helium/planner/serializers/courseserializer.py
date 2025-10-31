@@ -30,7 +30,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'num_days', 'num_days_completed', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
         read_only_fields = (
-            'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
+            'course_group', 'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def validate(self, attrs):
