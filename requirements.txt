@@ -8,7 +8,7 @@ django-health-check==3.20.0
 django_celery_results==2.6.0
 drf-spectacular[sidecar]==0.28.0
 celery[redis]==5.5.3
-twilio==9.8.4
+twilio==9.8.5
 firebase-admin==7.1.0
 pyOpenSSL==25.3.0
 Pillow==12.0.0
