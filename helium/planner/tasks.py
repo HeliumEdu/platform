@@ -45,7 +45,11 @@ def recalculate_course_group_grade(course_group_id, retries=0):
 @app.task
 def recalculate_course_grade(course_id, retries=0):
     try:
+        course_group_id = Course.objects.get(pk=course_id).course_group.id
+
         gradingservice.recalculate_course_grade(course_id)
+
+        recalculate_course_group_grade(course_group_id)
 
         metricutils.increment('grade.recalculate.course', extra_tags=[f"retries:{retries}"])
     except IntegrityError as ex:  # pragma: no cover
@@ -60,10 +64,11 @@ def recalculate_course_grade(course_id, retries=0):
     except ObjectDoesNotExist:
         logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
 
-    course_group_id = (Course.objects.filter(pk=course_id)
-                       .values_list("course_group_id", flat=True)).first()
-    if course_group_id:
-        recalculate_course_group_grade(course_group_id)
+
+@app.task
+def recalculate_course_grades_for_course_group(course_group_id):
+    for course_id in Course.objects.for_course_group(course_group_id).values_list("id", flat=True):
+        recalculate_course_grade(course_id)
 
 
 @app.task
@@ -71,12 +76,11 @@ def recalculate_category_grade(category_id, retries=0):
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
+        course_id = Category.objects.get(pk=category_id).course.id
+
         gradingservice.recalculate_category_grade(category_id)
 
-        course_id = Category.objects.filter(pk=category_id).values_list("course_id", flat=True).first()
-
-        if course_id:
-            recalculate_course_grade(course_id)
+        recalculate_course_grade(course_id)
 
         metricutils.increment('grade.recalculate.category', extra_tags=[f"retries:{retries}"])
     except IntegrityError as ex:  # pragma: no cover
