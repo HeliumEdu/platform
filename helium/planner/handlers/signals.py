@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
-    adjust_reminder_times, recalculate_course_group_grade
+    adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Course)
 def save_course(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance)
+    recalculate_course_grade.delay(instance.pk)
 
 
 @receiver(post_delete, sender=Course)
 def delete_course(sender, instance, **kwargs):
-    recalculate_course_group_grade.delay(instance.course_group.pk)
+    recalculate_course_grades_for_course_group.delay(instance.course_group.pk)
 
 
 @receiver(post_save, sender=CourseSchedule)
