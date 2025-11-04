@@ -171,6 +171,10 @@ def recalculate_course_group_grade(course_group_id):
     #                      'start',
     #                      'grade'))
 
+    # course_grade_points = [(points[1] / 100) for points in get_grade_points_for(query_set, False, has_credit_grading) if points]
+    # overall_grade = course_grade_points[-1] * 100 if len(course_grade_points) > 0 else -1
+    # trend = commonutils.calculate_trend(range(len(course_grade_points)), course_grade_points)
+
     # if has_credit_grading:
     #     # If no credits are present, this course is ungraded
     #     if 'credits' not in item or not item['credits']:
@@ -179,10 +183,6 @@ def recalculate_course_group_grade(course_group_id):
     #     # Formula is same as weighted: ( cl1xcr1 + cl2xcr2 + cl3xcr3 ... ) / ( cr1 + cr2 + cr3 ... )
     #     earned = (((earned / possible) * (float(item['credits']) / 100)) * 100)
     #     possible = float(item['credits'])
-
-    course_grade_points = [(points[1] / 100) for points in get_grade_points_for(query_set, False, has_credit_grading) if points]
-    overall_grade = course_grade_points[-1] * 100 if len(course_grade_points) > 0 else -1
-    trend = commonutils.calculate_trend(range(len(course_grade_points)), course_grade_points)
 
     course_grades = (Course.objects
                      .for_course_group(course_group_id)
