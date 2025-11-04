@@ -15,13 +15,13 @@ from helium.planner.tasks import recalculate_course_group_grade, recalculate_cou
 def recalculate_grade(modeladmin, request, queryset):
     model_class = queryset.model
 
-    for course_group in queryset:
+    for model in queryset:
         if model_class.__name__ == "CourseGroup":
-            recalculate_course_group_grade.delay(course_group.pk)
+            recalculate_course_group_grade.delay(model.pk)
         elif model_class.__name__ == "Course":
-            recalculate_course_grade.delay(course_group.pk)
+            recalculate_course_grade.delay(model.pk)
         elif model_class.__name__ == "Category":
-            recalculate_category_grade.delay(course_group.pk)
+            recalculate_category_grade.delay(model.pk)
 
     modeladmin.message_user(request,
                             f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")
