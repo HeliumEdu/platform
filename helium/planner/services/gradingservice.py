@@ -14,88 +14,87 @@ def get_grade_points_for_course(course_id):
     has_weighted_grading = Course.objects.has_weighted_grading(course_id)
     query_set = (Homework.objects.for_course(course_id)
                  .graded()
-                 .values_list('id',
-                              'title',
-                              'category_id',
-                              'start',
-                              'current_grade'))
+                 .values('id',
+                         'title',
+                         'category_id',
+                         'category__weight',
+                         'start',
+                         'current_grade'))
 
-    return get_grade_points_for(query_set, has_weighted_grading)
+    return get_grade_points_for(query_set, has_weighted_grading, False)
 
 
 def get_grade_points_for_course_group(course_group_id):
     has_weighted_grading = False
+    has_credit_grading = False
     for course in Course.objects.for_course_group(course_group_id):
         if course.has_weighted_grading:
             has_weighted_grading = True
+        if course.credits != 0:
+            has_credit_grading = True
+
+        if has_weighted_grading and has_credit_grading:
             break
 
     query_set = (Homework.objects.for_course_group(course_group_id)
                  .graded()
-                 .values_list('id',
-                              'title',
-                              'category_id',
-                              'start',
-                              'current_grade'))
+                 .values('id',
+                         'title',
+                         'category_id',
+                         'category__weight',
+                         'course__credits',
+                         'start',
+                         'current_grade'))
 
-    return get_grade_points_for(query_set, has_weighted_grading)
+    return get_grade_points_for(query_set, has_weighted_grading, has_credit_grading)
 
 
 def get_grade_points_for_category(category_id):
     query_set = (Homework.objects
                  .for_category(category_id)
                  .graded()
-                 .values_list('id',
-                              'title',
-                              'category_id',
-                              'start',
-                              'current_grade'))
+                 .values('id',
+                         'title',
+                         'category_id',
+                         'start',
+                         'current_grade'))
 
     # When fetching grade points for a single category, weighted grading does not need to be considered,
     # since the grades are not in relation to anything outside of the single category
-    return get_grade_points_for(query_set, False)
+    return get_grade_points_for(query_set, False, False)
 
 
-def get_grade_points_for(query_set, has_weighted_grading):
+def get_grade_points_for(query_set, has_weighted_grading, has_credit_grading):
     total_earned = 0
     total_possible = 0
-    # Maintain grades by category as we iterate over all homework
-    categories = {}
-    category_totals = {}
     grade_series = []
-    for homework_id, homework_title, category_id, start, current_grade in query_set:
-        if category_id not in categories:
-            # The category may no longer exist by the time a recalculation request is processed
-            try:
-                categories[category_id] = Category.objects.get(pk=category_id)
-            except Category.DoesNotExist:
-                continue
-        category = categories[category_id]
-
-        earned, possible = current_grade.split('/')
+    for homework in query_set:
+        earned, possible = homework['current_grade'].split('/')
         earned = float(earned)
         possible = float(possible)
         homework_grade = (earned / possible) * 100
-        # Formula for weighted grading: weighted_grade = ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... )
+        # Formula for weighted grading: ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... )
         if has_weighted_grading:
             # If no weight is present, this category is ungraded
-            if category.weight == 0:
+            if 'category__weight' not in homework or not homework['category__weight']:
                 continue
 
-            if category.pk not in category_totals:
-                category_totals[category.pk] = {'category': category, 'total_earned': 0, 'total_possible': 0}
+            earned = (((earned / possible) * (float(homework['category__weight']) / 100)) * 100)
+            possible = float(homework['category__weight'])
 
-            category_totals[category.pk]['total_earned'] += earned
-            category_totals[category.pk]['total_possible'] += possible
+        if has_credit_grading:
+            # If no credits are present, this course is ungraded
+            if 'course__credits' not in homework or not homework['course__credits']:
+                continue
 
-            total_earned += (((earned / possible) * (float(category.weight) / 100)) * 100)
-            total_possible += float(category.weight)
-        else:
-            total_earned += earned
-            total_possible += possible
+            # Formula is same as weighted: ( cl1xcr1 + cl2xcr2 + cl3xcr3 ... ) / ( cr1 + cr2 + cr3 ... )
+            # TODO: implement credit grading
 
-        grade_series.append([start, round((total_earned / total_possible * 100), 4), homework_id, homework_title,
-                             round(homework_grade, 4), category.pk])
+        total_earned += earned
+        total_possible += possible
+
+        grade_series.append([homework['start'], round((total_earned / total_possible * 100), 4),
+                             homework['id'], homework['title'], round(homework_grade, 4), homework['category_id']])
 
     return grade_series
 
