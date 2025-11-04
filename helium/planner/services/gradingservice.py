@@ -156,42 +156,49 @@ def get_grade_data(user_id):
     }
 
 
-def recalculate_course_group_grade(course_group):
+def recalculate_course_group_grade(course_group_id):
     course_grades = (Course.objects
-                     .for_course_group(course_group.pk)
+                     .for_course_group(course_group_id)
                      .graded()
                      .values_list('current_grade', flat=True))
     total = sum(course_grades)
     overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
 
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group.pk) if points]
+    grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group_id) if points]
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
-    logger.debug(f'Course Group {course_group.pk} average grade recalculated to '
+    logger.debug(f'Course Group {course_group_id} average grade recalculated to '
                  f'{overall_grade} with {len(grade_points)} homework '
                  f'in {len(course_grades)} courses')
-    logger.debug(f'Course Group {course_group.pk} trend recalculated to {trend}')
+    logger.debug(f'Course Group {course_group_id} trend recalculated to {trend}')
 
     # Update the values in the datastore, circumventing signals
-    CourseGroup.objects.filter(pk=course_group.pk).update(overall_grade=overall_grade, trend=trend)
+    CourseGroup.objects.filter(pk=course_group_id).update(overall_grade=overall_grade, trend=trend)
 
 
-def recalculate_course_grade(course):
-    # Recalculate category weight breakdown
+def recalculate_course_grade(course_id):
+    # Recalculate course grade
+    grade_points = [(points[1] / 100) for points in get_grade_points_for_course(course_id) if points]
+    current_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
+    trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
+
+    logger.debug(f'Course {course_id} current grade recalculated to {current_grade} '
+                 f'with {len(grade_points)} homework')
+    logger.debug(f'Course {course_id} trend recalculated to {trend}')
+
+    # Update the values in the datastore, circumventing signals
+    Course.objects.filter(pk=course_id).update(current_grade=current_grade, trend=trend)
+
+    # Also recalculate category weight breakdown
     total_earned = 0
     total_possible = 0
-    # Maintain grades by category as we iterate over all homework
     category_totals = {}
-    for category_id, grade in (Homework.objects
-            .for_course(course.pk)
+    for category_id, grade, weight in (Homework.objects
+            .for_course(course_id)
             .graded()
             .values_list('category_id',
-                         'current_grade')):
-        # The category may no longer exist by the time a recalculation request is processed
-        try:
-            category = Category.objects.get(pk=category_id)
-        except Category.DoesNotExist:
-            continue
+                         'current_grade',
+                         'category__weight')):
 
         earned, possible = grade.split('/')
         earned = float(earned)
@@ -200,61 +207,39 @@ def recalculate_course_grade(course):
         total_earned += earned
         total_possible += possible
 
-        if category.pk not in category_totals:
-            category_totals[category.pk] = {'instance': category, 'total_earned': 0, 'total_possible': 0}
+        if category_id not in category_totals:
+            category_totals[category_id] = {'weight': weight, 'total_earned': 0, 'total_possible': 0}
 
-        category_totals[category.pk]['total_earned'] += earned
-        category_totals[category.pk]['total_possible'] += possible
+        category_totals[category_id]['total_earned'] += earned
+        category_totals[category_id]['total_possible'] += possible
 
-    category_earned = 0
-    category_possible = 0
-    for category in category_totals.values():
-        if course.has_weighted_grading:
-            grade_by_weight = (((category['total_earned'] / category['total_possible']) * (
-                    float(category['instance'].weight) / 100)) * 100)
+    for category_id, totals in category_totals.items():
+        if totals['weight']:
+            grade_by_weight = (((totals['total_earned'] / totals['total_possible']) * (
+                    float(totals['weight']) / 100)) * 100)
 
-            category_earned += grade_by_weight
-            category_possible += float(category['instance'].weight)
-
-            logger.debug(f'Course triggered category {category["instance"].pk} '
+            logger.debug(f'Course triggered category {category_id} '
                          f'recalculation of grade_by_weight to {grade_by_weight}')
-        else:
-            category_earned += total_earned
-            category_possible += total_possible
 
-            grade_by_weight = 0
-
-        # Update the values in the datastore, circumventing signals
-        Category.objects.filter(pk=category['instance'].pk).update(grade_by_weight=grade_by_weight)
-
-    # Recalculate course grade
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_course(course.pk) if points]
-    current_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
-    trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
-
-    logger.debug(f'Course {course.pk} current grade recalculated to {current_grade} '
-                 f'with {len(grade_points)} homework')
-    logger.debug(f'Course {course.pk} trend recalculated to {trend}')
-
-    # Update the values in the datastore, circumventing signals
-    Course.objects.filter(pk=course.pk).update(current_grade=current_grade, trend=trend)
+            # Update the values in the datastore, circumventing signals
+            Category.objects.filter(pk=category_id).update(grade_by_weight=grade_by_weight)
 
 
-def recalculate_category_grade(category):
+def recalculate_category_grade(category_id):
     total_earned = 0
     total_possible = 0
-    for grade in Homework.objects.for_category(category.pk).graded().values_list('current_grade', flat=True):
+    for grade in Homework.objects.for_category(category_id).graded().values_list('current_grade', flat=True):
         earned, possible = grade.split('/')
         total_earned += float(earned)
         total_possible += float(possible)
     average_grade = (total_earned / total_possible) * 100 if total_possible > 0 else -1
 
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_category(category.pk) if points]
+    grade_points = [(points[1] / 100) for points in get_grade_points_for_category(category_id) if points]
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
-    logger.debug(f'Category {category.pk} average grade recalculated to '
+    logger.debug(f'Category {category_id} average grade recalculated to '
                  f'{average_grade} with {len(grade_points)} homework')
-    logger.debug(f'Category {category.pk} trend recalculated to {trend}')
+    logger.debug(f'Category {category_id} trend recalculated to {trend}')
 
     # Update the values in the datastore, circumventing signals
-    Category.objects.filter(pk=category.pk).update(average_grade=average_grade, trend=trend)
+    Category.objects.filter(pk=category_id).update(average_grade=average_grade, trend=trend)
