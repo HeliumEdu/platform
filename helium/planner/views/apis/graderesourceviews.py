@@ -29,7 +29,7 @@ class GradesApiResourceView(HeliumAPIView):
 
         `grade_points` represents a list of grades accumulating over time. This is a list made up of individual grade
         points, each a tuple containing values of the format [time, grade_at_time, homework_id, homework_title,
-        homework_grade, category_id].
+        homework_grade, category_id, course_id].
         """
         grade_data = gradingservice.get_grade_data(request.user.pk)
 
