@@ -77,7 +77,7 @@ class AttachmentAdmin(BaseModelAdmin):
 
 
 class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
-    title = 'Has Course Schedule'
+    title = 'has course schedule'
     parameter_name = 'has_course_schedule'
 
     def lookups(self, request, model_admin):
@@ -124,7 +124,7 @@ class CourseGroupAdmin(BaseModelAdmin):
 
 
 class CourseHasCourseScheduleFilter(SimpleListFilter):
-    title = 'Has Course Schedule'
+    title = 'has course schedule'
     parameter_name = 'has_course_schedule'
 
     def lookups(self, request, model_admin):
@@ -143,7 +143,7 @@ class CourseHasCourseScheduleFilter(SimpleListFilter):
 
 
 class HasAttachmentFilter(SimpleListFilter):
-    title = 'Has Attachments'
+    title = 'has attachments'
     parameter_name = 'has_attachments'
 
     def lookups(self, request, model_admin):
@@ -162,7 +162,7 @@ class HasAttachmentFilter(SimpleListFilter):
 
 
 class CourseHasWeightedGradingFilter(SimpleListFilter):
-    title = 'Has Weighted Grading'
+    title = 'has weighted grading'
     parameter_name = 'has_weighted_grading'
 
     def lookups(self, request, model_admin):
@@ -180,11 +180,30 @@ class CourseHasWeightedGradingFilter(SimpleListFilter):
             return queryset
 
 
+class CourseHasCreditsFilter(SimpleListFilter):
+    title = 'has credits'
+    parameter_name = 'has_credits'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(credits__gt=0).distinct()
+        elif self.value() == 'no':
+            return queryset.filter(credits=0).distinct()
+        else:
+            return queryset
+
+
 class CourseAdmin(BaseModelAdmin):
     list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_attachments',
                     'get_user',)
     list_filter = ('course_group__shown_on_calendar', CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
-                   HasAttachmentFilter,)
+                   CourseHasCreditsFilter, HasAttachmentFilter,)
     search_fields = ('id', 'title', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
@@ -214,7 +233,7 @@ class CourseAdmin(BaseModelAdmin):
 
 
 class HasCourseScheduleFilter(SimpleListFilter):
-    title = 'Has Course Schedule'
+    title = 'has course schedule'
     parameter_name = 'has_course_schedule'
 
     def lookups(self, request, model_admin):
@@ -269,7 +288,7 @@ class CourseScheduleAdmin(BaseModelAdmin):
 
 
 class CategoryHasWeightedGradingFilter(SimpleListFilter):
-    title = 'Has Weighted Grading'
+    title = 'has weighted grading'
     parameter_name = 'has_weighted_grading'
 
     def lookups(self, request, model_admin):
@@ -322,7 +341,7 @@ class CategoryAdmin(BaseModelAdmin):
 
 
 class HasReminderFilter(SimpleListFilter):
-    title = 'Has Reminders'
+    title = 'has seminders'
     parameter_name = 'has_reminders'
 
     def lookups(self, request, model_admin):
@@ -363,7 +382,7 @@ class EventAdmin(BaseModelAdmin):
 
 
 class HomeworkHasWeightedGradingFilter(SimpleListFilter):
-    title = 'Has Weighted Grading'
+    title = 'has weighted grading'
     parameter_name = 'has_weighted_grading'
 
     def lookups(self, request, model_admin):

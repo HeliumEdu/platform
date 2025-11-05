@@ -31,35 +31,7 @@ def get_grade_points_for_course_group(course_group_id):
                          'start',
                          'grade'))
 
-    grade_points = get_grade_points_for(query_set, has_weighted_grading)
-
-    courses = {}
-    has_credit_grading = False
-    for course in Course.objects.for_course_group(course_group_id):
-        courses[course.id] = course
-        if course.credits > 0:
-            has_credit_grading = True
-            break
-
-    if has_credit_grading:
-        total_earned = 0
-        total_possible = 0
-        for grade_point in grade_points:
-            course_id = grade_point[6]
-            if course_id not in courses:
-                courses[course_id] = Course.objects.get(pk=course_id)
-            course = courses[course_id]
-
-            # If no credits present, this course is ungraded
-            if not course.credits:
-                continue
-
-            total_earned += float(grade_point[1]) * float(course.credits)
-            total_possible += float(course.credits)
-
-            grade_point[1] = round((total_earned / total_possible), 4)
-
-    return grade_points
+    return get_grade_points_for(query_set, has_weighted_grading)
 
 
 def get_grade_points_for_course(course_id):
@@ -184,9 +156,7 @@ def recalculate_course_group_grade(course_group_id):
                      .graded()
                      .values_list('current_grade', flat=True))
     total = sum(course_grades)
-    # TODO: fix implementation for tests and remove this
-    old_overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
-    overall_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
+    overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
     logger.debug(f'Course Group {course_group_id} overall grade recalculated to '
