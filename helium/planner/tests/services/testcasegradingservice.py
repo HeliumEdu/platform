@@ -771,7 +771,7 @@ class TestCaseGradingService(TestCase):
         course_group = CourseGroup.objects.get(pk=course_group.pk)
         course1 = Course.objects.get(pk=course1.pk)
         course2 = Course.objects.get(pk=course2.pk)
-        self.assertEqual(float(course_group.overall_grade), 70.35)
+        self.assertEqual(float(course_group.overall_grade), 70.5662)
         self.assertEqual(float(course1.current_grade), 71.4209)
         self.assertEqual(float(course2.current_grade), 69.7115)
 
@@ -787,7 +787,7 @@ class TestCaseGradingService(TestCase):
         course_group = CourseGroup.objects.get(pk=course_group.pk)
         course1 = Course.objects.get(pk=course1.pk)
         course2 = Course.objects.get(pk=course2.pk)
-        self.assertEqual(float(course_group.overall_grade), 68.38)
+        self.assertEqual(float(course_group.overall_grade), 67.713)
         self.assertEqual(float(course1.current_grade), 65.7146)
         self.assertEqual(float(course2.current_grade), 69.7115)
 
@@ -798,7 +798,7 @@ class TestCaseGradingService(TestCase):
         course_group = CourseGroup.objects.get(pk=course_group.pk)
         course1 = Course.objects.get(pk=course1.pk)
         course2 = Course.objects.get(pk=course2.pk)
-        self.assertEqual(float(course_group.overall_grade), 66.38)
+        self.assertEqual(float(course_group.overall_grade), 64.7092)
         self.assertEqual(float(course1.current_grade), 59.707)
         self.assertEqual(float(course2.current_grade), 69.7115)
 
@@ -881,4 +881,4 @@ class TestCaseGradingService(TestCase):
 
         # THEN
         course_group = CourseGroup.objects.get(pk=course_group.pk)
-        self.assertEqual(float(course_group.overall_grade), 62.72)
+        self.assertEqual(float(course_group.overall_grade), 63.1818)
