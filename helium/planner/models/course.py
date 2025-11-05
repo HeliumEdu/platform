@@ -28,7 +28,7 @@ class Course(BaseModel):
     website = models.URLField(help_text='A valid URL.', max_length=3000, blank=True, null=True)
 
     is_online = models.BooleanField(
-        help_text='Whether or not the course is online (and thus may have times associated with it).',
+        help_text='Whether the course is online.',
         default=False)
 
     current_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)

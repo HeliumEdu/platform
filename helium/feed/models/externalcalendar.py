@@ -25,7 +25,7 @@ class ExternalCalendar(BaseModel):
         help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
         max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
 
-    shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
+    shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True, db_index=True)
 
     last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',

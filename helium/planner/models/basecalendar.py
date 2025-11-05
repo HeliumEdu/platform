@@ -11,10 +11,10 @@ class BaseCalendar(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 
-    all_day = models.BooleanField(help_text='Whether or not it is an all day event.',
+    all_day = models.BooleanField(help_text='Whether it is an all day event.',
                                   default=False)
 
-    show_end_time = models.BooleanField(help_text='Whether or not the end time should be shown on the calendar.',
+    show_end_time = models.BooleanField(help_text='Whether the end time should be shown on the calendar.',
                                         default=False)
 
     start = models.DateTimeField(help_text='An ISO-8601 date.',

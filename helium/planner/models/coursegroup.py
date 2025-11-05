@@ -21,7 +21,7 @@ class CourseGroup(BaseModel):
     end_date = models.DateField(help_text='An ISO-8601 date.',
                                 db_index=True)
 
-    shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
+    shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True, db_index=True)
 
     overall_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
