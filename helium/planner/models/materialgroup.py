@@ -13,7 +13,7 @@ class MaterialGroup(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 
-    shown_on_calendar = models.BooleanField(help_text='Whether or not items should be shown on the calendar.',
+    shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='material_groups', on_delete=models.CASCADE)

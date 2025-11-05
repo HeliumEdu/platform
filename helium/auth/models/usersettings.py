@@ -27,7 +27,7 @@ class UserSettings(BaseModel):
 
     all_day_offset = models.PositiveIntegerField(default=30)
 
-    show_getting_started = models.BooleanField(help_text='Whether or not the "Getting Started" dialog should be shown.',
+    show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
 
     events_color = models.CharField(
@@ -46,7 +46,11 @@ class UserSettings(BaseModel):
                                                           default=30)
 
     calendar_event_limit = models.BooleanField(
-        help_text='Whether or not calendar events should collapse to "+ more" when a day is full.',
+        help_text='Whether calendar events should collapse to "+ more" when a day is full.',
+        default=False)
+
+    calendar_use_category_colors = models.BooleanField(
+        help_text='Whether calendar items for classes should be shown in category colors instead of class colors.',
         default=False)
 
     default_reminder_offset_type = models.PositiveIntegerField(
@@ -59,7 +63,7 @@ class UserSettings(BaseModel):
         default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
 
     receive_emails_from_admin = models.BooleanField(
-        help_text='Whether or not the `email` on file should receive bulletin emails.',
+        help_text='Whether the user wants to receive Helium update emails.',
         default=True)
 
     remember_filter_state = models.BooleanField(
