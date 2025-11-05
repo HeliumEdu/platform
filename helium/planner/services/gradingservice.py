@@ -184,6 +184,7 @@ def recalculate_course_group_grade(course_group_id):
                      .graded()
                      .values_list('current_grade', flat=True))
     total = sum(course_grades)
+    # TODO: fix implementation for tests and remove this
     old_overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
     overall_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
