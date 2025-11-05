@@ -10,6 +10,7 @@ from django.test import TestCase
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import CourseGroup, Course, Category
 from helium.planner.services import gradingservice
+from helium.planner.services.gradingservice import recalculate_course_group_grade
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
 
@@ -432,15 +433,15 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 5)
         # (25) / 1
-        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25, category1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25, category1.pk, course.pk])
         # (25 + 75) / 2
-        self.assertEqual(grade_points[1], [homework2.start, 50, homework2.pk, homework2.title, 75, category2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 50, homework2.pk, homework2.title, 75, category2.pk, course.pk])
         # (25 + 75 + 50) / 3
-        self.assertEqual(grade_points[2], [homework3.start, 50, homework3.pk, homework3.title, 50, category3.pk])
+        self.assertEqual(grade_points[2], [homework3.start, 50, homework3.pk, homework3.title, 50, category3.pk, course.pk])
         # (25 + 75 + 50 + (60/80)) / 4
-        self.assertEqual(grade_points[3], [homework4.start, 55.2632, homework4.pk, homework4.title, 75, category1.pk])
+        self.assertEqual(grade_points[3], [homework4.start, 55.2632, homework4.pk, homework4.title, 75, category1.pk, course.pk])
         # (25 + 75 + 50 + (60/80) + (4/5)) / 5
-        self.assertEqual(grade_points[4], [homework5.start, 55.5844, homework5.pk, homework5.title, 80, category3.pk])
+        self.assertEqual(grade_points[4], [homework5.start, 55.5844, homework5.pk, homework5.title, 80, category3.pk, course.pk])
 
         # Final grade point should also equal the overall calculated grade
         self.assertEqual(grade_points[4][1], float(course.current_grade))
@@ -473,11 +474,11 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 3)
         # (80 * 30) / 30
-        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk, course.pk])
         # ((80 * 30) + (90 * 50)) / 80
-        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk, course.pk])
         # ((80 * 30) + (90 * 50) + (72 * 20)) / 100
-        self.assertEqual(grade_points[2], [homework3.start, 83.4, homework3.pk, homework3.title, 72, category3.pk])
+        self.assertEqual(grade_points[2], [homework3.start, 83.4, homework3.pk, homework3.title, 72, category3.pk, course.pk])
 
         # Final grade point should also equal the overall calculated grade
         self.assertEqual(grade_points[2][1], float(course.current_grade))
@@ -523,15 +524,15 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 5)
         # ((25 * 30)) / 30
-        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25, category1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 25, homework1.pk, homework1.title, 25, category1.pk, course.pk])
         # ((25 * 30) + (75 * 50)) / 80
-        self.assertEqual(grade_points[1], [homework2.start, 56.25, homework2.pk, homework2.title, 75, category2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 56.25, homework2.pk, homework2.title, 75, category2.pk, course.pk])
         # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
-        self.assertEqual(grade_points[2], [homework3.start, 55, homework3.pk, homework3.title, 50, category3.pk])
+        self.assertEqual(grade_points[2], [homework3.start, 55, homework3.pk, homework3.title, 50, category3.pk, course.pk])
         # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30)) / 130
-        self.assertEqual(grade_points[3], [homework4.start, 59.6154, homework4.pk, homework4.title, 75, category1.pk])
+        self.assertEqual(grade_points[3], [homework4.start, 59.6154, homework4.pk, homework4.title, 75, category1.pk, course.pk])
         # ((25 * 30) + (75 * 50) + (50 * 20) + ((60/80) * 30) + ((4/5) * 20)) / 150
-        self.assertEqual(grade_points[4], [homework5.start, 62.3333, homework5.pk, homework5.title, 80, category3.pk])
+        self.assertEqual(grade_points[4], [homework5.start, 62.3333, homework5.pk, homework5.title, 80, category3.pk, course.pk])
 
         # Final grade point should also equal the overall calculated grade
         self.assertEqual(grade_points[4][1], float(course.current_grade))
@@ -559,9 +560,9 @@ class TestCaseGradingService(TestCase):
         # THEN
         self.assertEqual(len(grade_points), 2)
         # ((80 * 30)) / 30
-        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk])
+        self.assertEqual(grade_points[0], [homework1.start, 80, homework1.pk, homework1.title, 80, category1.pk, course.pk])
         # ((80 * 30) + (90 * 50)) / 80
-        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk])
+        self.assertEqual(grade_points[1], [homework2.start, 86.25, homework2.pk, homework2.title, 90, category2.pk, course.pk])
 
         # Final grade point should also equal the overall calculated grade
         self.assertEqual(grade_points[1][1], float(course.current_grade))

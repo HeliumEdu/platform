@@ -22,18 +22,44 @@ def get_grade_points_for_course_group(course_group_id):
     query_set = (Homework.objects.for_course_group(course_group_id)
                  .graded()
                  .annotate(weight=F('category__weight'),
-                           credits=F('course__credits'),
                            grade=F('current_grade'))
                  .values('id',
                          'title',
                          'category',
-                         'credits',
+                         'course',
                          'weight',
-                         'credits',
                          'start',
                          'grade'))
 
-    return get_grade_points_for(query_set, has_weighted_grading)
+    grade_points = get_grade_points_for(query_set, has_weighted_grading)
+
+    courses = {}
+    has_credit_grading = False
+    for course in Course.objects.for_course_group(course_group_id):
+        courses[course.id] = course
+        if course.credits > 0:
+            has_credit_grading = True
+            break
+
+    if has_credit_grading:
+        total_earned = 0
+        total_possible = 0
+        for grade_point in grade_points:
+            course_id = grade_point[6]
+            if course_id not in courses:
+                courses[course_id] = Course.objects.get(pk=course_id)
+            course = courses[course_id]
+
+            # If no credits present, this course is ungraded
+            if not course.credits:
+                continue
+
+            total_earned += float(grade_point[1]) * float(course.credits)
+            total_possible += float(course.credits)
+
+            grade_point[1] = round((total_earned / total_possible), 4)
+
+    return grade_points
 
 
 def get_grade_points_for_course(course_id):
@@ -45,26 +71,8 @@ def get_grade_points_for_course(course_id):
                  .values('id',
                          'title',
                          'category',
+                         'course',
                          'weight',
-                         'start',
-                         'grade'))
-
-    return get_grade_points_for(query_set, has_weighted_grading)
-
-
-def get_grade_points_for_category(category_id, average=False):
-    if not average:
-        has_weighted_grading = Category.objects.get(pk=category_id).weight > 0
-    else:
-        has_weighted_grading = False
-
-    query_set = (Homework.objects
-                 .for_category(category_id)
-                 .graded()
-                 .annotate(grade=F('current_grade'))
-                 .values('id',
-                         'title',
-                         'category',
                          'start',
                          'grade'))
 
@@ -82,7 +90,7 @@ def get_grade_points_for(query_set, has_weighted_grading):
         grade = (earned / possible) * 100
         # Formula for weighted grading: ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... )
         if has_weighted_grading:
-            # If no weight is present, this category is ungraded
+            # If no weight present, this category is ungraded
             if 'weight' not in item or not item['weight']:
                 continue
 
@@ -92,8 +100,13 @@ def get_grade_points_for(query_set, has_weighted_grading):
         total_earned += earned
         total_possible += possible
 
-        grade_series.append([item['start'], round((total_earned / total_possible * 100), 4),
-                             item['id'], item['title'], round(grade, 4), item.get('category', None)])
+        grade_series.append([item['start'],
+                             round((total_earned / total_possible * 100), 4),
+                             item['id'],
+                             item['title'],
+                             round(grade, 4),
+                             item['category'],
+                             item['course']])
 
     return grade_series
 
@@ -140,13 +153,21 @@ def get_grade_data(user_id):
                                             'grade_by_weight',
                                             'trend'))
 
+            category_grade_points = {}
+            for grade_point in course['grade_points']:
+                category_id = grade_point[5]
+                if category_id not in category_grade_points:
+                    category_grade_points[category_id] = []
+
+                category_grade_points[category_id].append(grade_point)
+
             for category in course['categories']:
                 category_db_entity = Category.objects.filter(pk=category['id'])
                 category['overall_grade'] = category['average_grade']
                 category['num_homework'] = category_db_entity.num_homework()
                 category['num_homework_graded'] = category_db_entity.num_homework_graded()
                 category.pop('average_grade')
-                category['grade_points'] = get_grade_points_for_category(category['id'])
+                category['grade_points'] = category_grade_points.get(category['id'], [])
 
         course_group['num_homework'] = course_group_num_homework
 
@@ -156,46 +177,20 @@ def get_grade_data(user_id):
 
 
 def recalculate_course_group_grade(course_group_id):
-    # has_credit_grading = False
-    # for course in Course.objects.for_course_group(course_group_id):
-    #     if course.credits > 0:
-    #         has_credit_grading = True
-    #         break
-    #
-    # query_set = (Course.objects.for_course_group(course_group_id)
-    #              .annotate(grade=Concat(F('current_grade'), Value("/100"), output_field=CharField()),
-    #                        start=F('start_date'))
-    #              .values('id',
-    #                      'title',
-    #                      'credits',
-    #                      'start',
-    #                      'grade'))
-
-    # course_grade_points = [(points[1] / 100) for points in get_grade_points_for(query_set, False, has_credit_grading) if points]
-    # overall_grade = course_grade_points[-1] * 100 if len(course_grade_points) > 0 else -1
-    # trend = commonutils.calculate_trend(range(len(course_grade_points)), course_grade_points)
-
-    # if has_credit_grading:
-    #     # If no credits are present, this course is ungraded
-    #     if 'credits' not in item or not item['credits']:
-    #         continue
-    #
-    #     # Formula is same as weighted: ( cl1xcr1 + cl2xcr2 + cl3xcr3 ... ) / ( cr1 + cr2 + cr3 ... )
-    #     earned = (((earned / possible) * (float(item['credits']) / 100)) * 100)
-    #     possible = float(item['credits'])
-
+    num_courses = Course.objects.for_course_group(course_group_id).count()
+    grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group_id) if points]
     course_grades = (Course.objects
                      .for_course_group(course_group_id)
                      .graded()
                      .values_list('current_grade', flat=True))
     total = sum(course_grades)
-    overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group_id) if points]
+    old_overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
+    overall_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
     logger.debug(f'Course Group {course_group_id} overall grade recalculated to '
                  f'{overall_grade} with {len(grade_points)} homework '
-                 f'in {len(course_grades)} courses')
+                 f'in {num_courses} courses')
     logger.debug(f'Course Group {course_group_id} trend recalculated to {trend}')
 
     # Update the values in the datastore, circumventing signals
@@ -253,17 +248,17 @@ def recalculate_course_grade(course_id):
 def recalculate_category_grade(category_id):
     total_earned = 0
     total_possible = 0
+    grades = []
     for grade in Homework.objects.for_category(category_id).graded().values_list('current_grade', flat=True):
         earned, possible = grade.split('/')
         total_earned += float(earned)
         total_possible += float(possible)
+        grades.append(total_earned / total_possible)
     average_grade = (total_earned / total_possible) * 100 if total_possible > 0 else -1
-
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_category(category_id, average=True) if points]
-    trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
+    trend = commonutils.calculate_trend(range(len(grades)), grades)
 
     logger.debug(f'Category {category_id} average grade recalculated to '
-                 f'{average_grade} with {len(grade_points)} homework')
+                 f'{average_grade} with {len(grades)} homework')
     logger.debug(f'Category {category_id} trend recalculated to {trend}')
 
     # Update the values in the datastore, circumventing signals
