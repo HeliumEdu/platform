@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.0"
+__version__ = "1.16.1"
 
 import time
 
@@ -30,15 +30,15 @@ class UserSettings(BaseModel):
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
-        max_length=7, validators=[validate_hex_color], default='#87b8d4')
+        max_length=7, validators=[validate_hex_color], default='#e74674')
 
     grade_color = models.CharField(
         help_text='A valid hex color code choice to determine the color grade badges will be.',
-        max_length=7, validators=[validate_hex_color], default='#a387d4')
+        max_length=7, validators=[validate_hex_color], default='#9d629d')
 
     material_color = models.CharField(
         help_text='A valid hex color code choice to determine the color material badges will be.',
-        max_length=7, validators=[validate_hex_color], default='#b8d487')
+        max_length=7, validators=[validate_hex_color], default='#dc7d50')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
