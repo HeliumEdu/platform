@@ -2,16 +2,13 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.11.54"
 
-import logging
-
 from django.conf import settings
 from django.db import models
 
-from helium.common import enums
 from helium.common.models.base import BaseModel
+from helium.common.utils.commonutils import random_color
+from helium.common.utils.validators import validate_hex_color
 from helium.feed.managers.externalcalendarmanager import ExternalCalendarManager
-
-logger = logging.getLogger(__name__)
 
 
 class ExternalCalendar(BaseModel):
@@ -23,7 +20,7 @@ class ExternalCalendar(BaseModel):
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+        max_length=7, validators=[validate_hex_color], default=random_color)
 
     shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True, db_index=True)
