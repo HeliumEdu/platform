@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.16.0"
 
 from datetime import timedelta
 
@@ -30,7 +30,7 @@ class Reminder(BaseModel):
     type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
                                        choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP, db_index=True)
 
-    sent = models.BooleanField(help_text='Whether or not the reminder has been sent.', default=False, db_index=True)
+    sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False, db_index=True)
 
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)

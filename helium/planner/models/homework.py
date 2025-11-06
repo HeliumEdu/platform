@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.15"
+__version__ = "1.16.0"
 
 from django.db import models
 
@@ -15,7 +15,7 @@ class Homework(BaseCalendar):
     current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[validate_fraction])
 
-    completed = models.BooleanField(help_text='Whether or not the homework has been completed.',
+    completed = models.BooleanField(help_text='Whether the homework has been completed.',
                                     default=False)
 
     category = models.ForeignKey('Category', help_text='The category with which to associate.',

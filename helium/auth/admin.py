@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.15"
+__version__ = "1.16.0"
 
 from django import forms
 from django.contrib.admin import SimpleListFilter
@@ -43,8 +43,27 @@ class AdminUserCreationForm(UserCreationForm):
         return self.instance
 
 
+class HasCreditsFilter(SimpleListFilter):
+    title = 'has credits'
+    parameter_name = 'has_credits'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(course_groups__courses__credits__gt=0).distinct()
+        elif self.value() == 'no':
+            return queryset.filter(course_groups__courses__credits=0).distinct()
+        else:
+            return queryset
+
+
 class HasWeightedGradingFilter(SimpleListFilter):
-    title = 'Has Weighted Grading'
+    title = 'has weighted grading'
     parameter_name = 'has_weighted_grading'
 
     def lookups(self, request, model_admin):
@@ -63,7 +82,7 @@ class HasWeightedGradingFilter(SimpleListFilter):
 
 
 class HasCourseScheduleFilter(SimpleListFilter):
-    title = 'Has Course Schedule'
+    title = 'has course schedule'
     parameter_name = 'has_course_schedule'
 
     def lookups(self, request, model_admin):
@@ -92,7 +111,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'username', 'created_at', 'last_login', 'num_course_groups', 'num_courses',
                     'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type', HasWeightedGradingFilter,
+                   'settings__calendar_event_limit', 'settings__default_reminder_type',
+                   'settings__calendar_use_category_colors', HasWeightedGradingFilter, HasCreditsFilter,
                    HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
     ordering = ('-last_login',)
@@ -142,7 +162,7 @@ class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'receive_emails_from_admin',
                     'get_last_login']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
-                   'default_reminder_type', 'receive_emails_from_admin']
+                   'calendar_use_category_colors', 'default_reminder_type']
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_login',)
     readonly_fields = ('user',)

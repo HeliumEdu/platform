@@ -1,8 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.14"
+__version__ = "1.16.0"
 
-import logging
 import time
 
 from django.conf import settings
@@ -11,8 +10,7 @@ from django.utils.text import slugify
 
 from helium.common import enums
 from helium.common.models import BaseModel
-
-logger = logging.getLogger(__name__)
+from helium.common.utils.validators import validate_hex_color
 
 
 class UserSettings(BaseModel):
@@ -27,26 +25,30 @@ class UserSettings(BaseModel):
 
     all_day_offset = models.PositiveIntegerField(default=30)
 
-    show_getting_started = models.BooleanField(help_text='Whether or not the "Getting Started" dialog should be shown.',
+    show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#ff7537')
+        max_length=7, validators=[validate_hex_color], default='#87b8d4')
 
     grade_color = models.CharField(
         help_text='A valid hex color code choice to determine the color grade badges will be.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#9a9cff')
+        max_length=7, validators=[validate_hex_color], default='#a387d4')
 
     material_color = models.CharField(
         help_text='A valid hex color code choice to determine the color material badges will be.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#ffad46')
+        max_length=7, validators=[validate_hex_color], default='#b8d487')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
     calendar_event_limit = models.BooleanField(
-        help_text='Whether or not calendar events should collapse to "+ more" when a day is full.',
+        help_text='Whether calendar events should collapse to "+ more" when a day is full.',
+        default=False)
+
+    calendar_use_category_colors = models.BooleanField(
+        help_text='Whether calendar items for classes should be shown in category colors instead of class colors.',
         default=False)
 
     default_reminder_offset_type = models.PositiveIntegerField(
@@ -59,7 +61,7 @@ class UserSettings(BaseModel):
         default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
 
     receive_emails_from_admin = models.BooleanField(
-        help_text='Whether or not the `email` on file should receive bulletin emails.',
+        help_text='Whether the user wants to receive Helium update emails.',
         default=True)
 
     remember_filter_state = models.BooleanField(

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.16.0"
 
 import datetime
 
@@ -9,7 +9,7 @@ from dateutil import parser
 from helium.planner.models import Course
 
 
-def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', credits=5, color='#4986e7',
+def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', credits=0, color='#4986e7',
                         website='http://mycourse.com', is_online=False, teacher_name='My Teacher',
                         teacher_email='teacher@email.com', start_date=datetime.date(2017, 1, 6),
                         end_date=datetime.date(2017, 5, 8)):

@@ -1,13 +1,14 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.15"
+__version__ = "1.16.0"
 
 import datetime
 
 from django.db import models
 
-from helium.common import enums
 from helium.common.models import BaseModel
+from helium.common.utils.commonutils import random_color
+from helium.common.utils.validators import validate_hex_color
 from helium.planner.managers.coursemanager import CourseManager
 
 
@@ -23,12 +24,12 @@ class Course(BaseModel):
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+        max_length=7, validators=[validate_hex_color], default=random_color)
 
     website = models.URLField(help_text='A valid URL.', max_length=3000, blank=True, null=True)
 
     is_online = models.BooleanField(
-        help_text='Whether or not the course is online (and thus may have times associated with it).',
+        help_text='Whether the course is online.',
         default=False)
 
     current_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)

@@ -1,8 +1,9 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.16.0"
 
 import decimal
+import re
 import sys
 
 from django.core.exceptions import ValidationError
@@ -29,3 +30,8 @@ def validate_fraction(value):
         return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
     except:
         raise ValidationError('The fraction must contain valid integers.')
+
+
+def validate_hex_color(value):
+    if not re.match(r'^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$', value):
+        raise ValidationError('The value must be a valid hex color code.')
