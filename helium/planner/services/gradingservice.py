@@ -13,25 +13,33 @@ logger = logging.getLogger(__name__)
 
 
 def get_grade_points_for_course_group(course_group_id):
-    has_weighted_grading = False
+    course_grade_points = []
+    # Fetch grade points for each course in the group, then sort by date
     for course in Course.objects.for_course_group(course_group_id):
-        if course.has_weighted_grading:
-            has_weighted_grading = True
-            break
+        course_grade_points += get_grade_points_for_course(course.id)
+    course_grade_points = sorted(course_grade_points, key=lambda x: x[0])
 
-    query_set = (Homework.objects.for_course_group(course_group_id)
-                 .graded()
-                 .annotate(weight=F('category__weight'),
-                           grade=F('current_grade'))
-                 .values('id',
-                         'title',
-                         'category',
-                         'course',
-                         'weight',
-                         'start',
-                         'grade'))
+    # Now average the grades of all courses as each grade point to build the group's points
+    course_grades = {}
+    grade_points = []
+    for item in course_grade_points:
+        if item[6] not in course_grades:
+            course_grades[item[6]] = []
+        course_grades[item[6]].append(item[1])
 
-    return get_grade_points_for(query_set, has_weighted_grading)
+        sum = 0
+        for course_id in course_grades.keys():
+            sum += course_grades[course_id][-1]
+        overall_grade = round(sum / len(course_grades.keys()), 4)
+        grade_points.append([item[0],
+                             overall_grade,
+                             item[2],
+                             item[3],
+                             item[4],
+                             item[5],
+                             item[6]])
+
+    return grade_points
 
 
 def get_grade_points_for_course(course_id):
@@ -151,12 +159,7 @@ def get_grade_data(user_id):
 def recalculate_course_group_grade(course_group_id):
     num_courses = Course.objects.for_course_group(course_group_id).count()
     grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group_id) if points]
-    course_grades = (Course.objects
-                     .for_course_group(course_group_id)
-                     .graded()
-                     .values_list('current_grade', flat=True))
-    total = sum(course_grades)
-    overall_grade = total / len(course_grades) if len(course_grades) > 0 else -1
+    overall_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
     logger.debug(f'Course Group {course_group_id} overall grade recalculated to '

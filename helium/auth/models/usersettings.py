@@ -38,7 +38,7 @@ class UserSettings(BaseModel):
 
     material_color = models.CharField(
         help_text='A valid hex color code choice to determine the color material badges will be.',
-        max_length=7, validators=[validate_hex_color], default='#cfa25e')
+        max_length=7, validators=[validate_hex_color], default='#dc7d50')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
