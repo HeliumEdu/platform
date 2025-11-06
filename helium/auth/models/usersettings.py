@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.15.14"
 
-import logging
 import time
 
 from django.conf import settings
@@ -11,8 +10,7 @@ from django.utils.text import slugify
 
 from helium.common import enums
 from helium.common.models import BaseModel
-
-logger = logging.getLogger(__name__)
+from helium.common.utils.validators import validate_hex_color
 
 
 class UserSettings(BaseModel):
@@ -32,15 +30,15 @@ class UserSettings(BaseModel):
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#ff7537')
+        max_length=7, validators=[validate_hex_color], default='#87b8d4')
 
     grade_color = models.CharField(
         help_text='A valid hex color code choice to determine the color grade badges will be.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#9a9cff')
+        max_length=7, validators=[validate_hex_color], default='#a387d4')
 
     material_color = models.CharField(
         help_text='A valid hex color code choice to determine the color material badges will be.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#ffad46')
+        max_length=7, validators=[validate_hex_color], default='#b8d487')
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)

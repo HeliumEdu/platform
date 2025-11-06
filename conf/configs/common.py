@@ -229,7 +229,6 @@ SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'ENUM_NAME_OVERRIDES': {
-        'ColorEnum': enums.ALLOWED_COLORS,
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
     }

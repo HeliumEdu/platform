@@ -5,12 +5,14 @@ __version__ = "1.12.2"
 import csv
 import io
 import logging
+import random
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
+from helium.common import enums
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
@@ -92,3 +94,7 @@ def split_csv(s, delimiter=',', quotechar="'"):
     reader = csv.reader(f, delimiter=delimiter, quotechar=quotechar)
     for row in reader:
         return row
+
+
+def random_color():
+    return random.choice(enums.PREFERRED_COLORS)

@@ -4,8 +4,9 @@ __version__ = "1.11.54"
 
 from django.db import models
 
-from helium.common import enums
 from helium.common.models import BaseModel
+from helium.common.utils.commonutils import random_color
+from helium.common.utils.validators import validate_hex_color
 from helium.planner.managers.categorymanager import CategoryManager
 
 
@@ -20,7 +21,7 @@ class Category(BaseModel):
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
-        max_length=7, choices=enums.ALLOWED_COLORS, default='#4986e7')
+        max_length=7, validators=[validate_hex_color], default=random_color)
 
     average_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
 

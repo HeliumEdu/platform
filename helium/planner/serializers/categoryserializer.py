@@ -3,11 +3,9 @@ __license__ = "MIT"
 __version__ = "1.11.54"
 
 import logging
-import random
 
 from rest_framework import serializers
 
-from helium.common import enums
 from helium.planner.models.category import Category
 
 logger = logging.getLogger(__name__)
@@ -36,7 +34,7 @@ class CategorySerializer(serializers.ModelSerializer):
         course_id = self.context['request'].parser_context['kwargs']['course']
 
         if Category.objects.for_course(course_id).exclude(pk=pk).filter(title=title):
-           raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
+            raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
 
         return title
 
@@ -61,9 +59,3 @@ class CategorySerializer(serializers.ModelSerializer):
                 "The cumulative weights of all categories associated with a course cannot exceed 100.")
 
         return weight
-
-    def create(self, validated_data):
-        if 'color' not in validated_data:
-            validated_data['color'] = random.choice(enums.ALLOWED_COLORS)[0]
-
-        return super().create(validated_data)
