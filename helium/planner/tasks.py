@@ -176,11 +176,6 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
             settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
         normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
 
-        normalized_materials = None
-        if reminder.homework:
-            normalized_materials = calendar_item.materials.values_list('title', flat=True)
-            normalized_materials = ', '.join(normalized_materials)
-
         comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
 
         commonutils.send_multipart_email('email/reminder',
@@ -189,7 +184,6 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                              'reminder': reminder,
                                              'calendar_item': calendar_item,
                                              'normalized_datetime': normalized_datetime,
-                                             'normalized_materials': normalized_materials,
                                              'comments': comments,
                                          },
                                          subject, [email])
