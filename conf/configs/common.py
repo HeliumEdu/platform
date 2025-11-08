@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.5"
+__version__ = "1.16.6"
 
 import os
 import socket
@@ -206,7 +206,9 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-ACCESS_TOKEN_TTL_MINUTES = int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))
+#ACCESS_TOKEN_TTL_MINUTES = int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))
+# TODO: this is a temporary increase until we fix the frontend issue causing sporadic forced logouts
+ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
 ACCESS_TOKEN_TTL_DAYS = int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
