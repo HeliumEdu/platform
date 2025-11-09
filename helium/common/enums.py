@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.1"
+__version__ = "1.16.9"
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
 
@@ -269,6 +269,7 @@ USED_GOOD = 4
 USED_ACCEPTABLE = 5
 USED_POOR = 6
 BROKEN = 7
+DIGITAL = 8
 CONDITION_CHOICES = (
     (BRAND_NEW, 'Brand New'),
     (REFURBISHED, 'Refurbished'),
@@ -277,7 +278,8 @@ CONDITION_CHOICES = (
     (USED_GOOD, 'Used - Good'),
     (USED_ACCEPTABLE, 'Used - Acceptable'),
     (USED_POOR, 'Used - Poor'),
-    (BROKEN, 'Broken')
+    (BROKEN, 'Broken'),
+    (DIGITAL, 'Digital')
 )
 
 EVENT = 0
