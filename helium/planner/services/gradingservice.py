@@ -193,7 +193,6 @@ def recalculate_course_grade(course_id):
             .values_list('category_id',
                          'current_grade',
                          'category__weight')):
-
         earned, possible = grade.split('/')
         earned = float(earned)
         possible = float(possible)
@@ -217,6 +216,8 @@ def recalculate_course_grade(course_id):
 
             # Update the values in the datastore, circumventing signals
             Category.objects.filter(pk=category_id).update(grade_by_weight=grade_by_weight)
+
+    Category.objects.for_course(course_id).filter(weight=0).update(grade_by_weight=0)
 
 
 def recalculate_category_grade(category_id):
