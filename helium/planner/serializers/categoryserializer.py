@@ -56,6 +56,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
         if weight_total + weight > 100:
             raise serializers.ValidationError(
-                "The cumulative weights of all categories associated with a course cannot exceed 100.")
+                "The cumulative weights of all categories associated with a course cannot exceed 100%.")
 
         return weight
