@@ -28,7 +28,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Homework
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments', 'current_grade',
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments', 'current_grade',
             'completed', 'category', 'materials', 'attachments', 'reminders', 'course',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
