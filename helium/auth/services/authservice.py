@@ -11,6 +11,8 @@ from rest_framework.response import Response
 
 from helium.auth.tasks import send_password_reset_email, send_registration_email
 from helium.common.utils import metricutils
+from helium.feed.models import ExternalCalendar
+from helium.planner.models import CourseGroup, MaterialGroup, Event
 
 logger = logging.getLogger(__name__)
 
@@ -82,3 +84,31 @@ def verify_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         raise NotFound('No User matches the given query.')
+
+
+def delete_example_schedule(user_id):
+    metrics = metricutils.task_start("user.exampleschedule.delete")
+
+    try:
+        user = get_user_model().objects.get(pk=user_id)
+    except get_user_model().DoesNotExist:
+        user = None
+
+    (ExternalCalendar.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (CourseGroup.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (MaterialGroup.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (Event.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+
+    metricutils.task_stop(metrics, user=user)

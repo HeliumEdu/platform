@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.tasks import delete_example_schedule
+from helium.auth.services.authservice import delete_example_schedule
 from helium.common.views.views import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ class UserDeleteExampleScheduleView(HeliumAPIView):
         """
         user = self.get_object()
 
-        logger.info(f'User {user.get_username()} is deleting their example schedule')
+        delete_example_schedule(user.pk)
 
-        delete_example_schedule.delay(user.pk)
+        logger.info(f'User {user.get_username()} deleted the example schedule')
 
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -368,6 +368,11 @@ class TestCaseImportExportViews(APITestCase):
         reminder = Reminder.objects.all()[0]
         self.assertEqual(reminder.start_of_range.date(), reminder.event.start.date())
 
+        fourth_friday = first_monday + relativedelta(days=4, weeks=3)
+        event = Event.objects.all()[5]
+        self.assertEqual(event.start.date(), fourth_friday.date())
+        self.assertEqual(event.end.date(), fourth_friday.date() + relativedelta(days=3))
+
         course_group = CourseGroup.objects.all()[0]
         course = Course.objects.for_course_group(course_group.pk)[1]
         category1 = Category.objects.for_course(course.pk)[2]
