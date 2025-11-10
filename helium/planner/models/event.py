@@ -14,6 +14,9 @@ class Event(BaseCalendar):
     owner_id = models.CharField(help_text='An arbitrary string identifying the owning resource.',
                                 max_length=255, blank=True, null=True)
 
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
     objects = EventManager()

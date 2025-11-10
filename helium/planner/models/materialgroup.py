@@ -16,6 +16,9 @@ class MaterialGroup(BaseModel):
     shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True)
 
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='material_groups', on_delete=models.CASCADE)
 
     objects = MaterialGroupManager()

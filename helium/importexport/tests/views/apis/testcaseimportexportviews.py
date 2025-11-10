@@ -340,7 +340,7 @@ class TestCaseImportExportViews(APITestCase):
                                     content_type='application/json')
 
         # GIVEN
-        adjusted_month = timezone.now().replace(month=timezone.now().month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0, microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
@@ -348,34 +348,37 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        start_of_month = timezone.now().replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0) - relativedelta(
-            months=0)
+        start_of_month = adjusted_month.replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
-        self.assertEqual(Course.objects.count(), 2)
-        self.assertEqual(CourseSchedule.objects.count(), 2)
-        self.assertEqual(Category.objects.count(), 10)
-        self.assertEqual(MaterialGroup.objects.count(), 2)
+        self.assertEqual(Course.objects.count(), 3)
+        self.assertEqual(CourseSchedule.objects.count(), 3)
+        self.assertEqual(Category.objects.count(), 15)
+        self.assertEqual(MaterialGroup.objects.count(), 3)
         self.assertEqual(Material.objects.count(), 5)
-        self.assertEqual(Homework.objects.count(), 22)
-        self.assertEqual(Reminder.objects.count(), 5)
-        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Homework.objects.count(), 53)
+        self.assertEqual(Reminder.objects.count(), 7)
+        self.assertEqual(Event.objects.count(), 9)
 
         homework1 = Homework.objects.all()[0]
-        reminder = Reminder.objects.all()[0]
         self.assertEqual(CourseGroup.objects.all()[0].start_date, start_of_month.date())
         self.assertEqual(Course.objects.all()[0].start_date, start_of_month.date())
         self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
             days=(homework1.start.date() - homework1.course.start_date).days))
-        self.assertEqual(reminder.start_of_range.date(), reminder.homework.start.date())
+        reminder = Reminder.objects.all()[0]
+        self.assertEqual(reminder.start_of_range.date(), reminder.event.start.date())
 
         course_group = CourseGroup.objects.all()[0]
         course = Course.objects.for_course_group(course_group.pk)[1]
-        category = Category.objects.for_course(course.pk)[2]
-        self.assertEqual(float(course_group.overall_grade), 86.5119)
-        self.assertEqual(round(float(course_group.trend), 10), -0.001673098)
-        self.assertEqual(float(course.current_grade), 90.3571)
-        self.assertEqual(round(float(course.trend), 10), 0.0048988364)
-        self.assertEqual(float(category.average_grade), 91.5)
-        self.assertEqual(float(category.grade_by_weight), 13.725)
-        self.assertEqual(round(float(category.trend), 10), -0.0275)
+        category1 = Category.objects.for_course(course.pk)[2]
+        category2 = Category.objects.for_course(course.pk)[4]
+        self.assertEqual(float(course_group.overall_grade), 87.7934)
+        self.assertEqual(float(course_group.trend), 0.0010061923076923659)
+        self.assertEqual(float(course.current_grade), 89.0833)
+        self.assertEqual(float(course.trend), 0.006485167832167846)
+        self.assertEqual(float(category1.average_grade), 110)
+        self.assertEqual(float(category1.grade_by_weight), 16.5)
+        self.assertIsNone(category1.trend)
+        self.assertEqual(float(category2.average_grade), 87.6)
+        self.assertEqual(float(category2.grade_by_weight), 17.52)
+        self.assertEqual(float(category2.trend), 0.011699999999999875)
