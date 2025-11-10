@@ -318,15 +318,16 @@ def _adjust_schedule_relative_to(user, month):
 
         for homework in Homework.objects.for_user(user.pk).iterator():
             course = homework.course
-            delta = (homework.start.date() - course.start_date).days
+            start_delta = (homework.start.date() - course.start_date).days
+            end_delta = (homework.end.date() - course.start_date).days
             Homework.objects.filter(pk=homework.pk).update(
-                start=(first_monday + datetime.timedelta(days=delta)).replace(
+                start=(first_monday + datetime.timedelta(days=start_delta)).replace(
                     hour=homework.start.time().hour,
                     minute=homework.start.time().minute,
                     second=0,
                     microsecond=0,
                     tzinfo=timezone.utc),
-                end=(first_monday + datetime.timedelta(days=delta)).replace(
+                end=(first_monday + datetime.timedelta(days=end_delta)).replace(
                     hour=homework.end.time().hour,
                     minute=homework.end.time().minute,
                     second=0,
@@ -337,15 +338,16 @@ def _adjust_schedule_relative_to(user, month):
 
         for event in Event.objects.for_user(user.pk).iterator():
             adjusted_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            delta = (event.start.date() - adjusted_month.date()).days
+            start_delta = (event.start.date() - adjusted_month.date()).days
+            end_delta = (event.end.date() - adjusted_month.date()).days
             Event.objects.filter(pk=event.pk).update(
-                start=(first_monday + datetime.timedelta(days=delta)).replace(
+                start=(first_monday + datetime.timedelta(days=start_delta)).replace(
                     hour=event.start.time().hour,
                     minute=event.start.time().minute,
                     second=0,
                     microsecond=0,
                     tzinfo=timezone.utc),
-                end=(first_monday + datetime.timedelta(days=delta)).replace(
+                end=(first_monday + datetime.timedelta(days=end_delta)).replace(
                     hour=event.end.time().hour,
                     minute=event.end.time().minute,
                     second=0,
