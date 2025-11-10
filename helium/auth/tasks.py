@@ -15,6 +15,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
+from helium.feed.models import ExternalCalendar
+from helium.planner.models import Event, CourseGroup, MaterialGroup
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +145,35 @@ def purge_unverified_users():
         num_purged += 1
 
     metricutils.task_stop(metrics, value=num_purged)
+
+
+@app.task
+def delete_example_schedule(user_id):
+    metrics = metricutils.task_start("user.exampleschedule.delete")
+
+    try:
+        user = get_user_model().objects.get(pk=user_id)
+    except get_user_model().DoesNotExist:
+        user = None
+
+    (ExternalCalendar.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (CourseGroup.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (MaterialGroup.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+    (Event.objects
+     .for_user(user_id)
+     .filter(example_schedule=True)
+     .delete())
+
+    metricutils.task_stop(metrics, user=user)
 
 
 @app.on_after_finalize.connect

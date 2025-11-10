@@ -28,6 +28,9 @@ class ExternalCalendar(BaseModel):
     last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',
                                       blank=True, null=True, db_index=True)
 
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 
     objects = ExternalCalendarManager()
