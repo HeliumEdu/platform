@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.0"
+__version__ = "1.16.13"
 
 from django.conf import settings
 from django.db import models
@@ -27,6 +27,9 @@ class ExternalCalendar(BaseModel):
 
     last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',
                                       blank=True, null=True, db_index=True)
+
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='external_calendars', on_delete=models.CASCADE)
 

@@ -40,7 +40,6 @@
                     {% endfor %}
                 </ul>
             {% endif %}
-            {% if comments %}<p><em>Comments</em>: {{ comments }}</p>{% endif %}
             {% if calendar_item.attachments.count > 0 %}
                 <h4>Attachments</h4>
                 <ul>
@@ -50,6 +49,7 @@
                     {% endfor %}
                 </ul>
             {% endif %}
+            {% if comments %}<br/><p>{{ comments }}</p>{% endif %}
         </td>
     </tr>
 {% endblock %}

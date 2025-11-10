@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.16.13"
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
@@ -9,6 +9,7 @@ from django.urls import path
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView
+from helium.auth.views.apis.userdeletemanyviews import UserDeleteExampleScheduleView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
@@ -54,4 +55,10 @@ urlpatterns = [
          name='auth_user_pushtoken_list'),
     path('auth/user/pushtoken/<int:pk>/', UserPushTokenApiDetailView.as_view(),
          name='auth_user_pushtoken_detail'),
+
+    ##############################
+    # Authenticated URLs for many-delete actions
+    ##############################
+    path('auth/user/delete/exampleschedule/', UserDeleteExampleScheduleView.as_view(),
+         name='auth_user_resource_delete_exampleschedule'),
 ]

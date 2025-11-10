@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.15"
+__version__ = "1.16.13"
 
 from django.conf import settings
 from django.db import models
@@ -13,6 +13,9 @@ from helium.planner.models.basecalendar import BaseCalendar
 class Event(BaseCalendar):
     owner_id = models.CharField(help_text='An arbitrary string identifying the owning resource.',
                                 max_length=255, blank=True, null=True)
+
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 

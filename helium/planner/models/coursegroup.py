@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.0"
+__version__ = "1.16.13"
 
 import datetime
 
@@ -29,6 +29,9 @@ class CourseGroup(BaseModel):
     trend = models.FloatField(default=None, blank=True, null=True)
 
     private_slug = models.SlugField(unique=True, blank=True, null=True)
+
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
 
