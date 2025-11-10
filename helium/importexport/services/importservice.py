@@ -32,12 +32,12 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 logger = logging.getLogger(__name__)
 
 
-def _import_external_calendars(external_calendars, user):
+def _import_external_calendars(external_calendars, user, example_schedule):
     for external_calendar in external_calendars:
         serializer = ExternalCalendarSerializer(data=external_calendar)
 
         if serializer.is_valid():
-            serializer.save(user=user)
+            serializer.save(user=user, example_schedule=example_schedule)
         else:
             raise ValidationError({
                 'external_calendars': {
@@ -50,7 +50,7 @@ def _import_external_calendars(external_calendars, user):
     return len(external_calendars)
 
 
-def _import_course_groups(course_groups, user):
+def _import_course_groups(course_groups, user, example_schedule):
     course_group_remap = {}
 
     for course_group in course_groups:
@@ -60,7 +60,7 @@ def _import_course_groups(course_groups, user):
         serializer = CourseGroupSerializer(data=course_group)
 
         if serializer.is_valid():
-            instance = serializer.save(user=user)
+            instance = serializer.save(user=user, example_schedule=example_schedule)
             course_group_remap[course_group['id']] = instance.pk
         else:
             raise ValidationError({
@@ -143,14 +143,14 @@ def _import_categories(categories, request, course_remap):
     return category_remap
 
 
-def _import_material_groups(material_groups, user):
+def _import_material_groups(material_groups, user, example_schedule):
     material_group_remap = {}
 
     for material_group in material_groups:
         serializer = MaterialGroupSerializer(data=material_group)
 
         if serializer.is_valid():
-            instance = serializer.save(user=user)
+            instance = serializer.save(user=user, example_schedule=example_schedule)
             material_group_remap[material_group['id']] = instance.pk
         else:
             raise ValidationError({
@@ -189,14 +189,14 @@ def _import_materials(materials, material_group_remap, course_remap):
     return material_remap
 
 
-def _import_events(events, user):
+def _import_events(events, user, example_schedule):
     event_remap = {}
 
     for event in events:
         serializer = EventSerializer(data=event)
 
         if serializer.is_valid():
-            instance = serializer.save(user=user)
+            instance = serializer.save(user=user, example_schedule=example_schedule)
             event_remap[event['id']] = instance.pk
         else:
             raise ValidationError({
@@ -261,7 +261,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
 
 
 @transaction.atomic
-def import_user(request, data):
+def import_user(request, data, example_schedule=False):
     """
     Parse the given JSON string and import its associated data for the given user. Each model will be imported in a
     schema matching that of the documented APIs.
@@ -269,9 +269,9 @@ def import_user(request, data):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     """
-    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user)
+    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user, example_schedule)
 
-    course_group_remap = _import_course_groups(data.get('course_groups', []), request.user)
+    course_group_remap = _import_course_groups(data.get('course_groups', []), request.user, example_schedule)
 
     course_remap = _import_courses(data.get('courses', []), course_group_remap)
 
@@ -279,11 +279,11 @@ def import_user(request, data):
 
     category_remap = _import_categories(data.get('categories', []), request, course_remap)
 
-    material_group_remap = _import_material_groups(data.get('material_groups', []), request.user)
+    material_group_remap = _import_material_groups(data.get('material_groups', []), request.user, example_schedule)
 
     material_remap = _import_materials(data.get('materials', []), material_group_remap, course_remap)
 
-    event_remap = _import_events(data.get('events', []), request.user)
+    event_remap = _import_events(data.get('events', []), request.user, example_schedule)
 
     homework_remap = _import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
 
@@ -352,6 +352,8 @@ def _adjust_schedule_relative_to(user, month):
                     microsecond=0,
                     tzinfo=timezone.utc))
 
+            adjust_reminder_times.delay(event.pk, event.calendar_item_type)
+
         for course in Course.objects.for_user(user.pk).iterator():
             delta = (course.end_date - course.start_date).days
             Course.objects.filter(pk=course.pk).update(
@@ -378,9 +380,9 @@ def import_example_schedule(user):
     try:
         data = json.loads(json_str)
 
-        import_user(request, data)
+        import_user(request, data, True)
 
-        adjusted_month = timezone.now().month - 0
+        adjusted_month = timezone.now().month - 1
         if adjusted_month == 0:
             adjusted_month = 12
         _adjust_schedule_relative_to(user, adjusted_month)

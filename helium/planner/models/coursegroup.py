@@ -30,6 +30,9 @@ class CourseGroup(BaseModel):
 
     private_slug = models.SlugField(unique=True, blank=True, null=True)
 
+    example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
+                                           default=False)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
 
     objects = CourseGroupManager()
