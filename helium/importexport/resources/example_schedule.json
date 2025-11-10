@@ -1051,7 +1051,9 @@
             "current_grade": "55/50",
             "completed": true,
             "category": 351,
-            "materials": [],
+            "materials": [
+                156
+            ],
             "attachments": [],
             "reminders": [
                 229
