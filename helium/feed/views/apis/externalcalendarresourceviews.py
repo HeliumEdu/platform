@@ -57,14 +57,10 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
         _from = request.query_params.get('from', None)
         to = request.query_params.get('to', None)
 
-        if not (_from or to):
-            raise ValidationError(
-                detail="Both 'from' and 'to' must be provided together.",
-                code=status.HTTP_400_BAD_REQUEST
-            )
-
-        _from = parser.parse(_from[0]).astimezone(timezone.utc)
-        to = parser.parse(to[0]).astimezone(timezone.utc)
+        if _from:
+            _from = parser.parse(_from[0]).astimezone(timezone.utc)
+        if to:
+            to = parser.parse(to[0]).astimezone(timezone.utc)
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         try:
