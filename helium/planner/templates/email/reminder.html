@@ -9,47 +9,42 @@
 {% block greeting %}{{ subject|safe }}{% endblock %}
 
 {% block content %}
-    <tr>
-        <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; ">
-            <h3>Message: {{ reminder.message }}</h3>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
-            <h3>Details for {{ reminder.title }}</h3>
+<tr>
+    <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; ">
+        <h3>{{ reminder.message }}</h3>
+    </td>
+</tr>
+<tr>
+    <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
+        <p><em>When</em>: {{ normalized_datetime }}</p>
 
-            <p><em>When</em>: {{ normalized_datetime }}</p>
-
-            {% if reminder.homework %}<p><em>Info</em>:
-                {% if calendar_item.category.title %}{{ calendar_item.category.title }}
-                    for {% endif %}
-                    {% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}
-                    {{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}
-                    {% if not calendar_item.course.is_online and calendar_item.course.room %} in
-                    {{ calendar_item.course.room }}{% endif %}
-            </p>{% endif %}
-            {% if calendar_item.materials and calendar_item.materials.count > 0 %}
-                <h4>Materials</h4>
-                <ul>
-                    {% for material in calendar_item.materials.all %}
-                    <li>
-                    {% if material.website %}<a target="_blank" href="{{ material.website }}">{% endif %}
-                        {{ material.title }}
-                    {% if material.website %}</a>{% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            {% if calendar_item.attachments.count > 0 %}
-                <h4>Attachments</h4>
-                <ul>
-                    {% for attachment in calendar_item.attachments.all %}
-                        <li><a target="_blank"
-                           href="{{ attachment.attachment.url }}">{{ attachment.title }}</a></li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            {% if comments %}<br/><p>{{ comments }}</p>{% endif %}
-        </td>
-    </tr>
+        {% if reminder.homework %}<p><em>Info</em>:
+        {% if calendar_item.category.title %}{{ calendar_item.category.title }} in {% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}
+            {{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}</p><p><em>Room:</em> {{ calendar_item.course.room }}{% endif %}
+        </p>{% endif %}
+        {% if calendar_item.materials and calendar_item.materials.count > 0 %}
+        <h4>Materials</h4>
+        <ul>
+            {% for material in calendar_item.materials.all %}
+            <li>
+                {% if material.website %}<a target="_blank" href="{{ material.website }}">{% endif %}
+                {{ material.title }}
+                {% if material.website %}</a>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if calendar_item.attachments.count > 0 %}
+        <h4>Attachments</h4>
+        <ul>
+            {% for attachment in calendar_item.attachments.all %}
+            <li><a target="_blank"
+                   href="{{ attachment.attachment.url }}">{{ attachment.title }}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if comments %}<br/>
+        <p>{{ comments }}</p>{% endif %}
+    </td>
+</tr>
 {% endblock %}
