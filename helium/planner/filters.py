@@ -22,8 +22,6 @@ class EventFilter(django_filters.FilterSet):
     class Meta:
         model = Event
         fields = {
-            'start': ['exact', 'gte'],
-            'end': ['exact', 'lt'],
             'title': ['exact'],
         }
 
@@ -40,8 +38,6 @@ class HomeworkFilter(django_filters.FilterSet):
         fields = {
             'id': ['exact'],
             'title': ['exact'],
-            'start': ['exact', 'gte'],
-            'end': ['exact', 'lt'],
             'completed': ['exact'],
             'course__id': ['in'],
             'category__id': ['in'],

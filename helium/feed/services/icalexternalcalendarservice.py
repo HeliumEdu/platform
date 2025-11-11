@@ -37,7 +37,7 @@ def _get_cache_prefix(external_calendar):
     return f"users:{external_calendar.get_user().pk}:externalcalendars:{external_calendar.pk}:events"
 
 
-def _get_events_from_cache(external_calendar, cached_value, start=None, end=None, search=None):
+def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
 
@@ -55,7 +55,8 @@ def _get_events_from_cache(external_calendar, cached_value, start=None, end=None
                           url=event['url'],
                           comments=event['comments'])
 
-            if not ((start is None or end is None) or (event.start >= start and event.end < end)):
+            if not ((_from is None or to is None) or
+                    (_from <= event.start <= to or _from <= event.end <= to)):
                 continue
 
             if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
@@ -72,7 +73,7 @@ def _get_events_from_cache(external_calendar, cached_value, start=None, end=None
     return events, not invalid_data
 
 
-def _create_events_from_calendar(external_calendar, calendar, start=None, end=None, search=None):
+def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None, search=None):
     events = []
     events_filtered = []
 
@@ -130,7 +131,8 @@ def _create_events_from_calendar(external_calendar, calendar, start=None, end=No
 
             events.append(event)
 
-            if not ((start is None or end is None) or (event.start >= start and event.end < end)):
+            if not ((_from is None or to is None) or
+                    (_from <= event.start < to or _from <= event.end <= to)):
                 continue
 
             if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
@@ -187,14 +189,14 @@ def validate_url(url):
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 
-def calendar_to_events(external_calendar, start=None, end=None, search=None):
+def calendar_to_events(external_calendar, _from=None, to=None, search=None):
     """
     For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
     resources.
 
     :param external_calendar: The external calendar source that is referenced by the calendar object.
-    :param start: The earliest date by which to filter results.
-    :param end: The latest date by which to filter results.
+    :param _from: The earliest date by which to filter results.
+    :param to: The last date by which to filter results.
     :param search: The search string to filter by.
     :return: A list of event resources.
     """
@@ -203,12 +205,12 @@ def calendar_to_events(external_calendar, start=None, end=None, search=None):
     cached = False
     cached_value = cache.get(_get_cache_prefix(external_calendar))
     if cached_value:
-        events, cached = _get_events_from_cache(external_calendar, cached_value, start, end, search)
+        events, cached = _get_events_from_cache(external_calendar, cached_value, _from, to, search)
 
     if not cached:
         calendar = validate_url(external_calendar.url)
 
-        events = _create_events_from_calendar(external_calendar, calendar, start, end, search)
+        events = _create_events_from_calendar(external_calendar, calendar, _from, to, search)
 
     return events
 
