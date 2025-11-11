@@ -5,6 +5,7 @@ __version__ = "1.11.62"
 import json
 import logging
 
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -81,3 +82,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         })
 
         return Response(serializer.data)
+
+    def import_exampleschedule(self, request, *args, **kwargs):
+        importservice.import_example_schedule(request.user)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
