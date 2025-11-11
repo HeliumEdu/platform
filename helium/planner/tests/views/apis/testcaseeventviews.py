@@ -336,16 +336,16 @@ class TestCaseEventViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user,
                                        start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc))
+                                       end=datetime.datetime(2017, 5, 8, 16, 59, 0, tzinfo=timezone.utc))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
                                                 end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
-        eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2017, 5, 8, 18, 30, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 19, 0, 0, tzinfo=timezone.utc))
         event4 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+                                                end=datetime.datetime(2017, 5, 8, 20, 0, 0, tzinfo=timezone.utc))
+        eventhelper.given_event_exists(user,
+                                       start=datetime.datetime(2017, 5, 8, 20, 1, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
 
         # WHEN
         response = self.client.get(

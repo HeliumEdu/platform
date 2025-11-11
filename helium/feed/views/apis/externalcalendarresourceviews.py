@@ -3,10 +3,11 @@ __license__ = "MIT"
 __version__ = "1.12.2"
 
 import logging
-from datetime import timezone
+from datetime import timezone, datetime
 
 from dateutil import parser
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -25,17 +26,10 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
-    # def get_queryset(self):
-    #     if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
-    #         user = self.request.user
-    #         return user.external_calendars.all()
-    #     else:
-    #         return ExternalCalendar.objects.none()
-
     @extend_schema(
         parameters=[
-            OpenApiParameter(name='start__gte', type=str),
-            OpenApiParameter(name='end__lt', type=str),
+            OpenApiParameter(name='from', type=datetime),
+            OpenApiParameter(name='to', type=datetime),
             OpenApiParameter(name='search', description='A search term.', type=str),
         ]
     )
@@ -53,14 +47,28 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
         except ExternalCalendar.DoesNotExist:
             raise NotFound()
 
-        start = parser.parse(request.query_params["start__gte"]).astimezone(
-            timezone.utc) if "start__gte" in request.query_params else None
-        end = parser.parse(request.query_params["end__lt"]).astimezone(
-            timezone.utc) if "end__lt" in request.query_params else None
+        # TODO: Remap legacy query params, will be removed
+        request.query_params._mutable = True
+        if 'start__gte' in request.query_params:
+            request.query_params['from'] = request.query_params.pop('start__gte')
+        if 'end__lt' in request.query_params:
+            request.query_params['to'] = request.query_params.pop('end__lt')
+
+        _from = request.query_params.get('from', None)
+        to = request.query_params.get('to', None)
+
+        if not (_from or to):
+            raise ValidationError(
+                detail="Both 'from' and 'to' must be provided together.",
+                code=status.HTTP_400_BAD_REQUEST
+            )
+
+        _from = parser.parse(_from[0]).astimezone(timezone.utc)
+        to = parser.parse(to[0]).astimezone(timezone.utc)
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         try:
-            events = icalexternalcalendarservice.calendar_to_events(external_calendar, start, end, search)
+            events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
         except HeliumICalError as ex:
             external_calendar.shown_on_calendar = False
             external_calendar.save()

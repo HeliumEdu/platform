@@ -3,10 +3,14 @@ __license__ = "MIT"
 __version__ = "1.12.2"
 
 import logging
+from datetime import datetime, timezone
 
+from dateutil import parser
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import filters, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -28,7 +32,7 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filterset_class = EventFilter
     search_fields = ('title', 'comments')
-    order_fields = ('title', 'start', 'priority',)
+    order_fields = ('start', 'title', 'priority',)
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
@@ -43,12 +47,49 @@ class EventsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         else:
             return self.serializer_class
 
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+
+        query_params = self.request.query_params.copy()
+
+        # TODO: Remap legacy query params, will be removed
+        if 'start__gte' in query_params:
+            query_params['from'] = query_params.pop('start__gte')
+        if 'end__lt' in query_params:
+            query_params['to'] = query_params.pop('end__lt')
+
+        _from = query_params.get('from', None)
+        to = query_params.get('to', None)
+        if _from and to:
+            _from = parser.parse(_from[0]).astimezone(timezone.utc)
+            to = parser.parse(to[0]).astimezone(timezone.utc)
+            queryset = queryset.filter(Q(start__range=(_from, to)) |
+                                       Q(end__range=(_from, to)))
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='from', type=datetime),
+            OpenApiParameter(name='to', type=datetime),
+        ]
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all event instances for the authenticated user. For convenience, event instances on a GET are
         serialized with representations of associated attachments and reminders to avoid the need for redundant API
         calls.
         """
+        _from = request.query_params.get('from')
+        to = request.query_params.get('to')
+
+        if (_from and not to) or (to and not _from):
+            raise ValidationError(
+                detail="Both 'from' and 'to' must be provided together.",
+                code=status.HTTP_400_BAD_REQUEST
+            )
+
         response = self.list(request, *args, **kwargs)
 
         return response
