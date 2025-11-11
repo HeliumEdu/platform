@@ -4,6 +4,7 @@ __version__ = "1.15.19"
 
 import logging
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,11 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='search', description='A search term.', type=str),
+        ]
+    )
     def get(self, request, *args, **kwargs):
         """
         Return all schedules for the given course as a list of event instances.
