@@ -32,8 +32,8 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('importexport_resource_import')),
-            self.client.post(reverse('importexport_resource_export'))
+            self.client.get(reverse('importexport_import')),
+            self.client.post(reverse('importexport_export'))
         ]
 
         # THEN
@@ -50,7 +50,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response1 = self.client.post(
-                reverse('importexport_resource_import'),
+                reverse('importexport_import'),
                 data)
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -63,7 +63,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response2 = self.client.post(
-                reverse('importexport_resource_import'),
+                reverse('importexport_import'),
                 data)
 
         # THEN
@@ -226,7 +226,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('importexport_resource_import'),
+                reverse('importexport_import'),
                 data)
 
         # THEN
@@ -253,7 +253,7 @@ class TestCaseImportExportViews(APITestCase):
                 'file[]': [fp]
             }
             response = self.client.post(
-                reverse('importexport_resource_import'),
+                reverse('importexport_import'),
                 data)
 
         # THEN
@@ -304,7 +304,7 @@ class TestCaseImportExportViews(APITestCase):
         reminder = reminderhelper.given_reminder_exists(user1, homework=homework1)
 
         # WHEN
-        response = self.client.get(reverse('importexport_resource_export'))
+        response = self.client.get(reverse('importexport_export'))
         data = json.loads(response.content.decode('utf-8'))
 
         # THEN
@@ -340,7 +340,8 @@ class TestCaseImportExportViews(APITestCase):
                                     content_type='application/json')
 
         # GIVEN
-        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0,
+                                                microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
@@ -387,3 +388,32 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(float(category2.average_grade), 87.6)
         self.assertEqual(float(category2.grade_by_weight), 17.52)
         self.assertEqual(float(category2.trend), 0.011699999999999875)
+
+    def test_import_exampleschedule(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(reverse('importexport_import_exampleschedule'))
+
+        # GIVEN
+        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0,
+                                                microsecond=0)
+        days_ahead = 0 - adjusted_month.weekday()
+        if days_ahead < 0:
+            days_ahead += 7
+        first_monday = adjusted_month + datetime.timedelta(days_ahead)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        start_of_month = adjusted_month.replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0)
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(CourseGroup.objects.count(), 1)
+        self.assertEqual(Course.objects.count(), 3)
+        self.assertEqual(CourseSchedule.objects.count(), 3)
+        self.assertEqual(Category.objects.count(), 15)
+        self.assertEqual(MaterialGroup.objects.count(), 3)
+        self.assertEqual(Material.objects.count(), 5)
+        self.assertEqual(Homework.objects.count(), 53)
+        self.assertEqual(Reminder.objects.count(), 7)
+        self.assertEqual(Event.objects.count(), 9)

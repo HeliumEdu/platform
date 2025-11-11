@@ -13,7 +13,6 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.views import HeliumAPIView
-from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
