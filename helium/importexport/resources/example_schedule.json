@@ -1731,8 +1731,8 @@
     "reminders": [
         {
             "id": 227,
-            "title": "90 minute group study session",
-            "message": "90 minute group study session",
+            "title": "Bring notes for group",
+            "message": "Bring notes for group",
             "start_of_range": "2025-11-22T17:30:00Z",
             "offset": 30,
             "offset_type": 0,
@@ -1796,8 +1796,8 @@
         },
         {
             "id": 229,
-            "title": "Midterm is 90 minutes",
-            "message": "Midterm is 90 minutes",
+            "title": "90 minutes to complete exam",
+            "message": "90 minutes to complete exam",
             "start_of_range": "2025-11-24T16:30:00Z",
             "offset": 30,
             "offset_type": 0,
@@ -1809,8 +1809,8 @@
         },
         {
             "id": 226,
-            "title": "Project 2 due at start of class",
-            "message": "Project 2 due at start of class",
+            "title": "Due at start of class",
+            "message": "Due at start of class",
             "start_of_range": "2025-12-05T05:30:00Z",
             "offset": 30,
             "offset_type": 0,
