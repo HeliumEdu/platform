@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.16.15"
 
 import logging
 
@@ -83,7 +83,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         response = self.update(request, *args, **kwargs)
 
         logger.info(
-            f"ExternalCalendar {kwargs['pk']} update for user {request.user.get_username()}")
+            f"ExternalCalendar {kwargs['pk']} updated for user {request.user.get_username()}")
 
         return response
 
