@@ -198,7 +198,7 @@ def clear_cached_course_schedule(course):
 
 def course_schedules_to_events(course, course_schedules, search=None):
     """
-    For the given course schedule model, generate an event for each class time within the courses's start/end window.
+    For the given course schedule model, generate an event for each class time within the course's start/end window.
 
     :param course: The course with a start/end date range to iterate over.
     :param course_schedules: A list of course schedules to generate the events for.

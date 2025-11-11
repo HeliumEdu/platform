@@ -10,6 +10,7 @@ from rest_framework.exceptions import NotFound
 
 from helium.common.views.views import HeliumAPIView
 from helium.feed.services import icalprivateservice
+from helium.planner.serializers.eventserializer import EventSerializer
 
 logger = logging.getLogger(__name__)
 

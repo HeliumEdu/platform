@@ -6,6 +6,7 @@ import logging
 from datetime import timezone
 
 from dateutil import parser
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,13 +25,13 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
-    def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
-            user = self.request.user
-            return user.external_calendars.all()
-        else:
-            return ExternalCalendar.objects.none()
-
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='start__gte', type=str),
+            OpenApiParameter(name='end__lt', type=str),
+            OpenApiParameter(name='search', description='A search term.', type=str),
+        ]
+    )
     def get(self, request, *args, **kwargs):
         """
         Return an external calendar's ICAL feed items as a list of event instances.
