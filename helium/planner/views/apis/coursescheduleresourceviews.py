@@ -33,7 +33,7 @@ class CourseScheduleAsEventsResourceView(HeliumAPIView):
         """
         user = self.request.user
         try:
-            course = Course.objects.get(pk=self.kwargs['course'])
+            course = Course.objects.for_user(user.pk).get(pk=self.kwargs['course'])
             course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
             search = request.query_params["search"].lower() if "search" in request.query_params else None
 
