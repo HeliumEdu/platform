@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.20"
+__version__ = "1.16.24"
 
 import datetime
 import json
@@ -366,7 +366,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.all()[0].start_date, start_of_month.date())
         self.assertEqual(homework1.start.date(), homework1.course.start_date + datetime.timedelta(
             days=(homework1.start.date() - homework1.course.start_date).days))
-        reminder = Reminder.objects.all()[1]
+        reminder = Reminder.objects.all()[2]
         self.assertEqual(reminder.start_of_range.date(), reminder.event.start.date())
 
         fourth_friday = first_monday + relativedelta(days=4, weeks=3)
