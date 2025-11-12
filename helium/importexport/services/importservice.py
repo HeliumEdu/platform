@@ -269,7 +269,8 @@ def import_user(request, data, example_schedule=False):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     """
-    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user, example_schedule)
+    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user,
+                                                         example_schedule)
 
     course_group_remap = _import_course_groups(data.get('course_groups', []), request.user, example_schedule)
 
@@ -296,17 +297,21 @@ def import_user(request, data, example_schedule=False):
             reminders_count)
 
 
-def _adjust_schedule_relative_to(user, month):
+def _adjust_schedule_relative_to(user, adjust_month):
     timezone.activate(user.settings.time_zone)
 
+    adjusted_month = timezone.now().month + adjust_month
+    if adjusted_month == 0:
+        adjusted_month = 12
+
     try:
-        adjusted_month = timezone.now().replace(month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = timezone.now().replace(month=adjusted_month, day=1, hour=0, minute=0, second=0, microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
         first_monday = adjusted_month + datetime.timedelta(days_ahead)
 
-        logger.info(f'Adjusting schedule relative to new month: {month}')
+        logger.info(f'Adjusting schedule relative to new month: {adjusted_month}')
         logger.info(f'Start of week adjusted ahead {days_ahead} days')
         logger.info(f'First Monday set to {first_monday}')
 
@@ -337,9 +342,8 @@ def _adjust_schedule_relative_to(user, month):
             adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
 
         for event in Event.objects.for_user(user.pk).iterator():
-            adjusted_month = event.start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            start_delta = (event.start.date() - adjusted_month.date()).days
-            end_delta = (event.end.date() - adjusted_month.date()).days
+            start_delta = (event.start.date() - first_monday).days
+            end_delta = (event.end.date() - first_monday).days
             Event.objects.filter(pk=event.pk).update(
                 start=(first_monday + datetime.timedelta(days=start_delta)).replace(
                     hour=event.start.time().hour,
@@ -384,10 +388,7 @@ def import_example_schedule(user):
 
         import_user(request, data, True)
 
-        adjusted_month = timezone.now().month - 1
-        if adjusted_month == 0:
-            adjusted_month = 12
-        _adjust_schedule_relative_to(user, adjusted_month)
+        _adjust_schedule_relative_to(user, -1)
 
         for category in Category.objects.for_user(user.pk).iterator():
             recalculate_category_grade.delay(category.pk)
