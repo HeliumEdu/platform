@@ -340,7 +340,7 @@ class TestCaseImportExportViews(APITestCase):
                                     content_type='application/json')
 
         # GIVEN
-        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0,
+        adjusted_month = timezone.now().replace(month=10, day=1, hour=0, minute=0, second=0,
                                                 microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
@@ -370,7 +370,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(reminder.start_of_range.date(), reminder.event.start.date())
 
         fourth_friday = first_monday + relativedelta(days=4, weeks=3)
-        event = Event.objects.all()[5]
+        event = Event.objects.all()[4]
         self.assertEqual(event.start.date(), fourth_friday.date())
         self.assertEqual(event.end.date(), fourth_friday.date() + relativedelta(days=3))
 
