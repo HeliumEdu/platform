@@ -211,7 +211,7 @@
     "categories": [
         {
             "id": 395,
-            "title": "Capstone Case Study 📝",
+            "title": "Capstone Case Study 🧩",
             "weight": "20.00",
             "average_grade": "-1.0000",
             "grade_by_weight": "0.0000",
@@ -223,7 +223,7 @@
         },
         {
             "id": 355,
-            "title": "Case Study 📝",
+            "title": "Case Study 🔎",
             "weight": "25.00",
             "average_grade": "89.0000",
             "grade_by_weight": "22.2500",
@@ -295,7 +295,7 @@
         },
         {
             "id": 351,
-            "title": "Midterm 📈",
+            "title": "Midterm 📊",
             "weight": "15.00",
             "average_grade": "110.0000",
             "grade_by_weight": "16.5000",
@@ -307,7 +307,7 @@
         },
         {
             "id": 356,
-            "title": "Midterm 📈",
+            "title": "Midterm 📊",
             "weight": "15.00",
             "average_grade": "89.7500",
             "grade_by_weight": "13.4625",
