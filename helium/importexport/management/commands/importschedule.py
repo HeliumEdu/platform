@@ -3,7 +3,6 @@ import json
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
-from django.utils import timezone
 from rest_framework.request import Request
 
 from helium.importexport.services.importservice import import_user, _adjust_schedule_relative_to
@@ -35,10 +34,7 @@ class Command(BaseCommand):
             import_user(request, data)
 
             if adjust_month is not None:
-                adjusted_month = timezone.now().month + adjust_month
-                if adjusted_month == 0:
-                    adjusted_month = 12
-                _adjust_schedule_relative_to(user, adjusted_month)
+                _adjust_schedule_relative_to(user, adjust_month)
 
             for category in Category.objects.for_user(user.pk).iterator():
                 recalculate_category_grade.delay(category.pk)
