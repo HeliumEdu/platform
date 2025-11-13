@@ -22,7 +22,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 INSTALLED_APPS = common.INSTALLED_APPS
 
 MIDDLEWARE = common.MIDDLEWARE + (
-    'helium.common.middleware.HeliumRollbarMiddleware',
+    'helium.common.middleware.exceptionlogging.HeliumRollbarMiddleware',
 )
 
 TEMPLATES = common.TEMPLATES
