@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.2"
+__version__ = "1.17.3"
 
 import datetime
 import json
@@ -342,7 +342,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
             adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
 
         for event in Event.objects.for_user(user.pk).iterator():
-            start_delta = (event.start.date() - first_monday).days
+            start_delta = (event.start.date() - first_monday.date()).days
             end_delta = (event.end.date() - first_monday).days
             Event.objects.filter(pk=event.pk).update(
                 start=(first_monday + datetime.timedelta(days=start_delta)).replace(
