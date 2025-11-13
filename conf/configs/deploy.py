@@ -9,6 +9,9 @@ __version__ = "1.17.0"
 import os
 import sys
 
+import rollbar
+from django.http import HttpRequest
+
 from conf.configcache import config
 from conf.configs import common
 from conf.configs.common import ENVIRONMENT, PROJECT_VERSION
