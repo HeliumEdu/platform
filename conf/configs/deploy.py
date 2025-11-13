@@ -78,6 +78,15 @@ ROLLBAR = {
     'code_version': PROJECT_VERSION
 }
 
+
+def health_check_payload_handler(payload: dict, request: HttpRequest, **kwargs):
+    if request.path.startswith('/status/'):
+        return False
+    return True
+
+
+rollbar.events.add_payload_handler(health_check_payload_handler)
+
 if not common.DEBUG:
     ADMINS = (
         (common.PROJECT_NAME, common.ADMIN_EMAIL_ADDRESS),
