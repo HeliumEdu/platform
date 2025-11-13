@@ -4,10 +4,13 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.0"
+__version__ = "1.17.5"
 
 import os
 import sys
+
+import rollbar
+from django.http import HttpRequest
 
 from conf.configcache import config
 from conf.configs import common
@@ -77,6 +80,15 @@ ROLLBAR = {
     'root': BASE_DIR,
     'code_version': PROJECT_VERSION
 }
+
+
+def health_check_payload_handler(payload: dict, request: HttpRequest, **kwargs):
+    if request.path.startswith('/status/'):
+        return False
+    return True
+
+
+rollbar.events.add_payload_handler(health_check_payload_handler)
 
 if not common.DEBUG:
     ADMINS = (
