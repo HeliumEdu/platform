@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.5"
+__version__ = "1.17.6"
 
 import os
 import socket
@@ -111,7 +111,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'helium.common.middleware.HeliumMiddleware',
+    'helium.common.middleware.exceptionmetric.HeliumExceptionMiddleware',
 )
 
 TEMPLATES = [{
@@ -182,7 +182,7 @@ HEALTH_CHECK = {
         "db": ["Database"],
         "cache": ["Cache"],
         "storage": ["Storage"],
-        "task-processing": ["TaskProcessing"],
+        "task-processing": ["TaskProcessing", "CeleryBeat"],
     },
 }
 

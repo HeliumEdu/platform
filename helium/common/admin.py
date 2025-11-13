@@ -1,11 +1,11 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.16"
+__version__ = "1.17.6"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.sites import AdminSite
-from django_celery_results.models import TaskResult, GroupResult
+from django_celery_results.models import TaskResult
 
 
 class PlatformAdminSite(AdminSite):

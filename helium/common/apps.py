@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.13.12"
+__version__ = "1.17.6"
 
 import sys
 from urllib.parse import urlparse
@@ -24,12 +24,13 @@ class CommonConfig(AppConfig):
         plugin_dir.reset()
 
         from helium.common.health import IdentifiedDatabaseBackend, IdentifiedCacheBackend, \
-            IdentifiedS3Boto3StorageHealthCheck, IdentifiedCeleryHealthCheck
+            IdentifiedS3Boto3StorageHealthCheck, IdentifiedCeleryHealthCheck, IdentifiedCeleryBeatHealthCheck
 
         plugin_dir.register(IdentifiedDatabaseBackend, database_name='default')
         plugin_dir.register(IdentifiedCacheBackend, backend='default')
         plugin_dir.register(IdentifiedS3Boto3StorageHealthCheck)
         plugin_dir.register(type("TaskProcessing", (IdentifiedCeleryHealthCheck,), {'queue': 'celery'}))
+        plugin_dir.register(IdentifiedCeleryBeatHealthCheck)
 
     def init_ngrok(self):
         if settings.USE_NGROK:
