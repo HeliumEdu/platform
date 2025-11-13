@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.17.7"
 
 import logging
 
@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 

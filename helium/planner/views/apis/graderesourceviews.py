@@ -1,13 +1,13 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.0"
+__version__ = "1.17.7"
 
 import logging
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner.serializers.gradeserializer import GradeSerializer
 from helium.planner.services import gradingservice
 

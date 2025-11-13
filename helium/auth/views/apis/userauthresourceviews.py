@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.17.7"
 
 import logging
 
@@ -12,7 +12,7 @@ from rest_framework.viewsets import ViewSet, GenericViewSet
 from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 
