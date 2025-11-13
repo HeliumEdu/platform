@@ -3,26 +3,25 @@ __license__ = "MIT"
 __version__ = "1.16.18"
 
 import logging
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 
 from dateutil import parser
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
+from helium.planner.views.base import HeliumCalendarItemAPIView
 
 logger = logging.getLogger(__name__)
 
 
-class ExternalCalendarAsEventsResourceView(HeliumAPIView):
+class ExternalCalendarAsEventsResourceView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
@@ -40,6 +39,9 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
         The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
         guaranteed to be consistent across calls.
         """
+        return super().get(request, *args, **kwargs)
+
+    def list(self, request, *arg, **kwargs):
         try:
             external_calendar = (ExternalCalendar.objects
                                  .for_user(request.user.id)
@@ -47,20 +49,10 @@ class ExternalCalendarAsEventsResourceView(HeliumAPIView):
         except ExternalCalendar.DoesNotExist:
             raise NotFound()
 
-        # TODO: Remap legacy query params, will be removed
-        request.query_params._mutable = True
-        if 'start__gte' in request.query_params:
-            request.query_params['from'] = request.query_params.pop('start__gte')
-        if 'end__lt' in request.query_params:
-            request.query_params['to'] = request.query_params.pop('end__lt')
-
-        _from = request.query_params.get('from', None)
-        to = request.query_params.get('to', None)
-
-        if _from:
-            _from = parser.parse(_from[0]).astimezone(timezone.utc)
-        if to:
-            to = parser.parse(to[0]).astimezone(timezone.utc)
+        _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
+            if "from" in request.query_params else None
+        to = parser.parse(request.query_params["to"]).astimezone(timezone.utc) \
+            if "to" in request.query_params else None
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         try:

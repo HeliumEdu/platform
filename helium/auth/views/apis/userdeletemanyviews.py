@@ -5,13 +5,12 @@ __version__ = "1.16.13"
 import logging
 
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.services.authservice import delete_example_schedule
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 

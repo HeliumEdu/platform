@@ -37,6 +37,20 @@ def _get_cache_prefix(external_calendar):
     return f"users:{external_calendar.get_user().pk}:externalcalendars:{external_calendar.pk}:events"
 
 
+def _apply_event_filters(event, _from, to, search):
+    if _from and to and not (
+            (_from <= event.start <= to or _from <= event.end <= to) or
+            # Also include results where start/end dates are wider than the window
+            (event.start <= _from and event.end >= to)):
+        return False
+
+    if search and not (search in event.title.lower() or
+                       (event.comments and search in event.comments.lower())):
+        return False
+
+    return True
+
+
 def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
@@ -55,14 +69,8 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
                           url=event['url'],
                           comments=event['comments'])
 
-            if not ((_from is None or to is None) or
-                    (_from <= event.start <= to or _from <= event.end <= to)):
-                continue
-
-            if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
-                continue
-
-            events.append(event)
+            if _apply_event_filters(event, _from, to, search):
+                events.append(event)
     except:
         invalid_data = True
 
@@ -131,14 +139,8 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
             events.append(event)
 
-            if not ((_from is None or to is None) or
-                    (_from <= event.start < to or _from <= event.end <= to)):
-                continue
-
-            if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
-                continue
-
-            events_filtered.append(event)
+            if _apply_event_filters(event, _from, to, search):
+                events_filtered.append(event)
 
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)

@@ -186,6 +186,38 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
             self.assertEqual(response_db.data[0]['calendar_item_type'], response_cached.data[0]['calendar_item_type'])
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_range_query(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}) +
+            f'?from=2017-01-01T08:00:00Z&to=2017-08-02T19:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_range_query_multihour(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}) +
+            f'?from=2020-03-28T18:00:00Z&to=2020-03-28T19:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_get_external_calendar_invalid_ical(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

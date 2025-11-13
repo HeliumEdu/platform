@@ -356,6 +356,22 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
+    def test_range_query_multiday(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        eventhelper.given_event_exists(user,
+                                       start=datetime.datetime(2025, 10, 31, 0, 0, 0, tzinfo=timezone.utc),
+                                       end=datetime.datetime(2025, 11, 2, 0, 0, 0, tzinfo=timezone.utc))
+
+        # WHEN
+        response = self.client.get(
+            reverse(
+                'planner_events_list') + f'?from=2025-11-01T00:00:00Z&to=2025-11-02T00:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
     def test_title_search_query(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

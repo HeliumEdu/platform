@@ -7,7 +7,7 @@ import logging
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner.serializers.gradeserializer import GradeSerializer
 from helium.planner.services import gradingservice
 

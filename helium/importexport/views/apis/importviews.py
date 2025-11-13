@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.common.services import uploadfileservice
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.importexport.serializers.importerializer import ImportSerializer
 from helium.importexport.services import importservice
 

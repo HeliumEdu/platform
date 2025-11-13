@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from rest_framework.exceptions import NotFound
 
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.feed.services import icalprivateservice
 
 logger = logging.getLogger(__name__)

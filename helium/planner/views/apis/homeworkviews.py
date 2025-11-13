@@ -3,30 +3,28 @@ __license__ = "MIT"
 __version__ = "1.16.18"
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
-from dateutil import parser
-from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import filters, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin, CreateModelMixin, \
+from rest_framework import filters
+from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
+from helium.planner.views.base import HeliumCalendarItemAPIView
 
 logger = logging.getLogger(__name__)
 
 
-class UserHomeworkApiListView(HeliumAPIView, ListModelMixin):
+class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
@@ -41,20 +39,6 @@ class UserHomeworkApiListView(HeliumAPIView, ListModelMixin):
         else:
             return Homework.objects.none()
 
-    def filter_queryset(self, queryset):
-        for backend in list(self.filter_backends):
-            queryset = backend().filter_queryset(self.request, queryset, self)
-
-        _from = self.request.query_params.get('from', None)
-        to = self.request.query_params.get('to', None)
-        if _from and to:
-            _from = parser.parse(_from[0]).astimezone(timezone.utc)
-            to = parser.parse(to[0]).astimezone(timezone.utc)
-            queryset = queryset.filter(Q(start__range=(_from, to)) |
-                                       Q(end__range=(_from, to)))
-
-        return queryset
-
     @extend_schema(
         parameters=[
             OpenApiParameter(name='from', type=datetime),
@@ -67,28 +51,12 @@ class UserHomeworkApiListView(HeliumAPIView, ListModelMixin):
         GET are serialized with representations of associated attachments and reminders to avoid the need for redundant
         API calls.
         """
-        # TODO: Legacy query params, will be removed
-        request.query_params._mutable = True
-        if 'start__gte' in request.query_params:
-            request.query_params['from'] = request.query_params.pop('start__gte')
-        if 'end__lt' in request.query_params:
-            request.query_params['to'] = request.query_params.pop('end__lt')
-
-        _from = request.query_params.get('from')
-        to = request.query_params.get('to')
-
-        if (_from and not to) or (to and not _from):
-            raise ValidationError(
-                detail="Both 'from' and 'to' must be provided together.",
-                code=status.HTTP_400_BAD_REQUEST
-            )
-
-        response = self.list(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
 
         return response
 
 
-class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
+class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     filterset_class = HomeworkFilter
@@ -99,20 +67,6 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
             return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
         else:
             return Homework.objects.none()
-
-    def filter_queryset(self, queryset):
-        for backend in list(self.filter_backends):
-            queryset = backend().filter_queryset(self.request, queryset, self)
-
-        _from = self.request.query_params.get('from', None)
-        to = self.request.query_params.get('to', None)
-        if _from and to:
-            _from = parser.parse(_from[0]).astimezone(timezone.utc)
-            to = parser.parse(to[0]).astimezone(timezone.utc)
-            queryset = queryset.filter(Q(start__range=(_from, to)) |
-                                       Q(end__range=(_from, to)))
-
-        return queryset
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
@@ -132,23 +86,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumAPIView, ListModelMixin, Create
         serialized with representations of associated attachments and reminders to avoid the need for redundant API
         calls.
         """
-        # TODO: Remap legacy query params, will be removed
-        request.query_params._mutable = True
-        if 'start__gte' in request.query_params:
-            request.query_params['from'] = request.query_params.pop('start__gte')
-        if 'end__lt' in request.query_params:
-            request.query_params['to'] = request.query_params.pop('end__lt')
-
-        _from = request.query_params.get('from')
-        to = request.query_params.get('to')
-
-        if (_from and not to) or (to and not _from):
-            raise ValidationError(
-                detail="Both 'from' and 'to' must be provided together.",
-                code=status.HTTP_400_BAD_REQUEST
-            )
-
-        response = self.list(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
 
         return response
 

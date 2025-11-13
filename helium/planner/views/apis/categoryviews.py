@@ -10,7 +10,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import CategoryFilter
 from helium.planner.models import Category
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner

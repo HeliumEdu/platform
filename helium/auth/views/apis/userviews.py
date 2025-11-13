@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 
