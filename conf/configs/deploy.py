@@ -9,9 +9,6 @@ __version__ = "1.17.5"
 import os
 import sys
 
-import rollbar
-from django.http import HttpRequest
-
 from conf.configcache import config
 from conf.configs import common
 from conf.configs.common import ENVIRONMENT, PROJECT_VERSION
@@ -25,7 +22,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 INSTALLED_APPS = common.INSTALLED_APPS
 
 MIDDLEWARE = common.MIDDLEWARE + (
-    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
+    'helium.common.middleware.HeliumRollbarMiddleware',
 )
 
 TEMPLATES = common.TEMPLATES
@@ -80,15 +77,6 @@ ROLLBAR = {
     'root': BASE_DIR,
     'code_version': PROJECT_VERSION
 }
-
-
-def health_check_payload_handler(payload: dict, request: HttpRequest, **kwargs):
-    if request.path.startswith('/status/'):
-        return False
-    return True
-
-
-rollbar.events.add_payload_handler(health_check_payload_handler)
 
 if not common.DEBUG:
     ADMINS = (

@@ -111,7 +111,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'helium.common.middleware.HeliumMiddleware',
+    'helium.common.middleware.HeliumExceptionMiddleware',
 )
 
 TEMPLATES = [{
@@ -182,7 +182,7 @@ HEALTH_CHECK = {
         "db": ["Database"],
         "cache": ["Cache"],
         "storage": ["Storage"],
-        "task-processing": ["TaskProcessing"],
+        "task-processing": ["TaskProcessing", "CeleryBeat"],
     },
 }
 
