@@ -549,6 +549,23 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
+    def test_range_query_multiday(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course,
+                                             start=datetime.datetime(2025, 10, 31, 0, 0, 0,
+                                                                     tzinfo=timezone.utc),
+                                             end=datetime.datetime(2025, 11, 3, 0, 0, 0,
+                                                                   tzinfo=timezone.utc))
+
+        response = self.client.get(
+            reverse(
+                'planner_homework_list') + f'?from=2025-11-01T00:00:00Z&to=2025-11-02T00:00:00Z')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
     def test_title_search_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)

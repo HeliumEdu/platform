@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 

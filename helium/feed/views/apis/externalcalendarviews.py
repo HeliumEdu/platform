@@ -10,7 +10,7 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelM
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 

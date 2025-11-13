@@ -10,7 +10,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyMod
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import MaterialFilter
 from helium.planner.models import Material

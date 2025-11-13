@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.models import Attachment
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer, AttachmentCreateSerializer

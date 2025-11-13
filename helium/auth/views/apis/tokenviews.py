@@ -6,7 +6,7 @@ import logging
 
 from rest_framework_simplejwt import views
 
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
 

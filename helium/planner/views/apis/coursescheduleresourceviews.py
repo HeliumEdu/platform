@@ -9,7 +9,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner.models import Course, CourseSchedule
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.eventserializer import EventSerializer

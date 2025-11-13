@@ -10,7 +10,7 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.views import HeliumAPIView
+from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import CourseGroupFilter
 from helium.planner.models import CourseGroup
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
