@@ -5,7 +5,7 @@ __version__ = "1.15.16"
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.sites import AdminSite
-from django_celery_results.models import TaskResult, GroupResult
+from django_celery_results.models import TaskResult
 
 
 class PlatformAdminSite(AdminSite):
