@@ -7,5 +7,5 @@ from rollbar.contrib.django.middleware import RollbarNotifierMiddleware
 
 class HeliumRollbarMiddleware(RollbarNotifierMiddleware):
     def process_exception(self, request, exc):
-        if not request.path.startswith("/status"):
+        if not request.path.startswith("/status/"):
             super(HeliumRollbarMiddleware, self).process_exception(request, exc)
