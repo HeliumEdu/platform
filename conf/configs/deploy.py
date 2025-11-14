@@ -4,8 +4,9 @@ Settings specific to prod-like deployable code, reading values from system envir
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.6"
+__version__ = "1.17.8"
 
+import logging
 import os
 import sys
 
@@ -94,15 +95,15 @@ LOGGING = {
         },
     },
     'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        }
+        'ignore_status_check': {
+            '()': 'helium.common.filters.IgnoreStatusCheckFilter',
+        },
     },
     'handlers': {
         'rollbar': {
             'level': 'WARN',
             'class': 'rollbar.logger.RollbarHandler',
-            'filters': ['require_debug_false'],
+            'filters': ['ignore_status_check'],
         },
         'console': {
             'level': 'INFO',
