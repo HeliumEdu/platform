@@ -1,3 +1,7 @@
+__copyright__ = "Copyright (c) 2025 Helium Edu"
+__license__ = "MIT"
+__version__ = "1.17.5"
+
 from datetime import timedelta
 
 from celery import states
@@ -33,6 +37,7 @@ class IdentifiedCeleryHealthCheck(CeleryHealthCheck):
 
 class IdentifiedCeleryBeatHealthCheck(BaseHealthCheckBackend):
     def check_status(self):
+        raise Exception("oops")
         try:
             time_threshold = timezone.now() - timedelta(minutes=3)
             if not TaskResult.objects.filter(date_done__gte=time_threshold,
