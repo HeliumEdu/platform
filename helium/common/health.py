@@ -37,7 +37,6 @@ class IdentifiedCeleryHealthCheck(CeleryHealthCheck):
 
 class IdentifiedCeleryBeatHealthCheck(BaseHealthCheckBackend):
     def check_status(self):
-        raise Exception("oops")
         try:
             time_threshold = timezone.now() - timedelta(minutes=3)
             if not TaskResult.objects.filter(date_done__gte=time_threshold,
