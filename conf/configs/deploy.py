@@ -97,7 +97,7 @@ LOGGING = {
     'filters': {
         'ignore_status_check': {
             '()': 'helium.common.filters.IgnoreStatusCheckFilter',
-        },
+        }
     },
     'handlers': {
         'rollbar': {
