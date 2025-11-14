@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.9"
+__version__ = "1.17.10"
 
 import os
 import socket
@@ -173,6 +173,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 HOSTNAME = socket.gethostname()
 
 SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' not in ENVIRONMENT else "https://support.heliumedu.com"
+STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
 
 # Healthcheck
 
