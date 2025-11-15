@@ -27,7 +27,7 @@ class TestCasePrivateViews(CacheTestCase):
         eventhelper.given_event_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse("feed_private_events_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
@@ -62,7 +62,7 @@ class TestCasePrivateViews(CacheTestCase):
         homeworkhelper.given_homework_exists(course3, category=category3, completed=True, current_grade="-1/100")
 
         # WHEN
-        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
@@ -96,7 +96,7 @@ class TestCasePrivateViews(CacheTestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"slug": user1.settings.private_slug}))
+            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))

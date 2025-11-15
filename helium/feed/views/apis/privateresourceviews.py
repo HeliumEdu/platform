@@ -38,10 +38,10 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
         user.settings.enable_private_slug()
 
         serializer = PrivateFeedSerializer({
-            'events_private_url': reverse('feed_private_events_ical', kwargs={'slug': user.settings.private_slug}),
-            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug}),
+            'events_private_url': reverse('feed_private_events_ical', kwargs={'private_slug': user.settings.private_slug}),
+            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug}),
             'courseschedules_private_url': reverse('feed_private_courseschedules_ical',
-                                                   kwargs={'slug': user.settings.private_slug})
+                                                   kwargs={'private_slug': user.settings.private_slug})
         })
 
         return Response(serializer.data)
