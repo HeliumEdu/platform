@@ -5,6 +5,7 @@ __version__ = "1.17.7"
 import logging
 
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError, AuthenticationFailed
 from rest_framework.mixins import RetrieveModelMixin
@@ -27,6 +28,9 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     def get_object(self):
         return self.request.user
 
+    @extend_schema(
+        tags=['auth', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return the authenticated user instance, including profile and settings details.

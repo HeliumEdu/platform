@@ -52,7 +52,8 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         parameters=[
             OpenApiParameter(name='from', type=datetime),
             OpenApiParameter(name='to', type=datetime),
-        ]
+        ],
+        tags=['planner.event', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
         """
