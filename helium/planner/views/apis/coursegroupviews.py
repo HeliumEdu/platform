@@ -18,6 +18,9 @@ from helium.planner.serializers.coursegroupserializer import CourseGroupSerializ
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.coursegroup']
+)
 class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
@@ -56,7 +59,9 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 
         return response
 
-
+@extend_schema(
+    tags=['planner.coursegroup']
+)
 class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

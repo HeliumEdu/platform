@@ -21,6 +21,9 @@ from helium.planner.views.base import HeliumCalendarItemAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['feed.externalcalendar.event']
+)
 class ExternalCalendarAsEventsResourceView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

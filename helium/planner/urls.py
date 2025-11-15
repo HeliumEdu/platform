@@ -87,7 +87,7 @@ urlpatterns = [
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
-    path('planner/events/delete/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
+    path('planner/events/delete/all', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
          name='planner_events_resource_delete'),
 
     # Homework

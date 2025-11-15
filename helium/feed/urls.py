@@ -14,11 +14,11 @@ urlpatterns = [
     ##############################
     # Unauthenticated URLs
     ##############################
-    path('feed/private/<str:slug>/events.ics', PrivateEventsICALResourceView.as_view(),
+    path('feed/private/<str:private_slug>/events.ics', PrivateEventsICALResourceView.as_view(),
          name='feed_private_events_ical'),
-    path('feed/private/<str:slug>/homework.ics', PrivateHomeworkICALResourceView.as_view(),
+    path('feed/private/<str:private_slug>/homework.ics', PrivateHomeworkICALResourceView.as_view(),
          name='feed_private_homework_ical'),
-    path('feed/private/<str:slug>/courseschedules.ics', PrivateCourseSchedulesICALResourceView.as_view(),
+    path('feed/private/<str:private_slug>/courseschedules.ics', PrivateCourseSchedulesICALResourceView.as_view(),
          name='feed_private_courseschedules_ical'),
 
     ##############################

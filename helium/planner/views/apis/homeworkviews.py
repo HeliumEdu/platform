@@ -24,6 +24,9 @@ from helium.planner.views.base import HeliumCalendarItemAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.homework', 'planner.user']
+)
 class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
@@ -56,6 +59,9 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
         return response
 
 
+@extend_schema(
+    tags=['planner.homework']
+)
 class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
@@ -115,6 +121,9 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         return response
 
 
+@extend_schema(
+    tags=['planner.homework']
+)
 class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)

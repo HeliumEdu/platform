@@ -18,6 +18,9 @@ from helium.planner.services import coursescheduleservice
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.courseschedule.event']
+)
 class CourseScheduleAsEventsResourceView(HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
