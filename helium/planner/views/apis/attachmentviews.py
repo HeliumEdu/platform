@@ -20,6 +20,9 @@ from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.attachment']
+)
 class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
@@ -92,6 +95,9 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
             raise ValidationError({'details': 'An unknown error occurred.'})
 
 
+@extend_schema(
+    tags=['planner.attachment']
+)
 class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMixin):
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

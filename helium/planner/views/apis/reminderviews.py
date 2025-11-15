@@ -19,6 +19,9 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer, Re
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.reminder']
+)
 class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
@@ -66,6 +69,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['planner.reminder']
+)
 class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
