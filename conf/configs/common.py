@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.16"
+__version__ = "1.17.17"
 
 import os
 import socket
@@ -30,8 +30,8 @@ ENVIRONMENT_PREFIX = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
 
 AWS_REGION = config('AWS_REGION', 'us-east-1')
 
-PROJECT_NAME = 'Helium Student Planner'
-PROJECT_TAGLINE = 'Lightening Your Course Load'
+PROJECT_NAME = 'Helium Edu'
+PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
