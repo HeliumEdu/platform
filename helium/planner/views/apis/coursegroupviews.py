@@ -33,6 +33,9 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         else:
             return CourseGroup.objects.none()
 
+    @extend_schema(
+        tags=['planner.coursegroup', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course group instances for the authenticated user.

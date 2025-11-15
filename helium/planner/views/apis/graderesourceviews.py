@@ -4,7 +4,6 @@ __version__ = "1.17.7"
 
 import logging
 
-from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -15,9 +14,6 @@ from helium.planner.services import gradingservice
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(
-    tags=['planner.user']
-)
 class GradesApiResourceView(HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = GradeSerializer

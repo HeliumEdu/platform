@@ -34,6 +34,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         else:
             return Reminder.objects.none()
 
+    @extend_schema(
+        tags=['planner.reminder', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a
