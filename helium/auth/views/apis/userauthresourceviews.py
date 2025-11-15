@@ -17,6 +17,9 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['auth.register']
+)
 class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
@@ -46,6 +49,9 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['auth.register']
+)
 class UserVerifyResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 

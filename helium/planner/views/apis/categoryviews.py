@@ -19,6 +19,9 @@ from helium.planner.serializers.categoryserializer import CategorySerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.user']
+)
 class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
@@ -40,6 +43,9 @@ class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['planner.category']
+)
 class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
@@ -82,6 +88,9 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
         return response
 
 
+@extend_schema(
+    tags=['planner.category']
+)
 class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
