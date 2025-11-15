@@ -17,6 +17,9 @@ from helium.feed.serializers.externalcalendarserializer import ExternalCalendarS
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['feed.externalcalendar']
+)
 class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
@@ -57,6 +60,9 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
         return response
 
 
+@extend_schema(
+    tags=['feed.externalcalendar']
+)
 class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

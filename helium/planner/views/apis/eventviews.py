@@ -24,6 +24,9 @@ from helium.planner.views.base import HeliumCalendarItemAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
@@ -80,6 +83,9 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
@@ -137,6 +143,9 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         return response
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)

@@ -17,6 +17,9 @@ from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['feed.private']
+)
 class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
@@ -44,6 +47,9 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
         return Response(serializer.data)
 
 
+@extend_schema(
+    tags=['feed.private']
+)
 class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer

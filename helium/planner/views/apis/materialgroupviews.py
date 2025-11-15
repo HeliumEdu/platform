@@ -18,6 +18,9 @@ from helium.planner.serializers.materialgroupserializer import MaterialGroupSeri
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.materialgroup']
+)
 class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated,)
@@ -57,6 +60,9 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         return response
 
 
+@extend_schema(
+    tags=['planner.materialgroup']
+)
 class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
