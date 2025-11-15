@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -18,6 +18,9 @@ from helium.planner.services import coursescheduleservice
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.courseschedule.event']
+)
 class CourseScheduleAsEventsResourceView(HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)

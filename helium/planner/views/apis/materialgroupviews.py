@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -18,6 +18,9 @@ from helium.planner.serializers.materialgroupserializer import MaterialGroupSeri
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.materialgroup']
+)
 class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated,)
@@ -30,6 +33,9 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         else:
             return MaterialGroup.objects.none()
 
+    @extend_schema(
+        tags=['planner.materialgroup', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all material group instances for the authenticated user.
@@ -57,6 +63,9 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         return response
 
 
+@extend_schema(
+    tags=['planner.materialgroup']
+)
 class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

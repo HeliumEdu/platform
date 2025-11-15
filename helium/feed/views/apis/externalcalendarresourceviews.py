@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 from datetime import datetime, timezone
@@ -21,6 +21,9 @@ from helium.planner.views.base import HeliumCalendarItemAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['feed.externalcalendar.event']
+)
 class ExternalCalendarAsEventsResourceView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

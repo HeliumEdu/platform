@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -18,6 +18,9 @@ from helium.planner.serializers.coursegroupserializer import CourseGroupSerializ
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.coursegroup']
+)
 class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated,)
@@ -30,6 +33,9 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         else:
             return CourseGroup.objects.none()
 
+    @extend_schema(
+        tags=['planner.coursegroup', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course group instances for the authenticated user.
@@ -56,7 +62,9 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 
         return response
 
-
+@extend_schema(
+    tags=['planner.coursegroup']
+)
 class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

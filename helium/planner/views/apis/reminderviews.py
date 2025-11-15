@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -19,6 +19,9 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer, Re
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.reminder']
+)
 class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated,)
@@ -31,6 +34,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         else:
             return Reminder.objects.none()
 
+    @extend_schema(
+        tags=['planner.reminder', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all reminder instances for the authenticated user. For convenience, reminder instances on a
@@ -66,6 +72,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['planner.reminder']
+)
 class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = ReminderSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

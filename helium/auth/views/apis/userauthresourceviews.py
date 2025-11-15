@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -17,6 +17,9 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['auth.register']
+)
 class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
@@ -46,6 +49,9 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['auth.register']
+)
 class UserVerifyResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 

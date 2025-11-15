@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -18,6 +18,9 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['auth.pushtoken']
+)
 class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = UserPushTokenSerializer
     permission_classes = (IsAuthenticated,)
@@ -57,6 +60,9 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['auth.pushtoken']
+)
 class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = UserPushTokenSerializer
     permission_classes = (IsAuthenticated, IsOwner,)

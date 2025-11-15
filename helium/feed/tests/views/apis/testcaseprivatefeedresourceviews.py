@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.17.19"
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -57,11 +57,11 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         user = get_user_model().objects.get(pk=user.pk)
         self.assertIsNone(user.settings.private_slug)
         self.assertEqual(
-            self.client.get(reverse('feed_private_events_ical', kwargs={'slug': private_slug})).status_code,
+            self.client.get(reverse('feed_private_events_ical', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)
         self.assertEqual(
-            self.client.get(reverse('feed_private_homework_ical', kwargs={'slug': private_slug})).status_code,
+            self.client.get(reverse('feed_private_homework_ical', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)
         self.assertEqual(
-            self.client.get(reverse('feed_private_courseschedules_ical', kwargs={'slug': private_slug})).status_code,
+            self.client.get(reverse('feed_private_courseschedules_ical', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)

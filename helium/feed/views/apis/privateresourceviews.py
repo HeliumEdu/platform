@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -17,6 +17,9 @@ from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['feed.private']
+)
 class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer
@@ -35,15 +38,18 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
         user.settings.enable_private_slug()
 
         serializer = PrivateFeedSerializer({
-            'events_private_url': reverse('feed_private_events_ical', kwargs={'slug': user.settings.private_slug}),
-            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'slug': user.settings.private_slug}),
+            'events_private_url': reverse('feed_private_events_ical', kwargs={'private_slug': user.settings.private_slug}),
+            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug}),
             'courseschedules_private_url': reverse('feed_private_courseschedules_ical',
-                                                   kwargs={'slug': user.settings.private_slug})
+                                                   kwargs={'private_slug': user.settings.private_slug})
         })
 
         return Response(serializer.data)
 
 
+@extend_schema(
+    tags=['feed.private']
+)
 class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateFeedSerializer

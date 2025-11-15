@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 
@@ -18,6 +18,9 @@ from helium.planner.serializers.coursescheduleserializer import CourseScheduleSe
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.courseschedule']
+)
 class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
@@ -62,6 +65,9 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         return response
 
 
+@extend_schema(
+    tags=['planner.courseschedule']
+)
 class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
                                                     DestroyModelMixin):
     serializer_class = CourseScheduleSerializer

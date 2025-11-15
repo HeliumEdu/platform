@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.19"
 
 import logging
 from datetime import datetime
@@ -24,6 +24,9 @@ from helium.planner.views.base import HeliumCalendarItemAPIView
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
@@ -49,7 +52,8 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         parameters=[
             OpenApiParameter(name='from', type=datetime),
             OpenApiParameter(name='to', type=datetime),
-        ]
+        ],
+        tags=['planner.event', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
         """
@@ -80,6 +84,9 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         return response
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
@@ -137,6 +144,9 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         return response
 
 
+@extend_schema(
+    tags=['planner.event']
+)
 class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
