@@ -33,6 +33,9 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         else:
             return MaterialGroup.objects.none()
 
+    @extend_schema(
+        tags=['planner.materialgroup', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all material group instances for the authenticated user.
