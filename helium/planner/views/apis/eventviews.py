@@ -57,8 +57,8 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     )
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all event instances for the authenticated user. For convenience, event instances on a GET are
-        serialized with representations of associated attachments and reminders to avoid the need for redundant API
+        Return a list of all Helium Event instances for the authenticated user. For convenience, Helium Events on a GET
+        are serialized with representations of associated attachments and reminders to avoid the need for redundant API
         calls.
         """
         response = super().get(request, *args, **kwargs)
@@ -75,7 +75,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new event instance for the authenticated user.
+        Create a new Helium Event instance for the authenticated user.
         """
         response = self.create(request, *args, **kwargs)
 
@@ -106,8 +106,8 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
     def get(self, request, *args, **kwargs):
         """
-        Return the given event instance. For convenience, event instances on a GET are serialized with representations of
-        associated attachments and reminders to avoid the need for redundant API calls.
+        Return the given Helium Event instance. For convenience, Helium Event instances on a GET are serialized with
+        representations of associated attachments and reminders to avoid the need for redundant API calls.
         """
         response = self.retrieve(request, *args, **kwargs)
 
@@ -115,7 +115,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
     def put(self, request, *args, **kwargs):
         """
-        Update the given event instance.
+        Update the given Helium Event instance.
         """
         response = self.update(request, *args, **kwargs)
 
@@ -125,7 +125,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
     def patch(self, request, *args, **kwargs):
         """
-        Update only the given attributes of the given event instance.
+        Update only the given attributes of the given Helium Event instance.
         """
         response = self.partial_update(request, *args, **kwargs)
 
@@ -135,7 +135,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given event instance.
+        Delete the given Helium Event instance.
         """
         response = self.destroy(request, *args, **kwargs)
 
@@ -160,7 +160,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
 
     def delete_all(self, request, *args, **kwargs):
         """
-        Delete all events for the authenticated user.
+        Delete all Helium Event instances for the authenticated user.
         """
         queryset = self.filter_queryset(self.get_queryset())
 

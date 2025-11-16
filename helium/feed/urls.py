@@ -4,7 +4,8 @@ __version__ = "1.17.19"
 
 from django.urls import path
 
-from helium.feed.views.apis.externalcalendarresourceviews import ExternalCalendarAsEventsResourceView
+from helium.feed.views.apis.externalcalendaraseventsviews import ExternalCalendarAsEventsListView, \
+    UserExternalCalendarAsEventsListView
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.apis.privateresourceviews import PrivateEnableResourceView, PrivateDisableResourceView
 from helium.feed.views.privateviews import PrivateEventsICALResourceView, PrivateHomeworkICALResourceView, \
@@ -30,8 +31,11 @@ urlpatterns = [
     path('feed/private/disable/', PrivateDisableResourceView.as_view({'put': 'disable'}),
          name='feed_private_resource_disable'),
     path('feed/externalcalendars/<int:pk>/events/',
-         ExternalCalendarAsEventsResourceView.as_view(),
+         ExternalCalendarAsEventsListView.as_view(),
          name='feed_resource_externalcalendars_events'),
+    path('feed/externalcalendars/events/',
+         UserExternalCalendarAsEventsListView.as_view(),
+         name='feed_externalcalendars_events'),
 
     # ExternalCalendar
     path('feed/externalcalendars/', ExternalCalendarsApiListView.as_view(),
