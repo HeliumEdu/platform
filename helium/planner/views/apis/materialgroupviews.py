@@ -34,7 +34,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
             return MaterialGroup.objects.none()
 
     @extend_schema(
-        tags=['planner.materialgroup', 'calendar.user']
+        tags=['planner.materialgroup']
     )
     def get(self, request, *args, **kwargs):
         """

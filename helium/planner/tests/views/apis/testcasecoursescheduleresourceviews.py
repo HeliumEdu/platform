@@ -23,7 +23,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                     kwargs={'course_group': '9999', 'course': '9999'}))
         ]
 
@@ -41,7 +41,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
 
         # WHEN
         responses = [
-            self.client.get(reverse('planner_resource_courseschedules_events',
+            self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                     kwargs={'course_group': course_group.pk, 'course': course.pk}))
         ]
 
@@ -64,7 +64,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
-        response = self.client.get(reverse('planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN
@@ -89,11 +89,11 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         # WHEN
-        response_db = self.client.get(reverse('planner_resource_courseschedules_events',
+        response_db = self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                               kwargs={'course_group': course_group.pk, 'course': course.pk}))
         with mock.patch('helium.planner.services.coursescheduleservice._create_events_from_course_schedules') as \
                 _create_events_from_course_schedules_mock:
-            response_cached = self.client.get(reverse('planner_resource_courseschedules_events',
+            response_cached = self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                                       kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
             # THEN
@@ -116,7 +116,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
-        response = self.client.get(reverse('planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_many_mock.call_count, 0)
@@ -128,7 +128,7 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         course_schedule.mon_start_time = datetime.time(2, 00, 0)
         course_schedule.save()
 
-        response = self.client.get(reverse('planner_resource_courseschedules_events',
+        response = self.client.get(reverse('planner_resource_courses_courseschedules_events',
                                            kwargs={'course_group': course_group.pk, 'course': course.pk}))
 
         # THEN

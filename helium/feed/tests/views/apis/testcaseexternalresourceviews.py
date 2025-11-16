@@ -127,6 +127,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['priority'], 50)
         self.assertEqual(response.data[0]['user'], user.pk)
         self.assertEqual(response.data[0]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[0]['color'], external_calendar.color)
         self.assertEqual(response.data[1]['title'], 'An All Day Event')
         self.assertEqual(response.data[1]['all_day'], True)
         self.assertEqual(response.data[1]['show_end_time'], False)
@@ -135,6 +136,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[1]['priority'], 50)
         self.assertEqual(response.data[1]['user'], user.pk)
         self.assertEqual(response.data[1]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[1]['color'], external_calendar.color)
         self.assertEqual(response.data[2]['title'], 'Some Timed Event at 9am CT Outside DST')
         self.assertEqual(response.data[2]['all_day'], False)
         self.assertEqual(response.data[2]['show_end_time'], True)
@@ -143,6 +145,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[2]['priority'], 50)
         self.assertEqual(response.data[2]['user'], user.pk)
         self.assertEqual(response.data[2]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[2]['color'], external_calendar.color)
         # This is a "removed" member of the recurring group (the time is different than the recurring group), which
         # means it has been turned in to its own custom event, apart from the recurrence
         self.assertEqual(response.data[3]['title'], 'Daily Timed Event')
@@ -153,6 +156,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[3]['priority'], 50)
         self.assertEqual(response.data[3]['user'], user.pk)
         self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[3]['color'], external_calendar.color)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_get_external_calendar_cached(self, mock_urlopen):
@@ -184,6 +188,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
             self.assertEqual(response_db.data[0]['comments'], response_cached.data[0]['comments'])
             self.assertEqual(response_db.data[0]['user'], response_cached.data[0]['user'])
             self.assertEqual(response_db.data[0]['calendar_item_type'], response_cached.data[0]['calendar_item_type'])
+            self.assertEqual(response_db.data[0]['color'], response_cached.data[0]['color'])
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_range_query(self, mock_urlopen):
