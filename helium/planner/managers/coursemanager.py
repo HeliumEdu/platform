@@ -27,6 +27,9 @@ class CourseQuerySet(BaseQuerySet):
     def for_course_group(self, course_group_id):
         return self.filter(course_group_id=course_group_id)
 
+    def shown_on_calendar(self):
+        return self.filter(course_group__shown_on_calendar=True)
+
     def graded(self):
         return self.filter(current_grade__gt=-1)
 
@@ -60,6 +63,9 @@ class CourseManager(BaseManager):
 
     def for_course_group(self, course_group_id):
         return self.get_queryset().for_course_group(course_group_id)
+
+    def shown_on_calendar(self):
+        return self.get_queryset().shown_on_calendar()
 
     def graded(self):
         return self.get_queryset().graded()

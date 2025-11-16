@@ -8,9 +8,11 @@ import logging
 
 import pytz
 from dateutil import parser
+from django.conf import settings
 from django.core.cache import cache
 
 from helium.common import enums
+from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
@@ -93,44 +95,53 @@ def _get_cache_prefix(course):
     return f"users:{course.get_user().pk}:courses:{course.pk}:coursescheduleevents:"
 
 
-def _get_events_from_cache(cached_keys, search=None):
+def _apply_event_filters(event, _from, to, search):
+    if _from and to and not (
+            (_from <= event.start <= to or _from <= event.end <= to) or
+            # Also include results where start/end dates are wider than the window
+            (event.start <= _from and event.end >= to)):
+        return False
+
+    if search and not (search in event.title.lower() or
+                       (event.comments and search in event.comments.lower())):
+        return False
+
+    return True
+
+
+def _get_events_from_cache(cache_prefix, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
 
-    for key, event_item in cache.get_many(cached_keys).items():
-        try:
-            event_item = json.loads(event_item)
-            event = Event(id=event_item['id'],
-                          title=event_item['title'],
-                          all_day=event_item['all_day'],
-                          show_end_time=event_item['show_end_time'],
-                          start=parser.parse(event_item['start']),
-                          end=parser.parse(event_item['end']),
-                          url=event_item['url'],
-                          owner_id=event_item['owner_id'],
-                          user_id=event_item['user'],
-                          calendar_item_type=event_item['calendar_item_type'],
-                          comments=event_item['comments'])
+    try:
+        for event in json.loads(cached_value):
+            event = Event(id=event['id'],
+                          title=event['title'],
+                          all_day=event['all_day'],
+                          show_end_time=event['show_end_time'],
+                          start=parser.parse(event['start']),
+                          end=parser.parse(event['end']),
+                          url=event['url'],
+                          owner_id=event['owner_id'],
+                          user_id=event['user'],
+                          calendar_item_type=event['calendar_item_type'],
+                          comments=event['comments'])
 
-            if search and not (search in event.title.lower() or (event.comments and search in event.comments.lower())):
-                continue
-
-            events.append(event)
-        except:
-            invalid_data = True
-
-            break
+            if _apply_event_filters(event, _from, to, search):
+                events.append(event)
+    except:
+        invalid_data = True
 
     if invalid_data:
         events = []
-        cache.delete_many(cached_keys)
+        cache.delete(cache_prefix)
 
     return events, not invalid_data
 
 
-def _create_events_from_course_schedules(course, course_schedules, search=None):
+def _create_events_from_course_schedules(course, course_schedules, _from=None, to=None, search=None):
     events = []
-    cache_prefix = _get_cache_prefix(course)
+    events_filtered = []
 
     day = course.start_date
     while day <= course.end_date:
@@ -169,19 +180,27 @@ def _create_events_from_course_schedules(course, course_schedules, search=None):
                               calendar_item_type=enums.COURSE,
                               comments=comments)
 
-                if search and not (search in event.title.title() or (event.comments and search in event.comments.lower())):
-                    continue
-
                 events.append(event)
 
-                serializer = EventSerializer(event)
-                cache.set(cache_prefix + str(event.id), json.dumps(serializer.data))
+                if _apply_event_filters(event, _from, to, search):
+                    events_filtered.append(event)
 
                 break
 
         day += datetime.timedelta(days=1)
 
-    return events
+    serializer = EventSerializer(events, many=True)
+    events_json = json.dumps(serializer.data)
+    if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
+        cache.set(_get_cache_prefix(course), events_json, settings.FEED_CACHE_TTL_SECONDS)
+    else:
+        logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
+            max_cache_size=len(events_json.encode('utf-8')),
+            id=course.pk))
+
+        metricutils.increment('task.cache.max-size-exceeded')
+
+    return events_filtered
 
 
 def clear_cached_course_schedule(course):
@@ -196,23 +215,26 @@ def clear_cached_course_schedule(course):
     cache.delete_many(cached_keys)
 
 
-def course_schedules_to_events(course, course_schedules, search=None):
+def course_schedules_to_events(course, course_schedules, _from=None, to=None, search=None):
     """
     For the given course schedule model, generate an event for each class time within the course's start/end window.
 
     :param course: The course with a start/end date range to iterate over.
     :param course_schedules: A list of course schedules to generate the events for.
+    :param _from: The earliest date by which to filter results.
+    :param to: The last date by which to filter results.
     :param search: The search string to filter by.
     :return: A list of event resources.
     """
     events = []
 
     cached = False
-    cached_keys = cache.keys(_get_cache_prefix(course) + "*")
-    if cached_keys:
-        events, cached = _get_events_from_cache(cached_keys, search)
+    cache_prefix = _get_cache_prefix(course)
+    cached_value = cache.get(_get_cache_prefix(course))
+    if cached_value:
+        events, cached = _get_events_from_cache(cache_prefix, cached_value, _from, to, search)
 
     if not cached:
-        events = _create_events_from_course_schedules(course, course_schedules, search)
+        events = _create_events_from_course_schedules(course, course_schedules, _from, to, search)
 
     return events
