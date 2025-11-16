@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.12.26"
+__version__ = "1.17.22"
 
 import logging
 
@@ -48,7 +48,11 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
                     'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
                     'this out!')
 
-            refresh = self.get_token(user)
+
+            try:
+                refresh = self.get_token(user)
+            except IntegrityError:
+                raise PermissionDenied('Sorry, the given token is no longer valid. Request a new one.')
 
             attrs["refresh"] = str(refresh)
             attrs["access"] = str(refresh.access_token)

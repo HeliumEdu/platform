@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.19"
+__version__ = "1.17.22"
 
 import logging
 
@@ -34,7 +34,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
             return MaterialGroup.objects.none()
 
     @extend_schema(
-        tags=['planner.materialgroup', 'calendar.user']
+        tags=['planner.materialgroup']
     )
     def get(self, request, *args, **kwargs):
         """
