@@ -73,6 +73,8 @@ class CourseGroupFilter(django_filters.FilterSet):
 
 
 class CourseFilter(django_filters.FilterSet):
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
+
     class Meta:
         model = Course
         fields = {
@@ -80,6 +82,9 @@ class CourseFilter(django_filters.FilterSet):
             'end_date': ['exact', 'lte'],
             'title': ['exact'],
         }
+
+    def filter_shown_on_calendar(self, queryset, name, value):
+        return queryset.filter(course_group__shown_on_calendar=value)
 
 
 class CategoryFilter(django_filters.FilterSet):
@@ -108,13 +113,19 @@ class MaterialGroupFilter(django_filters.FilterSet):
     class Meta:
         model = MaterialGroup
         fields = {
+            'shown_on_calendar': ['exact'],
             'title': ['exact'],
         }
 
 
 class MaterialFilter(django_filters.FilterSet):
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
+
     class Meta:
         model = Material
         fields = {
             'title': ['exact'],
         }
+
+    def filter_shown_on_calendar(self, queryset, name, value):
+        return queryset.filter(material_group__shown_on_calendar=value)
