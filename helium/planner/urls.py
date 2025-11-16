@@ -9,7 +9,8 @@ from helium.planner.views.apis.categoryviews import UserCategoriesApiListView, C
     CourseGroupCourseCategoriesApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
-from helium.planner.views.apis.coursescheduleresourceviews import CourseScheduleAsEventsResourceView
+from helium.planner.views.apis.coursescheduleaseventsviews import CourseScheduleAsEventsListView, \
+    UserCourseScheduleAsEventsListView
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiDetailView
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
@@ -31,7 +32,9 @@ urlpatterns = [
     # Resource shortcuts
     path('planner/grades/', GradesApiResourceView.as_view(), name='planner_resource_grades'),
     path('planner/coursegroups/<int:course_group>/courses/<int:course>/courseschedules/events/',
-         CourseScheduleAsEventsResourceView.as_view(), name='planner_resource_courseschedules_events'),
+         CourseScheduleAsEventsListView.as_view(), name='planner_resource_courses_courseschedules_events'),
+    path('planner/courseschedules/events/', UserCourseScheduleAsEventsListView.as_view(),
+         name='planner_courseschedules_events'),
 
     # CourseGroup
     path('planner/coursegroups/', CourseGroupsApiListView.as_view(), name='planner_coursegroups_list'),

@@ -68,6 +68,7 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
                           calendar_item_type=event['calendar_item_type'],
                           url=event['url'],
                           comments=event['comments'])
+            event.color =external_calendar.color
 
             if _apply_event_filters(event, _from, to, search):
                 events.append(event)
@@ -136,6 +137,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           comments=component.get("DESCRIPTION"),
                           user=external_calendar.get_user(),
                           calendar_item_type=enums.EXTERNAL)
+            event.color=external_calendar.color
 
             events.append(event)
 
