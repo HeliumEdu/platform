@@ -10,6 +10,7 @@ db.sqlite3-journal
 *.log
 .env.docker
 .env.local
+.env
 venv
 build
 docs/_build
