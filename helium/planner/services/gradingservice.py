@@ -100,6 +100,12 @@ def get_grade_data(user_id):
                              'trend'))
 
     for course_group in course_groups:
+        course_group['num_homework'] = (Course.objects
+                                               .for_course_group(course_group['id'])
+                                               .num_homework())
+        course_group['num_homework_completed'] = (Course.objects
+                                        .for_course_group(course_group['id'])
+                                        .num_homework_completed())
         course_group['num_homework_graded'] = (Course.objects
                                                .for_course_group(course_group['id'])
                                                .num_homework_graded())
@@ -118,6 +124,7 @@ def get_grade_data(user_id):
             course['overall_grade'] = course['current_grade']
             course['num_homework'] = course_db_entity.num_homework()
             course_group_num_homework += course['num_homework']
+            course['num_homework_completed'] = course_db_entity.num_homework_completed()
             course['num_homework_graded'] = course_db_entity.num_homework_graded()
             course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
             course.pop('current_grade')
@@ -145,6 +152,7 @@ def get_grade_data(user_id):
                 category_db_entity = Category.objects.filter(pk=category['id'])
                 category['overall_grade'] = category['average_grade']
                 category['num_homework'] = category_db_entity.num_homework()
+                category['num_homework_completed'] = category_db_entity.num_homework_completed()
                 category['num_homework_graded'] = category_db_entity.num_homework_graded()
                 category.pop('average_grade')
                 category['grade_points'] = category_grade_points.get(category['id'], [])

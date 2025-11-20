@@ -24,6 +24,9 @@ class CategoryQuerySet(BaseQuerySet):
     def num_homework(self):
         return self.aggregate(homework_count=Count('homework'))['homework_count']
 
+    def num_homework_completed(self, completed=True):
+        return self.aggregate(homework_count=Count(Case(When(homework__completed=completed, then=1))))['homework_count']
+
     def num_homework_graded(self):
         return self.aggregate(
             homework_count=Count(Case(
@@ -48,6 +51,9 @@ class CategoryManager(BaseManager):
 
     def num_homework(self):
         return self.get_queryset().num_homework()
+
+    def num_homework_completed(self):
+        return self.get_queryset().num_homework_completed()
 
     def num_homework_graded(self):
         return self.get_queryset().num_homework_graded()
