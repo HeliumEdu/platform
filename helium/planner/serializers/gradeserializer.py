@@ -26,6 +26,8 @@ class GradeHolderSerializer(serializers.Serializer):
 
     num_homework = serializers.IntegerField()
 
+    num_homework_completed = serializers.IntegerField()
+
     num_homework_graded = serializers.IntegerField()
 
     has_weighted_grading = serializers.BooleanField(required=False)
