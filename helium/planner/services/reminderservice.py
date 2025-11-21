@@ -118,7 +118,7 @@ def process_push_reminders(mark_sent_only=False):
                 subject = get_subject(reminder)
 
                 if not subject:
-                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
+                    logger.info(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
                 else:
                     logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
 
@@ -129,7 +129,7 @@ def process_push_reminders(mark_sent_only=False):
 
                         send_pushes.delay(push_tokens, user.username, subject, reminder.message)
                     else:
-                        logger.warning(
+                        logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
             else:
                 logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")

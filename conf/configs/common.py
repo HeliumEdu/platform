@@ -301,6 +301,7 @@ SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
+    '10.0.2.2',
     urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
 CSRF_TRUSTED_ORIGINS = [
