@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.18"
+__version__ = "1.17.27"
 
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
