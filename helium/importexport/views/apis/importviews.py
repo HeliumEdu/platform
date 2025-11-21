@@ -15,6 +15,7 @@ from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView
 from helium.importexport.serializers.importerializer import ImportSerializer
 from helium.importexport.services import importservice
+from helium.planner.services import reminderservice
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                  course_schedules_count_file, categories_count_file, material_groups_count_file, materials_count_file,
                  events_count_file, homework_count_file, reminders_count_file) = importservice.import_user(request,
                                                                                                            data)
+
+                reminderservice.process_push_reminders(True)
 
                 external_calendar_count += external_calendar_count_file
                 course_groups_count += course_groups_count_file

@@ -206,13 +206,15 @@ class TestCaseImportExportViews(APITestCase):
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45:00Z',
                                                                          'offset': 15, 'offset_type': 0, 'type': 2,
-                                                                         'sent': False, 'homework': homework[0].pk,
+                                                                         'sent': False, 'dismissed': False,
+                                                                         'homework': homework[0].pk,
                                                                          'event': None, 'user': user.pk})
         reminderhelper.verify_reminder_matches_data(self, reminders[3], {'id': 3, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45Z',
                                                                          'offset': 15, 'offset_type': 0, 'type': 2,
-                                                                         'sent': False, 'homework': homework[2].pk,
+                                                                         'sent': False, 'dismissed': False,
+                                                                         'homework': homework[2].pk,
                                                                          'event': None, 'user': user.pk})
 
     def test_import_invalid_json(self):

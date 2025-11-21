@@ -26,6 +26,7 @@ from helium.planner.serializers.materialgroupserializer import MaterialGroupSeri
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
+from helium.planner.services import reminderservice
 from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
@@ -339,7 +340,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
                     microsecond=0,
                     tzinfo=timezone.utc))
 
-            adjust_reminder_times.delay(homework.pk, homework.calendar_item_type)
+            adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
         for event in Event.objects.for_user(user.pk).iterator():
             start_delta = (event.start.date() - first_monday.date()).days
@@ -358,7 +359,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
                     microsecond=0,
                     tzinfo=timezone.utc))
 
-            adjust_reminder_times.delay(event.pk, event.calendar_item_type)
+            adjust_reminder_times(event.pk, event.calendar_item_type)
 
         for course in Course.objects.for_user(user.pk).iterator():
             delta = (course.end_date - course.start_date).days
@@ -389,6 +390,8 @@ def import_example_schedule(user):
         import_user(request, data, True)
 
         _adjust_schedule_relative_to(user, -1)
+
+        reminderservice.process_push_reminders(True)
 
         for category in Category.objects.for_user(user.pk).iterator():
             recalculate_category_grade.delay(category.pk)

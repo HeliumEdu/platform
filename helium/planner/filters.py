@@ -104,6 +104,7 @@ class ReminderFilter(django_filters.FilterSet):
             'homework': ['exact'],
             'type': ['exact'],
             'sent': ['exact'],
+            'dismissed': ['exact'],
             'start_of_range': ['lte'],
             'title': ['exact'],
         }

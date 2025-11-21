@@ -90,6 +90,7 @@ class TestCaseReminderViews(APITestCase):
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'start_of_range': (event.start - timedelta(hours=1)).isoformat(),
             'sent': False,
+            'dismissed': False,
             'user': user.pk
         }
         response = self.client.post(reverse('planner_reminders_list'),
@@ -121,6 +122,7 @@ class TestCaseReminderViews(APITestCase):
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'start_of_range': (homework.start - timedelta(hours=1)).isoformat(),
             'sent': False,
+            'dismissed': False,
             'user': user.pk
         }
         response = self.client.post(reverse('planner_reminders_list'),
