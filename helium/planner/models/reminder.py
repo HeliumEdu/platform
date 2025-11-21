@@ -32,6 +32,8 @@ class Reminder(BaseModel):
 
     sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False, db_index=True)
 
+    dismissed = models.BooleanField(help_text='Whether the reminder has been dismieed.', default=False, db_index=True)
+
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 

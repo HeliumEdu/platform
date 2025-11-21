@@ -97,8 +97,8 @@ class TestCaseReminderService(TestCase):
                                                 end=datetime.datetime.now().replace(
                                                     tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1, hours=1))
-        reminder1 = reminderhelper.given_reminder_exists(user, event=event1, type=enums.PUSH)
-        reminder2 = reminderhelper.given_reminder_exists(user, homework=homework, type=enums.PUSH)
+        reminder1 = reminderhelper.given_reminder_exists(user, event=event1, type=enums.POPUP)
+        reminder2 = reminderhelper.given_reminder_exists(user, homework=homework, type=enums.POPUP)
         # This reminder is ignored, as we're not yet in its send window
         reminder3 = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event2)
         # Sent reminders are ignored

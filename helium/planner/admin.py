@@ -495,7 +495,7 @@ class MaterialAdmin(BaseModelAdmin):
 
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
-    list_filter = ('type', 'sent')
+    list_filter = ('type', 'sent', 'dismissed')
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('event', 'homework', 'user')

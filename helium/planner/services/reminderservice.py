@@ -107,29 +107,32 @@ def process_text_reminders():
         timezone.deactivate()
 
 
-def process_push_reminders():
-    for reminder in Reminder.objects.with_type(enums.PUSH).unsent().for_today().iterator():
+def process_push_reminders(mark_sent_only=False):
+    for reminder in Reminder.objects.with_type(enums.POPUP).unsent().for_today().iterator():
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
 
         try:
-            subject = get_subject(reminder)
+            if not mark_sent_only:
+                subject = get_subject(reminder)
 
-            if not subject:
-                logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
-            else:
-                logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
-
-                push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
-
-                if len(push_tokens) > 0:
-                    metricutils.increment('task', value=len(push_tokens), user=reminder.user, extra_tags=['name:reminder.queue.push'])
-
-                    send_pushes.delay(push_tokens, user.username, subject, reminder.message)
+                if not subject:
+                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
                 else:
-                    logger.warning(
-                        f'Reminder {reminder.pk} was not processed, as there are no active push tokens for user {user.pk}')
+                    logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
+
+                    push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
+
+                    if len(push_tokens) > 0:
+                        metricutils.increment('task', value=len(push_tokens), user=reminder.user, extra_tags=['name:reminder.queue.push'])
+
+                        send_pushes.delay(push_tokens, user.username, subject, reminder.message)
+                    else:
+                        logger.warning(
+                            f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
+            else:
+                logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")
 
             reminder.sent = True
             reminder.save()

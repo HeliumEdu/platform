@@ -22,8 +22,8 @@ class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
         fields = (
-            'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'homework', 'event',
-            'user',)
+            'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
+            'homework', 'event', 'user',)
         read_only_fields = ('start_of_range', 'user',)
 
     def validate(self, attrs):
