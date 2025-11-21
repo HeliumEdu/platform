@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.18"
+__version__ = "1.17.27"
 
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
@@ -495,7 +495,7 @@ class MaterialAdmin(BaseModelAdmin):
 
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
-    list_filter = ('type', 'sent')
+    list_filter = ('type', 'sent', 'dismissed')
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('event', 'homework', 'user')

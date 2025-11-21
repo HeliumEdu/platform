@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.20"
+__version__ = "1.17.27"
 
 import logging
 
@@ -104,6 +104,7 @@ class ReminderFilter(django_filters.FilterSet):
             'homework': ['exact'],
             'type': ['exact'],
             'sent': ['exact'],
+            'dismissed': ['exact'],
             'start_of_range': ['lte'],
             'title': ['exact'],
         }

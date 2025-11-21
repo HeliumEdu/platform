@@ -7,6 +7,7 @@ from rest_framework.request import Request
 
 from helium.importexport.services.importservice import import_user, _adjust_schedule_relative_to
 from helium.planner.models import Category
+from helium.planner.services import reminderservice
 from helium.planner.tasks import recalculate_category_grade
 
 
@@ -35,6 +36,8 @@ class Command(BaseCommand):
 
             if adjust_month is not None:
                 _adjust_schedule_relative_to(user, adjust_month)
+
+            reminderservice.process_push_reminders(True)
 
             for category in Category.objects.for_user(user.pk).iterator():
                 recalculate_category_grade.delay(category.pk)
