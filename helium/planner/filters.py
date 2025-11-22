@@ -80,7 +80,7 @@ class CourseFilter(django_filters.FilterSet):
         fields = {
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
-            'title': ['exact'],
+            'title': ['exact']
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):

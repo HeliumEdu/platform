@@ -48,6 +48,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         user = request.user
         external_calendars = (ExternalCalendar.objects
                               .for_user(user.pk))
+        if 'shown_on_calendar' in request.query_params:
+            external_calendars = external_calendars.filter(shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
 
         _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
             if "from" in request.query_params else None
