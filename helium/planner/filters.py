@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.27"
+__version__ = "1.17.28"
 
 import logging
 
@@ -80,7 +80,7 @@ class CourseFilter(django_filters.FilterSet):
         fields = {
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
-            'title': ['exact'],
+            'title': ['exact']
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):

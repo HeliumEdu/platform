@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.27"
+__version__ = "1.17.28"
 
 import os
 import socket
@@ -301,6 +301,7 @@ SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
+    '10.0.2.2',
     urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
 CSRF_TRUSTED_ORIGINS = [

@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.22"
+__version__ = "1.17.28"
 
 import logging
 from datetime import datetime
@@ -44,8 +44,9 @@ class UserCourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
     def list(self, request, *arg, **kwargs):
         user = self.request.user
         courses = (Course.objects
-                   .for_user(user.pk)
-                   .shown_on_calendar())
+                   .for_user(user.pk))
+        if 'shown_on_calendar' in request.query_params:
+            courses = courses.filter(course_group__shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
         course_schedules = (CourseSchedule.objects
                             .filter(course__in=courses))
 
@@ -56,7 +57,7 @@ class UserCourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         events = []
-        for course in Course.objects.for_user(user.pk).iterator():
+        for course in courses:
             events += coursescheduleservice.course_schedules_to_events(course,
                                                                        course_schedules.filter(course=course.id),
                                                                        _from, to, search)

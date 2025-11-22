@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.22"
+__version__ = "1.17.28"
 
 import logging
 from datetime import datetime, timezone
@@ -48,6 +48,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         user = request.user
         external_calendars = (ExternalCalendar.objects
                               .for_user(user.pk))
+        if 'shown_on_calendar' in request.query_params:
+            external_calendars = external_calendars.filter(shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
 
         _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
             if "from" in request.query_params else None
