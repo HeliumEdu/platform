@@ -30,7 +30,7 @@ ENVIRONMENT_PREFIX = f'{ENVIRONMENT}.' if 'prod' not in ENVIRONMENT else ''
 
 AWS_REGION = config('AWS_REGION', 'us-east-1')
 
-PROJECT_NAME = 'Helium Edu'
+PROJECT_NAME = 'Helium'
 PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
