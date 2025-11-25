@@ -8,7 +8,7 @@
 
 # Helium Platform
 
-The backend `platform` for [Helium Edu](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
+The backend `platform` for [Helium](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
 integrating with the API can be found [here](https://api.heliumedu.com/docs/).
 
 Released container images are published to [Helium's AWS ECR](https://gallery.ecr.aws/heliumedu/).
