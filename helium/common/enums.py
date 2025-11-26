@@ -170,7 +170,9 @@ TIME_ZONE_CHOICES = (
       ('Pacific/Palau', 'Palau'), ('Pacific/Pitcairn', 'Pitcairn'), ('Pacific/Pohnpei', 'Pohnpei'),
       ('Pacific/Port_Moresby', 'Port_Moresby'), ('Pacific/Rarotonga', 'Rarotonga'), ('Pacific/Saipan', 'Saipan'),
       ('Pacific/Tahiti', 'Tahiti'), ('Pacific/Tarawa', 'Tarawa'), ('Pacific/Tongatapu', 'Tongatapu'),
-      ('Pacific/Wake', 'Wake'), ('Pacific/Wallis', 'Wallis')])
+      ('Pacific/Wake', 'Wake'), ('Pacific/Wallis', 'Wallis')]),
+    ('Etc',
+     [('Etc/UTC', 'UTC')])
 )
 
 MONTH = 0
