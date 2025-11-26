@@ -31,13 +31,6 @@ class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
         return queryset
 
     def get(self, request, *args, **kwargs):
-        # TODO: Legacy query params, will be removed
-        request.query_params._mutable = True
-        if 'start__gte' in request.query_params:
-            request.query_params['from'] = request.query_params.pop('start__gte')[0]
-        if 'end__lt' in request.query_params:
-            request.query_params['to'] = request.query_params.pop('end__lt')[0]
-
         _from = request.query_params.get('from')
         to = request.query_params.get('to')
 

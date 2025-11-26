@@ -350,7 +350,7 @@ class TestCaseEventViews(APITestCase):
         # WHEN
         response = self.client.get(
             reverse(
-                'planner_events_list') + f'?start__gte={quote(event2.start.isoformat())}&end__lt={quote(event4.end.isoformat())}')
+                'planner_events_list') + f'?from={quote(event2.start.isoformat())}&to={quote(event4.end.isoformat())}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
