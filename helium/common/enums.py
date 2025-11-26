@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.27"
+__version__ = "1.17.34"
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
 
@@ -170,7 +170,9 @@ TIME_ZONE_CHOICES = (
       ('Pacific/Palau', 'Palau'), ('Pacific/Pitcairn', 'Pitcairn'), ('Pacific/Pohnpei', 'Pohnpei'),
       ('Pacific/Port_Moresby', 'Port_Moresby'), ('Pacific/Rarotonga', 'Rarotonga'), ('Pacific/Saipan', 'Saipan'),
       ('Pacific/Tahiti', 'Tahiti'), ('Pacific/Tarawa', 'Tarawa'), ('Pacific/Tongatapu', 'Tongatapu'),
-      ('Pacific/Wake', 'Wake'), ('Pacific/Wallis', 'Wallis')])
+      ('Pacific/Wake', 'Wake'), ('Pacific/Wallis', 'Wallis')]),
+    ('Etc',
+     [('Etc/UTC', 'UTC')])
 )
 
 MONTH = 0

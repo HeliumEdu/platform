@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.7"
+__version__ = "1.17.34"
 
 import datetime
 import json
@@ -544,7 +544,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         response = self.client.get(
             reverse(
-                'planner_homework_list') + f'?start__gte={quote(homework2.start.isoformat())}&end__lt={quote(homework4.end.isoformat())}')
+                'planner_homework_list') + f'?from={quote(homework2.start.isoformat())}&to={quote(homework4.end.isoformat())}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
