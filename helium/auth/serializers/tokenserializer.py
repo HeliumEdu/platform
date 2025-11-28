@@ -22,17 +22,22 @@ logger = logging.getLogger(__name__)
 
 class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
     username = serializers.CharField(help_text="The username for the user.",
-                                     label="Username")
+                                     label="Username",
+                                     write_only=True)
 
     password = serializers.CharField(help_text="The password for the user.",
-                                     label="Password", write_only=True, style={'input_type': 'password'},
+                                     label="Password",
+                                     write_only=True,
+                                     style={'input_type': 'password'},
                                      trim_whitespace=False)
 
-    token = serializers.CharField(read_only=True, required=False)
+    access = serializers.CharField(read_only=True, required=False)
+
+    refresh = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
-        username = attrs.get('username').strip()
-        password = attrs.get('password')
+        username = attrs.pop('username').strip()
+        password = attrs.pop('password')
 
         if username and password:
             user = authenticate(request=self.context.get('request'),
@@ -48,14 +53,13 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
                     'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
                     'this out!')
 
-
             try:
-                refresh = self.get_token(user)
+                token = self.get_token(user)
             except IntegrityError:
                 raise PermissionDenied('Sorry, the given token is no longer valid. Request a new one.')
 
-            attrs["refresh"] = str(refresh)
-            attrs["access"] = str(refresh.access_token)
+            attrs["access"] = str(token.access_token)
+            attrs["refresh"] = str(token)
 
             if api_settings.UPDATE_LAST_LOGIN or self.context.get('request').data.get('last_login_now', False):
                 update_last_login(None, user)
@@ -81,7 +85,8 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                 if not api_settings.USER_AUTHENTICATION_RULE(user):
                     raise PermissionDenied('Sorry, your account is no longer active.')
         except get_user_model().DoesNotExist:
-            raise PermissionDenied('Sorry, the given token does have permissions for the given account, or the account is inactive.')
+            raise PermissionDenied(
+                'Sorry, the given token does have permissions for the given account, or the account is inactive.')
 
         data = {"access": str(refresh.access_token)}
 
