@@ -1737,7 +1737,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7865,
             "event": null,
             "user": 118
@@ -1750,7 +1751,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7838,
             "event": null,
             "user": 118
@@ -1763,7 +1765,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": null,
             "event": 1090,
             "user": 118
@@ -1776,7 +1779,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7845,
             "event": null,
             "user": 118
@@ -1789,7 +1793,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7863,
             "event": null,
             "user": 118
@@ -1802,7 +1807,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7867,
             "event": null,
             "user": 118
@@ -1815,7 +1821,8 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
-            "sent": false,
+            "sent": true,
+            "dismissed": false,
             "homework": 7835,
             "event": null,
             "user": 118

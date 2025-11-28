@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.28"
+__version__ = "1.17.35"
 
 import logging
 
@@ -108,7 +108,7 @@ def process_text_reminders():
 
 
 def process_push_reminders(mark_sent_only=False):
-    for reminder in Reminder.objects.with_type(enums.POPUP).unsent().for_today().iterator():
+    for reminder in Reminder.objects.with_type(enums.PUSH).unsent().for_today().iterator():
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
