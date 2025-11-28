@@ -108,7 +108,7 @@ def process_text_reminders():
 
 
 def process_push_reminders(mark_sent_only=False):
-    for reminder in Reminder.objects.with_type(enums.POPUP).unsent().for_today().iterator():
+    for reminder in Reminder.objects.with_type(enums.PUSH).unsent().for_today().iterator():
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
