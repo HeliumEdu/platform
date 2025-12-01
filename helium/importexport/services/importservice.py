@@ -316,13 +316,15 @@ def _adjust_schedule_relative_to(user, adjust_month):
         logger.info(f'Start of week adjusted ahead {days_ahead} days')
         logger.info(f'First Monday set to {first_monday}')
 
-        for course_group in CourseGroup.objects.for_user(user.pk).iterator():
+        for course_group in (CourseGroup.objects.for_user(user.pk)
+                .filter(example_schedule=True).iterator()):
             delta = (course_group.end_date - course_group.start_date).days
             CourseGroup.objects.filter(pk=course_group.pk).update(
                 start_date=first_monday,
                 end_date=first_monday + datetime.timedelta(days=delta))
 
-        for homework in Homework.objects.for_user(user.pk).iterator():
+        for homework in (Homework.objects.for_user(user.pk)
+                .filter(course__course_group__example_schedule=True).iterator()):
             course = homework.course
             start_delta = (homework.start.date() - course.start_date).days
             end_delta = (homework.end.date() - course.start_date).days
@@ -342,9 +344,19 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
             adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
-        for event in Event.objects.for_user(user.pk).iterator():
-            start_delta = (event.start.date() - first_monday.date()).days
-            end_delta = (event.end.date() - first_monday.date()).days
+        first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
+
+        first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        days_ahead = 0 - first_event_month.weekday()
+        if days_ahead < 0:
+            days_ahead += 7
+        first_event_monday = first_event_month + datetime.timedelta(days_ahead)
+        events_delta = (first_monday - first_event_monday).days
+
+        for event in (Event.objects.for_user(user.pk)
+                .filter(example_schedule=True).iterator()):
+            start_delta = (event.start.date() - first_monday.date()).days + events_delta
+            end_delta = (event.end.date() - first_monday.date()).days + events_delta
             Event.objects.filter(pk=event.pk).update(
                 start=(first_monday + datetime.timedelta(days=start_delta)).replace(
                     hour=event.start.time().hour,
@@ -361,7 +373,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
             adjust_reminder_times(event.pk, event.calendar_item_type)
 
-        for course in Course.objects.for_user(user.pk).iterator():
+        for course in (Course.objects.for_user(user.pk)
+                .filter(course_group__example_schedule=True).iterator()):
             delta = (course.end_date - course.start_date).days
             Course.objects.filter(pk=course.pk).update(
                 start_date=first_monday,

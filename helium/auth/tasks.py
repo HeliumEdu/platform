@@ -99,7 +99,7 @@ def delete_user(user_id):
                 logger.info('Skipping, token is already deleted.')
 
         value = 1
-    except get_user_model().DoesNotExist:
+    except (get_user_model().DoesNotExist, IntegrityError):
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         value = 0
