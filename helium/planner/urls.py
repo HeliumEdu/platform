@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.22"
+__version__ = "1.17.42"
 
 from django.urls import path
 
@@ -90,7 +90,7 @@ urlpatterns = [
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
-    path('planner/events/delete/all', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
+    path('planner/events/delete/all/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
          name='planner_events_resource_delete'),
 
     # Homework

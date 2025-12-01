@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.10"
+__version__ = "1.17.42"
 
 import logging
 from datetime import datetime, timedelta
@@ -99,7 +99,7 @@ def delete_user(user_id):
                 logger.info('Skipping, token is already deleted.')
 
         value = 1
-    except get_user_model().DoesNotExist:
+    except (get_user_model().DoesNotExist, IntegrityError):
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         value = 0
