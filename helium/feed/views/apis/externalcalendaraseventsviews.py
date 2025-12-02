@@ -61,11 +61,13 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             events = []
             for external_calendar in external_calendars:
                 events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
-        except HeliumICalError as ex:
+        except HeliumICalError:
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-            raise ValidationError(ex)
+            logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
+
+            raise ValidationError(f"An error occurred while trying to fetch external calendar {external_calendar.pk}, disabled.")
 
         serializer = self.get_serializer(events, many=True)
 
@@ -111,11 +113,13 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
         try:
             events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
-        except HeliumICalError as ex:
+        except HeliumICalError:
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-            raise ValidationError(ex)
+            logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
+
+            raise ValidationError(f"An error occurred while trying to fetch external calendar {external_calendar.pk}, disabled.")
 
         serializer = self.get_serializer(events, many=True)
 
