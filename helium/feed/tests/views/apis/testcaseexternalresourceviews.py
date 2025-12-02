@@ -235,7 +235,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("valid ICAL", response.data[0])
+        self.assertIn("not a valid ICAL", response.data[0])
         external_calendar = ExternalCalendar.objects.get(pk=external_calendar.pk)
         self.assertFalse(external_calendar.shown_on_calendar)
 

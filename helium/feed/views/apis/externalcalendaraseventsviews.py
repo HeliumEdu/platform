@@ -67,7 +67,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
             logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
 
-            raise ValidationError(f"An error occurred while trying to fetch external calendar {external_calendar.pk}, disabled.")
+            raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
         serializer = self.get_serializer(events, many=True)
 
@@ -119,7 +119,7 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
             logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
 
-            raise ValidationError(f"An error occurred while trying to fetch external calendar {external_calendar.pk}, disabled.")
+            raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
         serializer = self.get_serializer(events, many=True)
 
