@@ -45,7 +45,7 @@ class Reminder(BaseModel):
     objects = ReminderManager()
 
     class Meta:
-        ordering = ('title',)
+        ordering = ('start_of_range', 'title')
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
