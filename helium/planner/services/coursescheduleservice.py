@@ -109,7 +109,7 @@ def _apply_event_filters(event, _from, to, search):
     return True
 
 
-def _get_events_from_cache(cache_prefix, cached_value, _from=None, to=None, search=None):
+def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
 
@@ -126,6 +126,7 @@ def _get_events_from_cache(cache_prefix, cached_value, _from=None, to=None, sear
                           user_id=event['user'],
                           calendar_item_type=event['calendar_item_type'],
                           comments=event['comments'])
+            event.color = course.color
 
             if _apply_event_filters(event, _from, to, search):
                 events.append(event)
@@ -179,6 +180,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                               user=course.get_user(),
                               calendar_item_type=enums.COURSE,
                               comments=comments)
+                event.color = course.color
 
                 events.append(event)
 
@@ -232,7 +234,7 @@ def course_schedules_to_events(course, course_schedules, _from=None, to=None, se
     cache_prefix = _get_cache_prefix(course)
     cached_value = cache.get(_get_cache_prefix(course))
     if cached_value:
-        events, cached = _get_events_from_cache(cache_prefix, cached_value, _from, to, search)
+        events, cached = _get_events_from_cache(course, cache_prefix, cached_value, _from, to, search)
 
     if not cached:
         events = _create_events_from_course_schedules(course, course_schedules, _from, to, search)
