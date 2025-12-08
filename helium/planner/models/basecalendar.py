@@ -34,7 +34,7 @@ class BaseCalendar(BaseModel):
 
     class Meta:
         abstract = True
-        ordering = ('start',)
+        ordering = ('start', 'title')
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
