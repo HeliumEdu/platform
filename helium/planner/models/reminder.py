@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.27"
+__version__ = "1.17.54"
 
 from datetime import timedelta
 
@@ -45,7 +45,7 @@ class Reminder(BaseModel):
     objects = ReminderManager()
 
     class Meta:
-        ordering = ('title',)
+        ordering = ('start_of_range', 'title')
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'

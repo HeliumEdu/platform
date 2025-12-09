@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.0"
+__version__ = "1.17.54"
 
 from django.db import models
 
@@ -34,7 +34,7 @@ class BaseCalendar(BaseModel):
 
     class Meta:
         abstract = True
-        ordering = ('start',)
+        ordering = ('start', 'title')
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
