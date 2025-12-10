@@ -24,10 +24,10 @@ def send_text(phone, message):
 
 
 @app.task
-def send_pushes(push_tokens, username, subject, message):
+def send_pushes(push_tokens, username, subject, message, reminder_data):
     if settings.DISABLE_PUSH:
         logger.warning(
             f'Push disabled. Push with message "{message}" to {username} not sent.')
         return
 
-    send_notifications(push_tokens, subject, message)
+    send_notifications(push_tokens, subject, message, reminder_data)
