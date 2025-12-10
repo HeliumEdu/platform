@@ -134,6 +134,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           start=dt_start,
                           end=dt_end,
                           url=component.get("URL"),
+                          owner_id=external_calendar.id,
                           comments=component.get("DESCRIPTION"),
                           user=external_calendar.get_user(),
                           calendar_item_type=enums.EXTERNAL)
