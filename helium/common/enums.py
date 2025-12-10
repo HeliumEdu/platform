@@ -208,7 +208,7 @@ DAY_OF_WEEK_CHOICES = (
 POPUP = 0
 EMAIL = 1
 TEXT = 2
-PUSH = 4
+PUSH = 3
 REMINDER_TYPE_CHOICES = (
     (POPUP, 'Popup'),
     (EMAIL, 'Email'),
