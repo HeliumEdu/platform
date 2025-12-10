@@ -13,6 +13,7 @@ from helium.common import enums
 from helium.common.tasks import send_text, send_pushes
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
+from helium.planner.serializers.reminderserializer import ReminderExtendedSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -125,9 +126,13 @@ def process_push_reminders(mark_sent_only=False):
                     push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
 
                     if len(push_tokens) > 0:
-                        metricutils.increment('task', value=len(push_tokens), user=reminder.user, extra_tags=['name:reminder.queue.push'])
+                        metricutils.increment('task', value=len(push_tokens), user=reminder.user,
+                                              extra_tags=['name:reminder.queue.push'])
 
-                        send_pushes.delay(push_tokens, user.username, subject, reminder.message)
+                        serializer = ReminderExtendedSerializer(reminder)
+                        reminder_json = serializer.data
+
+                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, dict(reminder_json))
                     else:
                         logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
