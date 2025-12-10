@@ -3,7 +3,7 @@ __license__ = "MIT"
 __version__ = "1.17.57"
 
 import logging
-import json
+
 from firebase_admin import messaging
 
 from helium.common.utils import metricutils
@@ -17,7 +17,7 @@ def send_notifications(push_tokens, subject, message, reminder_data):
             title=subject,
             body=message,
         ),
-        data=json.loads(reminder_data),
+        data=reminder_data,
         tokens=push_tokens
     )
 
