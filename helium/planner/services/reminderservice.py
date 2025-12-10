@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.57"
+__version__ = "1.17.58"
 
 import logging
 
@@ -132,7 +132,7 @@ def process_push_reminders(mark_sent_only=False):
                         serializer = ReminderExtendedSerializer(reminder)
                         reminder_json = serializer.data
 
-                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, dict(reminder_json))
+                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, reminder_json)
                     else:
                         logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')

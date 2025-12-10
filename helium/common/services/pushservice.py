@@ -1,9 +1,9 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.57"
+__version__ = "1.17.58"
 
 import logging
-
+import json
 from firebase_admin import messaging
 
 from helium.common.utils import metricutils
@@ -11,13 +11,13 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
-def send_notifications(reminder, push_tokens, subject, message, reminder_data):
+def send_notifications(push_tokens, subject, message, reminder_data):
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=subject,
             body=message,
         ),
-        data=reminder_data,
+        data=json.loads(reminder_data),
         tokens=push_tokens
     )
 
