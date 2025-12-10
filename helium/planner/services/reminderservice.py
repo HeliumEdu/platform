@@ -130,9 +130,9 @@ def process_push_reminders(mark_sent_only=False):
                                               extra_tags=['name:reminder.queue.push'])
 
                         serializer = ReminderExtendedSerializer(reminder)
-                        reminder_json = serializer.data
+                        reminder_data = serializer.data
 
-                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, reminder_json)
+                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, reminder_data)
                     else:
                         logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
