@@ -11,12 +11,13 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
-def send_notifications(push_tokens, subject, message):
+def send_notifications(reminder, push_tokens, subject, message, reminder_data):
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=subject,
             body=message,
         ),
+        data=reminder_data,
         tokens=push_tokens
     )
 
