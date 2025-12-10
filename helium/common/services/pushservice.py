@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.14.7"
+__version__ = "1.17.57"
 
 import logging
 
@@ -11,12 +11,13 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
-def send_notifications(push_tokens, subject, message):
+def send_notifications(reminder, push_tokens, subject, message, reminder_data):
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=subject,
             body=message,
         ),
+        data=reminder_data,
         tokens=push_tokens
     )
 
