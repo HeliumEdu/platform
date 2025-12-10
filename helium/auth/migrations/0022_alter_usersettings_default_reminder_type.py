@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
+            model_name='usersettings',
             name='default_reminder_type',
             field=models.PositiveIntegerField(choices=[(0, 'Popup'), (1, 'Email'), (2, 'Text'), (3, 'Push')], default=0, help_text='A valid default type of reminder choice when creating a new reminder.'),
         ),
