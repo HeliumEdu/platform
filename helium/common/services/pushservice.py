@@ -3,6 +3,7 @@ __license__ = "MIT"
 __version__ = "1.17.58"
 
 import logging
+import json
 
 from firebase_admin import messaging
 
@@ -17,7 +18,7 @@ def send_notifications(push_tokens, subject, message, reminder_data):
             title=subject,
             body=message,
         ),
-        data=reminder_data,
+        data={"json_payload": json.dumps(reminder_data)},
         tokens=push_tokens
     )
 
