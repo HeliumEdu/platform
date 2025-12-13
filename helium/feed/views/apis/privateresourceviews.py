@@ -28,6 +28,9 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
         user = self.request.user
         return user.external_calendars.all()
 
+    @extend_schema(
+        request=None
+    )
     def enable(self, request, *args, **kwargs):
         """
         Enable the private feed URLs for the authenticated user. It is safe to make this request multiple times, and if
@@ -55,6 +58,7 @@ class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     serializer_class = PrivateFeedSerializer
 
     @extend_schema(
+        request=None,
         responses={status.HTTP_204_NO_CONTENT: None}
     )
     def disable(self, request, *args, **kwargs):
