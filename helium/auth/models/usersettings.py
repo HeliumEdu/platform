@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.16.1"
+__version__ = "1.17.62"
 
 import time
 
@@ -58,6 +58,15 @@ class UserSettings(BaseModel):
 
     default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder.',
+        default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
+
+    default_mobile_reminder_offset_type = models.PositiveIntegerField(
+        help_text='A valid default type of time offset choice when creating a new reminder on mobile.',
+        default=enums.MINUTES,
+        choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
+
+    default_mobile_reminder_type = models.PositiveIntegerField(
+        help_text='A valid default type of reminder choice when creating a new reminder on mobile.',
         default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
 
     receive_emails_from_admin = models.BooleanField(
