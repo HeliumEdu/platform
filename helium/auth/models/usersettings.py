@@ -40,9 +40,6 @@ class UserSettings(BaseModel):
         help_text='A valid hex color code choice to determine the color material badges will be.',
         max_length=7, validators=[validate_hex_color], default='#dc7d50')
 
-    default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
-                                                          default=30)
-
     calendar_event_limit = models.BooleanField(
         help_text='Whether calendar events should collapse to "+ more" when a day is full.',
         default=False)
@@ -51,23 +48,17 @@ class UserSettings(BaseModel):
         help_text='Whether calendar items for classes should be shown in category colors instead of class colors.',
         default=False)
 
+    default_reminder_type = models.PositiveIntegerField(
+        help_text='A valid default type of reminder choice when creating a new reminder.',
+        default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
+    
+    default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
+                                                          default=30)
+
     default_reminder_offset_type = models.PositiveIntegerField(
         help_text='A valid default type of time offset choice when creating a new reminder.',
         default=enums.MINUTES,
         choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
-
-    default_reminder_type = models.PositiveIntegerField(
-        help_text='A valid default type of reminder choice when creating a new reminder.',
-        default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
-
-    mobile_default_reminder_offset_type = models.PositiveIntegerField(
-        help_text='A valid default type of time offset choice when creating a new reminder on mobile.',
-        default=enums.MINUTES,
-        choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
-
-    mobile_default_reminder_type = models.PositiveIntegerField(
-        help_text='A valid default type of reminder choice when creating a new reminder on mobile.',
-        default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
 
     receive_emails_from_admin = models.BooleanField(
         help_text='Whether the user wants to receive Helium update emails.',
@@ -78,6 +69,19 @@ class UserSettings(BaseModel):
         default=True)
 
     private_slug = models.SlugField(blank=True, null=True)
+
+    mobile_default_reminder_type = models.PositiveIntegerField(
+        help_text='A valid default type of reminder choice when creating a new reminder on mobile.',
+        default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
+
+    mobile_default_reminder_offset = models.PositiveIntegerField(
+        help_text='The default offset when creating a new reminder on mobile.',
+        default=30)
+
+    mobile_default_reminder_offset_type = models.PositiveIntegerField(
+        help_text='A valid default type of time offset choice when creating a new reminder on mobile.',
+        default=enums.MINUTES,
+        choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
 
     mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
                                                       choices=enums.VIEW_CHOICES, default=enums.WEEK)
