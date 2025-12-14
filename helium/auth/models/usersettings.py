@@ -70,6 +70,9 @@ class UserSettings(BaseModel):
 
     private_slug = models.SlugField(blank=True, null=True)
 
+    mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
+                                                      choices=enums.MOBILE_VIEW_CHOICES, default=enums.WEEK)
+
     mobile_default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder on mobile.',
         default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
@@ -82,9 +85,6 @@ class UserSettings(BaseModel):
         help_text='A valid default type of time offset choice when creating a new reminder on mobile.',
         default=enums.MINUTES,
         choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
-
-    mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
-                                                      choices=enums.VIEW_CHOICES, default=enums.WEEK)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 
