@@ -11,11 +11,34 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
-from helium.planner.models import CourseSchedule, Course
+from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 
 logger = logging.getLogger(__name__)
+
+
+@extend_schema(
+    tags=['planner.courseschedule', 'calendar.user']
+)
+class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
+    serializer_class = CourseScheduleSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+            user = self.request.user
+            return CourseSchedule.objects.for_user(user.pk)
+        else:
+            return CourseSchedule.objects.none()
+
+    def get(self, request, *args, **kwargs):
+        """
+        Return a list of all course schedule instances for the authenticated user.
+        """
+        response = self.list(request, *args, **kwargs)
+
+        return response
 
 
 @extend_schema(
