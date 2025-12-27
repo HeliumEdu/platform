@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.42"
+__version__ = "1.17.66"
 
 from django.urls import path
 
@@ -11,7 +11,8 @@ from helium.planner.views.apis.coursegroupviews import CourseGroupsApiDetailView
 from helium.planner.views.apis.coursegroupviews import CourseGroupsApiListView
 from helium.planner.views.apis.coursescheduleaseventsviews import CourseScheduleAsEventsListView, \
     UserCourseScheduleAsEventsListView
-from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiDetailView
+from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiDetailView, \
+    UserCourseSchedulesApiListView
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
@@ -50,6 +51,7 @@ urlpatterns = [
          name='planner_coursegroups_courses_detail'),
 
     # CourseSchedule
+    path('planner/courseschedules/', UserCourseSchedulesApiListView.as_view(), name='planner_courseschedules_list'),
     path('planner/coursegroups/<int:course_group>/courses/<int:course>/courseschedules/',
          CourseGroupCourseCourseSchedulesApiListView.as_view(),
          name='planner_coursegroups_courses_courseschedules_list'),
