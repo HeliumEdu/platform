@@ -342,11 +342,15 @@ class TestCaseImportExportViews(APITestCase):
                                     content_type='application/json')
 
         # GIVEN
-        adjusted_month = timezone.now().month - 1
+        now = timezone.now()
+        adjusted_month = now.month - 1
+        adjusted_year = now.year
         if adjusted_month == 0:
             adjusted_month = 12
+            adjusted_year -= 1
 
-        adjusted_month = timezone.now().replace(month=adjusted_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0,
+                                     second=0, microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
@@ -401,9 +405,16 @@ class TestCaseImportExportViews(APITestCase):
         # WHEN
         response = self.client.post(reverse('importexport_import_exampleschedule'))
 
+        now = timezone.now()
+        adjusted_month = now.month - 1
+        adjusted_year = now.year
+        if adjusted_month == 0:
+            adjusted_month = 12
+            adjusted_year -= 1
+
         # GIVEN
-        adjusted_month = timezone.now().replace(month=timezone.now().month - 1, day=1, hour=0, minute=0, second=0,
-                                                microsecond=0)
+        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
+                                     microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
