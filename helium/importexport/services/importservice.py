@@ -301,12 +301,15 @@ def import_user(request, data, example_schedule=False):
 def _adjust_schedule_relative_to(user, adjust_month):
     timezone.activate(user.settings.time_zone)
 
-    adjusted_month = timezone.now().month + adjust_month
+    now = timezone.now()
+    adjusted_month = now.month + adjust_month
+    adjusted_year = now.year
     if adjusted_month == 0:
         adjusted_month = 12
+        adjusted_year -= 1
 
     try:
-        adjusted_month = timezone.now().replace(month=adjusted_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0, microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
