@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.27"
+__version__ = "1.17.68"
 
 import json
 import logging
@@ -48,6 +48,11 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             try:
                 json_str = uploadfileservice.read(upload).decode('utf-8')
                 data = json.loads(json_str)
+
+                if isinstance(data, list):
+                    raise ValidationError({
+                        'details': f'Invalid JSON structure: {upload}.'
+                    })
 
                 (external_calendar_count_file, course_groups_count_file, courses_count_file,
                  course_schedules_count_file, categories_count_file, material_groups_count_file, materials_count_file,
