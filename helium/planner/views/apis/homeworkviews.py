@@ -108,10 +108,14 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         """
         Create a new homework instance for the given course.
         """
-        if 'category' in request.data:
-            permissions.check_category_permission(request.user.pk, request.data['category'])
-        for material_id in request.data.get('materials', []):
-            permissions.check_material_permission(request.user.pk, material_id)
+        category = request.data.get('category', None)
+        if category:
+            permissions.check_category_permission(request.user.pk, category)
+
+        materials = request.data.get('materials', [])
+        if materials:
+            for material_id in materials:
+                permissions.check_material_permission(request.user.pk, material_id)
 
         response = self.create(request, *args, **kwargs)
 
@@ -155,10 +159,13 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         Update the given homework instance.
         """
         permissions.check_course_permission(request.user.pk, request.data['course'])
-        if 'category' in request.data:
-            permissions.check_category_permission(request.user.pk, request.data['category'])
-        for material_id in request.data.get('materials', []):
-            permissions.check_material_permission(request.user.pk, material_id)
+        category = request.data.get('category', None)
+        if category:
+            permissions.check_category_permission(request.user.pk, category)
+        materials = request.data.get('materials', [])
+        if materials:
+            for material_id in materials:
+                permissions.check_material_permission(request.user.pk, material_id)
 
         response = self.update(request, *args, **kwargs)
 
@@ -172,10 +179,13 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         """
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
-        if 'category' in request.data:
-            permissions.check_category_permission(request.user.pk, request.data['category'])
-        for material_id in request.data.get('materials', []):
-            permissions.check_material_permission(request.user.pk, material_id)
+        category = request.data.get('category', None)
+        if category:
+            permissions.check_category_permission(request.user.pk, category)
+        materials = request.data.get('materials', [])
+        if materials:
+            for material_id in materials:
+                permissions.check_material_permission(request.user.pk, material_id)
 
         response = self.partial_update(request, *args, **kwargs)
 

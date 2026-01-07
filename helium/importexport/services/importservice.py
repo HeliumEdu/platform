@@ -270,26 +270,37 @@ def import_user(request, data, example_schedule=False):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     """
-    external_calendar_count = _import_external_calendars(data.get('external_calendars', []), request.user,
-                                                         example_schedule)
+    external_calendars = data.get('external_calendars', [])
+    external_calendar_count = _import_external_calendars(external_calendars, request.user,
+                                                         example_schedule) if external_calendars else 0
 
-    course_group_remap = _import_course_groups(data.get('course_groups', []), request.user, example_schedule)
+    course_groups = data.get('course_groups', [])
+    course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
 
-    course_remap = _import_courses(data.get('courses', []), course_group_remap)
+    courses = data.get('courses', [])
+    course_remap = _import_courses(courses, course_group_remap) if courses else {}
 
-    course_schedules_count = _import_course_schedules(data.get('course_schedules', []), course_remap)
+    course_schedules = data.get('course_schedules', [])
+    course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
 
-    category_remap = _import_categories(data.get('categories', []), request, course_remap)
+    categories = data.get('categories', [])
+    category_remap = _import_categories(categories, request, course_remap) if categories else {}
 
-    material_group_remap = _import_material_groups(data.get('material_groups', []), request.user, example_schedule)
+    material_groups = data.get('material_groups', [])
+    material_group_remap = _import_material_groups(material_groups, request.user,
+                                                   example_schedule) if material_groups else {}
 
-    material_remap = _import_materials(data.get('materials', []), material_group_remap, course_remap)
+    materials = data.get('materials', [])
+    material_remap = _import_materials(materials, material_group_remap, course_remap) if materials else {}
 
-    event_remap = _import_events(data.get('events', []), request.user, example_schedule)
+    events = data.get('events', [])
+    event_remap = _import_events(events, request.user, example_schedule) if events else {}
 
-    homework_remap = _import_homework(data.get('homework', []), course_remap, category_remap, material_remap)
+    homework = data.get('homework', [])
+    homework_remap = _import_homework(homework, course_remap, category_remap, material_remap) if homework else {}
 
-    reminders_count = _import_reminders(data.get('reminders', []), request.user, event_remap, homework_remap)
+    reminders = data.get('reminders', [])
+    reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap) if reminders else 0
 
     metricutils.increment("user.import.schedule")
 
@@ -309,7 +320,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
         adjusted_year -= 1
 
     try:
-        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
+                                     microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
         if days_ahead < 0:
             days_ahead += 7
