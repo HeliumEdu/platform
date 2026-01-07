@@ -83,8 +83,10 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         """
         Create a new material instance for the given material group.
         """
-        for course_id in request.data.get('courses', []):
-            permissions.check_course_permission(request.user.pk, course_id)
+        courses = request.data.get('courses', [])
+        if courses:
+            for course_id in courses:
+                permissions.check_course_permission(request.user.pk, course_id)
 
         response = self.create(request, *args, **kwargs)
 
@@ -123,8 +125,10 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         """
         if 'material_group' in request.data:
             permissions.check_material_group_permission(request.user.pk, request.data['material_group'])
-        for course_id in request.data.get('courses', []):
-            permissions.check_course_permission(request.user.pk, course_id)
+        courses = request.data.get('courses', [])
+        if courses:
+            for course_id in courses:
+                permissions.check_course_permission(request.user.pk, course_id)
 
         response = self.update(request, *args, **kwargs)
 
