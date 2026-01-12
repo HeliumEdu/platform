@@ -5,6 +5,7 @@ __version__ = "1.17.69"
 import logging
 
 from drf_spectacular.utils import extend_schema
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -125,19 +126,30 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         Delete the given category instance.
         """
         category = self.get_object()
+
+        if category.title == 'Uncategorized':
+            raise ValidationError("The 'Uncategorized' category cannot be deleted")
+
         homework = list(category.homework.all())
 
-        response = self.destroy(request, *args, **kwargs)
+        uncategorized = None
 
-        # One category must always exist, so "Uncategorized" will also be re-provisioned if the last category was deleted
-        if len(homework) > 0 or Category.objects.count() == 0:
+        if Category.objects.for_user(request.user.pk).for_course(category.course_id).count() == 1:
+            logger.info(f"One category remains, creating 'Uncategorized' proactively for {request.user.get_username()}")
             uncategorized = Category.objects.get_uncategorized(category.course_id)
+
+        if len(homework) > 0:
+            if not uncategorized:
+                logger.info(f"Creating 'Uncategorized' to move Homework out of category being deleted for {request.user.get_username()}")
+                uncategorized = Category.objects.get_uncategorized(category.course_id)
             for h in homework:
                 h.category = uncategorized
                 h.save()
 
                 logger.info(
                     f'Homework {h.pk} category set to Uncategorized {uncategorized.pk} for user {request.user.get_username()}')
+
+        response = self.destroy(request, *args, **kwargs)
 
         logger.info(
             f"Category {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.get_username()}")
