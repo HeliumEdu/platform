@@ -211,6 +211,11 @@ class TestCaseCategoryViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Category.objects.filter(pk=category.pk).exists())
 
+        # Ensure "Uncategorized" was recreated
+        categories = Category.objects.all()
+        self.assertTrue(len(categories), 1)
+        self.assertEqual(categories[0].title, 'Uncategorized')
+
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
