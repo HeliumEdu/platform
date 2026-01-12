@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.19"
+__version__ = "1.17.69"
 
 import logging
 
@@ -129,7 +129,8 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
         response = self.destroy(request, *args, **kwargs)
 
-        if len(homework) > 0:
+        # One category must always exist, so "Uncategorized" will also be re-provisioned if the last category was deleted
+        if len(homework) > 0 or Category.objects.count() == 0:
             uncategorized = Category.objects.get_uncategorized(category.course_id)
             for h in homework:
                 h.category = uncategorized
