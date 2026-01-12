@@ -129,7 +129,8 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
         response = self.destroy(request, *args, **kwargs)
 
-        if len(homework) > 0:
+        # One category must always exist, so "Uncategorized" will also be re-provisioned if the last category was deleted
+        if len(homework) > 0 or Category.objects.count() == 0:
             uncategorized = Category.objects.get_uncategorized(category.course_id)
             for h in homework:
                 h.category = uncategorized
