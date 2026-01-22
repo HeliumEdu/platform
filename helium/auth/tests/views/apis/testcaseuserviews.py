@@ -67,13 +67,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.receive_emails_from_admin,
                          response.data['settings']['receive_emails_from_admin'])
         self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
-        self.assertEqual(user.settings.mobile_default_view, response.data['settings']['mobile_default_view'])
-        self.assertEqual(user.settings.mobile_default_reminder_type,
-                         response.data['settings']['mobile_default_reminder_type'])
-        self.assertEqual(user.settings.mobile_default_reminder_offset,
-                         response.data['settings']['mobile_default_reminder_offset'])
-        self.assertEqual(user.settings.mobile_default_reminder_offset_type,
-                         response.data['settings']['mobile_default_reminder_offset_type'])
         self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
     def test_username_changes(self):
