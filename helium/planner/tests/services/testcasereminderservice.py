@@ -112,3 +112,84 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
         self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
         self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    def test_process_email_reminders_inactive_user(self, mock_send_multipart_email):
+        # GIVEN
+        user = userhelper.given_an_inactive_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+        # WHEN
+        reminderservice.process_email_reminders()
+
+        # THEN
+        # Inactive user should not receive email but reminder should be marked sent
+        mock_send_multipart_email.assert_not_called()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+
+    @mock.patch('helium.common.tasks.send_sms')
+    def test_process_text_reminders_no_phone(self, mock_send_sms):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        # User has no phone set (default)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
+
+        # WHEN
+        reminderservice.process_text_reminders()
+
+        # THEN
+        # No SMS sent when user has no phone
+        mock_send_sms.assert_not_called()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+
+    @mock.patch('helium.common.tasks.send_sms')
+    def test_process_text_reminders_phone_not_verified(self, mock_send_sms):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.profile.phone = '5555555'
+        user.profile.phone_verified = False  # Phone not verified
+        user.profile.save()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
+
+        # WHEN
+        reminderservice.process_text_reminders()
+
+        # THEN
+        # No SMS sent when phone not verified
+        mock_send_sms.assert_not_called()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminders_no_push_tokens(self, mock_send_notifications):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        # No push tokens created for user
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.PUSH, event=event)
+
+        # WHEN
+        reminderservice.process_push_reminders()
+
+        # THEN
+        # No push sent when user has no push tokens
+        mock_send_notifications.assert_not_called()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminders_mark_sent_only(self, mock_send_notifications):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.PUSH, event=event)
+
+        # WHEN
+        reminderservice.process_push_reminders(mark_sent_only=True)
+
+        # THEN
+        # No push sent when mark_sent_only=True, but reminder marked as sent
+        mock_send_notifications.assert_not_called()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
