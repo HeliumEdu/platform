@@ -221,7 +221,7 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        reminder = Reminder.objects.get(pk=reminder.pk)
+        reminder.refresh_from_db()
         reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
 
     def test_update_reminder_parent_updates(self):
@@ -342,7 +342,7 @@ class TestCaseReminderViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        reminder = Reminder.objects.get(pk=reminder.id)
+        reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range, start_of_range)
 
     def test_create_bad_data(self):

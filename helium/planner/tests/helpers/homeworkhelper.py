@@ -43,9 +43,13 @@ def verify_homework_matches_data(test_case, homework, data):
     test_case.assertEqual(homework.start, parser.parse(data['start']))
     test_case.assertEqual(homework.end, parser.parse(data['end']))
     test_case.assertEqual(homework.priority, data['priority'])
+    if 'url' in data:
+        test_case.assertEqual(homework.url, data['url'])
     test_case.assertEqual(homework.comments, data['comments'])
     test_case.assertEqual(homework.current_grade, data['current_grade'])
     test_case.assertEqual(homework.completed, data['completed'])
+    if 'calendar_item_type' in data:
+        test_case.assertEqual(homework.calendar_item_type, data['calendar_item_type'])
     if 'category' in data:
         test_case.assertEqual(homework.category.pk, int(data['category']))
     for material_id in data['materials']:

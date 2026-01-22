@@ -26,4 +26,10 @@ def verify_course_group_matches_data(test_case, course_group, data):
     test_case.assertEqual(course_group.start_date, parser.parse(data['start_date']).date())
     test_case.assertEqual(course_group.end_date, parser.parse(data['end_date']).date())
     test_case.assertEqual(course_group.shown_on_calendar, data['shown_on_calendar'])
+    if 'overall_grade' in data:
+        test_case.assertEqual(float(course_group.overall_grade), float(data['overall_grade']))
+    if 'trend' in data:
+        test_case.assertEqual(course_group.trend, data['trend'])
+    if 'private_slug' in data:
+        test_case.assertEqual(course_group.private_slug, data['private_slug'])
     test_case.assertEqual(course_group.get_user().pk, data['user'])

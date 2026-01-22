@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 __version__ = "1.17.19"
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -34,7 +33,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user = get_user_model().objects.get(pk=user.pk)
+        user.refresh_from_db()
         self.assertIsNotNone(user.settings.private_slug)
         self.assertIn('events_private_url', response.data)
         self.assertIn('homework_private_url', response.data)
@@ -54,7 +53,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        user = get_user_model().objects.get(pk=user.pk)
+        user.refresh_from_db()
         self.assertIsNone(user.settings.private_slug)
         self.assertEqual(
             self.client.get(reverse('feed_private_events_ical', kwargs={'private_slug': private_slug})).status_code,
