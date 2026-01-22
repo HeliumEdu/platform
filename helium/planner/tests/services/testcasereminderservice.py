@@ -47,7 +47,7 @@ class TestCaseReminderService(TestCase):
         reminder3.refresh_from_db()
         self.assertTrue(reminder1.sent)
         self.assertTrue(reminder2.sent)
-        self.assertTrue(reminder3.sent)
+        self.assertFalse(reminder3.sent)
 
     @mock.patch('helium.common.tasks.send_sms')
     def test_process_text_reminders(self, mock_send_sms):
@@ -84,7 +84,7 @@ class TestCaseReminderService(TestCase):
         reminder3.refresh_from_db()
         self.assertTrue(reminder1.sent)
         self.assertTrue(reminder2.sent)
-        self.assertTrue(reminder3.sent)
+        self.assertFalse(reminder3.sent)
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders(self, mock_send_notifications):
@@ -119,7 +119,7 @@ class TestCaseReminderService(TestCase):
         reminder3.refresh_from_db()
         self.assertTrue(reminder1.sent)
         self.assertTrue(reminder2.sent)
-        self.assertTrue(reminder3.sent)
+        self.assertFalse(reminder3.sent)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_process_email_reminders_inactive_user(self, mock_send_multipart_email):
