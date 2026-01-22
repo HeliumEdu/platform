@@ -8,7 +8,6 @@ from django.test import TestCase
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Reminder
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper
 
 
@@ -30,7 +29,7 @@ class TestCaseReminder(TestCase):
         homework.save()
 
         # THEN
-        reminder1 = Reminder.objects.get(pk=reminder1.id)
-        reminder2 = Reminder.objects.get(pk=reminder2.id)
+        reminder1.refresh_from_db()
+        reminder2.refresh_from_db()
         self.assertEqual(reminder1.start_of_range, datetime.datetime(2019, 5, 8, 11, 45, 0, tzinfo=timezone.utc))
         self.assertEqual(reminder2.start_of_range, datetime.datetime(2019, 1, 8, 9, 45, 0, tzinfo=timezone.utc))

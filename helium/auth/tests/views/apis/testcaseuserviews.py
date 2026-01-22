@@ -37,12 +37,17 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # User fields
         self.assertNotIn('verification_code', response.data)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
+        # Profile fields
         self.assertNotIn('phone_verification_code', response.data['profile'])
         self.assertEqual(user.profile.phone, response.data['profile']['phone'])
+        self.assertEqual(user.profile.phone_changing, response.data['profile']['phone_changing'])
+        self.assertEqual(user.profile.phone_verified, response.data['profile']['phone_verified'])
         self.assertEqual(user.profile.user.pk, response.data['profile']['user'])
+        # Settings fields
         self.assertEqual(user.settings.time_zone, response.data['settings']['time_zone'])
         self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
         self.assertEqual(user.settings.week_starts_on, response.data['settings']['week_starts_on'])
@@ -53,7 +58,8 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.material_color, response.data['settings']['material_color'])
         self.assertEqual(user.settings.default_reminder_offset, response.data['settings']['default_reminder_offset'])
         self.assertEqual(user.settings.calendar_event_limit, response.data['settings']['calendar_event_limit'])
-        self.assertEqual(user.settings.calendar_use_category_colors, response.data['settings']['calendar_use_category_colors'])
+        self.assertEqual(user.settings.calendar_use_category_colors,
+                         response.data['settings']['calendar_use_category_colors'])
         self.assertEqual(user.settings.remember_filter_state, response.data['settings']['remember_filter_state'])
         self.assertEqual(user.settings.default_reminder_offset_type,
                          response.data['settings']['default_reminder_offset_type'])
@@ -61,6 +67,13 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.receive_emails_from_admin,
                          response.data['settings']['receive_emails_from_admin'])
         self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
+        self.assertEqual(user.settings.mobile_default_view, response.data['settings']['mobile_default_view'])
+        self.assertEqual(user.settings.mobile_default_reminder_type,
+                         response.data['settings']['mobile_default_reminder_type'])
+        self.assertEqual(user.settings.mobile_default_reminder_offset,
+                         response.data['settings']['mobile_default_reminder_offset'])
+        self.assertEqual(user.settings.mobile_default_reminder_offset_type,
+                         response.data['settings']['mobile_default_reminder_offset_type'])
         self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
     def test_username_changes(self):
@@ -80,7 +93,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], data['username'])
         self.assertEqual(response.data['email'], user.email)
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
         self.assertIsNone(user.email_changing)
@@ -104,7 +117,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.data['username'], user.username)
         self.assertEqual(response.data['email'], user.email)
         self.assertEqual(response.data['email_changing'], 'new@email.com')
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(user.email, response.data['email'])
         self.assertEqual(user.email_changing, response.data['email_changing'])
         self.assertEqual(user.username, response.data['username'])
@@ -121,7 +134,7 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
 
@@ -140,7 +153,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertTrue(user.check_password('new_pass_1!'))
 
     def test_password_change_fails_old_password(self):
@@ -197,7 +210,7 @@ class TestCaseUserViews(APITestCase):
     def test_username_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
                                                                     email='test2@email.com')
 
         # WHEN
@@ -214,7 +227,7 @@ class TestCaseUserViews(APITestCase):
 
     def test_reserved_username_not_in_helium_domain(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -229,7 +242,7 @@ class TestCaseUserViews(APITestCase):
     def test_email_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
                                                                     email='test2@email.com')
 
         # WHEN

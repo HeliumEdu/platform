@@ -5,7 +5,6 @@ __version__ = "1.11.54"
 import json
 import uuid
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -46,7 +45,7 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['show_getting_started'])
         self.assertEqual(response.data['time_zone'], 'America/Chicago')
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertFalse(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
 
@@ -81,5 +80,5 @@ class TestCaseUserSettingsViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(user.settings.private_slug, private_slug)

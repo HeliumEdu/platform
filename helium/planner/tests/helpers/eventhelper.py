@@ -34,6 +34,10 @@ def verify_event_matches_data(test_case, event, data):
     test_case.assertEqual(event.start, parser.parse(data['start']))
     test_case.assertEqual(event.end, parser.parse(data['end']))
     test_case.assertEqual(event.priority, data['priority'])
+    if 'url' in data:
+        test_case.assertEqual(event.url, data['url'])
     test_case.assertEqual(event.comments, data['comments'])
     test_case.assertEqual(event.owner_id, data['owner_id'])
+    if 'calendar_item_type' in data:
+        test_case.assertEqual(event.calendar_item_type, data['calendar_item_type'])
     test_case.assertEqual(event.user.pk, int(data['user']))

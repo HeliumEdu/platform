@@ -225,7 +225,7 @@ class TestCaseHomeworkViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        homework = Homework.objects.get(pk=homework.pk)
+        homework.refresh_from_db()
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
     def test_update_start_before_end_fails(self):
@@ -270,7 +270,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        homework = Homework.objects.get(pk=homework.pk)
+        homework.refresh_from_db()
         self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
@@ -296,7 +296,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        homework = Homework.objects.get(pk=homework.pk)
+        homework.refresh_from_db()
 
         start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
         end = timezone.make_aware(parser.parse(data['end']), timezone.utc)

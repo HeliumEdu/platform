@@ -236,7 +236,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("not a valid ICAL", response.data[0])
-        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.pk)
+        external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
@@ -256,3 +256,94 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'New Year\'s Day')
         self.assertEqual(response.data[0]['comments'], 'all day event test')
+
+
+class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCase):
+    def test_user_external_calendar_events_login_required(self):
+        # GIVEN
+        userhelper.given_a_user_exists()
+
+        # WHEN
+        response = self.client.get(reverse('feed_externalcalendars_events'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_user_external_calendars_as_events(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(reverse('feed_externalcalendars_events'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+        self.assertEqual(response.data[0]['title'], 'test1')
+        self.assertEqual(response.data[0]['calendar_item_type'], enums.EXTERNAL)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_user_external_calendars_as_events_shown_on_calendar_filter(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        externalcalendarhelper.given_external_calendar_exists(user, title='Visible Calendar', shown_on_calendar=True)
+        externalcalendarhelper.given_external_calendar_exists(user, title='Hidden Calendar', shown_on_calendar=False)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(reverse('feed_externalcalendars_events') + '?shown_on_calendar=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Only events from visible calendar should be present
+        self.assertEqual(len(response.data), 4)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_user_external_calendars_as_events_with_date_range(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_externalcalendars_events') + '?from=2017-01-01T08:00:00Z&to=2017-08-02T19:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_user_external_calendars_as_events_with_search(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(reverse('feed_externalcalendars_events') + '?search=test1')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], 'test1')
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_get_user_external_calendars_as_events_invalid_ical(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(reverse('feed_externalcalendars_events'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("not a valid ICAL", response.data[0])
+        # Calendar should be disabled
+        external_calendar.refresh_from_db()
+        self.assertFalse(external_calendar.shown_on_calendar)

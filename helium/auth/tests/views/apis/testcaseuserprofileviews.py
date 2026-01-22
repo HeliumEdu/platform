@@ -5,7 +5,6 @@ __version__ = "1.11.54"
 import json
 from unittest import mock
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -50,7 +49,7 @@ class TestCaseUserProfileViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'])
         self.assertEqual(response.data['phone_changing'], '+15555555555')
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertIsNone(user.profile.phone)
         self.assertEqual(user.profile.phone_changing, response.data['phone_changing'])
 
@@ -92,7 +91,7 @@ class TestCaseUserProfileViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['phone'], '5555555')
         self.assertIsNone(response.data['phone_changing'])
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(user.profile.phone, response.data['phone'])
         self.assertIsNone(user.profile.phone_changing)
         self.assertTrue(user.profile.phone_verified)
@@ -113,7 +112,7 @@ class TestCaseUserProfileViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['phone'], '5555555')
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertIsNone(user.profile.phone)
 
     def test_invalid_phone_verification_code_fails(self):
@@ -149,6 +148,6 @@ class TestCaseUserProfileViews(APITestCase):
                                    content_type='application/json')
 
         # THEN
-        user = get_user_model().objects.get(pk=user.id)
+        user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.profile.phone_changing, phone_changing)

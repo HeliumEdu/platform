@@ -9,7 +9,6 @@ from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import FileField, IntegerField
-from rest_framework.relations import RelatedField
 
 from helium.planner.models import Attachment, Course, Homework, Event
 

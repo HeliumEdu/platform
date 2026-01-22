@@ -134,3 +134,129 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_many_mock.call_count, 0)
+
+    def test_get_user_course_schedule_events_login_required(self):
+        # GIVEN
+        userhelper.given_a_user_exists()
+
+        # WHEN
+        response = self.client.get(reverse('planner_courseschedules_events'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_user_course_schedule_as_events(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        attachmenthelper.given_attachment_exists(user, course=course)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_courseschedules_events'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 53)
+        self.assertEqual(response.data[0]['title'], course.title)
+
+    def test_get_user_course_schedule_as_events_shown_on_calendar_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group_visible = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=True)
+        course_group_hidden = coursegrouphelper.given_course_group_exists(user, title='Hidden Group',
+                                                                          shown_on_calendar=False)
+        course_visible = coursehelper.given_course_exists(course_group_visible, title='Visible Course')
+        course_hidden = coursehelper.given_course_exists(course_group_hidden, title='Hidden Course')
+        courseschedulehelper.given_course_schedule_exists(course_visible)
+        courseschedulehelper.given_course_schedule_exists(course_hidden)
+
+        # WHEN
+        response = self.client.get(reverse('planner_courseschedules_events') + '?shown_on_calendar=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Only visible course events should be returned
+        for event in response.data:
+            self.assertEqual(event['title'], 'Visible Course')
+
+    def test_get_user_course_schedule_as_events_with_date_range(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_courseschedules_events') + '?from=2017-01-01T00:00:00Z&to=2017-01-15T00:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should have fewer events due to date range filter
+        self.assertLess(len(response.data), 53)
+
+    def test_get_user_course_schedule_as_events_with_search(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group, title='Math 101')
+        course2 = coursehelper.given_course_exists(course_group, title='English 201')
+        courseschedulehelper.given_course_schedule_exists(course1)
+        courseschedulehelper.given_course_schedule_exists(course2)
+
+        # WHEN
+        response = self.client.get(reverse('planner_courseschedules_events') + '?search=math')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for event in response.data:
+            self.assertEqual(event['title'], 'Math 101')
+
+    def test_get_course_schedule_as_events_not_found_for_invalid_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_courses_courseschedules_events',
+                                           kwargs={'course_group': course_group.pk, 'course': 9999}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_course_schedule_as_events_with_date_range(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_resource_courses_courseschedules_events',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}) +
+            '?from=2017-01-01T00:00:00Z&to=2017-01-15T00:00:00Z')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(len(response.data), 53)
+
+    def test_get_course_schedule_as_events_with_search(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, title='Biology 301')
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_resource_courses_courseschedules_events',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}) + '?search=bio')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(response.data), 0)
+        for event in response.data:
+            self.assertEqual(event['title'], 'Biology 301')
