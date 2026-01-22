@@ -188,17 +188,6 @@ VIEW_CHOICES = (
     (AGENDA_WEEK, 'Agenda')
 )
 
-MONTH = 0
-WEEK = 1
-DAY = 2
-LIST = 3
-MOBILE_VIEW_CHOICES = (
-    (MONTH, 'Month'),
-    (WEEK, 'Week'),
-    (DAY, 'Day'),
-    (LIST, 'List'),
-)
-
 SUNDAY = 0
 MONDAY = 1
 TUESDAY = 2

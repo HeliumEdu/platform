@@ -18,7 +18,5 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'time_zone', 'default_view', 'week_starts_on', 'all_day_offset', 'show_getting_started', 'events_color',
             'grade_color', 'material_color', 'remember_filter_state',
             'calendar_event_limit', 'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
-            'calendar_use_category_colors', 'receive_emails_from_admin', 'private_slug', 'mobile_default_view',
-            'mobile_default_reminder_type', 'mobile_default_reminder_offset', 'mobile_default_reminder_offset_type',
-            'user',)
+            'calendar_use_category_colors', 'receive_emails_from_admin', 'private_slug', 'user',)
         read_only_fields = ('all_day_offset', 'private_slug', 'user',)
