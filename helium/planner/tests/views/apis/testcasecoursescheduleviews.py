@@ -153,7 +153,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course_schedule = CourseSchedule.objects.get(pk=course_schedule.pk)
+        course_schedule.refresh_from_db()
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
     def test_update_course_schedule_by_id(self):
@@ -191,7 +191,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        course_schedule = CourseSchedule.objects.get(pk=course_schedule.pk)
+        course_schedule.refresh_from_db()
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
     def test_delete_course_schedule_by_id(self):

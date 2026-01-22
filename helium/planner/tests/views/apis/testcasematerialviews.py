@@ -139,7 +139,7 @@ class TestCaseMaterialViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        material = Material.objects.get(pk=material.pk)
+        material.refresh_from_db()
         materialhelper.verify_material_matches_data(self, material, response.data)
 
     def test_update_multiple_courses(self):
@@ -167,7 +167,7 @@ class TestCaseMaterialViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['courses'], data['courses'])
-        material = Material.objects.get(pk=material.pk)
+        material.refresh_from_db()
         materialhelper.verify_material_matches_data(self, material, response.data)
 
     def test_delete_material_by_id(self):

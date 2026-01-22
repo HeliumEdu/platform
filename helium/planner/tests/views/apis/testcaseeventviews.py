@@ -175,7 +175,7 @@ class TestCaseEventViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        event = Event.objects.get(pk=event.pk)
+        event.refresh_from_db()
         eventhelper.verify_event_matches_data(self, event, response.data)
 
     def test_update_start_before_end_fails(self):
@@ -214,7 +214,7 @@ class TestCaseEventViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event = Event.objects.get(pk=event.pk)
+        event.refresh_from_db()
         self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
         self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
 
@@ -237,7 +237,7 @@ class TestCaseEventViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event = Event.objects.get(pk=event.pk)
+        event.refresh_from_db()
 
         start = timezone.make_aware(parser.parse(data['start']), pytz.utc)
         end = timezone.make_aware(parser.parse(data['end']), pytz.utc)

@@ -138,7 +138,7 @@ class TestCaseCategoryViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        category = Category.objects.get(pk=category.pk)
+        category.refresh_from_db()
         categoryhelper.verify_category_matches_data(self, category, response.data)
         self.assertEqual(response.data['num_homework'], 3)
         self.assertEqual(response.data['num_homework_graded'], 1)
@@ -166,7 +166,7 @@ class TestCaseCategoryViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        category = Category.objects.get(pk=category.pk)
+        category.refresh_from_db()
         categoryhelper.verify_category_matches_data(self, category, response.data)
 
     def test_update_category_exceeds_weight_course_100_fails(self):
@@ -280,7 +280,7 @@ class TestCaseCategoryViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        category = Category.objects.get(pk=category.id)
+        category.refresh_from_db()
         self.assertEqual(category.average_grade, average_grade)
         self.assertEqual(category.grade_by_weight, grade_by_weight)
         self.assertEqual(category.trend, trend)

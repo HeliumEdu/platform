@@ -3,13 +3,11 @@ __license__ = "MIT"
 __version__ = "1.16.1"
 
 import datetime
-import unittest
 
 import pytz
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import CourseGroup, Course, Category
 from helium.planner.services import gradingservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
@@ -37,9 +35,9 @@ class TestCaseGradingService(TestCase):
                                              current_grade='400/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category.refresh_from_db()
         self.assertEqual(float(course_group.trend), 1)
         self.assertEqual(float(course.trend), 1)
         self.assertEqual(float(category.trend), 1)
@@ -66,9 +64,9 @@ class TestCaseGradingService(TestCase):
                                              current_grade='0/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category.refresh_from_db()
         self.assertEqual(float(course_group.trend), -1)
         self.assertEqual(float(course.trend), -1)
         self.assertEqual(float(category.trend), -1)
@@ -84,9 +82,9 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category, current_grade='-1/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category.refresh_from_db()
         self.assertEqual(course_group.overall_grade, -1)
         self.assertEqual(course.current_grade, -1)
         self.assertEqual(category.average_grade, -1)
@@ -108,14 +106,14 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='100/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
-        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
-        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        course_group.refresh_from_db()
+        course_group_ungraded.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
+        course_ungraded.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
+        category_ungraded.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 100)
         self.assertEqual(course_group_ungraded.overall_grade, -1)
         self.assertEqual(course1.current_grade, 100)
@@ -129,14 +127,14 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course2, category=category2, completed=True, current_grade='50/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
-        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
-        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        course_group.refresh_from_db()
+        course_group_ungraded.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
+        course_ungraded.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
+        category_ungraded.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 75)
         self.assertEqual(course_group_ungraded.overall_grade, -1)
         self.assertEqual(course1.current_grade, 100)
@@ -150,11 +148,11 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course1, category=category1, completed=True, current_grade='80/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
+        course_group.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 70)
         self.assertEqual(course1.current_grade, 90)
         self.assertEqual(course2.current_grade, 50)
@@ -165,14 +163,14 @@ class TestCaseGradingService(TestCase):
         homework1.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course_group_ungraded = CourseGroup.objects.get(pk=course_group_ungraded.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
-        course_ungraded = Course.objects.get(pk=course_ungraded.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
-        category_ungraded = Category.objects.get(pk=category_ungraded.pk)
+        course_group.refresh_from_db()
+        course_group_ungraded.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
+        course_ungraded.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
+        category_ungraded.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 65)
         self.assertEqual(course_group_ungraded.overall_grade, -1)
         self.assertEqual(course1.current_grade, 80)
@@ -199,11 +197,11 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category3, completed=True, current_grade='200/200')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
-        category3 = Category.objects.get(pk=category3.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
+        category3.refresh_from_db()
         # 360/460 total points
         self.assertEqual(float(course_group.overall_grade), 78.2609)
         self.assertEqual(float(course.current_grade), 78.2609)
@@ -227,36 +225,36 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='100/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category1.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 100)
         self.assertEqual(float(course.current_grade), 100)
-        self.assertEqual(float(category.average_grade), 100)
+        self.assertEqual(float(category1.average_grade), 100)
 
         # WHEN
         homework1.completed = True
         homework1.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category1.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 75)
         self.assertEqual(float(course.current_grade), 75)
-        self.assertEqual(float(category.average_grade), 75)
+        self.assertEqual(float(category1.average_grade), 75)
 
         # WHEN
         homework1.completed = False
         homework1.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category = Category.objects.get(pk=category1.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 100)
         self.assertEqual(float(course.current_grade), 100)
-        self.assertEqual(float(category.average_grade), 100)
+        self.assertEqual(float(category1.average_grade), 100)
 
     def test_unweighted_course_grade_changes(self):
         # GIVEN
@@ -278,8 +276,8 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category1, completed=True, current_grade='100/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 + 75 + 25 + 75 + 100) / 5
         self.assertEqual(float(course_group.overall_grade), 60)
         self.assertEqual(float(course.current_grade), 60)
@@ -289,8 +287,8 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category2, completed=True, current_grade='25/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 + 75 + 25 + 75 + 100 + 25 + 25) / 7
         self.assertEqual(float(course_group.overall_grade), 50)
         self.assertEqual(float(course.current_grade), 50)
@@ -302,8 +300,8 @@ class TestCaseGradingService(TestCase):
         homework2.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (80 + 90 + 25 + 75 + 100 + 25 + 25) / 7
         self.assertEqual(float(course_group.overall_grade), 60)
         self.assertEqual(float(course.current_grade), 60)
@@ -315,8 +313,8 @@ class TestCaseGradingService(TestCase):
         homework4.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (80 + 90 + 80 + 90 + 100 + 25 + 25) / 7
         self.assertEqual(float(course_group.overall_grade), 70)
         self.assertEqual(float(course.current_grade), 70)
@@ -326,8 +324,8 @@ class TestCaseGradingService(TestCase):
         homework4.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (80 + 90 + 100 + 25 + 25) / 5
         self.assertEqual(float(course_group.overall_grade), 64)
         self.assertEqual(float(course.current_grade), 64)
@@ -350,7 +348,7 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='50/100')
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) / 90
         self.assertEqual(float(course.current_grade), 50)
 
@@ -359,8 +357,8 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='35/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) / 150
         self.assertEqual(float(course_group.overall_grade), 44)
         self.assertEqual(float(course.current_grade), 44)
@@ -369,8 +367,8 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category3, completed=True, current_grade='90/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) / 160
         self.assertEqual(float(course_group.overall_grade), 46.875)
         self.assertEqual(float(course.current_grade), 46.875)
@@ -382,8 +380,8 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='45/100')
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (45 * 10) / 260
         self.assertEqual(float(course_group.overall_grade), 58.8462)
         self.assertEqual(float(course.current_grade), 58.8462)
@@ -395,8 +393,8 @@ class TestCaseGradingService(TestCase):
         homework8.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
         self.assertEqual(float(course_group.overall_grade), 70.5769)
         self.assertEqual(float(course.current_grade), 70.5769)
@@ -406,8 +404,8 @@ class TestCaseGradingService(TestCase):
         homework3.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
         # (75 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
         self.assertEqual(float(course_group.overall_grade), 80.5)
         self.assertEqual(float(course.current_grade), 80.5)
@@ -430,7 +428,7 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='50/100')
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) / 90
         self.assertEqual(float(course.current_grade), 50)
 
@@ -439,7 +437,7 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='35/100')
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) / 150
         self.assertEqual(float(course.current_grade), 44)
 
@@ -447,7 +445,7 @@ class TestCaseGradingService(TestCase):
         homeworkhelper.given_homework_exists(course, category=category3, completed=True, current_grade='90/100')
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) / 160
         self.assertEqual(float(course.current_grade), 46.875)
 
@@ -458,7 +456,7 @@ class TestCaseGradingService(TestCase):
                                                          current_grade='45/100')
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (35 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (45 * 10) / 260
         self.assertEqual(float(course.current_grade), 58.8462)
 
@@ -469,7 +467,7 @@ class TestCaseGradingService(TestCase):
         homework8.save()
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (25 * 30) + (75 * 30) + (50 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
         self.assertEqual(float(course.current_grade), 70.5769)
 
@@ -478,7 +476,7 @@ class TestCaseGradingService(TestCase):
         homework3.delete()
 
         # THEN
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
         # (75 * 30) + (80 * 60) + (90 * 10) + (75 * 30) + (85 * 60) + (80 * 10) / 260
         self.assertEqual(float(course.current_grade), 80.5)
 
@@ -537,7 +535,7 @@ class TestCaseGradingService(TestCase):
                                                              end=datetime.datetime(2017, 4, 10, 19, 30,
                                                                                    tzinfo=pytz.utc),
                                                              current_grade='50/120')
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.refresh_from_db()
 
         # WHEN
         grade_points = gradingservice.get_grade_points_for_course_group(course_group.pk)
@@ -605,7 +603,7 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=pytz.utc),
                                              current_grade='80/100')
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
 
         # WHEN
         grade_points = gradingservice.get_grade_points_for_course(course.pk)
@@ -651,7 +649,7 @@ class TestCaseGradingService(TestCase):
                                                          start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
                                                          end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
                                                          current_grade='72/100')
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
 
         # WHEN
         grade_points = gradingservice.get_grade_points_for_course(course.pk)
@@ -704,7 +702,7 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=pytz.utc),
                                              current_grade='80/100')
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
 
         # WHEN
         grade_points = gradingservice.get_grade_points_for_course(course.pk)
@@ -745,7 +743,7 @@ class TestCaseGradingService(TestCase):
                                                          start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
                                                          end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
                                                          current_grade='90/100')
-        course = Course.objects.get(pk=course.pk)
+        course.refresh_from_db()
 
         # WHEN
         grade_points = gradingservice.get_grade_points_for_course(course.pk)
@@ -790,9 +788,9 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
                                              current_grade='110/130')
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category1 = Category.objects.get(pk=category1.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
         # ((25/60) * 30) + ((75/80) * 50) + ((50/120) * 20) + ((60/80) * 30) + ((110/130) * 20) / 150
         self.assertEqual(float(course_group.overall_grade), 71.4209)
         self.assertEqual(float(course.current_grade), 71.4209)
@@ -806,10 +804,10 @@ class TestCaseGradingService(TestCase):
         category1.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
         # ((25/60) * 50) + ((75/80) * 30) + ((50/120) * 20) + ((60/80) * 50) + ((110/130) * 20) / 150
         self.assertEqual(float(course_group.overall_grade), 65.7146)
         self.assertEqual(float(course.current_grade), 65.7146)
@@ -822,15 +820,15 @@ class TestCaseGradingService(TestCase):
         category2.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course = Course.objects.get(pk=course.pk)
-        category1 = Category.objects.get(pk=category1.pk)
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category1.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 59.707)
         self.assertEqual(float(course.current_grade), 59.707)
         self.assertEqual(float(category1.average_grade), 60.7143)
         self.assertEqual(float(category1.grade_by_weight), 30.3571)
 
-    def test_category_changed_deleted_weighted_grade_changes(self):
+    def test_category_changed_deleted_weighted_grade_changes_multiple_courses(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -873,9 +871,9 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
                                              current_grade='50/120')
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
+        course_group.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 70.5662)
         self.assertEqual(float(course1.current_grade), 71.4209)
         self.assertEqual(float(course2.current_grade), 69.7115)
@@ -887,9 +885,9 @@ class TestCaseGradingService(TestCase):
         category1_1.save()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
+        course_group.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 67.7131)
         self.assertEqual(float(course1.current_grade), 65.7146)
         self.assertEqual(float(course2.current_grade), 69.7115)
@@ -898,9 +896,9 @@ class TestCaseGradingService(TestCase):
         category1_2.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
+        course_group.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 64.7092)
         self.assertEqual(float(course1.current_grade), 59.707)
         self.assertEqual(float(course2.current_grade), 69.7115)
@@ -934,7 +932,7 @@ class TestCaseGradingService(TestCase):
                                              start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=pytz.utc),
                                              end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=pytz.utc),
                                              completed=True, current_grade='4/5')
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.refresh_from_db()
         # Course 1: ((25 * 30) + (75 * 50) + ((60/80) * 30)) / 110 = 61.36
         # Course 2: ((50 * 20) + ((4/5) * 20)) / 40 = 61.36 = 65.00
         self.assertEqual(float(course_group.overall_grade), 63.1818)
@@ -943,5 +941,5 @@ class TestCaseGradingService(TestCase):
         course2.delete()
 
         # THEN
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 61.3636)

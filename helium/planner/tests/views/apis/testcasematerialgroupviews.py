@@ -99,7 +99,7 @@ class TestCaseMaterialGroupViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        material_group = MaterialGroup.objects.get(pk=material_group.pk)
+        material_group.refresh_from_db()
         materialgrouphelper.verify_material_group_matches_data(self, material_group, response.data)
 
     def test_delete_materialgroup_by_id(self):
@@ -151,7 +151,7 @@ class TestCaseMaterialGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        material_group = MaterialGroup.objects.get(pk=material_group.id)
+        material_group.refresh_from_db()
         self.assertEqual(material_group.get_user().pk, user2.pk)
 
     def test_not_found(self):

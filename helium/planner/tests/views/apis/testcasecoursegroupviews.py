@@ -88,6 +88,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_group.refresh_from_db()
         coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
         self.assertEqual(response.data['num_days'], 122)
         self.assertEqual(response.data['num_days_completed'],
@@ -118,7 +119,7 @@ class TestCaseCourseGroupViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.refresh_from_db()
         coursegrouphelper.verify_course_group_matches_data(self, course_group, response.data)
 
     def test_update_start_before_end_fails(self):
@@ -201,7 +202,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        course_group = CourseGroup.objects.get(pk=course_group.id)
+        course_group.refresh_from_db()
         self.assertEqual(course_group.overall_grade, overall_grade)
         self.assertEqual(course_group.trend, trend)
         self.assertEqual(course_group.private_slug, private_slug)

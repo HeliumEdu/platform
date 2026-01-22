@@ -310,12 +310,12 @@ class TestCaseImportExportViews(APITestCase):
         data = json.loads(response.content.decode('utf-8'))
 
         # THEN
-        course_group1 = CourseGroup.objects.get(pk=course_group1.pk)
-        course_group2 = CourseGroup.objects.get(pk=course_group2.pk)
-        course1 = Course.objects.get(pk=course1.pk)
-        course2 = Course.objects.get(pk=course2.pk)
-        category1 = Category.objects.get(pk=category1.pk)
-        category2 = Category.objects.get(pk=category2.pk)
+        course_group1.refresh_from_db()
+        course_group2.refresh_from_db()
+        course1.refresh_from_db()
+        course2.refresh_from_db()
+        category1.refresh_from_db()
+        category2.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar,
                                                                     data['external_calendars'][0])
@@ -400,7 +400,7 @@ class TestCaseImportExportViews(APITestCase):
 
     def test_import_exampleschedule(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         response = self.client.post(reverse('importexport_import_exampleschedule'))
@@ -422,7 +422,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        start_of_month = adjusted_month.replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0)
+        adjusted_month.replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 3)
