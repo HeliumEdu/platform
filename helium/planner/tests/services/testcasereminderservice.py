@@ -10,7 +10,6 @@ from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.planner.models import Reminder
 from helium.planner.services import reminderservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper
 
@@ -43,9 +42,12 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertEqual(mock_send_multipart_email.call_count, 2)
-        self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
-        self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
-        self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
+        reminder1.refresh_from_db()
+        reminder2.refresh_from_db()
+        reminder3.refresh_from_db()
+        self.assertTrue(reminder1.sent)
+        self.assertTrue(reminder2.sent)
+        self.assertTrue(reminder3.sent)
 
     @mock.patch('helium.common.tasks.send_sms')
     def test_process_text_reminders(self, mock_send_sms):
@@ -77,9 +79,12 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertEqual(mock_send_sms.call_count, 2)
-        self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
-        self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
-        self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
+        reminder1.refresh_from_db()
+        reminder2.refresh_from_db()
+        reminder3.refresh_from_db()
+        self.assertTrue(reminder1.sent)
+        self.assertTrue(reminder2.sent)
+        self.assertTrue(reminder3.sent)
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders(self, mock_send_notifications):
@@ -109,9 +114,12 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertEqual(mock_send_notifications.call_count, 2)
-        self.assertTrue(Reminder.objects.get(pk=reminder1.pk).sent)
-        self.assertTrue(Reminder.objects.get(pk=reminder2.pk).sent)
-        self.assertFalse(Reminder.objects.get(pk=reminder3.pk).sent)
+        reminder1.refresh_from_db()
+        reminder2.refresh_from_db()
+        reminder3.refresh_from_db()
+        self.assertTrue(reminder1.sent)
+        self.assertTrue(reminder2.sent)
+        self.assertTrue(reminder3.sent)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_process_email_reminders_inactive_user(self, mock_send_multipart_email):
@@ -126,7 +134,8 @@ class TestCaseReminderService(TestCase):
         # THEN
         # Inactive user should not receive email but reminder should be marked sent
         mock_send_multipart_email.assert_not_called()
-        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
 
     @mock.patch('helium.common.tasks.send_sms')
     def test_process_text_reminders_no_phone(self, mock_send_sms):
@@ -142,7 +151,8 @@ class TestCaseReminderService(TestCase):
         # THEN
         # No SMS sent when user has no phone
         mock_send_sms.assert_not_called()
-        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
 
     @mock.patch('helium.common.tasks.send_sms')
     def test_process_text_reminders_phone_not_verified(self, mock_send_sms):
@@ -160,7 +170,8 @@ class TestCaseReminderService(TestCase):
         # THEN
         # No SMS sent when phone not verified
         mock_send_sms.assert_not_called()
-        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_no_push_tokens(self, mock_send_notifications):
@@ -176,7 +187,8 @@ class TestCaseReminderService(TestCase):
         # THEN
         # No push sent when user has no push tokens
         mock_send_notifications.assert_not_called()
-        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_mark_sent_only(self, mock_send_notifications):
@@ -192,4 +204,5 @@ class TestCaseReminderService(TestCase):
         # THEN
         # No push sent when mark_sent_only=True, but reminder marked as sent
         mock_send_notifications.assert_not_called()
-        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)

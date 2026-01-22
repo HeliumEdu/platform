@@ -5,17 +5,14 @@ __version__ = "1.14.6"
 import datetime
 from unittest import mock
 
-import pytz
 from django.test import TestCase
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.planner.models import Reminder
 from helium.planner.tasks import (
     email_reminders, text_reminders, push_reminders,
-    recalculate_course_grade, recalculate_category_grade,
-    recalculate_course_group_grade, recalculate_course_grades_for_course_group,
+    recalculate_course_grades_for_course_group,
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
 )
 from helium.planner.tests.helpers import (

@@ -10,7 +10,6 @@ from django.db.models import Q, Count
 
 from helium.auth.models.userprofile import UserProfile
 from helium.auth.models.usersettings import UserSettings
-from helium.auth.utils.userutils import generate_verification_code
 
 logger = logging.getLogger(__name__)
 
