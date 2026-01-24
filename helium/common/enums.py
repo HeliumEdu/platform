@@ -294,3 +294,12 @@ CALENDAR_ITEM_TYPE_CHOICES = (
     (EXTERNAL, 'External'),
     (COURSE, 'Class')
 )
+
+LIGHT = 0
+DARK = 1
+SYSTEM = 2
+COLOR_SCHEME_THEME = (
+    (LIGHT, 'Light'),
+    (DARK, 'Dark'),
+    (SYSTEM, 'System'),
+)
