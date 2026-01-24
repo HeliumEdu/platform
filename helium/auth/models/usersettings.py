@@ -51,7 +51,7 @@ class UserSettings(BaseModel):
     default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder.',
         default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
-    
+
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
@@ -67,6 +67,11 @@ class UserSettings(BaseModel):
     remember_filter_state = models.BooleanField(
         help_text='Remember filter states for the Calendar within a session.',
         default=True)
+
+    color_scheme_theme = models.PositiveIntegerField(
+        help_text='A valid color scheme theme.',
+        default=enums.DARK,
+        choices=enums.COLOR_SCHEME_THEME)
 
     private_slug = models.SlugField(blank=True, null=True)
 

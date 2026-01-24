@@ -111,7 +111,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'username', 'created_at', 'last_login', 'num_course_groups', 'num_courses',
                     'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type',
+                   'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', HasWeightedGradingFilter, HasCreditsFilter,
                    HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
