@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.64"
+__version__ = "1.17.74"
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
 
@@ -188,17 +188,6 @@ VIEW_CHOICES = (
     (AGENDA_WEEK, 'Agenda')
 )
 
-MONTH = 0
-WEEK = 1
-DAY = 2
-LIST = 3
-MOBILE_VIEW_CHOICES = (
-    (MONTH, 'Month'),
-    (WEEK, 'Week'),
-    (DAY, 'Day'),
-    (LIST, 'List'),
-)
-
 SUNDAY = 0
 MONDAY = 1
 TUESDAY = 2
@@ -304,4 +293,13 @@ CALENDAR_ITEM_TYPE_CHOICES = (
     (HOMEWORK, 'Homework'),
     (EXTERNAL, 'External'),
     (COURSE, 'Class')
+)
+
+LIGHT = 0
+DARK = 1
+SYSTEM = 2
+COLOR_SCHEME_THEME = (
+    (LIGHT, 'Light'),
+    (DARK, 'Dark'),
+    (SYSTEM, 'System'),
 )

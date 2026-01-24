@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.64"
+__version__ = "1.17.74"
 
 import time
 
@@ -51,7 +51,7 @@ class UserSettings(BaseModel):
     default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder.',
         default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
-    
+
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
@@ -68,23 +68,12 @@ class UserSettings(BaseModel):
         help_text='Remember filter states for the Calendar within a session.',
         default=True)
 
+    color_scheme_theme = models.PositiveIntegerField(
+        help_text='A valid color scheme theme.',
+        default=enums.DARK,
+        choices=enums.COLOR_SCHEME_THEME)
+
     private_slug = models.SlugField(blank=True, null=True)
-
-    mobile_default_view = models.PositiveIntegerField(help_text='A valid default mobile calendar view choice.',
-                                                      choices=enums.MOBILE_VIEW_CHOICES, default=enums.WEEK)
-
-    mobile_default_reminder_type = models.PositiveIntegerField(
-        help_text='A valid default type of reminder choice when creating a new reminder on mobile.',
-        default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
-
-    mobile_default_reminder_offset = models.PositiveIntegerField(
-        help_text='The default offset when creating a new reminder on mobile.',
-        default=30)
-
-    mobile_default_reminder_offset_type = models.PositiveIntegerField(
-        help_text='A valid default type of time offset choice when creating a new reminder on mobile.',
-        default=enums.MINUTES,
-        choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 

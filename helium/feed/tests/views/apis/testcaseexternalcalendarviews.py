@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.17.74"
 
 import json
 import os
@@ -107,7 +107,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, response.data | data)
-        external_calendar = ExternalCalendar.objects.get(pk=external_calendar.id)
+        external_calendar.refresh_from_db()
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendar, response.data)
 
     def test_delete_externalcalendar_by_id(self):

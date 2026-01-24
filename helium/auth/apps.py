@@ -1,9 +1,8 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
+__version__ = "1.17.74"
 
 from django.apps import AppConfig
-from django.db import models
 
 
 class AuthConfig(AppConfig):

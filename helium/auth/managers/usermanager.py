@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.14.1"
+__version__ = "1.17.74"
 
 import logging
 
@@ -10,7 +10,6 @@ from django.db.models import Q, Count
 
 from helium.auth.models.userprofile import UserProfile
 from helium.auth.models.usersettings import UserSettings
-from helium.auth.utils.userutils import generate_verification_code
 
 logger = logging.getLogger(__name__)
 
