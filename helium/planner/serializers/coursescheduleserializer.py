@@ -29,4 +29,21 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 raise ValidationError(
                     f'Course {course_id} already has a CourseSchedule and there cannot be more than one.')
 
+        # Validate that start_time is before or equal to end_time for each day
+        days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+        for day in days:
+            start_key = f'{day}_start_time'
+            end_key = f'{day}_end_time'
+
+            start_time = attrs.get(start_key)
+            if start_time is None and self.instance:
+                start_time = getattr(self.instance, start_key)
+
+            end_time = attrs.get(end_key)
+            if end_time is None and self.instance:
+                end_time = getattr(self.instance, end_key)
+
+            if start_time and end_time and start_time > end_time:
+                raise ValidationError(f"The 'start_time' of '{day}' must be before 'end_time'")
+
         return attrs

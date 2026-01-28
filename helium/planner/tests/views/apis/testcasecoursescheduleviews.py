@@ -287,6 +287,78 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('sun_start_time', response.data)
 
+    def test_create_start_time_after_end_time(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '15:30:00',
+            'mon_end_time': '14:30:00',  # End before start
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'tue_start_time': '12:00:00',
+            'tue_end_time': '12:00:00',
+            'wed_start_time': '12:00:00',
+            'wed_end_time': '12:00:00',
+            'thu_start_time': '12:00:00',
+            'thu_end_time': '12:00:00',
+            'fri_start_time': '12:00:00',
+            'fri_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The 'start_time' of 'mon' must be before 'end_time'", str(response.data))
+        self.assertEqual(CourseSchedule.objects.count(), 0)
+
+    def test_update_start_time_after_end_time(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        data = {
+            'days_of_week': '0001000',
+            'wed_start_time': '19:30:00',
+            'wed_end_time': '18:30:00',  # End before start
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'mon_start_time': '12:00:00',
+            'mon_end_time': '12:00:00',
+            'tue_start_time': '12:00:00',
+            'tue_end_time': '12:00:00',
+            'thu_start_time': '12:00:00',
+            'thu_end_time': '12:00:00',
+            'fri_start_time': '12:00:00',
+            'fri_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+        }
+        response = self.client.put(
+            reverse('planner_coursegroups_courses_courseschedules_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course_schedule.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The 'start_time' of 'wed' must be before 'end_time'", str(response.data))
+
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
