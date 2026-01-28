@@ -56,19 +56,20 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
     invalid_data = False
 
     try:
-        for event in json.loads(cached_value):
-            event = Event(id=event['id'],
-                          title=event['title'],
-                          all_day=event['all_day'],
-                          show_end_time=event['show_end_time'],
-                          start=parser.parse(event['start']),
-                          end=parser.parse(event['end']),
-                          owner_id=event['owner_id'],
-                          user_id=event['user'],
-                          calendar_item_type=event['calendar_item_type'],
-                          url=event['url'],
-                          comments=event['comments'])
+        for event_data in json.loads(cached_value):
+            event = Event(id=event_data['id'],
+                          title=event_data['title'],
+                          all_day=event_data['all_day'],
+                          show_end_time=event_data['show_end_time'],
+                          start=parser.parse(event_data['start']),
+                          end=parser.parse(event_data['end']),
+                          owner_id=event_data['owner_id'],
+                          user_id=event_data['user'],
+                          calendar_item_type=event_data['calendar_item_type'],
+                          url=event_data['url'],
+                          comments=event_data['comments'])
             event.color = external_calendar.color
+            event.location = event_data.get('location')
 
             if _apply_event_filters(event, _from, to, search):
                 events.append(event)
@@ -139,6 +140,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           user=external_calendar.get_user(),
                           calendar_item_type=enums.EXTERNAL)
             event.color = external_calendar.color
+            event.location = component.get("LOCATION")
 
             events.append(event)
 
