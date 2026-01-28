@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.74"
+__version__ = "1.17.75"
 
 import time
 
@@ -70,7 +70,7 @@ class UserSettings(BaseModel):
 
     color_scheme_theme = models.PositiveIntegerField(
         help_text='A valid color scheme theme.',
-        default=enums.DARK,
+        default=enums.SYSTEM,
         choices=enums.COLOR_SCHEME_THEME)
 
     private_slug = models.SlugField(blank=True, null=True)

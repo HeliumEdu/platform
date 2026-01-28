@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.22"
+__version__ = "1.17.75"
 
 import logging
 
@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 
 class EventSerializer(serializers.ModelSerializer):
     color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
+    location = serializers.CharField(read_only=True, required=False, allow_null=True)
 
     class Meta:
         model = Event
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments', 'owner_id',
-            'color', 'attachments', 'reminders', 'user',
+            'color', 'location', 'attachments', 'reminders', 'user',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)
