@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.75"
+__version__ = "1.17.76"
 
 import time
 
@@ -27,6 +27,10 @@ class UserSettings(BaseModel):
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
+
+    whats_new_version_seen = models.PositiveIntegerField(
+        help_text='The "What\'s New" dialog version the user has seen.',
+        default=0)
 
     events_color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',

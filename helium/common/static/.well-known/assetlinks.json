@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.heliumedu.heliumapp",
+      "sha256_cert_fingerprints": [
+        "6E:EB:32:D3:DF:81:F3:5F:4F:7F:9C:B9:6F:B5:61:9A:4E:C5:7D:18:40:78:0E:D7:81:CE:B4:B3:4C:8A:AA:85"
+      ]
+    }
+  }
+]
