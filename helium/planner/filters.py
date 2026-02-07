@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.28"
+__version__ = "1.17.82"
 
 import logging
 
@@ -88,12 +88,17 @@ class CourseFilter(django_filters.FilterSet):
 
 
 class CategoryFilter(django_filters.FilterSet):
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
+
     class Meta:
         model = Category
         fields = {
             'course': ['exact'],
             'title': ['exact'],
         }
+
+    def filter_shown_on_calendar(self, queryset, name, value):
+        return queryset.filter(course__course_group__shown_on_calendar=value)
 
 
 class ReminderFilter(django_filters.FilterSet):
