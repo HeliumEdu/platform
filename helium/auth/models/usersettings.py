@@ -18,7 +18,7 @@ class UserSettings(BaseModel):
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
     default_view = models.PositiveIntegerField(help_text='A valid default calendar view choice.',
-                                               choices=enums.VIEW_CHOICES, default=enums.MONTH)
+                                               choices=enums.VIEW_CHOICES, default=enums.DAY)
 
     week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
@@ -54,7 +54,7 @@ class UserSettings(BaseModel):
 
     default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder.',
-        default=enums.POPUP, choices=enums.REMINDER_TYPE_CHOICES)
+        default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
