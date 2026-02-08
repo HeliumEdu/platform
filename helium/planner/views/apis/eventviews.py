@@ -38,7 +38,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.events.all()
+            return user.events.all().prefetch_related('attachments', 'reminders')
         else:
             return Event.objects.none()
 
@@ -94,7 +94,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.events.all()
+            return user.events.all().prefetch_related('attachments', 'reminders')
         else:
             return Event.objects.none()
 
