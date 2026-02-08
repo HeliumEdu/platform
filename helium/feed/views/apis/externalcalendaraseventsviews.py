@@ -47,7 +47,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     def list(self, request, *arg, **kwargs):
         user = request.user
         external_calendars = (ExternalCalendar.objects
-                              .for_user(user.pk))
+                              .for_user(user.pk)
+                              .select_related('user'))
         if 'shown_on_calendar' in request.query_params:
             external_calendars = external_calendars.filter(shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
 
@@ -101,6 +102,7 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         try:
             external_calendar = (ExternalCalendar.objects
                                  .for_user(request.user.id)
+                                 .select_related('user')
                                  .get(pk=self.kwargs['pk']))
         except ExternalCalendar.DoesNotExist:
             raise NotFound()
