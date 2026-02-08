@@ -9,7 +9,6 @@ __version__ = "1.11.54"
 import os
 import sys
 
-from celery.signals import task_failure
 from django.conf import settings
 
 from celery import Celery
@@ -21,19 +20,16 @@ app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-if 'celery' in sys.argv[0] and hasattr(settings, 'ROLLBAR'):
-    import rollbar
+if 'celery' in sys.argv[0]:
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    import sentry_sdk
 
-    rollbar.init(**settings.ROLLBAR)
-
-
-    def celery_base_data_hook(request, data):
-        data['framework'] = 'celery'
-
-
-    rollbar.BASE_DATA_HOOK = celery_base_data_hook
-
-
-    @task_failure.connect
-    def handle_task_failure(**kwargs):
-        rollbar.report_exc_info(extra_data=kwargs)
+    # Initialize Sentry for Celery workers
+    sentry_sdk.init(
+        dsn=settings.config('PLATFORM_SENTRY_DSN') if hasattr(settings, 'config') else os.environ.get('PLATFORM_SENTRY_DSN'),
+        integrations=[CeleryIntegration()],
+        environment=settings.ENVIRONMENT if hasattr(settings, 'ENVIRONMENT') else os.environ.get('PLATFORM_ENVIRONMENT', 'production'),
+        release=settings.PROJECT_VERSION if hasattr(settings, 'PROJECT_VERSION') else None,
+        send_default_pii=True,
+        traces_sample_rate=0.1,
+    )

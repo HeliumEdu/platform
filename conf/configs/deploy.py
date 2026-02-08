@@ -22,7 +22,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 INSTALLED_APPS = common.INSTALLED_APPS
 
 MIDDLEWARE = common.MIDDLEWARE + (
-    'helium.common.middleware.exceptionlogging.HeliumRollbarMiddleware',
+    'helium.common.middleware.exceptionlogging.HeliumSentryMiddleware',
 )
 
 TEMPLATES = common.TEMPLATES
@@ -33,8 +33,6 @@ if common.DEBUG:
     )
 
 # API configuration
-
-common.REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'rollbar.contrib.django_rest_framework.post_exception_handler'
 
 #############################
 # Django configuration
@@ -68,15 +66,26 @@ if 'celery' not in sys.argv[0]:
 else:
     ALLOWED_HOSTS = common.ALLOWED_HOSTS
 
-# Logging
+# Error tracking
 
-ROLLBAR = {
-    'access_token': config('PLATFORM_ROLLBAR_SERVER_ITEM_ACCESS_TOKEN'),
-    'environment': ENVIRONMENT,
-    'branch': 'main',
-    'root': BASE_DIR,
-    'code_version': PROJECT_VERSION
-}
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+sentry_sdk.init(
+    dsn=config('PLATFORM_SENTRY_DSN'),
+    integrations=[
+        DjangoIntegration(),
+        LoggingIntegration(
+            level=None,
+            event_level='WARNING'
+        ),
+    ],
+    environment=ENVIRONMENT,
+    release=PROJECT_VERSION,
+    send_default_pii=True,
+    traces_sample_rate=0.1,
+)
 
 if not common.DEBUG:
     ADMINS = (
@@ -99,11 +108,6 @@ LOGGING = {
         }
     },
     'handlers': {
-        'rollbar': {
-            'level': 'WARN',
-            'class': 'rollbar.logger.RollbarHandler',
-            'filters': ['ignore_status_check'],
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -113,12 +117,12 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['console', 'rollbar'],
+            'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
         'django.security': {
-            'handlers': ['console', 'rollbar'],
+            'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -131,7 +135,7 @@ LOGGING = {
             'level': 'ERROR',
         },
         'helium': {
-            'handlers': ['console', 'rollbar'],
+            'handlers': ['console'],
             'level': config('PLATFORM_LOG_LEVEL', 'INFO'),
         }
     }
