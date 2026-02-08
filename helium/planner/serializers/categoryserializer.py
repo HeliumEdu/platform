@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    num_homework = serializers.SerializerMethodField()
+    num_homework_completed = serializers.SerializerMethodField()
+    num_homework_graded = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
         fields = (
@@ -21,6 +25,18 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = (
             'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
+
+    def get_num_homework(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework', obj.num_homework)
+
+    def get_num_homework_completed(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework_completed', obj.num_homework_completed)
+
+    def get_num_homework_graded(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework_graded', obj.num_homework_graded)
 
     def validate_title(self, title):
         """
