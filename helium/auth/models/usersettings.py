@@ -18,7 +18,7 @@ class UserSettings(BaseModel):
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
     default_view = models.PositiveIntegerField(help_text='A valid default calendar view choice.',
-                                               choices=enums.VIEW_CHOICES, default=enums.DAY)
+                                               choices=enums.VIEW_CHOICES, default=enums.MONTH)
 
     week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
