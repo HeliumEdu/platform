@@ -5,6 +5,7 @@ __version__ = "1.17.22"
 import logging
 from datetime import datetime
 
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import filters, status
@@ -17,7 +18,7 @@ from rest_framework.viewsets import ViewSet
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
-from helium.planner.models import Event
+from helium.planner.models import Event, Reminder
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView
 
@@ -38,7 +39,10 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.events.all().prefetch_related('attachments', 'reminders')
+            return user.events.all().prefetch_related(
+                'attachments',
+                Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
+            )
         else:
             return Event.objects.none()
 
@@ -94,7 +98,10 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.events.all().prefetch_related('attachments', 'reminders')
+            return user.events.all().prefetch_related(
+                'attachments',
+                Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
+            )
         else:
             return Event.objects.none()
 
