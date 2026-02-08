@@ -31,7 +31,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.attachments.all()
+            return user.attachments.all().select_related('course', 'event', 'homework', 'user')
         else:
             return Attachment.objects.none()
 
@@ -105,7 +105,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.attachments.all()
+            return user.attachments.all().select_related('course', 'event', 'homework', 'user')
         else:
             return Attachment.objects.none()
 
