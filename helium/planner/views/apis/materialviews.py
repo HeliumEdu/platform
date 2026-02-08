@@ -31,7 +31,7 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            materials = Material.objects.for_user(user.pk)
+            materials = Material.objects.for_user(user.pk).select_related('material_group').prefetch_related('courses')
             # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
             if 'courses' in self.request.query_params:
                 materials = materials.with_courses(self.request.query_params.getlist('courses'))
@@ -59,7 +59,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group']).select_related('material_group').prefetch_related('courses')
         else:
             return Material.objects.none()
 
@@ -107,7 +107,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group'])
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group']).select_related('material_group').prefetch_related('courses')
         else:
             return Material.objects.none()
 
