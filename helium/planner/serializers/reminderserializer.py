@@ -41,12 +41,24 @@ class ReminderSerializer(serializers.ModelSerializer):
 
 
 class ReminderExtendedSerializer(ReminderSerializer):
-    class Meta(ReminderSerializer.Meta):
-        depth = 2
-
     def to_representation(self, instance):
+        # Import serializers here to avoid circular imports
+        from helium.planner.serializers.homeworkserializer import HomeworkSerializer
+        from helium.planner.serializers.eventserializer import EventSerializer
+
+        # Get base representation first
         representation = super().to_representation(instance)
 
-        representation['user'] = representation['user']['id']
+        # Serialize homework and event with their respective serializers if present
+        if instance.homework:
+            homework_serializer = HomeworkSerializer(instance.homework, context=self.context)
+            representation['homework'] = homework_serializer.data
+
+        if instance.event:
+            event_serializer = EventSerializer(instance.event, context=self.context)
+            representation['event'] = event_serializer.data
+
+        # Keep only the user ID instead of the full nested user object
+        representation['user'] = instance.user.id
 
         return representation
