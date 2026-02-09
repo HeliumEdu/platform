@@ -141,12 +141,12 @@ jobs:
       CI_TWILIO_RECIPIENT_PHONE_NUMBER: ${{ secrets.CI_TWILIO_RECIPIENT_PHONE_NUMBER }}
 
     steps:
-      - name: Checkout helium monorepo
+      - name: Checkout deploy monorepo
         uses: actions/checkout@v5
         with:
-          repository: HeliumEdu/helium
+          repository: HeliumEdu/deploy
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          path: helium
+          path: deploy
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
@@ -178,11 +178,11 @@ jobs:
           echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${TAG}" >> $GITHUB_ENV
 
       - name: Install dependencies
-        working-directory: helium
+        working-directory: deploy
         run: make install
 
       - name: Run cluster tests against release build
-        working-directory: helium
+        working-directory: deploy
         env:
           TAG_VERSION: ${{ needs.determine-version.outputs.version }}
         run: make test-cluster
@@ -192,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cluster-test-output-${{ needs.determine-version.outputs.version }}
-          path: helium/projects/cluster-tests/build/screenshots/
+          path: deploy/projects/cluster-tests/build/screenshots/
           retention-days: 30
 
       - name: Dump Docker logs on failure
@@ -237,7 +237,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: deploy
-        run: pip install requests boto3 GitPython heliumcli
+        run: pip install requests boto3 GitPython
 
       - name: Update Terraform variables
         working-directory: deploy
