@@ -74,28 +74,21 @@ jobs:
     needs: build
 
     env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
-      ENVIRONMENT: dev
-      TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
       DEV_ENV_ENABLED: ${{ vars.DEV_ENV_ENABLED || false }}
 
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Trigger Terraform deployment to `dev`
+      - name: Trigger deployment to dev
         if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
-        run: python -m pip install requests && ./bin/trigger-ci-release.py
-      - name: Trigger cluster tests against `dev`
-        if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          curl -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u $GITHB_ACCESS_TOKEN \
-          --data '{"event_type": "Triggered from `platform` CI deploy latest", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "environment": "dev"}}'
+          gh workflow run deploy.yml \
+            --ref main \
+            -f version_type=latest \
+            -f environment=dev \
+            -f run_cluster_tests=true
+
+          echo "Triggered deploy workflow for dev environment with latest containers"
+          echo "View workflow runs: https://github.com/${{ github.repository }}/actions/workflows/deploy.yml"
