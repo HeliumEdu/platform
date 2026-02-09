@@ -110,7 +110,7 @@ jobs:
           echo "Version: $VERSION"
 
   build-and-publish:
-    name: Build and Publish Docker Containers
+    name: Build and Publish Containers
     needs: [test, bump-version]
     runs-on: ubuntu-latest
 
