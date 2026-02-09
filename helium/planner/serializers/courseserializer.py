@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 class CourseSerializer(serializers.ModelSerializer):
     schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
+    num_homework = serializers.SerializerMethodField()
+    num_homework_completed = serializers.SerializerMethodField()
+    num_homework_graded = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,6 +35,18 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = (
             'course_group', 'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
+
+    def get_num_homework(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework', obj.num_homework)
+
+    def get_num_homework_completed(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework_completed', obj.num_homework_completed)
+
+    def get_num_homework_graded(self, obj):
+        # Use annotated value if available, otherwise fall back to property
+        return getattr(obj, 'annotated_num_homework_graded', obj.num_homework_graded)
 
     def validate(self, attrs):
         start_date = attrs.get('start_date', None)

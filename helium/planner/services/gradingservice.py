@@ -4,7 +4,7 @@ __version__ = "1.17.24"
 
 import logging
 
-from django.db.models import F
+from django.db.models import F, Count, Q, Case, When
 
 from helium.common.utils import commonutils
 from helium.planner.models import CourseGroup, Course, Category, Homework
@@ -92,53 +92,108 @@ def get_grade_points_for(query_set, has_weighted_grading):
 
 
 def get_grade_data(user_id):
+    # Annotate course groups with homework counts to avoid N+1 queries
     course_groups = (CourseGroup.objects
                      .for_user(user_id)
+                     .annotate(
+                         annotated_num_homework=Count('courses__homework', distinct=True),
+                         annotated_num_homework_completed=Count(
+                             'courses__homework',
+                             filter=Q(courses__homework__completed=True),
+                             distinct=True
+                         ),
+                         annotated_num_homework_graded=Count(
+                             'courses__homework',
+                             filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'),
+                             distinct=True
+                         )
+                     )
                      .values('id',
                              'title',
                              'overall_grade',
-                             'trend'))
+                             'trend',
+                             'annotated_num_homework',
+                             'annotated_num_homework_completed',
+                             'annotated_num_homework_graded')
+                     .order_by('start_date', 'title'))
 
     for course_group in course_groups:
-        course_group['num_homework'] = (Course.objects
-                                               .for_course_group(course_group['id'])
-                                               .num_homework())
-        course_group['num_homework_completed'] = (Course.objects
-                                        .for_course_group(course_group['id'])
-                                        .num_homework_completed())
-        course_group['num_homework_graded'] = (Course.objects
-                                               .for_course_group(course_group['id'])
-                                               .num_homework_graded())
+        course_group['num_homework'] = course_group['annotated_num_homework']
+        course_group['num_homework_completed'] = course_group['annotated_num_homework_completed']
+        course_group['num_homework_graded'] = course_group['annotated_num_homework_graded']
+        # Remove the annotated_ prefixed keys
+        course_group.pop('annotated_num_homework')
+        course_group.pop('annotated_num_homework_completed')
+        course_group.pop('annotated_num_homework_graded')
         course_group['grade_points'] = get_grade_points_for_course_group(course_group['id'])
 
+        # Annotate courses with homework counts to avoid N+1 queries
         course_group['courses'] = (Course.objects.for_user(user_id)
                                    .for_course_group(course_group['id'])
+                                   .annotate(
+                                       annotated_num_homework=Count('homework', distinct=True),
+                                       annotated_num_homework_completed=Count(
+                                           'homework',
+                                           filter=Q(homework__completed=True),
+                                           distinct=True
+                                       ),
+                                       annotated_num_homework_graded=Count(
+                                           'homework',
+                                           filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
+                                           distinct=True
+                                       )
+                                   )
                                    .values('id',
                                            'title',
                                            'color',
                                            'current_grade',
-                                           'trend'))
+                                           'trend',
+                                           'annotated_num_homework',
+                                           'annotated_num_homework_completed',
+                                           'annotated_num_homework_graded')
+                                   .order_by('start_date', 'title'))
         course_group_num_homework = 0
         for course in course_group['courses']:
-            course_db_entity = Course.objects.filter(pk=course['id'])
             course['overall_grade'] = course['current_grade']
-            course['num_homework'] = course_db_entity.num_homework()
+            course['num_homework'] = course['annotated_num_homework']
             course_group_num_homework += course['num_homework']
-            course['num_homework_completed'] = course_db_entity.num_homework_completed()
-            course['num_homework_graded'] = course_db_entity.num_homework_graded()
+            course['num_homework_completed'] = course['annotated_num_homework_completed']
+            course['num_homework_graded'] = course['annotated_num_homework_graded']
             course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
+            # Remove the annotated_ prefixed keys
+            course.pop('annotated_num_homework')
+            course.pop('annotated_num_homework_completed')
+            course.pop('annotated_num_homework_graded')
             course.pop('current_grade')
             course['grade_points'] = get_grade_points_for_course(course['id'])
 
+            # Annotate categories with homework counts to avoid N+1 queries
             course['categories'] = (Category.objects.for_user(user_id)
                                     .for_course(course['id'])
+                                    .annotate(
+                                        annotated_num_homework=Count('homework', distinct=True),
+                                        annotated_num_homework_completed=Count(
+                                            'homework',
+                                            filter=Q(homework__completed=True),
+                                            distinct=True
+                                        ),
+                                        annotated_num_homework_graded=Count(
+                                            'homework',
+                                            filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
+                                            distinct=True
+                                        )
+                                    )
                                     .values('id',
                                             'title',
                                             'weight',
                                             'color',
                                             'average_grade',
                                             'grade_by_weight',
-                                            'trend'))
+                                            'trend',
+                                            'annotated_num_homework',
+                                            'annotated_num_homework_completed',
+                                            'annotated_num_homework_graded')
+                                    .order_by('title'))
 
             category_grade_points = {}
             for grade_point in course['grade_points']:
@@ -149,11 +204,14 @@ def get_grade_data(user_id):
                 category_grade_points[category_id].append(grade_point)
 
             for category in course['categories']:
-                category_db_entity = Category.objects.filter(pk=category['id'])
                 category['overall_grade'] = category['average_grade']
-                category['num_homework'] = category_db_entity.num_homework()
-                category['num_homework_completed'] = category_db_entity.num_homework_completed()
-                category['num_homework_graded'] = category_db_entity.num_homework_graded()
+                category['num_homework'] = category['annotated_num_homework']
+                category['num_homework_completed'] = category['annotated_num_homework_completed']
+                category['num_homework_graded'] = category['annotated_num_homework_graded']
+                # Remove the annotated_ prefixed keys
+                category.pop('annotated_num_homework')
+                category.pop('annotated_num_homework_completed')
+                category.pop('annotated_num_homework_graded')
                 category.pop('average_grade')
                 category['grade_points'] = category_grade_points.get(category['id'], [])
 
