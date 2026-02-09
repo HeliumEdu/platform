@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.75"
+__version__ = "1.18.3"
 
 import datetime
 import json
@@ -225,8 +225,10 @@ def calendar_to_events(external_calendar, _from=None, to=None, search=None):
 def reindex_stale_feed_caches():
     reindexed = []
 
-    for external_calendar in ExternalCalendar.objects.needs_recached(
-            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS)).iterator():
+    for external_calendar in (ExternalCalendar.objects.needs_recached(
+            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS))
+            .select_related('user', 'user__settings')
+            .iterator()):
         cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")

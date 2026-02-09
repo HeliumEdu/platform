@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.18.0"
+__version__ = "1.18.3"
 
 import logging
 
@@ -27,16 +27,19 @@ class CategorySerializer(serializers.ModelSerializer):
             'num_homework_graded',)
 
     def get_num_homework(self, obj):
-        # Use annotated value if available, otherwise fall back to property
-        return getattr(obj, 'annotated_num_homework', obj.num_homework)
+        # Use annotated value if available, otherwise default to 0
+        # (avoids N+1 queries; newly created categories have no homework anyway)
+        return getattr(obj, 'annotated_num_homework', 0)
 
     def get_num_homework_completed(self, obj):
-        # Use annotated value if available, otherwise fall back to property
-        return getattr(obj, 'annotated_num_homework_completed', obj.num_homework_completed)
+        # Use annotated value if available, otherwise default to 0
+        # (avoids N+1 queries; newly created categories have no homework anyway)
+        return getattr(obj, 'annotated_num_homework_completed', 0)
 
     def get_num_homework_graded(self, obj):
-        # Use annotated value if available, otherwise fall back to property
-        return getattr(obj, 'annotated_num_homework_graded', obj.num_homework_graded)
+        # Use annotated value if available, otherwise default to 0
+        # (avoids N+1 queries; newly created categories have no homework anyway)
+        return getattr(obj, 'annotated_num_homework_graded', 0)
 
     def validate_title(self, title):
         """

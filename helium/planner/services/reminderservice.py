@@ -1,6 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.17.59"
+__version__ = "1.18.3"
 
 import logging
 
@@ -38,7 +38,12 @@ def get_subject(reminder):
 def process_email_reminders():
     from helium.planner.tasks import send_email_reminder
 
-    for reminder in Reminder.objects.with_type(enums.EMAIL).unsent().for_today().iterator():
+    for reminder in (Reminder.objects
+                     .with_type(enums.EMAIL)
+                     .unsent()
+                     .for_today()
+                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event')
+                     .iterator()):
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
@@ -78,7 +83,12 @@ def process_email_reminders():
 
 
 def process_text_reminders():
-    for reminder in Reminder.objects.with_type(enums.TEXT).unsent().for_today().iterator():
+    for reminder in (Reminder.objects
+                     .with_type(enums.TEXT)
+                     .unsent()
+                     .for_today()
+                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event')
+                     .iterator()):
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
@@ -109,7 +119,12 @@ def process_text_reminders():
 
 
 def process_push_reminders(mark_sent_only=False):
-    for reminder in Reminder.objects.with_type(enums.PUSH).unsent().for_today().iterator():
+    for reminder in (Reminder.objects
+                     .with_type(enums.PUSH)
+                     .unsent()
+                     .for_today()
+                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event')
+                     .iterator()):
         user = reminder.get_user()
 
         timezone.activate(pytz.timezone(user.settings.time_zone))
