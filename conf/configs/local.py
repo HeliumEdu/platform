@@ -4,7 +4,6 @@ Settings specific to a development environment using Django's `runserver` comman
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.15.15"
 
 import os
 import warnings

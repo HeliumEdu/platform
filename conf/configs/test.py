@@ -4,7 +4,6 @@ Settings specific to running tests, reading values from `.env`.
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
 
 import logging
 import os
