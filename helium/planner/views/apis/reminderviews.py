@@ -30,7 +30,17 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.reminders.all()
+            return user.reminders.all().select_related(
+                'homework__category',
+                'homework__course',
+                'event__user'
+            ).prefetch_related(
+                'homework__attachments',
+                'homework__reminders',
+                'homework__materials',
+                'event__attachments',
+                'event__reminders'
+            )
         else:
             return Reminder.objects.none()
 
@@ -82,7 +92,17 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.reminders.all()
+            return user.reminders.all().select_related(
+                'homework__category',
+                'homework__course',
+                'event__user'
+            ).prefetch_related(
+                'homework__attachments',
+                'homework__reminders',
+                'homework__materials',
+                'event__attachments',
+                'event__reminders'
+            )
         else:
             return Reminder.objects.none()
 

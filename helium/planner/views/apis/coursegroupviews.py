@@ -4,6 +4,7 @@ __version__ = "1.17.19"
 
 import logging
 
+from django.db.models import Count, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
@@ -29,7 +30,11 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.course_groups.all()
+            return user.course_groups.all().annotate(
+                annotated_num_homework=Count('courses__homework', distinct=True),
+                annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True)
+            )
         else:
             return CourseGroup.objects.none()
 
@@ -72,7 +77,11 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.course_groups.all()
+            return user.course_groups.all().annotate(
+                annotated_num_homework=Count('courses__homework', distinct=True),
+                annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True)
+            )
         else:
             return CourseGroup.objects.none()
 
