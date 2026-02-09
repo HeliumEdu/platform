@@ -45,7 +45,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
 @app.task
 def recalculate_course_grade(course_id, retries=0):
     try:
-        course_group_id = Course.objects.get(pk=course_id).course_group.id
+        course_group_id = Course.objects.select_related('course_group').get(pk=course_id).course_group.id
 
         gradingservice.recalculate_course_grade(course_id)
 
@@ -76,7 +76,7 @@ def recalculate_category_grade(category_id, retries=0):
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
-        course_id = Category.objects.get(pk=category_id).course.id
+        course_id = Category.objects.select_related('course').get(pk=category_id).course.id
 
         gradingservice.recalculate_category_grade(category_id)
 
@@ -104,7 +104,10 @@ def recalculate_category_grades_for_course(course_id):
 
 @app.task
 def adjust_reminder_times(calendar_item_id, calendar_item_type):
-    for reminder in Reminder.objects.for_calendar_item(calendar_item_id, calendar_item_type).iterator():
+    for reminder in (Reminder.objects
+                     .for_calendar_item(calendar_item_id, calendar_item_type)
+                     .select_related('homework', 'event')
+                     .iterator()):
         logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
         # Forcing a reminder to save will recalculate its start_of_range, if necessary
@@ -143,7 +146,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
-        reminder = Reminder.objects.get(pk=reminder_id)
+        reminder = Reminder.objects.select_related('user', 'user__settings').get(pk=reminder_id)
     except Reminder.DoesNotExist:
         logger.info(f'Reminder {reminder_id} does not exist. Nothing to do.')
 
