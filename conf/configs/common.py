@@ -41,8 +41,7 @@ PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local'
 
 PROJECT_VERSION = __version__
 
-# Frontend-legacy version pinned for cluster tests (update when frontend-legacy is released)
-FRONTEND_LEGACY_VERSION = "1.17.89"
+FRONTEND_LEGACY_VERSION = "1.18.4"
 
 # AWS S3
 
