@@ -255,7 +255,6 @@ jobs:
       - name: Update Terraform variables
         working-directory: deploy
         run: |
-          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
           VERSION_NUM="${VERSION#v}"
 
           FILE_PATH="terraform/environments/$ENVIRONMENT/variables.tf"
@@ -278,7 +277,6 @@ jobs:
       - name: Commit and push Terraform changes
         working-directory: deploy
         run: |
-          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
           VERSION_NUM="${VERSION#v}"
 
           git add terraform/environments/$ENVIRONMENT/variables.tf
@@ -296,7 +294,6 @@ jobs:
       - name: Trigger Terraform apply
         working-directory: deploy
         run: |
-          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
           VERSION_NUM="${VERSION#v}"
 
           # Get workspace details
@@ -349,7 +346,6 @@ jobs:
 
       - name: Wait for deployment to be live
         run: |
-          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
           VERSION_NUM="${VERSION#v}"
 
           if [ "$ENVIRONMENT" = "prod" ]; then
