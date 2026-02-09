@@ -166,6 +166,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Checkout platform repository
+        uses: actions/checkout@v5
+        with:
+          repository: HeliumEdu/platform
+          ref: ${{ needs.determine-version.outputs.version }}
+          path: platform-repo
+
       - name: Set container environment variables
         env:
           VERSION: ${{ needs.determine-version.outputs.version }}
@@ -176,6 +183,12 @@ jobs:
           echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${TAG}" >> $GITHUB_ENV
           echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${TAG}" >> $GITHUB_ENV
           echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${TAG}" >> $GITHUB_ENV
+
+          # Read frontend-legacy version from platform config (single source of truth)
+          cd platform-repo
+          FRONTEND_LEGACY_VERSION=$(python3 -c "import sys; sys.path.insert(0, '.'); from conf.configs.common import FRONTEND_LEGACY_VERSION; print(FRONTEND_LEGACY_VERSION)")
+          echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
+          cd ..
 
       - name: Install dependencies
         working-directory: deploy
