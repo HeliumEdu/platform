@@ -1,0 +1,383 @@
+name: "Deploy"
+
+run-name: "Deploy ${{ github.event.inputs.version_type == 'latest' && 'latest' || github.event.inputs.specific_version }} to ${{ github.event.inputs.environment }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version to deploy'
+        required: true
+        type: choice
+        default: latest
+        options:
+          - latest
+          - specific
+      specific_version:
+        description: 'Specific version tag (only used if version_type is "specific", (ex: v1.2.3)'
+        required: false
+        type: string
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        default: prod
+        options:
+          - dev
+          - prod
+      run_cluster_tests:
+        description: 'Run cluster tests before deploying'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "helium-platform-deploy-${{inputs.environment}}"
+
+jobs:
+  determine-version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Determine version to deploy
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.version_type }}" = "latest" ]; then
+            # Get the latest version tag (v*.*.*)
+            VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
+
+            if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+              echo "Error: No version tags found in HeliumEdu/platform"
+              exit 1
+            fi
+
+            echo "Using latest version: ${VERSION}"
+          else
+            VERSION="${{ github.event.inputs.specific_version }}"
+
+            if [ -z "$VERSION" ]; then
+              echo "Error: specific_version is required when version_type is 'specific'"
+              exit 1
+            fi
+
+            echo "Using specific version: ${VERSION}"
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+  verify-containers:
+    name: Verify Containers Exist
+    needs: determine-version
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Verify containers exist in ECR
+        env:
+          VERSION: ${{ needs.determine-version.outputs.version }}
+        run: |
+          # Strip 'v' prefix for container tag matching (v1.0.9 -> 1.0.9)
+          TAG="${VERSION#v}"
+
+          echo "Verifying containers exist for version ${TAG}..."
+
+          # Check each container exists
+          for CONTAINER in platform-resource platform-api platform-worker; do
+            echo "Checking ${CONTAINER}:amd64-${TAG}..."
+
+            # Try to describe the image
+            if ! aws ecr-public describe-images \
+              --repository-name "helium/${CONTAINER}" \
+              --image-ids imageTag="amd64-${TAG}" \
+              --region us-east-1 > /dev/null 2>&1; then
+              echo "Error: Container public.ecr.aws/heliumedu/helium/${CONTAINER}:amd64-${TAG} not found"
+              exit 1
+            fi
+
+            echo "✓ ${CONTAINER}:amd64-${TAG} found"
+          done
+
+          echo "All containers verified successfully!"
+
+  test-release:
+    name: Test Release
+    needs: [determine-version, verify-containers]
+    if: ${{ github.event.inputs.run_cluster_tests == 'true' }}
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      PLATFORM_EMAIL_HOST_USER: ${{ secrets.PLATFORM_EMAIL_HOST_USER }}
+      PLATFORM_EMAIL_HOST_PASSWORD: ${{ secrets.PLATFORM_EMAIL_HOST_PASSWORD }}
+      PLATFORM_TWILIO_ACCOUNT_SID: ${{ secrets.PLATFORM_TWILIO_ACCOUNT_SID }}
+      PLATFORM_TWILIO_AUTH_TOKEN: ${{ secrets.PLATFORM_TWILIO_AUTH_TOKEN }}
+      PLATFORM_TWILIO_SMS_FROM: ${{ vars.PLATFORM_TWILIO_SMS_FROM }}
+      CI_AWS_S3_ACCESS_KEY_ID: ${{ secrets.CI_AWS_S3_ACCESS_KEY_ID }}
+      CI_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.CI_AWS_S3_SECRET_ACCESS_KEY }}
+      CI_TWILIO_RECIPIENT_PHONE_NUMBER: ${{ secrets.CI_TWILIO_RECIPIENT_PHONE_NUMBER }}
+
+    steps:
+      - name: Checkout helium monorepo
+        uses: actions/checkout@v5
+        with:
+          repository: HeliumEdu/helium
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          path: helium
+
+      - name: Set up Python "3.12"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install GitHub SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY_GITHUB }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS_GITHUB }}
+          if_key_exists: replace
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set container environment variables
+        env:
+          VERSION: ${{ needs.determine-version.outputs.version }}
+        run: |
+          # Strip 'v' prefix for container tag matching (v1.0.9 -> 1.0.9)
+          TAG="${VERSION#v}"
+
+          echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${TAG}" >> $GITHUB_ENV
+          echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${TAG}" >> $GITHUB_ENV
+          echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${TAG}" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        working-directory: helium
+        run: make install
+
+      - name: Run cluster tests against release build
+        working-directory: helium
+        env:
+          TAG_VERSION: ${{ needs.determine-version.outputs.version }}
+        run: make test-cluster
+
+      - name: Upload test output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cluster-test-output-${{ needs.determine-version.outputs.version }}
+          path: helium/projects/cluster-tests/build/screenshots/
+          retention-days: 30
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    needs: [determine-version, verify-containers, test-release]
+    if: always() && needs.determine-version.result == 'success' && needs.verify-containers.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      VERSION: ${{ needs.determine-version.outputs.version }}
+
+    steps:
+      - name: Checkout deploy repository
+        uses: actions/checkout@v5
+        with:
+          repository: HeliumEdu/deploy
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          path: deploy
+
+      - name: Set up Python "3.12"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup git
+        run: |
+          git config --global user.name "GitHub Release Bot"
+          git config --global user.email "<contact@alexlaird.com>"
+
+      - name: Install dependencies
+        working-directory: deploy
+        run: pip install requests boto3 GitPython heliumcli
+
+      - name: Update Terraform variables
+        working-directory: deploy
+        run: |
+          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
+          VERSION_NUM="${VERSION#v}"
+
+          FILE_PATH="terraform/environments/$ENVIRONMENT/variables.tf"
+
+          # Update the helium_version variable
+          sed -i "s/default     = \".*\"/default     = \"${VERSION_NUM}\"/" "$FILE_PATH"
+
+          echo "Updated $FILE_PATH with version ${VERSION_NUM}"
+          cat "$FILE_PATH" | head -5
+
+      - name: Commit and push Terraform changes
+        working-directory: deploy
+        run: |
+          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
+          VERSION_NUM="${VERSION#v}"
+
+          git add terraform/environments/$ENVIRONMENT/variables.tf
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Deploy platform ${VERSION_NUM} to ${ENVIRONMENT}"
+
+            # Create and push tag
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin main "$VERSION"
+          fi
+
+      - name: Trigger Terraform apply
+        working-directory: deploy
+        run: |
+          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
+          VERSION_NUM="${VERSION#v}"
+
+          # Get workspace details
+          WORKSPACE_RESPONSE=$(curl -s -X GET \
+            "https://app.terraform.io/api/v2/organizations/HeliumEdu/workspaces/${ENVIRONMENT}" \
+            -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
+            -H "Content-Type: application/vnd.api+json")
+
+          WORKSPACE_ID=$(echo "$WORKSPACE_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['id'])")
+          echo "Workspace ID: $WORKSPACE_ID"
+
+          # Wait for and find the triggered plan
+          echo "Waiting for Terraform plan to be created..."
+          for i in {1..18}; do
+            sleep 10
+
+            RUNS_RESPONSE=$(curl -s -X GET \
+              "https://app.terraform.io/api/v2/workspaces/${WORKSPACE_ID}/runs" \
+              -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
+              -H "Content-Type: application/vnd.api+json")
+
+            # Find the plan for our commit
+            RUN_ID=$(echo "$RUNS_RESPONSE" | python3 -c "
+          import sys, json
+          runs = json.load(sys.stdin)
+          for run in runs.get('data', []):
+              if run['attributes']['status'] == 'planned':
+                  print(run['id'])
+                  break
+          ")
+
+            if [ -n "$RUN_ID" ]; then
+              echo "Found planned run: $RUN_ID"
+              break
+            fi
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "Error: No planned run found within timeout"
+            exit 1
+          fi
+
+          # Apply the plan
+          echo "Applying Terraform plan..."
+          curl -X POST \
+            "https://app.terraform.io/api/v2/runs/${RUN_ID}/actions/apply" \
+            -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
+            -H "Content-Type: application/vnd.api+json" \
+            -d '{"comment": "[platform] Apply '"${VERSION_NUM}"'"}'
+
+      - name: Wait for deployment to be live
+        run: |
+          # Strip 'v' prefix for version (v1.0.9 -> 1.0.9)
+          VERSION_NUM="${VERSION#v}"
+
+          if [ "$ENVIRONMENT" = "prod" ]; then
+            INFO_URI="https://api.heliumedu.com/info"
+          else
+            INFO_URI="https://api.${ENVIRONMENT}.heliumedu.com/info"
+          fi
+
+          echo "Waiting for ${INFO_URI} to report version ${VERSION_NUM}..."
+
+          for i in {1..30}; do
+            sleep 20
+
+            RESPONSE=$(curl -s "$INFO_URI" || echo '{}')
+            CURRENT_VERSION=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('version', 'unknown'))" 2>/dev/null || echo "unknown")
+
+            echo "Current version: $CURRENT_VERSION (waiting for $VERSION_NUM)"
+
+            if [ "$CURRENT_VERSION" = "$VERSION_NUM" ]; then
+              echo "✓ Version ${VERSION_NUM} is now live in ${ENVIRONMENT}!"
+              exit 0
+            fi
+          done
+
+          echo "Error: Deployment did not complete within timeout"
+          exit 1
+
+      - name: Notify Sentry of deploy
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: helium-edu
+          SENTRY_PROJECT: "4510851407413248"
+        with:
+          environment: ${{ github.event.inputs.environment }}
+          version: ${{ needs.determine-version.outputs.version }}
+
+      - name: Deployment summary
+        env:
+          VERSION: ${{ needs.determine-version.outputs.version }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: |
+          if [ "$ENVIRONMENT" = "prod" ]; then
+            URL="https://api.heliumedu.com"
+          else
+            URL="https://api.${ENVIRONMENT}.heliumedu.com"
+          fi
+
+          echo "### Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${ENVIRONMENT}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API URL**: ${URL}" >> $GITHUB_STEP_SUMMARY
