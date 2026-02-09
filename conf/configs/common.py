@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "1.18.4"
+__version__ = "1.18.6"
 
 import os
 import socket
@@ -40,6 +40,8 @@ PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local'
 # Version information
 
 PROJECT_VERSION = __version__
+
+FRONTEND_LEGACY_VERSION = "1.18.4"
 
 # AWS S3
 

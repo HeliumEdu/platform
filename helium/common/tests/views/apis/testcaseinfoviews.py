@@ -1,6 +1,5 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.55"
 
 from django.conf import settings
 from django.urls import reverse

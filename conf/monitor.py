@@ -4,7 +4,6 @@ Detects changes and restarts the WSGI daemon process. Should only be used in dev
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
-__version__ = "1.11.54"
 
 import atexit
 import os
