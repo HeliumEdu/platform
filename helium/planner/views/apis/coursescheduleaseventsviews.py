@@ -44,7 +44,8 @@ class UserCourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
     def list(self, request, *arg, **kwargs):
         user = self.request.user
         courses = (Course.objects
-                   .for_user(user.pk))
+                   .for_user(user.pk)
+                   .select_related('course_group', 'course_group__user', 'course_group__user__settings'))
         if 'shown_on_calendar' in request.query_params:
             courses = courses.filter(course_group__shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
         course_schedules = (CourseSchedule.objects
@@ -96,7 +97,10 @@ class CourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
     def list(self, request, *arg, **kwargs):
         user = self.request.user
         try:
-            course = Course.objects.for_user(user.pk).get(pk=self.kwargs['course'])
+            course = (Course.objects
+                      .for_user(user.pk)
+                      .select_related('course_group', 'course_group__user', 'course_group__user__settings')
+                      .get(pk=self.kwargs['course']))
             course_schedules = CourseSchedule.objects.for_user(user.pk).for_course(course.pk)
 
             _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
