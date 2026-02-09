@@ -114,7 +114,8 @@ def get_grade_data(user_id):
                              'trend',
                              'annotated_num_homework',
                              'annotated_num_homework_completed',
-                             'annotated_num_homework_graded'))
+                             'annotated_num_homework_graded')
+                     .order_by('start_date', 'title'))
 
     for course_group in course_groups:
         course_group['num_homework'] = course_group['annotated_num_homework']
@@ -149,7 +150,8 @@ def get_grade_data(user_id):
                                            'trend',
                                            'annotated_num_homework',
                                            'annotated_num_homework_completed',
-                                           'annotated_num_homework_graded'))
+                                           'annotated_num_homework_graded')
+                                   .order_by('start_date', 'title'))
         course_group_num_homework = 0
         for course in course_group['courses']:
             course['overall_grade'] = course['current_grade']
@@ -190,7 +192,8 @@ def get_grade_data(user_id):
                                             'trend',
                                             'annotated_num_homework',
                                             'annotated_num_homework_completed',
-                                            'annotated_num_homework_graded'))
+                                            'annotated_num_homework_graded')
+                                    .order_by('title'))
 
             category_grade_points = {}
             for grade_point in course['grade_points']:
