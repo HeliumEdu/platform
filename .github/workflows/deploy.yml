@@ -260,11 +260,20 @@ jobs:
 
           FILE_PATH="terraform/environments/$ENVIRONMENT/variables.tf"
 
-          # Update the helium_version variable
-          sed -i "s/default     = \".*\"/default     = \"${VERSION_NUM}\"/" "$FILE_PATH"
+          # Update ONLY the helium_version variable's default value
+          # This finds the helium_version variable block and updates only its default
+          awk -v version="$VERSION_NUM" '
+            /^variable "helium_version"/ { in_block=1 }
+            in_block && /default/ {
+              sub(/default[[:space:]]*=[[:space:]]*"[^"]*"/, "default     = \"" version "\"")
+              in_block=0
+            }
+            { print }
+          ' "$FILE_PATH" > "$FILE_PATH.tmp" && mv "$FILE_PATH.tmp" "$FILE_PATH"
 
           echo "Updated $FILE_PATH with version ${VERSION_NUM}"
-          cat "$FILE_PATH" | head -5
+          echo "helium_version variable:"
+          grep -A 2 'variable "helium_version"' "$FILE_PATH"
 
       - name: Commit and push Terraform changes
         working-directory: deploy
