@@ -43,6 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      version_number: ${{ steps.version.outputs.version_number }}
 
     steps:
       - name: Determine version to deploy
@@ -51,7 +52,6 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.version_type }}" = "latest" ]; then
-            # Get the latest version tag (v*.*.*)
             VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
 
             if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
@@ -71,55 +71,15 @@ jobs:
             echo "Using specific version: ${VERSION}"
           fi
 
+          # Strip 'v' prefix for version number
+          VERSION_NUMBER="${VERSION#v}"
+
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-  verify-containers:
-    name: Verify Containers Exist
-    needs: determine-version
-    runs-on: ubuntu-latest
-
-    env:
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Verify containers exist in ECR
-        env:
-          VERSION: ${{ needs.determine-version.outputs.version }}
-        run: |
-          TAG="${VERSION#v}"
-
-          echo "Verifying containers exist for version ${TAG}..."
-
-          # Check each container exists
-          for CONTAINER in platform-resource platform-api platform-worker; do
-            echo "Checking ${CONTAINER}:amd64-${TAG}..."
-
-            # Try to describe the image
-            if ! aws ecr-public describe-images \
-              --repository-name "helium/${CONTAINER}" \
-              --image-ids imageTag="amd64-${TAG}" \
-              --region us-east-1 > /dev/null 2>&1; then
-              echo "Error: Container public.ecr.aws/heliumedu/helium/${CONTAINER}:amd64-${TAG} not found"
-              exit 1
-            fi
-
-            echo "✓ ${CONTAINER}:amd64-${TAG} found"
-          done
-
-          echo "All containers verified successfully!"
+          echo "version_number=${VERSION_NUMBER}" >> $GITHUB_OUTPUT
 
   test-release:
     name: Test Release
-    needs: [determine-version, verify-containers]
+    needs: [determine-version]
     if: ${{ github.event.inputs.run_cluster_tests == 'true' }}
     runs-on: ubuntu-latest
 
@@ -174,13 +134,11 @@ jobs:
 
       - name: Set container environment variables
         env:
-          VERSION: ${{ needs.determine-version.outputs.version }}
+          VERSION_NUMBER: ${{ needs.determine-version.outputs.version_number }}
         run: |
-          TAG="${VERSION#v}"
-
-          echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${TAG}" >> $GITHUB_ENV
-          echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${TAG}" >> $GITHUB_ENV
-          echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${TAG}" >> $GITHUB_ENV
+          echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
+          echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
+          echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
 
           # Read frontend-legacy version from platform config (single source of truth)
           cd platform-repo
@@ -212,23 +170,21 @@ jobs:
 
   deploy:
     name: Deploy to ${{ github.event.inputs.environment }}
-    needs: [determine-version, verify-containers, test-release]
-    if: always() && needs.determine-version.result == 'success' && needs.verify-containers.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')
+    needs: [determine-version, test-release]
+    if: always() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')
     runs-on: ubuntu-latest
 
     env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
-      GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       ENVIRONMENT: ${{ github.event.inputs.environment }}
-      VERSION: ${{ needs.determine-version.outputs.version }}
+      VERSION_NUMBER: ${{ needs.determine-version.outputs.version_number }}
 
     steps:
+      - name: Checkout platform repository
+        uses: actions/checkout@v5
+
       - name: Checkout deploy repository
         uses: actions/checkout@v5
         with:
@@ -247,195 +203,14 @@ jobs:
           git config --global user.email "<contact@alexlaird.com>"
 
       - name: Install dependencies
-        working-directory: deploy
-        run: pip install requests boto3 GitPython
+        run: pip install requests GitPython boto3
 
-      - name: Update Terraform variables
-        working-directory: deploy
+      - name: Run deployment script
         run: |
-          VERSION_NUM="${VERSION#v}"
-
-          FILE_PATH="terraform/environments/$ENVIRONMENT/variables.tf"
-
-          # Update ONLY the helium_version variable's default value
-          # This finds the helium_version variable block and updates only its default
-          awk -v version="$VERSION_NUM" '
-            /^variable "helium_version"/ { in_block=1 }
-            in_block && /default/ {
-              sub(/default[[:space:]]*=[[:space:]]*"[^"]*"/, "default     = \"" version "\"")
-              in_block=0
-            }
-            { print }
-          ' "$FILE_PATH" > "$FILE_PATH.tmp" && mv "$FILE_PATH.tmp" "$FILE_PATH"
-
-          echo "Updated $FILE_PATH with version ${VERSION_NUM}"
-          echo "helium_version variable:"
-          grep -A 2 'variable "helium_version"' "$FILE_PATH"
-
-      - name: Commit and push Terraform changes
-        working-directory: deploy
-        run: |
-          VERSION_NUM="${VERSION#v}"
-
-          git add terraform/environments/$ENVIRONMENT/variables.tf
-
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Deploy platform ${VERSION_NUM} to ${ENVIRONMENT}"
-
-            # Create and push tag
-            git tag -a "$VERSION" -m "Release $VERSION"
-            git push origin main "$VERSION"
-          fi
-
-      - name: Trigger Terraform apply
-        working-directory: deploy
-        run: |
-          VERSION_NUM="${VERSION#v}"
-          export VERSION_NUM
-
-          # Get workspace details
-          WORKSPACE_RESPONSE=$(curl -s -X GET \
-            "https://app.terraform.io/api/v2/organizations/HeliumEdu/workspaces/${ENVIRONMENT}" \
-            -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
-            -H "Content-Type: application/vnd.api+json")
-
-          WORKSPACE_ID=$(echo "$WORKSPACE_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['id'])")
-          echo "Workspace ID: $WORKSPACE_ID"
-
-          # Wait for and find the [platform] Terraform run, discard competing runs
-          echo "Waiting for [platform] Terraform plan for version ${VERSION_NUM}..."
-          PLATFORM_RUN=""
-          for i in {1..36}; do
-            sleep 10
-
-            RUNS_RESPONSE=$(curl -s -X GET \
-              "https://app.terraform.io/api/v2/workspaces/${WORKSPACE_ID}/runs" \
-              -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
-              -H "Content-Type: application/vnd.api+json")
-
-            # Discard all planned/pending runs that are not from [platform] for this version
-            echo "$RUNS_RESPONSE" | python3 << 'PYTHON_SCRIPT'
-          import sys, json, os, requests
-
-          TERRAFORM_API_TOKEN = os.environ['TERRAFORM_API_TOKEN']
-          VERSION_NUM = os.environ['VERSION_NUM']
-
-          runs = json.load(sys.stdin)
-          for run in runs.get('data', []):
-              run_id = run['id']
-              status = run['attributes']['status']
-              message = run['attributes'].get('message', '')
-
-              # Discard non-[platform] planned/pending runs or wrong version
-              if status in ['planned', 'pending'] and \
-                 (not message.startswith('[platform]') or VERSION_NUM not in message):
-
-                  actions = run['attributes'].get('actions', {})
-                  reject_endpoint = 'cancel' if actions.get('is-cancelable') else 'discard'
-
-                  print(f"Discarding run {run_id}: {message}", file=sys.stderr)
-                  resp = requests.post(
-                      f"https://app.terraform.io/api/v2/runs/{run_id}/actions/{reject_endpoint}",
-                      headers={
-                          "Authorization": f"Bearer {TERRAFORM_API_TOKEN}",
-                          "Content-Type": "application/vnd.api+json"
-                      },
-                      json={"comment": "Discarding in favor of official [platform] release"}
-                  )
-                  if resp.status_code not in [200, 202]:
-                      print(f"Failed to discard run {run_id}: {resp.status_code}", file=sys.stderr)
-          PYTHON_SCRIPT
-
-            # Find our [platform] run for this version
-            RUN_ID=$(echo "$RUNS_RESPONSE" | python3 -c "
-          import sys, json
-          VERSION_NUM = '${VERSION_NUM}'
-          runs = json.load(sys.stdin)
-          for run in runs.get('data', []):
-              status = run['attributes']['status']
-              message = run['attributes'].get('message', '')
-              if status == 'planned' and message.startswith('[platform]') and VERSION_NUM in message:
-                  print(run['id'])
-                  break
-          ")
-
-            if [ -n "$RUN_ID" ]; then
-              echo "Found [platform] run $RUN_ID for version ${VERSION_NUM}"
-              break
-            fi
-          done
-
-          if [ -z "$RUN_ID" ]; then
-            echo "Error: No [platform] planned run found within timeout (6 minutes)"
-            exit 1
-          fi
-
-          # Apply the plan
-          echo "Applying Terraform plan $RUN_ID..."
-          APPLY_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
-            "https://app.terraform.io/api/v2/runs/${RUN_ID}/actions/apply" \
-            -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
-            -H "Content-Type: application/vnd.api+json" \
-            -d "{\"comment\": \"[platform] Apply ${VERSION_NUM}\"}")
-
-          HTTP_CODE=$(echo "$APPLY_RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
-          RESPONSE_BODY=$(echo "$APPLY_RESPONSE" | sed '/HTTP_CODE:/d')
-
-          if [ "$HTTP_CODE" != "202" ]; then
-            echo "Error: Apply failed with HTTP $HTTP_CODE"
-            echo "Response: $RESPONSE_BODY"
-            exit 1
-          fi
-
-          echo "Apply triggered successfully"
-
-      - name: Wait for deployment to be live
-        run: |
-          VERSION_NUM="${VERSION#v}"
-
-          if [ "$ENVIRONMENT" = "prod" ]; then
-            INFO_URI="https://api.heliumedu.com/info"
-          else
-            INFO_URI="https://api.${ENVIRONMENT}.heliumedu.com/info"
-          fi
-
-          echo "Waiting for ${INFO_URI} to report version ${VERSION_NUM}..."
-
-          for i in {1..30}; do
-            sleep 20
-
-            # Fetch the /info endpoint
-            RESPONSE=$(curl -s -f "$INFO_URI" 2>&1)
-            CURL_EXIT=$?
-
-            if [ $CURL_EXIT -ne 0 ]; then
-              echo "API not responding yet (curl exit code: $CURL_EXIT)"
-              continue
-            fi
-
-            # Parse version from JSON response
-            CURRENT_VERSION=$(echo "$RESPONSE" | python3 -c "
-          import sys, json
-          try:
-              data = json.load(sys.stdin)
-              print(data.get('version', 'unknown'))
-          except Exception as e:
-              print(f'parse-error: {e}', file=sys.stderr)
-              print('unknown')
-          " 2>&1)
-
-            echo "Current version: $CURRENT_VERSION (waiting for $VERSION_NUM)"
-
-            if [ "$CURRENT_VERSION" = "$VERSION_NUM" ]; then
-              echo "✓ Version ${VERSION_NUM} is now live in ${ENVIRONMENT}!"
-              exit 0
-            fi
-          done
-
-          echo "Error: Deployment did not complete within timeout"
-          exit 1
+          ./bin/deploy-release.py \
+            "$VERSION_NUMBER" \
+            "$ENVIRONMENT" \
+            --deploy-repo ./deploy
 
       - name: Notify Sentry of deploy
         uses: getsentry/action-release@v1
