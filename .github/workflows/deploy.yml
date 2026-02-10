@@ -95,7 +95,6 @@ jobs:
         env:
           VERSION: ${{ needs.determine-version.outputs.version }}
         run: |
-          # Strip 'v' prefix for container tag matching (v1.0.9 -> 1.0.9)
           TAG="${VERSION#v}"
 
           echo "Verifying containers exist for version ${TAG}..."
@@ -177,7 +176,6 @@ jobs:
         env:
           VERSION: ${{ needs.determine-version.outputs.version }}
         run: |
-          # Strip 'v' prefix for container tag matching (v1.0.9 -> 1.0.9)
           TAG="${VERSION#v}"
 
           echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${TAG}" >> $GITHUB_ENV
@@ -305,9 +303,10 @@ jobs:
           WORKSPACE_ID=$(echo "$WORKSPACE_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['id'])")
           echo "Workspace ID: $WORKSPACE_ID"
 
-          # Wait for and find the triggered plan
-          echo "Waiting for Terraform plan to be created..."
-          for i in {1..18}; do
+          # Wait for and find the [platform] Terraform run, discard competing runs
+          echo "Waiting for [platform] Terraform plan for version ${VERSION_NUM}..."
+          PLATFORM_RUN=""
+          for i in {1..36}; do
             sleep 10
 
             RUNS_RESPONSE=$(curl -s -X GET \
@@ -315,34 +314,81 @@ jobs:
               -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
               -H "Content-Type: application/vnd.api+json")
 
-            # Find the plan for our commit
-            RUN_ID=$(echo "$RUNS_RESPONSE" | python3 -c "
-          import sys, json
+            # Discard all planned/pending runs that are not from [platform] for this version
+            echo "$RUNS_RESPONSE" | python3 << 'PYTHON_SCRIPT'
+          import sys, json, os, requests
+
+          TERRAFORM_API_TOKEN = os.environ['TERRAFORM_API_TOKEN']
+          VERSION_NUM = os.environ['VERSION_NUM']
+
           runs = json.load(sys.stdin)
           for run in runs.get('data', []):
-              if run['attributes']['status'] == 'planned':
+              run_id = run['id']
+              status = run['attributes']['status']
+              message = run['attributes'].get('message', '')
+
+              # Discard non-[platform] planned/pending runs or wrong version
+              if status in ['planned', 'pending'] and \
+                 (not message.startswith('[platform]') or VERSION_NUM not in message):
+
+                  actions = run['attributes'].get('actions', {})
+                  reject_endpoint = 'cancel' if actions.get('is-cancelable') else 'discard'
+
+                  print(f"Discarding run {run_id}: {message}", file=sys.stderr)
+                  resp = requests.post(
+                      f"https://app.terraform.io/api/v2/runs/{run_id}/actions/{reject_endpoint}",
+                      headers={
+                          "Authorization": f"Bearer {TERRAFORM_API_TOKEN}",
+                          "Content-Type": "application/vnd.api+json"
+                      },
+                      json={"comment": "Discarding in favor of official [platform] release"}
+                  )
+                  if resp.status_code not in [200, 202]:
+                      print(f"Failed to discard run {run_id}: {resp.status_code}", file=sys.stderr)
+          PYTHON_SCRIPT
+
+            # Find our [platform] run for this version
+            RUN_ID=$(echo "$RUNS_RESPONSE" | python3 -c "
+          import sys, json
+          VERSION_NUM = '${VERSION_NUM}'
+          runs = json.load(sys.stdin)
+          for run in runs.get('data', []):
+              status = run['attributes']['status']
+              message = run['attributes'].get('message', '')
+              if status == 'planned' and message.startswith('[platform]') and VERSION_NUM in message:
                   print(run['id'])
                   break
           ")
 
             if [ -n "$RUN_ID" ]; then
-              echo "Found planned run: $RUN_ID"
+              echo "Found [platform] run $RUN_ID for version ${VERSION_NUM}"
               break
             fi
           done
 
           if [ -z "$RUN_ID" ]; then
-            echo "Error: No planned run found within timeout"
+            echo "Error: No [platform] planned run found within timeout (6 minutes)"
             exit 1
           fi
 
           # Apply the plan
-          echo "Applying Terraform plan..."
-          curl -X POST \
+          echo "Applying Terraform plan $RUN_ID..."
+          APPLY_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
             "https://app.terraform.io/api/v2/runs/${RUN_ID}/actions/apply" \
             -H "Authorization: Bearer ${TERRAFORM_API_TOKEN}" \
             -H "Content-Type: application/vnd.api+json" \
-            -d '{"comment": "[platform] Apply '"${VERSION_NUM}"'"}'
+            -d "{\"comment\": \"[platform] Apply ${VERSION_NUM}\"}")
+
+          HTTP_CODE=$(echo "$APPLY_RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+          RESPONSE_BODY=$(echo "$APPLY_RESPONSE" | sed '/HTTP_CODE:/d')
+
+          if [ "$HTTP_CODE" != "202" ]; then
+            echo "Error: Apply failed with HTTP $HTTP_CODE"
+            echo "Response: $RESPONSE_BODY"
+            exit 1
+          fi
+
+          echo "Apply triggered successfully"
 
       - name: Wait for deployment to be live
         run: |
@@ -359,8 +405,25 @@ jobs:
           for i in {1..30}; do
             sleep 20
 
-            RESPONSE=$(curl -s "$INFO_URI" || echo '{}')
-            CURRENT_VERSION=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('version', 'unknown'))" 2>/dev/null || echo "unknown")
+            # Fetch the /info endpoint
+            RESPONSE=$(curl -s -f "$INFO_URI" 2>&1)
+            CURL_EXIT=$?
+
+            if [ $CURL_EXIT -ne 0 ]; then
+              echo "API not responding yet (curl exit code: $CURL_EXIT)"
+              continue
+            fi
+
+            # Parse version from JSON response
+            CURRENT_VERSION=$(echo "$RESPONSE" | python3 -c "
+          import sys, json
+          try:
+              data = json.load(sys.stdin)
+              print(data.get('version', 'unknown'))
+          except Exception as e:
+              print(f'parse-error: {e}', file=sys.stderr)
+              print('unknown')
+          " 2>&1)
 
             echo "Current version: $CURRENT_VERSION (waiting for $VERSION_NUM)"
 
