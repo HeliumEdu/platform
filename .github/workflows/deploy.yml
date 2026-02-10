@@ -188,11 +188,17 @@ jobs:
       - name: Checkout platform repository
         uses: actions/checkout@v5
 
+      - name: Install GitHub SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY_GITHUB }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS_GITHUB }}
+          if_key_exists: replace
+
       - name: Checkout deploy repository
         uses: actions/checkout@v5
         with:
           repository: HeliumEdu/deploy
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: deploy
 
       - name: Set up Python "3.12"
@@ -207,13 +213,14 @@ jobs:
           cd deploy
           git config user.name "GitHub Release Bot"
           git config user.email "<contact@alexlaird.com>"
+          git remote set-url origin git@github.com:HeliumEdu/deploy.git
 
       - name: Install dependencies
         run: pip install requests GitPython boto3
 
       - name: Run deployment script
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           ./bin/deploy-release.py \
             "$VERSION_NUMBER" \

@@ -114,9 +114,8 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     print(f"\nCommitting and pushing changes...")
 
     repo = Repo(deploy_repo_path)
-
-    # Pull latest changes first to avoid conflicts
     origin = repo.remote('origin')
+
     print(f"Remote 'origin' URL: {origin.url}")
     print("Pulling latest changes from origin...")
     origin.pull('main')
