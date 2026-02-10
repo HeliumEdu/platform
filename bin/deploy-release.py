@@ -114,11 +114,23 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     print(f"\nCommitting and pushing changes...")
 
     repo = Repo(deploy_repo_path)
-
-    # Pull latest changes first to avoid conflicts
     origin = repo.remote('origin')
+
+    print(f"Remote 'origin' URL: {origin.url}")
     print("Pulling latest changes from origin...")
-    origin.pull('main')
+
+    # Use subprocess to run git pull directly
+    result = subprocess.run(
+        ["git", "pull", "origin", "main"],
+        cwd=deploy_repo_path,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print(f"Warning: Pull had issues but continuing...")
+        print(f"  stdout: {result.stdout}")
+        print(f"  stderr: {result.stderr}")
 
     # Check if there are changes
     if not repo.is_dirty(untracked_files=False):
@@ -138,14 +150,41 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     if tag_name not in repo.tags:
         repo.create_tag(tag_name, message=f"Release {tag_name}")
 
-    # Push
+    # Push using git command directly for better error handling
     try:
         print("Pushing to origin...")
-        origin.push('main')
-        origin.push(tag_name)
+
+        # Use subprocess to run git push directly
+        result = subprocess.run(
+            ["git", "push", "origin", "main"],
+            cwd=deploy_repo_path,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            print(f"✗ Push failed:")
+            print(f"  stdout: {result.stdout}")
+            print(f"  stderr: {result.stderr}")
+            return (False, False)
+
+        # Push tag
+        result = subprocess.run(
+            ["git", "push", "origin", tag_name],
+            cwd=deploy_repo_path,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            print(f"✗ Tag push failed:")
+            print(f"  stdout: {result.stdout}")
+            print(f"  stderr: {result.stderr}")
+            return (False, False)
+
         print(f"✓ Committed and pushed: {commit_message}")
     except Exception as e:
-        print(f"✗ Push failed: {e}")
+        print(f"✗ Push failed with exception: {e}")
         return (False, False)
 
     return (True, True)  # Success with changes pushed

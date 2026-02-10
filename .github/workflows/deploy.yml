@@ -194,6 +194,7 @@ jobs:
           repository: HeliumEdu/deploy
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: deploy
+          fetch-depth: 0
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
@@ -203,12 +204,17 @@ jobs:
       - name: Setup git
         run: |
           git config --global user.name "GitHub Release Bot"
-          git config --global user.email "<contact@alexlaird.com>"
+          git config --global user.email "contact@alexlaird.com"
+          cd deploy
+          git config user.name "GitHub Release Bot"
+          git config user.email "contact@alexlaird.com"
 
       - name: Install dependencies
         run: pip install requests GitPython boto3
 
       - name: Run deployment script
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           ./bin/deploy-release.py \
             "$VERSION_NUMBER" \
