@@ -135,6 +135,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.bump-version.outputs.commit_sha }}
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
