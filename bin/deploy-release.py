@@ -103,7 +103,14 @@ def update_terraform_variables(deploy_repo_path, environment, version):
 
 
 def commit_and_push_changes(deploy_repo_path, version, environment):
-    """Commit and push Terraform changes."""
+    """Commit and push Terraform changes.
+
+    Returns:
+        tuple: (success: bool, changes_pushed: bool)
+            - (True, True) if changes were pushed successfully
+            - (True, False) if no changes needed (already up to date)
+            - (False, False) if an error occurred
+    """
     print(f"\nCommitting and pushing changes...")
 
     repo = Repo(deploy_repo_path)
@@ -115,8 +122,8 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
     # Check if there are changes
     if not repo.is_dirty(untracked_files=False):
-        print("No changes to commit")
-        return True
+        print("✓ No changes to commit - version already deployed")
+        return (True, False)  # Success, but no changes
 
     # Stage the variables file
     variables_file = f"terraform/environments/{environment}/variables.tf"
@@ -139,9 +146,9 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
         print(f"✓ Committed and pushed: {commit_message}")
     except Exception as e:
         print(f"✗ Push failed: {e}")
-        return False
+        return (False, False)
 
-    return True
+    return (True, True)  # Success with changes pushed
 
 
 def find_and_apply_terraform_run(environment, version, terraform_token, timeout_minutes=6):
@@ -280,6 +287,10 @@ def main():
 
     args = parser.parse_args()
 
+    print(f"Starting deployment of version {args.version} to {args.environment}...")
+    print(f"Deploy repo: {args.deploy_repo}")
+    print(f"Skip verify: {args.skip_verify}, Skip wait: {args.skip_wait}\n")
+
     # Get required environment variables
     terraform_token = os.environ.get('TERRAFORM_API_TOKEN')
     if not terraform_token:
@@ -296,12 +307,16 @@ def main():
         return 1
 
     # Commit and push
-    if not commit_and_push_changes(args.deploy_repo, args.version, args.environment):
+    success, changes_pushed = commit_and_push_changes(args.deploy_repo, args.version, args.environment)
+    if not success:
         return 1
 
-    # Find and apply Terraform run
-    if not find_and_apply_terraform_run(args.environment, args.version, terraform_token):
-        return 1
+    # Find and apply Terraform run (only if changes were pushed)
+    if changes_pushed:
+        if not find_and_apply_terraform_run(args.environment, args.version, terraform_token):
+            return 1
+    else:
+        print("\nSkipping Terraform apply - no changes were pushed")
 
     # Wait for deployment
     if not args.skip_wait:
