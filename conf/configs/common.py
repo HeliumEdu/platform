@@ -211,7 +211,7 @@ REST_FRAMEWORK = {
 }
 
 #ACCESS_TOKEN_TTL_MINUTES = int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))
-# TODO: this is a temporary increase until we fix the frontend issue causing sporadic forced logouts
+# TODO: this is a temporary increase until frontend-legacy is fully shutdown, then we can reduce this down 16
 ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
 ACCESS_TOKEN_TTL_DAYS = int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))
 
