@@ -20,9 +20,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 INSTALLED_APPS = common.INSTALLED_APPS
 
-MIDDLEWARE = common.MIDDLEWARE + (
-    'helium.common.middleware.exceptionlogging.HeliumSentryMiddleware',
-)
+MIDDLEWARE = common.MIDDLEWARE
 
 TEMPLATES = common.TEMPLATES
 
@@ -71,6 +69,14 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+def before_send(event, hint):
+    """Filter out errors from the /status endpoint"""
+    if 'request' in event and 'url' in event['request']:
+        url = event['request']['url']
+        if '/status' in url:
+            return None
+    return event
+
 sentry_sdk.init(
     dsn=config('PLATFORM_SENTRY_DSN'),
     integrations=[
@@ -84,6 +90,7 @@ sentry_sdk.init(
     release=PROJECT_VERSION,
     send_default_pii=True,
     traces_sample_rate=0.1,
+    before_send=before_send,
 )
 
 if not common.DEBUG:

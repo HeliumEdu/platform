@@ -109,7 +109,7 @@ def homework_to_private_ical_feed(user):
     try:
         calendar = _create_calendar(user)
 
-        for homework in Homework.objects.for_user(user.pk).iterator():
+        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('materials'):
             calendar_event = icalendar.Event()
             calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
             calendar_event["SUMMARY"] = homework.title
@@ -144,7 +144,7 @@ def courseschedules_to_private_ical_feed(user):
     calendar = _create_calendar(user)
 
     events = []
-    for course in Course.objects.for_user(user.pk).iterator():
+    for course in Course.objects.for_user(user.pk).select_related('course_group', 'course_group__user', 'course_group__user__settings'):
         events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
