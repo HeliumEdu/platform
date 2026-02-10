@@ -118,7 +118,19 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
     print(f"Remote 'origin' URL: {origin.url}")
     print("Pulling latest changes from origin...")
-    origin.pull('main')
+
+    # Use subprocess to run git pull directly
+    result = subprocess.run(
+        ["git", "pull", "origin", "main"],
+        cwd=deploy_repo_path,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print(f"Warning: Pull had issues but continuing...")
+        print(f"  stdout: {result.stdout}")
+        print(f"  stderr: {result.stderr}")
 
     # Check if there are changes
     if not repo.is_dirty(untracked_files=False):
@@ -138,29 +150,37 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     if tag_name not in repo.tags:
         repo.create_tag(tag_name, message=f"Release {tag_name}")
 
-    # Push
+    # Push using git command directly for better error handling
     try:
         print("Pushing to origin...")
 
-        # Push main branch
-        push_info = origin.push('main')
-        for info in push_info:
-            if info.flags & info.ERROR:
-                print(f"✗ Push failed: {info.summary}")
-                return (False, False)
-            if info.flags & info.REJECTED:
-                print(f"✗ Push rejected: {info.summary}")
-                return (False, False)
+        # Use subprocess to run git push directly
+        result = subprocess.run(
+            ["git", "push", "origin", "main"],
+            cwd=deploy_repo_path,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            print(f"✗ Push failed:")
+            print(f"  stdout: {result.stdout}")
+            print(f"  stderr: {result.stderr}")
+            return (False, False)
 
         # Push tag
-        tag_push_info = origin.push(tag_name)
-        for info in tag_push_info:
-            if info.flags & info.ERROR:
-                print(f"✗ Tag push failed: {info.summary}")
-                return (False, False)
-            if info.flags & info.REJECTED:
-                print(f"✗ Tag push rejected: {info.summary}")
-                return (False, False)
+        result = subprocess.run(
+            ["git", "push", "origin", tag_name],
+            cwd=deploy_repo_path,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            print(f"✗ Tag push failed:")
+            print(f"  stdout: {result.stdout}")
+            print(f"  stderr: {result.stderr}")
+            return (False, False)
 
         print(f"✓ Committed and pushed: {commit_message}")
     except Exception as e:
