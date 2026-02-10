@@ -77,6 +77,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "version_number=${VERSION_NUMBER}" >> $GITHUB_OUTPUT
 
+  # TODO: this can be removed once we fully shut down frontend-legacy
   test-release:
     name: Test Release
     needs: [determine-version]
@@ -140,7 +141,6 @@ jobs:
           echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
           echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
 
-          # Read frontend-legacy version from platform config (single source of truth)
           cd platform-repo
           FRONTEND_LEGACY_VERSION=$(grep '^FRONTEND_LEGACY_VERSION = ' conf/configs/common.py | sed 's/FRONTEND_LEGACY_VERSION = "\(.*\)"/\1/')
           echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
