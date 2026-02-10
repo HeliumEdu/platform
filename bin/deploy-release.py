@@ -117,6 +117,7 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
     # Pull latest changes first to avoid conflicts
     origin = repo.remote('origin')
+    print(f"Remote 'origin' URL: {origin.url}")
     print("Pulling latest changes from origin...")
     origin.pull('main')
 
@@ -141,11 +142,30 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     # Push
     try:
         print("Pushing to origin...")
-        origin.push('main')
-        origin.push(tag_name)
+
+        # Push main branch
+        push_info = origin.push('main')
+        for info in push_info:
+            if info.flags & info.ERROR:
+                print(f"✗ Push failed: {info.summary}")
+                return (False, False)
+            if info.flags & info.REJECTED:
+                print(f"✗ Push rejected: {info.summary}")
+                return (False, False)
+
+        # Push tag
+        tag_push_info = origin.push(tag_name)
+        for info in tag_push_info:
+            if info.flags & info.ERROR:
+                print(f"✗ Tag push failed: {info.summary}")
+                return (False, False)
+            if info.flags & info.REJECTED:
+                print(f"✗ Tag push rejected: {info.summary}")
+                return (False, False)
+
         print(f"✓ Committed and pushed: {commit_message}")
     except Exception as e:
-        print(f"✗ Push failed: {e}")
+        print(f"✗ Push failed with exception: {e}")
         return (False, False)
 
     return (True, True)  # Success with changes pushed

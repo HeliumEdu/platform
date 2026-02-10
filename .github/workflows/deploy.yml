@@ -204,11 +204,16 @@ jobs:
         run: |
           git config --global user.name "GitHub Release Bot"
           git config --global user.email "<contact@alexlaird.com>"
+          cd deploy
+          git config user.name "GitHub Release Bot"
+          git config user.email "<contact@alexlaird.com>"
 
       - name: Install dependencies
         run: pip install requests GitPython boto3
 
       - name: Run deployment script
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           ./bin/deploy-release.py \
             "$VERSION_NUMBER" \
