@@ -200,6 +200,7 @@ jobs:
         with:
           repository: HeliumEdu/deploy
           path: deploy
+          fetch-depth: 0
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
