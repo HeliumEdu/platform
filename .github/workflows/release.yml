@@ -88,7 +88,6 @@ jobs:
           sed -i "s/__version__ = \".*\"/__version__ = \"${NEW_VERSION}\"/" conf/configs/common.py
 
       - name: Commit version bump
-        if: ${{ github.event.inputs.bump_type != 'none' }}
         run: |
           git config --global user.name "GitHub Release Bot"
           git config --global user.email "contact@alexlaird.com"
