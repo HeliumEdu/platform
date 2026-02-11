@@ -92,8 +92,6 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
         if component.name == "VTIMEZONE":
             time_zone = pytz.timezone(component.get("TZID"))
         elif component.name == "VEVENT":
-            # TODO: implement support for recurring events, but until then, skip them to avoid adding only the first
-            #  instance to the calendar
             if component.has_key("RRULE"):
                 continue
 
