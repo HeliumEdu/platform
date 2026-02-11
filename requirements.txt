@@ -11,7 +11,7 @@ celery[redis]==5.5.3
 twilio==9.8.7
 firebase-admin==7.1.0
 pyOpenSSL==25.3.0
-Pillow==12.0.0
+Pillow==12.1.1
 icalendar==6.3.2
 pytz==2025.2
 datadog==0.52.1
