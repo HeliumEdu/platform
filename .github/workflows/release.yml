@@ -14,7 +14,6 @@ on:
           - patch
           - minor
           - major
-          - none
 
 permissions:
   contents: write
@@ -54,13 +53,11 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Set up Python "3.12"
-        if: ${{ github.event.inputs.bump_type != 'none' }}
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Bump version
-        if: ${{ github.event.inputs.bump_type != 'none' }}
         run: |
           CURRENT_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
           echo "Current version: $CURRENT_VERSION"
