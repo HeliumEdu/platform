@@ -14,7 +14,7 @@ on:
           - latest
           - specific
       specific_version:
-        description: 'Specific version tag (only used if version_type is "specific", (ex: v1.2.3)'
+        description: 'Specific version tag (only used if version_type is "specific", ex: 1.2.3)'
         required: false
         type: string
       environment:
@@ -52,7 +52,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.version_type }}" = "latest" ]; then
-            VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
+            VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
 
             if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
               echo "Error: No version tags found in HeliumEdu/platform"
@@ -71,11 +71,8 @@ jobs:
             echo "Using specific version: ${VERSION}"
           fi
 
-          # Strip 'v' prefix for version number
-          VERSION_NUMBER="${VERSION#v}"
-
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "version_number=${VERSION_NUMBER}" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION}" >> $GITHUB_OUTPUT
 
   # TODO: this can be removed once we fully shut down frontend-legacy
   test-release:
