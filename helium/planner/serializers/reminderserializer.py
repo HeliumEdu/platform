@@ -45,6 +45,7 @@ class ReminderExtendedSerializer(ReminderSerializer):
         from helium.planner.serializers.homeworkserializer import HomeworkSerializer
         from helium.planner.serializers.eventserializer import EventSerializer
         from helium.planner.serializers.courseserializer import CourseSerializer
+        from helium.planner.serializers.categoryserializer import CategorySerializer
 
         # Get base representation first
         representation = super().to_representation(instance)
@@ -53,10 +54,13 @@ class ReminderExtendedSerializer(ReminderSerializer):
         if instance.homework:
             homework_serializer = HomeworkSerializer(instance.homework, context=self.context)
             homework_data = homework_serializer.data
-            # Nest the course object to maintain depth=2 behavior
+            # Nest the course and category objects to maintain depth=2 behavior
             if instance.homework.course:
                 course_serializer = CourseSerializer(instance.homework.course, context=self.context)
                 homework_data['course'] = course_serializer.data
+            if instance.homework.category:
+                category_serializer = CategorySerializer(instance.homework.category, context=self.context)
+                homework_data['category'] = category_serializer.data
             representation['homework'] = homework_data
 
         if instance.event:
