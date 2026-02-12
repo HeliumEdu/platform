@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 
 import os
 import socket
@@ -210,8 +210,6 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-#ACCESS_TOKEN_TTL_MINUTES = int(config('PLATFORM_ACCESS_TOKEN_TTL_MINUTES', '16'))
-# TODO: this is a temporary increase until frontend-legacy is fully shutdown, then we can reduce this down 16
 ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
 ACCESS_TOKEN_TTL_DAYS = int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))
 

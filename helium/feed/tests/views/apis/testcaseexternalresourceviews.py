@@ -117,7 +117,6 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
-        # TODO: when recurring event support is implemented, this will actually have 6 items
         self.assertEqual(response.data[0]['title'], 'Some Timed Event at 9am CT Inside DST')
         self.assertEqual(response.data[0]['all_day'], False)
         self.assertEqual(response.data[0]['show_end_time'], True)
