@@ -97,10 +97,10 @@ jobs:
       CI_TWILIO_RECIPIENT_PHONE_NUMBER: ${{ secrets.CI_TWILIO_RECIPIENT_PHONE_NUMBER }}
 
     steps:
-      - name: Checkout deploy monorepo
+      - name: Checkout infra monorepo
         uses: actions/checkout@v5
         with:
-          repository: HeliumEdu/deploy
+          repository: HeliumEdu/infra
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: deploy
 
@@ -184,10 +184,10 @@ jobs:
       - name: Checkout platform repository
         uses: actions/checkout@v5
 
-      - name: Checkout deploy repository
+      - name: Checkout infra repository
         uses: actions/checkout@v5
         with:
-          repository: HeliumEdu/deploy
+          repository: HeliumEdu/infra
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: deploy
           fetch-depth: 0
