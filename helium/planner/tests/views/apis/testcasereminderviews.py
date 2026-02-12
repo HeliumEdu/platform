@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Reminder
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, categoryhelper
 
 
 class TestCaseReminderViews(APITestCase):
@@ -471,3 +471,55 @@ class TestCaseReminderViews(APITestCase):
         self.assertIsInstance(response.data['homework']['course'], dict)
         self.assertEqual(response.data['homework']['course']['id'], course.pk)
         self.assertEqual(response.data['homework']['course']['title'], course.title)
+
+    def test_get_reminders_returns_nested_homework_with_category(self):
+        """Verify that GET /reminders/ returns nested homework with category object, not just ID."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework)
+
+        # WHEN
+        response = self.client.get(reverse('planner_reminders_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        reminder_data = response.data[0]
+        # Verify homework is a nested object, not just an ID
+        self.assertIsInstance(reminder_data['homework'], dict)
+        self.assertEqual(reminder_data['homework']['id'], homework.pk)
+
+        # Verify category is nested within homework as an object, not just an ID
+        self.assertIsInstance(reminder_data['homework']['category'], dict)
+        self.assertEqual(reminder_data['homework']['category']['id'], category.pk)
+        self.assertEqual(reminder_data['homework']['category']['title'], category.title)
+
+    def test_get_reminder_by_id_returns_nested_homework_with_category(self):
+        """Verify that GET /reminders/{id}/ returns nested homework with category object."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework)
+
+        # WHEN
+        response = self.client.get(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify homework is a nested object, not just an ID
+        self.assertIsInstance(response.data['homework'], dict)
+        self.assertEqual(response.data['homework']['id'], homework.pk)
+
+        # Verify category is nested within homework as an object, not just an ID
+        self.assertIsInstance(response.data['homework']['category'], dict)
+        self.assertEqual(response.data['homework']['category']['id'], category.pk)
+        self.assertEqual(response.data['homework']['category']['title'], category.title)
