@@ -542,7 +542,8 @@
             "owner_id": null,
             "attachments": [],
             "reminders": [
-                1311
+                1311,
+                1320
             ],
             "user": 118,
             "calendar_item_type": 0
@@ -1056,7 +1057,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1316
+                1316,
+                1324
             ],
             "course": 513,
             "calendar_item_type": 1
@@ -1120,7 +1122,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1315
+                1315,
+                1319
             ],
             "course": 514,
             "calendar_item_type": 1
@@ -1266,7 +1269,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1317
+                1317,
+                1321
             ],
             "course": 513,
             "calendar_item_type": 1
@@ -1638,7 +1642,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1312
+                1312,
+                1322
             ],
             "course": 514,
             "calendar_item_type": 1
@@ -1680,7 +1685,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1313
+                1313,
+                1318
             ],
             "course": 514,
             "calendar_item_type": 1
@@ -1722,7 +1728,8 @@
             ],
             "attachments": [],
             "reminders": [
-                1314
+                1314,
+                1323
             ],
             "course": 513,
             "calendar_item_type": 1
@@ -1821,6 +1828,104 @@
             "offset": 30,
             "offset_type": 0,
             "type": 0,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7835,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1318,
+            "title": "90 minutes to complete exam",
+            "message": "90 minutes to complete exam",
+            "start_of_range": "2025-12-01T18:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7865,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1319,
+            "title": "90 minutes to complete exam",
+            "message": "90 minutes to complete exam",
+            "start_of_range": "2025-10-29T18:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7838,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1320,
+            "title": "Bring notes for group",
+            "message": "Bring notes for group",
+            "start_of_range": "2025-10-27T17:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": null,
+            "event": 1090,
+            "user": 118
+        },
+        {
+            "id": 1321,
+            "title": "Due at midnight",
+            "message": "Due at midnight",
+            "start_of_range": "2025-11-07T05:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7845,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1322,
+            "title": "Due at start of class",
+            "message": "Due at start of class",
+            "start_of_range": "2025-11-26T18:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7863,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1323,
+            "title": "In ENG 305 instead",
+            "message": "90 minutes to complete exam",
+            "start_of_range": "2025-12-05T16:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
+            "sent": true,
+            "dismissed": false,
+            "homework": 7867,
+            "event": null,
+            "user": 118
+        },
+        {
+            "id": 1324,
+            "title": "In ENG 305 instead",
+            "message": "In ENG 305 instead",
+            "start_of_range": "2025-10-27T16:30:00Z",
+            "offset": 30,
+            "offset_type": 0,
+            "type": 3,
             "sent": true,
             "dismissed": false,
             "homework": 7835,

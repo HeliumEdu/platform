@@ -366,7 +366,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(MaterialGroup.objects.count(), 3)
         self.assertEqual(Material.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
-        self.assertEqual(Reminder.objects.count(), 7)
+        self.assertEqual(Reminder.objects.count(), 14)
         self.assertEqual(Event.objects.count(), 9)
 
         homework1 = Homework.objects.all()[0]
@@ -430,5 +430,5 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(MaterialGroup.objects.count(), 3)
         self.assertEqual(Material.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
-        self.assertEqual(Reminder.objects.count(), 7)
+        self.assertEqual(Reminder.objects.count(), 14)
         self.assertEqual(Event.objects.count(), 9)
