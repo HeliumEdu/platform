@@ -130,6 +130,9 @@ class TestCaseUserViews(APITestCase):
         user.refresh_from_db()
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
+        # Verify auth tokens are returned
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
 
     def test_password_change(self):
         # GIVEN

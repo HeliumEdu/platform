@@ -127,6 +127,9 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(user.get_username(), 'test_user')
         self.assertTrue(user.is_active)
+        # Verify auth tokens are returned for immediate login
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
 
     def test_verification_bad_request(self):
         # GIVEN

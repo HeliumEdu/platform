@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
+from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
 from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
@@ -52,7 +53,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     tags=['auth.register']
 )
 class UserVerifyResourceView(ViewSet, HeliumAPIView):
-    serializer_class = UserSerializer
+    serializer_class = TokenResponseFieldsMixin
 
     @extend_schema(
         parameters=[
@@ -60,12 +61,14 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
         ],
         responses={
-            202: UserSerializer
+            202: TokenResponseFieldsMixin
         }
     )
     def verify_email(self, request, *args, **kwargs):
         """
         Verify an email address for the user instance associated with the username and verification code.
+
+        Returns access and refresh tokens for immediate authentication.
         """
         response = authservice.verify_email(request)
 
