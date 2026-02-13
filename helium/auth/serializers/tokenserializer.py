@@ -53,8 +53,8 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             if not api_settings.USER_AUTHENTICATION_RULE(user):
                 raise PermissionDenied(
                     detail={
-                        'detail': 'Sorry, your account is not active. Check your to see if you received a verification email after '
-                                  'registering with us',
+                        'detail': 'Sorry, your account is not active. Check your to see if you received a '
+                                  'verification email after registering with us.',
                         'code': 'account_inactive',
                         'username': username,
                     }

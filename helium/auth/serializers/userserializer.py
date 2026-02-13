@@ -41,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         if (username.startswith("heliumedu-cluster") and
                 not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
-            raise serializers.ValidationError("Sorry, this is username is reserved for Helium staff.")
+            raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
 
         return attrs
 
