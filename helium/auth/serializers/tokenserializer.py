@@ -52,9 +52,13 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
 
             if not api_settings.USER_AUTHENTICATION_RULE(user):
                 raise PermissionDenied(
-                    'Sorry, your account is not active. Check your to see if you received a verification email after '
-                    'registering with us, otherwise <a href="/contact">contact us</a> and  we\'ll help you sort '
-                    'this out!')
+                    detail={
+                        'detail': 'Your account is not yet verified. Check your email for a verification link, '
+                                  'or request a new one.',
+                        'code': 'account_inactive',
+                        'username': username,
+                    }
+                )
 
             try:
                 token = self.get_token(user)
