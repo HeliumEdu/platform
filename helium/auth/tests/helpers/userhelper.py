@@ -39,8 +39,6 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
                            json.dumps(data),
                            content_type='application/json')
 
-    if 'access' not in response.data:
-        print(f"DEBUG: Auth failed - status={response.status_code}, data={response.data}")
     client.credentials(HTTP_AUTHORIZATION='Bearer ' + response.data['access'])
 
     user.access = response.data['access']
