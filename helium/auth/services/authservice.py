@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from helium.auth.tasks import send_password_reset_email, send_registration_email
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
@@ -51,7 +53,7 @@ def verify_email(request):
     Process the code for the given user, verifying their email address and marking them as active (if not already).
 
     :param request: the request being processed
-    :return: a 202 Response upon success
+    :return: a 202 Response upon success, with user data and auth tokens
     """
     if 'username' not in request.GET or 'code' not in request.GET:
         raise ValidationError("'username' and 'code' must be given as query parameters")
@@ -80,7 +82,13 @@ def verify_email(request):
 
             metricutils.increment('action.user.email-changed', request=request, user=user)
 
-        return Response(status=status.HTTP_202_ACCEPTED)
+        # Generate auth tokens for the verified user
+        token = RefreshToken.for_user(user)
+
+        return Response({
+            'access': str(token.access_token),
+            'refresh': str(token),
+        }, status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         raise NotFound('No User matches the given query.')
 

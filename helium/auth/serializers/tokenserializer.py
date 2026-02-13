@@ -19,7 +19,15 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
-class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
+class TokenResponseFieldsMixin(serializers.Serializer):
+    """Mixin providing access and refresh token fields for response serializers."""
+    access = serializers.CharField(read_only=True, required=False,
+                                   help_text='JWT access token for authentication.')
+    refresh = serializers.CharField(read_only=True, required=False,
+                                    help_text='JWT refresh token for obtaining new access tokens.')
+
+
+class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
     username = serializers.CharField(help_text="The username for the user.",
                                      label="Username",
                                      write_only=True)
@@ -29,10 +37,6 @@ class TokenObtainSerializer(jwt_serializers.TokenObtainPairSerializer):
                                      write_only=True,
                                      style={'input_type': 'password'},
                                      trim_whitespace=False)
-
-    access = serializers.CharField(read_only=True, required=False)
-
-    refresh = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
         username = attrs.pop('username').strip()
