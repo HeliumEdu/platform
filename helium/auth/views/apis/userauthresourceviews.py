@@ -75,6 +75,31 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
         return response
 
 
+@extend_schema(
+    tags=['auth.register']
+)
+class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
+    serializer_class = UserSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('username', description='The username for the user.')
+        ],
+        responses={
+            202: None,
+            429: None
+        }
+    )
+    def resend_verification(self, request, *args, **kwargs):
+        """
+        Resend the verification email for an inactive user account.
+        Rate limited to once per 60 seconds per user.
+        """
+        response = authservice.resend_verification_email(request)
+
+        return response
+
+
 class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
