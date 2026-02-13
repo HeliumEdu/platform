@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
+from helium.planner.filters import AttachmentFilter
 from helium.planner.models import Attachment
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer, AttachmentCreateSerializer
 
@@ -20,12 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.attachment']
+    tags=['planner.attachment', 'calendar.user']
 )
 class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
-    filterset_fields = ('course', 'event', 'homework',)
+    filterset_class = AttachmentFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):

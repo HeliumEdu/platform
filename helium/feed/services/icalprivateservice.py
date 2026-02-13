@@ -7,12 +7,103 @@ import logging
 import icalendar
 import pytz
 from django.conf import settings
+from django.db.models import Max
+from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.http import http_date, parse_http_date_safe
 
-from helium.planner.models import Homework, Course
+from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
+
 from helium.planner.services import coursescheduleservice
 
 logger = logging.getLogger(__name__)
+
+
+def get_events_last_modified(user) -> datetime.datetime | None:
+    """
+    Get the maximum updated_at timestamp from all events for a user.
+
+    :param user: The user whose events to check.
+    :return: The max updated_at datetime, or None if no events exist.
+    """
+    return user.events.aggregate(Max('updated_at'))['updated_at__max']
+
+
+def get_homework_last_modified(user) -> datetime.datetime | None:
+    """
+    Get the maximum updated_at timestamp from homework, courses, and categories for a user.
+
+    :param user: The user whose homework-related models to check.
+    :return: The max updated_at datetime across all related models, or None if no data exists.
+    """
+    homework_max = Homework.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    category_max = Category.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+
+    timestamps = [t for t in [homework_max, course_max, category_max] if t is not None]
+    return max(timestamps) if timestamps else None
+
+
+def get_courseschedules_last_modified(user) -> datetime.datetime | None:
+    """
+    Get the maximum updated_at timestamp from course schedules, courses, and course groups for a user.
+
+    :param user: The user whose course schedule-related models to check.
+    :return: The max updated_at datetime across all related models, or None if no data exists.
+    """
+    schedule_max = CourseSchedule.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+
+    timestamps = [t for t in [schedule_max, course_max, course_group_max] if t is not None]
+    return max(timestamps) if timestamps else None
+
+
+def generate_etag(user_id: int, last_modified: datetime.datetime | None) -> str:
+    """
+    Generate an ETag from user ID and timestamp.
+
+    :param user_id: The user's primary key.
+    :param last_modified: The last modified datetime, or None for empty feeds.
+    :return: An ETag string in the format '"{user_id}:{timestamp}"' or '"{user_id}:0"' if no timestamp.
+    """
+    if last_modified is None:
+        return f'"{user_id}:0"'
+    timestamp = int(last_modified.timestamp())
+    return f'"{user_id}:{timestamp}"'
+
+
+def check_conditional_request(request, etag: str, last_modified: datetime.datetime | None) -> HttpResponse | None:
+    """
+    Check if the request contains conditional headers that match the current state.
+
+    :param request: The HTTP request object.
+    :param etag: The current ETag for the resource.
+    :param last_modified: The last modified datetime for the resource.
+    :return: A 304 Not Modified response if conditions match, else None.
+    """
+    # Check If-None-Match header
+    if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
+    if if_none_match:
+        # ETags can be comma-separated
+        etags = [e.strip() for e in if_none_match.split(',')]
+        if etag in etags or '*' in etags:
+            response = HttpResponse(status=304)
+            response['ETag'] = etag
+            return response
+
+    # Check If-Modified-Since header
+    if_modified_since = request.META.get('HTTP_IF_MODIFIED_SINCE')
+    if if_modified_since and last_modified:
+        parsed_time = parse_http_date_safe(if_modified_since)
+        if parsed_time is not None:
+            # HTTP dates have 1-second precision, so use >= comparison
+            if int(last_modified.timestamp()) <= parsed_time:
+                response = HttpResponse(status=304)
+                response['ETag'] = etag
+                return response
+
+    return None
 
 
 def _create_calendar(user):

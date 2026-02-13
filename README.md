@@ -102,7 +102,7 @@ make test
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
 The `frontend` and `platform` containers can be started alongside each other to almost entirely
 emulate a `prod`-like environment locally. For functionality that still requires Internet-connected external
-services (ex. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/deploy/tree/main/terraform/environments/dev-local),
+services (ex. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
 which is meant to work alongside local Docker development.
 
 ### Documentation

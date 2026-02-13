@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import json
 
 from django.urls import reverse
@@ -169,3 +170,30 @@ class TestCaseMaterialGroupViews(APITestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('matches the given query', response.data['detail'].lower())
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group1 = materialgrouphelper.given_material_group_exists(user)
+        material_group2 = materialgrouphelper.given_material_group_exists(user, title='Material Group 2')
+        material_group3 = materialgrouphelper.given_material_group_exists(user, title='Material Group 3')
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        MaterialGroup.objects.filter(pk=material_group1.pk).update(updated_at=old_time)
+        MaterialGroup.objects.filter(pk=material_group2.pk).update(updated_at=recent_time)
+        MaterialGroup.objects.filter(pk=material_group3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_materialgroups_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(material_group2.pk, returned_ids)
+        self.assertIn(material_group3.pk, returned_ids)
+        self.assertNotIn(material_group1.pk, returned_ids)

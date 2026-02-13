@@ -27,6 +27,12 @@ class ExternalCalendar(BaseModel):
     last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',
                                       blank=True, null=True, db_index=True)
 
+    etag = models.CharField(help_text='The ETag header from the last successful iCal fetch.',
+                            max_length=255, blank=True, null=True)
+
+    last_modified_header = models.CharField(help_text='The Last-Modified header from the last successful iCal fetch.',
+                                            max_length=255, blank=True, null=True)
+
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
