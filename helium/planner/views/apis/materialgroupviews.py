@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.materialgroup', 'calendar.user']
+    tags=['planner.materialgroup']
 )
 class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = MaterialGroupSerializer
@@ -33,7 +33,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
             return MaterialGroup.objects.none()
 
     @extend_schema(
-        tags=['planner.materialgroup']
+        tags=['planner.materialgroup', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
         """

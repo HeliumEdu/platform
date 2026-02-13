@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.attachment', 'calendar.user']
+    tags=['planner.attachment']
 )
 class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
@@ -35,6 +35,9 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         else:
             return Attachment.objects.none()
 
+    @extend_schema(
+        tags=['planner.attachment', 'calendar.user']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all attachment instances for the authenticated user. To download the attachment, follow the
