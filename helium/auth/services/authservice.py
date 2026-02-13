@@ -4,13 +4,15 @@ __license__ = "MIT"
 import logging
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import ValidationError, NotFound, Throttled
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from helium.auth.tasks import send_password_reset_email, send_registration_email
+from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
+from helium.auth.utils.userutils import generate_verification_code
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, MaterialGroup, Event
@@ -91,6 +93,55 @@ def verify_email(request):
         }, status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         raise NotFound('No User matches the given query.')
+
+
+RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
+
+
+def resend_verification_email(request):
+    """
+    Resend the verification email for an inactive user account.
+    Rate limited to once per 60 seconds per user.
+
+    :param request: the request being processed
+    :return: a 202 Response upon success, 429 if rate limited
+    """
+    if 'username' not in request.GET:
+        raise ValidationError("'username' must be given as a query parameter")
+
+    username = request.GET['username']
+    cache_key = f'resend_verification:{username}'
+
+    # Check rate limit
+    if cache.get(cache_key):
+        raise Throttled(detail='Please wait before requesting another verification email.')
+
+    try:
+        user = get_user_model().objects.get(username=username)
+
+        if user.is_active:
+            # Don't reveal whether user exists or is already active
+            logger.info(f'Resend verification requested for already active user {username}')
+            return Response(status=status.HTTP_202_ACCEPTED)
+
+        # Generate new verification code and send email
+        user.verification_code = generate_verification_code()
+        user.save()
+
+        send_verification_email.delay(user.email, user.username, user.verification_code)
+
+        logger.info(f'Resent verification email for user {username}')
+
+        metricutils.increment('action.user.verification-resent', request=request, user=user)
+
+        # Set rate limit
+        cache.set(cache_key, True, RESEND_VERIFICATION_COOLDOWN_SECONDS)
+
+        return Response(status=status.HTTP_202_ACCEPTED)
+    except get_user_model().DoesNotExist:
+        # Don't reveal whether user exists - return success anyway
+        logger.info(f'Resend verification requested for unknown user {username}')
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 def delete_example_schedule(user_id):
