@@ -145,11 +145,6 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     commit_message = f"[platform] Deploy {version} to {environment}"
     repo.index.commit(commit_message)
 
-    # Create and push tag
-    tag_name = f"v{version}"
-    if tag_name not in repo.tags:
-        repo.create_tag(tag_name, message=f"Release {tag_name}")
-
     # Push using git command directly for better error handling
     try:
         print("Pushing to origin...")
@@ -164,20 +159,6 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
         if result.returncode != 0:
             print(f"✗ Push failed:")
-            print(f"  stdout: {result.stdout}")
-            print(f"  stderr: {result.stderr}")
-            return (False, False)
-
-        # Push tag
-        result = subprocess.run(
-            ["git", "push", "origin", tag_name],
-            cwd=deploy_repo_path,
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            print(f"✗ Tag push failed:")
             print(f"  stdout: {result.stdout}")
             print(f"  stderr: {result.stderr}")
             return (False, False)
