@@ -4,7 +4,7 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
-from urllib.request import urlopen, URLError
+from urllib.request import urlopen, Request, URLError
 
 import icalendar
 import pytz
@@ -193,6 +193,71 @@ def validate_url(url):
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 
+def fetch_ical_conditional(external_calendar):
+    """
+    Fetches an iCal feed using conditional HTTP requests (ETag/If-Modified-Since).
+
+    If the feed has not been modified since the last fetch (304 Not Modified),
+    returns None to indicate the existing cache should be used.
+
+    If the feed has been modified or this is the first fetch, returns the parsed
+    Calendar object and updates the external_calendar's etag and last_modified_header.
+
+    :param external_calendar: The ExternalCalendar model instance
+    :return: Parsed icalendar.Calendar object, or None if not modified (304)
+    :raises HeliumICalError: If the URL is invalid or unreachable
+    """
+    try:
+        url_validator(external_calendar.url)
+
+        request = Request(external_calendar.url)
+
+        # Add conditional request headers if we have cached values
+        if external_calendar.etag:
+            request.add_header('If-None-Match', external_calendar.etag)
+        if external_calendar.last_modified_header:
+            request.add_header('If-Modified-Since', external_calendar.last_modified_header)
+
+        response = urlopen(request)
+        response_code = response.getcode()
+
+        if response_code == status.HTTP_304_NOT_MODIFIED:
+            logger.info(f"External Calendar {external_calendar.pk} not modified (304)")
+            metricutils.increment('feed.ical.not-modified')
+            return None
+
+        if response_code != status.HTTP_200_OK:
+            raise HeliumICalError("The URL did not return a valid response.")
+
+        # Store caching headers from the response for next time
+        new_etag = response.getheader('ETag')
+        new_last_modified = response.getheader('Last-Modified')
+
+        if new_etag or new_last_modified:
+            update_fields = []
+            if new_etag and new_etag != external_calendar.etag:
+                external_calendar.etag = new_etag
+                update_fields.append('etag')
+            if new_last_modified and new_last_modified != external_calendar.last_modified_header:
+                external_calendar.last_modified_header = new_last_modified
+                update_fields.append('last_modified_header')
+            if update_fields:
+                external_calendar.save(update_fields=update_fields)
+
+        metricutils.increment('feed.ical.fetched')
+        return icalendar.Calendar.from_ical(response.read())
+
+    except ValidationError as ex:
+        logger.info(f"The URL is invalid: {ex}")
+        raise HeliumICalError(ex.message)
+    except URLError as ex:
+        logger.info(f"The URL is not reachable: {ex}")
+        raise HeliumICalError("The URL is not reachable.")
+    except ValueError as ex:
+        logger.info(f"The URL did not return a valid ICAL feed: {ex}")
+        raise HeliumICalError("The URL did not return a valid ICAL feed.")
+
+
 def calendar_to_events(external_calendar, _from=None, to=None, search=None):
     """
     For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
@@ -221,25 +286,33 @@ def calendar_to_events(external_calendar, _from=None, to=None, search=None):
 
 def reindex_stale_feed_caches():
     reindexed = []
+    not_modified = []
 
     for external_calendar in (ExternalCalendar.objects.needs_recached(
             timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS))
             .select_related('user', 'user__settings')
             .iterator()):
-        cache.delete(_get_cache_prefix(external_calendar))
 
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")
 
         try:
-            calendar = validate_url(external_calendar.url)
+            calendar = fetch_ical_conditional(external_calendar)
 
-            _create_events_from_calendar(external_calendar, calendar)
+            if calendar is None:
+                # 304 Not Modified - feed hasn't changed, just update last_index to extend cache
+                external_calendar.last_index = timezone.now()
+                external_calendar.save(update_fields=['last_index'])
+                not_modified.append(external_calendar)
+            else:
+                # Feed was modified, clear cache and re-parse
+                cache.delete(_get_cache_prefix(external_calendar))
+                _create_events_from_calendar(external_calendar, calendar)
+                reindexed.append(external_calendar)
 
-            reindexed.append(external_calendar)
         except HeliumICalError:
             logger.info(f"URL invalid, disabling calendar {external_calendar.pk}")
 
             external_calendar.shown_on_calendar = False
             external_calendar.save()
 
-    logger.info(f"Done reindexing {len(reindexed)} stale caches")
+    logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")
