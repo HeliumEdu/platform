@@ -7,7 +7,7 @@ from django.urls import path
 
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
-    UserForgotResourceView
+    UserForgotResourceView, UserResendVerificationResourceView
 from helium.auth.views.apis.userdeletemanyviews import UserDeleteExampleScheduleView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
@@ -28,6 +28,8 @@ urlpatterns = [
          name='auth_user_resource_register'),
     path('auth/user/verify/', UserVerifyResourceView.as_view({'get': 'verify_email'}),
          name='auth_user_resource_verify'),
+    path('auth/user/verify/resend/', UserResendVerificationResourceView.as_view({'get': 'resend_verification'}),
+         name='auth_user_resource_resend_verification'),
     path('auth/user/forgot/', UserForgotResourceView.as_view({'put': 'forgot_password'}),
          name='auth_user_resource_forgot'),
 
