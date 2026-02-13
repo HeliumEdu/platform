@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import json
 import os
 from unittest import mock
@@ -260,3 +261,30 @@ class TestCaseExternalCalendarViews(APITestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('matches the given query', response.data['detail'].lower())
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar1 = externalcalendarhelper.given_external_calendar_exists(user)
+        external_calendar2 = externalcalendarhelper.given_external_calendar_exists(user)
+        external_calendar3 = externalcalendarhelper.given_external_calendar_exists(user)
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        ExternalCalendar.objects.filter(pk=external_calendar1.pk).update(updated_at=old_time)
+        ExternalCalendar.objects.filter(pk=external_calendar2.pk).update(updated_at=recent_time)
+        ExternalCalendar.objects.filter(pk=external_calendar3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('feed_externalcalendars_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(external_calendar2.pk, returned_ids)
+        self.assertIn(external_calendar3.pk, returned_ids)
+        self.assertNotIn(external_calendar1.pk, returned_ids)

@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import json
 
 from django.urls import reverse
@@ -404,3 +405,32 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('matches the given query', response.data['detail'].lower())
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        schedule1 = courseschedulehelper.given_course_schedule_exists(course)
+        schedule2 = courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010000')
+        schedule3 = courseschedulehelper.given_course_schedule_exists(course, days_of_week='0001000')
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        CourseSchedule.objects.filter(pk=schedule1.pk).update(updated_at=old_time)
+        CourseSchedule.objects.filter(pk=schedule2.pk).update(updated_at=recent_time)
+        CourseSchedule.objects.filter(pk=schedule3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_courseschedules_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(schedule2.pk, returned_ids)
+        self.assertIn(schedule3.pk, returned_ids)
+        self.assertNotIn(schedule1.pk, returned_ids)

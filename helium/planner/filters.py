@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from helium.common.utils.commonutils import split_csv
-from helium.planner.models import CourseGroup, Course, Event, Homework, Reminder, Category, Material, MaterialGroup
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Material, MaterialGroup, Attachment
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class EventFilter(django_filters.FilterSet):
         model = Event
         fields = {
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
 
@@ -41,6 +42,7 @@ class HomeworkFilter(django_filters.FilterSet):
             'course__id': ['in'],
             'category__id': ['in'],
             'category__title': ['in'],
+            'updated_at': ['gte'],
         }
 
     def filter_category_titles(self, queryset, name, value):
@@ -68,6 +70,7 @@ class CourseGroupFilter(django_filters.FilterSet):
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
 
@@ -79,7 +82,8 @@ class CourseFilter(django_filters.FilterSet):
         fields = {
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
-            'title': ['exact']
+            'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):
@@ -94,6 +98,7 @@ class CategoryFilter(django_filters.FilterSet):
         fields = {
             'course': ['exact'],
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):
@@ -111,6 +116,7 @@ class ReminderFilter(django_filters.FilterSet):
             'dismissed': ['exact'],
             'start_of_range': ['lte'],
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
 
@@ -120,6 +126,7 @@ class MaterialGroupFilter(django_filters.FilterSet):
         fields = {
             'shown_on_calendar': ['exact'],
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
 
@@ -130,7 +137,27 @@ class MaterialFilter(django_filters.FilterSet):
         model = Material
         fields = {
             'title': ['exact'],
+            'updated_at': ['gte'],
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):
         return queryset.filter(material_group__shown_on_calendar=value)
+
+
+class CourseScheduleFilter(django_filters.FilterSet):
+    class Meta:
+        model = CourseSchedule
+        fields = {
+            'updated_at': ['gte'],
+        }
+
+
+class AttachmentFilter(django_filters.FilterSet):
+    class Meta:
+        model = Attachment
+        fields = {
+            'course': ['exact'],
+            'event': ['exact'],
+            'homework': ['exact'],
+            'updated_at': ['gte'],
+        }

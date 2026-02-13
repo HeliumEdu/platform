@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
+from helium.planner.filters import CourseScheduleFilter
 from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = CourseScheduleFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
@@ -46,6 +48,7 @@ class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
 class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
+    filterset_class = CourseScheduleFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
