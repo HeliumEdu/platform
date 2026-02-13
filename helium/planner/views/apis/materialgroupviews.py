@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.materialgroup']
+    tags=['planner.materialgroup', 'calendar.user']
 )
 class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = MaterialGroupSerializer

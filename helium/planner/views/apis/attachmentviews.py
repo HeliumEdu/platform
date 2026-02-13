@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.attachment']
+    tags=['planner.attachment', 'calendar.user']
 )
 class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
