@@ -703,3 +703,32 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 2)
         for h in response.data:
             self.assertEqual("not overdue", h['title'])
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework1 = homeworkhelper.given_homework_exists(course)
+        homework2 = homeworkhelper.given_homework_exists(course)
+        homework3 = homeworkhelper.given_homework_exists(course)
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        Homework.objects.filter(pk=homework1.pk).update(updated_at=old_time)
+        Homework.objects.filter(pk=homework2.pk).update(updated_at=recent_time)
+        Homework.objects.filter(pk=homework3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_homework_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(homework2.pk, returned_ids)
+        self.assertIn(homework3.pk, returned_ids)
+        self.assertNotIn(homework1.pk, returned_ids)

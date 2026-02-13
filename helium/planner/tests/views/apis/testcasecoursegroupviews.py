@@ -245,3 +245,30 @@ class TestCaseCourseGroupViews(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group1 = coursegrouphelper.given_course_group_exists(user)
+        course_group2 = coursegrouphelper.given_course_group_exists(user)
+        course_group3 = coursegrouphelper.given_course_group_exists(user)
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        CourseGroup.objects.filter(pk=course_group1.pk).update(updated_at=old_time)
+        CourseGroup.objects.filter(pk=course_group2.pk).update(updated_at=recent_time)
+        CourseGroup.objects.filter(pk=course_group3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_coursegroups_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(course_group2.pk, returned_ids)
+        self.assertIn(course_group3.pk, returned_ids)
+        self.assertNotIn(course_group1.pk, returned_ids)

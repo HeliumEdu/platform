@@ -523,3 +523,31 @@ class TestCaseReminderViews(APITestCase):
         self.assertIsInstance(response.data['homework']['category'], dict)
         self.assertEqual(response.data['homework']['category']['id'], category.pk)
         self.assertEqual(response.data['homework']['category']['title'], category.title)
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder1 = reminderhelper.given_reminder_exists(user, event=event)
+        reminder2 = reminderhelper.given_reminder_exists(user, event=event)
+        reminder3 = reminderhelper.given_reminder_exists(user, event=event)
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        Reminder.objects.filter(pk=reminder1.pk).update(updated_at=old_time)
+        Reminder.objects.filter(pk=reminder2.pk).update(updated_at=recent_time)
+        Reminder.objects.filter(pk=reminder3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_reminders_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(reminder2.pk, returned_ids)
+        self.assertIn(reminder3.pk, returned_ids)
+        self.assertNotIn(reminder1.pk, returned_ids)

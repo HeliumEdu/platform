@@ -403,3 +403,30 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(Event.objects.for_user(user2.pk).count(), 0)
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event1 = eventhelper.given_event_exists(user)
+        event2 = eventhelper.given_event_exists(user)
+        event3 = eventhelper.given_event_exists(user)
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        Event.objects.filter(pk=event1.pk).update(updated_at=old_time)
+        Event.objects.filter(pk=event2.pk).update(updated_at=recent_time)
+        Event.objects.filter(pk=event3.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(
+            reverse('planner_events_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(event2.pk, returned_ids)
+        self.assertIn(event3.pk, returned_ids)
+        self.assertNotIn(event1.pk, returned_ids)

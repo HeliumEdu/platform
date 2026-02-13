@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
+from helium.feed.filters import ExternalCalendarFilter
 from helium.feed.models import ExternalCalendar
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated,)
-    filterset_fields = ('shown_on_calendar',)
+    filterset_class = ExternalCalendarFilter
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
