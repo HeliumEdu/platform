@@ -161,7 +161,6 @@ def oauth_login(request, provider_name):
     try:
         # Verify the Firebase ID token
         decoded_token = firebase_auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
         email = decoded_token.get('email')
         email_verified = decoded_token.get('email_verified', False)
 
