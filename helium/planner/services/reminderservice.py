@@ -21,17 +21,57 @@ def get_subject(reminder):
     if reminder.homework:
         calendar_item = reminder.homework
         subject = f'{calendar_item.title} in {calendar_item.course.title}'
+        start = timezone.localtime(calendar_item.start).strftime(
+            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+        subject += f' on {start}'
     elif reminder.event:
         calendar_item = reminder.event
         subject = calendar_item.title
+        start = timezone.localtime(calendar_item.start).strftime(
+            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+        subject += f' on {start}'
+    elif reminder.course:
+        course = reminder.course
+        subject = f'{course.title}'
+        # Calculate the next occurrence time for display
+        next_start = reminder._get_next_course_occurrence_start()
+        if next_start:
+            start = timezone.localtime(next_start).strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
+            subject += f' on {start}'
     else:
-        return
-
-    start = timezone.localtime(calendar_item.start).strftime(
-        settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-    subject += f' on {start}'
+        return None
 
     return subject
+
+
+def create_next_repeating_reminder(reminder):
+    """
+    For a repeating reminder (course), create the next occurrence.
+    """
+    if not reminder.repeating or not reminder.course:
+        return None
+
+    # Create a new reminder with the same settings
+    new_reminder = Reminder(
+        title=reminder.title,
+        message=reminder.message,
+        offset=reminder.offset,
+        offset_type=reminder.offset_type,
+        type=reminder.type,
+        sent=False,
+        dismissed=False,
+        repeating=True,
+        course=reminder.course,
+        user=reminder.user
+    )
+
+    # Check if there's a next occurrence (save() will calculate start_of_range)
+    next_start = new_reminder._get_next_course_occurrence_start()
+    if next_start:
+        new_reminder.save()
+        return new_reminder
+
+    return None
 
 
 def process_email_reminders():
@@ -41,7 +81,8 @@ def process_email_reminders():
                      .with_type(enums.EMAIL)
                      .unsent()
                      .for_today()
-                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event')
+                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
+                                     'course', 'course__course_group')
                      .iterator()):
         user = reminder.get_user()
 
@@ -60,8 +101,11 @@ def process_email_reminders():
                     elif reminder.homework:
                         calendar_item_id = reminder.homework.pk
                         calendar_item_type = enums.HOMEWORK
+                    elif reminder.course:
+                        calendar_item_id = reminder.course.pk
+                        calendar_item_type = enums.COURSE
                     else:
-                        logger.warning(f'Reminder {reminder.pk} was not for a homework or event. Nothing to do.')
+                        logger.warning(f'Reminder {reminder.pk} was not for a homework, event, or course. Nothing to do.')
                         continue
 
                     logger.info(f'Sending email reminder {reminder.pk} for user {user.pk}')
@@ -75,6 +119,10 @@ def process_email_reminders():
 
             reminder.sent = True
             reminder.save()
+
+            # Create next reminder if this is a repeating reminder
+            if reminder.repeating:
+                create_next_repeating_reminder(reminder)
         except:
             logger.error("An unknown error occurred.", exc_info=True)
 
@@ -86,7 +134,8 @@ def process_text_reminders():
                      .with_type(enums.TEXT)
                      .unsent()
                      .for_today()
-                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event')
+                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event',
+                                     'course', 'course__course_group')
                      .iterator()):
         user = reminder.get_user()
 
@@ -111,6 +160,10 @@ def process_text_reminders():
 
             reminder.sent = True
             reminder.save()
+
+            # Create next reminder if this is a repeating reminder
+            if reminder.repeating:
+                create_next_repeating_reminder(reminder)
         except:
             logger.error("An unknown error occurred.", exc_info=True)
 
@@ -122,7 +175,8 @@ def process_push_reminders(mark_sent_only=False):
                      .with_type(enums.PUSH)
                      .unsent()
                      .for_today()
-                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event')
+                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
+                                     'course', 'course__course_group')
                      .iterator()):
         user = reminder.get_user()
 
@@ -155,6 +209,10 @@ def process_push_reminders(mark_sent_only=False):
 
             reminder.sent = True
             reminder.save()
+
+            # Create next reminder if this is a repeating reminder
+            if reminder.repeating:
+                create_next_repeating_reminder(reminder)
         except:
             logger.error("An unknown error occurred.", exc_info=True)
 
