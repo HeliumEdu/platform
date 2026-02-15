@@ -90,7 +90,7 @@ def delete_user(user_id):
         outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
         blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
 
-        # Try to delete Firebase Auth user if they signed in with Google
+        # Try to delete Firebase Auth user if they signed in with OAuth (Google, Apple, etc.)
         try:
             firebase_user = firebase_auth.get_user_by_email(user.email)
             firebase_auth.delete_user(firebase_user.uid)
