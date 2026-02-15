@@ -30,10 +30,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     settings = UserSettingsSerializer(required=False, read_only=True)
 
+    has_usable_password = serializers.SerializerMethodField(
+        help_text='Whether the user has a usable password (false for OAuth-only users).'
+    )
+
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings',)
-        read_only_fields = ('email_changing',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'has_usable_password',)
+        read_only_fields = ('email_changing', 'has_usable_password',)
+
+    def get_has_usable_password(self, obj):
+        """Return whether the user has a usable password."""
+        return obj.has_usable_password()
 
     def validate(self, attrs):
         email = attrs.get('email', self.instance.email if self.instance else None)

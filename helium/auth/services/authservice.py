@@ -35,16 +35,22 @@ def forgot_password(request):
     try:
         user = get_user_model().objects.get(email=request.data['email'])
 
-        # Generate a random password for the user
-        password = get_user_model().objects.make_random_password()
-        user.set_password(password)
-        user.save()
+        # Only reset password for users with usable passwords (not OAuth-only users)
+        if user.has_usable_password():
+            # Generate a random password for the user
+            password = get_user_model().objects.make_random_password()
+            user.set_password(password)
+            user.save()
 
-        logger.info(f'Reset password for user with email {user.email}')
+            logger.info(f'Reset password for user with email {user.email}')
 
-        send_password_reset_email.delay(user.email, password)
+            send_password_reset_email.delay(user.email, password)
 
-        metricutils.increment('action.user.password-reset', request=request, user=user)
+            metricutils.increment('action.user.password-reset', request=request, user=user)
+        else:
+            # OAuth-only user - don't create a password for security reasons
+            logger.info(f'Password reset requested for OAuth-only user {user.email}, ignoring for security')
+            metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
     except get_user_model().DoesNotExist:
         logger.info(f'A user tried to reset their password, but the given email address is unknown')
 
@@ -161,7 +167,6 @@ def oauth_login(request, provider_name):
     try:
         # Verify the Firebase ID token
         decoded_token = firebase_auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
         email = decoded_token.get('email')
         email_verified = decoded_token.get('email_verified', False)
 

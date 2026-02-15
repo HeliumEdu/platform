@@ -65,16 +65,19 @@ class UserDeleteResourceView(HeliumAPIView):
 
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given user instance. The request body should include the authenticated user's `password` for the
-        request to succeed.
+        Delete the given user instance. For users with passwords, the request body should include the
+        authenticated user's `password` for the request to succeed. For OAuth users without passwords,
+        deletion is allowed as they are already authenticated.
         """
         user = self.get_object()
 
-        if 'password' not in request.data:
-            raise ValidationError({'password': ['This field is required.']})
+        # Only require password verification if user has a usable password
+        if user.has_usable_password():
+            if 'password' not in request.data:
+                raise ValidationError({'password': ['This field is required.']})
 
-        if not user.check_password(request.data['password']):
-            raise ValidationError({'password': ['The password is incorrect.']})
+            if not user.check_password(request.data['password']):
+                raise ValidationError({'password': ['The password is incorrect.']})
 
         logger.info(f'User {user.get_username()} will be deleted')
 

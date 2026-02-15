@@ -43,6 +43,33 @@ class TestCaseAuthenticationViews(TestCase):
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
+    def test_password_reset_oauth_user_blocked(self):
+        """Test that OAuth users (without usable password) don't get passwords created via forgot password."""
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        # Simulate OAuth user by removing their password
+        user.set_unusable_password()
+        user.save()
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_resource_forgot'),
+                                   json.dumps({'email': user.email}),
+                                   content_type='application/json')
+
+        # THEN
+        # Returns 202 for security (don't reveal user existence)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        # Verify user still has no usable password (password wasn't created)
+        user.refresh_from_db()
+        self.assertFalse(user.has_usable_password())
+
+        # Verify they can't login with any password
+        response = self.client.post(reverse('auth_token_obtain'),
+                                    json.dumps({'username': user.get_username(), 'password': 'any-password'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_registration_success(self):
         # WHEN
         data = {

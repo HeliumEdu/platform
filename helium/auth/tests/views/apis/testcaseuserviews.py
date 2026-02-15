@@ -287,6 +287,25 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
         self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
 
+    def test_delete_oauth_user_without_password(self):
+        """Test that OAuth users (without usable password) can delete their account without providing a password."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        # Simulate OAuth user by removing their password
+        user.set_unusable_password()
+        user.save()
+
+        # WHEN
+        data = {}  # No password provided
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
+                                      content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
+        self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
+        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
+
     def test_delete_user_inactive(self):
         # GIVEN
         user = userhelper.given_an_inactive_user_exists()
