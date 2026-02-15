@@ -5,7 +5,7 @@ import logging
 
 from rest_framework import serializers
 
-from helium.planner.models import Reminder, Homework, Event
+from helium.planner.models import Reminder, Homework, Event, Course
 
 logger = logging.getLogger(__name__)
 
@@ -17,24 +17,38 @@ class ReminderSerializer(serializers.ModelSerializer):
         if self.context.get('request', None):
             self.fields['homework'].queryset = Homework.objects.for_user(self.context['request'].user.pk)
             self.fields['event'].queryset = Event.objects.for_user(self.context['request'].user.pk)
+            self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
 
     class Meta:
         model = Reminder
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
-            'homework', 'event', 'user',)
+            'repeating', 'homework', 'event', 'course', 'user',)
         read_only_fields = ('start_of_range', 'user',)
 
     def validate(self, attrs):
-        if not self.instance and ('event' not in attrs and 'homework' not in attrs):
-            raise serializers.ValidationError("One of `event` or `homework` must be given.")
-        elif attrs.get('event', None) and attrs.get('homework', None):
-            raise serializers.ValidationError("Only one of `event` or `homework` may be given.")
+        has_event = attrs.get('event', None) or (self.instance and self.instance.event and 'event' not in attrs)
+        has_homework = attrs.get('homework', None) or (self.instance and self.instance.homework and 'homework' not in attrs)
+        has_course = attrs.get('course', None) or (self.instance and self.instance.course and 'course' not in attrs)
 
-        # We're settings these to None here as the serialization save will persist the new parent
-        if self.instance and ('event' in attrs or 'homework' in attrs):
+        # Count how many are set
+        set_count = sum([bool(has_event), bool(has_homework), bool(has_course)])
+
+        if not self.instance and set_count == 0:
+            raise serializers.ValidationError("One of `event`, `homework`, or `course` must be given.")
+        elif set_count > 1:
+            raise serializers.ValidationError("Only one of `event`, `homework`, or `course` may be given.")
+
+        # Validate that repeating is only allowed for course reminders
+        is_repeating = attrs.get('repeating', False) or (self.instance and self.instance.repeating and 'repeating' not in attrs)
+        if is_repeating and not has_course:
+            raise serializers.ValidationError("The `repeating` field can only be set to true for course reminders.")
+
+        # We're setting these to None here as the serialization save will persist the new parent
+        if self.instance and ('event' in attrs or 'homework' in attrs or 'course' in attrs):
             self.instance.event = None
             self.instance.homework = None
+            self.instance.course = None
 
         return attrs
 
@@ -66,6 +80,10 @@ class ReminderExtendedSerializer(ReminderSerializer):
         if instance.event:
             event_serializer = EventSerializer(instance.event, context=self.context)
             representation['event'] = event_serializer.data
+
+        if instance.course:
+            course_serializer = CourseSerializer(instance.course, context=self.context)
+            representation['course'] = course_serializer.data
 
         # Keep only the user ID instead of the full nested user object
         representation['user'] = instance.user.id

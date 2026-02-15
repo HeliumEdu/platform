@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Reminder
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, categoryhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, categoryhelper, courseschedulehelper
 
 
 class TestCaseReminderViews(APITestCase):
@@ -551,3 +551,92 @@ class TestCaseReminderViews(APITestCase):
         self.assertIn(reminder2.pk, returned_ids)
         self.assertIn(reminder3.pk, returned_ids)
         self.assertNotIn(reminder1.pk, returned_ids)
+
+    def test_create_course_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        # Create a course that spans into the future so we can find the next occurrence
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=(timezone.now() - timedelta(days=7)).date(),
+            end_date=(timezone.now() + timedelta(days=30)).date()
+        )
+        # Create a schedule with classes on Monday, Wednesday, Friday at 10:00 AM
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='0101010',
+            mon_start_time=datetime.time(10, 0, 0),
+            wed_start_time=datetime.time(10, 0, 0),
+            fri_start_time=datetime.time(10, 0, 0)
+        )
+
+        # WHEN
+        data = {
+            'title': 'Class reminder',
+            'message': 'Time to go to class!',
+            'offset': 30,
+            'offset_type': enums.MINUTES,
+            'type': enums.PUSH,
+            'course': course.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reminder.objects.count(), 1)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        self.assertEqual(reminder.course.pk, course.pk)
+        self.assertTrue(reminder.repeating)
+        self.assertIsNotNone(reminder.start_of_range)
+
+    def test_create_reminder_course_and_homework_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'message': 'some message',
+            'offset': 1,
+            'offset_type': enums.HOURS,
+            'type': enums.POPUP,
+            'homework': homework.pk,
+            'course': course.pk,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Only one of', response.data['non_field_errors'][0])
+
+    def test_create_event_reminder_with_repeating_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'message': 'some message',
+            'offset': 1,
+            'offset_type': enums.HOURS,
+            'type': enums.POPUP,
+            'event': event.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('repeating', response.data['non_field_errors'][0].lower())
