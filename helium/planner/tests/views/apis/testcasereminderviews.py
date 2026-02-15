@@ -640,3 +640,104 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('repeating', response.data['non_field_errors'][0].lower())
+
+    def test_course_reminder_skips_group_exception(self):
+        """Verify that course reminders skip dates in the course group's exceptions."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # Find the next Monday from today
+        today = timezone.now().date()
+        days_until_monday = (7 - today.weekday()) % 7
+        if days_until_monday == 0:
+            days_until_monday = 7
+        next_monday = today + timedelta(days=days_until_monday)
+        following_monday = next_monday + timedelta(days=7)
+
+        # Set the next Monday as an exception at the group level
+        course_group.exceptions = next_monday.strftime('%Y%m%d')
+        course_group.save()
+
+        # Create a course that spans both Mondays
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=today,
+            end_date=following_monday + timedelta(days=1)
+        )
+        # Schedule on Mondays only
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='0100000',
+            mon_start_time=datetime.time(10, 0, 0)
+        )
+
+        # WHEN
+        data = {
+            'title': 'Class reminder',
+            'message': 'Time to go to class!',
+            'offset': 30,
+            'offset_type': enums.MINUTES,
+            'type': enums.PUSH,
+            'course': course.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        # The reminder should skip the first Monday (exception) and target the following Monday
+        self.assertEqual(reminder.start_of_range.date(), following_monday)
+
+    def test_course_reminder_skips_course_exception(self):
+        """Verify that course reminders skip dates in the course's own exceptions."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # Find the next Monday from today
+        today = timezone.now().date()
+        days_until_monday = (7 - today.weekday()) % 7
+        if days_until_monday == 0:
+            days_until_monday = 7
+        next_monday = today + timedelta(days=days_until_monday)
+        following_monday = next_monday + timedelta(days=7)
+
+        # Create a course with the next Monday as an exception
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=today,
+            end_date=following_monday + timedelta(days=1)
+        )
+        course.exceptions = next_monday.strftime('%Y%m%d')
+        course.save()
+
+        # Schedule on Mondays only
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='0100000',
+            mon_start_time=datetime.time(10, 0, 0)
+        )
+
+        # WHEN
+        data = {
+            'title': 'Class reminder',
+            'message': 'Time to go to class!',
+            'offset': 30,
+            'offset_type': enums.MINUTES,
+            'type': enums.PUSH,
+            'course': course.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        # The reminder should skip the first Monday (exception) and target the following Monday
+        self.assertEqual(reminder.start_of_range.date(), following_monday)
