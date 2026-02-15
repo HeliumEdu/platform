@@ -27,21 +27,33 @@ class ReminderSerializer(serializers.ModelSerializer):
         read_only_fields = ('start_of_range', 'user',)
 
     def validate(self, attrs):
-        has_event = attrs.get('event', None) or (self.instance and self.instance.event and 'event' not in attrs)
-        has_homework = attrs.get('homework', None) or (self.instance and self.instance.homework and 'homework' not in attrs)
-        has_course = attrs.get('course', None) or (self.instance and self.instance.course and 'course' not in attrs)
+        # Check what's being explicitly set in this request
+        event_in_request = attrs.get('event', None)
+        homework_in_request = attrs.get('homework', None)
+        course_in_request = attrs.get('course', None)
 
-        # Count how many are set
-        set_count = sum([bool(has_event), bool(has_homework), bool(has_course)])
+        # Count how many are being set in this request
+        request_set_count = sum([bool(event_in_request), bool(homework_in_request), bool(course_in_request)])
 
-        if not self.instance and set_count == 0:
+        # For new instances, require exactly one parent
+        if not self.instance and request_set_count == 0:
             raise serializers.ValidationError("One of `event`, `homework`, or `course` must be given.")
-        elif set_count > 1:
+
+        # Don't allow multiple parents to be set in the same request
+        if request_set_count > 1:
             raise serializers.ValidationError("Only one of `event`, `homework`, or `course` may be given.")
+
+        # Determine what the final parent will be after this update
+        # If a new parent is being set, it replaces any existing one
+        if request_set_count > 0:
+            final_has_course = bool(course_in_request)
+        else:
+            # No new parent in request, keep existing
+            final_has_course = self.instance and self.instance.course
 
         # Validate that repeating is only allowed for course reminders
         is_repeating = attrs.get('repeating', False) or (self.instance and self.instance.repeating and 'repeating' not in attrs)
-        if is_repeating and not has_course:
+        if is_repeating and not final_has_course:
             raise serializers.ValidationError("The `repeating` field can only be set to true for course reminders.")
 
         # We're setting these to None here as the serialization save will persist the new parent
