@@ -27,7 +27,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = (
             'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'trend', 'teacher_name',
-            'teacher_email', 'start_date', 'end_date', 'schedules', 'course_group',
+            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'course_group',
             # Property fields (which should also be declared as read-only)
             'num_days', 'num_days_completed', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)

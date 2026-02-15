@@ -108,6 +108,36 @@ def _apply_event_filters(event, _from, to, search):
     return True
 
 
+def _parse_exceptions(course):
+    """
+    Parse exception dates from course and course group.
+    Returns a set of dates when the course does not meet.
+    """
+    exceptions = set()
+
+    # Group-level exceptions (holidays, breaks)
+    if course.course_group.exceptions:
+        for date_str in course.course_group.exceptions.split(','):
+            date_str = date_str.strip()
+            if date_str:
+                try:
+                    exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
+                except ValueError:
+                    pass  # Skip invalid date formats
+
+    # Course-level exceptions (professor cancellations)
+    if course.exceptions:
+        for date_str in course.exceptions.split(','):
+            date_str = date_str.strip()
+            if date_str:
+                try:
+                    exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
+                except ValueError:
+                    pass  # Skip invalid date formats
+
+    return exceptions
+
+
 def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
@@ -143,8 +173,16 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     events = []
     events_filtered = []
 
+    # Get exception dates to skip
+    exceptions = _parse_exceptions(course)
+
     day = course.start_date
     while day <= course.end_date:
+        # Skip exception dates
+        if day in exceptions:
+            day += datetime.timedelta(days=1)
+            continue
+
         for course_schedule in course_schedules.iterator():
             if course_schedule.days_of_week[enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]] == "1":
                 start_time = _get_start_time_for_weekday(course_schedule,

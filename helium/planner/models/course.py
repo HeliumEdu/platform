@@ -49,6 +49,10 @@ class Course(BaseModel):
     course_group = models.ForeignKey('CourseGroup', help_text='The course group with which to associate.',
                                      related_name='courses', on_delete=models.CASCADE)
 
+    exceptions = models.TextField(
+        help_text='Comma-separated dates (YYYYMMDD) when this course does not meet.',
+        blank=True, default='')
+
     objects = CourseManager()
 
     class Meta:
