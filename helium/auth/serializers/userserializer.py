@@ -104,6 +104,21 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def create_from_oauth(self, validated_data):
+        # OAuth users can bypass email verification
+        validated_data['is_active'] = True
+
+        instance = super().create(validated_data)
+
+        # OAuth users bypass local passwords
+        instance.set_unusable_password()
+        instance.save()
+
+        # Import the example schedule for the user
+        import_example_schedule.delay(instance.pk)
+
+        return instance
+
 
 class UserCreateSerializer(serializers.Serializer):
     username = serializers.CharField(help_text=get_user_model()._meta.get_field('username').help_text)

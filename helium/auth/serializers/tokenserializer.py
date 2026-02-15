@@ -123,3 +123,19 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
         except IntegrityError:
             logger.info("IntegrityError, parent token was already blacklisted or purge, nothing to do.")
         return {}
+
+
+class GoogleLoginSerializer(serializers.Serializer):
+    """Serializer for Google Sign-In via Firebase ID token."""
+    id_token = serializers.CharField(
+        help_text='Firebase ID token obtained from Google Sign-In on the client.',
+        write_only=True
+    )
+
+
+class AppleLoginSerializer(serializers.Serializer):
+    """Serializer for Apple Sign-In via Firebase ID token."""
+    id_token = serializers.CharField(
+        help_text='Firebase ID token obtained from Apple Sign-In on the client.',
+        write_only=True
+    )

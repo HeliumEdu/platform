@@ -5,12 +5,13 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from firebase_admin import auth as firebase_auth
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound, Throttled
+from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
 from rest_framework.response import Response
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code
 from helium.common.utils import metricutils
@@ -142,6 +143,78 @@ def resend_verification_email(request):
         # Don't reveal whether user exists - return success anyway
         logger.info(f'Resend verification requested for unknown user {username}')
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+def oauth_login(request, provider_name):
+    """
+    Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
+
+    :param request: the request being processed (must contain 'id_token' in data)
+    :param provider_name: the OAuth provider name (e.g., 'Google', 'Apple')
+    :return: a 200 Response with access and refresh tokens
+    """
+    if 'id_token' not in request.data:
+        raise ValidationError("'id_token' is required")
+
+    id_token = request.data['id_token']
+
+    try:
+        # Verify the Firebase ID token
+        decoded_token = firebase_auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+        email = decoded_token.get('email')
+        email_verified = decoded_token.get('email_verified', False)
+
+        if not email:
+            raise AuthenticationFailed(f"Email not provided by {provider_name} account")
+
+        if not email_verified:
+            raise AuthenticationFailed(f"Email not verified by {provider_name}")
+
+        # Try to find existing user by email
+        try:
+            user = get_user_model().objects.get(email=email)
+            logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In')
+            metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
+        except get_user_model().DoesNotExist:
+            # Generate unique username from email
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+
+            while get_user_model().objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            serializer = UserSerializer()
+            user = serializer.create_from_oauth({
+                'username': username,
+                'email': email,
+            })
+
+            logger.info(f'New user {user.id} created via {provider_name} Sign-In with username {username}')
+
+            metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
+
+        token = RefreshToken.for_user(user)
+
+        return Response({
+            'access': str(token.access_token),
+            'refresh': str(token),
+        }, status=status.HTTP_200_OK)
+
+    except firebase_auth.ExpiredIdTokenError:
+        logger.warning('Expired Firebase ID token')
+        raise AuthenticationFailed(f'{provider_name} Sign-In token has expired')
+    except firebase_auth.InvalidIdTokenError as e:
+        logger.warning(f'Invalid Firebase ID token: {str(e)}')
+        raise AuthenticationFailed(f'Invalid {provider_name} Sign-In token')
+    except (ValidationError, AuthenticationFailed):
+        # Re-raise validation and authentication errors
+        raise
+    except Exception as e:
+        logger.error(f'{provider_name} Sign-In error: {str(e)}', exc_info=True)
+        raise AuthenticationFailed(f'{provider_name} Sign-In authentication failed')
 
 
 def delete_example_schedule(user_id):
