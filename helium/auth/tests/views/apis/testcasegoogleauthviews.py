@@ -17,7 +17,7 @@ from helium.auth.tests.helpers import userhelper
 class TestCaseGoogleAuthViews(APITestCase):
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
-    def test_google_login_creates_new_user(self, mock_import_schedule, mock_verify_token):
+    def test_google_login_creates_new_user(self, mock_verify_token, mock_import_schedule):
         """Test that Google login creates a new user and returns tokens."""
         # GIVEN
         mock_verify_token.return_value = {
@@ -91,7 +91,7 @@ class TestCaseGoogleAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
-    def test_google_login_username_collision_handling(self, mock_import_schedule, mock_verify_token):
+    def test_google_login_username_collision_handling(self, mock_verify_token, mock_import_schedule):
         """Test that username collisions are handled correctly."""
         # GIVEN
         # Create a user with username 'testuser'
@@ -221,7 +221,7 @@ class TestCaseGoogleAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
-    def test_google_login_user_has_no_usable_password(self, mock_import_schedule, mock_verify_token):
+    def test_google_login_user_has_no_usable_password(self, mock_verify_token, mock_import_schedule):
         """Test that users created via Google Sign-In cannot use password login."""
         # GIVEN
         mock_verify_token.return_value = {
@@ -253,7 +253,7 @@ class TestCaseGoogleAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
-    def test_google_login_multiple_times_same_user(self, mock_import_schedule, mock_verify_token):
+    def test_google_login_multiple_times_same_user(self, mock_verify_token, mock_import_schedule):
         """Test that logging in multiple times with same Google account works."""
         # GIVEN
         mock_verify_token.return_value = {
