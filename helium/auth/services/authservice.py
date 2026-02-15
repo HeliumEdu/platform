@@ -6,16 +6,18 @@ import logging
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound, Throttled
+from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.tokens import RefreshToken
+from firebase_admin import auth as firebase_auth
 
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, MaterialGroup, Event
+from helium.importexport.tasks import import_example_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +144,87 @@ def resend_verification_email(request):
         # Don't reveal whether user exists - return success anyway
         logger.info(f'Resend verification requested for unknown user {username}')
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+def google_login(request):
+    """
+    Authenticate or create a user via Google Sign-In using a Firebase ID token.
+
+    :param request: the request being processed (must contain 'id_token' in data)
+    :return: a 200 Response with access and refresh tokens
+    """
+    if 'id_token' not in request.data:
+        raise ValidationError("'id_token' is required")
+
+    id_token = request.data['id_token']
+
+    try:
+        # Verify the Firebase ID token
+        decoded_token = firebase_auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+        email = decoded_token.get('email')
+        email_verified = decoded_token.get('email_verified', False)
+
+        if not email:
+            raise AuthenticationFailed("Email not provided by Google account")
+
+        if not email_verified:
+            raise AuthenticationFailed("Email not verified by Google")
+
+        User = get_user_model()
+
+        # Try to find existing user by email
+        try:
+            user = User.objects.get(email=email)
+            logger.info(f'Existing user {user.id} logged in via Google Sign-In')
+            metricutils.increment('action.user.google-login', request=request, user=user)
+        except User.DoesNotExist:
+            # Create new user
+            # Generate username from email (handle potential duplicates)
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User.objects.create(
+                username=username,
+                email=email,
+                is_active=True,  # Skip email verification for Google Sign-In!
+            )
+            user.set_unusable_password()  # They'll use Google Sign-In
+            user.save()
+
+            logger.info(f'New user {user.id} created via Google Sign-In with username {username}')
+
+            # Import example schedule for new user
+            import_example_schedule.delay(user.pk)
+
+            metricutils.increment('action.user.google-signup', request=request, user=user)
+
+        # Generate JWT tokens
+        token = RefreshToken.for_user(user)
+
+        return Response({
+            'access': str(token.access_token),
+            'refresh': str(token),
+        }, status=status.HTTP_200_OK)
+
+    except firebase_auth.ExpiredIdTokenError:
+        # Must come before InvalidIdTokenError (ExpiredIdTokenError is a subclass)
+        logger.warning('Expired Firebase ID token')
+        raise AuthenticationFailed('Google Sign-In token has expired')
+    except firebase_auth.InvalidIdTokenError as e:
+        logger.warning(f'Invalid Firebase ID token: {str(e)}')
+        raise AuthenticationFailed('Invalid Google Sign-In token')
+    except (ValidationError, AuthenticationFailed):
+        # Re-raise validation and authentication errors
+        raise
+    except Exception as e:
+        logger.error(f'Google Sign-In error: {str(e)}', exc_info=True)
+        raise AuthenticationFailed('Google Sign-In authentication failed')
 
 
 def delete_example_schedule(user_id):
