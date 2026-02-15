@@ -32,6 +32,10 @@ class CourseGroup(BaseModel):
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
+    exceptions = models.TextField(
+        help_text='Comma-separated dates (YYYYMMDD) when no classes occur (holidays, breaks).',
+        blank=True, default='')
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)
 
     objects = CourseGroupManager()

@@ -59,6 +59,35 @@ class Reminder(BaseModel):
     def get_user(self):
         return self.user
 
+    def _parse_exceptions(self):
+        """
+        Parse exception dates from course and course group.
+        Returns a set of dates when the course does not meet.
+        """
+        exceptions = set()
+
+        # Group-level exceptions (holidays, breaks)
+        if self.course.course_group.exceptions:
+            for date_str in self.course.course_group.exceptions.split(','):
+                date_str = date_str.strip()
+                if date_str:
+                    try:
+                        exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
+                    except ValueError:
+                        pass  # Skip invalid date formats
+
+        # Course-level exceptions (professor cancellations)
+        if self.course.exceptions:
+            for date_str in self.course.exceptions.split(','):
+                date_str = date_str.strip()
+                if date_str:
+                    try:
+                        exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
+                    except ValueError:
+                        pass  # Skip invalid date formats
+
+        return exceptions
+
     def _get_next_course_occurrence_start(self):
         """
         Calculate the next occurrence start time for a course.
@@ -73,11 +102,19 @@ class Reminder(BaseModel):
         now = datetime.datetime.now(user_tz)
         today = now.date()
 
+        # Get exception dates to skip
+        exceptions = self._parse_exceptions()
+
         # Start from today or course start_date, whichever is later
         day = max(today, course.start_date)
 
         # Look through days until we find the next occurrence or pass end_date
         while day <= course.end_date:
+            # Skip exception dates
+            if day in exceptions:
+                day += datetime.timedelta(days=1)
+                continue
+
             weekday = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]
 
             if course_schedule.days_of_week[weekday] == "1":

@@ -19,7 +19,7 @@ class CourseGroupSerializer(serializers.ModelSerializer):
         model = CourseGroup
         fields = (
             'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend', 'private_slug',
-            'user',
+            'exceptions', 'user',
             # Property fields (which should also be declared as read-only)
             'num_days', 'num_days_completed', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
