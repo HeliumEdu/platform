@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from firebase_admin import auth as firebase_auth
 
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
@@ -88,6 +89,16 @@ def delete_user(user_id):
 
         outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
         blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
+
+        # Try to delete Firebase Auth user if they signed in with Google
+        try:
+            firebase_user = firebase_auth.get_user_by_email(user.email)
+            firebase_auth.delete_user(firebase_user.uid)
+            logger.info(f'Deleted Firebase Auth user for {user.email}')
+        except firebase_auth.UserNotFoundError:
+            logger.info(f'No Firebase Auth user found for {user.email}')
+        except Exception as e:
+            logger.warning(f'Failed to delete Firebase Auth user for {user.email}: {str(e)}')
 
         user.delete()
 
