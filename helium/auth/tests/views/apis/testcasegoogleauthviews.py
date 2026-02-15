@@ -89,8 +89,8 @@ class TestCaseGoogleAuthViews(APITestCase):
         user = get_user_model().objects.get(email='existing@gmail.com')
         self.assertEqual(user.pk, existing_user.pk)
 
-    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_google_login_username_collision_handling(self, mock_verify_token, mock_import_schedule):
         """Test that username collisions are handled correctly."""
         # GIVEN
@@ -219,8 +219,8 @@ class TestCaseGoogleAuthViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn('Email', str(response.data))
 
-    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_google_login_user_has_no_usable_password(self, mock_verify_token, mock_import_schedule):
         """Test that users created via Google Sign-In cannot use password login."""
         # GIVEN
@@ -251,8 +251,8 @@ class TestCaseGoogleAuthViews(APITestCase):
         )
         self.assertEqual(login_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_google_login_multiple_times_same_user(self, mock_verify_token, mock_import_schedule):
         """Test that logging in multiple times with same Google account works."""
         # GIVEN
