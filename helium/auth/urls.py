@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
-from helium.auth.views.apis.oauthviews import GoogleLoginView, AppleLoginView
+from helium.auth.views.apis.oauthviews import OAuthLoginView
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView, UserResendVerificationResourceView
@@ -40,10 +40,8 @@ urlpatterns = [
     path('auth/token/', TokenObtainPairView.as_view(), name='auth_token_obtain'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='auth_token_refresh'),
     path('auth/token/blacklist/', TokenBlacklistView.as_view(), name='auth_token_blacklist'),
-    path('auth/google/login/', GoogleLoginView.as_view({'post': 'google_login'}),
-         name='auth_google_login'),
-    path('auth/apple/login/', AppleLoginView.as_view({'post': 'apple_login'}),
-         name='auth_apple_login'),
+    path('auth/oauth/login/', OAuthLoginView.as_view({'post': 'oauth_login'}),
+         name='auth_oauth_login'),
 
     ##############################
     # Authenticated URLs

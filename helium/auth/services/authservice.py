@@ -152,16 +152,27 @@ def resend_verification_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-def oauth_login(request, provider_name):
+SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
+
+
+def oauth_login(request):
     """
     Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
 
-    :param request: the request being processed (must contain 'id_token' in data)
-    :param provider_name: the OAuth provider name (e.g., 'Google', 'Apple')
+    :param request: the request being processed (must contain 'id_token' and 'provider' in data)
     :return: a 200 Response with access and refresh tokens
     """
     if 'id_token' not in request.data:
         raise ValidationError("'id_token' is required")
+
+    if 'provider' not in request.data:
+        raise ValidationError("'provider' is required")
+
+    provider = request.data['provider'].lower()
+    if provider not in SUPPORTED_OAUTH_PROVIDERS:
+        raise ValidationError(f"'provider' must be one of: {', '.join(SUPPORTED_OAUTH_PROVIDERS)}")
+
+    provider_name = provider.capitalize()
 
     id_token = request.data['id_token']
 
