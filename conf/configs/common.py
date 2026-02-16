@@ -36,7 +36,6 @@ PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_FLUTTER_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://app.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
-PROJECT_AUTH_HOST = config('PROJECT_AUTH_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://auth.{ENVIRONMENT_PREFIX}heliumedu.com')
 
 # Version information
 
@@ -304,24 +303,21 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '10.0.2.2',
-    urlparse(PROJECT_API_HOST).netloc.split(':')[0],
-    urlparse(PROJECT_AUTH_HOST).netloc.split(':')[0]
+    urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3000',
     PROJECT_APP_HOST,
     strip_www(PROJECT_APP_HOST),
     PROJECT_FLUTTER_APP_HOST,
-    PROJECT_API_HOST,
-    PROJECT_AUTH_HOST
+    PROJECT_API_HOST
 ]
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     PROJECT_APP_HOST,
     strip_www(PROJECT_APP_HOST),
     PROJECT_FLUTTER_APP_HOST,
-    PROJECT_API_HOST,
-    PROJECT_AUTH_HOST
+    PROJECT_API_HOST
 ]
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
