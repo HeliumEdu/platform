@@ -81,3 +81,32 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertEqual(user.settings.private_slug, private_slug)
+
+    def test_is_setup_complete_in_response(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_settings_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('is_setup_complete', response.data)
+
+    def test_is_setup_complete_is_read_only(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.is_setup_complete = False
+        user.settings.save()
+
+        # WHEN
+        data = {
+            'is_setup_complete': True
+        }
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertFalse(user.settings.is_setup_complete)
