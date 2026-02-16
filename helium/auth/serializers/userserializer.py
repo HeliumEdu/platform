@@ -54,6 +54,13 @@ class UserSerializer(serializers.ModelSerializer):
                 not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
             raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
 
+        # If setting a password and user has a usable password, require old_password for security
+        if 'password' in attrs and self.instance:
+            if self.instance.has_usable_password() and 'old_password' not in attrs:
+                raise serializers.ValidationError({
+                    'old_password': 'Current password is required when changing your password.'
+                })
+
         return attrs
 
     def validate_email(self, email):
@@ -95,7 +102,9 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         instance = super().update(instance, validated_data)
 
-        if old_password and password:
+        if password:
+            # For users with usable passwords, old_password is required (validated in validate())
+            # For OAuth users without passwords, allow setting password directly to "upgrade" their account
             instance.set_password(password)
             instance.save()
 
