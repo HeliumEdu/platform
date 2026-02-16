@@ -647,11 +647,9 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
 
-        # Find the next Monday from today
+        # Find the next Monday from today (including today if it's Monday)
         today = timezone.now().date()
         days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
         next_monday = today + timedelta(days=days_until_monday)
         following_monday = next_monday + timedelta(days=7)
 
@@ -698,11 +696,9 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
 
-        # Find the next Monday from today
+        # Find the next Monday from today (including today if it's Monday)
         today = timezone.now().date()
         days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
         next_monday = today + timedelta(days=days_until_monday)
         following_monday = next_monday + timedelta(days=7)
 
