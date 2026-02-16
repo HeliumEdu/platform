@@ -40,8 +40,8 @@ urlpatterns = [
     path('auth/token/', TokenObtainPairView.as_view(), name='auth_token_obtain'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='auth_token_refresh'),
     path('auth/token/blacklist/', TokenBlacklistView.as_view(), name='auth_token_blacklist'),
-    path('auth/oauth/login/', OAuthLoginView.as_view({'post': 'oauth_login'}),
-         name='auth_oauth_login'),
+    path('auth/token/oauth/', OAuthLoginView.as_view({'post': 'oauth_login'}),
+         name='auth_token_oauth'),
 
     ##############################
     # Authenticated URLs
