@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django import forms
+from django.contrib import admin as django_admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
@@ -13,6 +14,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
+from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.common.admin import admin_site, BaseModelAdmin
 
@@ -103,11 +105,22 @@ class HasCourseScheduleFilter(SimpleListFilter):
             return queryset
 
 
+class UserOAuthProviderInline(django_admin.TabularInline):
+    model = UserOAuthProvider
+    extra = 0
+    can_delete = True
+    fields = ('provider', 'provider_user_id', 'created_at', 'last_used_at')
+    readonly_fields = ('provider', 'provider_user_id', 'created_at', 'last_used_at')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'username', 'created_at', 'last_login', 'num_course_groups', 'num_courses',
+    list_display = ('email', 'username', 'created_at', 'last_login', 'get_auth_type', 'num_course_groups', 'num_courses',
                     'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
@@ -122,12 +135,28 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     )
     fieldsets = None
     filter_horizontal = ()
+    inlines = [UserOAuthProviderInline]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login',)
 
         return self.readonly_fields
+
+    def get_auth_type(self, obj):
+        """Display the authentication types for the user."""
+        auth_types = []
+        if obj.has_usable_password():
+            auth_types.append('Password')
+
+        oauth_providers = obj.oauth_providers.all()
+        if oauth_providers:
+            provider_names = [provider.get_provider_display() for provider in oauth_providers]
+            auth_types.extend(provider_names)
+
+        return ', '.join(auth_types) if auth_types else 'None'
+
+    get_auth_type.short_description = 'Auth Type'
 
 
 class UserProfileAdmin(BaseModelAdmin):
@@ -220,6 +249,26 @@ class UserPushTokenAdmin(BaseModelAdmin):
     get_last_login.admin_order_field = 'user__last_login'
 
 
+class UserOAuthProviderAdmin(BaseModelAdmin):
+    list_display = ['get_user', 'provider', 'provider_user_id', 'created_at', 'last_used_at']
+    list_filter = ['provider']
+    search_fields = ('user__id', 'user__email', 'user__username', 'provider_user_id')
+    ordering = ('-last_used_at',)
+    readonly_fields = ('user', 'provider', 'provider_user_id', 'created_at', 'last_used_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_user(self, obj):
+        if obj.user:
+            return obj.user.get_username()
+        else:
+            return ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
+
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
     search_fields = ('token__jti', 'tokne__user__id', 'token__user__email', 'token__user__username')
     ordering = ('-token__user__last_login',)
@@ -239,5 +288,6 @@ admin_site.register(get_user_model(), UserAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserPushToken, UserPushTokenAdmin)
+admin_site.register(UserOAuthProvider, UserOAuthProviderAdmin)
 admin_site.register(OutstandingToken, OutstandingTokenAdmin)
 admin_site.register(BlacklistedToken, HeliumBlacklistedTokenAdmin)

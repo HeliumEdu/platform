@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError, NotFound, Throttled, Auth
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code
@@ -200,6 +201,23 @@ def oauth_login(request, provider_name):
             logger.info(f'New user {user.id} created via {provider_name} Sign-In with username {username}')
 
             metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
+
+        # Link or update OAuth provider for this user
+        provider_uid = decoded_token.get('uid')
+        provider_key = provider_name.lower()
+
+        oauth_provider, created = UserOAuthProvider.objects.update_or_create(
+            user=user,
+            provider=provider_key,
+            defaults={
+                'provider_user_id': provider_uid,
+            }
+        )
+
+        if created:
+            logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
+        else:
+            logger.info(f'Updated {provider_name} OAuth provider last_used_at for user {user.id}')
 
         token = RefreshToken.for_user(user)
 

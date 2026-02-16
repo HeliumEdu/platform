@@ -8,6 +8,7 @@ from django.core import exceptions
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
+from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
@@ -30,14 +31,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     settings = UserSettingsSerializer(required=False, read_only=True)
 
+    oauth_providers = UserOAuthProviderSerializer(many=True, read_only=True)
+
     has_usable_password = serializers.SerializerMethodField(
         help_text='Whether the user has a usable password (false for OAuth-only users).'
     )
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'has_usable_password',)
-        read_only_fields = ('email_changing', 'has_usable_password',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'oauth_providers', 'has_usable_password',)
+        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password',)
 
     def get_has_usable_password(self, obj):
         """Return whether the user has a usable password."""
