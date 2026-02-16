@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['auth.oauth']
+    tags=['auth.token']
 )
 class OAuthLoginView(ViewSet, HeliumAPIView):
     serializer_class = OAuthLoginSerializer

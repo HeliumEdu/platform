@@ -33,7 +33,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -77,7 +77,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'apple'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -113,7 +113,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -147,7 +147,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -165,7 +165,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -179,7 +179,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-token'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -193,7 +193,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'facebook'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -211,7 +211,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'invalid-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -232,7 +232,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'expired-token', 'provider': 'apple'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -254,7 +254,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -278,7 +278,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'google'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -302,7 +302,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -334,12 +334,12 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         response1 = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
         response2 = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -370,7 +370,7 @@ class TestCaseOAuthViews(APITestCase):
         # Create initial login
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -381,7 +381,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN - login again
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -409,7 +409,7 @@ class TestCaseOAuthViews(APITestCase):
 
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -425,7 +425,7 @@ class TestCaseOAuthViews(APITestCase):
 
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'apple'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
@@ -451,7 +451,7 @@ class TestCaseOAuthViews(APITestCase):
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'GOOGLE'}
         response = self.client.post(
-            reverse('auth_oauth_login'),
+            reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json'
         )
