@@ -87,11 +87,11 @@ class TestCaseUserSettingsViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        response = self.client.get(reverse('auth_user_settings_detail'))
+        response = self.client.get(reverse('auth_user_detail'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('is_setup_complete', response.data)
+        self.assertIn('is_setup_complete', response.data['settings'])
 
     def test_is_setup_complete_is_read_only(self):
         # GIVEN
