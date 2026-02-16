@@ -34,7 +34,7 @@ PROJECT_NAME = 'Helium'
 PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
-PROJECT_FLUTTER_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://{ENVIRONMENT_PREFIX}app.heliumedu.com')
+PROJECT_FLUTTER_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://app.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
 
 # Version information
@@ -175,8 +175,8 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' not in ENVIRONMENT else "https://support.heliumedu.com"
-STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}.heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
+SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else "https://support.heliumedu.com"
+STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
 
 # Healthcheck
 
