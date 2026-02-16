@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError, NotFound, Throttled, Auth
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code
@@ -151,16 +152,27 @@ def resend_verification_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-def oauth_login(request, provider_name):
+SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
+
+
+def oauth_login(request):
     """
     Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
 
-    :param request: the request being processed (must contain 'id_token' in data)
-    :param provider_name: the OAuth provider name (e.g., 'Google', 'Apple')
+    :param request: the request being processed (must contain 'id_token' and 'provider' in data)
     :return: a 200 Response with access and refresh tokens
     """
     if 'id_token' not in request.data:
         raise ValidationError("'id_token' is required")
+
+    if 'provider' not in request.data:
+        raise ValidationError("'provider' is required")
+
+    provider = request.data['provider'].lower()
+    if provider not in SUPPORTED_OAUTH_PROVIDERS:
+        raise ValidationError(f"'provider' must be one of: {', '.join(SUPPORTED_OAUTH_PROVIDERS)}")
+
+    provider_name = provider.capitalize()
 
     id_token = request.data['id_token']
 
@@ -200,6 +212,23 @@ def oauth_login(request, provider_name):
             logger.info(f'New user {user.id} created via {provider_name} Sign-In with username {username}')
 
             metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
+
+        # Link or update OAuth provider for this user
+        provider_uid = decoded_token.get('uid')
+        provider_key = provider_name.lower()
+
+        oauth_provider, created = UserOAuthProvider.objects.update_or_create(
+            user=user,
+            provider=provider_key,
+            defaults={
+                'provider_user_id': provider_uid,
+            }
+        )
+
+        if created:
+            logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
+        else:
+            logger.info(f'Updated {provider_name} OAuth provider last_used_at for user {user.id}')
 
         token = RefreshToken.for_user(user)
 

@@ -8,6 +8,7 @@ from django.core import exceptions
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
+from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
@@ -30,14 +31,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     settings = UserSettingsSerializer(required=False, read_only=True)
 
+    oauth_providers = UserOAuthProviderSerializer(many=True, read_only=True)
+
     has_usable_password = serializers.SerializerMethodField(
         help_text='Whether the user has a usable password (false for OAuth-only users).'
     )
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'has_usable_password',)
-        read_only_fields = ('email_changing', 'has_usable_password',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'oauth_providers', 'has_usable_password',)
+        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password',)
 
     def get_has_usable_password(self, obj):
         """Return whether the user has a usable password."""
@@ -50,6 +53,13 @@ class UserSerializer(serializers.ModelSerializer):
         if (username.startswith("heliumedu-cluster") and
                 not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
             raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
+
+        # If setting a password and user has a usable password, require old_password for security
+        if 'password' in attrs and self.instance:
+            if self.instance.has_usable_password() and 'old_password' not in attrs:
+                raise serializers.ValidationError({
+                    'old_password': 'Current password is required when changing your password.'
+                })
 
         return attrs
 
@@ -92,7 +102,9 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         instance = super().update(instance, validated_data)
 
-        if old_password and password:
+        if password:
+            # For users with usable passwords, old_password is required (validated in validate())
+            # For OAuth users without passwords, allow setting password directly to "upgrade" their account
             instance.set_password(password)
             instance.save()
 

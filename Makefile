@@ -66,6 +66,12 @@ test: install-dev
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
 	)
 
+create-superuser: migrate-dev
+	@( \
+		source $(PLATFORM_VENV)/bin/activate; \
+		ENVIRONMENT=local python manage.py createsuperuser; \
+	)
+
 run-devserver: build-dev migrate-dev
 	# This will start a local dev server, outside of Docker. This can be useful during active development, so images
 	# don't need to be rebuilt to validate each change.
