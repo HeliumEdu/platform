@@ -359,3 +359,110 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
         self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
+
+    def test_oauth_user_can_add_password(self):
+        """Test that OAuth users can add a password without providing old_password."""
+        # GIVEN - OAuth user (no usable password)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.set_unusable_password()
+        user.save()
+
+        self.assertFalse(user.has_usable_password())
+
+        # WHEN - User adds a password (no old_password required)
+        data = {'password': 'new_secure_pass_1!'}
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify password was set and user can now authenticate with it
+        user.refresh_from_db()
+        self.assertTrue(user.has_usable_password())
+        self.assertTrue(user.check_password('new_secure_pass_1!'))
+
+    def test_regular_user_cannot_change_password_without_old_password(self):
+        """Test that regular users still need old_password to change their password."""
+        # GIVEN - Regular user with password
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        self.assertTrue(user.has_usable_password())
+
+        # WHEN - User tries to change password without providing old_password
+        data = {'password': 'new_password_1!'}
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('old_password', response.data)
+
+        # Verify password was NOT changed
+        user.refresh_from_db()
+        self.assertFalse(user.check_password('new_password_1!'))
+        self.assertTrue(user.check_password('test_pass_1!'))  # Still the default test password
+
+    def test_regular_user_can_change_password_with_old_password(self):
+        """Test that regular users can change password when providing old_password."""
+        # GIVEN - Regular user with password
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN - User changes password with old_password
+        data = {
+            'old_password': 'test_pass_1!',
+            'password': 'new_secure_pass_1!'
+        }
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify password was changed
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('new_secure_pass_1!'))
+        self.assertFalse(user.check_password('test_pass_1!'))
+
+    def test_oauth_user_upgrade_to_password_then_change_requires_old_password(self):
+        """Test that after OAuth user adds password, subsequent changes require old_password."""
+        # GIVEN - OAuth user adds a password
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.set_unusable_password()
+        user.save()
+
+        # Add password first
+        data = {'password': 'first_password_1!'}
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        user.refresh_from_db()
+        self.assertTrue(user.has_usable_password())
+
+        # WHEN - User tries to change password again without old_password
+        data = {'password': 'second_password_1!'}
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN - Should require old_password now
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('old_password', response.data)
+
+        # Verify password was NOT changed
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('first_password_1!'))
+        self.assertFalse(user.check_password('second_password_1!'))
+
+        # WHEN - User provides old_password
+        data = {
+            'old_password': 'first_password_1!',
+            'password': 'second_password_1!'
+        }
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN - Should succeed
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('second_password_1!'))
