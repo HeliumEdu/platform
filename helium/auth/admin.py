@@ -256,6 +256,10 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
     ordering = ('-last_used_at',)
     readonly_fields = ('user', 'provider', 'provider_user_id', 'created_at', 'last_used_at')
 
+    def get_readonly_fields(self, request, obj=None):
+        # Override base to avoid adding 'updated_at' - this model uses 'last_used_at' instead
+        return self.readonly_fields
+
     def has_add_permission(self, request):
         return False
 

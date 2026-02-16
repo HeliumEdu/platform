@@ -22,6 +22,10 @@ def import_example_schedule(user_id):
 
         importservice.import_example_schedule(user)
 
+        # Mark setup as complete now that example schedule is imported
+        user.settings.is_setup_complete = True
+        user.settings.save()
+
         value = 1
     except get_user_model().DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
