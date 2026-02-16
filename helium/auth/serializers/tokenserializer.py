@@ -125,17 +125,14 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
         return {}
 
 
-class GoogleLoginSerializer(serializers.Serializer):
-    """Serializer for Google Sign-In via Firebase ID token."""
+class OAuthLoginSerializer(serializers.Serializer):
+    """Serializer for OAuth Sign-In via Firebase ID token."""
     id_token = serializers.CharField(
-        help_text='Firebase ID token obtained from Google Sign-In on the client.',
+        help_text='Firebase ID token obtained from OAuth Sign-In on the client.',
         write_only=True
     )
-
-
-class AppleLoginSerializer(serializers.Serializer):
-    """Serializer for Apple Sign-In via Firebase ID token."""
-    id_token = serializers.CharField(
-        help_text='Firebase ID token obtained from Apple Sign-In on the client.',
+    provider = serializers.ChoiceField(
+        choices=['google', 'apple'],
+        help_text='The OAuth provider (google or apple).',
         write_only=True
     )

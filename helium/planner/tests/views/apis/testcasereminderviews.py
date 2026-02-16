@@ -6,6 +6,7 @@ import json
 from datetime import timedelta
 from urllib.parse import quote
 
+import pytz
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -648,7 +649,9 @@ class TestCaseReminderViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # Find the next Monday from today (including today if it's Monday)
-        today = timezone.now().date()
+        # Use the user's timezone to match the implementation in Reminder._get_next_course_occurrence_start
+        user_tz = pytz.timezone(user.settings.time_zone)
+        today = datetime.datetime.now(user_tz).date()
         days_until_monday = (7 - today.weekday()) % 7
         next_monday = today + timedelta(days=days_until_monday)
         following_monday = next_monday + timedelta(days=7)
@@ -697,7 +700,9 @@ class TestCaseReminderViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
 
         # Find the next Monday from today (including today if it's Monday)
-        today = timezone.now().date()
+        # Use the user's timezone to match the implementation in Reminder._get_next_course_occurrence_start
+        user_tz = pytz.timezone(user.settings.time_zone)
+        today = datetime.datetime.now(user_tz).date()
         days_until_monday = (7 - today.weekday()) % 7
         next_monday = today + timedelta(days=days_until_monday)
         following_monday = next_monday + timedelta(days=7)
