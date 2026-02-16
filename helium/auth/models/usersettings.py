@@ -27,6 +27,10 @@ class UserSettings(BaseModel):
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
 
+    is_setup_complete = models.BooleanField(
+        help_text='Whether the account setup is complete (example schedule imported).',
+        default=False)
+
     whats_new_version_seen = models.PositiveIntegerField(
         help_text='The "What\'s New" dialog version the user has seen.',
         default=0)
