@@ -11,6 +11,7 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from firebase_admin import auth as firebase_auth
 
+from helium.auth.models import UserOAuthProvider
 from helium.auth.tests.helpers import userhelper
 
 
@@ -287,4 +288,122 @@ class TestCaseGoogleAuthViews(APITestCase):
         self.assertNotEqual(response1.data['access'], response2.data['access'])
 
         # Verify example schedule only imported once (on first login)
+        self.assertEqual(mock_import_schedule.delay.call_count, 1)
+
+    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_google_login_creates_oauth_provider(self, mock_verify_token, mock_import_schedule):
+        """Test that Google login creates a UserOAuthProvider record."""
+        # GIVEN
+        mock_verify_token.return_value = {
+            'uid': 'google-uid-123',
+            'email': 'oauth@gmail.com',
+            'email_verified': True
+        }
+        mock_import_schedule.delay = MagicMock()
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token'}
+        response = self.client.post(
+            reverse('auth_google_login'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify OAuth provider was created
+        user = get_user_model().objects.get(email='oauth@gmail.com')
+        oauth_provider = UserOAuthProvider.objects.get(user=user, provider='google')
+        self.assertEqual(oauth_provider.provider_user_id, 'google-uid-123')
+        self.assertIsNotNone(oauth_provider.created_at)
+        self.assertIsNotNone(oauth_provider.last_used_at)
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_google_login_updates_oauth_provider_last_used(self, mock_verify_token):
+        """Test that subsequent Google logins update the OAuth provider's last_used_at."""
+        # GIVEN
+        mock_verify_token.return_value = {
+            'uid': 'google-uid-456',
+            'email': 'existing@gmail.com',
+            'email_verified': True
+        }
+
+        # Create initial login
+        data = {'id_token': 'valid-firebase-id-token'}
+        self.client.post(
+            reverse('auth_google_login'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        user = get_user_model().objects.get(email='existing@gmail.com')
+        oauth_provider = UserOAuthProvider.objects.get(user=user, provider='google')
+        first_last_used = oauth_provider.last_used_at
+
+        # WHEN - login again
+        response = self.client.post(
+            reverse('auth_google_login'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify OAuth provider was updated (not duplicated)
+        self.assertEqual(UserOAuthProvider.objects.filter(user=user, provider='google').count(), 1)
+
+        oauth_provider.refresh_from_db()
+        self.assertGreater(oauth_provider.last_used_at, first_last_used)
+
+    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_user_can_have_multiple_oauth_providers(self, mock_verify_token, mock_import_schedule):
+        """Test that a user can link both Google and Apple OAuth providers."""
+        # GIVEN - user logs in with Google first
+        mock_verify_token.return_value = {
+            'uid': 'google-uid-multi',
+            'email': 'multiauth@gmail.com',
+            'email_verified': True
+        }
+        mock_import_schedule.delay = MagicMock()
+
+        data = {'id_token': 'valid-firebase-id-token'}
+        self.client.post(
+            reverse('auth_google_login'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        user = get_user_model().objects.get(email='multiauth@gmail.com')
+
+        # WHEN - same user logs in with Apple
+        mock_verify_token.return_value = {
+            'uid': 'apple-uid-multi',
+            'email': 'multiauth@gmail.com',  # Same email
+            'email_verified': True
+        }
+
+        response = self.client.post(
+            reverse('auth_apple_login'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify user has both OAuth providers
+        oauth_providers = UserOAuthProvider.objects.filter(user=user)
+        self.assertEqual(oauth_providers.count(), 2)
+
+        google_provider = oauth_providers.get(provider='google')
+        apple_provider = oauth_providers.get(provider='apple')
+
+        self.assertEqual(google_provider.provider_user_id, 'google-uid-multi')
+        self.assertEqual(apple_provider.provider_user_id, 'apple-uid-multi')
+
+        # Verify example schedule only imported once (on first provider link)
         self.assertEqual(mock_import_schedule.delay.call_count, 1)
