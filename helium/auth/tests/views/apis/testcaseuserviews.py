@@ -59,6 +59,8 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.calendar_event_limit, response.data['settings']['calendar_event_limit'])
         self.assertEqual(user.settings.calendar_use_category_colors,
                          response.data['settings']['calendar_use_category_colors'])
+        self.assertEqual(user.settings.show_planner_tooltips,
+                         response.data['settings']['show_planner_tooltips'])
         self.assertEqual(user.settings.remember_filter_state, response.data['settings']['remember_filter_state'])
         self.assertEqual(user.settings.color_scheme_theme, response.data['settings']['color_scheme_theme'])
         self.assertEqual(user.settings.default_reminder_offset_type,
