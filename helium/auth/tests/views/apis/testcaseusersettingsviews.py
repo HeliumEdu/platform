@@ -31,11 +31,13 @@ class TestCaseUserSettingsViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertTrue(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
+        self.assertTrue(user.settings.show_planner_tooltips)
 
         # WHEN
         data = {
             'show_getting_started': False,
-            'time_zone': 'America/Chicago'
+            'time_zone': 'America/Chicago',
+            'show_planner_tooltips': False,
         }
         response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -44,9 +46,11 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['show_getting_started'])
         self.assertEqual(response.data['time_zone'], 'America/Chicago')
+        self.assertFalse(response.data['show_planner_tooltips'])
         user.refresh_from_db()
         self.assertFalse(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
+        self.assertFalse(user.settings.show_planner_tooltips)
 
     def test_put_bad_data_fails(self):
         # GIVEN
