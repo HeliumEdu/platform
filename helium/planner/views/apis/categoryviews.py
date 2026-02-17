@@ -92,7 +92,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
+            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.pk}")
 
         return response
 
@@ -129,7 +129,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         """
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"Category {kwargs['pk']} updated for user {request.user.get_username()}")
+        logger.info(f"Category {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -147,23 +147,23 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         uncategorized = None
 
         if Category.objects.for_user(request.user.pk).for_course(category.course_id).count() == 1:
-            logger.info(f"One category remains, creating 'Uncategorized' proactively for {request.user.get_username()}")
+            logger.info(f"One category remains, creating 'Uncategorized' proactively for {request.user.pk}")
             uncategorized = Category.objects.get_uncategorized(category.course_id)
 
         if len(homework) > 0:
             if not uncategorized:
-                logger.info(f"Creating 'Uncategorized' to move Homework out of category being deleted for {request.user.get_username()}")
+                logger.info(f"Creating 'Uncategorized' to move Homework out of category being deleted for {request.user.pk}")
                 uncategorized = Category.objects.get_uncategorized(category.course_id)
             for h in homework:
                 h.category = uncategorized
                 h.save()
 
                 logger.info(
-                    f'Homework {h.pk} category set to Uncategorized {uncategorized.pk} for user {request.user.get_username()}')
+                    f'Homework {h.pk} category set to Uncategorized {uncategorized.pk} for user {request.user.pk}')
 
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            f"Category {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.get_username()}")
+            f"Category {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.pk}")
 
         return response

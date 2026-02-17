@@ -119,7 +119,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
+            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.pk}")
 
         return response
 
@@ -168,7 +168,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"Homework {kwargs['pk']} updated for user {request.user.get_username()}")
+        logger.info(f"Homework {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -188,7 +188,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info(f"Homework {kwargs['pk']} patched for user {request.user.get_username()}")
+        logger.info(f"Homework {kwargs['pk']} patched for user {request.user.pk}")
 
         return response
 
@@ -198,6 +198,6 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         """
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info(f"Homework {kwargs['pk']} deleted for user {request.user.get_username()}")
+        logger.info(f"Homework {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response

@@ -51,7 +51,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info(f'User {user.get_username()} updated')
+        logger.info(f'User {user.pk} updated')
 
         return Response(serializer.data)
 
@@ -79,7 +79,7 @@ class UserDeleteResourceView(HeliumAPIView):
             if not user.check_password(request.data['password']):
                 raise ValidationError({'password': ['The password is incorrect.']})
 
-        logger.info(f'User {user.get_username()} will be deleted')
+        logger.info(f'User {user.pk} will be deleted')
 
         delete_user.delay(user.pk)
 
@@ -115,7 +115,7 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         if not user.check_password(request.data['password']):
             raise AuthenticationFailed({'password': ['The password is incorrect.']})
 
-        logger.info(f'User {user.get_username()} will be deleted')
+        logger.info(f'User {user.pk} will be deleted')
 
         delete_user.delay(user.pk)
 

@@ -71,7 +71,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             if api_settings.UPDATE_LAST_LOGIN or self.context.get('request').data.get('last_login_now', False):
                 update_last_login(None, user)
 
-                logger.debug(f"User {username} has been logged in")
+                logger.debug(f"User {user.pk} has been logged in")
 
                 metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
 

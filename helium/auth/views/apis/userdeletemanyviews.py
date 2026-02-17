@@ -29,6 +29,6 @@ class UserDeleteExampleScheduleView(HeliumAPIView):
 
         delete_example_schedule(user.pk)
 
-        logger.info(f'User {user.get_username()} deleted the example schedule')
+        logger.info(f'User {user.pk} deleted the example schedule')
 
         return Response(status=status.HTTP_204_NO_CONTENT)

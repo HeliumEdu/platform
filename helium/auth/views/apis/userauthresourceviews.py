@@ -44,7 +44,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
 
             response.data['settings'] = serializer.data
 
-        logger.info(f"User {response.data['id']} created with username {response.data['username']}")
+        logger.info(f"User {response.data['id']} created")
 
         return response
 

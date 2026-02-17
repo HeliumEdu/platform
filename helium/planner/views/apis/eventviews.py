@@ -82,7 +82,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         """
         response = self.create(request, *args, **kwargs)
 
-        logger.info(f"Event {response.data['id']} created for user {request.user.get_username()}")
+        logger.info(f"Event {response.data['id']} created for user {request.user.pk}")
 
         return response
 
@@ -125,7 +125,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         """
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"Event {kwargs['pk']} updated for user {request.user.get_username()}")
+        logger.info(f"Event {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -135,7 +135,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         """
         response = self.partial_update(request, *args, **kwargs)
 
-        logger.info(f"Event {kwargs['pk']} patched for user {request.user.get_username()}")
+        logger.info(f"Event {kwargs['pk']} patched for user {request.user.pk}")
 
         return response
 
@@ -145,7 +145,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         """
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info(f"Event {kwargs['pk']} deleted for user {request.user.get_username()}")
+        logger.info(f"Event {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response
 

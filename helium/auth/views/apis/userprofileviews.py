@@ -33,6 +33,6 @@ class UserProfileApiDetailView(HeliumAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info(f'Profile updated for user {user.get_username()}')
+        logger.info(f'Profile updated for user {user.pk}')
 
         return Response(serializer.data)

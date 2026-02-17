@@ -54,7 +54,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         """
         response = self.create(request, *args, **kwargs)
 
-        logger.info(f"Push Token {response.data['id']} created for user {request.user.get_username()}")
+        logger.info(f"Push Token {response.data['id']} created for user {request.user.pk}")
 
         return response
 
@@ -87,6 +87,6 @@ class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelM
         """
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info(f"Push Token {kwargs['pk']} deleted for user {request.user.get_username()}")
+        logger.info(f"Push Token {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response

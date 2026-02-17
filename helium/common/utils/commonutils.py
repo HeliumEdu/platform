@@ -41,7 +41,7 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-    logger.debug(f"Sent email from {settings.DEFAULT_FROM_EMAIL} to {to} with subject \"{subject}\"")
+    logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
 
     metricutils.increment('action.email.sent')
 
