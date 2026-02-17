@@ -96,6 +96,25 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())
 
+    def test_registration_success_without_username(self):
+        # WHEN
+        data = {
+            'email': 'autouser@test.com',
+            'password': 'test_pass_1!',
+            'time_zone': 'America/Chicago'
+        }
+        response = self.client.post(reverse('auth_user_resource_register'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['settings']['time_zone'], 'America/Chicago')
+
+        user = get_user_model().objects.get(email='autouser@test.com')
+        self.assertTrue(user.username.startswith('autouser'))
+        self.assertFalse(user.is_active)
+
     def test_registration_bad_data(self):
         # WHEN
         response = self.client.post(reverse('auth_user_resource_register'),
