@@ -34,7 +34,7 @@ def send_verification_email(email, username, verification_code):
                                      },
                                      'Verify Your Email Address with Helium', [email])
 
-    logger.debug(f"Verification email with code \"{verification_code}\" sent to {username}")
+    logger.debug("Verification email sent successfully")
 
     metricutils.increment('task', extra_tags=['name:email.verification.sent'])
 
@@ -52,7 +52,7 @@ def send_registration_email(email):
                                      },
                                      'Welcome to Helium', [email])
 
-    logger.debug(f"Registration email sent to {email}")
+    logger.debug(f"Registration email sent successfully")
 
     metricutils.increment('task', extra_tags=['name:email.registration.sent'])
 
@@ -60,7 +60,7 @@ def send_registration_email(email):
 @app.task
 def send_password_reset_email(email, temp_password):
     if settings.DISABLE_EMAILS:
-        logger.warning(f'Emails disabled. Reset password: {temp_password}')
+        logger.warning('Emails disabled. Password reset email not sent.')
         return
 
     commonutils.send_multipart_email('email/forgot',
@@ -72,7 +72,7 @@ def send_password_reset_email(email, temp_password):
                                      },
                                      'Your Helium Password Has Been Reset', [email])
 
-    logger.debug(f"Password reset email sent to {email}")
+    logger.debug(f"Password reset email sent successfully")
 
     metricutils.increment('task', extra_tags=['name:email.password-reset.sent'])
 
@@ -94,11 +94,11 @@ def delete_user(user_id):
         try:
             firebase_user = firebase_auth.get_user_by_email(user.email)
             firebase_auth.delete_user(firebase_user.uid)
-            logger.info(f'Deleted Firebase Auth user for {user.email}')
+            logger.info(f'Deleted Firebase Auth user for user {user.pk}')
         except firebase_auth.UserNotFoundError:
-            logger.info(f'No Firebase Auth user found for {user.email}')
+            logger.info(f'No Firebase Auth user found for user {user.pk}')
         except Exception as e:
-            logger.warning(f'Failed to delete Firebase Auth user for {user.email}: {str(e)}')
+            logger.warning(f'Failed to delete Firebase Auth user for user {user.pk}: {str(e)}')
 
         user.delete()
 
@@ -147,7 +147,7 @@ def purge_unverified_users():
             created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
                 days=settings.UNVERIFIED_USER_TTL_DAYS)):
         logger.info(
-            f'Deleting user {user.username}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
+            f'Deleting user {user.pk}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
         user.delete()
 

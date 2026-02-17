@@ -44,17 +44,17 @@ def forgot_password(request):
             user.set_password(password)
             user.save()
 
-            logger.info(f'Reset password for user with email {user.email}')
+            logger.info(f'Reset password for user {user.pk}')
 
             send_password_reset_email.delay(user.email, password)
 
             metricutils.increment('action.user.password-reset', request=request, user=user)
         else:
             # OAuth-only user - don't create a password for security reasons
-            logger.info(f'Password reset requested for OAuth-only user {user.email}, ignoring for security')
+            logger.info(f'Password reset requested for OAuth-only user {user.pk}, ignoring for security')
             metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
     except get_user_model().DoesNotExist:
-        logger.info(f'A user tried to reset their password, but the given email address is unknown')
+        logger.info(f'Password reset requested for unknown account identifier')
 
     return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -82,7 +82,7 @@ def verify_email(request):
             user.is_active = True
             user.save()
 
-            logger.info(f'Completed registration and verification for user {user.username}')
+            logger.info(f'Completed registration and verification for user {user.pk}')
 
             if request.GET.get('welcome-email', 'true') == 'true':
                 send_registration_email.delay(user.email)
@@ -95,7 +95,7 @@ def verify_email(request):
             user.email_changing = None
             user.save()
 
-            logger.info(f'Verified new email for user {user.username}')
+            logger.info(f'Verified new email for user {user.pk}')
 
             metricutils.increment('action.user.email-changed', request=request, user=user)
 
@@ -138,7 +138,7 @@ def resend_verification_email(request):
 
         if user.is_active:
             # Don't reveal whether user exists or is already active
-            logger.info(f'Resend verification requested for already active user identifier {identifier}')
+            logger.info(f'Resend verification requested for already active user {user.pk}')
             return Response(status=status.HTTP_202_ACCEPTED)
 
         # Generate new verification code and send email
@@ -147,7 +147,7 @@ def resend_verification_email(request):
 
         send_verification_email.delay(user.email, user.username, user.verification_code)
 
-        logger.info(f'Resent verification email for user identifier {identifier}')
+        logger.info(f'Resent verification email for user {user.pk}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
@@ -157,7 +157,7 @@ def resend_verification_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         # Don't reveal whether user exists - return success anyway
-        logger.info(f'Resend verification requested for unknown user identifier {identifier}')
+        logger.info(f'Resend verification requested for unknown account identifier')
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
@@ -212,7 +212,7 @@ def oauth_login(request):
                 'email': email,
             })
 
-            logger.info(f'New user {user.id} created via {provider_name} Sign-In with username {username}')
+            logger.info(f'New user {user.id} created via {provider_name} Sign-In')
 
             metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
 

@@ -84,7 +84,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
                 serializer.save(user=request.user)
 
                 logger.info(
-                    f'Attachment {serializer.instance.pk} created for user {request.user.get_username()}')
+                    f'Attachment {serializer.instance.pk} created for user {request.user.pk}')
 
                 response_data.append(serializer.data)
             else:
@@ -127,6 +127,6 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
         """
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info(f"Attachment {kwargs['pk']} deleted for user {request.user.get_username()}")
+        logger.info(f"Attachment {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response

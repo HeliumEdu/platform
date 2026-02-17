@@ -85,7 +85,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"CourseSchedule {response.data['id']} created in Course {kwargs['course']} for user {request.user.get_username()}")
+            f"CourseSchedule {response.data['id']} created in Course {kwargs['course']} for user {request.user.pk}")
 
         return response
 
@@ -119,7 +119,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         """
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.get_username()}")
+        logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -130,6 +130,6 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            f"CourseSchedule {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.get_username()}")
+            f"CourseSchedule {kwargs['pk']} deleted from Course {kwargs['course']} for user {request.user.pk}")
 
         return response
