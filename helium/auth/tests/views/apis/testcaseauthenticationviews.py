@@ -177,6 +177,32 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
+    def test_verification_success_with_email_identifier(self):
+        # GIVEN
+        user = userhelper.given_an_inactive_user_exists()
+
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_verify') + f'?username={user.email}&code={user.verification_code}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        user = get_user_model().objects.get(email=user.email)
+        self.assertTrue(user.is_active)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+    def test_resend_verification_success_with_email_identifier(self):
+        # GIVEN
+        user = userhelper.given_an_inactive_user_exists()
+
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_resend_verification') + f'?username={user.email}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
     def test_verification_bad_request(self):
         # GIVEN
         user = userhelper.given_an_inactive_user_exists()

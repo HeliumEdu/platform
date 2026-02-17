@@ -5,6 +5,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db.models import Q
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
@@ -68,8 +69,14 @@ def verify_email(request):
     if 'username' not in request.GET or 'code' not in request.GET:
         raise ValidationError("'username' and 'code' must be given as query parameters")
 
+    identifier = request.GET['username']
+    code = request.GET['code']
+
     try:
-        user = get_user_model().objects.get(username=request.GET['username'], verification_code=request.GET['code'])
+        user = get_user_model().objects.get(
+            (Q(username__iexact=identifier) | Q(email__iexact=identifier)),
+            verification_code=code,
+        )
 
         if not user.is_active:
             user.is_active = True
@@ -117,19 +124,21 @@ def resend_verification_email(request):
     if 'username' not in request.GET:
         raise ValidationError("'username' must be given as a query parameter")
 
-    username = request.GET['username']
-    cache_key = f'resend_verification:{username}'
+    identifier = request.GET['username']
+    cache_key = f'resend_verification:{identifier.strip().lower()}'
 
     # Check rate limit
     if cache.get(cache_key):
         raise Throttled(detail='Please wait before requesting another verification email.')
 
     try:
-        user = get_user_model().objects.get(username=username)
+        user = get_user_model().objects.get(
+            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+        )
 
         if user.is_active:
             # Don't reveal whether user exists or is already active
-            logger.info(f'Resend verification requested for already active user {username}')
+            logger.info(f'Resend verification requested for already active user identifier {identifier}')
             return Response(status=status.HTTP_202_ACCEPTED)
 
         # Generate new verification code and send email
@@ -138,7 +147,7 @@ def resend_verification_email(request):
 
         send_verification_email.delay(user.email, user.username, user.verification_code)
 
-        logger.info(f'Resent verification email for user {username}')
+        logger.info(f'Resent verification email for user identifier {identifier}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
@@ -148,7 +157,7 @@ def resend_verification_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
     except get_user_model().DoesNotExist:
         # Don't reveal whether user exists - return success anyway
-        logger.info(f'Resend verification requested for unknown user {username}')
+        logger.info(f'Resend verification requested for unknown user identifier {identifier}')
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
