@@ -14,7 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
-from helium.auth.utils.userutils import generate_verification_code
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, MaterialGroup, Event
@@ -195,13 +195,7 @@ def oauth_login(request):
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
         except get_user_model().DoesNotExist:
             # Generate unique username from email
-            base_username = email.split('@')[0]
-            username = base_username
-            counter = 1
-
-            while get_user_model().objects.filter(username=username).exists():
-                username = f"{base_username}{counter}"
-                counter += 1
+            username = generate_unique_username_from_email(email)
 
             serializer = UserSerializer()
             user = serializer.create_from_oauth({
