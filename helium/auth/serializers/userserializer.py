@@ -12,7 +12,7 @@ from helium.auth.serializers.useroauthproviderserializer import UserOAuthProvide
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import generate_verification_code
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common import enums
 from helium.importexport.tasks import import_example_schedule
 
@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text=get_user_model()._meta.get_field('username').help_text
+    )
+
     old_password = serializers.CharField(
         help_text='The current password for the user (required only when changing an existing password).',
         required=False, write_only=True)
@@ -50,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
         email = attrs.get('email', self.instance.email if self.instance else None)
         username = attrs.get('username', self.instance.username if self.instance else None)
 
-        if (username.startswith("heliumedu-cluster") and
+        if (username and username.startswith("heliumedu-cluster") and
                 not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
             raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
 
@@ -112,6 +118,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
+        username = validated_data.get('username')
+        if not username:
+            validated_data['username'] = generate_unique_username_from_email(
+                validated_data.get('email')
+            )
         instance = super().create(validated_data)
 
         instance.set_password(password)
@@ -141,7 +152,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.Serializer):
-    username = serializers.CharField(help_text=get_user_model()._meta.get_field('username').help_text)
+    username = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text=get_user_model()._meta.get_field('username').help_text
+    )
 
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 
