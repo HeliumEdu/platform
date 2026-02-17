@@ -20,12 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text=get_user_model()._meta.get_field('username').help_text
-    )
-
     old_password = serializers.CharField(
         help_text='The current password for the user (required only when changing an existing password).',
         required=False, write_only=True)
@@ -47,6 +41,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'oauth_providers', 'has_usable_password',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password',)
+        extra_kwargs = {
+            'username': {'required': False, 'allow_blank': True},
+        }
 
     def get_has_usable_password(self, obj):
         """Return whether the user has a usable password."""
