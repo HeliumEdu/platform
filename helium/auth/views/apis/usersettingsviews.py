@@ -32,6 +32,6 @@ class UserSettingsApiDetailView(HeliumAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        logger.info(f'Settings updated for user {user.get_username()}')
+        logger.info(f'Settings updated for user {user.pk}')
 
         return Response(serializer.data)
