@@ -59,6 +59,10 @@ class UserSettings(BaseModel):
         help_text='Whether planner item hover tooltips should be shown.',
         default=True)
 
+    drag_and_drop_on_mobile = models.BooleanField(
+        help_text='Whether drag-and-drop is enabled on touch/mobile devices.',
+        default=True)
+
     default_reminder_type = models.PositiveIntegerField(
         help_text='A valid default type of reminder choice when creating a new reminder.',
         default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
