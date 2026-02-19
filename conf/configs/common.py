@@ -300,22 +300,15 @@ SECRET_KEY = config('PLATFORM_SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '10.0.2.2',
     urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
     PROJECT_APP_LEGACY_HOST,
     strip_www(PROJECT_APP_LEGACY_HOST)
 ]
 CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
     PROJECT_APP_LEGACY_HOST,
@@ -324,6 +317,22 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
+
+if 'prod' not in ENVIRONMENT:
+    CSRF_TRUSTED_ORIGINS += [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
 
 if 'local' in ENVIRONMENT:
     ALLOWED_HOSTS += [
