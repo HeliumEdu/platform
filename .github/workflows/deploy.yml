@@ -182,6 +182,16 @@ jobs:
         if: failure()
         uses: jwalton/gh-docker-logs@v2
 
+      - name: Trigger cluster-tests run
+        if: always()
+        env:
+          CLUSTER_TITLE: "Triggered from platform release ${{ needs.determine-version.outputs.version }} for ${{ inputs.environment }}"
+        run: |
+          curl -s -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -d "{\"event_type\":\"trigger-cluster-tests\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"title\":\"${CLUSTER_TITLE}\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
+
   deploy:
     name: Deploy to ${{ inputs.environment }}
     needs: [determine-version, test-release]
