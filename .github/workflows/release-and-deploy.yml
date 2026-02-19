@@ -23,7 +23,7 @@ on:
           - dev
           - prod
       run_cluster_tests:
-        description: "Run cluster tests before deploying"
+        description: "Run cluster tests for frontend-legacy before deploying"
         required: true
         type: boolean
         default: true
@@ -60,4 +60,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run cluster tests**: ${{ inputs.run_cluster_tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run cluster tests for frontend-legacy**: ${{ inputs.run_cluster_tests }}" >> $GITHUB_STEP_SUMMARY
