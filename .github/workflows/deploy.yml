@@ -159,7 +159,7 @@ jobs:
 
           cd platform-repo
           FRONTEND_LEGACY_VERSION=$(grep '^FRONTEND_LEGACY_VERSION = ' conf/configs/common.py | sed 's/FRONTEND_LEGACY_VERSION = "\(.*\)"/\1/')
-          echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:legacy-amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
           cd ..
 
       - name: Install dependencies
