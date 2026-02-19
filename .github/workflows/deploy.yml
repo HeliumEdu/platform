@@ -156,11 +156,9 @@ jobs:
           echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
           echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
           echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
-
-          cd platform-repo
-          FRONTEND_LEGACY_VERSION=$(grep '^FRONTEND_LEGACY_VERSION = ' conf/configs/common.py | sed 's/FRONTEND_LEGACY_VERSION = "\(.*\)"/\1/')
+          : ${FRONTEND_LEGACY_VERSION:=latest}
+          echo "FRONTEND_LEGACY_VERSION=${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
           echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:legacy-amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
-          cd ..
 
       - name: Install dependencies
         working-directory: deploy

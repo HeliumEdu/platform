@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.22"
+__version__ = "2.1.24"
 
 import os
 import socket
@@ -41,7 +41,7 @@ PROJECT_APP_LEGACY_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 
 
 PROJECT_VERSION = __version__
 
-FRONTEND_LEGACY_VERSION = config('PLATFORM_FRONTEND_LEGACY_VERSION', "1.18.24")
+FRONTEND_LEGACY_VERSION = config('PLATFORM_FRONTEND_LEGACY_VERSION', "latest")
 
 # AWS S3
 
