@@ -101,7 +101,7 @@ jobs:
       - name: Commit version bump
         run: |
           git config --global user.name "GitHub Release Bot"
-          git config --global user.email "contact@alexlaird.com"
+          git config --global user.email "support@heliumedu.com"
 
           git add conf/configs/common.py
 
@@ -186,7 +186,7 @@ jobs:
           COMMIT_SHA: ${{ needs.bump-version.outputs.commit_sha }}
         run: |
           git config --global user.name "GitHub Release Bot"
-          git config --global user.email "contact@alexlaird.com"
+          git config --global user.email "support@heliumedu.com"
 
           # Fetch latest changes to ensure we have the version bump commit
           git fetch origin main
