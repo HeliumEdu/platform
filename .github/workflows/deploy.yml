@@ -170,7 +170,7 @@ jobs:
         working-directory: deploy
         env:
           TAG_VERSION: ${{ needs.determine-version.outputs.version }}
-        run: FRONTEND_PROJECT=frontend-legacy PROJECT_APP_HOST=http://localhost:3000 make test-cluster
+        run: make test-cluster-legacy
 
       - name: Upload test output
         if: ${{ always() }}
