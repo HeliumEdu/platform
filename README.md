@@ -48,7 +48,7 @@ To create an admin user, you can run:
 docker exec -it platform-api-1 python manage.py createsuperuser
 ```
 
-An admin extends a basic user (when you register from [the `frontend` website](http://localhost:3000/register)) with
+An admin extends a basic user (when you register from [the `frontend` website](http://localhost:8080/signup)) with
 access to [the admin site](http://localhost:8000/admin).
 
 The shell of containers can be accessed using their name, like:
