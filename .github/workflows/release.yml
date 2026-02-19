@@ -14,6 +14,17 @@ on:
           - patch
           - minor
           - major
+  workflow_call:
+    inputs:
+      bump_type:
+        description: "Version bump type"
+        required: false
+        type: string
+        default: patch
+    outputs:
+      version:
+        description: "Released version"
+        value: ${{ jobs.bump-version.outputs.version }}
 
 permissions:
   contents: write
@@ -67,7 +78,7 @@ jobs:
           MINOR="${VERSION_PARTS[1]}"
           PATCH="${VERSION_PARTS[2]}"
 
-          case "${{ github.event.inputs.bump_type }}" in
+          case "${{ inputs.bump_type }}" in
             major)
               MAJOR=$((MAJOR + 1))
               MINOR=0
