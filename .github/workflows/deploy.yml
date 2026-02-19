@@ -170,7 +170,7 @@ jobs:
         working-directory: deploy
         env:
           TAG_VERSION: ${{ needs.determine-version.outputs.version }}
-        run: make test-cluster
+        run: make test-cluster-legacy
 
       - name: Upload test output
         if: ${{ always() }}
