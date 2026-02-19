@@ -1,0 +1,63 @@
+name: "Release and Deploy"
+
+run-name: "Release and deploy to ${{ inputs.environment }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: "Version bump type"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        default: prod
+        options:
+          - dev
+          - prod
+      run_cluster_tests:
+        description: "Run cluster tests before deploying"
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    name: Release
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      bump_type: ${{ inputs.bump_type }}
+
+  deploy:
+    name: Deploy
+    needs: release
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      version_type: specific
+      specific_version: ${{ needs.release.outputs.version }}
+      environment: ${{ inputs.environment }}
+      run_cluster_tests: ${{ inputs.run_cluster_tests }}
+
+  summary:
+    name: Summary
+    needs: [release, deploy]
+    if: always() && needs.release.result == 'success' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Release and deployment summary
+        run: |
+          echo "### Release and Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run cluster tests**: ${{ inputs.run_cluster_tests }}" >> $GITHUB_STEP_SUMMARY
