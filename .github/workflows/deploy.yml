@@ -221,10 +221,10 @@ jobs:
       - name: Setup git
         run: |
           git config --global user.name "GitHub Release Bot"
-          git config --global user.email "contact@alexlaird.com"
+          git config --global user.email "support@heliumedu.com"
           cd deploy
           git config user.name "GitHub Release Bot"
-          git config user.email "contact@alexlaird.com"
+          git config user.email "support@heliumedu.com"
 
       - name: Install dependencies
         run: pip install requests GitPython boto3
