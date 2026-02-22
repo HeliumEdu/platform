@@ -99,6 +99,7 @@ def delete_user(user_id):
             logger.info(f'No Firebase Auth user found for user {user.pk}')
         except Exception as e:
             logger.warning(f'Failed to delete Firebase Auth user for user {user.pk}: {str(e)}')
+            metricutils.increment('external.firebase.failed', extra_tags=['operation:delete_user'])
 
         user.delete()
 

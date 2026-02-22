@@ -36,6 +36,7 @@ def recalculate_course_group_grade(course_group_id, retries=0):
             recalculate_course_group_grade.apply_async((course_group_id, retries + 1),
                                                        countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
+            metricutils.task_failure('grade.recalculate.course-group', 'IntegrityError')
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
@@ -59,6 +60,7 @@ def recalculate_course_grade(course_id, retries=0):
             recalculate_course_grade.apply_async((course_id, retries + 1),
                                                  countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
+            metricutils.task_failure('grade.recalculate.course', 'IntegrityError')
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
@@ -90,6 +92,7 @@ def recalculate_category_grade(category_id, retries=0):
             recalculate_category_grade.apply_async((category_id, retries + 1),
                                                    countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
         else:
+            metricutils.task_failure('grade.recalculate.category', 'IntegrityError')
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"Category {category_id}, or an associated resource, does not exist. Nothing to do.")
