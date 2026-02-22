@@ -223,7 +223,6 @@ def fetch_ical_conditional(external_calendar):
 
         if response_code == status.HTTP_304_NOT_MODIFIED:
             logger.info(f"External Calendar {external_calendar.pk} not modified (304)")
-            metricutils.increment('feed.ical.not-modified')
             return None
 
         if response_code != status.HTTP_200_OK:
@@ -249,12 +248,15 @@ def fetch_ical_conditional(external_calendar):
 
     except ValidationError as ex:
         logger.info(f"The URL is invalid: {ex}")
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_url'])
         raise HeliumICalError(ex.message)
     except URLError as ex:
         logger.info(f"The URL is not reachable: {ex}")
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:unreachable'])
         raise HeliumICalError("The URL is not reachable.")
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
         raise HeliumICalError("The URL did not return a valid ICAL feed.")
 
 

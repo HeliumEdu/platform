@@ -39,11 +39,15 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
 
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.attach_alternative(html_content, "text/html")
-    msg.send()
 
-    logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
-
-    metricutils.increment('action.email.sent')
+    try:
+        msg.send()
+        logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
+        metricutils.increment('action.email.sent')
+    except Exception:
+        logger.error("Failed to send email", exc_info=True)
+        metricutils.increment('action.email.failed')
+        raise
 
 
 def remove_exponent(d):

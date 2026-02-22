@@ -21,14 +21,18 @@ class HeliumPhoneError(HeliumError):
 def send_sms(phone, message):
     client = _get_client()
 
-    client.api.account.messages.create(
-        to=phone,
-        from_=settings.TWILIO_SMS_FROM,
-        body=message)
+    try:
+        client.api.account.messages.create(
+            to=phone,
+            from_=settings.TWILIO_SMS_FROM,
+            body=message)
 
-    logger.debug(f"SMS sent to {phone}")
-
-    metricutils.increment('action.text.sent')
+        logger.debug(f"SMS sent to {phone}")
+        metricutils.increment('action.text.sent')
+    except TwilioRestException:
+        logger.error(f"Failed to send SMS to {phone}", exc_info=True)
+        metricutils.increment('action.text.failed')
+        raise
 
 
 def verify_number(phone):
