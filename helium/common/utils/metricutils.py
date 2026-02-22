@@ -105,3 +105,14 @@ def task_stop(metrics, value=1, user=None):
         timing('task.timing', metrics['Task-Metric-Millis'], extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
+def task_failure(task_name, exception_type=None):
+    try:
+        tags = [f"name:{task_name}"]
+        if exception_type:
+            tags.append(f"exception:{exception_type}")
+
+        increment('task.failed', extra_tags=tags)
+    except Exception:
+        logger.error("An error occurred while emitting metrics", exc_info=True)
