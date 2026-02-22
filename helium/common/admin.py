@@ -3,8 +3,15 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
+from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
 from django_celery_results.models import TaskResult
+
+
+class EmailOrUsernameAuthForm(AdminAuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = "Email"
 
 
 class PlatformAdminSite(AdminSite):
@@ -14,6 +21,7 @@ class PlatformAdminSite(AdminSite):
     site_header = settings.PROJECT_NAME + ' Administration'
     site_title = site_header
     index_title = settings.PROJECT_NAME
+    login_form = EmailOrUsernameAuthForm
 
 
 class BaseModelAdmin(ModelAdmin):
