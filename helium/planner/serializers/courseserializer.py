@@ -35,17 +35,17 @@ class CourseSerializer(serializers.ModelSerializer):
             'course_group', 'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
-    def get_num_homework(self, obj):
+    def get_num_homework(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created courses have no homework anyway)
         return getattr(obj, 'annotated_num_homework', 0)
 
-    def get_num_homework_completed(self, obj):
+    def get_num_homework_completed(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created courses have no homework anyway)
         return getattr(obj, 'annotated_num_homework_completed', 0)
 
-    def get_num_homework_graded(self, obj):
+    def get_num_homework_graded(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created courses have no homework anyway)
         return getattr(obj, 'annotated_num_homework_graded', 0)
