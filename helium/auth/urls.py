@@ -9,7 +9,7 @@ from helium.auth.views.apis.oauthviews import OAuthLoginView
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView, UserResendVerificationResourceView
-from helium.auth.views.apis.userdeletemanyviews import UserDeleteExampleScheduleView
+from helium.auth.views.apis.userdeleteexamplescheduleviews import UserDeleteExampleScheduleView
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView

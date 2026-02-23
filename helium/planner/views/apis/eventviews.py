@@ -139,6 +139,9 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return response
 
+    @extend_schema(
+        tags=['planner.event']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given Helium Event instance.

@@ -192,6 +192,9 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return response
 
+    @extend_schema(
+        tags=['planner.homework']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given homework instance.

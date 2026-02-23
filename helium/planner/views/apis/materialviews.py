@@ -135,6 +135,9 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
 
         return response
 
+    @extend_schema(
+        tags=['planner.material']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given material instance.

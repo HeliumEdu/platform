@@ -141,6 +141,9 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
+    @extend_schema(
+        tags=['planner.reminder']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given reminder instance.
