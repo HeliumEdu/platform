@@ -13,7 +13,7 @@ from helium.auth.views.apis.userdeletemanyviews import UserDeleteExampleSchedule
 from helium.auth.views.apis.userprofileviews import UserProfileApiDetailView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
-from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView, UserDeleteInactiveResourceView
+from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView
 
 urlpatterns = [
     # URLs for Django's auto-generated, session-based login views for ease of API navigation
@@ -49,8 +49,6 @@ urlpatterns = [
     # User
     path('auth/user/', UserApiDetailView.as_view(), name='auth_user_detail'),
     path('auth/user/delete/', UserDeleteResourceView.as_view(), name='auth_user_resource_delete'),
-    path('auth/user/delete/inactive/', UserDeleteInactiveResourceView.as_view(),
-         name='auth_user_resource_delete_inactive'),
     path('auth/user/profile/', UserProfileApiDetailView.as_view(),
          name='auth_user_profile_detail'),
     path('auth/user/settings/', UserSettingsApiDetailView.as_view(),

@@ -308,60 +308,6 @@ class TestCaseUserViews(APITestCase):
         self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
         self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
 
-    def test_delete_user_inactive(self):
-        # GIVEN
-        user = userhelper.given_an_inactive_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.username,
-            'password': 'test_pass_1!'
-        }
-        response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),
-                                      content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
-        self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
-
-    def test_delete_user_inactive_fails_bad_request(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.username,
-            'password': 'wrong_pass'
-        }
-        response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),
-                                      content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
-        self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
-
-    def test_delete_user_inactive_with_active_user(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-
-        # WHEN
-        data = {
-            'username': user.username,
-            'password': 'test_pass_1!'
-        }
-        response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),
-                                      content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
-        self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
-
     def test_oauth_user_can_add_password(self):
         """Test that OAuth users can add a password without providing old_password."""
         # GIVEN - OAuth user (no usable password)

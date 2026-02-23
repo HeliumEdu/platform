@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -22,6 +23,7 @@ class UserProfileApiDetailView(HeliumAPIView):
     def get_object(self):
         return self.request.user
 
+    @extend_schema(deprecated=True, exclude=True)
     def put(self, request, *args, **kwargs):
         """
         Update the authenticated user's profile. This endpoint only updates the fields given (i.e. no need to PATCH
