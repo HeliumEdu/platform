@@ -150,7 +150,7 @@ def purge_unverified_users():
         logger.info(
             f'Deleting user {user.pk}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
-        user.delete()
+        delete_user.delay(user.pk)
 
         num_purged += 1
 

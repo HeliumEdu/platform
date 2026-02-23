@@ -123,6 +123,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
 
         return response
 
+    @extend_schema(deprecated=True, exclude=True)
     def delete(self, request, *args, **kwargs):
         """
         Delete the given course schedule instance.

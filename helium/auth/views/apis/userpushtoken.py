@@ -73,6 +73,7 @@ class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelM
         else:
             return UserPushToken.objects.none()
 
+    @extend_schema(deprecated=True, exclude=True)
     def get(self, request, *args, **kwargs):
         """
         Return the given push token instance.
