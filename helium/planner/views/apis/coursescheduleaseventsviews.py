@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 # built from CourseSchedules. These routes are only maintained for the legacy frontend, then can be removed.
 
 @extend_schema(
-    tags=['planner.courseschedule.event', 'calendar.user']
+    tags=['planner.courseschedule.event', 'calendar.user'],
+    deprecated=True,
+    exclude=True,
 )
 class UserCourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
@@ -76,7 +78,9 @@ class UserCourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
 
 
 @extend_schema(
-    tags=['planner.courseschedule.event']
+    tags=['planner.courseschedule.event'],
+    deprecated=True,
+    exclude=True,
 )
 class CourseScheduleAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
