@@ -82,6 +82,9 @@ class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelM
 
         return response
 
+    @extend_schema(
+        tags=['auth.pushtoken']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given push token instance.

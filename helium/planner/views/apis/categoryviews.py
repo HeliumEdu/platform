@@ -133,6 +133,9 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
         return response
 
+    @extend_schema(
+        tags=['planner.category']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given category instance.

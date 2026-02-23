@@ -112,6 +112,9 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
         else:
             return Attachment.objects.none()
 
+    @extend_schema(
+        tags=['planner.attachment']
+    )
     def get(self, request, *args, **kwargs):
         """
         Return the given attachment instance. To download the attachment, follow the link contained in the `attachment`
@@ -121,6 +124,9 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
 
         return response
 
+    @extend_schema(
+        tags=['planner.attachment']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given attachment instance.

@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
+from helium.planner.models import Event
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView
@@ -26,6 +27,11 @@ logger = logging.getLogger(__name__)
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Event.objects.none()
+        return Event.objects.none()
 
     @extend_schema(
         parameters=[
@@ -81,7 +87,13 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Event.objects.none()
+        return Event.objects.none()
+
     @extend_schema(
+        operation_id='feed_externalcalendar_events_list',
         parameters=[
             OpenApiParameter(name='from', type=datetime),
             OpenApiParameter(name='to', type=datetime),

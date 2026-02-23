@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username': {'required': False, 'allow_blank': True},
         }
 
-    def get_has_usable_password(self, obj):
+    def get_has_usable_password(self, obj) -> bool:
         """Return whether the user has a usable password."""
         return obj.has_usable_password()
 

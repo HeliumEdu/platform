@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.29"
+__version__ = "2.1.30"
 
 import os
 import socket
@@ -336,10 +336,18 @@ if 'prod' not in ENVIRONMENT:
 
 if 'local' in ENVIRONMENT:
     ALLOWED_HOSTS += [
-        '.ngrok.dev'
+        'localhost',
+        '127.0.0.1',
+        '.ngrok.dev',
     ]
     CSRF_TRUSTED_ORIGINS += [
-        'https://*.ngrok.dev'
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'https://*.ngrok.dev',
+    ]
+    CORS_ALLOWED_ORIGINS += [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
     ]
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r"https://\w+\.ngrok\.dev"
