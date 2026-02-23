@@ -132,6 +132,9 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
+    @extend_schema(
+        tags=['planner.course']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given course instance.

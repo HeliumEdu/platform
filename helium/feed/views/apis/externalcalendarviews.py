@@ -93,6 +93,9 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
         return response
 
+    @extend_schema(
+        tags=['feed.externalcalendar']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given external calendar instance.
