@@ -6,7 +6,8 @@ import logging
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.utils.http import http_date
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import NotFound
 
 from helium.common.views.base import HeliumAPIView
@@ -19,6 +20,14 @@ logger = logging.getLogger(__name__)
     tags=['feed.private.event']
 )
 class PrivateEventsICALResourceView(HeliumAPIView):
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing events'
+            )
+        }
+    )
     def get(self, request, private_slug):
         """
         Return a list of all event instances for the private slug (defined in a user's settings) formatted for an ICAL stream. The response will
@@ -53,6 +62,14 @@ class PrivateEventsICALResourceView(HeliumAPIView):
     tags=['feed.private.event']
 )
 class PrivateHomeworkICALResourceView(HeliumAPIView):
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing homework'
+            )
+        }
+    )
     def get(self, request, private_slug):
         """
         Return a list of all homework instances for the private slug (defined in a user's settings) for an ICAL stream.
@@ -87,6 +104,14 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
     tags=['feed.private.event']
 )
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing course schedules'
+            )
+        }
+    )
     def get(self, request, private_slug):
         """
         Return a list of all course schedule instances for the private slug (defined in a user's settings) for an ICAL

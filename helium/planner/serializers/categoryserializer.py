@@ -25,17 +25,17 @@ class CategorySerializer(serializers.ModelSerializer):
             'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
 
-    def get_num_homework(self, obj):
+    def get_num_homework(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created categories have no homework anyway)
         return getattr(obj, 'annotated_num_homework', 0)
 
-    def get_num_homework_completed(self, obj):
+    def get_num_homework_completed(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created categories have no homework anyway)
         return getattr(obj, 'annotated_num_homework_completed', 0)
 
-    def get_num_homework_graded(self, obj):
+    def get_num_homework_graded(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created categories have no homework anyway)
         return getattr(obj, 'annotated_num_homework_graded', 0)
