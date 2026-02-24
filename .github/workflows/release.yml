@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   test:
@@ -126,7 +127,7 @@ jobs:
 
       - name: Update workflow run name
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           gh api \
