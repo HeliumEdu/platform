@@ -250,7 +250,7 @@ jobs:
           curl -s -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            -d "{\"event_type\":\"Triggered from \`platform\` release \`${{ needs.determine-version.outputs.version }}\` for \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
+            -d "{\"event_type\":\"\`platform\` triggered for \`${{ needs.determine-version.outputs.version }}\` to \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
 
       - name: Deployment summary
         env:
