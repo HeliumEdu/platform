@@ -3,6 +3,8 @@ __license__ = "MIT"
 
 import logging
 
+from datetime import timedelta
+
 import rest_framework_simplejwt.serializers as jwt_serializers
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -12,6 +14,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from helium.auth.tasks import blacklist_refresh_token
 from helium.common.utils import metricutils
@@ -76,6 +79,28 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
                 metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
 
         return attrs
+
+
+class LegacyAccessToken(AccessToken):
+    """Access token with legacy (longer) lifetime for legacy frontend."""
+    lifetime = timedelta(minutes=settings.LEGACY_ACCESS_TOKEN_TTL_MINUTES)
+
+
+class LegacyRefreshToken(RefreshToken):
+    """Refresh token with legacy (longer) lifetime for legacy frontend."""
+    lifetime = timedelta(days=settings.LEGACY_REFRESH_TOKEN_TTL_DAYS)
+    access_token_class = LegacyAccessToken
+
+
+class LegacyTokenObtainSerializer(TokenObtainSerializer):
+    """
+    Token obtain serializer for legacy frontend that doesn't properly support token refresh.
+    Uses longer token lifetimes configured via LEGACY_*_TTL settings.
+    """
+
+    @classmethod
+    def get_token(cls, user):
+        return LegacyRefreshToken.for_user(user)
 
 
 class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
