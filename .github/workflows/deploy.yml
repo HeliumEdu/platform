@@ -1,6 +1,6 @@
 name: "Deploy"
 
-run-name: "Deploy ${{ inputs.version_type == 'latest' && 'latest' || inputs.specific_version }} to ${{ inputs.environment }}"
+run-name: "Deploy `${{ inputs.version_type == 'latest' && 'latest' || inputs.specific_version }}` to `${{ inputs.environment }}`"
 
 on:
   workflow_dispatch:
