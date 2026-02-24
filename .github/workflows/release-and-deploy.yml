@@ -37,27 +37,27 @@ jobs:
       bump_type: ${{ inputs.bump_type }}
 
   deploy:
-    name: Deploy
+    name: Trigger Deploy
     needs: release
-    uses: ./.github/workflows/deploy.yml
-    secrets: inherit
-    with:
-      version_type: specific
-      specific_version: ${{ needs.release.outputs.version }}
-      environment: ${{ inputs.environment }}
-      run_cluster_tests: ${{ inputs.run_cluster_tests }}
-
-  summary:
-    name: Summary
-    needs: [release, deploy]
-    if: always() && needs.release.result == 'success' && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Release and deployment summary
+      - name: Trigger deploy workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_CLUSTER_TESTS: ${{ inputs.run_cluster_tests }}
         run: |
-          echo "### Release and Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          gh workflow run deploy.yml \
+            --repo ${{ github.repository }} \
+            -f version_type=specific \
+            -f specific_version="$VERSION" \
+            -f environment="$ENVIRONMENT" \
+            -f run_cluster_tests="$RUN_CLUSTER_TESTS"
+
+          echo "### Deploy Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run cluster tests for frontend-legacy**: ${{ inputs.run_cluster_tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "A separate deploy workflow has been triggered. Check the [Actions tab](https://github.com/${{ github.repository }}/actions/workflows/deploy.yml) for progress." >> $GITHUB_STEP_SUMMARY
