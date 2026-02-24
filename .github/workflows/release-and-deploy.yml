@@ -1,6 +1,6 @@
 name: "Release and Deploy"
 
-run-name: "Release and deploy to ${{ inputs.environment }}"
+run-name: "Release and deploy `${{ inputs.bump_type }}` to `${{ inputs.environment }}`"
 
 on:
   workflow_dispatch:
