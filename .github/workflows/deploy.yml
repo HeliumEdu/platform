@@ -95,6 +95,18 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "version_number=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Update workflow run name
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/runs/${{ github.run_id }} \
+            -f name="Deploy \`$VERSION\` to \`$ENVIRONMENT\`"
+
   test-release:
     name: Test Release
     needs: [determine-version]
