@@ -6,7 +6,8 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from helium.auth.views.apis.oauthviews import OAuthLoginView
-from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
+from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView, \
+    LegacyTokenObtainPairView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView, UserResendVerificationResourceView
 from helium.auth.views.apis.userdeleteexamplescheduleviews import UserDeleteExampleScheduleView
@@ -38,6 +39,7 @@ urlpatterns = [
     # Authentication URLs
     ##############################
     path('auth/token/', TokenObtainPairView.as_view(), name='auth_token_obtain'),
+    path('auth/token/legacy/', LegacyTokenObtainPairView.as_view(), name='auth_token_obtain_legacy'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='auth_token_refresh'),
     path('auth/token/blacklist/', TokenBlacklistView.as_view(), name='auth_token_blacklist'),
     path('auth/token/oauth/', OAuthLoginView.as_view({'post': 'oauth_login'}),

@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.31"
+__version__ = "2.1.32"
 
 import os
 import socket
@@ -210,15 +210,19 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
-ACCESS_TOKEN_TTL_DAYS = int(config('PLATFORM_ACCESS_TOKEN_TTL_DAYS', '30'))
+ACCESS_TOKEN_TTL_MINUTES = 5
+REFRESH_TOKEN_TTL_MINUTES = 16
+
+# TTL values for the legacy frontend that doesn't reliably support token refresh
+LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
+LEGACY_REFRESH_TOKEN_TTL_DAYS = int(config('PLATFORM_LEGACY_REFRESH_TOKEN_TTL_DAYS', '30'))
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=ACCESS_TOKEN_TTL_DAYS),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=REFRESH_TOKEN_TTL_MINUTES),
     'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenObtainSerializer',
     'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
     'TOKEN_BLACKLIST_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenBlacklistSerializer',
