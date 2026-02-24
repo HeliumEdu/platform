@@ -28,10 +28,6 @@ on:
         type: boolean
         default: true
 
-permissions:
-  actions: write
-  contents: write
-
 jobs:
   release:
     name: Release
@@ -39,23 +35,6 @@ jobs:
     secrets: inherit
     with:
       bump_type: ${{ inputs.bump_type }}
-
-  update-run-name:
-    name: Update Run Name
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update workflow run name
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          VERSION: ${{ needs.release.outputs.version }}
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: |
-          gh api \
-            --method PATCH \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/runs/${{ github.run_id }} \
-            -f name="Release and deploy \`$VERSION\` to \`$ENVIRONMENT\`"
 
   deploy:
     name: Deploy

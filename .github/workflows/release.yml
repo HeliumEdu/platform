@@ -28,7 +28,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   test:
@@ -124,17 +123,6 @@ jobs:
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "Commit SHA: $COMMIT_SHA"
-
-      - name: Update workflow run name
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          VERSION: ${{ steps.get_version.outputs.version }}
-        run: |
-          gh api \
-            --method PATCH \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/runs/${{ github.run_id }} \
-            -f name="Release \`$VERSION\` to \`$ENVIRONMENT\`"
 
   build-and-publish:
     name: Build and Publish Containers
