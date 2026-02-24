@@ -1,6 +1,6 @@
 name: "Release and Deploy"
 
-run-name: "Release and deploy to ${{ inputs.environment }}"
+run-name: "Release and deploy `${{ inputs.bump_type }}` to `${{ inputs.environment }}`"
 
 on:
   workflow_dispatch:
@@ -28,6 +28,10 @@ on:
         type: boolean
         default: true
 
+permissions:
+  actions: write
+  contents: write
+
 jobs:
   release:
     name: Release
@@ -43,7 +47,7 @@ jobs:
     steps:
       - name: Update workflow run name
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
