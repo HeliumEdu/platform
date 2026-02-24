@@ -1,6 +1,6 @@
 name: "Release"
 
-run-name: "Release `${{ inputs.bump_type }}`
+run-name: "Release `${{ inputs.bump_type }}`"
 
 on:
   workflow_dispatch:
