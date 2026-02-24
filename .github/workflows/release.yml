@@ -127,7 +127,7 @@ jobs:
 
       - name: Update workflow run name
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           gh api \
