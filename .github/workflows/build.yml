@@ -1,6 +1,6 @@
 name: "Build"
 
-run-name: "Build ${{ github.ref_name }}"
+run-name: "Build"
 
 on:
   push:

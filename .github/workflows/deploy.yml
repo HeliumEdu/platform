@@ -54,6 +54,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: "helium-platform-deploy-${{inputs.environment}}"
@@ -97,7 +98,7 @@ jobs:
 
       - name: Update workflow run name
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
