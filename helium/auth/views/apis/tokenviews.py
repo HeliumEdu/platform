@@ -6,7 +6,8 @@ import logging
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt import views
 
-from helium.auth.serializers.tokenserializer import TokenRefreshSerializer, TokenObtainSerializer
+from helium.auth.serializers.tokenserializer import TokenRefreshSerializer, TokenObtainSerializer, \
+    LegacyTokenObtainSerializer
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,15 @@ logger = logging.getLogger(__name__)
 )
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     pass
+
+
+@extend_schema(deprecated=True, exclude=True)
+class LegacyTokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
+    """
+    Token obtain endpoint for legacy frontend that doesn't properly support token refresh.
+    Uses longer token lifetimes. Excluded from API documentation.
+    """
+    serializer_class = LegacyTokenObtainSerializer
 
 
 @extend_schema(
