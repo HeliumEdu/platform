@@ -6,6 +6,7 @@ import logging
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from django.db.models import Q
 from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -90,8 +91,12 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
+        identifier = self.request.data['username']
         try:
-            return get_user_model().objects.get(username=self.request.data['username'])
+            # Look up by username or email to support both identifiers
+            return get_user_model().objects.get(
+                Q(username__iexact=identifier) | Q(email__iexact=identifier)
+            )
         except get_user_model().DoesNotExist:
             raise NotFound('No User matches the given query.')
 
