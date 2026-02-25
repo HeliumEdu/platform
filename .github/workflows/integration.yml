@@ -73,6 +73,21 @@ jobs:
       - name: Start platform containers
         run: make run-docker
 
+      - name: Wait for platform API to be ready
+        run: |
+          echo "Waiting for platform API to be ready..."
+          for i in {1..60}; do
+            if curl -sf http://localhost:8000/status/ > /dev/null 2>&1; then
+              echo "Platform API is ready at http://localhost:8000"
+              exit 0
+            fi
+            echo "  Waiting... ($i/60)"
+            sleep 2
+          done
+          echo "Platform API failed to become ready"
+          docker compose logs
+          exit 1
+
       - name: Start frontend container
         run: make start-frontend
 
