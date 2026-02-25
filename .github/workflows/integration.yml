@@ -1,15 +1,23 @@
 name: "Integration Tests"
 
-run-name: "Integration Tests (Frontend `${{ inputs.frontend_version }}`)"
+run-name: "Integration Tests (`${{ inputs.suite }}` against local platform build)"
 
 on:
   workflow_dispatch:
     inputs:
-      frontend_version:
-        description: 'Frontend version (e.g., "amd64-latest" or "amd64-1.0.0")'
+      suite:
+        description: 'Test suite to run'
+        required: true
+        type: choice
+        default: smoke
+        options:
+          - smoke
+          - full
+      frontend_ref:
+        description: 'Frontend branch/tag to test with'
         required: false
         type: string
-        default: 'amd64-latest'
+        default: 'main'
 
 permissions:
   contents: read
@@ -18,6 +26,10 @@ permissions:
 concurrency:
   group: integration-tests
   cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.38.9"
+  PLATFORM: amd64
 
 jobs:
   integration-test:
@@ -28,49 +40,72 @@ jobs:
       FORCE_COLOR: 1
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
-      PLATFORM: amd64
-      FRONTEND_IMAGE: public.ecr.aws/heliumedu/helium/frontend-web:${{ inputs.frontend_version || 'amd64-latest' }}
+      ENVIRONMENT: dev-local
+      AWS_S3_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}
+      AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      # Point to locally built images (not ECR)
+      PLATFORM_RESOURCE_IMAGE: helium/platform-resource:amd64-latest
+      PLATFORM_API_IMAGE: helium/platform-api:amd64-latest
+      PLATFORM_WORKER_IMAGE: helium/platform-worker:amd64-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout platform
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Checkout frontend
+        uses: actions/checkout@v4
         with:
-          python-version: "3.12"
-          cache: 'pip'
-          cache-dependency-path: requirements*.txt
+          repository: HeliumEdu/frontend
+          ref: ${{ inputs.frontend_ref || 'main' }}
+          path: frontend
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          channel: stable
+          version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
-      - name: Login to AWS ECR Public
-        run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('frontend/**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
-      - name: Pre-pull frontend image (background)
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Start ChromeDriver
+        run: chromedriver --port=4444 &
+
+      - name: Pre-pull base images (background)
         run: |
-          echo "Pre-pulling frontend image in background..."
-          docker pull "$FRONTEND_IMAGE" &
-          echo $! > /tmp/frontend-pull-pid
+          echo "Pulling base images..."
+          docker pull localstack/localstack:latest &
+          docker pull redis:7-alpine &
+          docker pull mysql:8 &
+          echo $! > /tmp/pull-pid
 
       - name: Build platform Docker images
         run: make build-docker
 
-      - name: Wait for frontend image pull
+      - name: Wait for base image pulls
         run: |
-          if [ -f /tmp/frontend-pull-pid ]; then
-            wait $(cat /tmp/frontend-pull-pid) || true
+          if [ -f /tmp/pull-pid ]; then
+            wait $(cat /tmp/pull-pid) || true
           fi
 
-      - name: Start platform containers
+      - name: Start platform
         run: make run-docker
 
       - name: Wait for platform API to be ready
@@ -88,27 +123,33 @@ jobs:
           docker compose logs
           exit 1
 
-      - name: Start frontend container
-        run: make start-frontend
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: make install
 
-      - name: Verify services are running
-        run: |
-          echo "Verifying platform API..."
-          curl -sf http://localhost:8000/status/ || (echo "Platform API not healthy" && exit 1)
-          echo "Verifying frontend..."
-          curl -sf http://localhost:8080 || (echo "Frontend not responding" && exit 1)
-          echo "All services are running"
-
-      # Add integration/E2E tests here
-      # For now, this workflow just verifies both services start correctly together
       - name: Run integration tests
+        working-directory: frontend
         run: |
-          echo "Platform API and Frontend are running together"
-          echo "Add E2E test commands here as needed"
+          if [ "${{ inputs.suite }}" = "smoke" ]; then
+            make test-integration-smoke \
+              ENVIRONMENT=dev-local \
+              INTEGRATION_HEADLESS=true
+          else
+            make test-integration \
+              ENVIRONMENT=dev-local \
+              INTEGRATION_HEADLESS=true \
+              AWS_S3_ACCESS_KEY_ID="${{ env.AWS_S3_ACCESS_KEY_ID }}" \
+              AWS_S3_SECRET_ACCESS_KEY="${{ env.AWS_S3_SECRET_ACCESS_KEY }}"
+          fi
 
-      - name: Stop frontend
+      - name: Upload test results
         if: always()
-        run: make stop-frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results-${{ inputs.suite }}
+          path: frontend/build/integration_test_results/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Dump Docker logs on failure
         if: failure()
