@@ -1,0 +1,79 @@
+name: "Integration Tests"
+
+run-name: "Integration Tests (Frontend `${{ inputs.frontend_version }}`)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      frontend_version:
+        description: 'Frontend version (e.g., "amd64-latest" or "amd64-1.0.0")'
+        required: false
+        type: string
+        default: 'amd64-latest'
+
+permissions:
+  contents: read
+
+# Only allow one integration test run at a time
+concurrency:
+  group: integration-tests
+  cancel-in-progress: false
+
+jobs:
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      PLATFORM: amd64
+      FRONTEND_IMAGE: public.ecr.aws/heliumedu/helium/frontend-web:${{ inputs.frontend_version || 'amd64-latest' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build platform Docker images
+        run: make build-docker
+
+      - name: Start platform containers
+        run: make run-docker
+
+      - name: Start frontend container
+        run: make start-frontend
+
+      - name: Verify services are running
+        run: |
+          echo "Verifying platform API..."
+          curl -sf http://localhost:8000/health/ || (echo "Platform API not healthy" && exit 1)
+          echo "Verifying frontend..."
+          curl -sf http://localhost:8080 || (echo "Frontend not responding" && exit 1)
+          echo "All services are running"
+
+      # Add integration/E2E tests here
+      # For now, this workflow just verifies both services start correctly together
+      - name: Run integration tests
+        run: |
+          echo "Platform API and Frontend are running together"
+          echo "Add E2E test commands here as needed"
+
+      - name: Stop frontend
+        if: always()
+        run: make stop-frontend
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+
+      - name: Stop platform
+        if: always()
+        run: make stop-docker

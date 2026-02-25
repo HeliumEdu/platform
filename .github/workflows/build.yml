@@ -87,7 +87,7 @@ jobs:
             --ref main \
             -f version_type=latest \
             -f environment=dev \
-            -f run_cluster_tests=true
+            -f run_legacy_cluster_tests=true
 
           echo "Triggered deploy workflow for dev environment with latest containers"
           echo "View workflow runs: https://github.com/${{ github.repository }}/actions/workflows/deploy.yml"
