@@ -318,6 +318,7 @@ CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_LEGACY_HOST,
     strip_www(PROJECT_APP_LEGACY_HOST)
 ]
+CORS_ALLOWED_ORIGIN_REGEXES = []
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
@@ -353,7 +354,7 @@ if 'local' in ENVIRONMENT:
         'http://localhost:8000',
         'http://127.0.0.1:8000',
     ]
-    CORS_ALLOWED_ORIGIN_REGEXES = [
+    CORS_ALLOWED_ORIGIN_REGEXES += [
         r"https://\w+\.ngrok\.dev"
     ]
 
