@@ -211,7 +211,7 @@ REST_FRAMEWORK = {
 }
 
 ACCESS_TOKEN_TTL_MINUTES = 5
-REFRESH_TOKEN_TTL_MINUTES = 16
+REFRESH_TOKEN_TTL_DAYS = 14
 
 # TTL values for the legacy frontend that doesn't reliably support token refresh
 LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
@@ -222,7 +222,7 @@ if ACCESS_TOKEN_TTL_MINUTES < 3:
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_TTL_MINUTES),
-    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=REFRESH_TOKEN_TTL_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=REFRESH_TOKEN_TTL_DAYS),
     'TOKEN_OBTAIN_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenObtainSerializer',
     'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
     'TOKEN_BLACKLIST_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenBlacklistSerializer',
