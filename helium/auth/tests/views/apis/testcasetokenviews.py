@@ -310,9 +310,9 @@ class TestCaseLegacyTokenViews(APITestCase):
         self.assertEqual(standard_access_exp, settings.ACCESS_TOKEN_TTL_MINUTES * 60)
         self.assertGreater(legacy_access_exp, standard_access_exp)
 
-        # Legacy refresh token should be 30 days (vs 16 minutes standard)
+        # Legacy refresh token should be 30 days (vs 14 days standard)
         self.assertEqual(legacy_refresh_exp, settings.LEGACY_REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60)
-        self.assertEqual(standard_refresh_exp, settings.REFRESH_TOKEN_TTL_MINUTES * 60)
+        self.assertEqual(standard_refresh_exp, settings.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60)
         self.assertGreater(legacy_refresh_exp, standard_refresh_exp)
 
     def test_legacy_token_works_with_refresh_endpoint(self):
