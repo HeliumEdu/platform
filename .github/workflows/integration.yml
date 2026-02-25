@@ -1,6 +1,6 @@
 name: "Integration Tests"
 
-run-name: "Integration Tests (`${{ inputs.suite }}` against local platform build)"
+run-name: "Integration Tests (`${{ inputs.suite }}` against `${{ inputs.frontend_ref }}`)"
 
 on:
   workflow_dispatch:
