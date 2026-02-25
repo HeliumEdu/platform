@@ -6,7 +6,7 @@ import logging
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -78,6 +78,44 @@ class UserDeleteResourceView(HeliumAPIView):
 
             if not user.check_password(request.data['password']):
                 raise ValidationError({'password': ['The password is incorrect.']})
+
+        logger.info(f'User {user.pk} will be deleted')
+
+        delete_user.delay(user.pk)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserDeleteInactiveResourceView(HeliumAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        try:
+            return get_user_model().objects.get(username=self.request.data['username'])
+        except get_user_model().DoesNotExist:
+            raise NotFound('No User matches the given query.')
+
+    # Excluded from API docs - this endpoint is only needed by integration tests for cleanup
+    @extend_schema(exclude=True)
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete an inactive user instance. The request body should include the `username` and `password`, and this route
+        can only be used to delete users that never finished setting up their account.
+        """
+        if 'username' not in request.data:
+            raise ValidationError({'username': ['This field is required.']})
+
+        if 'password' not in request.data:
+            raise ValidationError({'password': ['This field is required.']})
+
+        user = self.get_object()
+
+        if user.is_active:
+            raise ValidationError({'non_field_errors': ['This endpoint can only be used to cleanup user accounts that '
+                                                  'were never activated.']})
+
+        if not user.check_password(request.data['password']):
+            raise AuthenticationFailed({'password': ['The password is incorrect.']})
 
         logger.info(f'User {user.pk} will be deleted')
 
