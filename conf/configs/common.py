@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.43"
+__version__ = "2.1.44"
 
 import os
 import socket
@@ -318,6 +318,7 @@ CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_LEGACY_HOST,
     strip_www(PROJECT_APP_LEGACY_HOST)
 ]
+CORS_ALLOWED_ORIGIN_REGEXES = []
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
 )
@@ -330,7 +331,7 @@ if 'prod' not in ENVIRONMENT:
         'http://localhost:3000',
         'http://127.0.0.1:3000',
     ]
-    CORS_ALLOWED_ORIGIN_REGEXES = [
+    CORS_ALLOWED_ORIGINS += [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
         # Legacy frontend
@@ -353,7 +354,7 @@ if 'local' in ENVIRONMENT:
         'http://localhost:8000',
         'http://127.0.0.1:8000',
     ]
-    CORS_ALLOWED_ORIGIN_REGEXES = [
+    CORS_ALLOWED_ORIGIN_REGEXES += [
         r"https://\w+\.ngrok\.dev"
     ]
 
