@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from helium.planner.models.category import Category
@@ -56,6 +57,12 @@ class CategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
 
         return title
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({'title': f'This course already has a category named "{validated_data.get("title")}".'})
 
     def validate_weight(self, weight):
         """

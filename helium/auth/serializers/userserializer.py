@@ -5,6 +5,7 @@ import logging
 
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
@@ -120,7 +121,10 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data['username'] = generate_unique_username_from_email(
                 validated_data.get('email')
             )
-        instance = super().create(validated_data)
+        try:
+            instance = super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
 
         instance.set_password(password)
         instance.save()
