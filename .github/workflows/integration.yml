@@ -79,7 +79,7 @@ jobs:
       - name: Verify services are running
         run: |
           echo "Verifying platform API..."
-          curl -sf http://localhost:8000/health/ || (echo "Platform API not healthy" && exit 1)
+          curl -sf http://localhost:8000/status/ || (echo "Platform API not healthy" && exit 1)
           echo "Verifying frontend..."
           curl -sf http://localhost:8080 || (echo "Frontend not responding" && exit 1)
           echo "All services are running"
