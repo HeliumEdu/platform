@@ -88,25 +88,26 @@ build-docker:
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
-	@if [[ -n "$$PLATFORM_RESOURCE_IMAGE" || -n "$$PLATFORM_API_IMAGE" || -n "$$PLATFORM_WORKER_IMAGE" ]]; then \
-		aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu; \
+	@if curl -s http://localhost:8000/health/ > /dev/null 2>&1; then \
+		echo "Platform already running"; \
+	else \
+		if [[ -n "$$PLATFORM_RESOURCE_IMAGE" || -n "$$PLATFORM_API_IMAGE" || -n "$$PLATFORM_WORKER_IMAGE" ]]; then \
+			aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu; \
+		fi; \
+		if [ -n "$$PLATFORM_RESOURCE_IMAGE" ]; then \
+			docker pull $$PLATFORM_RESOURCE_IMAGE; \
+		fi; \
+		if [ -n "$$PLATFORM_API_IMAGE" ]; then \
+			docker pull $$PLATFORM_API_IMAGE; \
+		fi; \
+		if [ -n "$$PLATFORM_WORKER_IMAGE" ]; then \
+			docker pull $$PLATFORM_WORKER_IMAGE; \
+		fi; \
+		if [ -n "$$DOCKERHUB_TOKEN" ]; then \
+			echo "$$DOCKERHUB_TOKEN" | docker login --username "$$DOCKER_USERNAME" --password-stdin; \
+		fi; \
+		docker compose up -d; \
 	fi
-
-	@if [ -n "$$PLATFORM_RESOURCE_IMAGE" ]; then \
-		docker pull $$PLATFORM_RESOURCE_IMAGE; \
-	fi
-	@if [ -n "$$PLATFORM_API_IMAGE" ]; then \
-        docker pull $$PLATFORM_API_IMAGE; \
-  	fi
-	@if [ -n "$$PLATFORM_WORKER_IMAGE" ]; then \
-        docker pull $$PLATFORM_WORKER_IMAGE; \
-  	fi
-
-	@if [ -n "$$DOCKERHUB_TOKEN" ]; then \
-		echo "$$DOCKERHUB_TOKEN" | docker login --username "$$DOCKER_USERNAME" --password-stdin; \
-	fi
-
-	docker compose up -d
 
 stop-docker: docker-env
 	docker compose stop
@@ -129,8 +130,12 @@ publish: build-docker
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
 
 start-frontend:
-	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
-		FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash
+	@if curl -s http://localhost:8080 > /dev/null 2>&1; then \
+		echo "Frontend already running"; \
+	else \
+		curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
+			FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash; \
+	fi
 
 stop-frontend:
 	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
