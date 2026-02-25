@@ -22,7 +22,7 @@ on:
         options:
           - dev
           - prod
-      run_cluster_tests:
+      run_legacy_cluster_tests:
         description: "Run cluster tests for frontend-legacy before deploying"
         required: true
         type: boolean
@@ -91,14 +91,14 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
-          RUN_CLUSTER_TESTS: ${{ inputs.run_cluster_tests }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_cluster_tests }}
         run: |
           gh workflow run deploy.yml \
             --repo ${{ github.repository }} \
             -f version_type=specific \
             -f specific_version="$VERSION" \
             -f environment="$ENVIRONMENT" \
-            -f run_cluster_tests="$RUN_CLUSTER_TESTS"
+            -f run_legacy_cluster_tests="$RUN_LEGACY_CLUSTER_TESTS"
 
           echo "### Release and Deploy Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

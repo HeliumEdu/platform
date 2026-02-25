@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -124,3 +124,20 @@ publish: build-docker
 
 	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
 	docker push public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
+
+# Frontend integration testing
+FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
+
+start-frontend:
+	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
+		FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash
+
+stop-frontend:
+	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
+
+test-with-frontend: run-docker start-frontend
+	@echo "Platform and frontend are running"
+	@echo "  Platform API: http://localhost:8000"
+	@echo "  Frontend:     http://localhost:8080"
+	@echo ""
+	@echo "Run your tests, then use 'make stop-docker stop-frontend' to clean up"

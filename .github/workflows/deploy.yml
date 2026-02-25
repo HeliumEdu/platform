@@ -25,7 +25,7 @@ on:
         options:
           - dev
           - prod
-      run_cluster_tests:
+      run_legacy_cluster_tests:
         description: 'Run cluster tests for frontend-legacy before deploying'
         required: true
         type: boolean
@@ -46,7 +46,7 @@ on:
         required: false
         type: string
         default: prod
-      run_cluster_tests:
+      run_legacy_cluster_tests:
         description: "Run cluster tests for frontend-legacy before deploying"
         required: false
         type: boolean
@@ -98,7 +98,7 @@ jobs:
   test-release:
     name: Test Release
     needs: [determine-version]
-    if: ${{ inputs.run_cluster_tests }}
+    if: ${{ inputs.run_legacy_cluster_tests }}
     runs-on: ubuntu-latest
 
     env:
@@ -245,7 +245,7 @@ jobs:
           environment: ${{ inputs.environment }}
           version: ${{ needs.determine-version.outputs.version }}
 
-      - name: Trigger cluster-tests run
+      - name: Trigger legacy cluster-tests run
         run: |
           curl -s -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
