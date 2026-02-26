@@ -48,8 +48,8 @@ jobs:
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
       ENVIRONMENT: dev-local
-      AWS_S3_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}
-      AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      AWS_INTEGRATION_S3_ACCESS_KEY_ID: ${{ secrets.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}
+      AWS_INTEGRATION_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}
       # Point to locally built images (not ECR)
       PLATFORM_RESOURCE_IMAGE: helium/platform-resource:amd64-latest
       PLATFORM_API_IMAGE: helium/platform-api:amd64-latest
@@ -145,8 +145,8 @@ jobs:
             make test-integration \
               ENVIRONMENT=dev-local \
               INTEGRATION_LOG_LEVEL=fine \
-              AWS_S3_ACCESS_KEY_ID="${{ env.AWS_S3_ACCESS_KEY_ID }}" \
-              AWS_S3_SECRET_ACCESS_KEY="${{ env.AWS_S3_SECRET_ACCESS_KEY }}"
+              AWS_INTEGRATION_S3_ACCESS_KEY_ID="${{ env.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}" \
+              AWS_INTEGRATION_S3_SECRET_ACCESS_KEY="${{ env.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}"
           fi
 
       - name: Dump Docker logs on failure
