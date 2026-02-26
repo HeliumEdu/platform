@@ -16,6 +16,14 @@ permissions:
   pull-requests: none
 
 jobs:
+  integration-test:
+    name: Integration Test
+    uses: ./.github/workflows/integration.yml
+    with:
+      suite: full
+      frontend_ref: ${{ github.ref_name }}
+    secrets: inherit
+
   build:
     name: Build
 
