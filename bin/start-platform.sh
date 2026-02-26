@@ -49,19 +49,17 @@ echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
 echo "  API:      $PLATFORM_API_IMAGE"
 echo "  Worker:   $PLATFORM_WORKER_IMAGE"
 
-# Pull images if they're from ECR
+# Pull images if authenticated with ECR (avoids rate limits in CI)
 if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
-    # Optionally login to ECR to avoid rate limits (public ECR works without auth)
-    if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null; then
+    if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
         echo "Logging in to ECR Public to avoid rate limits..."
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null || true
-    fi
 
-    # Pre-pull images (non-fatal - docker-compose will pull if needed)
-    echo "Pulling images from ECR..."
-    docker pull "$PLATFORM_RESOURCE_IMAGE" 2>/dev/null || true
-    docker pull "$PLATFORM_API_IMAGE" 2>/dev/null || true
-    docker pull "$PLATFORM_WORKER_IMAGE" 2>/dev/null || true
+        echo "Pulling images from ECR..."
+        docker pull "$PLATFORM_RESOURCE_IMAGE"
+        docker pull "$PLATFORM_API_IMAGE"
+        docker pull "$PLATFORM_WORKER_IMAGE"
+    fi
 fi
 
 # Start containers (will pull images if not already available)
