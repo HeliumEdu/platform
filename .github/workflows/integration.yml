@@ -34,11 +34,6 @@ on:
 permissions:
   contents: read
 
-# Only allow one integration test run at a time
-concurrency:
-  group: integration-tests
-  cancel-in-progress: false
-
 env:
   FLUTTER_VERSION: "3.38.9"
   PLATFORM: amd64
