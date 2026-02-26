@@ -38,11 +38,21 @@ curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 mkdir -p container
 curl -fsSL "$GITHUB_RAW_URL/container/init-localstack.py" -o container/init-localstack.py
 
-# Export image variables for docker-compose (default to ECR Public)
+# Export image variables for docker-compose
+# Prefer local images if available, otherwise fall back to ECR Public
 export PLATFORM
-export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
-export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
-export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
+LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
+if docker image inspect "$LOCAL_API_IMAGE" &>/dev/null; then
+    echo "Using local images..."
+    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM}-latest}"
+    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM}-latest}"
+    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM}-latest}"
+else
+    echo "Local images not found, will pull from ECR Public..."
+    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
+    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
+    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
+fi
 
 echo "Using images:"
 echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
