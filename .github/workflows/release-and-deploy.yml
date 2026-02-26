@@ -41,7 +41,7 @@ jobs:
             --repo ${{ github.repository }} \
             -f bump_type="${{ inputs.bump_type }}"
 
-          echo "Release workflow triggered, waiting for completion..."
+          echo "Release workflow triggered, waiting for completion ..."
 
       - name: Wait for release to complete
         env:
@@ -58,7 +58,7 @@ jobs:
             --json databaseId \
             --jq '.[0].databaseId')
 
-          echo "Waiting for release run $RUN_ID to complete..."
+          echo "Waiting for release run $RUN_ID to complete ..."
           gh run watch "$RUN_ID" --repo ${{ github.repository }}
 
           # Check if it succeeded
