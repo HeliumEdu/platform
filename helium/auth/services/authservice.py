@@ -200,6 +200,14 @@ def oauth_login(request):
         # Try to find existing user by email
         try:
             user = get_user_model().objects.get(email=email)
+
+            # Activate inactive users since OAuth provides verified email
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
+                metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
+
             logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
         except get_user_model().DoesNotExist:

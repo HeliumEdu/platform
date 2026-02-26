@@ -459,3 +459,40 @@ class TestCaseOAuthViews(APITestCase):
         # THEN - Should fail on token validation, not provider validation
         # This means 'GOOGLE' was accepted as a valid provider
         self.assertNotIn('provider', str(response.data).lower())
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_activates_inactive_user(self, mock_verify_token):
+        """Test that OAuth login activates an existing inactive user."""
+        # GIVEN - user registered via email but hasn't verified
+        inactive_user = userhelper.given_an_inactive_user_exists(
+            username='inactive_user',
+            email='inactive@gmail.com'
+        )
+        self.assertFalse(inactive_user.is_active)
+
+        mock_verify_token.return_value = {
+            'uid': 'google-user-inactive',
+            'email': 'inactive@gmail.com',
+            'email_verified': True
+        }
+
+        # WHEN - user logs in via OAuth
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN - login succeeds and user is activated
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+        # Verify user was activated
+        inactive_user.refresh_from_db()
+        self.assertTrue(inactive_user.is_active)
+
+        # Verify OAuth provider was linked
+        oauth_provider = UserOAuthProvider.objects.get(user=inactive_user, provider='google')
+        self.assertEqual(oauth_provider.provider_user_id, 'google-user-inactive')
