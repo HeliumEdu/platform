@@ -49,22 +49,33 @@ echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
 echo "  API:      $PLATFORM_API_IMAGE"
 echo "  Worker:   $PLATFORM_WORKER_IMAGE"
 
-# Pull images if authenticated with ECR (avoids rate limits in CI)
+# Check if we can authenticate with AWS (for CI environments)
+USE_ECR_AUTH=false
 if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
     if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
         echo "Logging in to ECR Public to avoid rate limits..."
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null || true
-
-        echo "Pulling images from ECR..."
-        docker pull "$PLATFORM_RESOURCE_IMAGE"
-        docker pull "$PLATFORM_API_IMAGE"
-        docker pull "$PLATFORM_WORKER_IMAGE"
+        if aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null; then
+            USE_ECR_AUTH=true
+            echo "Pulling images from ECR..."
+            docker pull "$PLATFORM_RESOURCE_IMAGE"
+            docker pull "$PLATFORM_API_IMAGE"
+            docker pull "$PLATFORM_WORKER_IMAGE"
+        fi
     fi
 fi
 
-# Start containers (will pull images if not already available)
+# Start containers
 echo "Starting Docker containers..."
-docker compose up -d --pull missing
+if [[ "$USE_ECR_AUTH" == "true" ]]; then
+    # Use normal docker-compose (already authenticated)
+    docker compose up -d
+else
+    # Create temp Docker config without credential helpers to avoid ECR helper panic
+    TEMP_DOCKER_CONFIG=$(mktemp -d)
+    echo '{}' > "$TEMP_DOCKER_CONFIG/config.json"
+    DOCKER_CONFIG="$TEMP_DOCKER_CONFIG" docker compose up -d --pull missing
+    rm -rf "$TEMP_DOCKER_CONFIG"
+fi
 
 # Wait for API to be ready
 echo "Waiting for platform API to be ready..."
