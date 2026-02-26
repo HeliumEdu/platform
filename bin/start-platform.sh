@@ -13,7 +13,7 @@
 #   PLATFORM_BRANCH            - GitHub branch to fetch configs from (default: main)
 #
 # If PLATFORM_*_IMAGE vars are set, those specific images are used.
-# Otherwise, local images (helium/platform-*:$PLATFORM-latest) are used if available.
+# Otherwise, images are pulled from ECR Public.
 #
 
 set -e
@@ -38,11 +38,11 @@ curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 mkdir -p container
 curl -fsSL "$GITHUB_RAW_URL/container/init-localstack.py" -o container/init-localstack.py
 
-# Export image variables for docker-compose
+# Export image variables for docker-compose (default to ECR Public)
 export PLATFORM
-export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM}-latest}"
-export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM}-latest}"
-export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM}-latest}"
+export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
+export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
+export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
 
 echo "Using images:"
 echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
