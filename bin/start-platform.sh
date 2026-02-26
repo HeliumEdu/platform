@@ -49,7 +49,7 @@ echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
 echo "  API:      $PLATFORM_API_IMAGE"
 echo "  Worker:   $PLATFORM_WORKER_IMAGE"
 
-# Pull images if they're from ECR (local images like helium/platform-* are assumed to be pre-built)
+# Pull images if they're from ECR
 if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
     # Optionally login to ECR to avoid rate limits (public ECR works without auth)
     if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null; then
@@ -57,15 +57,16 @@ if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null || true
     fi
 
+    # Pre-pull images (non-fatal - docker-compose will pull if needed)
     echo "Pulling images from ECR..."
-    docker pull "$PLATFORM_RESOURCE_IMAGE"
-    docker pull "$PLATFORM_API_IMAGE"
-    docker pull "$PLATFORM_WORKER_IMAGE"
+    docker pull "$PLATFORM_RESOURCE_IMAGE" 2>/dev/null || true
+    docker pull "$PLATFORM_API_IMAGE" 2>/dev/null || true
+    docker pull "$PLATFORM_WORKER_IMAGE" 2>/dev/null || true
 fi
 
-# Start containers
+# Start containers (will pull images if not already available)
 echo "Starting Docker containers..."
-docker compose up -d
+docker compose up -d --pull missing
 
 # Wait for API to be ready
 echo "Waiting for platform API to be ready..."
