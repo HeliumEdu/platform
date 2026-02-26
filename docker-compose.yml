@@ -17,7 +17,7 @@ services:
     ports:
       - 6379:6379
   storage:
-    image: localstack/localstack:s3-latest
+    image: localstack/localstack:4.13.1
     environment:
       ENVIRONMENT: "dev-local"
     ports:

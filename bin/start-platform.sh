@@ -38,20 +38,52 @@ curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 mkdir -p container
 curl -fsSL "$GITHUB_RAW_URL/container/init-localstack.py" -o container/init-localstack.py
 
-# Export image variables for docker-compose (default to ECR Public)
+# Export image variables for docker-compose
+# Prefer local images if available, otherwise fall back to ECR Public
 export PLATFORM
-export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
-export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
-export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
+LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
+if docker image inspect "$LOCAL_API_IMAGE" &>/dev/null; then
+    echo "Using local images..."
+    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM}-latest}"
+    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM}-latest}"
+    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM}-latest}"
+else
+    echo "Local images not found, will pull from ECR Public..."
+    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
+    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
+    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
+fi
 
 echo "Using images:"
 echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
 echo "  API:      $PLATFORM_API_IMAGE"
 echo "  Worker:   $PLATFORM_WORKER_IMAGE"
 
-# Start containers (docker-compose will pull images if needed)
+# Check if we can authenticate with AWS (for CI environments)
+USE_ECR_AUTH=false
+if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
+    if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
+        echo "Logging in to ECR Public to avoid rate limits..."
+        if aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null; then
+            USE_ECR_AUTH=true
+            echo "Pulling images from ECR..."
+            docker pull "$PLATFORM_RESOURCE_IMAGE"
+            docker pull "$PLATFORM_API_IMAGE"
+            docker pull "$PLATFORM_WORKER_IMAGE"
+        fi
+    fi
+fi
+
+# Start containers
 echo "Starting Docker containers..."
-docker compose up -d --pull always
+if [[ "$USE_ECR_AUTH" == "true" ]]; then
+    # Use normal docker-compose (already authenticated)
+    docker compose up -d
+else
+    # Logout from ECR to prevent credential helper from being invoked
+    docker logout public.ecr.aws 2>/dev/null || true
+    docker compose up -d --pull missing
+fi
 
 # Wait for API to be ready
 echo "Waiting for platform API to be ready..."
