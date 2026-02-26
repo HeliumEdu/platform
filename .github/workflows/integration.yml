@@ -18,6 +18,18 @@ on:
         required: false
         type: string
         default: 'main'
+  workflow_call:
+    inputs:
+      suite:
+        description: 'Test suite to run'
+        required: false
+        type: string
+        default: 'smoke'
+      frontend_ref:
+        description: 'Frontend branch/tag to test with'
+        required: false
+        type: string
+        default: 'main'
 
 permissions:
   contents: read
