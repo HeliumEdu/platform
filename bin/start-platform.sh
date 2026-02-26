@@ -70,13 +70,9 @@ if [[ "$USE_ECR_AUTH" == "true" ]]; then
     # Use normal docker-compose (already authenticated)
     docker compose up -d
 else
-    # Create temp Docker config without credential helpers to avoid ECR helper panic
-    TEMP_DOCKER_CONFIG=$(mktemp -d)
-    echo '{}' > "$TEMP_DOCKER_CONFIG/config.json"
-    export DOCKER_CONFIG="$TEMP_DOCKER_CONFIG"
+    # Logout from ECR to prevent credential helper from being invoked
+    docker logout public.ecr.aws 2>/dev/null || true
     docker compose up -d --pull missing
-    rm -rf "$TEMP_DOCKER_CONFIG"
-    unset DOCKER_CONFIG
 fi
 
 # Wait for API to be ready
