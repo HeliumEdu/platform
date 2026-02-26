@@ -103,7 +103,7 @@ jobs:
       - name: Pre-pull base images (background)
         run: |
           echo "Pulling base images ..."
-          docker pull localstack/localstack:s3-4.13.1 &
+          docker pull localstack/localstack:4.13.1 &
           docker pull redis:7-alpine &
           docker pull mysql:8 &
           echo $! > /tmp/pull-pid
