@@ -73,8 +73,10 @@ else
     # Create temp Docker config without credential helpers to avoid ECR helper panic
     TEMP_DOCKER_CONFIG=$(mktemp -d)
     echo '{}' > "$TEMP_DOCKER_CONFIG/config.json"
-    DOCKER_CONFIG="$TEMP_DOCKER_CONFIG" docker compose up -d --pull missing
+    export DOCKER_CONFIG="$TEMP_DOCKER_CONFIG"
+    docker compose up -d --pull missing
     rm -rf "$TEMP_DOCKER_CONFIG"
+    unset DOCKER_CONFIG
 fi
 
 # Wait for API to be ready
