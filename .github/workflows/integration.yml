@@ -50,6 +50,8 @@ jobs:
       ENVIRONMENT: dev-local
       AWS_INTEGRATION_S3_ACCESS_KEY_ID: ${{ secrets.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}
       AWS_INTEGRATION_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}
+      PLATFORM_EMAIL_HOST_USER: ${{ secrets.PLATFORM_EMAIL_HOST_USER }}
+      PLATFORM_EMAIL_HOST_PASSWORD: ${{ secrets.PLATFORM_EMAIL_HOST_PASSWORD }}
       # Point to locally built images (not ECR)
       PLATFORM_RESOURCE_IMAGE: helium/platform-resource:amd64-latest
       PLATFORM_API_IMAGE: helium/platform-api:amd64-latest
@@ -111,6 +113,11 @@ jobs:
           if [ -f /tmp/pull-pid ]; then
             wait $(cat /tmp/pull-pid) || true
           fi
+
+      - name: Inject SMTP credentials
+        run: |
+          sed -i "s/<SMTP_USERNAME>/$PLATFORM_EMAIL_HOST_USER/" .env
+          sed -i "s/<SMTP_PASSWORD>/$PLATFORM_EMAIL_HOST_PASSWORD/" .env
 
       - name: Start platform
         run: make run-docker
