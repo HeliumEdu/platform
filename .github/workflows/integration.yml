@@ -116,7 +116,7 @@ jobs:
 
       - name: Inject SMTP credentials
         run: |
-          make env
+          make docker-env
           sed -i "s/<SMTP_USERNAME>/$PLATFORM_EMAIL_HOST_USER/" .env
           sed -i "s/<SMTP_PASSWORD>/$PLATFORM_EMAIL_HOST_PASSWORD/" .env
 
