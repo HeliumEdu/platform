@@ -151,11 +151,13 @@ jobs:
           if [ "${{ inputs.suite }}" = "smoke" ]; then
             make test-integration-smoke \
               ENVIRONMENT=dev-local \
-              INTEGRATION_LOG_LEVEL=fine
+              INTEGRATION_LOG_LEVEL=fine \
+              INTEGRATION_EMAIL_SUFFIX=integration-platform
           else
             make test-integration \
               ENVIRONMENT=dev-local \
               INTEGRATION_LOG_LEVEL=fine \
+              INTEGRATION_EMAIL_SUFFIX=integration-platform \
               AWS_INTEGRATION_S3_ACCESS_KEY_ID="${{ env.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}" \
               AWS_INTEGRATION_S3_SECRET_ACCESS_KEY="${{ env.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}"
           fi
