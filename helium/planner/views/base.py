@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 from datetime import timezone
 
+import pytz
 from dateutil import parser
 from django.db.models import Q
 from rest_framework import status
@@ -10,6 +11,22 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
 
 from helium.common.views.base import HeliumAPIView
+
+
+def _parse_date_param_to_utc(date_str, user_tz_name):
+    """
+    Parse a date/datetime string and convert to UTC.
+
+    When the input is a date-only string (e.g., "2026-02-02"), it's interpreted
+    as midnight in the user's timezone, not the server's timezone. This ensures
+    consistent filtering regardless of where the server runs.
+    """
+    dt = parser.parse(date_str)
+    if dt.tzinfo is None:
+        # Naive datetime - interpret in user's timezone
+        user_tz = pytz.timezone(user_tz_name)
+        dt = user_tz.localize(dt)
+    return dt.astimezone(timezone.utc)
 
 
 class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
@@ -20,8 +37,9 @@ class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
         _from = self.request.query_params.get('from', None)
         to = self.request.query_params.get('to', None)
         if _from and to:
-            _from = parser.parse(_from).astimezone(timezone.utc)
-            to = parser.parse(to).astimezone(timezone.utc)
+            user_tz_name = self.request.user.settings.time_zone
+            _from = _parse_date_param_to_utc(_from, user_tz_name)
+            to = _parse_date_param_to_utc(to, user_tz_name)
             queryset = queryset.filter(Q(start__range=(_from, to)) |
                                        Q(end__range=(_from, to)) |
                                        # Also include results where start/end dates are wider than the window
