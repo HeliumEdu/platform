@@ -161,6 +161,15 @@ jobs:
               AWS_INTEGRATION_S3_SECRET_ACCESS_KEY="${{ env.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}"
           fi
 
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-screenshots
+          path: frontend/build/integration-screenshots/
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Dump Docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
