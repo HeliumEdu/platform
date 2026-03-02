@@ -2,9 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
-from dateutil import parser
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
@@ -16,7 +15,7 @@ from helium.feed.services import icalexternalcalendarservice
 from helium.planner.models import Event
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
-from helium.planner.views.base import HeliumCalendarItemAPIView
+from helium.planner.views.base import HeliumCalendarItemAPIView, _parse_date_param_to_utc
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +56,10 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         if 'shown_on_calendar' in request.query_params:
             external_calendars = external_calendars.filter(shown_on_calendar=request.query_params['shown_on_calendar'].lower() == 'true')
 
-        _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
+        user_tz_name = user.settings.time_zone
+        _from = _parse_date_param_to_utc(request.query_params["from"], user_tz_name) \
             if "from" in request.query_params else None
-        to = parser.parse(request.query_params["to"]).astimezone(timezone.utc) \
+        to = _parse_date_param_to_utc(request.query_params["to"], user_tz_name) \
             if "to" in request.query_params else None
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
@@ -118,9 +118,10 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         except ExternalCalendar.DoesNotExist:
             raise NotFound()
 
-        _from = parser.parse(request.query_params["from"]).astimezone(timezone.utc) \
+        user_tz_name = external_calendar.user.settings.time_zone
+        _from = _parse_date_param_to_utc(request.query_params["from"], user_tz_name) \
             if "from" in request.query_params else None
-        to = parser.parse(request.query_params["to"]).astimezone(timezone.utc) \
+        to = _parse_date_param_to_utc(request.query_params["to"], user_tz_name) \
             if "to" in request.query_params else None
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
