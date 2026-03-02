@@ -732,3 +732,159 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn(homework2.pk, returned_ids)
         self.assertIn(homework3.pk, returned_ids)
         self.assertNotIn(homework1.pk, returned_ids)
+
+    def test_range_query_date_only_from_boundary_edges(self):
+        """
+        Test the 'from' boundary with date-only query params.
+        For a user in America/Chicago (CST, UTC-6):
+        - from=2026-02-02 means Feb 2 00:00 Chicago = Feb 2 06:00 UTC
+
+        Items should be included if start >= from boundary.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # Item 1 minute BEFORE from boundary: Feb 2 05:59 UTC = Feb 1 11:59pm Chicago
+        homework_before_from = homeworkhelper.given_homework_exists(
+            course,
+            title='before_from',
+            start=datetime.datetime(2026, 2, 2, 5, 59, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 5, 59, 30, tzinfo=timezone.utc))
+
+        # Item exactly AT from boundary: Feb 2 06:00 UTC = Feb 2 00:00 Chicago
+        homework_at_from = homeworkhelper.given_homework_exists(
+            course,
+            title='at_from',
+            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+
+        # Item 1 minute AFTER from boundary: Feb 2 06:01 UTC = Feb 2 00:01 Chicago
+        homework_after_from = homeworkhelper.given_homework_exists(
+            course,
+            title='after_from',
+            start=datetime.datetime(2026, 2, 2, 6, 1, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+
+        # WHEN - query with date-only params (wide to window to focus on from boundary)
+        response = self.client.get(
+            reverse('planner_homework_list') + '?from=2026-02-02&to=2026-02-03')
+
+        # THEN - items at or after from boundary should be included
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        titles = {item['title'] for item in response.data}
+        self.assertNotIn('before_from', titles)
+        self.assertIn('at_from', titles)
+        self.assertIn('after_from', titles)
+
+    def test_range_query_date_only_to_boundary_edges(self):
+        """
+        Test the 'to' boundary with date-only query params.
+        For a user in America/Chicago (CST, UTC-6):
+        - to=2026-02-03 means Feb 3 00:00 Chicago = Feb 3 06:00 UTC
+
+        Items should be included if start <= to boundary.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # Item 1 minute BEFORE to boundary: Feb 3 05:59 UTC = Feb 2 11:59pm Chicago
+        homework_before_to = homeworkhelper.given_homework_exists(
+            course,
+            title='before_to',
+            start=datetime.datetime(2026, 2, 3, 5, 59, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 5, 59, 30, tzinfo=timezone.utc))
+
+        # Item exactly AT to boundary: Feb 3 06:00 UTC = Feb 3 00:00 Chicago
+        homework_at_to = homeworkhelper.given_homework_exists(
+            course,
+            title='at_to',
+            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+
+        # Item 1 minute AFTER to boundary: Feb 3 06:01 UTC = Feb 3 00:01 Chicago
+        homework_after_to = homeworkhelper.given_homework_exists(
+            course,
+            title='after_to',
+            start=datetime.datetime(2026, 2, 3, 6, 1, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+
+        # WHEN - query with date-only params (wide from window to focus on to boundary)
+        response = self.client.get(
+            reverse('planner_homework_list') + '?from=2026-02-01&to=2026-02-03')
+
+        # THEN - items before or at to boundary should be included
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        titles = {item['title'] for item in response.data}
+        self.assertIn('before_to', titles)
+        self.assertIn('at_to', titles)
+        self.assertNotIn('after_to', titles)
+
+    def test_range_query_date_only_both_boundaries(self):
+        """
+        Comprehensive test of both from and to boundaries with date-only params.
+        For America/Chicago (CST, UTC-6):
+        - from=2026-02-02 = Feb 2 06:00 UTC
+        - to=2026-02-03 = Feb 3 06:00 UTC
+
+        Tests items at all four edge positions plus one in the middle.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # BEFORE from: Feb 2 05:00 UTC = Feb 1 11pm Chicago
+        homeworkhelper.given_homework_exists(
+            course, title='1_before_from',
+            start=datetime.datetime(2026, 2, 2, 5, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 5, 30, 0, tzinfo=timezone.utc))
+
+        # AT from: Feb 2 06:00 UTC = Feb 2 midnight Chicago
+        homeworkhelper.given_homework_exists(
+            course, title='2_at_from',
+            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+
+        # MIDDLE: Feb 2 18:00 UTC = Feb 2 noon Chicago
+        homeworkhelper.given_homework_exists(
+            course, title='3_middle',
+            start=datetime.datetime(2026, 2, 2, 18, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 19, 0, 0, tzinfo=timezone.utc))
+
+        # AT to: Feb 3 06:00 UTC = Feb 3 midnight Chicago
+        homeworkhelper.given_homework_exists(
+            course, title='4_at_to',
+            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+
+        # AFTER to: Feb 3 07:00 UTC = Feb 3 1am Chicago
+        homeworkhelper.given_homework_exists(
+            course, title='5_after_to',
+            start=datetime.datetime(2026, 2, 3, 7, 0, 0, tzinfo=timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 7, 30, 0, tzinfo=timezone.utc))
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_homework_list') + '?from=2026-02-02&to=2026-02-03')
+
+        # THEN - should include: at_from, middle, at_to (items 2, 3, 4)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        titles = {item['title'] for item in response.data}
+        self.assertNotIn('1_before_from', titles)
+        self.assertIn('2_at_from', titles)
+        self.assertIn('3_middle', titles)
+        self.assertIn('4_at_to', titles)
+        self.assertNotIn('5_after_to', titles)
