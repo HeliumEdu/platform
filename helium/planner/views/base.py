@@ -1,7 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import logging
 from datetime import timezone
 
 import pytz
@@ -12,8 +11,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
 
 from helium.common.views.base import HeliumAPIView
-
-logger = logging.getLogger(__name__)
 
 
 def _parse_date_param_to_utc(date_str, user_tz_name):
@@ -41,15 +38,12 @@ class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
         to = self.request.query_params.get('to', None)
         if _from and to:
             user_tz_name = self.request.user.settings.time_zone
-            _from_raw, to_raw = _from, to
             _from = _parse_date_param_to_utc(_from, user_tz_name)
             to = _parse_date_param_to_utc(to, user_tz_name)
-            logger.info(f'[DATE_DEBUG] user_tz={user_tz_name}, from_raw={_from_raw}, to_raw={to_raw}, from_utc={_from}, to_utc={to}')
             queryset = queryset.filter(Q(start__range=(_from, to)) |
                                        Q(end__range=(_from, to)) |
                                        # Also include results where start/end dates are wider than the window
                                        Q(start__lte=_from, end__gte=to))
-            logger.info(f'[DATE_DEBUG] queryset count after filter: {queryset.count()}')
 
         return queryset
 
