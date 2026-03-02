@@ -345,3 +345,90 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         # Calendar should be disabled
         external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_range_query_date_only_interprets_in_user_timezone(self, mock_urlopen):
+        """
+        Date-only query params should be interpreted in the user's timezone.
+        For a user in America/Chicago:
+        - from=2017-08-02 means Aug 2 00:00 Chicago = Aug 2 05:00 UTC (CDT)
+        - to=2017-08-03 means Aug 3 00:00 Chicago = Aug 3 05:00 UTC (CDT)
+
+        The sample.ical has an event at 2017-08-02T18:34:00Z which is Aug 2 1:34pm Chicago,
+        so it should be included with date-only query.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN - query with date-only params for Aug 2-3 (should include the test1 event)
+        response = self.client.get(
+            reverse('feed_externalcalendars_events') + '?from=2017-08-02&to=2017-08-03')
+
+        # THEN - should include test1 event (Aug 2 18:34 UTC = Aug 2 1:34pm Chicago)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], 'test1')
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_range_query_date_only_excludes_events_outside_user_timezone_window(self, mock_urlopen):
+        """
+        Verify that date-only queries correctly exclude events outside the user's timezone window.
+        The sample.ical has:
+        - test1: 2017-08-02T18:34:00Z (Aug 2 1:34pm Chicago CDT)
+        - New Year's Day: 2017-01-01T08:00:00Z (Jan 1 2am Chicago CST)
+
+        If we query for just Aug 2 in Chicago time, only test1 should be included.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN - query for just Aug 2 Chicago time
+        response = self.client.get(
+            reverse('feed_externalcalendars_events') + '?from=2017-08-02&to=2017-08-03')
+
+        # THEN - should only include test1, not New Year's Day
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], 'test1')
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    def test_range_query_date_only_vs_full_timestamp_consistency(self, mock_urlopen):
+        """
+        Verify that a date-only query for a specific day in user's timezone
+        produces consistent results with explicit UTC timestamps.
+
+        For America/Chicago on Aug 2:
+        - Aug 2 00:00 Chicago = Aug 2 05:00 UTC (CDT)
+        - Aug 3 00:00 Chicago = Aug 3 05:00 UTC (CDT)
+
+        The test1 event at 2017-08-02T18:34:00Z should be included in both queries.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN - query with date-only params
+        response_date_only = self.client.get(
+            reverse('feed_externalcalendars_events') + '?from=2017-08-02&to=2017-08-03')
+
+        # AND - query with explicit UTC timestamps equivalent to Chicago midnight boundaries
+        response_utc = self.client.get(
+            reverse('feed_externalcalendars_events') + '?from=2017-08-02T05:00:00Z&to=2017-08-03T05:00:00Z')
+
+        # THEN - both should return the same results
+        self.assertEqual(response_date_only.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_utc.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response_date_only.data), len(response_utc.data))
+        self.assertEqual(len(response_date_only.data), 1)
+        self.assertEqual(response_date_only.data[0]['title'], response_utc.data[0]['title'])
