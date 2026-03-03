@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.48"
+__version__ = "2.1.49"
 
 import os
 import socket
@@ -200,11 +200,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+        'helium.common.throttles.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
-        'user': '60/min'
+        'user': '60/min',
+        'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
