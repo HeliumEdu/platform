@@ -327,6 +327,8 @@ CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
     'sentry-trace',
     'baggage',
+    'traceparent',
+    'tracestate',
 )
 
 if 'prod' not in ENVIRONMENT:
