@@ -55,6 +55,7 @@ jobs:
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
+      caller: release
     secrets: inherit
 
   bump-version:
