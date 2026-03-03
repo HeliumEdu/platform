@@ -59,7 +59,15 @@ jobs:
             --jq '.[0].databaseId')
 
           echo "Waiting for release run $RUN_ID to complete ..."
-          gh run watch "$RUN_ID" --repo ${{ github.repository }}
+          gh run watch "$RUN_ID" --repo ${{ github.repository }} || true
+
+          # Ensure completion in case watch exited early due to a transient API error
+          while true; do
+            RUN_STATUS=$(gh run view "$RUN_ID" --repo ${{ github.repository }} --json status --jq '.status' 2>/dev/null) || { sleep 10; continue; }
+            [ "$RUN_STATUS" = "completed" ] && break
+            echo "Run status: $RUN_STATUS, waiting ..."
+            sleep 15
+          done
 
           # Check if it succeeded
           STATUS=$(gh run view "$RUN_ID" --repo ${{ github.repository }} --json conclusion --jq '.conclusion')
