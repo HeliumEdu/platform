@@ -325,6 +325,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOWED_ORIGIN_REGEXES = []
 CORS_ALLOW_HEADERS = default_headers + (
     'cache-control',
+    'sentry-trace',
+    'baggage',
 )
 
 if 'prod' not in ENVIRONMENT:
