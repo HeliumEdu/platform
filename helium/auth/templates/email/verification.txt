@@ -6,7 +6,7 @@ You're almost there. Your verification code is: {{ verification_code|unlocalize 
 
 Paste the link below in to your browser to verify this email address with Helium.
 
-{{ verify_url }}?username={{ username }}&code={{ verification_code|unlocalize }}
+{{ verify_url }}?email={{ email }}&code={{ verification_code|unlocalize }}
 
 Regards,
 The Helium Team
