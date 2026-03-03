@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.db import IntegrityError
+from django.db.models import Sum
 from rest_framework import serializers
 
 from helium.planner.models.category import Category
@@ -73,12 +74,10 @@ class CategorySerializer(serializers.ModelSerializer):
         """
         course_id = self.context['request'].parser_context['kwargs']['course']
 
-        weight_total = 0
-        for category in Category.objects.for_course(course_id).iterator():
-            if self.instance and category.pk == self.instance.pk:
-                continue
-
-            weight_total += category.weight
+        qs = Category.objects.for_course(course_id)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        weight_total = qs.aggregate(Sum('weight'))['weight__sum'] or 0
 
         if weight_total + weight > 100:
             raise serializers.ValidationError(

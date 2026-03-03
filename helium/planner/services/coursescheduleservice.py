@@ -183,7 +183,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
             day += datetime.timedelta(days=1)
             continue
 
-        for course_schedule in course_schedules.iterator():
+        for course_schedule in course_schedules.all():
             if course_schedule.days_of_week[enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]] == "1":
                 start_time = _get_start_time_for_weekday(course_schedule,
                                                          enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
