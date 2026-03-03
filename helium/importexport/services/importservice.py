@@ -339,7 +339,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
         for homework in (Homework.objects.for_user(user.pk)
                 .filter(course__course_group__example_schedule=True)
-                .select_related('course')):
+                .select_related('course')
+                .iterator()):
             course = homework.course
             start_delta = (homework.start.date() - course.start_date).days
             end_delta = (homework.end.date() - course.start_date).days
