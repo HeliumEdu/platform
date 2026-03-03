@@ -98,6 +98,6 @@ class ReminderExtendedSerializer(ReminderSerializer):
             representation['course'] = course_serializer.data
 
         # Keep only the user ID instead of the full nested user object
-        representation['user'] = instance.user.id
+        representation['user'] = instance.user_id
 
         return representation

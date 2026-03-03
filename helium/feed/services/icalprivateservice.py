@@ -136,7 +136,7 @@ def _create_homework_description(homework):
         class_info += f" in {homework.course.room}"
 
     materials = []
-    for material in homework.materials.iterator():
+    for material in homework.materials.all():
         materials.append(material.title)
 
     description = f"Class Info: {class_info}\n"
@@ -235,7 +235,7 @@ def courseschedules_to_private_ical_feed(user):
     calendar = _create_calendar(user)
 
     events = []
-    for course in Course.objects.for_user(user.pk).select_related('course_group', 'course_group__user', 'course_group__user__settings'):
+    for course in Course.objects.for_user(user.pk).select_related('course_group', 'course_group__user', 'course_group__user__settings').prefetch_related('schedules'):
         events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
 
     timezone.activate(pytz.timezone(user.settings.time_zone))
