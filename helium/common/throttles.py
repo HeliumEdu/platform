@@ -15,7 +15,8 @@ class UserRateThrottle(DRFUserRateThrottle):
     """
 
     def allow_request(self, request, view):
-        if 'www.heliumedu.com' in request.META.get('HTTP_ORIGIN', ''):
+        origin = request.META.get('HTTP_ORIGIN', '')
+        if origin.startswith('https://www.') and origin.endswith('heliumedu.com'):
             self.scope = 'user_legacy'
             self.rate = self.get_rate()
             self.num_requests, self.duration = self.parse_rate(self.rate)
