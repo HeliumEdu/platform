@@ -1,9 +1,7 @@
 {% extends "email/base.html" %}
-{% load static %}
-
 {% block heading %}{% endblock %}
 
-{% block greeting_pre %}<img src='{% static "img/logo_square.png" %}" width="50" height="50"
+{% block greeting_pre %}<img src='https://www.heliumedu.com/assets/img/logo_square.png" width="50" height="50"
                              style="display: inline !important; vertical-align: middle; margin-top: -15px;'/>{% endblock %}
 
 {% block greeting %}{{ subject|safe }}{% endblock %}
