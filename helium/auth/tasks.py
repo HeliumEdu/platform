@@ -28,7 +28,7 @@ def send_verification_email(email, username, verification_code):
     commonutils.send_multipart_email('email/verification',
                                      {
                                          'PROJECT_NAME': settings.PROJECT_NAME,
-                                         'username': username,
+                                         'email': email,
                                          'verification_code': verification_code,
                                          'verify_url': f"{settings.PROJECT_APP_HOST}/verify",
                                      },
