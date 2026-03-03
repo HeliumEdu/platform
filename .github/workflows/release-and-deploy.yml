@@ -99,7 +99,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
-          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_cluster_tests }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
         run: |
           gh workflow run deploy.yml \
             --repo ${{ github.repository }} \
