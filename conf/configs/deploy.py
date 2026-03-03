@@ -77,6 +77,14 @@ def before_send(event, hint):
             return None
     return event
 
+def before_send_transaction(event, hint):
+    """Filter out transactions from health/status endpoints"""
+    if 'request' in event and 'url' in event['request']:
+        url = event['request']['url']
+        if '/status' in url or '/health' in url:
+            return None
+    return event
+
 sentry_sdk.init(
     dsn=config('PLATFORM_SENTRY_DSN'),
     integrations=[
@@ -90,8 +98,8 @@ sentry_sdk.init(
     release=PROJECT_VERSION,
     send_default_pii=True,
     traces_sample_rate=0.1,
-    ignore_transactions=['/status', '/health'],
     before_send=before_send,
+    before_send_transaction=before_send_transaction,
 )
 
 if not common.DEBUG:
