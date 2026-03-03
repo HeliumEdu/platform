@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.47"
+__version__ = "2.1.48"
 
 import os
 import socket
@@ -209,6 +209,9 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+if 'local' in ENVIRONMENT:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = ()
 
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
