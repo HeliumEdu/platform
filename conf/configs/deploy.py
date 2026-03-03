@@ -70,10 +70,10 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 def before_send(event, hint):
-    """Filter out errors from the /status endpoint"""
+    """Filter out errors from health/status endpoints"""
     if 'request' in event and 'url' in event['request']:
         url = event['request']['url']
-        if '/status' in url:
+        if '/status' in url or '/health' in url:
             return None
     return event
 
@@ -90,6 +90,7 @@ sentry_sdk.init(
     release=PROJECT_VERSION,
     send_default_pii=True,
     traces_sample_rate=0.1,
+    ignore_transactions=['/status', '/health'],
     before_send=before_send,
 )
 
