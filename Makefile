@@ -108,7 +108,7 @@ build-docker:
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_worker -t helium/platform-worker:$(PLATFORM)-latest -t helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 run-docker: docker-env
-	@if curl -s http://localhost:8000/health/ > /dev/null 2>&1; then \
+	@if curl -s http://localhost:8000/status/ > /dev/null 2>&1; then \
 		echo "Platform already running"; \
 	else \
 		if [[ -n "$$PLATFORM_RESOURCE_IMAGE" || -n "$$PLATFORM_API_IMAGE" || -n "$$PLATFORM_WORKER_IMAGE" ]]; then \
