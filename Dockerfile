@@ -75,7 +75,7 @@ COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
 EXPOSE 8000
 
-CMD ["gunicorn", "conf.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "4", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "--statsd-host", "localhost:8125", "--statsd-prefix", "helium.gunicorn"]
+CMD ["gunicorn", "conf.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "4", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "--statsd-host", "localhost:8125", "--statsd-prefix", "helium"]
 
 ######################################################################
 
