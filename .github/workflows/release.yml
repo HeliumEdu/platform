@@ -72,6 +72,7 @@ jobs:
   bump-version:
     name: Bump Version
     needs: [test, integration-test]
+    if: always() && needs.test.result == 'success' && (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -146,7 +147,7 @@ jobs:
 
   build-and-publish:
     name: Build and Publish Containers
-    needs: [test, integration-test, bump-version]
+    needs: [test, bump-version]
     runs-on: ubuntu-latest
 
     env:
@@ -185,8 +186,8 @@ jobs:
 
   create-release-tag:
     name: Create Release Tag
-    needs: [test, integration-test, bump-version, build-and-publish]
-    if: always() && needs.test.result == 'success' && (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped') && (needs.build-and-publish.result == 'success' || needs.build-and-publish.result == 'skipped')
+    needs: [test, bump-version, build-and-publish]
+    if: always() && needs.test.result == 'success' && needs.bump-version.result == 'success' && (needs.build-and-publish.result == 'success' || needs.build-and-publish.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
