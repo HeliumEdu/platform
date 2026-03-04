@@ -148,6 +148,7 @@ jobs:
   build-and-publish:
     name: Build and Publish Containers
     needs: [test, bump-version]
+    if: always() && needs.test.result == 'success' && needs.bump-version.result == 'success'
     runs-on: ubuntu-latest
 
     env:
