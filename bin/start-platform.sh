@@ -84,7 +84,7 @@ fi
 # Wait for API to be ready
 echo "Waiting for platform API to be ready..."
 for i in $(seq 1 60); do
-    if curl -s http://localhost:8000/health/ > /dev/null 2>&1; then
+    if curl -s http://localhost:8000/status/ > /dev/null 2>&1; then
         echo "Platform API is ready!"
         exit 0
     fi
