@@ -54,11 +54,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: "integration-tests-${{inputs.caller}}"
+  group: "integration-tests"
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.38.9"
   PLATFORM: amd64
 
 jobs:
@@ -100,7 +99,6 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Cache pub dependencies

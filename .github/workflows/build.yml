@@ -9,6 +9,13 @@ on:
     branches: [ main ]
   schedule:
     - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      run_integration_tests:
+        description: 'Run integration tests'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -22,6 +29,7 @@ concurrency:
 jobs:
   integration-test:
     name: Integration Test
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_integration_tests }}
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
