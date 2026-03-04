@@ -27,6 +27,11 @@ on:
         required: true
         type: boolean
         default: true
+      run_integration_tests:
+        description: 'Run integration tests'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   release-and-deploy:
@@ -39,7 +44,8 @@ jobs:
         run: |
           gh workflow run release.yml \
             --repo ${{ github.repository }} \
-            -f bump_type="${{ inputs.bump_type }}"
+            -f bump_type="${{ inputs.bump_type }}" \
+            -f run_integration_tests="${{ inputs.run_integration_tests }}"
 
           echo "Release workflow triggered, waiting for completion ..."
 
