@@ -19,6 +19,24 @@ on:
         required: true
         type: boolean
         default: true
+      trigger_deploy_after_release:
+        description: 'Trigger deploy after release'
+        required: true
+        type: boolean
+        default: true
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        default: prod
+        options:
+          - dev
+          - prod
+      run_legacy_cluster_tests:
+        description: 'Run cluster tests for frontend-legacy before deploying'
+        required: true
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       bump_type:
@@ -28,6 +46,21 @@ on:
         default: patch
       run_integration_tests:
         description: "Run integration tests"
+        required: false
+        type: boolean
+        default: true
+      trigger_deploy_after_release:
+        description: "Trigger deploy after release"
+        required: false
+        type: boolean
+        default: true
+      environment:
+        description: "Environment to deploy to"
+        required: false
+        type: string
+        default: prod
+      run_legacy_cluster_tests:
+        description: "Run cluster tests for frontend-legacy before deploying"
         required: false
         type: boolean
         default: true
@@ -230,3 +263,15 @@ jobs:
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases new "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases set-commits --auto "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
+
+  deploy:
+    name: Deploy
+    needs: [create-release-tag, bump-version]
+    if: ${{ inputs.trigger_deploy_after_release && needs.create-release-tag.result == 'success' && needs.bump-version.result == 'success' }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      version_type: specific
+      specific_version: ${{ needs.bump-version.outputs.version }}
+      environment: ${{ inputs.environment }}
+      run_legacy_cluster_tests: ${{ inputs.run_legacy_cluster_tests }}
+    secrets: inherit
