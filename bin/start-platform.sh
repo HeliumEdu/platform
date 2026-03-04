@@ -6,14 +6,14 @@
 # It does not require a local clone of the platform repository.
 #
 # Environment variables:
-#   PLATFORM_RESOURCE_IMAGE    - ECR image for resource container (optional)
-#   PLATFORM_API_IMAGE         - ECR image for API container (optional)
-#   PLATFORM_WORKER_IMAGE      - ECR image for worker container (optional)
+#   REGISTRY_PREFIX            - Registry prefix (e.g., "public.ecr.aws/heliumedu/") - auto-detected if not set
+#   PLATFORM_RESOURCE_IMAGE    - Full image for resource container (optional, overrides REGISTRY_PREFIX)
+#   PLATFORM_API_IMAGE         - Full image for API container (optional, overrides REGISTRY_PREFIX)
+#   PLATFORM_WORKER_IMAGE      - Full image for worker container (optional, overrides REGISTRY_PREFIX)
 #   PLATFORM                   - Architecture: arm64 or amd64 (default: arm64)
 #   PLATFORM_BRANCH            - GitHub branch to fetch configs from (default: main)
 #
-# If PLATFORM_*_IMAGE vars are set, those specific images are used.
-# Otherwise, images are pulled from ECR Public.
+# If local images exist, they are used. Otherwise, images are pulled from ECR Public.
 #
 
 set -e
@@ -38,38 +38,34 @@ curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 mkdir -p container
 curl -fsSL "$GITHUB_RAW_URL/container/init-localstack.py" -o container/init-localstack.py
 
-# Export image variables for docker-compose
-# Prefer local images if available, otherwise fall back to ECR Public
+# Determine registry prefix - prefer local images if available
 export PLATFORM
-LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
-if docker image inspect "$LOCAL_API_IMAGE" &>/dev/null; then
-    echo "Using local images..."
-    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM}-latest}"
-    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM}-latest}"
-    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM}-latest}"
+if [[ -z "${REGISTRY_PREFIX:-}" ]]; then
+    LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
+    if docker image inspect "$LOCAL_API_IMAGE" &>/dev/null; then
+        echo "Using local images..."
+        export REGISTRY_PREFIX=""
+    else
+        echo "Local images not found, will pull from ECR Public..."
+        export REGISTRY_PREFIX="public.ecr.aws/heliumedu/"
+    fi
 else
-    echo "Local images not found, will pull from ECR Public..."
-    export PLATFORM_RESOURCE_IMAGE="${PLATFORM_RESOURCE_IMAGE:-public.ecr.aws/heliumedu/helium/platform-resource:${PLATFORM}-latest}"
-    export PLATFORM_API_IMAGE="${PLATFORM_API_IMAGE:-public.ecr.aws/heliumedu/helium/platform-api:${PLATFORM}-latest}"
-    export PLATFORM_WORKER_IMAGE="${PLATFORM_WORKER_IMAGE:-public.ecr.aws/heliumedu/helium/platform-worker:${PLATFORM}-latest}"
+    echo "Using provided REGISTRY_PREFIX: $REGISTRY_PREFIX"
 fi
 
-echo "Using images:"
-echo "  Resource: $PLATFORM_RESOURCE_IMAGE"
-echo "  API:      $PLATFORM_API_IMAGE"
-echo "  Worker:   $PLATFORM_WORKER_IMAGE"
+echo "Registry prefix: ${REGISTRY_PREFIX:-<local>}"
 
 # Check if we can authenticate with AWS (for CI environments)
 USE_ECR_AUTH=false
-if [[ "$PLATFORM_API_IMAGE" == *"public.ecr.aws"* ]]; then
+if [[ "$REGISTRY_PREFIX" == *"public.ecr.aws"* ]]; then
     if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
         echo "Logging in to ECR Public to avoid rate limits..."
         if aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null; then
             USE_ECR_AUTH=true
             echo "Pulling images from ECR..."
-            docker pull "$PLATFORM_RESOURCE_IMAGE"
-            docker pull "$PLATFORM_API_IMAGE"
-            docker pull "$PLATFORM_WORKER_IMAGE"
+            docker pull "${REGISTRY_PREFIX}helium/platform-resource:${PLATFORM}-latest"
+            docker pull "${REGISTRY_PREFIX}helium/platform-api:${PLATFORM}-latest"
+            docker pull "${REGISTRY_PREFIX}helium/platform-worker:${PLATFORM}-latest"
         fi
     fi
 fi
