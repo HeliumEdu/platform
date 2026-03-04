@@ -265,13 +265,33 @@ jobs:
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
 
   deploy:
-    name: Deploy
+    name: Trigger Deploy Workflow
     needs: [create-release-tag, bump-version]
     if: ${{ inputs.trigger_deploy_after_release && needs.create-release-tag.result == 'success' && needs.bump-version.result == 'success' }}
-    uses: ./.github/workflows/deploy.yml
-    with:
-      version_type: specific
-      specific_version: ${{ needs.bump-version.outputs.version }}
-      environment: ${{ inputs.environment }}
-      run_legacy_cluster_tests: ${{ inputs.run_legacy_cluster_tests }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          VERSION: ${{ needs.bump-version.outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
+        run: |
+          gh workflow run deploy.yml \
+            --repo ${{ github.repository }} \
+            -f version_type=specific \
+            -f specific_version="$VERSION" \
+            -f environment="$ENVIRONMENT" \
+            -f run_legacy_cluster_tests="$RUN_LEGACY_CLUSTER_TESTS"
+
+      - name: Deployment trigger summary
+        env:
+          VERSION: ${{ needs.bump-version.outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
+        run: |
+          echo "### Deploy Workflow Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run Legacy Cluster Tests**: $RUN_LEGACY_CLUSTER_TESTS" >> $GITHUB_STEP_SUMMARY
