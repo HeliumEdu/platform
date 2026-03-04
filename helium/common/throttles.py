@@ -14,9 +14,18 @@ class UserRateThrottle(DRFUserRateThrottle):
     DEFAULT_THROTTLE_CLASSES once the legacy frontend is retired.
     """
 
+    def _is_legacy_frontend(self, origin):
+        # Production legacy frontend
+        if origin.startswith('https://www.') and origin.endswith('heliumedu.com'):
+            return True
+        # Local legacy frontend
+        if origin.startswith('http://localhost:3000'):
+            return True
+        return False
+
     def allow_request(self, request, view):
         origin = request.META.get('HTTP_ORIGIN', '')
-        if origin.startswith('https://www.') and origin.endswith('heliumedu.com'):
+        if self._is_legacy_frontend(origin):
             self.scope = 'user_legacy'
             self.rate = self.get_rate()
             self.num_requests, self.duration = self.parse_rate(self.rate)
