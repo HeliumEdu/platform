@@ -80,8 +80,6 @@ There are also some special environment variables that can be set in development
   - `local` provisions hosts as `localhost` for use outside of Docker (ex. when using Django's `runserver` command) 
   - `prod` provisions hosts to be suffixed with `heliumedu.com`
   - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
-- `PLATFORM_BEAT_MODE`
-  - Set to `True` to start a Beat scheduler (only one should ever be running in the fleet) instead of a Worker when launching from [Celery](https://docs.celeryq.dev/en/stable/getting-started/introduction.html)
 - `USE_AWS_SECRETS_MANAGER`
   - Set to `True` to use AWS Secrets Manager before falling back to environment variables
 - `USE_NGROK`
