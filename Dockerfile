@@ -26,10 +26,11 @@ RUN if [[ "$ENVIRONMENT" == "*local*" ]] ; then RUN python -m pip install --no-c
 
 FROM ubuntu:24.04 AS platform_resource
 
-RUN apt-get --fix-missing update
-RUN apt-get install -y --no-install-recommends python3-mysqldb npm
-RUN npm install yuglify -g
-RUN apt-get clean
+RUN apt-get --fix-missing update && \
+    apt-get install -y --no-install-recommends python3-mysqldb npm && \
+    npm install yuglify -g && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -52,23 +53,18 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 FROM ubuntu:24.04 AS platform_api
 
-RUN apt-get --fix-missing update
-RUN apt-get install -y --no-install-recommends apache2 libapache2-mod-wsgi-py3 python3-mysqldb libjpeg-dev ca-certificates
-RUN apt-get clean
+RUN apt-get --fix-missing update && \
+    apt-get install -y --no-install-recommends python3-mysqldb libjpeg-dev ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
-ENV APACHE_RUN_USER=ubuntu
 ENV TZ=UTC
 
 WORKDIR /app
-
-COPY container/apache2.conf /etc/apache2
-COPY container/apache-000-default.conf /etc/apache2/sites-enabled/000-default.conf
-COPY container/apache-ports.conf /etc/apache2/ports.conf
-COPY container/apache-mod-servername.conf /etc/apache2/mods-enabled/servername.conf
 
 RUN chown -R ubuntu:ubuntu .
 
@@ -79,15 +75,16 @@ COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
 EXPOSE 8000
 
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+CMD ["gunicorn", "conf.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--access-logfile", "-", "--error-logfile", "-"]
 
 ######################################################################
 
 FROM ubuntu:24.04 AS platform_worker
 
-RUN apt-get --fix-missing update
-RUN apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates
-RUN apt-get clean
+RUN apt-get --fix-missing update && \
+    apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1

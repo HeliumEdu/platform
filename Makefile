@@ -7,6 +7,8 @@ TAG_VERSION ?= latest
 PLATFORM ?= arm64
 ENVIRONMENT ?= prod
 
+FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
+
 all: test build-docker run-docker
 
 env:
@@ -80,6 +82,24 @@ run-devserver: build-dev migrate-dev
 		ENVIRONMENT=local python manage.py runserver; \
 	)
 
+start-frontend:
+	@if curl -s http://localhost:8080 > /dev/null 2>&1; then \
+		echo "Frontend already running"; \
+	else \
+		curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
+			FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash; \
+	fi
+
+stop-frontend:
+	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
+
+test-with-frontend: run-docker start-frontend
+	@echo "Platform and frontend are running"
+	@echo "  Platform API: http://localhost:8000"
+	@echo "  Frontend:     http://localhost:8080"
+	@echo ""
+	@echo "Run your tests, then use 'make stop-docker stop-frontend' to clean up"
+
 build-docker:
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
@@ -125,24 +145,3 @@ publish: build-docker
 
 	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
 	docker push public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
-
-# Frontend integration testing
-FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
-
-start-frontend:
-	@if curl -s http://localhost:8080 > /dev/null 2>&1; then \
-		echo "Frontend already running"; \
-	else \
-		curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
-			FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash; \
-	fi
-
-stop-frontend:
-	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
-
-test-with-frontend: run-docker start-frontend
-	@echo "Platform and frontend are running"
-	@echo "  Platform API: http://localhost:8000"
-	@echo "  Frontend:     http://localhost:8080"
-	@echo ""
-	@echo "Run your tests, then use 'make stop-docker stop-frontend' to clean up"

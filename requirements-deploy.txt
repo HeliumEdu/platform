@@ -3,3 +3,4 @@ boto3==1.42.60
 mysqlclient==2.2.7
 django-redis==6.0.0
 sentry-sdk==2.54.0
+gunicorn==23.0.0
