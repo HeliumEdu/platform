@@ -25,7 +25,7 @@ services:
     volumes:
       - "./container/init-localstack.py:/etc/localstack/init/ready.d/init-localstack.py"
   resource:
-    image: ${PLATFORM_RESOURCE_IMAGE:-helium/platform-resource:${PLATFORM:-arm64}-latest}
+    image: ${PLATFORM_RESOURCE_IMAGE:-${REGISTRY_PREFIX:-}helium/platform-resource:${PLATFORM:-arm64}-latest}
     env_file: .env
     depends_on:
       db:
@@ -35,7 +35,7 @@ services:
       storage:
         condition: service_healthy
   api:
-    image: ${PLATFORM_API_IMAGE:-helium/platform-api:${PLATFORM:-arm64}-latest}
+    image: ${PLATFORM_API_IMAGE:-${REGISTRY_PREFIX:-}helium/platform-api:${PLATFORM:-arm64}-latest}
     env_file: .env
     ports:
       - 8000:8000
@@ -54,7 +54,7 @@ services:
       resource:
         condition: service_completed_successfully
   worker:
-    image: ${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM:-arm64}-latest}
+    image: ${PLATFORM_WORKER_IMAGE:-${REGISTRY_PREFIX:-}helium/platform-worker:${PLATFORM:-arm64}-latest}
     env_file: .env
     deploy:
       resources:
