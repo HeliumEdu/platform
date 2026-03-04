@@ -127,6 +127,7 @@ jobs:
           NEW_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
           git commit -m "Bump version to ${NEW_VERSION}"
 
+          git pull --rebase
           git push
 
       - name: Get version and commit SHA
