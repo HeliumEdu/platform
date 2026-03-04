@@ -72,7 +72,7 @@ jobs:
             RUN_STATUS=$(gh run view "$RUN_ID" --repo ${{ github.repository }} --json status --jq '.status' 2>/dev/null) || { sleep 10; continue; }
             [ "$RUN_STATUS" = "completed" ] && break
             echo "Run status: $RUN_STATUS, waiting ..."
-            sleep 15
+            sleep 60
           done
 
           # Check if it succeeded
