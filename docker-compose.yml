@@ -50,8 +50,6 @@ services:
         condition: service_completed_successfully
   worker:
     image: ${PLATFORM_WORKER_IMAGE:-helium/platform-worker:${PLATFORM:-arm64}-latest}
-    environment:
-        PLATFORM_BEAT_AND_WORKER_MODE: "True"
     env_file: .env
     depends_on:
       db:
