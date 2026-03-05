@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 
-from django.db.models import F, Count, Q, Case, When
+from django.db.models import F, Count, Q, Case, When, Exists, OuterRef
 
 from helium.common.utils import commonutils
 from helium.planner.models import CourseGroup, Course, Category, Homework
@@ -14,8 +14,13 @@ logger = logging.getLogger(__name__)
 def get_grade_points_for_course_group(course_group_id):
     course_grade_points = []
     # Fetch grade points for each course in the group, then sort by date
-    for course in Course.objects.for_course_group(course_group_id):
-        course_grade_points += get_grade_points_for_course(course.id)
+    # Annotate has_weighted_grading to avoid N+1 queries
+    courses = (Course.objects.for_course_group(course_group_id)
+               .annotate(annotated_has_weighted_grading=Exists(
+                   Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
+               )))
+    for course in courses:
+        course_grade_points += get_grade_points_for_course(course.id, course.annotated_has_weighted_grading)
     course_grade_points = sorted(course_grade_points, key=lambda x: x[0])
 
     # Now average the grades of all courses as each grade point to build the group's points
@@ -41,8 +46,9 @@ def get_grade_points_for_course_group(course_group_id):
     return grade_points
 
 
-def get_grade_points_for_course(course_id):
-    has_weighted_grading = Course.objects.has_weighted_grading(course_id)
+def get_grade_points_for_course(course_id, has_weighted_grading=None):
+    if has_weighted_grading is None:
+        has_weighted_grading = Course.objects.has_weighted_grading(course_id)
     query_set = (Homework.objects.for_course(course_id)
                  .graded()
                  .annotate(weight=F('category__weight'),
@@ -126,7 +132,7 @@ def get_grade_data(user_id):
         course_group.pop('annotated_num_homework_graded')
         course_group['grade_points'] = get_grade_points_for_course_group(course_group['id'])
 
-        # Annotate courses with homework counts to avoid N+1 queries
+        # Annotate courses with homework counts and has_weighted_grading to avoid N+1 queries
         course_group['courses'] = (Course.objects.for_user(user_id)
                                    .for_course_group(course_group['id'])
                                    .annotate(
@@ -140,6 +146,9 @@ def get_grade_data(user_id):
                                            'homework',
                                            filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
                                            distinct=True
+                                       ),
+                                       annotated_has_weighted_grading=Exists(
+                                           Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
                                        )
                                    )
                                    .values('id',
@@ -149,7 +158,8 @@ def get_grade_data(user_id):
                                            'trend',
                                            'annotated_num_homework',
                                            'annotated_num_homework_completed',
-                                           'annotated_num_homework_graded')
+                                           'annotated_num_homework_graded',
+                                           'annotated_has_weighted_grading')
                                    .order_by('start_date', 'title'))
         course_group_num_homework = 0
         for course in course_group['courses']:
@@ -158,13 +168,14 @@ def get_grade_data(user_id):
             course_group_num_homework += course['num_homework']
             course['num_homework_completed'] = course['annotated_num_homework_completed']
             course['num_homework_graded'] = course['annotated_num_homework_graded']
-            course['has_weighted_grading'] = Course.objects.has_weighted_grading(course['id'])
+            course['has_weighted_grading'] = course['annotated_has_weighted_grading']
             # Remove the annotated_ prefixed keys
             course.pop('annotated_num_homework')
             course.pop('annotated_num_homework_completed')
             course.pop('annotated_num_homework_graded')
+            course.pop('annotated_has_weighted_grading')
             course.pop('current_grade')
-            course['grade_points'] = get_grade_points_for_course(course['id'])
+            course['grade_points'] = get_grade_points_for_course(course['id'], course['has_weighted_grading'])
 
             # Annotate categories with homework counts to avoid N+1 queries
             course['categories'] = (Category.objects.for_user(user_id)

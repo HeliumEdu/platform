@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
@@ -13,7 +13,7 @@ from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import CourseFilter
-from helium.planner.models import Course
+from helium.planner.models import Course, Category
 from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
 
@@ -34,7 +34,8 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
             return Course.objects.for_user(user.pk).select_related('course_group').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True)
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:
             return Course.objects.none()
@@ -61,7 +62,8 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True)
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:
             return Course.objects.none()
@@ -106,7 +108,8 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True)
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:
             return Course.objects.none()
