@@ -16,6 +16,7 @@ class CourseSerializer(serializers.ModelSerializer):
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
+    has_weighted_grading = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,6 +50,11 @@ class CourseSerializer(serializers.ModelSerializer):
         # Use annotated value if available, otherwise default to 0
         # (avoids N+1 queries; newly created courses have no homework anyway)
         return getattr(obj, 'annotated_num_homework_graded', 0)
+
+    def get_has_weighted_grading(self, obj) -> bool:
+        # Use annotated value if available, otherwise default to False
+        # (avoids N+1 queries against planner_category table)
+        return getattr(obj, 'annotated_has_weighted_grading', False)
 
     def validate(self, attrs):
         start_date = attrs.get('start_date', None)
