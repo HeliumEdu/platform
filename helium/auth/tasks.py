@@ -157,9 +157,24 @@ def purge_unverified_users():
     metricutils.task_stop(metrics, value=num_purged)
 
 
+@app.task
+def emit_queue_depth():
+    """Emit the current Celery queue depth as a metric."""
+    try:
+        from kombu import Connection
+        with Connection(settings.CELERY_BROKER_URL) as conn:
+            with conn.channel() as channel:
+                queue_depth = channel.client.llen('celery')
+                metricutils.gauge('celery.queue.depth', queue_depth)
+    except Exception as e:
+        logger.warning(f"Failed to get queue depth: {e}")
+
+
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired refresh tokens periodically
     sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
     # Add schedule to purge unverified users that don't finish setting up their account
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
+    # Emit queue depth every minute for monitoring
+    sender.add_periodic_task(60, emit_queue_depth.s())
