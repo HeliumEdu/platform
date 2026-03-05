@@ -69,8 +69,33 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+
+def _is_ignorable_statsd_error(event):
+    logger_name = event.get('logger', '')
+    if logger_name != 'gunicorn.error':
+        return False
+
+    # Common gunicorn statsd warning message.
+    log_message = event.get('logentry', {}).get('message', '')
+    if 'Error sending message to statsd' in log_message:
+        return True
+
+    # Fallback on exception type/value from the captured event.
+    exception_values = event.get('exception', {}).get('values', [])
+    for exception in exception_values:
+        exc_type = exception.get('type', '')
+        exc_value = exception.get('value', '')
+        if exc_type == 'ConnectionRefusedError' and 'Connection refused' in exc_value:
+            return True
+
+    return False
+
+
 def before_send(event, hint):
     """Filter out errors from health/status endpoints"""
+    if _is_ignorable_statsd_error(event):
+        return None
+
     if 'request' in event and 'url' in event['request']:
         url = event['request']['url']
         if '/status' in url or '/health' in url:
