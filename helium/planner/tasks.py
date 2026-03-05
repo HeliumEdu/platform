@@ -190,6 +190,7 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                              'calendar_item': calendar_item,
                                              'normalized_datetime': normalized_datetime,
                                              'comments': comments,
+                                             'notifications_url': f"{settings.PROJECT_APP_HOST}/notifications",
                                          },
                                          subject, [email])
 
