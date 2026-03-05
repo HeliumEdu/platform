@@ -17,6 +17,30 @@ DATADOG_METRICS = True
 DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
 
 
+def _normalize_user_agent_tag(user_agent):
+    if not user_agent:
+        return "unknown"
+
+    ua = user_agent.lower()
+
+    if any(bot in ua for bot in ["bot", "spider", "crawler", "slurp", "curl", "wget", "postman"]):
+        return "bot"
+
+    if "dart" in ua or "flutter" in ua:
+        return "mobile_app_flutter"
+
+    if "iphone" in ua or "ipad" in ua or "ios" in ua:
+        return "mobile_browser_ios"
+
+    if "android" in ua:
+        return "mobile_browser_android"
+
+    if any(browser in ua for browser in ["mozilla", "chrome", "safari", "firefox", "edg", "opera"]):
+        return "web_browser"
+
+    return "other"
+
+
 def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
     if user:
         user = user
@@ -37,7 +61,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         if request:
             tags.append(f"method:{request.method}")
             if request.headers and 'User-Agent' in request.headers:
-                tags.append(f"user_agent:{request.headers.get('User-Agent')}")
+                tags.append(f"user_agent:{_normalize_user_agent_tag(request.headers.get('User-Agent'))}")
         if response:
             tags.append(f"status_code:{response.status_code}")
 
