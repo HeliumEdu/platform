@@ -161,11 +161,11 @@ def purge_unverified_users():
 def emit_queue_depth():
     """Emit the current Celery queue depth as a metric."""
     try:
-        from kombu import Connection
-        with Connection(settings.CELERY_BROKER_URL) as conn:
-            with conn.channel() as channel:
-                queue_depth = channel.client.llen('celery')
-                metricutils.gauge('celery.queue.depth', queue_depth)
+        import redis
+        r = redis.from_url(settings.CELERY_BROKER_URL)
+        queue_depth = r.llen('celery')
+        metricutils.gauge('celery.queue.depth', queue_depth)
+        logger.debug(f"Emitted queue depth: {queue_depth}")
     except Exception as e:
         logger.warning(f"Failed to get queue depth: {e}")
 
