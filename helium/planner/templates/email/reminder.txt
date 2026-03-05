@@ -12,5 +12,7 @@ Room: {{ calendar_item.course.room }}{% endif %}{% endif %}
 
 {{ comments }}
 
+View in Helium: {{ notifications_url }}
+
 Regards,
 The Helium Team
