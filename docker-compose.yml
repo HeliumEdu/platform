@@ -39,11 +39,6 @@ services:
     env_file: .env
     ports:
       - 8000:8000
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 512M
     depends_on:
       db:
         condition: service_healthy
@@ -56,11 +51,6 @@ services:
   worker:
     image: ${PLATFORM_WORKER_IMAGE:-${REGISTRY_PREFIX:-}helium/platform-worker:${PLATFORM:-arm64}-latest}
     env_file: .env
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 1024M
     depends_on:
       db:
         condition: service_healthy
