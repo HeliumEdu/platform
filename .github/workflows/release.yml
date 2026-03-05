@@ -19,6 +19,24 @@ on:
         required: true
         type: boolean
         default: true
+      trigger_deploy_after_release:
+        description: 'Trigger deploy after release'
+        required: true
+        type: boolean
+        default: true
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        default: prod
+        options:
+          - dev
+          - prod
+      run_legacy_cluster_tests:
+        description: 'Run cluster tests for frontend-legacy before deploying'
+        required: true
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       bump_type:
@@ -31,6 +49,21 @@ on:
         required: false
         type: boolean
         default: true
+      trigger_deploy_after_release:
+        description: "Trigger deploy after release"
+        required: false
+        type: boolean
+        default: true
+      environment:
+        description: "Environment to deploy to"
+        required: false
+        type: string
+        default: prod
+      run_legacy_cluster_tests:
+        description: "Run cluster tests for frontend-legacy before deploying"
+        required: false
+        type: boolean
+        default: true
     outputs:
       version:
         description: "Released version"
@@ -40,8 +73,33 @@ permissions:
   contents: write
 
 jobs:
+  create-release-branch:
+    name: Create Release Branch
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.create_branch.outputs.branch_name }}
+      base_sha: ${{ steps.create_branch.outputs.base_sha }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ github.sha }}
+
+      - name: Create and push release branch
+        id: create_branch
+        run: |
+          BRANCH_NAME="release/${{ github.run_id }}-${{ github.run_attempt }}"
+          BASE_SHA="$(git rev-parse HEAD)"
+
+          git push origin "HEAD:refs/heads/${BRANCH_NAME}"
+
+          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+          echo "base_sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+
   test:
     name: Test
+    needs: [create-release-branch]
     runs-on: ubuntu-latest
 
     env:
@@ -51,6 +109,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs['create-release-branch'].outputs.base_sha }}
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
@@ -62,6 +122,7 @@ jobs:
 
   integration-test:
     name: Integration Test
+    needs: [create-release-branch]
     if: ${{ inputs.run_integration_tests }}
     uses: ./.github/workflows/integration.yml
     with:
@@ -71,8 +132,8 @@ jobs:
 
   bump-version:
     name: Bump Version
-    needs: [test, integration-test]
-    if: always() && needs.test.result == 'success' && (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped')
+    needs: [create-release-branch, test, integration-test]
+    if: always() && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -82,6 +143,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ needs['create-release-branch'].outputs.branch_name }}
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
@@ -128,8 +190,7 @@ jobs:
           NEW_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
           git commit -m "Bump version to ${NEW_VERSION}"
 
-          git pull --rebase
-          git push
+          git push origin "HEAD:refs/heads/${{ needs['create-release-branch'].outputs.branch_name }}"
 
       - name: Get version and commit SHA
         id: get_version
@@ -145,10 +206,47 @@ jobs:
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "Commit SHA: $COMMIT_SHA"
 
+  merge-release-branch:
+    name: Merge Release Branch to Main
+    needs: [create-release-branch, bump-version]
+    if: always() && needs['create-release-branch'].result == 'success' && needs['bump-version'].result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      merged_commit_sha: ${{ steps.merge.outputs.merged_commit_sha }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge release branch
+        id: merge
+        env:
+          RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
+        run: |
+          git config --global user.name "GitHub Release Bot"
+          git config --global user.email "support@heliumedu.com"
+
+          git fetch origin "$RELEASE_BRANCH" main
+          git checkout -B main origin/main
+          git merge --no-ff --no-edit "origin/$RELEASE_BRANCH"
+          git push origin main
+
+          echo "merged_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cleanup release branch
+        if: always()
+        env:
+          RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
+        run: |
+          git push origin --delete "$RELEASE_BRANCH" || true
+
   build-and-publish:
     name: Build and Publish Containers
-    needs: [test, bump-version]
-    if: always() && needs.test.result == 'success' && needs.bump-version.result == 'success'
+    needs: [merge-release-branch, bump-version]
+    if: always() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'
     runs-on: ubuntu-latest
 
     env:
@@ -158,13 +256,13 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PLATFORM: amd64
-      TAG_VERSION: ${{ needs.bump-version.outputs.version }}
+      TAG_VERSION: ${{ needs['bump-version'].outputs.version }}
       ENVIRONMENT: prod
 
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ needs.bump-version.outputs.commit_sha }}
+          ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v5
@@ -187,8 +285,8 @@ jobs:
 
   create-release-tag:
     name: Create Release Tag
-    needs: [test, bump-version, build-and-publish]
-    if: always() && needs.test.result == 'success' && needs.bump-version.result == 'success' && (needs.build-and-publish.result == 'success' || needs.build-and-publish.result == 'skipped')
+    needs: [merge-release-branch, bump-version, build-and-publish]
+    if: always() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -199,12 +297,12 @@ jobs:
 
       - name: Display release info
         run: |
-          echo "### Release ${{ needs.bump-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Release ${{ needs['bump-version'].outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Create and push tag
         env:
-          VERSION: ${{ needs.bump-version.outputs.version }}
-          COMMIT_SHA: ${{ needs.bump-version.outputs.commit_sha }}
+          VERSION: ${{ needs['bump-version'].outputs.version }}
+          COMMIT_SHA: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
         run: |
           git config --global user.name "GitHub Release Bot"
           git config --global user.email "support@heliumedu.com"
@@ -224,9 +322,41 @@ jobs:
       - name: Create Sentry release
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ needs.bump-version.outputs.version }}
+          VERSION: ${{ needs['bump-version'].outputs.version }}
         run: |
           pip install sentry-cli
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases new "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases set-commits --auto "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
+
+  deploy:
+    name: Trigger Deploy Workflow
+    needs: [create-release-tag, bump-version]
+    if: always() && inputs.trigger_deploy_after_release && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          VERSION: ${{ needs['bump-version'].outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
+        run: |
+          gh workflow run deploy.yml \
+            --repo ${{ github.repository }} \
+            -f version_type=specific \
+            -f specific_version="$VERSION" \
+            -f environment="$ENVIRONMENT" \
+            -f run_legacy_cluster_tests="$RUN_LEGACY_CLUSTER_TESTS"
+
+      - name: Deployment trigger summary
+        env:
+          VERSION: ${{ needs['bump-version'].outputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
+        run: |
+          echo "### Deploy Workflow Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run Legacy Cluster Tests**: $RUN_LEGACY_CLUSTER_TESTS" >> $GITHUB_STEP_SUMMARY
