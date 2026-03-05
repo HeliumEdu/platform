@@ -84,6 +84,17 @@ def timing(metric, value, extra_tags=None):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
+def gauge(metric, value, extra_tags=None):
+    try:
+        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+
+        metric_id = f"platform.{metric}"
+        statsd.gauge(metric_id, value=value, tags=tags)
+        logger.debug(f"Metric: {metric_id} gauge set to {value}, with tags {tags}")
+    except Exception:
+        logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
 def request_start(request):
     try:
         metric_id = re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))).strip(".")
