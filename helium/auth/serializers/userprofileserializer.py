@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from rest_framework import serializers
 
 from helium.auth.models import UserProfile
@@ -94,7 +95,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.phone != phone and phone:
             instance.phone_verification_code = generate_verification_code()
 
-            send_text.delay(phone,
-                            f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}')
+            send_text.apply_async(
+                args=(phone, f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}'),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
 
             logger.debug(f"Verification text with code \"{instance.phone_verification_code}\" sent to {instance.phone}")
