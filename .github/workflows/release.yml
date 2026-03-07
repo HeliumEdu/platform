@@ -123,7 +123,7 @@ jobs:
   integration-test:
     name: Integration Test
     needs: [create-release-branch]
-    if: ${{ inputs.run_integration_tests }}
+    if: ${{ inputs.run_integration_tests == true || inputs.run_integration_tests == 'true' }}
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
@@ -345,7 +345,7 @@ jobs:
   deploy:
     name: Trigger Deploy Workflow
     needs: [create-release-tag, bump-version]
-    if: always() && inputs.trigger_deploy_after_release && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'
+    if: always() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy workflow
