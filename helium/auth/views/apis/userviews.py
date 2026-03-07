@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -82,7 +83,7 @@ class UserDeleteResourceView(HeliumAPIView):
 
         logger.info(f'User {user.pk} will be deleted')
 
-        delete_user.delay(user.pk)
+        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -124,6 +125,6 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
 
         logger.info(f'User {user.pk} will be deleted')
 
-        delete_user.delay(user.pk)
+        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

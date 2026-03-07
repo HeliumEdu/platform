@@ -124,8 +124,11 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
 
         if api_settings.ROTATE_REFRESH_TOKENS:
             if api_settings.BLACKLIST_AFTER_ROTATION:
-                blacklist_refresh_token.apply_async((refresh.token,),
-                                                    countdown=settings.BLACKLIST_REFRESH_TOKEN_DELAY_SECS)
+                blacklist_refresh_token.apply_async(
+                    (refresh.token,),
+                    countdown=settings.BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
+                    priority=settings.CELERY_PRIORITY_LOW,
+                )
 
             refresh.set_jti()
             refresh.set_exp()

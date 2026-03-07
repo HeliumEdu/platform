@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from django.db import IntegrityError
@@ -100,7 +101,10 @@ class UserSerializer(serializers.ModelSerializer):
 
             instance.verification_code = generate_verification_code()
 
-            send_verification_email.delay(instance.email_changing, instance.username, instance.verification_code)
+            send_verification_email.apply_async(
+                args=(instance.email_changing, instance.username, instance.verification_code),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
 
         old_password = validated_data.pop('old_password', None)
         password = validated_data.pop('password', None)
@@ -129,10 +133,16 @@ class UserSerializer(serializers.ModelSerializer):
         instance.set_password(password)
         instance.save()
 
-        send_verification_email.delay(instance.email, instance.username, instance.verification_code)
+        send_verification_email.apply_async(
+            args=(instance.email, instance.username, instance.verification_code),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
 
         # Import the example schedule for the user
-        import_example_schedule.delay(instance.pk)
+        import_example_schedule.apply_async(
+            args=(instance.pk,),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
 
         return instance
 
@@ -147,7 +157,10 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         # Import the example schedule for the user
-        import_example_schedule.delay(instance.pk)
+        import_example_schedule.apply_async(
+            args=(instance.pk,),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
 
         return instance
 

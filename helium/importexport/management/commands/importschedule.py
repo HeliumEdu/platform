@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
@@ -40,4 +41,6 @@ class Command(BaseCommand):
             reminderservice.process_push_reminders(True)
 
             for category in Category.objects.for_user(user.pk).iterator():
-                recalculate_category_grade.delay(category.pk)
+                recalculate_category_grade.apply_async(
+                    args=(category.pk,), priority=settings.CELERY_PRIORITY_LOW
+                )

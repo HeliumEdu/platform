@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.82"
+__version__ = "2.1.83"
 
 import os
 import socket
@@ -382,6 +382,16 @@ STATICFILES_FINDERS = (
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
 CELERY_RESULT_EXPIRES = 3600 * 24 * 7
+
+# Priority constants for Celery tasks (lower number = higher priority)
+CELERY_PRIORITY_HIGH = 0
+CELERY_PRIORITY_LOW = 9
+
+# Enable priority support in Redis broker
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'priority_steps': list(range(10)),
+    'queue_order_strategy': 'priority',
+}
 
 # Media files
 

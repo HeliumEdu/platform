@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
 
@@ -16,11 +17,11 @@ def recalculate_grade(modeladmin, request, queryset):
 
     for model in queryset:
         if model_class.__name__ == "CourseGroup":
-            recalculate_course_group_grade.delay(model.pk)
+            recalculate_course_group_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
         elif model_class.__name__ == "Course":
-            recalculate_course_grade.delay(model.pk)
+            recalculate_course_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
         elif model_class.__name__ == "Category":
-            recalculate_category_grade.delay(model.pk)
+            recalculate_category_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
     modeladmin.message_user(request,
                             f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")
