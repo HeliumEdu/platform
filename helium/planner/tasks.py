@@ -35,8 +35,11 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
 
-            recalculate_course_group_grade.apply_async((course_group_id, retries + 1),
-                                                       countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            recalculate_course_group_grade.apply_async(
+                (course_group_id, retries + 1),
+                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
+                priority=settings.CELERY_PRIORITY_LOW,
+            )
             metricutils.task_stop(metrics, value=0)
         else:
             metricutils.task_failure('grade.recalculate.course-group', 'IntegrityError', priority="low")
@@ -64,8 +67,11 @@ def recalculate_course_grade(self, course_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
 
-            recalculate_course_grade.apply_async((course_id, retries + 1),
-                                                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            recalculate_course_grade.apply_async(
+                (course_id, retries + 1),
+                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
+                priority=settings.CELERY_PRIORITY_LOW,
+            )
             metricutils.task_stop(metrics, value=0)
         else:
             metricutils.task_failure('grade.recalculate.course', 'IntegrityError', priority="low")
@@ -108,8 +114,11 @@ def recalculate_category_grade(self, category_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
 
-            recalculate_category_grade.apply_async((category_id, retries + 1),
-                                                   countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            recalculate_category_grade.apply_async(
+                (category_id, retries + 1),
+                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
+                priority=settings.CELERY_PRIORITY_LOW,
+            )
             metricutils.task_stop(metrics, value=0)
         else:
             metricutils.task_failure('grade.recalculate.category', 'IntegrityError', priority="low")

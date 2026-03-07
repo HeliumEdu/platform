@@ -112,7 +112,10 @@ def process_email_reminders():
 
                     metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
 
-                    send_email_reminder.delay(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type)
+                    send_email_reminder.apply_async(
+                        args=(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type),
+                        priority=settings.CELERY_PRIORITY_HIGH,
+                    )
             else:
                 logger.warning(
                     f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
@@ -153,7 +156,10 @@ def process_text_reminders():
 
                     metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.text'])
 
-                    send_text.delay(user.profile.phone, message)
+                    send_text.apply_async(
+                        args=(user.profile.phone, message),
+                        priority=settings.CELERY_PRIORITY_HIGH,
+                    )
             else:
                 logger.warning(
                     f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
@@ -200,7 +206,10 @@ def process_push_reminders(mark_sent_only=False):
                         serializer = ReminderExtendedSerializer(reminder)
                         reminder_data = serializer.data
 
-                        send_pushes.delay(push_tokens, user.username, subject, reminder.message, reminder_data)
+                        send_pushes.apply_async(
+                            args=(push_tokens, user.username, subject, reminder.message, reminder_data),
+                            priority=settings.CELERY_PRIORITY_HIGH,
+                        )
                     else:
                         logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
