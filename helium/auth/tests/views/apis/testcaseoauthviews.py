@@ -28,7 +28,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'newuser@gmail.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
@@ -53,7 +53,9 @@ class TestCaseOAuthViews(APITestCase):
         self.assertTrue(user.username.startswith('newuser'))
 
         # Verify example schedule import was triggered
-        mock_import_schedule.delay.assert_called_once_with(user.pk)
+        mock_import_schedule.apply_async.assert_called_once()
+        call_args = mock_import_schedule.apply_async.call_args
+        self.assertEqual(call_args.kwargs['args'], (user.pk,))
 
         # Verify tokens were created
         self.assertEqual(OutstandingToken.objects.count(), 1)
@@ -72,7 +74,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'newuser@icloud.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'apple'}
@@ -142,7 +144,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'testuser@gmail.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
@@ -297,7 +299,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'nopass@gmail.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
@@ -329,7 +331,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'repeat@gmail.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
@@ -355,7 +357,7 @@ class TestCaseOAuthViews(APITestCase):
         self.assertNotEqual(response1.data['access'], response2.data['access'])
 
         # Verify example schedule only imported once (on first login)
-        self.assertEqual(mock_import_schedule.delay.call_count, 1)
+        self.assertEqual(mock_import_schedule.apply_async.call_count, 1)
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_updates_provider_last_used(self, mock_verify_token):
@@ -405,7 +407,7 @@ class TestCaseOAuthViews(APITestCase):
             'email': 'multiauth@gmail.com',
             'email_verified': True
         }
-        mock_import_schedule.delay = MagicMock()
+        mock_import_schedule.apply_async = MagicMock()
 
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         self.client.post(
@@ -444,7 +446,7 @@ class TestCaseOAuthViews(APITestCase):
         self.assertEqual(apple_provider.provider_user_id, 'apple-uid-multi')
 
         # Verify example schedule only imported once (on first provider link)
-        self.assertEqual(mock_import_schedule.delay.call_count, 1)
+        self.assertEqual(mock_import_schedule.apply_async.call_count, 1)
 
     def test_oauth_login_provider_case_insensitive(self):
         """Test that provider field is case-insensitive."""
