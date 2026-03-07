@@ -243,6 +243,19 @@ jobs:
         run: |
           git push origin --delete "$RELEASE_BRANCH" || true
 
+      - name: Merge main to develop
+        if: success()
+        run: |
+          git fetch origin develop
+          git checkout -B develop origin/develop
+          if git merge --no-ff --no-edit origin/main; then
+            git push origin develop
+            echo "Successfully merged main to develop"
+          else
+            echo "::warning::Merge conflict detected when merging main to develop. Manual merge required."
+            git merge --abort
+          fi
+
   build-and-publish:
     name: Build and Publish Containers
     needs: [merge-release-branch, bump-version]
