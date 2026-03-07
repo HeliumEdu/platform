@@ -12,9 +12,10 @@ from helium.importexport.services import importservice
 logger = logging.getLogger(__name__)
 
 
-@app.task
-def import_example_schedule(user_id):
-    metrics = metricutils.task_start("user.import.schedule.example")
+@app.task(bind=True)
+def import_example_schedule(self, user_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.import.schedule.example", priority="high", published_at_ms=published_at_ms)
 
     user = None
     try:

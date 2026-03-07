@@ -19,6 +19,9 @@ app = Celery('conf')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
+# Load Celery signals
+import helium.common.handlers  # noqa
+
 if 'celery' in sys.argv[0]:
     from sentry_sdk.integrations.celery import CeleryIntegration
     import sentry_sdk
