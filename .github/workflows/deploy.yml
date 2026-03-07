@@ -98,7 +98,7 @@ jobs:
   test-release:
     name: Test Release
     needs: [determine-version]
-    if: ${{ inputs.run_legacy_cluster_tests }}
+    if: ${{ inputs.run_legacy_cluster_tests == true || inputs.run_legacy_cluster_tests == 'true' }}
     runs-on: ubuntu-latest
 
     env:
