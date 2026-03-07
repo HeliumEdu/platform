@@ -92,6 +92,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'ERROR',
         },
+        'datadog.dogstatsd': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
         'helium': {
             'handlers': ['console'],
             'level': 'DEBUG',

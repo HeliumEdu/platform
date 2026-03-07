@@ -180,19 +180,14 @@ def get_published_at_ms(celery_task):
         if not request:
             return None
 
-        # Celery stores the publish time in the 'published_at' header (added by our signal)
+        # Headers added via apply_async(headers={...}) are in request.headers
         headers = getattr(request, 'headers', {}) or {}
         published_at = headers.get('published_at')
 
         if published_at:
             return int(float(published_at) * 1000)
 
-        # Fallback: Check stamped_headers
-        stamped_headers = getattr(request, 'stamped_headers', None)
-        if stamped_headers and 'published_at' in stamped_headers:
-            return int(float(stamped_headers['published_at']) * 1000)
-
         return None
     except Exception:
-        logger.debug("Could not determine publish time", exc_info=True)
+        logger.warning("Could not determine publish time", exc_info=True)
         return None
