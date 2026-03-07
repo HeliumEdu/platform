@@ -16,8 +16,6 @@ class CommonConfig(AppConfig):
     verbose_name = 'Common'
 
     def ready(self):
-        import helium.common.handlers  # noqa: F401 - Load Celery signals
-
         self.init_ngrok()
 
         self.init_firebase()
@@ -32,6 +30,9 @@ class CommonConfig(AppConfig):
         plugin_dir.register(IdentifiedS3Boto3StorageHealthCheck)
         plugin_dir.register(type("TaskProcessing", (IdentifiedCeleryHealthCheck,), {'queue': 'celery'}))
         plugin_dir.register(IdentifiedCeleryBeatHealthCheck)
+
+        # noinspection PyUnresolvedReferences
+        import helium.common.handlers
 
     def init_ngrok(self):
         if settings.USE_NGROK:
