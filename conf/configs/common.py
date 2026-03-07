@@ -383,6 +383,16 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
 CELERY_RESULT_EXPIRES = 3600 * 24 * 7
 
+# Priority constants for Celery tasks (lower number = higher priority)
+CELERY_PRIORITY_HIGH = 0
+CELERY_PRIORITY_LOW = 9
+
+# Enable priority support in Redis broker
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'priority_steps': list(range(10)),
+    'queue_order_strategy': 'priority',
+}
+
 # Media files
 
 MEDIA_ROOT = 'media/'
