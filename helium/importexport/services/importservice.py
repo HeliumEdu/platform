@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
@@ -423,7 +424,9 @@ def import_example_schedule(user):
         reminderservice.process_push_reminders(True)
 
         for category in Category.objects.for_user(user.pk).iterator():
-            recalculate_category_grade.delay(category.pk)
+            recalculate_category_grade.apply_async(
+                args=(category.pk,), priority=settings.CELERY_PRIORITY_LOW
+            )
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'

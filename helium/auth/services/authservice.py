@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import Q
@@ -46,7 +47,10 @@ def forgot_password(request):
 
             logger.info(f'Reset password for user {user.pk}')
 
-            send_password_reset_email.delay(user.email, password)
+            send_password_reset_email.apply_async(
+                args=(user.email, password),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
 
             metricutils.increment('action.user.password-reset', request=request, user=user)
         else:
@@ -85,7 +89,10 @@ def verify_email(request):
             logger.info(f'Completed registration and verification for user {user.pk}')
 
             if request.GET.get('welcome-email', 'true') == 'true':
-                send_registration_email.delay(user.email)
+                send_registration_email.apply_async(
+                    args=(user.email,),
+                    priority=settings.CELERY_PRIORITY_HIGH,
+                )
             else:
                 logger.info('Welcome email not sent, flag disabled')
 
@@ -145,7 +152,10 @@ def resend_verification_email(request):
         user.verification_code = generate_verification_code()
         user.save()
 
-        send_verification_email.delay(user.email, user.username, user.verification_code)
+        send_verification_email.apply_async(
+            args=(user.email, user.username, user.verification_code),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
 
         logger.info(f'Resent verification email for user {user.pk}')
 
