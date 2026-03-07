@@ -16,6 +16,8 @@ class CommonConfig(AppConfig):
     verbose_name = 'Common'
 
     def ready(self):
+        import helium.common.handlers  # noqa: F401 - Load Celery signals
+
         self.init_ngrok()
 
         self.init_firebase()
