@@ -21,13 +21,15 @@ from helium.planner.services import reminderservice
 logger = logging.getLogger(__name__)
 
 
-@app.task
-def recalculate_course_group_grade(course_group_id, retries=0):
+@app.task(bind=True)
+def recalculate_course_group_grade(self, course_group_id, retries=0):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.course-group", priority="low", published_at_ms=published_at_ms)
+
     try:
         gradingservice.recalculate_course_group_grade(course_group_id)
 
-        metricutils.increment('grade.recalculate.course-group',
-                              extra_tags=[f"retries:{retries}"])
+        metricutils.task_stop(metrics, value=1)
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -35,15 +37,20 @@ def recalculate_course_group_grade(course_group_id, retries=0):
 
             recalculate_course_group_grade.apply_async((course_group_id, retries + 1),
                                                        countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            metricutils.task_stop(metrics, value=0)
         else:
-            metricutils.task_failure('grade.recalculate.course-group', 'IntegrityError')
+            metricutils.task_failure('grade.recalculate.course-group', 'IntegrityError', priority="low")
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
+        metricutils.task_stop(metrics, value=0)
 
 
-@app.task
-def recalculate_course_grade(course_id, retries=0):
+@app.task(bind=True)
+def recalculate_course_grade(self, course_id, retries=0):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.course", priority="low", published_at_ms=published_at_ms)
+
     try:
         course_group_id = Course.objects.select_related('course_group').get(pk=course_id).course_group.id
 
@@ -51,7 +58,7 @@ def recalculate_course_grade(course_id, retries=0):
 
         recalculate_course_group_grade(course_group_id)
 
-        metricutils.increment('grade.recalculate.course', extra_tags=[f"retries:{retries}"])
+        metricutils.task_stop(metrics, value=1)
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -59,21 +66,33 @@ def recalculate_course_grade(course_id, retries=0):
 
             recalculate_course_grade.apply_async((course_id, retries + 1),
                                                  countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            metricutils.task_stop(metrics, value=0)
         else:
-            metricutils.task_failure('grade.recalculate.course', 'IntegrityError')
+            metricutils.task_failure('grade.recalculate.course', 'IntegrityError', priority="low")
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
+        metricutils.task_stop(metrics, value=0)
 
 
-@app.task
-def recalculate_course_grades_for_course_group(course_group_id):
+@app.task(bind=True)
+def recalculate_course_grades_for_course_group(self, course_group_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.course-group-all", priority="low", published_at_ms=published_at_ms)
+
+    count = 0
     for course_id in Course.objects.for_course_group(course_group_id).values_list("id", flat=True):
         recalculate_course_grade(course_id)
+        count += 1
+
+    metricutils.task_stop(metrics, value=count)
 
 
-@app.task
-def recalculate_category_grade(category_id, retries=0):
+@app.task(bind=True)
+def recalculate_category_grade(self, category_id, retries=0):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.category", priority="low", published_at_ms=published_at_ms)
+
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
@@ -83,7 +102,7 @@ def recalculate_category_grade(category_id, retries=0):
 
         recalculate_course_grade(course_id)
 
-        metricutils.increment('grade.recalculate.category', extra_tags=[f"retries:{retries}"])
+        metricutils.task_stop(metrics, value=1)
     except IntegrityError as ex:  # pragma: no cover
         if retries < settings.DB_INTEGRITY_RETRIES:
             # This error is common when importing schedules, as async tasks may come in different orders
@@ -91,21 +110,34 @@ def recalculate_category_grade(category_id, retries=0):
 
             recalculate_category_grade.apply_async((category_id, retries + 1),
                                                    countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS)
+            metricutils.task_stop(metrics, value=0)
         else:
-            metricutils.task_failure('grade.recalculate.category', 'IntegrityError')
+            metricutils.task_failure('grade.recalculate.category', 'IntegrityError', priority="low")
             raise ex
     except ObjectDoesNotExist:
         logger.info(f"Category {category_id}, or an associated resource, does not exist. Nothing to do.")
+        metricutils.task_stop(metrics, value=0)
 
 
-@app.task
-def recalculate_category_grades_for_course(course_id):
+@app.task(bind=True)
+def recalculate_category_grades_for_course(self, course_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.course-categories", priority="low", published_at_ms=published_at_ms)
+
+    count = 0
     for category_id in Category.objects.for_course(course_id).values_list("id", flat=True):
         recalculate_category_grade(category_id)
+        count += 1
+
+    metricutils.task_stop(metrics, value=count)
 
 
-@app.task
-def adjust_reminder_times(calendar_item_id, calendar_item_type):
+@app.task(bind=True)
+def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.adjust-times", priority="low", published_at_ms=published_at_ms)
+
+    count = 0
     for reminder in (Reminder.objects
                      .for_calendar_item(calendar_item_id, calendar_item_type)
                      .select_related('homework', 'event')
@@ -114,48 +146,70 @@ def adjust_reminder_times(calendar_item_id, calendar_item_type):
 
         # Forcing a reminder to save will recalculate its start_of_range, if necessary
         reminder.save()
+        count += 1
+
+    metricutils.task_stop(metrics, value=count)
 
 
-@app.task
-def email_reminders():
+@app.task(bind=True)
+def email_reminders(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.email.process", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_EMAILS:
         logger.warning('Emails disabled. Email reminders not being sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     reminderservice.process_email_reminders()
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def text_reminders():
+@app.task(bind=True)
+def text_reminders(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.text.process", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_TEXTS:
         logger.warning('Texts disabled. Text reminders not being sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     reminderservice.process_text_reminders()
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def push_reminders():
+@app.task(bind=True)
+def push_reminders(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.push.process", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_PUSH:
         logger.warning('Push disabled. Push reminders not being sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     reminderservice.process_push_reminders()
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_item_type):
+@app.task(bind=True)
+def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, calendar_item_type):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("email.reminder.sent", priority="high", published_at_ms=published_at_ms)
+
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
     try:
         reminder = Reminder.objects.select_related('user', 'user__settings').get(pk=reminder_id)
     except Reminder.DoesNotExist:
         logger.info(f'Reminder {reminder_id} does not exist. Nothing to do.')
-
+        metricutils.task_stop(metrics, value=0)
         return
 
     if settings.DISABLE_EMAILS:
         logger.warning(f'Emails disabled. Reminder {reminder.pk} not being sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     try:
@@ -165,11 +219,11 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
             calendar_item = Homework.objects.get(pk=calendar_item_id)
         else:
             logger.info(f'Nothing to do here, as a calendar_item_type of {calendar_item_type} does not exist.')
-
+            metricutils.task_stop(metrics, value=0)
             return
     except (Event.DoesNotExist, Homework.DoesNotExist):
         logger.info(f'calendar_item_id {calendar_item_id} does not exist. Nothing to do.')
-
+        metricutils.task_stop(metrics, value=0)
         return
 
     timezone.activate(pytz.timezone(reminder.user.settings.time_zone))
@@ -194,9 +248,10 @@ def send_email_reminder(email, subject, reminder_id, calendar_item_id, calendar_
                                          },
                                          subject, [email])
 
-        metricutils.increment('task', user=reminder.user, extra_tags=['name:email.reminder.sent'])
+        metricutils.task_stop(metrics, user=reminder.user)
     except:
         logger.error("An unknown error occurred.", exc_info=True)
+        metricutils.task_stop(metrics, value=0)
 
     timezone.deactivate()
 

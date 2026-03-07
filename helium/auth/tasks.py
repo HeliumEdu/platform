@@ -19,10 +19,14 @@ from helium.common.utils import commonutils, metricutils
 logger = logging.getLogger(__name__)
 
 
-@app.task
-def send_verification_email(email, username, verification_code):
+@app.task(bind=True)
+def send_verification_email(self, email, username, verification_code):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("email.verification.sent", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_EMAILS:
         logger.warning(f'Emails disabled. Verification code: {verification_code}')
+        metricutils.task_stop(metrics, value=0)
         return
 
     commonutils.send_multipart_email('email/verification',
@@ -36,13 +40,17 @@ def send_verification_email(email, username, verification_code):
 
     logger.debug("Verification email sent successfully")
 
-    metricutils.increment('task', extra_tags=['name:email.verification.sent'])
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def send_registration_email(email):
+@app.task(bind=True)
+def send_registration_email(self, email):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("email.registration.sent", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_EMAILS:
         logger.warning('Emails disabled. Welcome email not sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     commonutils.send_multipart_email('email/register',
@@ -54,13 +62,17 @@ def send_registration_email(email):
 
     logger.debug(f"Registration email sent successfully")
 
-    metricutils.increment('task', extra_tags=['name:email.registration.sent'])
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def send_password_reset_email(email, temp_password):
+@app.task(bind=True)
+def send_password_reset_email(self, email, temp_password):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("email.password-reset.sent", priority="high", published_at_ms=published_at_ms)
+
     if settings.DISABLE_EMAILS:
         logger.warning('Emails disabled. Password reset email not sent.')
+        metricutils.task_stop(metrics, value=0)
         return
 
     commonutils.send_multipart_email('email/forgot',
@@ -74,12 +86,13 @@ def send_password_reset_email(email, temp_password):
 
     logger.debug(f"Password reset email sent successfully")
 
-    metricutils.increment('task', extra_tags=['name:email.password-reset.sent'])
+    metricutils.task_stop(metrics)
 
 
-@app.task
-def delete_user(user_id):
-    metrics = metricutils.task_start("user.delete")
+@app.task(bind=True)
+def delete_user(self, user_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.delete", priority="low", published_at_ms=published_at_ms)
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it
@@ -118,19 +131,23 @@ def delete_user(user_id):
     metricutils.task_stop(metrics, user=user, value=value)
 
 
-@app.task
-def blacklist_refresh_token(token):
+@app.task(bind=True)
+def blacklist_refresh_token(self, token):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("token.refresh.blacklist", priority="low", published_at_ms=published_at_ms)
+
     try:
         RefreshToken(token).blacklist()
-
-        metricutils.increment('task', extra_tags=['name:token.refresh.blacklist'])
+        metricutils.task_stop(metrics)
     except TokenError:
         logger.info('Skipping, token is already blacklisted.')
+        metricutils.task_stop(metrics, value=0)
 
 
-@app.task
-def purge_refresh_tokens():
-    metrics = metricutils.task_start("token.refresh.purge")
+@app.task(bind=True)
+def purge_refresh_tokens(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("token.refresh.purge", priority="low", published_at_ms=published_at_ms)
 
     deleted, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
@@ -138,9 +155,10 @@ def purge_refresh_tokens():
     metricutils.task_stop(metrics, value=num_deleted)
 
 
-@app.task
-def purge_unverified_users():
-    metrics = metricutils.task_start("user.unverified.purge")
+@app.task(bind=True)
+def purge_unverified_users(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.unverified.purge", priority="low", published_at_ms=published_at_ms)
 
     num_purged = 0
     for user in get_user_model().objects.filter(
@@ -157,8 +175,8 @@ def purge_unverified_users():
     metricutils.task_stop(metrics, value=num_purged)
 
 
-@app.task
-def emit_queue_depth():
+@app.task(bind=True)
+def emit_queue_depth(self):
     """Emit the current Celery queue depth as a metric."""
     try:
         import redis

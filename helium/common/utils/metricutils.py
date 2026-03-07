@@ -120,14 +120,24 @@ def request_stop(metrics, request, response):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def task_start(task_name):
+def task_start(task_name, priority="low", published_at_ms=None):
     try:
         metric_id = f"{task_name}"
+        start_time = int(round(time.time() * 1000))
 
-        return {
+        metrics = {
             'Task-Metric-ID': metric_id,
-            'Task-Metric-Start': int(round(time.time() * 1000))
+            'Task-Metric-Start': start_time,
+            'Task-Metric-Priority': priority,
         }
+
+        # Store queue time (when published) and emit wait time metric
+        if published_at_ms is not None:
+            metrics['Task-Metric-Queue'] = published_at_ms
+            queue_wait_ms = max(0, start_time - published_at_ms)
+            timing('task.queue_time', queue_wait_ms, extra_tags=[f"name:{metric_id}", f"priority:{priority}"])
+
+        return metrics
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
@@ -136,18 +146,53 @@ def task_stop(metrics, value=1, user=None):
     try:
         metrics['Task-Metric-Millis'] = int(time.time() * 1000) - metrics['Task-Metric-Start']
 
-        increment('task', user=user, value=value, extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
-        timing('task.timing', metrics['Task-Metric-Millis'], extra_tags=[f"name:{metrics['Task-Metric-ID']}"])
+        task_tags = [f"name:{metrics['Task-Metric-ID']}", f"priority:{metrics.get('Task-Metric-Priority', 'low')}"]
+        increment('task', user=user, value=value, extra_tags=task_tags)
+        timing('task.timing', metrics['Task-Metric-Millis'], extra_tags=task_tags)
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def task_failure(task_name, exception_type=None):
+def task_failure(task_name, exception_type=None, priority="low"):
     try:
-        tags = [f"name:{task_name}"]
+        tags = [f"name:{task_name}", f"priority:{priority}"]
         if exception_type:
             tags.append(f"exception:{exception_type}")
 
         increment('task.failed', extra_tags=tags)
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
+def get_published_at_ms(celery_task):
+    """
+    Get the timestamp (in ms) when a task was published to the queue.
+    Uses Celery's task request headers to determine when the task was published.
+
+    Args:
+        celery_task: The Celery task instance (self in a bound task)
+
+    Returns:
+        Publish timestamp in milliseconds, or None if not available
+    """
+    try:
+        request = celery_task.request
+        if not request:
+            return None
+
+        # Celery stores the publish time in the 'published_at' header (added by our signal)
+        headers = getattr(request, 'headers', {}) or {}
+        published_at = headers.get('published_at')
+
+        if published_at:
+            return int(float(published_at) * 1000)
+
+        # Fallback: Check stamped_headers
+        stamped_headers = getattr(request, 'stamped_headers', None)
+        if stamped_headers and 'published_at' in stamped_headers:
+            return int(float(stamped_headers['published_at']) * 1000)
+
+        return None
+    except Exception:
+        logger.debug("Could not determine publish time", exc_info=True)
+        return None
