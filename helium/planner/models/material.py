@@ -27,6 +27,9 @@ class Material(BaseModel):
     details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
                                blank=True)
 
+    notes = models.JSONField(help_text='Rich text notes in Quill Delta format.',
+                             blank=True, null=True)
+
     material_group = models.ForeignKey('MaterialGroup', help_text='The material group with which to associate.',
                                        related_name='materials', on_delete=models.CASCADE)
 
