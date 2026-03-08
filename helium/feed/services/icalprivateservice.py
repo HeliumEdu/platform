@@ -119,8 +119,18 @@ def _create_calendar(user):
     return calendar
 
 
+def _delta_to_plain_text(delta):
+    """Extract plain text from a Quill Delta dict for use in plain-text contexts like ICS feeds."""
+    if not delta or "ops" not in delta:
+        return ""
+    return "".join(
+        op["insert"] for op in delta["ops"] if isinstance(op.get("insert"), str)
+    ).strip()
+
+
 def _create_event_description(event):
-    description = f"Comments: {event.comments}"
+    comments = _delta_to_plain_text(event.notes) if event.notes else event.comments
+    description = f"Comments: {comments}"
 
     if event.url:
         description = f"URL: {event.url}\n" + description
@@ -150,7 +160,8 @@ def _create_homework_description(homework):
     if homework.completed and homework.current_grade != "-1/100":
         description += f"Grade: {homework.current_grade}\n"
 
-    description += f"Comments: {homework.comments}"
+    comments = _delta_to_plain_text(homework.notes) if homework.notes else homework.comments
+    description += f"Comments: {comments}"
 
     return description
 
