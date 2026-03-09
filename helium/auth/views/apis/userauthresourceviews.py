@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import CreateModelMixin
@@ -13,6 +14,7 @@ from helium.auth.serializers.userserializer import UserSerializer, UserCreateSer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.views.base import HeliumAPIView
+from helium.importexport.tasks import import_example_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +39,18 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         response = self.create(request, *args, **kwargs)
 
         if 'time_zone' in request.data:
-            settings = get_user_model().objects.get(pk=response.data['id']).settings
-            serializer = UserSettingsSerializer(settings, data={'time_zone': request.data['time_zone']}, partial=True)
+            user_settings = get_user_model().objects.get(pk=response.data['id']).settings
+            serializer = UserSettingsSerializer(user_settings, data={'time_zone': request.data['time_zone']}, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
             response.data['settings'] = serializer.data
+
+        # Import the example schedule for the user (after timezone is set)
+        import_example_schedule.apply_async(
+            args=(response.data['id'],),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
 
         logger.info(f"User {response.data['id']} created")
 
