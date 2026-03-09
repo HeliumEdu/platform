@@ -206,7 +206,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
         'user': '60/min',
-        'user_legacy': '200/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
+        'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
