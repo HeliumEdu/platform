@@ -61,13 +61,13 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, email, username, password):  # pragma: no cover
+    def create_superuser(self, email, password, username=None):  # pragma: no cover
         """
         Create a new super user with admin privileges.
 
-        :param username: the username for the user
         :param email: the email for the new user
         :param password: the password for the new user
+        :param username: the username for the user
         :return: the created object
         """
         user = self.create_user(username=username,
