@@ -75,6 +75,8 @@ FIREBASE_CREDENTIALS = {
 #############################
 
 INSTALLED_APPS = (
+    # Import first, to override Django's auth commands
+    'helium.auth',
     # Django modules
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,7 +101,6 @@ INSTALLED_APPS = (
     'django_celery_results',
     'corsheaders',
     # Project modules
-    'helium.auth',
     'helium.common',
     'helium.feed',
     'helium.importexport',
