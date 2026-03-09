@@ -76,8 +76,9 @@ class TestCaseCourseScheduleResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['comments'],
                          f'<a href="{course.website}">{course.title}</a> in {course.room}')
 
-        self.assertEqual(response.data[-1]['start'], '2017-05-08T10:30:00Z')
-        self.assertEqual(response.data[-1]['end'], '2017-05-08T11:00:00Z')
+        # May 8, 2017 is during PDT (UTC-7), so 2:30 AM local = 09:30 UTC
+        self.assertEqual(response.data[-1]['start'], '2017-05-08T09:30:00Z')
+        self.assertEqual(response.data[-1]['end'], '2017-05-08T10:00:00Z')
 
     def test_get_course_schedule_cached(self):
         # GIVEN
