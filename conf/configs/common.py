@@ -196,6 +196,7 @@ HEALTHCHECK_CELERY_TIMEOUT = 10
 # API configuration
 
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'helium.common.handlers.exceptions.helium_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
