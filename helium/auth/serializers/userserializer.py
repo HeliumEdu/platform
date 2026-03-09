@@ -138,12 +138,6 @@ class UserSerializer(serializers.ModelSerializer):
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 
-        # Import the example schedule for the user
-        import_example_schedule.apply_async(
-            args=(instance.pk,),
-            priority=settings.CELERY_PRIORITY_HIGH,
-        )
-
         return instance
 
     def create_from_oauth(self, validated_data):

@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+import pytz
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest
@@ -309,8 +310,35 @@ def import_user(request, data, example_schedule=False):
             reminders_count)
 
 
+def _shift_datetime_to_target_date(original_dt, target_date, user_tz):
+    """
+    Shift a datetime to a new target date while preserving the local wall-clock time.
+    Uses pytz to handle DST transitions automatically.
+
+    :param original_dt: The original aware datetime (in UTC)
+    :param target_date: The target date to shift to
+    :param user_tz: The user's pytz timezone
+    :return: New aware datetime in UTC with same local time on target date
+    """
+    # Convert to user's local time to get the wall-clock hour/minute
+    local_dt = original_dt.astimezone(user_tz)
+
+    # Create a naive datetime on the target date with the same local hour/minute
+    naive_target = datetime.datetime(
+        target_date.year, target_date.month, target_date.day,
+        local_dt.hour, local_dt.minute, 0, 0
+    )
+
+    # Localize to user's timezone (pytz handles DST automatically)
+    aware_target = user_tz.localize(naive_target)
+
+    # Convert back to UTC for storage
+    return aware_target.astimezone(pytz.UTC)
+
+
 def _adjust_schedule_relative_to(user, adjust_month):
-    timezone.activate(user.settings.time_zone)
+    user_tz = pytz.timezone(user.settings.time_zone)
+    timezone.activate(user_tz)
 
     now = timezone.now()
     adjusted_month = now.month + adjust_month
@@ -326,6 +354,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
         if days_ahead < 0:
             days_ahead += 7
         first_monday = adjusted_month + datetime.timedelta(days_ahead)
+        first_monday_date = first_monday.date()
 
         logger.info(f'Adjusting schedule relative to new month: {adjusted_month}')
         logger.info(f'Start of week adjusted ahead {days_ahead} days')
@@ -335,8 +364,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 .filter(example_schedule=True).iterator()):
             delta = (course_group.end_date - course_group.start_date).days
             CourseGroup.objects.filter(pk=course_group.pk).update(
-                start_date=first_monday,
-                end_date=first_monday + datetime.timedelta(days=delta))
+                start_date=first_monday_date,
+                end_date=first_monday_date + datetime.timedelta(days=delta))
 
         for homework in (Homework.objects.for_user(user.pk)
                 .filter(course__course_group__example_schedule=True)
@@ -345,26 +374,13 @@ def _adjust_schedule_relative_to(user, adjust_month):
             course = homework.course
             start_delta = (homework.start.date() - course.start_date).days
             end_delta = (homework.end.date() - course.start_date).days
-            target_start = first_monday + datetime.timedelta(days=start_delta)
-            target_end = first_monday + datetime.timedelta(days=end_delta)
-            start_dst_correction = (timezone.localtime(homework.start).utcoffset()
-                                    - timezone.localtime(target_start.replace(hour=12, minute=0, second=0, microsecond=0)).utcoffset())
-            end_dst_correction = (timezone.localtime(homework.end).utcoffset()
-                                  - timezone.localtime(target_end.replace(hour=12, minute=0, second=0, microsecond=0)).utcoffset())
-            Homework.objects.filter(pk=homework.pk).update(
-                start=target_start.replace(
-                    hour=homework.start.time().hour,
-                    minute=homework.start.time().minute,
-                    second=0,
-                    microsecond=0,
-                    tzinfo=timezone.utc) + start_dst_correction,
-                end=target_end.replace(
-                    hour=homework.end.time().hour,
-                    minute=homework.end.time().minute,
-                    second=0,
-                    microsecond=0,
-                    tzinfo=timezone.utc) + end_dst_correction)
+            target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
+            target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
+            new_start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz)
+            new_end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz)
+
+            Homework.objects.filter(pk=homework.pk).update(start=new_start, end=new_end)
             adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
         first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
@@ -380,34 +396,21 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 .filter(example_schedule=True).iterator()):
             start_delta = (event.start.date() - first_monday.date()).days + events_delta
             end_delta = (event.end.date() - first_monday.date()).days + events_delta
-            target_start = first_monday + datetime.timedelta(days=start_delta)
-            target_end = first_monday + datetime.timedelta(days=end_delta)
-            start_dst_correction = (timezone.localtime(event.start).utcoffset()
-                                    - timezone.localtime(target_start.replace(hour=12, minute=0, second=0, microsecond=0)).utcoffset())
-            end_dst_correction = (timezone.localtime(event.end).utcoffset()
-                                  - timezone.localtime(target_end.replace(hour=12, minute=0, second=0, microsecond=0)).utcoffset())
-            Event.objects.filter(pk=event.pk).update(
-                start=target_start.replace(
-                    hour=event.start.time().hour,
-                    minute=event.start.time().minute,
-                    second=0,
-                    microsecond=0,
-                    tzinfo=timezone.utc) + start_dst_correction,
-                end=target_end.replace(
-                    hour=event.end.time().hour,
-                    minute=event.end.time().minute,
-                    second=0,
-                    microsecond=0,
-                    tzinfo=timezone.utc) + end_dst_correction)
+            target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
+            target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
+            new_start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz)
+            new_end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz)
+
+            Event.objects.filter(pk=event.pk).update(start=new_start, end=new_end)
             adjust_reminder_times(event.pk, event.calendar_item_type)
 
         for course in (Course.objects.for_user(user.pk)
                 .filter(course_group__example_schedule=True).iterator()):
             delta = (course.end_date - course.start_date).days
             Course.objects.filter(pk=course.pk).update(
-                start_date=first_monday,
-                end_date=first_monday + datetime.timedelta(days=delta))
+                start_date=first_monday_date,
+                end_date=first_monday_date + datetime.timedelta(days=delta))
 
             coursescheduleservice.clear_cached_course_schedule(course)
 
