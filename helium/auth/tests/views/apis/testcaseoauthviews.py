@@ -18,7 +18,7 @@ from helium.auth.tests.helpers import userhelper
 class TestCaseOAuthViews(APITestCase):
     """Tests for the unified OAuth login endpoint."""
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_google(self, mock_verify_token, mock_import_schedule):
         """Test that Google OAuth login creates a new user and returns tokens."""
@@ -64,7 +64,7 @@ class TestCaseOAuthViews(APITestCase):
         oauth_provider = UserOAuthProvider.objects.get(user=user, provider='google')
         self.assertEqual(oauth_provider.provider_user_id, 'google-user-123')
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_apple(self, mock_verify_token, mock_import_schedule):
         """Test that Apple OAuth login creates a new user and returns tokens."""
@@ -132,7 +132,7 @@ class TestCaseOAuthViews(APITestCase):
         user = get_user_model().objects.get(email='existing@gmail.com')
         self.assertEqual(user.pk, existing_user.pk)
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_username_collision_handling(self, mock_verify_token, mock_import_schedule):
         """Test that username collisions are handled correctly."""
@@ -289,7 +289,7 @@ class TestCaseOAuthViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn('Email', str(response.data))
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_user_has_no_usable_password(self, mock_verify_token, mock_import_schedule):
         """Test that users created via OAuth cannot use password login."""
@@ -321,7 +321,7 @@ class TestCaseOAuthViews(APITestCase):
         )
         self.assertEqual(login_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_multiple_times_same_user(self, mock_verify_token, mock_import_schedule):
         """Test that logging in multiple times with same account works."""
@@ -397,7 +397,7 @@ class TestCaseOAuthViews(APITestCase):
         oauth_provider.refresh_from_db()
         self.assertGreater(oauth_provider.last_used_at, first_last_used)
 
-    @patch('helium.auth.serializers.userserializer.import_example_schedule')
+    @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_user_can_have_multiple_oauth_providers(self, mock_verify_token, mock_import_schedule):
         """Test that a user can link both Google and Apple OAuth providers."""
