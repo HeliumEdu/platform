@@ -111,8 +111,6 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 dt_start = timezone.make_aware(dt_start, time_zone)
             else:
                 dt_start = dt_start.astimezone(time_zone)
-            if dt_start.dst():
-                dt_start = (dt_start + datetime.timedelta(hours=1))
             dt_start = dt_start.astimezone(pytz.utc)
 
             if all_day:
@@ -121,8 +119,6 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 dt_end = timezone.make_aware(dt_end, time_zone)
             else:
                 dt_end = dt_end.astimezone(time_zone)
-            if dt_end.dst():
-                dt_end = (dt_end + datetime.timedelta(hours=1))
             dt_end = dt_end.astimezone(pytz.utc)
 
             event = Event(id=len(events),
