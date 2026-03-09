@@ -16,7 +16,6 @@ from helium.auth.serializers.usersettingsserializer import UserSettingsSerialize
 from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common import enums
-from helium.importexport.tasks import import_example_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -149,12 +148,6 @@ class UserSerializer(serializers.ModelSerializer):
         # OAuth users bypass local passwords
         instance.set_unusable_password()
         instance.save()
-
-        # Import the example schedule for the user
-        import_example_schedule.apply_async(
-            args=(instance.pk,),
-            priority=settings.CELERY_PRIORITY_HIGH,
-        )
 
         return instance
 

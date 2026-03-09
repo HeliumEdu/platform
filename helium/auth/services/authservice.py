@@ -19,6 +19,7 @@ from helium.auth.tasks import send_password_reset_email, send_registration_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
+from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, MaterialGroup, Event
 
 logger = logging.getLogger(__name__)
@@ -229,6 +230,12 @@ def oauth_login(request):
                 'username': username,
                 'email': email,
             })
+
+            # Import the example schedule for the user
+            import_example_schedule.apply_async(
+                args=(user.pk,),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
 
             logger.info(f'New user {user.id} created via {provider_name} Sign-In')
 
