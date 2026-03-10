@@ -14,7 +14,8 @@ from helium.auth.serializers.useroauthproviderserializer import UserOAuthProvide
 from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
+    is_admin_allowed_email
 from helium.common import enums
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings', 'oauth_providers', 'has_usable_password',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings',
+                  'oauth_providers', 'has_usable_password',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password',)
         extra_kwargs = {
             'username': {'required': False, 'allow_blank': True},
@@ -73,6 +75,11 @@ class UserSerializer(serializers.ModelSerializer):
 
         :param email: the new email address
         """
+        if self.instance and self.instance.is_superuser and self.instance.email != email:
+            if not is_admin_allowed_email(email):
+                raise serializers.ValidationError(
+                    f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+
         if self.instance and self.instance.email != email and get_user_model().objects.email_used(self.instance.pk,
                                                                                                   email):
             raise serializers.ValidationError("Sorry, that email is already in use.")

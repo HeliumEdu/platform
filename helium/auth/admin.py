@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin as django_admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import admin, password_validation
@@ -9,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from django.db.models import Q
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
@@ -16,7 +18,27 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin
+
+
+class AdminUserChangeForm(UserChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Use non-standard IDs so password managers don't autofill these fields
+        for field_name, field_id in (('username', 'ha_un'), ('email', 'ha_em'), ('email_changing', 'ha_emc')):
+            if field_name in self.fields:
+                self.fields[field_name].widget.attrs.update({'id': field_id, 'autocomplete': 'new-password'})
+        if self.instance and self.instance.pk and 'username' in self.fields:
+            self.fields['username'].disabled = True
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if self.instance and self.instance.is_superuser and email != self.instance.email:
+            if not is_admin_allowed_email(email):
+                raise forms.ValidationError(
+                    f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+        return email
 
 
 class AdminUserCreationForm(UserCreationForm):
@@ -42,6 +64,21 @@ class AdminUserCreationForm(UserCreationForm):
         self.instance.save()
 
         return self.instance
+
+
+class OAuthProviderFilter(SimpleListFilter):
+    title = 'OAuth provider'
+    parameter_name = 'oauth_provider'
+
+    def lookups(self, request, model_admin):
+        return [('none', 'None (password only)')] + list(UserOAuthProvider.PROVIDER_CHOICES)
+
+    def queryset(self, request, queryset):
+        if self.value() == 'none':
+            return queryset.filter(oauth_providers__isnull=True)
+        elif self.value():
+            return queryset.filter(oauth_providers__provider=self.value()).distinct()
+        return queryset
 
 
 class HasCreditsFilter(SimpleListFilter):
@@ -117,15 +154,16 @@ class UserOAuthProviderInline(django_admin.TabularInline):
 
 
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
-    form = UserChangeForm
+    form = AdminUserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'username', 'created_at', 'last_login', 'get_auth_type', 'num_course_groups', 'num_courses',
-                    'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
+    list_display = ('email', 'created_at', 'last_login', 'get_auth_type',
+                    'num_course_groups', 'num_courses', 'num_homework', 'num_events', 'num_attachments',
+                    'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', HasWeightedGradingFilter, HasCreditsFilter,
-                   HasCourseScheduleFilter)
+                   'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
+                   HasCreditsFilter, HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
@@ -139,9 +177,15 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return self.readonly_fields + ('created_at', 'last_login',)
+            return self.readonly_fields + ('created_at', 'last_login', 'get_2fa_enabled',)
 
         return self.readonly_fields
+
+    def get_2fa_enabled(self, obj):
+        return TOTPDevice.objects.filter(user=obj, confirmed=True).exists()
+
+    get_2fa_enabled.short_description = '2FA'
+    get_2fa_enabled.boolean = True
 
     def get_auth_type(self, obj):
         """Display the authentication types for the user."""
