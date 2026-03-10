@@ -95,9 +95,14 @@ def gauge(metric, value, extra_tags=None):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
+def path_to_metric_id(path):
+    """Convert a URL path to a normalized metric ID (e.g., /planner/reminders/ -> planner.reminders)"""
+    return re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', path.replace('/', '.'))).strip(".")
+
+
 def request_start(request):
     try:
-        metric_id = re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))).strip(".")
+        metric_id = path_to_metric_id(request.path)
 
         return {
             'Request-Metric-ID': metric_id,
