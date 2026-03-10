@@ -3,16 +3,41 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
+from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
 from django.shortcuts import redirect
 from django.urls import reverse
 from django_celery_results.models import TaskResult
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
+from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
 
 from helium.auth.utils.userutils import is_admin_allowed_email
 
 _AdminBase = AdminSite if 'local' in settings.ENVIRONMENT else AdminSiteOTPRequired
+
+
+class AdminLoginForm(AdminAuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Email'
+
+
+class AdminTwoFactorLoginView:
+    """Mixin-style class that injects AdminLoginForm into TwoFactorLoginView's auth step."""
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        from two_factor.views import LoginView as TwoFactorLoginView
+
+        class _View(TwoFactorLoginView):
+            form_list = (
+                (TwoFactorLoginView.AUTH_STEP, AdminLoginForm),
+                (TwoFactorLoginView.TOKEN_STEP, AuthenticationTokenForm),
+                (TwoFactorLoginView.BACKUP_STEP, BackupTokenForm),
+            )
+
+        return _View.as_view(**kwargs)
 
 
 class PlatformAdminSite(_AdminBase):
@@ -24,6 +49,7 @@ class PlatformAdminSite(_AdminBase):
     site_header = settings.PROJECT_NAME + ' Administration'
     site_title = site_header
     index_title = settings.PROJECT_NAME
+    login_form = AdminLoginForm
 
     def has_permission(self, request):
         if not super().has_permission(request):
@@ -41,10 +67,9 @@ class PlatformAdminSite(_AdminBase):
         if 'local' in settings.ENVIRONMENT:
             return super().login(request, extra_context)
 
-        from two_factor.views import LoginView as TwoFactorLoginView
         if request.user.is_authenticated and not any(devices_for_user(request.user)):
             return redirect(f"{reverse('two_factor:setup')}?next={request.get_full_path()}")
-        return TwoFactorLoginView.as_view()(request)
+        return AdminTwoFactorLoginView.as_view()(request)
 
 
 class BaseModelAdmin(ModelAdmin):
