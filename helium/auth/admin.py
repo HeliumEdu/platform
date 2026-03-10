@@ -66,6 +66,21 @@ class AdminUserCreationForm(UserCreationForm):
         return self.instance
 
 
+class OAuthProviderFilter(SimpleListFilter):
+    title = 'OAuth provider'
+    parameter_name = 'oauth_provider'
+
+    def lookups(self, request, model_admin):
+        return [('none', 'None (password only)')] + list(UserOAuthProvider.PROVIDER_CHOICES)
+
+    def queryset(self, request, queryset):
+        if self.value() == 'none':
+            return queryset.filter(oauth_providers__isnull=True)
+        elif self.value():
+            return queryset.filter(oauth_providers__provider=self.value()).distinct()
+        return queryset
+
+
 class HasCreditsFilter(SimpleListFilter):
     title = 'has credits'
     parameter_name = 'has_credits'
@@ -147,8 +162,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
                     'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', HasWeightedGradingFilter, HasCreditsFilter,
-                   HasCourseScheduleFilter)
+                   'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
+                   HasCreditsFilter, HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
     ordering = ('-last_login',)
     add_fieldsets = (
