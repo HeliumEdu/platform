@@ -91,6 +91,11 @@ INSTALLED_APPS = (
     'health_check.cache',
     'health_check.contrib.celery',
     'health_check.contrib.s3boto3_storage',
+    # Two-factor authentication
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
     # Third-party modules
     'pipeline',
     'rest_framework',
@@ -113,6 +118,7 @@ MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'helium.common.middleware.exceptionmetric.HeliumExceptionMiddleware',
@@ -167,10 +173,10 @@ BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 AUTH_USER_MODEL = 'helium_auth.User'
-LOGIN_URL = '/login'
-LOGIN_REDIRECT_URL = '/docs'
-LOGOUT_URL = '/logout'
-LOGOUT_REDIRECT_URL = '/docs'
+LOGIN_URL = 'admin:login'
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_URL = 'admin:logout'
+LOGOUT_REDIRECT_URL = '/admin/'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
@@ -285,6 +291,8 @@ EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
 # Authentication
 
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
+
+ADMIN_ALLOWED_DOMAINS = [d.strip() for d in config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com').split(',')]
 
 AUTH_PASSWORD_VALIDATORS = [
     {

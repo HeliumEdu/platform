@@ -19,3 +19,4 @@ datadog==0.52.1
 python-dateutil==2.9.0.post0
 aws-secretsmanager-caching==1.1.3
 python-decouple==3.8
+django-two-factor-auth[qrcode]
