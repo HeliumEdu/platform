@@ -93,6 +93,9 @@ def send_password_reset_email(self, email, temp_password):
 def delete_user(self, user_id):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.delete", priority="low", published_at_ms=published_at_ms)
+    if settings.SENTRY_ENABLED:
+        import sentry_sdk
+        sentry_sdk.set_user({"id": user_id})
 
     # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
     # skip it

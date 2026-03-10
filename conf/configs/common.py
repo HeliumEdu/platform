@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.94"
+__version__ = "2.1.95"
 
 import os
 import socket
@@ -428,6 +428,8 @@ PIPELINE = {
 # Metrics
 
 DATADOG_STATSD_HOST = config('PROJECT_DATADOG_STATSD_HOST', 'localhost')
+
+SENTRY_ENABLED = False
 
 # Server
 

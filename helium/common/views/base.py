@@ -5,6 +5,8 @@ import logging
 
 from rest_framework.generics import GenericAPIView
 
+from django.conf import settings
+
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,10 @@ class HeliumAPIView(GenericAPIView):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
+
+        if settings.SENTRY_ENABLED and request.user and request.user.is_authenticated:
+            import sentry_sdk
+            sentry_sdk.set_user({"id": request.user.id})
 
         self.__request_metrics = metricutils.request_start(request)
 
