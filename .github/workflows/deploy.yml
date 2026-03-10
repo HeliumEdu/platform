@@ -238,7 +238,7 @@ jobs:
       - name: Notify Sentry of deploy
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_RELEASE: ${{ needs.determine-version.outputs.version }}
+          RELEASE_VERSION: ${{ needs.determine-version.outputs.version }}
         run: |
           pip install sentry-cli
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases deploys new --env "${{ inputs.environment }}"
