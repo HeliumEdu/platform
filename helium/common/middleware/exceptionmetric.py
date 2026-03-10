@@ -1,8 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import re
-
 from helium.common.utils import metricutils
 
 
@@ -16,7 +14,7 @@ class HeliumExceptionMiddleware:
         return response
 
     def process_exception(self, request, exc):
-        metric_id = re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))).strip(".")
+        metric_id = metricutils.path_to_metric_id(request.path)
 
         metricutils.increment('request', request=request,
                               extra_tags=[f"path:{metric_id}", "status_code:500"])
