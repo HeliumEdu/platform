@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+import sentry_sdk
 from rest_framework.generics import GenericAPIView
 
 from helium.common.utils import metricutils
@@ -18,6 +19,9 @@ class HeliumAPIView(GenericAPIView):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
+
+        if request.user and request.user.is_authenticated:
+            sentry_sdk.set_user({"id": request.user.id})
 
         self.__request_metrics = metricutils.request_start(request)
 
