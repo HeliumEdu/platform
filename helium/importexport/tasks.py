@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+import sentry_sdk
 from django.contrib.auth import get_user_model
 
 from conf.celery import app
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 def import_example_schedule(self, user_id):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.import.schedule.example", priority="high", published_at_ms=published_at_ms)
+    sentry_sdk.set_user({"id": user_id})
 
     user = None
     try:
