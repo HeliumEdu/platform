@@ -95,10 +95,14 @@ jobs:
         with:
           driver: docker
 
+      - name: Read Flutter version
+        id: flutter-version
+        run: echo "version=$(cat frontend/.flutter-version)" >> $GITHUB_OUTPUT
+
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
         with:
-          channel: stable
+          version: ${{ steps.flutter-version.outputs.version }}
           cache: true
 
       - name: Cache pub dependencies
