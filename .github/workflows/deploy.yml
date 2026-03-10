@@ -250,6 +250,15 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -d "{\"event_type\":\"\`platform\` triggered for \`${{ needs.determine-version.outputs.version }}\` to \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
 
+      - name: Trigger frontend integration tests
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run integration.yml \
+            --repo HeliumEdu/frontend \
+            -f suite=full \
+            -f environment=${{ inputs.environment }}
+
       - name: Deployment summary
         env:
           VERSION: ${{ needs.determine-version.outputs.version }}
