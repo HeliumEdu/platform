@@ -105,5 +105,4 @@ which is meant to work alongside local Docker development.
 
 ### Documentation
 
-Auto-generated API documentation is accessible via any environment at /docs. Additional documentation can be found
-on the [Platform Wiki](https://github.com/HeliumEdu/platform/wiki/Helium-Platform-Documentation).
+Auto-generated API documentation is accessible via any environment at /docs.

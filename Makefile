@@ -9,7 +9,7 @@ ENVIRONMENT ?= prod
 
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
 
-all: test build-docker run-docker
+all: build-docker run-docker
 
 env:
 	cp -n .env.example .env | true
