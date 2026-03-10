@@ -429,6 +429,8 @@ PIPELINE = {
 
 DATADOG_STATSD_HOST = config('PROJECT_DATADOG_STATSD_HOST', 'localhost')
 
+SENTRY_ENABLED = False
+
 # Server
 
 USE_NGROK = config("USE_NGROK", "false").lower() == "true" and os.environ.get("RUN_MAIN", None) != "true"
