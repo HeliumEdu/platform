@@ -16,7 +16,7 @@ class HeliumExceptionMiddleware:
         return response
 
     def process_exception(self, request, exc):
-        metric_id = f"{re.sub('[^a-zA-Z]+', '', request.path)}"
+        metric_id = re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', request.path.replace('/', '.'))).strip(".")
 
         metricutils.increment('request', request=request,
                               extra_tags=[f"path:{metric_id}", "status_code:500"])
