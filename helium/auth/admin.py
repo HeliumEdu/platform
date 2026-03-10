@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from django.db.models import Q
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
@@ -105,6 +106,25 @@ class HasCourseScheduleFilter(SimpleListFilter):
             return queryset
 
 
+class Has2FAFilter(SimpleListFilter):
+    title = 'has 2FA'
+    parameter_name = 'has_2fa'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        users_with_2fa = TOTPDevice.objects.filter(confirmed=True).values_list('user_id', flat=True)
+        if self.value() == 'yes':
+            return queryset.filter(id__in=users_with_2fa)
+        elif self.value() == 'no':
+            return queryset.exclude(id__in=users_with_2fa)
+        return queryset
+
+
 class UserOAuthProviderInline(django_admin.TabularInline):
     model = UserOAuthProvider
     extra = 0
@@ -120,11 +140,12 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = UserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'username', 'created_at', 'last_login', 'get_auth_type', 'num_course_groups', 'num_courses',
-                    'num_homework', 'num_events', 'num_attachments', 'num_external_calendars', 'is_active')
+    list_display = ('email', 'username', 'created_at', 'last_login', 'get_auth_type', 'get_2fa_enabled',
+                    'num_course_groups', 'num_courses', 'num_homework', 'num_events', 'num_attachments',
+                    'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', HasWeightedGradingFilter, HasCreditsFilter,
+                   'settings__calendar_use_category_colors', Has2FAFilter, HasWeightedGradingFilter, HasCreditsFilter,
                    HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
     ordering = ('-last_login',)
@@ -142,6 +163,12 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
             return self.readonly_fields + ('created_at', 'last_login',)
 
         return self.readonly_fields
+
+    def get_2fa_enabled(self, obj):
+        return TOTPDevice.objects.filter(user=obj, confirmed=True).exists()
+
+    get_2fa_enabled.short_description = '2FA'
+    get_2fa_enabled.boolean = True
 
     def get_auth_type(self, obj):
         """Display the authentication types for the user."""

@@ -3,25 +3,35 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
-from django.contrib.admin.forms import AdminAuthenticationForm
-from django.contrib.admin.sites import AdminSite
+from django.shortcuts import redirect
+from django.urls import reverse
 from django_celery_results.models import TaskResult
+from django_otp import devices_for_user
+from two_factor.admin import AdminSiteOTPRequired
 
 
-class EmailOrUsernameAuthForm(AdminAuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].label = "Email"
-
-
-class PlatformAdminSite(AdminSite):
+class PlatformAdminSite(AdminSiteOTPRequired):
     """
-    Creates a base AdminSite. Models and URLs should be attached to an instance of this class.
+    Creates a base AdminSite with OTP (TOTP) required. Models and URLs should be attached to an instance of this
+    class. Only users whose email domain is in ADMIN_ALLOWED_DOMAINS may access the admin. Authenticated users with
+    no confirmed TOTP device are redirected to the setup flow.
     """
     site_header = settings.PROJECT_NAME + ' Administration'
     site_title = site_header
     index_title = settings.PROJECT_NAME
-    login_form = EmailOrUsernameAuthForm
+
+    def has_permission(self, request):
+        if not super().has_permission(request):
+            return False
+        email = getattr(request.user, 'email', '')
+        domain = email.split('@')[-1] if '@' in email else ''
+        return domain in settings.ADMIN_ALLOWED_DOMAINS
+
+    def login(self, request, extra_context=None):
+        from two_factor.views import LoginView as TwoFactorLoginView
+        if request.user.is_authenticated and not any(devices_for_user(request.user)):
+            return redirect(f"{reverse('two_factor:setup')}?next={request.get_full_path()}")
+        return TwoFactorLoginView.as_view()(request)
 
 
 class BaseModelAdmin(ModelAdmin):

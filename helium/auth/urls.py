@@ -1,8 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from django.conf import settings
-from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from helium.auth.views.apis.oauthviews import OAuthLoginView
@@ -17,12 +15,6 @@ from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
 from helium.auth.views.apis.userviews import UserApiDetailView, UserDeleteResourceView, UserDeleteInactiveResourceView
 
 urlpatterns = [
-    # URLs for Django's auto-generated, session-based login views for ease of API navigation
-    path('login/', LoginView.as_view(redirect_authenticated_user=True,
-                                     extra_context={'title': 'Login', 'site_title': settings.PROJECT_NAME,
-                                                    'site_header': settings.PROJECT_NAME}), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-
     ##############################
     # Unauthenticated URLs
     ##############################
