@@ -127,6 +127,8 @@ sentry_sdk.init(
     before_send_transaction=before_send_transaction,
 )
 
+SENTRY_ENABLED = True
+
 if not common.DEBUG:
     ADMINS = (
         (common.PROJECT_NAME, common.ADMIN_EMAIL_ADDRESS),
