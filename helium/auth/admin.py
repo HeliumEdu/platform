@@ -28,7 +28,7 @@ class AdminUserChangeForm(UserChangeForm):
         # Use non-standard IDs so password managers don't autofill these fields
         for field_name, field_id in (('username', 'ha_un'), ('email', 'ha_em'), ('email_changing', 'ha_emc')):
             if field_name in self.fields:
-                self.fields[field_name].widget.attrs.update({'id': field_id, 'autocomplete': 'off'})
+                self.fields[field_name].widget.attrs.update({'id': field_id, 'autocomplete': 'new-password'})
         if self.instance and self.instance.pk and 'username' in self.fields:
             self.fields['username'].disabled = True
 
