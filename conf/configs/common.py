@@ -294,16 +294,9 @@ AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBacke
 
 ADMIN_ALLOWED_DOMAINS = [d.strip() for d in config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com').split(',')]
 
-# Enforce 2FA for admin login. Defaults to True, except in local environments where it defaults to False.
-# Set PLATFORM_ADMIN_ENFORCE_2FA=False in .env to disable, or =True to force-enable (e.g. for local testing).
-_enforce_2fa_raw = config('PLATFORM_ADMIN_ENFORCE_2FA', default=None)
-if _enforce_2fa_raw is not None:
-    ADMIN_ENFORCE_2FA = _enforce_2fa_raw == 'True'
-else:
-    ADMIN_ENFORCE_2FA = 'local' not in ENVIRONMENT
+ADMIN_ENFORCE_2FA = (config('PLATFORM_ADMIN_ENFORCE_2FA', default=None) or ('False' if 'local' in ENVIRONMENT else 'True')) == 'True'
 
-# Let PlatformAdminSite handle the admin login flow; only enable the monkey-patch when 2FA is enforced.
-TWO_FACTOR_PATCH_ADMIN = ADMIN_ENFORCE_2FA
+TWO_FACTOR_PATCH_ADMIN = False
 
 AUTH_PASSWORD_VALIDATORS = [
     {

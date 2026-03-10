@@ -18,6 +18,11 @@ _AdminBase = AdminSiteOTPRequired if settings.ADMIN_ENFORCE_2FA else AdminSite
 
 
 class AdminLoginForm(AdminAuthenticationForm):
+    error_messages = {
+        **AdminAuthenticationForm.error_messages,
+        'invalid_login': 'Check your admin credentials and try again.',
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Email'
