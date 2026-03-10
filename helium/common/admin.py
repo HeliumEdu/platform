@@ -14,7 +14,7 @@ from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
 
 from helium.auth.utils.userutils import is_admin_allowed_email
 
-_AdminBase = AdminSite if 'local' in settings.ENVIRONMENT else AdminSiteOTPRequired
+_AdminBase = AdminSiteOTPRequired if settings.ADMIN_ENFORCE_2FA else AdminSite
 
 
 class AdminLoginForm(AdminAuthenticationForm):
@@ -54,7 +54,7 @@ class PlatformAdminSite(_AdminBase):
     def has_permission(self, request):
         if not super().has_permission(request):
             return False
-        if 'local' in settings.ENVIRONMENT:
+        if not settings.ADMIN_ENFORCE_2FA:
             return True
         return is_admin_allowed_email(getattr(request.user, 'email', ''))
 
@@ -64,7 +64,7 @@ class PlatformAdminSite(_AdminBase):
             from django.contrib.auth import logout
             logout(request)
 
-        if 'local' in settings.ENVIRONMENT:
+        if not settings.ADMIN_ENFORCE_2FA:
             return super().login(request, extra_context)
 
         if request.user.is_authenticated and not any(devices_for_user(request.user)):

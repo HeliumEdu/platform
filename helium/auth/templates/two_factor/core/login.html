@@ -1,0 +1,60 @@
+{% extends "two_factor/_base_focus.html" %}
+{% load i18n static %}
+{% load two_factor_tags %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/login.css" %}">{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block extra_media %}{{ wizard.form.media }}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if wizard.form.errors and not wizard.form.non_field_errors %}
+  <p class="errornote">
+    {% blocktranslate count counter=wizard.form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+  </p>
+  {% endif %}
+  {% for error in wizard.form.non_field_errors %}
+  <p class="errornote">{{ error }}</p>
+  {% endfor %}
+
+  {% if wizard.steps.current == 'auth' %}
+    <p>{% trans "Enter your credentials." %}</p>
+  {% elif wizard.steps.current == 'token' %}
+    <p>{{ device|as_verbose_action }}</p>
+  {% elif wizard.steps.current == 'backup' %}
+    <p>{% trans "Enter a backup token to log in." %}</p>
+  {% endif %}
+
+  <form action="" method="post" id="login-form">
+    {% csrf_token %}
+    {% include "two_factor/_wizard_forms.html" %}
+    <input type="submit" value="" hidden />
+    <div class="submit-row">
+      <input type="submit" value="{% if wizard.steps.current == 'auth' %}{% trans 'Log in' %}{% else %}{% trans 'Next' %}{% endif %}">
+    </div>
+  </form>
+
+  {% if other_devices %}
+  <p>{% trans "Or, alternatively, use one of your other authentication methods:" %}</p>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {% for other in other_devices %}
+    <p><button name="challenge_device" value="{{ other.persistent_id }}" type="submit">{{ other|as_action }}</button></p>
+    {% endfor %}
+  </form>
+  {% endif %}
+
+  {% if backup_tokens %}
+  <hr>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    <p>{% trans "As a last resort, you can use a backup token:" %}</p>
+    <p><button name="wizard_goto_step" type="submit" value="backup">{% trans "Use Backup Token" %}</button></p>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
