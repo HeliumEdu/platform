@@ -89,7 +89,8 @@ class Command(BaseCommand):
 
                     try:
                         user = UserModel._default_manager.db_manager(database).create_superuser(**user_data)
-                        self._setup_totp(user)
+                        if settings.ADMIN_ENFORCE_2FA:
+                            self._setup_totp(user)
                         break
                     except IntegrityError:
                         self.stderr.write("Error: That email address is already taken.")
@@ -122,9 +123,10 @@ class Command(BaseCommand):
                 except IntegrityError:
                     raise CommandError("That email address is already taken.")
 
-                self.stdout.write(
-                    "TOTP two-factor authentication must be configured on first admin login."
-                )
+                if settings.ADMIN_ENFORCE_2FA:
+                    self.stdout.write(
+                        "TOTP two-factor authentication must be configured on first admin login."
+                    )
 
             if options["verbosity"] >= 1:
                 self.stdout.write("Superuser created successfully.")

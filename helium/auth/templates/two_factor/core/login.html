@@ -1,12 +1,17 @@
-{% extends "two_factor/_base_focus.html" %}
-{% load i18n static %}
+{% extends "admin/login.html" %}
+{% load i18n %}
 {% load two_factor_tags %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/login.css" %}">{% endblock %}
+{% block title %}{% trans 'Log in' %} | Helium Administration{% endblock %}
 
-{% block bodyclass %}{{ block.super }} login{% endblock %}
+{% block branding %}
+<h1 id="site-name"><a href="/admin/">Helium Administration</a></h1>
+{% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
 
-{% block extra_media %}{{ wizard.form.media }}{% endblock %}
+{% block extrastyle %}{{ block.super }}{{ wizard.form.media }}
+<style>.login .form-row input { width: 100%; padding: 8px; box-sizing: border-box; }</style>
+{% endblock %}
 
 {% block content %}
 <div id="content-main">
@@ -19,9 +24,7 @@
   <p class="errornote">{{ error }}</p>
   {% endfor %}
 
-  {% if wizard.steps.current == 'auth' %}
-    <p>{% trans "Enter your credentials." %}</p>
-  {% elif wizard.steps.current == 'token' %}
+  {% if wizard.steps.current == 'token' %}
     <p>{{ device|as_verbose_action }}</p>
   {% elif wizard.steps.current == 'backup' %}
     <p>{% trans "Enter a backup token to log in." %}</p>
