@@ -33,6 +33,14 @@ if config.DEBUG:
     except ImportError:
         pass
 
+if (config.DEBUG or 'test' in sys.argv or 'pytest' not in sys.modules) and config.STATIC_URL:
+    # Ensure static files are shown properly when using a dev server
+    urlpatterns += [
+        re_path(r'^' + config.STATIC_URL.removeprefix('/') + '(?P<path>.*)$', static.serve, {
+            'document_root': config.STATIC_ROOT
+        }),
+    ]
+
 if (config.DEBUG or 'test' in sys.argv or 'pytest' not in sys.modules) and config.MEDIA_URL:
     # Ensure media files are shown properly when using a dev server
     urlpatterns += [
