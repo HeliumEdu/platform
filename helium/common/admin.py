@@ -3,18 +3,21 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
+from django.contrib.admin.sites import AdminSite
 from django.shortcuts import redirect
 from django.urls import reverse
 from django_celery_results.models import TaskResult
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 
+_AdminBase = AdminSite if 'local' in settings.ENVIRONMENT else AdminSiteOTPRequired
 
-class PlatformAdminSite(AdminSiteOTPRequired):
+
+class PlatformAdminSite(_AdminBase):
     """
-    Creates a base AdminSite with OTP (TOTP) required. Models and URLs should be attached to an instance of this
-    class. Only users whose email domain is in ADMIN_ALLOWED_DOMAINS may access the admin. Authenticated users with
-    no confirmed TOTP device are redirected to the setup flow.
+    Creates a base AdminSite. On non-local environments, OTP (TOTP) is required and only users whose email domain is
+    in ADMIN_ALLOWED_DOMAINS may access the admin. Authenticated users with no confirmed TOTP device are redirected
+    to the setup flow.
     """
     site_header = settings.PROJECT_NAME + ' Administration'
     site_title = site_header
@@ -23,11 +26,21 @@ class PlatformAdminSite(AdminSiteOTPRequired):
     def has_permission(self, request):
         if not super().has_permission(request):
             return False
+        if 'local' in settings.ENVIRONMENT:
+            return True
         email = getattr(request.user, 'email', '')
         domain = email.split('@')[-1] if '@' in email else ''
         return domain in settings.ADMIN_ALLOWED_DOMAINS
 
     def login(self, request, extra_context=None):
+        # If authenticated but lacking admin permission, log out to prevent redirect loops
+        if request.user.is_authenticated and not self.has_permission(request):
+            from django.contrib.auth import logout
+            logout(request)
+
+        if 'local' in settings.ENVIRONMENT:
+            return super().login(request, extra_context)
+
         from two_factor.views import LoginView as TwoFactorLoginView
         if request.user.is_authenticated and not any(devices_for_user(request.user)):
             return redirect(f"{reverse('two_factor:setup')}?next={request.get_full_path()}")

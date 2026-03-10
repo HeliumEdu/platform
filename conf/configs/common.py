@@ -294,6 +294,8 @@ AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBacke
 
 ADMIN_ALLOWED_DOMAINS = [d.strip() for d in config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com').split(',')]
 
+TWO_FACTOR_PATCH_ADMIN = False
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -312,8 +314,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Security
 
 SECRET_KEY = config('PLATFORM_SECRET_KEY')
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = 'local' not in ENVIRONMENT
+SESSION_COOKIE_SECURE = 'local' not in ENVIRONMENT
 ALLOWED_HOSTS = [
     urlparse(PROJECT_API_HOST).netloc.split(':')[0]
 ]
