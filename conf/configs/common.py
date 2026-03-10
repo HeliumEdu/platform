@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.91"
+__version__ = "2.1.92"
 
 import os
 import socket
@@ -293,6 +293,8 @@ EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
 
 ADMIN_ALLOWED_DOMAINS = [d.strip() for d in config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com').split(',')]
+
+ADMIN_ENFORCE_2FA = (config('PLATFORM_ADMIN_ENFORCE_2FA', default=None) or ('False' if 'local' in ENVIRONMENT else 'True')) == 'True'
 
 TWO_FACTOR_PATCH_ADMIN = False
 

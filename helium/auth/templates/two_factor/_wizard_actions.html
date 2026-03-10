@@ -1,0 +1,10 @@
+{% load i18n %}
+
+<div class="submit-row">
+  {% if cancel_url %}
+    <a href="{{ cancel_url }}" style="float: left;">{% trans "Cancel" %}</a>
+  {% elif wizard.steps.prev %}
+    <input name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" style="float: left;">
+  {% endif %}
+  <input type="submit" value="{% trans 'Next' %}">
+</div>

@@ -1,0 +1,63 @@
+{% extends "admin/login.html" %}
+{% load i18n %}
+{% load two_factor_tags %}
+
+{% block title %}{% trans 'Log in' %} | Helium Administration{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="/admin/">Helium Administration</a></h1>
+{% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}{{ wizard.form.media }}
+<style>.login .form-row input { width: 100%; padding: 8px; box-sizing: border-box; }</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if wizard.form.errors and not wizard.form.non_field_errors %}
+  <p class="errornote">
+    {% blocktranslate count counter=wizard.form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+  </p>
+  {% endif %}
+  {% for error in wizard.form.non_field_errors %}
+  <p class="errornote">{{ error }}</p>
+  {% endfor %}
+
+  {% if wizard.steps.current == 'token' %}
+    <p>{{ device|as_verbose_action }}</p>
+  {% elif wizard.steps.current == 'backup' %}
+    <p>{% trans "Enter a backup token to log in." %}</p>
+  {% endif %}
+
+  <form action="" method="post" id="login-form">
+    {% csrf_token %}
+    {% include "two_factor/_wizard_forms.html" %}
+    <input type="submit" value="" hidden />
+    <div class="submit-row">
+      <input type="submit" value="{% if wizard.steps.current == 'auth' %}{% trans 'Log in' %}{% else %}{% trans 'Next' %}{% endif %}">
+    </div>
+  </form>
+
+  {% if other_devices %}
+  <p>{% trans "Or, alternatively, use one of your other authentication methods:" %}</p>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {% for other in other_devices %}
+    <p><button name="challenge_device" value="{{ other.persistent_id }}" type="submit">{{ other|as_action }}</button></p>
+    {% endfor %}
+  </form>
+  {% endif %}
+
+  {% if backup_tokens %}
+  <hr>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    <p>{% trans "As a last resort, you can use a backup token:" %}</p>
+    <p><button name="wizard_goto_step" type="submit" value="backup">{% trans "Use Backup Token" %}</button></p>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

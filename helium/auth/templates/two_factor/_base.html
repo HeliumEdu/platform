@@ -5,4 +5,11 @@
 <style>img[alt="QR Code"] { background: white; padding: 8px; }</style>
 {% endblock %}
 
+{% block site_title %}Helium Administration{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="/admin/">Helium Administration</a></h1>
+{% include "admin/color_theme_toggle.html" %}
+{% endblock %}
+
 {% block content %}{% block content_wrapper %}{% endblock %}{% endblock %}
