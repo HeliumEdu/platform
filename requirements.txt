@@ -9,12 +9,12 @@ django_celery_results==2.6.0
 drf-spectacular[sidecar]==0.29.0
 celery[redis]==5.6.2
 celery-redbeat==2.3.2
-twilio==9.10.2
+twilio==9.10.3
 firebase-admin==7.2.0
 pyOpenSSL==25.3.0
 Pillow==12.1.1
-icalendar==6.3.2
-pytz==2025.2
+icalendar==7.0.3
+pytz==2026.1.post1
 datadog==0.52.1
 python-dateutil==2.9.0.post0
 aws-secretsmanager-caching==1.1.3

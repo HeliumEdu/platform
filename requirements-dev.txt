@@ -1,4 +1,4 @@
-pyngrok==7.5.0
+pyngrok==7.5.1
 django-debug-toolbar==6.2.0
 pytest-django
 coverage
