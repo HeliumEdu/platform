@@ -121,7 +121,7 @@ sentry_sdk.init(
     ],
     environment=ENVIRONMENT,
     release=PROJECT_VERSION,
-    send_default_pii=True,
+    send_default_pii=False,
     traces_sample_rate=0.1,
     before_send=before_send,
     before_send_transaction=before_send_transaction,

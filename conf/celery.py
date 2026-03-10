@@ -43,6 +43,6 @@ if 'celery' in sys.argv[0]:
         integrations=[CeleryIntegration()],
         environment=settings.ENVIRONMENT if hasattr(settings, 'ENVIRONMENT') else os.environ.get('PLATFORM_ENVIRONMENT', 'production'),
         release=settings.PROJECT_VERSION if hasattr(settings, 'PROJECT_VERSION') else None,
-        send_default_pii=True,
+        send_default_pii=False,
         traces_sample_rate=0.1,
     )
