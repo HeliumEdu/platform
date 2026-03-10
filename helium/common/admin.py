@@ -10,6 +10,8 @@ from django_celery_results.models import TaskResult
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 
+from helium.auth.utils.userutils import is_admin_allowed_email
+
 _AdminBase = AdminSite if 'local' in settings.ENVIRONMENT else AdminSiteOTPRequired
 
 
@@ -28,9 +30,7 @@ class PlatformAdminSite(_AdminBase):
             return False
         if 'local' in settings.ENVIRONMENT:
             return True
-        email = getattr(request.user, 'email', '')
-        domain = email.split('@')[-1] if '@' in email else ''
-        return domain in settings.ADMIN_ALLOWED_DOMAINS
+        return is_admin_allowed_email(getattr(request.user, 'email', ''))
 
     def login(self, request, extra_context=None):
         # If authenticated but lacking admin permission, log out to prevent redirect loops
