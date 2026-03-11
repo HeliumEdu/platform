@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class UserSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(
-        help_text='The current password for the user (required only when changing an existing password).',
+        help_text='The current password for the user (required when changing password or email).',
         required=False, write_only=True)
 
     password = serializers.CharField(help_text='A password to set for the user.',
@@ -39,11 +39,15 @@ class UserSerializer(serializers.ModelSerializer):
         help_text='Whether the user has a usable password (false for OAuth-only users).'
     )
 
+    has_oauth_providers = serializers.SerializerMethodField(
+        help_text='Whether the user has any OAuth providers linked (Google, Apple, etc.).'
+    )
+
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password', 'profile', 'settings',
-                  'oauth_providers', 'has_usable_password',)
-        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password',)
+        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
+                  'profile', 'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
+        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
             'username': {'required': False, 'allow_blank': True},
         }
@@ -51,6 +55,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_has_usable_password(self, obj) -> bool:
         """Return whether the user has a usable password."""
         return obj.has_usable_password()
+
+    def get_has_oauth_providers(self, obj) -> bool:
+        """Return whether the user has any OAuth providers linked."""
+        return obj.oauth_providers.exists()
 
     def validate(self, attrs):
         email = attrs.get('email', self.instance.email if self.instance else None)
@@ -65,6 +73,13 @@ class UserSerializer(serializers.ModelSerializer):
             if self.instance.has_usable_password() and 'old_password' not in attrs:
                 raise serializers.ValidationError({
                     'old_password': 'Current password is required when changing your password.'
+                })
+
+        # If changing email, require old_password for security
+        if 'email' in attrs and self.instance and self.instance.email != attrs.get('email'):
+            if 'old_password' not in attrs:
+                raise serializers.ValidationError({
+                    'old_password': 'Current password is required when changing your email.'
                 })
 
         return attrs
