@@ -93,4 +93,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     def import_exampleschedule(self, request, *args, **kwargs):
         importservice.import_example_schedule(request.user)
 
+        # Re-show the Getting Started dialog so users can explore and clear the example data
+        request.user.settings.show_getting_started = True
+        request.user.settings.save()
+
         return Response(status=status.HTTP_204_NO_CONTENT)

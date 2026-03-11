@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
@@ -48,7 +49,10 @@ class ExportResourceView(ViewSet, HeliumAPIView):
 
         json_str = JSONRenderer().render(serializer.data)
 
+        email_local = user.email.split('@')[0] if user.email else 'backup'
+        filename = f"Helium_{email_local}_{datetime.now().strftime('%Y-%m-%d')}.json"
+
         response = HttpResponse(json_str, content_type='application/json; charset=utf-8')
-        response['Filename'] = 'Helium_' + user.username + '.json'
-        response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '.json'
+        response['Filename'] = filename
+        response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
