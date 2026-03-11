@@ -339,9 +339,9 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         # WHEN
         response = self.client.get(reverse('feed_externalcalendars_events'))
 
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("not a valid ICAL", response.data[0])
+        # THEN - invalid calendars are skipped but processing continues
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
         # Calendar should be disabled
         external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
