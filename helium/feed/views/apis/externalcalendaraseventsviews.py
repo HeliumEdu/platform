@@ -63,17 +63,14 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             if "to" in request.query_params else None
         search = request.query_params["search"].lower() if "search" in request.query_params else None
 
-        try:
-            events = []
-            for external_calendar in external_calendars:
+        events = []
+        for external_calendar in external_calendars:
+            try:
                 events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
-        except HeliumICalError:
-            external_calendar.shown_on_calendar = False
-            external_calendar.save()
-
-            logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
-
-            raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
+            except HeliumICalError:
+                external_calendar.shown_on_calendar = False
+                external_calendar.save()
+                logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.", exc_info=True)
 
         serializer = self.get_serializer(events, many=True)
 
