@@ -117,15 +117,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Manually process fields that require shuffling before relying on the serializer's internals to save the rest
-        if 'email' in validated_data and instance.email != validated_data.get('email'):
-            instance.email_changing = validated_data.pop('email')
+        if 'email' in validated_data:
+            new_email = validated_data.pop('email')
+            if instance.email != new_email:
+                # Initiate email change - requires verification
+                instance.email_changing = new_email
+                instance.verification_code = generate_verification_code()
 
-            instance.verification_code = generate_verification_code()
-
-            send_verification_email.apply_async(
-                args=(instance.email_changing, instance.username, instance.verification_code),
-                priority=settings.CELERY_PRIORITY_HIGH,
-            )
+                send_verification_email.apply_async(
+                    args=(instance.email_changing, instance.username, instance.verification_code),
+                    priority=settings.CELERY_PRIORITY_HIGH,
+                )
+            elif instance.email_changing:
+                # User submitted their existing email while a change is pending - cancel the change
+                instance.email_changing = None
+                instance.save()
 
         old_password = validated_data.pop('old_password', None)
         password = validated_data.pop('password', None)
