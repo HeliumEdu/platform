@@ -185,7 +185,7 @@ jobs:
   deploy:
     name: Deploy to ${{ inputs.environment }}
     needs: [determine-version, test-release]
-    if: always() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')
+    if: "!cancelled() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')"
     runs-on: ubuntu-latest
 
     env:
