@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.template.loader import get_template
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -69,3 +70,29 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0].pk, user1.pk)
         self.assertEqual(users[1].pk, user2.pk)
+
+    def test_verification_email_url_encodes_special_characters(self):
+        """Test that verification email properly URL-encodes email addresses with special characters like +."""
+        # GIVEN
+        email_with_plus = 'contact+test@example.com'
+        context = {
+            'PROJECT_NAME': 'Helium',
+            'email': email_with_plus,
+            'verification_code': 123456,
+            'verify_url': 'https://app.heliumedu.com/verify',
+        }
+
+        # WHEN
+        html_template = get_template('email/verification.html')
+        html_content = html_template.render(context)
+        txt_template = get_template('email/verification.txt')
+        txt_content = txt_template.render(context)
+
+        # THEN
+        # The + should be encoded as %2B in the URL, not left as + (which would be decoded as space)
+        expected_encoded_email = 'contact%2Btest%40example.com'
+        self.assertIn(expected_encoded_email, html_content)
+        self.assertIn(expected_encoded_email, txt_content)
+        # Make sure the raw + is NOT in the URL portion (it should only appear in the display text)
+        self.assertNotIn(f'?email={email_with_plus}', html_content)
+        self.assertNotIn(f'?email={email_with_plus}', txt_content)

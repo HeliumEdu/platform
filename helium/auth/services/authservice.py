@@ -79,7 +79,7 @@ def verify_email(request):
 
     try:
         user = get_user_model().objects.get(
-            (Q(username__iexact=identifier) | Q(email__iexact=identifier)),
+            (Q(username__iexact=identifier) | Q(email__iexact=identifier) | Q(email_changing__iexact=identifier)),
             verification_code=code,
         )
 
@@ -123,7 +123,7 @@ RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
 
 def resend_verification_email(request):
     """
-    Resend the verification email for an inactive user account.
+    Resend the verification email for an inactive user account or an active user changing their email.
     Rate limited to once per 60 seconds per user.
 
     :param request: the request being processed
@@ -144,21 +144,25 @@ def resend_verification_email(request):
             Q(username__iexact=identifier) | Q(email__iexact=identifier)
         )
 
-        if user.is_active:
-            # Don't reveal whether user exists or is already active
-            logger.info(f'Resend verification requested for already active user {user.pk}')
+        # Determine if this is a new registration or email change verification
+        if user.is_active and not user.email_changing:
+            # Active user with no pending email change - nothing to resend
+            logger.info(f'Resend verification requested for already active user {user.pk} with no pending email change')
             return Response(status=status.HTTP_202_ACCEPTED)
 
         # Generate new verification code and send email
         user.verification_code = generate_verification_code()
         user.save()
 
+        # Send to email_changing if set (active user changing email), otherwise to email (new registration)
+        target_email = user.email_changing if user.email_changing else user.email
+
         send_verification_email.apply_async(
-            args=(user.email, user.username, user.verification_code),
+            args=(target_email, user.username, user.verification_code),
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 
-        logger.info(f'Resent verification email for user {user.pk}')
+        logger.info(f'Resent verification email for user {user.pk} to {target_email}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
