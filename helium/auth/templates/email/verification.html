@@ -8,7 +8,7 @@
         <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
             You're almost there. Your verification code is: <strong>{{ verification_code|unlocalize }}</strong>
 
-            <br/><br/><a href="{{ verify_url }}?email={{ email }}&code={{ verification_code|unlocalize }}"
+            <br/><br/><a href="{{ verify_url }}?email={{ email|urlencode }}&code={{ verification_code|unlocalize }}"
                                     target="_blank">Click here</a> to verify this email address with Helium.
         </td>
     </tr>
