@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 if not new_email:
                     self.stderr.write("Error: This field cannot be blank.")
 
-            if UserModel.objects.filter(email=new_email).exists():
+            if UserModel.objects.email_used(user.pk, new_email):
                 raise CommandError(f"A user with email '{new_email}' already exists.")
 
             if user.is_superuser and not is_admin_allowed_email(new_email):

@@ -34,10 +34,14 @@ class AdminUserChangeForm(UserChangeForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if self.instance and self.instance.is_superuser and email != self.instance.email:
-            if not is_admin_allowed_email(email):
-                raise forms.ValidationError(
-                    f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+        if self.instance and email != self.instance.email:
+            # Check uniqueness against both email and email_changing fields
+            if get_user_model().objects.email_used(self.instance.pk, email):
+                raise forms.ValidationError("Sorry, that email is already in use.")
+            if self.instance.is_superuser:
+                if not is_admin_allowed_email(email):
+                    raise forms.ValidationError(
+                        f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
         return email
 
 

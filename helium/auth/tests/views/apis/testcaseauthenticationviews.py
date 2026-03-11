@@ -192,6 +192,29 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
+    def test_verification_success_with_email_changing(self):
+        """Test that verification works when user is changing their email and uses the new email as identifier."""
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        original_email = user.email
+        new_email = 'new_email@example.com'
+        user.email_changing = new_email
+        user.save()
+
+        # WHEN - verify using the NEW email address (email_changing)
+        response = self.client.get(
+            reverse('auth_user_resource_verify') + f'?username={new_email}&code={user.verification_code}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        user.refresh_from_db()
+        # Email should be updated to the new value
+        self.assertEqual(user.email, new_email)
+        # email_changing should be cleared
+        self.assertIsNone(user.email_changing)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
     def test_resend_verification_success_with_email_identifier(self):
         # GIVEN
         user = userhelper.given_an_inactive_user_exists()
@@ -224,3 +247,39 @@ class TestCaseAuthenticationViews(TestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_resend_verification_for_email_change(self):
+        """Test that resend verification sends to email_changing for active users changing email."""
+        # GIVEN
+        user = userhelper.given_a_user_exists(username='email_changer', email='changer@test.com')
+        original_code = user.verification_code
+        user.email_changing = 'new_email@example.com'
+        user.save()
+
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_resend_verification') + f'?username={user.username}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        user.refresh_from_db()
+        # Verification code should be regenerated
+        self.assertNotEqual(user.verification_code, original_code)
+        # The email should be sent to email_changing (verified via context in test settings)
+        self.assertEqual(response.context['email'], 'new_email@example.com')
+
+    def test_resend_verification_for_active_user_without_email_change(self):
+        """Test that resend verification returns 202 but does nothing for active users without email_changing."""
+        # GIVEN
+        user = userhelper.given_a_user_exists(username='active_user', email='active@test.com')
+        original_code = str(user.verification_code)
+
+        # WHEN
+        response = self.client.get(
+            reverse('auth_user_resource_resend_verification') + f'?username={user.username}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        user.refresh_from_db()
+        # Verification code should NOT be regenerated (no email was sent)
+        self.assertEqual(str(user.verification_code), original_code)

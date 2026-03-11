@@ -102,7 +102,8 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'email': 'new@email.com'
+            'email': 'new@email.com',
+            'old_password': 'test_pass_1!'
         }
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -116,6 +117,45 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.email, response.data['email'])
         self.assertEqual(user.email_changing, response.data['email_changing'])
         self.assertEqual(user.username, response.data['username'])
+
+    def test_email_change_fails_without_password(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.assertEqual(user.email, 'user@test.com')
+
+        # WHEN
+        data = {
+            'email': 'new@email.com'
+        }
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('old_password', response.data)
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'user@test.com')
+        self.assertIsNone(user.email_changing)
+
+    def test_email_change_fails_wrong_password(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.assertEqual(user.email, 'user@test.com')
+
+        # WHEN
+        data = {
+            'email': 'new@email.com',
+            'old_password': 'wrong_password'
+        }
+        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('old_password', response.data)
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'user@test.com')
+        self.assertIsNone(user.email_changing)
 
     def test_email_changes_after_verification(self):
         # GIVEN
@@ -468,3 +508,34 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertTrue(user.check_password('second_password_1!'))
+
+    def test_has_oauth_providers_false_for_regular_user(self):
+        """Test that has_oauth_providers is False for users without OAuth providers."""
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['has_oauth_providers'])
+
+    def test_has_oauth_providers_true_for_oauth_user(self):
+        """Test that has_oauth_providers is True for users with OAuth providers."""
+        from helium.auth.models import UserOAuthProvider
+
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        UserOAuthProvider.objects.create(
+            user=user,
+            provider=UserOAuthProvider.PROVIDER_GOOGLE,
+            provider_user_id='firebase-uid-123'
+        )
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['has_oauth_providers'])

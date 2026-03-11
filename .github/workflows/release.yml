@@ -133,7 +133,7 @@ jobs:
   bump-version:
     name: Bump Version
     needs: [create-release-branch, test, integration-test]
-    if: always() && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')
+    if: "!cancelled() && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -209,7 +209,7 @@ jobs:
   merge-release-branch:
     name: Merge Release Branch to Main
     needs: [create-release-branch, bump-version]
-    if: always() && needs['create-release-branch'].result == 'success' && needs['bump-version'].result == 'success'
+    if: "!cancelled() && needs['create-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
     runs-on: ubuntu-latest
     outputs:
       merged_commit_sha: ${{ steps.merge.outputs.merged_commit_sha }}
@@ -259,7 +259,7 @@ jobs:
   build-and-publish:
     name: Build and Publish Containers
     needs: [merge-release-branch, bump-version]
-    if: always() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'
+    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
     runs-on: ubuntu-latest
 
     env:
@@ -299,7 +299,7 @@ jobs:
   create-release-tag:
     name: Create Release Tag
     needs: [merge-release-branch, bump-version, build-and-publish]
-    if: always() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped')
+    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped')"
     runs-on: ubuntu-latest
 
     steps:
@@ -345,7 +345,7 @@ jobs:
   deploy:
     name: Trigger Deploy Workflow
     needs: [create-release-tag, bump-version]
-    if: always() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'
+    if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'"
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy workflow

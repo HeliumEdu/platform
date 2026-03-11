@@ -185,7 +185,7 @@ jobs:
   deploy:
     name: Deploy to ${{ inputs.environment }}
     needs: [determine-version, test-release]
-    if: always() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')
+    if: "!cancelled() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')"
     runs-on: ubuntu-latest
 
     env:
@@ -238,7 +238,7 @@ jobs:
       - name: Notify Sentry of deploy
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_RELEASE: ${{ needs.determine-version.outputs.version }}
+          RELEASE_VERSION: ${{ needs.determine-version.outputs.version }}
         run: |
           pip install sentry-cli
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases deploys new --env "${{ inputs.environment }}"
@@ -249,6 +249,15 @@ jobs:
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             -d "{\"event_type\":\"\`platform\` triggered for \`${{ needs.determine-version.outputs.version }}\` to \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
+
+      - name: Trigger frontend integration tests
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run integration.yml \
+            --repo HeliumEdu/frontend \
+            -f suite=full \
+            -f environment=${{ inputs.environment }}
 
       - name: Deployment summary
         env:
