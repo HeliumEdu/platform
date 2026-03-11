@@ -3,12 +3,10 @@ __license__ = "MIT"
 
 import os
 
-import certifi
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "conf.settings")
-os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 
 application = get_wsgi_application()
 
