@@ -63,6 +63,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
 ENV TZ=UTC
+ENV SSL_CERT_FILE=/venv/lib/python3.12/site-packages/certifi/cacert.pem
 
 WORKDIR /app
 
@@ -91,6 +92,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
 ENV TZ=UTC
+ENV SSL_CERT_FILE=/venv/lib/python3.12/site-packages/certifi/cacert.pem
 
 WORKDIR /app
 
