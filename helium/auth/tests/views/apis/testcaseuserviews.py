@@ -176,6 +176,30 @@ class TestCaseUserViews(APITestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
+    def test_email_change_cancelled_by_submitting_current_email(self):
+        """Test that submitting current email while a change is pending cancels the change."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.email_changing = 'new@email.com'
+        user.save()
+        self.assertEqual(user.email, 'user@test.com')
+        self.assertEqual(user.email_changing, 'new@email.com')
+
+        # WHEN - submit current email to cancel
+        data = {
+            'email': 'user@test.com',
+            'old_password': 'test_pass_1!',
+        }
+        response = self.client.put(reverse('auth_user_detail'),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'user@test.com')
+        self.assertIsNone(user.email_changing)
+
     def test_password_change(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
