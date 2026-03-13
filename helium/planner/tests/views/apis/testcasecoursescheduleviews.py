@@ -207,9 +207,10 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                                                       'pk': course_schedule.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(CourseSchedule.objects.filter(pk=course_group.pk).exists())
-        self.assertEqual(CourseSchedule.objects.count(), 0)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Deleting a course schedule is not allowed', response.data['detail'])
+        self.assertTrue(CourseSchedule.objects.filter(pk=course_schedule.pk).exists())
+        self.assertEqual(CourseSchedule.objects.count(), 1)
 
     def test_no_access_object_owned_by_another_user(self):
         # GIVEN
@@ -410,10 +411,12 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        schedule1 = courseschedulehelper.given_course_schedule_exists(course)
-        schedule2 = courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010000')
-        schedule3 = courseschedulehelper.given_course_schedule_exists(course, days_of_week='0001000')
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group, title='Course 2')
+        course3 = coursehelper.given_course_exists(course_group, title='Course 3')
+        schedule1 = courseschedulehelper.given_course_schedule_exists(course1)
+        schedule2 = courseschedulehelper.given_course_schedule_exists(course2, days_of_week='0010000')
+        schedule3 = courseschedulehelper.given_course_schedule_exists(course3, days_of_week='0001000')
 
         # Manually set updated_at to different times
         old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
