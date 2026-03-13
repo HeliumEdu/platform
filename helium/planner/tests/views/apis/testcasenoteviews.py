@@ -1,0 +1,362 @@
+__copyright__ = "Copyright (c) 2025 Helium Edu"
+__license__ = "MIT"
+
+import datetime
+import json
+
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from helium.auth.tests.helpers import userhelper
+from helium.planner.models import Note, NoteLink
+from helium.planner.tests.helpers import notehelper, eventhelper, homeworkhelper, coursegrouphelper, coursehelper
+
+
+class TestCaseNoteViews(APITestCase):
+    def test_note_login_required(self):
+        # GIVEN
+        userhelper.given_a_user_exists()
+
+        # WHEN
+        responses = [
+            self.client.get(reverse('planner_notes_list')),
+            self.client.post(reverse('planner_notes_list')),
+            self.client.get(reverse('planner_notes_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_notes_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_notes_detail', kwargs={'pk': '9999'}))
+        ]
+
+        # THEN
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_notes(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                    email='test2@email.com')
+        notehelper.given_note_exists(user1)
+        notehelper.given_note_exists(user2)
+        notehelper.given_note_exists(user2)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Note.objects.count(), 3)
+        self.assertEqual(len(response.data), 2)
+
+    def test_create_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'My Test Note',
+            'content': {'ops': [{'insert': 'Some content here\n'}]}
+        }
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Note.objects.count(), 1)
+        note = Note.objects.get(pk=response.data['id'])
+        self.assertEqual(note.title, data['title'])
+        self.assertEqual(note.content, data['content'])
+        self.assertEqual(note.user, user)
+
+    def test_create_standalone_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Standalone Note',
+            'content': {'ops': [{'insert': 'Just a note\n'}]}
+        }
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        note = Note.objects.get(pk=response.data['id'])
+        self.assertEqual(note.links.count(), 0)  # No links = standalone
+
+    def test_get_note_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], note.pk)
+        self.assertEqual(response.data['title'], note.title)
+
+    def test_get_note_includes_link_info(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('link', response.data)
+        self.assertEqual(response.data['link']['event'], event.pk)
+        self.assertEqual(response.data['link']['linked_entity_type'], 'event')
+        self.assertEqual(response.data['link']['linked_entity_title'], event.title)
+
+    def test_update_note_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'Updated Title',
+            'content': {'ops': [{'insert': 'Updated content\n'}]}
+        }
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.title, data['title'])
+        self.assertEqual(note.content, data['content'])
+
+    def test_patch_note_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user, title='Original Title')
+
+        # WHEN
+        data = {'title': 'Patched Title'}
+        response = self.client.patch(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.title, 'Patched Title')
+
+    def test_delete_note_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Note.objects.filter(pk=note.pk).exists())
+
+    def test_delete_note_cascades_to_links(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        link_pk = note.links.first().pk
+
+        # WHEN
+        response = self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(NoteLink.objects.filter(pk=link_pk).exists())
+
+    def test_no_access_object_owned_by_another_user(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        note = notehelper.given_note_exists(user1)
+
+        # WHEN
+        responses = [
+            self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk})),
+            self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk})),
+            self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+        ]
+
+        # THEN
+        self.assertTrue(Note.objects.filter(pk=note.pk, user_id=user1.pk).exists())
+        for response in responses:
+            if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_not_found(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        responses = [
+            self.client.get(reverse('planner_notes_detail', kwargs={'pk': '9999'})),
+            self.client.put(reverse('planner_notes_detail', kwargs={'pk': '9999'})),
+            self.client.delete(reverse('planner_notes_detail', kwargs={'pk': '9999'}))
+        ]
+
+        # THEN
+        for response in responses:
+            if isinstance(response.data, list):
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(len(response.data), 0)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_title_search_query(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user, title='Unique Search Title')
+        notehelper.given_note_exists(user, title='Other Note')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=UniQue')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], note.title)
+
+    def test_filter_by_linked_entity_type(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note_with_event = notehelper.given_note_linked_to_event(user, event)
+        notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?linked_entity_type=event')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], note_with_event.pk)
+
+    def test_filter_standalone_notes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        notehelper.given_note_linked_to_event(user, event)
+        standalone = notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?linked_entity_type=standalone')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], standalone.pk)
+
+    def test_updated_at_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note1 = notehelper.given_note_exists(user, title='Old')
+        note2 = notehelper.given_note_exists(user, title='Recent')
+
+        # Manually set updated_at to different times
+        old_time = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        recent_time = datetime.datetime(2025, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        Note.objects.filter(pk=note1.pk).update(updated_at=old_time)
+        Note.objects.filter(pk=note2.pk).update(updated_at=recent_time)
+
+        # WHEN
+        filter_time = '2024-01-01T00:00:00'
+        response = self.client.get(reverse('planner_notes_list') + f'?updated_at__gte={filter_time}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], note2.pk)
+
+
+class TestCaseNoteDualWrite(APITestCase):
+    """Test dual-write functionality for legacy frontend compatibility."""
+
+    def test_update_note_syncs_to_linked_homework(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+
+        # WHEN
+        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
+        data = {'title': note.title, 'content': new_content}
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        homework.refresh_from_db()
+        self.assertEqual(homework.notes, new_content)
+
+    def test_update_note_syncs_to_linked_event(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+
+        # WHEN
+        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
+        data = {'title': note.title, 'content': new_content}
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertEqual(event.notes, new_content)
+
+    def test_patch_note_content_syncs_to_linked_entity(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+
+        # WHEN
+        new_content = {'ops': [{'insert': 'Patched content\n'}]}
+        data = {'content': new_content}
+        response = self.client.patch(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertEqual(event.notes, new_content)
+
+    def test_update_standalone_note_no_sync(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(user)  # Standalone, no links
+
+        # WHEN
+        new_content = {'ops': [{'insert': 'Updated standalone\n'}]}
+        data = {'title': note.title, 'content': new_content}
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.content, new_content)

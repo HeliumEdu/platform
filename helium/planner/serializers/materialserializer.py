@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    note = serializers.SerializerMethodField()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -23,4 +25,12 @@ class MaterialSerializer(serializers.ModelSerializer):
         model = Material
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'notes', 'material_group',
-            'courses')
+            'courses', 'note')
+        read_only_fields = ('note',)
+
+    def get_note(self, obj):
+        """Return the linked Note's id if one exists."""
+        link = obj.note_links.select_related('note').first()
+        if link:
+            return {'id': link.note.id, 'title': link.note.title}
+        return None

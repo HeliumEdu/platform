@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from helium.common.utils.commonutils import split_csv
-from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Material, MaterialGroup, Attachment
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Material, MaterialGroup, Attachment, Note
 
 logger = logging.getLogger(__name__)
 
@@ -161,3 +161,31 @@ class AttachmentFilter(django_filters.FilterSet):
             'homework': ['exact'],
             'updated_at': ['gte'],
         }
+
+
+class NoteFilter(django_filters.FilterSet):
+    linked_entity_type = django_filters.CharFilter(method='filter_linked_type')
+    has_link = django_filters.BooleanFilter(method='filter_has_link')
+
+    class Meta:
+        model = Note
+        fields = {
+            'title': ['exact', 'icontains'],
+            'updated_at': ['gte'],
+        }
+
+    def filter_linked_type(self, queryset, name, value):
+        if value == 'homework':
+            return queryset.filter(links__homework__isnull=False)
+        if value == 'event':
+            return queryset.filter(links__event__isnull=False)
+        if value == 'material':
+            return queryset.filter(links__material__isnull=False)
+        if value == 'standalone':
+            return queryset.filter(links__isnull=True)
+        return queryset
+
+    def filter_has_link(self, queryset, name, value):
+        if value:
+            return queryset.filter(links__isnull=False)
+        return queryset.filter(links__isnull=True)

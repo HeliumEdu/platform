@@ -45,3 +45,15 @@ class EventExtendedSerializer(EventSerializer):
     attachments = AttachmentSerializer(many=True)
 
     reminders = ReminderSerializer(many=True)
+
+    note = serializers.SerializerMethodField()
+
+    class Meta(EventSerializer.Meta):
+        fields = EventSerializer.Meta.fields + ('note',)
+
+    def get_note(self, obj):
+        """Return the linked Note's id if one exists."""
+        link = obj.note_links.select_related('note').first()
+        if link:
+            return {'id': link.note.id, 'title': link.note.title}
+        return None

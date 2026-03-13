@@ -23,6 +23,7 @@ from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetail
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
     MaterialGroupMaterialsApiListView
+from helium.planner.views.apis.noteviews import NotesApiListView, NotesApiDetailView
 from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView
 
 urlpatterns = [
@@ -108,4 +109,8 @@ urlpatterns = [
     path('planner/reminders/', RemindersApiListView.as_view(), name='planner_reminders_list'),
     path('planner/reminders/<int:pk>/', RemindersApiDetailView.as_view(),
          name='planner_reminders_detail'),
+
+    # Note
+    path('planner/notes/', NotesApiListView.as_view(), name='planner_notes_list'),
+    path('planner/notes/<int:pk>/', NotesApiDetailView.as_view(), name='planner_notes_detail'),
 ]
