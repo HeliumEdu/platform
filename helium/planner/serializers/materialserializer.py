@@ -34,3 +34,44 @@ class MaterialSerializer(serializers.ModelSerializer):
         if link:
             return {'id': link.note.id, 'title': link.note.title}
         return None
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+
+        # Dual-write: sync inline notes to linked Note entity
+        if 'notes' in validated_data:
+            self._sync_notes_to_note_entity(instance, validated_data['notes'])
+
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+
+        # Dual-write: sync inline notes to linked Note entity
+        if 'notes' in validated_data:
+            self._sync_notes_to_note_entity(instance, validated_data['notes'])
+
+        return instance
+
+    def _sync_notes_to_note_entity(self, instance, notes_content):
+        """Sync inline notes field to the linked Note entity (dual-write)."""
+        from helium.planner.models import Note, NoteLink
+
+        link = instance.note_links.select_related('note').first()
+
+        if notes_content and notes_content != {}:
+            if link:
+                # Update existing Note
+                link.note.content = notes_content
+                link.note.save(update_fields=['content', 'updated_at'])
+            else:
+                # Create new Note and link
+                note = Note.objects.create(
+                    title=f'Notes for: {instance.title}',
+                    content=notes_content,
+                    user=instance.material_group.user,
+                )
+                NoteLink.objects.create(note=note, material=instance)
+        elif link:
+            # Notes cleared - delete the linked Note
+            link.note.delete()

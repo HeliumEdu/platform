@@ -17,7 +17,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
-    Homework, Reminder
+    Homework, Reminder, Note, NoteLink
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
 
@@ -54,7 +54,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2}, response1.data)
+             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response1.data)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
         with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
@@ -69,7 +69,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2}, response2.data)
+             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response2.data)
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
@@ -170,27 +170,47 @@ class TestCaseImportExportViews(APITestCase):
         materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
                                                                {'title': '📚 Test Material Group',
                                                                 'shown_on_calendar': True, 'user': user.pk})
+        # Legacy 'details' field is converted to 'notes' on import
         materialhelper.verify_material_matches_data(self, materials[1],
                                                     {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
-                                                     'details': 'Return by 7/1',
+                                                     'details': '',  # Legacy field is not populated on import
                                                      'material_group': material_groups[1].pk, 'courses': []})
+        # Verify legacy 'details' was converted to 'notes' Quill JSON
+        self.assertIsNotNone(materials[1].notes)
+        self.assertIn('ops', materials[1].notes)
+        self.assertEqual(materials[1].notes['ops'][0]['insert'], 'Return by 7/1')
+        # Verify Note and NoteLink were created for material
+        self.assertTrue(materials[1].note_links.exists())
+        self.assertEqual(materials[1].note_links.first().note.content, materials[1].notes)
+
+        # Legacy 'comments' field is converted to 'notes' on import
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'priority': 75, 'url': None, 'comments': '',  # Legacy field not populated
                                                'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'priority': 75, 'url': None, 'comments': '',  # Legacy field not populated
                                                'owner_id': None, 'user': user.pk})
+        # Verify legacy 'comments' was converted to 'notes' Quill JSON for events
+        self.assertIsNotNone(events[2].notes)
+        self.assertIn('ops', events[2].notes)
+        self.assertEqual(events[2].notes['ops'][0]['insert'], 'A comment on an event.')
+        # Verify Note and NoteLink were created for event
+        self.assertTrue(events[2].note_links.exists())
+        self.assertEqual(events[2].note_links.first().note.content, events[2].notes)
+
+        # Legacy 'comments' field is converted to 'notes' on import
         homeworkhelper.verify_homework_matches_data(self, homework[2],
                                                     {'title': '💻 Test Homework', 'all_day': False,
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': 'A comment on a homework.', 'current_grade': '20/30',
+                                                     'comments': '',  # Legacy field not populated
+                                                     'current_grade': '20/30',
                                                      'completed': True, 'category': categories[1].pk,
                                                      'course': courses[2].pk, 'materials': [materials[1].pk]})
         homeworkhelper.verify_homework_matches_data(self, homework[3],
@@ -198,9 +218,23 @@ class TestCaseImportExportViews(APITestCase):
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': 'A comment on a homework.', 'current_grade': '-1/100',
+                                                     'comments': '',  # Legacy field not populated
+                                                     'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[3].pk,
                                                      'course': courses[3].pk, 'materials': []})
+        # Verify legacy 'comments' was converted to 'notes' Quill JSON for homework
+        self.assertIsNotNone(homework[2].notes)
+        self.assertIn('ops', homework[2].notes)
+        self.assertEqual(homework[2].notes['ops'][0]['insert'], 'A comment on a homework.')
+        # Verify Note and NoteLink were created for homework
+        self.assertTrue(homework[2].note_links.exists())
+        self.assertEqual(homework[2].note_links.first().note.content, homework[2].notes)
+
+        # Verify total Note and NoteLink counts (4 events + 4 homework + 2 materials = 10 with legacy content)
+        # But we import twice, so 2x that, but items with empty comments don't create notes
+        # Events: 4 with comments, Homework: 4 with comments, Materials: 2 with details
+        self.assertEqual(Note.objects.filter(user=user).count(), 10)
+        self.assertEqual(NoteLink.objects.count(), 10)
         reminderhelper.verify_reminder_matches_data(self, reminders[2], {'id': 1, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45:00Z',
@@ -432,3 +466,160 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Homework.objects.count(), 53)
         self.assertEqual(Reminder.objects.count(), 14)
         self.assertEqual(Event.objects.count(), 9)
+
+        # Verify legacy 'comments'/'details' fields were converted to 'notes' on import
+        # Example schedule has items with legacy HTML content that should be upleveled
+        homework_with_notes = Homework.objects.exclude(notes__isnull=True).exclude(notes={})
+        events_with_notes = Event.objects.exclude(notes__isnull=True).exclude(notes={})
+        materials_with_notes = Material.objects.exclude(notes__isnull=True).exclude(notes={})
+
+        # Verify some items have converted notes
+        self.assertGreater(homework_with_notes.count(), 0)
+        self.assertGreater(events_with_notes.count(), 0)
+        self.assertGreater(materials_with_notes.count(), 0)
+
+        # Verify Note and NoteLink entries were created for items with notes
+        self.assertEqual(Note.objects.count(), homework_with_notes.count() + events_with_notes.count() + materials_with_notes.count())
+        self.assertEqual(NoteLink.objects.count(), Note.objects.count())
+
+        # Verify a specific homework's notes content structure
+        hw = homework_with_notes.first()
+        self.assertIn('ops', hw.notes)
+        self.assertTrue(hw.note_links.exists())
+
+    def test_import_legacy_notes_converted_to_quill(self):
+        """Test that importing legacy HTML comments/details converts them to Quill JSON notes."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # Import data with legacy HTML formatting
+        import_data = {
+            'course_groups': [{
+                'id': 1,
+                'title': 'Test Group',
+                'start_date': '2024-01-01',
+                'end_date': '2024-05-01',
+                'shown_on_calendar': True,
+                'overall_grade': '-1',
+                'user': 1
+            }],
+            'courses': [{
+                'id': 1,
+                'title': 'Test Course',
+                'room': '',
+                'credits': '3.00',
+                'color': '#4986e7',
+                'website': '',
+                'is_online': False,
+                'current_grade': '-1',
+                'teacher_name': '',
+                'teacher_email': '',
+                'start_date': '2024-01-01',
+                'end_date': '2024-05-01',
+                'course_group': 1
+            }],
+            'categories': [{
+                'id': 1,
+                'title': 'Uncategorized',
+                'weight': '0.00',
+                'average_grade': '-1',
+                'grade_by_weight': '0',
+                'color': '#4986e7',
+                'course': 1
+            }],
+            'material_groups': [{
+                'id': 1,
+                'title': 'Test Materials',
+                'shown_on_calendar': True,
+                'user': 1
+            }],
+            'materials': [{
+                'id': 1,
+                'title': 'Test Book',
+                'status': 0,
+                'condition': 0,
+                'website': '',
+                'price': '',
+                'details': '<b>ISBN:</b> 978-1234567890',  # Legacy HTML
+                'material_group': 1,
+                'courses': []
+            }],
+            'events': [{
+                'id': 1,
+                'title': 'Test Event',
+                'all_day': False,
+                'show_end_time': True,
+                'start': '2024-02-01T10:00:00Z',
+                'end': '2024-02-01T11:00:00Z',
+                'priority': 50,
+                'url': None,
+                'comments': '<ul><li>Item 1</li><li>Item 2</li></ul>',  # Legacy HTML list
+                'user': 1
+            }],
+            'homework': [{
+                'id': 1,
+                'title': 'Test Assignment',
+                'all_day': False,
+                'show_end_time': True,
+                'start': '2024-02-01T10:00:00Z',
+                'end': '2024-02-01T12:00:00Z',
+                'priority': 50,
+                'url': None,
+                'comments': '<p>Due by <strong>midnight</strong></p>',  # Legacy HTML with formatting
+                'current_grade': '-1/100',
+                'completed': False,
+                'category': 1,
+                'materials': [],
+                'course': 1
+            }],
+            'reminders': [],
+            'course_schedules': []
+        }
+
+        # WHEN
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(import_data, f)
+            f.flush()
+            with open(f.name, 'rb') as fp:
+                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify material's legacy 'details' was converted
+        material = Material.objects.first()
+        self.assertEqual(material.details, '')  # Legacy field should be empty
+        self.assertIsNotNone(material.notes)
+        self.assertIn('ops', material.notes)
+        # Check bold formatting was preserved
+        bold_op = next((op for op in material.notes['ops'] if op.get('attributes', {}).get('bold')), None)
+        self.assertIsNotNone(bold_op)
+        self.assertEqual(bold_op['insert'], 'ISBN:')
+
+        # Verify event's legacy 'comments' was converted (list structure)
+        event = Event.objects.first()
+        self.assertEqual(event.comments, '')  # Legacy field should be empty
+        self.assertIsNotNone(event.notes)
+        self.assertIn('ops', event.notes)
+        # Check list formatting was preserved
+        list_op = next((op for op in event.notes['ops'] if op.get('attributes', {}).get('list')), None)
+        self.assertIsNotNone(list_op)
+        self.assertEqual(list_op['attributes']['list'], 'bullet')
+
+        # Verify homework's legacy 'comments' was converted (paragraph with bold)
+        homework = Homework.objects.first()
+        self.assertEqual(homework.comments, '')  # Legacy field should be empty
+        self.assertIsNotNone(homework.notes)
+        self.assertIn('ops', homework.notes)
+        # Check bold formatting was preserved
+        bold_op = next((op for op in homework.notes['ops'] if op.get('attributes', {}).get('bold')), None)
+        self.assertIsNotNone(bold_op)
+        self.assertEqual(bold_op['insert'], 'midnight')
+
+        # Verify Note and NoteLink entries were created
+        self.assertEqual(Note.objects.filter(user=user).count(), 3)
+        self.assertEqual(NoteLink.objects.count(), 3)
+        self.assertTrue(material.note_links.exists())
+        self.assertTrue(event.note_links.exists())
+        self.assertTrue(homework.note_links.exists())

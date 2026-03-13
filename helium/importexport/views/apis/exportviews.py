@@ -14,7 +14,7 @@ from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
-    Homework, Reminder
+    Homework, Reminder, Note
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,8 @@ class ExportResourceView(ViewSet, HeliumAPIView):
             'materials': Material.objects.for_user(user.pk),
             'events': Event.objects.for_user(user.pk),
             'homework': Homework.objects.for_user(user.pk),
-            'reminders': Reminder.objects.for_user(user.pk)
+            'reminders': Reminder.objects.for_user(user.pk),
+            'notes': Note.objects.for_user(user.pk).prefetch_related('links'),
         })
 
         json_str = JSONRenderer().render(serializer.data)

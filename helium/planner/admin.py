@@ -522,11 +522,11 @@ class NoteLinkInline(admin.TabularInline):
     raw_id_fields = ('homework', 'event', 'material')
 
     def get_readonly_fields(self, request, obj=None):
-        return ('linked_entity_type', 'linked_entity_title')
+        return 'linked_entity_type', 'linked_entity_title'
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('id', 'title', 'get_user', 'created_at', 'updated_at')
+    list_display = ('title', 'get_user', 'created_at', 'updated_at')
     list_filter = ('created_at', 'updated_at')
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -548,7 +548,7 @@ class NoteAdmin(BaseModelAdmin):
 
 
 class NoteLinkAdmin(BaseModelAdmin):
-    list_display = ('id', 'note', 'linked_entity_type', 'linked_entity_title', 'created_at')
+    list_display = ('note', 'linked_entity_type', 'linked_entity_title', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('note__title',)
     autocomplete_fields = ('note', 'homework', 'event', 'material')
