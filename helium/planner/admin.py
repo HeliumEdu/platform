@@ -2,12 +2,13 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
-    Reminder, CourseSchedule
+    Reminder, CourseSchedule, Note, NoteLink
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
 
 
@@ -515,6 +516,52 @@ class ReminderAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
+class NoteLinkInline(admin.TabularInline):
+    model = NoteLink
+    extra = 0
+    raw_id_fields = ('homework', 'event', 'material')
+
+    def get_readonly_fields(self, request, obj=None):
+        return ('linked_entity_type', 'linked_entity_title')
+
+
+class NoteAdmin(BaseModelAdmin):
+    list_display = ('id', 'title', 'get_user', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('id', 'title', 'user__username', 'user__email')
+    autocomplete_fields = ('user',)
+    inlines = [NoteLinkInline]
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('user',)
+
+        return readonly_fields + self.readonly_fields
+
+    def get_user(self, obj):
+        return obj.user.username
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__username'
+
+
+class NoteLinkAdmin(BaseModelAdmin):
+    list_display = ('id', 'note', 'linked_entity_type', 'linked_entity_title', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('note__title',)
+    autocomplete_fields = ('note', 'homework', 'event', 'material')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj:
+            return readonly_fields + self.readonly_fields + ('note',)
+
+        return readonly_fields + self.readonly_fields
+
+
 # Register the models in the Admin
 admin_site.register(Attachment, AttachmentAdmin)
 admin_site.register(CourseGroup, CourseGroupAdmin)
@@ -525,4 +572,6 @@ admin_site.register(Event, EventAdmin)
 admin_site.register(Homework, HomeworkAdmin)
 admin_site.register(MaterialGroup, MaterialGroupAdmin)
 admin_site.register(Material, MaterialAdmin)
+admin_site.register(Note, NoteAdmin)
+admin_site.register(NoteLink, NoteLinkAdmin)
 admin_site.register(Reminder, ReminderAdmin)

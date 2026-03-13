@@ -1,0 +1,27 @@
+__copyright__ = "Copyright (c) 2025 Helium Edu"
+__license__ = "MIT"
+
+import logging
+
+from helium.common.managers.basemanager import BaseManager, BaseQuerySet
+
+logger = logging.getLogger(__name__)
+
+
+class NoteQuerySet(BaseQuerySet):
+    def exists_for_user(self, id, user_id):
+        return self.filter(pk=id, user_id=user_id).exists()
+
+    def for_user(self, user_id):
+        return self.filter(user_id=user_id)
+
+
+class NoteManager(BaseManager):
+    def get_queryset(self):
+        return NoteQuerySet(self.model, using=self._db)
+
+    def exists_for_user(self, id, user_id):
+        return self.get_queryset().exists_for_user(id, user_id)
+
+    def for_user(self, user_id):
+        return self.get_queryset().for_user(user_id)
