@@ -4,10 +4,10 @@ __license__ = "MIT"
 import logging
 
 from django.conf import settings
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
-from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment
+from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Note, NoteLink
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -82,3 +82,48 @@ def delete_attachment(sender, instance, **kwargs):
     """
     if instance.attachment:
         instance.attachment.delete(False)
+
+
+# Track notes being deleted to prevent signal recursion
+_notes_being_deleted = set()
+
+
+@receiver(pre_delete, sender=Note)
+def delete_note(sender, instance, **kwargs):
+    """
+    Clear the linked entity's notes field when a Note is deleted.
+
+    This ensures dual-write consistency: if a user deletes a Note via the API,
+    the linked entity's inline notes field is also cleared.
+    """
+    _notes_being_deleted.add(instance.pk)
+    for link in instance.links.select_related('homework', 'event', 'material').all():
+        entity = link.linked_entity
+        if entity and hasattr(entity, 'notes'):
+            entity.notes = None
+            entity.save(update_fields=['notes', 'updated_at'])
+
+
+@receiver(post_delete, sender=Note)
+def cleanup_note_deletion_tracking(sender, instance, **kwargs):
+    """Clean up tracking set after note deletion completes."""
+    _notes_being_deleted.discard(instance.pk)
+
+
+@receiver(pre_delete, sender=NoteLink)
+def delete_notelink(sender, instance, **kwargs):
+    """
+    Delete the associated Note when a NoteLink is deleted.
+
+    This ensures that when an entity (Homework, Event, Material) is deleted,
+    the cascade to NoteLink also cascades to the Note itself.
+
+    Skips deletion if the Note is already being deleted (e.g., cascade from Note.delete()).
+    """
+    try:
+        note_id = instance.note_id
+        if note_id and note_id not in _notes_being_deleted:
+            _notes_being_deleted.add(note_id)
+            instance.note.delete()
+    except Note.DoesNotExist:
+        pass

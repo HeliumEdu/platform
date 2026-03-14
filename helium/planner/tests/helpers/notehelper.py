@@ -15,7 +15,7 @@ def given_note_exists(user, title='Test Note', content=None):
 
 def given_note_linked_to_homework(user, homework, title=None, content=None):
     note = Note.objects.create(
-        title=title or f'Notes for: {homework.title}',
+        title=title or homework.title,
         content=content or {'ops': [{'insert': 'Homework notes\n'}]},
         user=user
     )
@@ -25,7 +25,7 @@ def given_note_linked_to_homework(user, homework, title=None, content=None):
 
 def given_note_linked_to_event(user, event, title=None, content=None):
     note = Note.objects.create(
-        title=title or f'Notes for: {event.title}',
+        title=title or event.title,
         content=content or {'ops': [{'insert': 'Event notes\n'}]},
         user=user
     )
@@ -35,7 +35,7 @@ def given_note_linked_to_event(user, event, title=None, content=None):
 
 def given_note_linked_to_material(user, material, title=None, content=None):
     note = Note.objects.create(
-        title=title or f'Notes for: {material.title}',
+        title=title or material.title,
         content=content or {'ops': [{'insert': 'Material notes\n'}]},
         user=user
     )

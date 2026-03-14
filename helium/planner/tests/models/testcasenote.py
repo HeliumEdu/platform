@@ -195,20 +195,21 @@ class TestCaseNoteLink(TestCase):
         with self.assertRaises(IntegrityError):
             NoteLink.objects.create(note=note, event=event, homework=homework)
 
-    def test_delete_entity_cascades_to_notelink(self):
+    def test_delete_entity_cascades_to_notelink_and_note(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         event = eventhelper.given_event_exists(user)
         note = notehelper.given_note_exists(user)
         link = NoteLink.objects.create(note=note, event=event)
         link_pk = link.pk
+        note_pk = note.pk
 
         # WHEN
         event.delete()
 
-        # THEN
+        # THEN - Both NoteLink and Note should be deleted
         self.assertFalse(NoteLink.objects.filter(pk=link_pk).exists())
-        self.assertTrue(Note.objects.filter(pk=note.pk).exists())  # Note still exists
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
 
     def test_delete_note_cascades_to_notelink(self):
         # GIVEN
@@ -224,3 +225,60 @@ class TestCaseNoteLink(TestCase):
         # THEN
         self.assertFalse(NoteLink.objects.filter(pk=link_pk).exists())
         self.assertTrue(event.__class__.objects.filter(pk=event.pk).exists())  # Event still exists
+
+    def test_delete_entity_cascades_to_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        note_pk = note.pk
+
+        # WHEN
+        event.delete()
+
+        # THEN - Note should also be deleted when entity is deleted
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+
+    def test_delete_homework_cascades_to_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+        note_pk = note.pk
+
+        # WHEN
+        homework.delete()
+
+        # THEN - Note should also be deleted when homework is deleted
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+
+    def test_delete_material_cascades_to_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_material(user, material)
+        note_pk = note.pk
+
+        # WHEN
+        material.delete()
+
+        # THEN - Note should also be deleted when material is deleted
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+
+    def test_delete_note_clears_entity_notes_field(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        event.notes = {'ops': [{'insert': 'Some notes\n'}]}
+        event.save()
+        note = notehelper.given_note_linked_to_event(user, event, content=event.notes)
+
+        # WHEN
+        note.delete()
+
+        # THEN - Entity's notes field should be cleared
+        event.refresh_from_db()
+        self.assertIsNone(event.notes)

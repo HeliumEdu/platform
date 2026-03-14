@@ -449,3 +449,231 @@ class TestCaseNoteDualWrite(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]['title'], 'Zebra')
         self.assertEqual(response.data[1]['title'], 'Apple')
+
+    def test_list_excludes_content(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        notehelper.given_note_exists(user, content={'ops': [{'insert': 'Large content\n'}]})
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertNotIn('content', response.data[0])
+
+    def test_detail_includes_content(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        content = {'ops': [{'insert': 'Detailed content\n'}]}
+        note = notehelper.given_note_exists(user, content=content)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('content', response.data)
+        self.assertEqual(response.data['content'], content)
+
+    def test_delete_note_clears_linked_entity_notes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        event.notes = {'ops': [{'insert': 'Event notes\n'}]}
+        event.save()
+        note = notehelper.given_note_linked_to_event(user, event, content=event.notes)
+
+        # WHEN - Delete the note via API
+        response = self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        event.refresh_from_db()
+        self.assertIsNone(event.notes)
+
+    def test_delete_note_then_recreate_via_entity(self):
+        """
+        Test flow:
+        1. Create event with notes -> Note entity created
+        2. Delete the Note via API -> Event.notes cleared
+        3. Fetch event -> notes is empty
+        4. Update event with new notes -> new Note entity created
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # Step 1: Create note via event
+        notes_content_v1 = {'ops': [{'insert': 'Original notes\n'}]}
+        data = {
+            'title': event.title,
+            'all_day': event.all_day,
+            'show_end_time': event.show_end_time,
+            'start': event.start.isoformat(),
+            'end': event.end.isoformat(),
+            'priority': event.priority,
+            'notes': notes_content_v1,
+        }
+        response = self.client.put(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify Note was created
+        event.refresh_from_db()
+        self.assertTrue(event.note_links.exists())
+        note_v1 = event.note_links.first().note
+        note_v1_pk = note_v1.pk
+        self.assertEqual(note_v1.content, notes_content_v1)
+
+        # Step 2: Delete the Note via API
+        response = self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note_v1_pk}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Step 3: Verify event.notes is cleared
+        event.refresh_from_db()
+        self.assertIsNone(event.notes)
+        self.assertFalse(event.note_links.exists())
+
+        # Fetch event via API and verify notes is empty
+        response = self.client.get(reverse('planner_events_detail', kwargs={'pk': event.pk}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data.get('notes'))
+
+        # Step 4: Save event with new notes
+        notes_content_v2 = {'ops': [{'insert': 'New notes after deletion\n'}]}
+        data['notes'] = notes_content_v2
+        response = self.client.put(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify new Note was created
+        event.refresh_from_db()
+        self.assertTrue(event.note_links.exists())
+        note_v2 = event.note_links.first().note
+        self.assertNotEqual(note_v2.pk, note_v1_pk)  # Different note
+        self.assertEqual(note_v2.content, notes_content_v2)
+        self.assertEqual(event.notes, notes_content_v2)
+
+
+class TestCaseNoteEdgeCases(APITestCase):
+    """Test edge cases for Note creation and deletion."""
+
+    def test_create_entity_with_empty_notes_no_note_created(self):
+        """Empty notes should not create a Note entity."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN - Create event with empty notes dict
+        data = {
+            'title': 'Event Without Notes',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2024-05-08T10:00:00Z',
+            'end': '2024-05-08T14:00:00Z',
+            'priority': 50,
+            'notes': {},
+        }
+        response = self.client.post(
+            reverse('planner_events_list'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        from helium.planner.models import Event
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertFalse(event.note_links.exists())
+        self.assertEqual(Note.objects.filter(user=user).count(), 0)
+
+    def test_create_entity_with_null_notes_no_note_created(self):
+        """Null notes should not create a Note entity."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN - Create event with null notes
+        data = {
+            'title': 'Event Without Notes',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2024-05-08T10:00:00Z',
+            'end': '2024-05-08T14:00:00Z',
+            'priority': 50,
+            'notes': None,
+        }
+        response = self.client.post(
+            reverse('planner_events_list'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        from helium.planner.models import Event
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertFalse(event.note_links.exists())
+        self.assertEqual(Note.objects.filter(user=user).count(), 0)
+
+    def test_clear_notes_deletes_linked_note(self):
+        """Setting notes to empty on an entity with existing notes should delete the Note."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # First, create a note via the event
+        notes_content = {'ops': [{'insert': 'Some notes\n'}]}
+        data = {
+            'title': event.title,
+            'all_day': event.all_day,
+            'show_end_time': event.show_end_time,
+            'start': event.start.isoformat(),
+            'end': event.end.isoformat(),
+            'priority': event.priority,
+            'notes': notes_content,
+        }
+        response = self.client.put(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertTrue(event.note_links.exists())
+        note_pk = event.note_links.first().note.pk
+
+        # WHEN - Clear the notes
+        data['notes'] = {}
+        response = self.client.put(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertFalse(event.note_links.exists())
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+
+    def test_delete_entity_deletes_linked_note(self):
+        """Deleting an entity should also delete its linked Note."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        note_pk = note.pk
+
+        # WHEN
+        response = self.client.delete(reverse('planner_events_detail', kwargs={'pk': event.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())

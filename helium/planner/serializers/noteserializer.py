@@ -60,3 +60,10 @@ class NoteExtendedSerializer(NoteSerializer):
         if link:
             return NoteLinkSerializer(link).data
         return None
+
+
+class NoteListSerializer(NoteExtendedSerializer):
+    """Serializer for list endpoints - excludes content to reduce payload size."""
+
+    class Meta(NoteExtendedSerializer.Meta):
+        fields = tuple(f for f in NoteExtendedSerializer.Meta.fields if f != 'content')
