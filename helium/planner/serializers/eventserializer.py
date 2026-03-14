@@ -72,7 +72,7 @@ class EventSerializer(serializers.ModelSerializer):
             else:
                 # Create new Note and link
                 note = Note.objects.create(
-                    title=f'Notes for: {instance.title}',
+                    title=instance.title,
                     content=notes_content,
                     user=instance.user,
                 )
