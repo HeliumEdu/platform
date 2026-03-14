@@ -17,7 +17,7 @@ class NoteLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NoteLink
-        fields = ('id', 'homework', 'event', 'material',
+        fields = ('id', 'homework', 'event', 'resource',
                   'linked_entity_type', 'linked_entity_title', 'linked_entity_color')
         read_only_fields = ('linked_entity_type', 'linked_entity_title', 'linked_entity_color')
 
@@ -34,7 +34,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
         # Dual-write: sync content to linked entity's notes field
         if 'content' in validated_data:
-            for link in instance.links.select_related('homework', 'event', 'material'):
+            for link in instance.links.select_related('homework', 'event', 'resource'):
                 entity = link.linked_entity
                 if entity and hasattr(entity, 'notes'):
                     entity.notes = instance.content
@@ -56,7 +56,7 @@ class NoteExtendedSerializer(NoteSerializer):
 
     def get_link(self, obj):
         # Return first link (v1: one link per note max)
-        link = obj.links.select_related('homework__course', 'event', 'material').first()
+        link = obj.links.select_related('homework__course', 'event', 'resource').first()
         if link:
             return NoteLinkSerializer(link).data
         return None

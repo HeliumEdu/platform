@@ -364,12 +364,12 @@ class TestCaseNoteDualWrite(APITestCase):
         note.refresh_from_db()
         self.assertEqual(note.content, new_content)
 
-    def test_update_note_syncs_to_linked_material(self):
+    def test_update_note_syncs_to_linked_resource(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-        note = notehelper.given_note_linked_to_material(user, material)
+        resource = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_resource(user, resource)
 
         # WHEN
         new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
@@ -380,8 +380,8 @@ class TestCaseNoteDualWrite(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        material.refresh_from_db()
-        self.assertEqual(material.notes, new_content)
+        resource.refresh_from_db()
+        self.assertEqual(resource.notes, new_content)
 
     def test_get_note_includes_link_info_with_homework(self):
         # GIVEN
@@ -402,12 +402,12 @@ class TestCaseNoteDualWrite(APITestCase):
         self.assertEqual(response.data['link']['linked_entity_title'], homework.title)
         self.assertEqual(response.data['link']['linked_entity_color'], course.color)
 
-    def test_get_note_includes_link_info_with_material(self):
+    def test_get_note_includes_link_info_with_resource(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-        note = notehelper.given_note_linked_to_material(user, material)
+        resource = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_resource(user, resource)
 
         # WHEN
         response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
@@ -415,9 +415,9 @@ class TestCaseNoteDualWrite(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('link', response.data)
-        self.assertEqual(response.data['link']['material'], material.pk)
-        self.assertEqual(response.data['link']['linked_entity_type'], 'material')
-        self.assertEqual(response.data['link']['linked_entity_title'], material.title)
+        self.assertEqual(response.data['link']['resource'], resource.pk)
+        self.assertEqual(response.data['link']['linked_entity_type'], 'resource')
+        self.assertEqual(response.data['link']['linked_entity_title'], resource.title)
 
     def test_ordering_by_title(self):
         # GIVEN

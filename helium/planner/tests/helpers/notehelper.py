@@ -33,13 +33,14 @@ def given_note_linked_to_event(user, event, title=None, content=None):
     return note
 
 
-def given_note_linked_to_material(user, material, title=None, content=None):
+def given_note_linked_to_resource(user, resource, title=None, content=None):
+    """Link a note to a resource (Material model)."""
     note = Note.objects.create(
-        title=title or material.title,
-        content=content or {'ops': [{'insert': 'Material notes\n'}]},
+        title=title or resource.title,
+        content=content or {'ops': [{'insert': 'Resource notes\n'}]},
         user=user
     )
-    NoteLink.objects.create(note=note, material=material)
+    NoteLink.objects.create(note=note, resource=resource)
     return note
 
 

@@ -111,20 +111,20 @@ class TestCaseNoteLink(TestCase):
         self.assertEqual(link.linked_entity_title, event.title)
         self.assertIsNone(link.linked_entity_color)
 
-    def test_notelink_to_material(self):
+    def test_notelink_to_resource(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
+        resource = materialhelper.given_material_exists(material_group)
         note = notehelper.given_note_exists(user)
 
         # WHEN
-        link = NoteLink.objects.create(note=note, material=material)
+        link = NoteLink.objects.create(note=note, resource=resource)
 
         # THEN
-        self.assertEqual(link.linked_entity, material)
-        self.assertEqual(link.linked_entity_type, 'material')
-        self.assertEqual(link.linked_entity_title, material.title)
+        self.assertEqual(link.linked_entity, resource)
+        self.assertEqual(link.linked_entity_type, 'resource')
+        self.assertEqual(link.linked_entity_title, resource.title)
         self.assertIsNone(link.linked_entity_color)
 
     def test_notelink_str_event(self):
@@ -151,17 +151,17 @@ class TestCaseNoteLink(TestCase):
         self.assertIn(str(note.id), str(link))
         self.assertIn('Homework', str(link))
 
-    def test_notelink_str_material(self):
+    def test_notelink_str_resource(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
+        resource = materialhelper.given_material_exists(material_group)
         note = notehelper.given_note_exists(user)
-        link = NoteLink.objects.create(note=note, material=material)
+        link = NoteLink.objects.create(note=note, resource=resource)
 
         # THEN
         self.assertIn(str(note.id), str(link))
-        self.assertIn('Material', str(link))
+        self.assertIn('Resource', str(link))
 
     def test_notelink_get_user(self):
         # GIVEN
@@ -254,18 +254,18 @@ class TestCaseNoteLink(TestCase):
         # THEN - Note should also be deleted when homework is deleted
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
 
-    def test_delete_material_cascades_to_note(self):
+    def test_delete_resource_cascades_to_note(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-        note = notehelper.given_note_linked_to_material(user, material)
+        resource = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_resource(user, resource)
         note_pk = note.pk
 
         # WHEN
-        material.delete()
+        resource.delete()
 
-        # THEN - Note should also be deleted when material is deleted
+        # THEN - Note should also be deleted when resource is deleted
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
 
     def test_delete_note_clears_entity_notes_field(self):

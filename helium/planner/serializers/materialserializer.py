@@ -71,7 +71,7 @@ class MaterialSerializer(serializers.ModelSerializer):
                     content=notes_content,
                     user=instance.material_group.user,
                 )
-                NoteLink.objects.create(note=note, material=instance)
+                NoteLink.objects.create(note=note, resource=instance)
         elif link:
             # Notes cleared - delete the linked Note
             link.note.delete()

@@ -32,7 +32,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
             return self.request.user.notes.prefetch_related(
                 'links__homework__course',
                 'links__event',
-                'links__material'
+                'links__resource'
             ).all()
         return Note.objects.none()
 
@@ -77,7 +77,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
             return self.request.user.notes.prefetch_related(
                 'links__homework__course',
                 'links__event',
-                'links__material'
+                'links__resource'
             ).all()
         return Note.objects.none()
 

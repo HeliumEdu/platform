@@ -179,8 +179,8 @@ class NoteFilter(django_filters.FilterSet):
             return queryset.filter(links__homework__isnull=False)
         if value == 'event':
             return queryset.filter(links__event__isnull=False)
-        if value == 'material':
-            return queryset.filter(links__material__isnull=False)
+        if value == 'resource':
+            return queryset.filter(links__resource__isnull=False)
         if value == 'standalone':
             return queryset.filter(links__isnull=True)
         return queryset
