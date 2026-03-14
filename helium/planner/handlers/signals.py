@@ -97,7 +97,7 @@ def delete_note(sender, instance, **kwargs):
     the linked entity's inline notes field is also cleared.
     """
     _notes_being_deleted.add(instance.pk)
-    for link in instance.links.select_related('homework', 'event', 'material').all():
+    for link in instance.links.select_related('homework', 'event', 'resource').all():
         entity = link.linked_entity
         if entity and hasattr(entity, 'notes'):
             entity.notes = None

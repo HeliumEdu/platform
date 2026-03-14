@@ -519,7 +519,7 @@ class ReminderAdmin(BaseModelAdmin):
 class NoteLinkInline(admin.TabularInline):
     model = NoteLink
     extra = 0
-    raw_id_fields = ('homework', 'event', 'material')
+    raw_id_fields = ('homework', 'event', 'resource')
 
     def get_readonly_fields(self, request, obj=None):
         return 'linked_entity_type', 'linked_entity_title'
@@ -551,7 +551,7 @@ class NoteLinkAdmin(BaseModelAdmin):
     list_display = ('note', 'linked_entity_type', 'linked_entity_title', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('note__title',)
-    autocomplete_fields = ('note', 'homework', 'event', 'material')
+    autocomplete_fields = ('note', 'homework', 'event', 'resource')
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)

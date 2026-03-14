@@ -8,7 +8,7 @@ from helium.common.models import BaseModel
 
 
 class NoteLink(BaseModel):
-    """Links a Note to exactly one entity (Homework, Event, or Material).
+    """Links a Note to exactly one entity (Homework, Event, or Resource).
 
     Uses ForeignKey (not OneToOne) to match existing patterns and allow
     future flexibility for tagging/multi-entity associations.
@@ -39,13 +39,13 @@ class NoteLink(BaseModel):
         help_text='Linked event.'
     )
 
-    material = models.ForeignKey(
+    resource = models.ForeignKey(
         'Material',
         related_name='note_links',
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        help_text='Linked material.'
+        help_text='Linked resource (Material model).'
     )
 
     class Meta:
@@ -53,9 +53,9 @@ class NoteLink(BaseModel):
             # Exactly one entity must be linked per NoteLink row
             models.CheckConstraint(
                 check=(
-                    Q(homework__isnull=False, event__isnull=True, material__isnull=True) |
-                    Q(homework__isnull=True, event__isnull=False, material__isnull=True) |
-                    Q(homework__isnull=True, event__isnull=True, material__isnull=False)
+                    Q(homework__isnull=False, event__isnull=True, resource__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=False, resource__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=True, resource__isnull=False)
                 ),
                 name='notelink_exactly_one_entity'
             )
@@ -66,8 +66,8 @@ class NoteLink(BaseModel):
             return f'Link: Note {self.note_id} -> Homework {self.homework_id}'
         if self.event:
             return f'Link: Note {self.note_id} -> Event {self.event_id}'
-        if self.material:
-            return f'Link: Note {self.note_id} -> Material {self.material_id}'
+        if self.resource:
+            return f'Link: Note {self.note_id} -> Resource {self.resource_id}'
         return f'Link: Note {self.note_id} (unlinked)'
 
     def get_user(self):
@@ -76,7 +76,7 @@ class NoteLink(BaseModel):
     @property
     def linked_entity(self):
         """Returns the linked entity or None."""
-        return self.homework or self.event or self.material
+        return self.homework or self.event or self.resource
 
     @property
     def linked_entity_type(self):
@@ -85,8 +85,8 @@ class NoteLink(BaseModel):
             return 'homework'
         if self.event:
             return 'event'
-        if self.material:
-            return 'material'
+        if self.resource:
+            return 'resource'
         return ''
 
     @property
@@ -101,7 +101,7 @@ class NoteLink(BaseModel):
 
         - Homework: color from homework.course.color
         - Event: no color (returns None)
-        - Material: no color (returns None)
+        - Resource: no color (returns None)
         """
         if self.homework and self.homework.course:
             return self.homework.course.color
