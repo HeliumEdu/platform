@@ -127,7 +127,7 @@ class TestCaseNoteLink(TestCase):
         self.assertEqual(link.linked_entity_title, material.title)
         self.assertIsNone(link.linked_entity_color)
 
-    def test_notelink_str(self):
+    def test_notelink_str_event(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         event = eventhelper.given_event_exists(user)
@@ -137,6 +137,31 @@ class TestCaseNoteLink(TestCase):
         # THEN
         self.assertIn(str(note.id), str(link))
         self.assertIn('Event', str(link))
+
+    def test_notelink_str_homework(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_exists(user)
+        link = NoteLink.objects.create(note=note, homework=homework)
+
+        # THEN
+        self.assertIn(str(note.id), str(link))
+        self.assertIn('Homework', str(link))
+
+    def test_notelink_str_material(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_exists(user)
+        link = NoteLink.objects.create(note=note, material=material)
+
+        # THEN
+        self.assertIn(str(note.id), str(link))
+        self.assertIn('Material', str(link))
 
     def test_notelink_get_user(self):
         # GIVEN

@@ -371,3 +371,115 @@ class TestCaseMaterialViews(APITestCase):
         self.assertIn(material2.pk, returned_ids)
         self.assertIn(material3.pk, returned_ids)
         self.assertNotIn(material1.pk, returned_ids)
+
+
+class TestCaseMaterialNotesDualWrite(APITestCase):
+    """Test dual-write functionality: Material.notes <-> Note table sync."""
+
+    def test_create_material_with_notes_creates_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+
+        # WHEN
+        notes_content = {'ops': [{'insert': 'My material notes\n'}]}
+        data = {
+            'title': 'Material With Notes',
+            'status': enums.ORDERED,
+            'condition': enums.USED_GOOD,
+            'website': '',
+            'price': '0.00',
+            'courses': [],
+            'notes': notes_content,
+            'material_group': material_group.pk,
+        }
+        response = self.client.post(
+            reverse('planner_materialgroups_materials_list',
+                    kwargs={'material_group': material_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        material = Material.objects.get(pk=response.data['id'])
+        self.assertEqual(material.notes, notes_content)
+
+        # Verify Note and NoteLink were created
+        self.assertTrue(material.note_links.exists())
+        note = material.note_links.first().note
+        self.assertEqual(note.content, notes_content)
+        self.assertEqual(note.user, user)
+
+    def test_update_material_notes_syncs_to_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+
+        # Create initial note link
+        initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
+        note = Note.objects.create(title='Test', content=initial_content, user=user)
+        NoteLink.objects.create(note=note, material=material)
+
+        # WHEN - update notes via material API
+        new_content = {'ops': [{'insert': 'Updated notes\n'}]}
+        data = {
+            'title': material.title,
+            'status': material.status,
+            'condition': material.condition,
+            'website': material.website,
+            'price': str(material.price),
+            'courses': [],
+            'notes': new_content,
+            'material_group': material_group.pk,
+        }
+        response = self.client.put(
+            reverse('planner_materialgroups_materials_detail',
+                    kwargs={'material_group': material_group.pk, 'pk': material.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.content, new_content)
+
+    def test_clear_material_notes_deletes_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+
+        # Create note link
+        note = Note.objects.create(
+            title='Test',
+            content={'ops': [{'insert': 'Some notes\n'}]},
+            user=user
+        )
+        NoteLink.objects.create(note=note, material=material)
+        note_pk = note.pk
+
+        # WHEN - clear notes via material API
+        data = {
+            'title': material.title,
+            'status': material.status,
+            'condition': material.condition,
+            'website': material.website,
+            'price': str(material.price),
+            'courses': [],
+            'notes': {},  # Empty notes
+            'material_group': material_group.pk,
+        }
+        response = self.client.put(
+            reverse('planner_materialgroups_materials_detail',
+                    kwargs={'material_group': material_group.pk, 'pk': material.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+        self.assertFalse(material.note_links.exists())
