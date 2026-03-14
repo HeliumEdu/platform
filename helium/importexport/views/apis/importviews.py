@@ -42,6 +42,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         events_count = 0
         homework_count = 0
         reminders_count = 0
+        notes_count = 0
 
         for upload in request.data.getlist('file[]'):
             try:
@@ -55,8 +56,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
                 (external_calendar_count_file, course_groups_count_file, courses_count_file,
                  course_schedules_count_file, categories_count_file, material_groups_count_file, materials_count_file,
-                 events_count_file, homework_count_file, reminders_count_file) = importservice.import_user(request,
-                                                                                                           data)
+                 events_count_file, homework_count_file, reminders_count_file,
+                 notes_count_file) = importservice.import_user(request, data)
 
                 reminderservice.process_push_reminders(True)
 
@@ -70,6 +71,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 events_count += events_count_file
                 homework_count += homework_count_file
                 reminders_count += reminders_count_file
+                notes_count += notes_count_file
             except ValueError:
                 raise ValidationError({
                     'details': f'Invalid JSON in file: {upload}.'
@@ -85,7 +87,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             'materials': materials_count,
             'events': events_count,
             'homework': homework_count,
-            'reminders': reminders_count
+            'reminders': reminders_count,
+            'notes': notes_count,
         })
 
         return Response(serializer.data)

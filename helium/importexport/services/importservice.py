@@ -16,7 +16,7 @@ from rest_framework.request import Request
 
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.planner.models import CourseGroup, Course, Homework, Event, Category
+from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note, NoteLink
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -29,9 +29,34 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
 from helium.planner.services import reminderservice
 from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
+from helium.planner.utils.quillutils import html_to_quill
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
 logger = logging.getLogger(__name__)
+
+
+def _convert_legacy_notes(data, legacy_field='comments'):
+    """
+    Convert legacy HTML notes field to Quill JSON format.
+
+    If the data has a legacy field (comments/details) but no notes field,
+    convert the legacy HTML to Quill JSON and set it as notes.
+    The legacy field is removed from the data to prevent it from being saved.
+
+    :param data: The entity data dict (modified in place)
+    :param legacy_field: The name of the legacy field ('comments' or 'details')
+    """
+    legacy_content = data.get(legacy_field)
+    notes_content = data.get('notes')
+
+    if legacy_content and not notes_content:
+        quill_content = html_to_quill(legacy_content)
+        if quill_content:
+            data['notes'] = quill_content
+
+    # Remove legacy field so it's not saved (field still exists on model but
+    # we don't want to populate it on import)
+    data.pop(legacy_field, None)
 
 
 def _import_external_calendars(external_calendars, user, example_schedule):
@@ -174,6 +199,9 @@ def _import_materials(materials, material_group_remap, course_remap):
         for i, course in enumerate(material['courses']):
             material['courses'][i] = course_remap.get(course, None)
 
+        # Convert legacy 'details' field to 'notes' if present
+        _convert_legacy_notes(material, legacy_field='details')
+
         serializer = MaterialSerializer(data=material)
 
         if serializer.is_valid():
@@ -195,6 +223,9 @@ def _import_events(events, user, example_schedule):
     event_remap = {}
 
     for event in events:
+        # Convert legacy 'comments' field to 'notes' if present
+        _convert_legacy_notes(event, legacy_field='comments')
+
         serializer = EventSerializer(data=event)
 
         if serializer.is_valid():
@@ -221,6 +252,9 @@ def _import_homework(homework, course_remap, category_remap, material_remap):
             ('category' in h and h['category']) else None
         for i, material in enumerate(h['materials']):
             h['materials'][i] = material_remap.get(material, None)
+
+        # Convert legacy 'comments' field to 'notes' if present
+        _convert_legacy_notes(h, legacy_field='comments')
 
         serializer = HomeworkSerializer(data=h)
 
@@ -260,6 +294,44 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
     logger.info(f"Imported {len(reminders)} reminders.")
 
     return len(reminders)
+
+
+def _import_notes(notes, user, homework_remap, event_remap, material_remap):
+    """Import standalone notes that aren't created via dual-write.
+
+    Notes linked to homework/events/materials are created automatically via
+    dual-write when those entities are imported with notes content.
+    This function handles:
+    1. Standalone notes (no links)
+    2. Notes with links to entities that had no inline notes (edge case)
+    """
+    notes_count = 0
+
+    for note_data in notes:
+        # Check if this note would be linked to an entity
+        links = note_data.get('links', [])
+
+        # Skip notes that are linked to entities - these are created via dual-write
+        # when the entity's inline notes field is imported
+        has_entity_link = any(
+            link.get('homework') or link.get('event') or link.get('material')
+            for link in links
+        )
+        if has_entity_link:
+            # The dual-write in homework/event/material serializers handles these
+            continue
+
+        # Import standalone note (no entity links)
+        note = Note.objects.create(
+            title=note_data.get('title', 'Imported Note'),
+            content=note_data.get('content', {}),
+            user=user,
+        )
+        notes_count += 1
+
+    logger.info(f"Imported {notes_count} standalone notes.")
+
+    return notes_count
 
 
 @transaction.atomic
@@ -303,11 +375,14 @@ def import_user(request, data, example_schedule=False):
     reminders = data.get('reminders', [])
     reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap) if reminders else 0
 
+    notes = data.get('notes', [])
+    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap) if notes else 0
+
     metricutils.increment("user.import.schedule")
 
     return (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
             len(category_remap), len(material_group_remap), len(material_remap), len(event_remap), len(homework_remap),
-            reminders_count)
+            reminders_count, notes_count)
 
 
 def _shift_datetime_to_target_date(original_dt, target_date, user_tz):

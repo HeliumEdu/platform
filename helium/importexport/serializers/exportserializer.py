@@ -14,9 +14,39 @@ from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 from helium.planner.serializers.materialserializer import MaterialSerializer
+from helium.planner.serializers.noteserializer import NoteSerializer, NoteLinkSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class NoteExportSerializer(NoteSerializer):
+    """Note serializer for export that includes link IDs for re-linking on import."""
+    links = NoteLinkSerializer(many=True, read_only=True)
+
+    class Meta(NoteSerializer.Meta):
+        fields = NoteSerializer.Meta.fields + ('links',)
+
+
+class HomeworkExportSerializer(HomeworkSerializer):
+    """Homework serializer for export that excludes legacy `comments` field."""
+
+    class Meta(HomeworkSerializer.Meta):
+        fields = tuple(f for f in HomeworkSerializer.Meta.fields if f != 'comments')
+
+
+class EventExportSerializer(EventSerializer):
+    """Event serializer for export that excludes legacy `comments` field."""
+
+    class Meta(EventSerializer.Meta):
+        fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
+
+
+class MaterialExportSerializer(MaterialSerializer):
+    """Material serializer for export that excludes legacy `details` field."""
+
+    class Meta(MaterialSerializer.Meta):
+        fields = tuple(f for f in MaterialSerializer.Meta.fields if f != 'details')
 
 
 class ExportSerializer(serializers.Serializer):
@@ -32,10 +62,12 @@ class ExportSerializer(serializers.Serializer):
 
     material_groups = MaterialGroupSerializer(many=True)
 
-    materials = MaterialSerializer(many=True)
+    materials = MaterialExportSerializer(many=True)
 
-    events = EventSerializer(many=True)
+    events = EventExportSerializer(many=True)
 
-    homework = HomeworkSerializer(many=True)
+    homework = HomeworkExportSerializer(many=True)
 
     reminders = ReminderSerializer(many=True)
+
+    notes = NoteExportSerializer(many=True)

@@ -888,3 +888,127 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn('3_middle', titles)
         self.assertIn('4_at_to', titles)
         self.assertNotIn('5_after_to', titles)
+
+
+class TestCaseHomeworkNotesDualWrite(APITestCase):
+    """Test dual-write functionality: Homework.notes <-> Note table sync."""
+
+    def test_create_homework_with_notes_creates_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        notes_content = {'ops': [{'insert': 'My homework notes\n'}]}
+        data = {
+            'title': 'Homework With Notes',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2024-05-08T12:00:00Z',
+            'end': '2024-05-08T14:00:00Z',
+            'priority': 50,
+            'completed': False,
+            'current_grade': '-1/100',
+            'materials': [],
+            'notes': notes_content,
+            'course': course.pk,
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_homework_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        homework = Homework.objects.get(pk=response.data['id'])
+        self.assertEqual(homework.notes, notes_content)
+
+        # Verify Note and NoteLink were created
+        self.assertTrue(homework.note_links.exists())
+        note = homework.note_links.first().note
+        self.assertEqual(note.content, notes_content)
+        self.assertEqual(note.user, user)
+
+    def test_update_homework_notes_syncs_to_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # Create initial note link
+        initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
+        note = Note.objects.create(title='Test', content=initial_content, user=user)
+        NoteLink.objects.create(note=note, homework=homework)
+
+        # WHEN - update notes via homework API
+        new_content = {'ops': [{'insert': 'Updated notes\n'}]}
+        data = {
+            'title': homework.title,
+            'all_day': homework.all_day,
+            'show_end_time': homework.show_end_time,
+            'start': homework.start.isoformat(),
+            'end': homework.end.isoformat(),
+            'priority': homework.priority,
+            'completed': homework.completed,
+            'current_grade': homework.current_grade,
+            'materials': [],
+            'notes': new_content,
+            'course': course.pk,
+        }
+        response = self.client.put(
+            reverse('planner_coursegroups_courses_homework_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.content, new_content)
+
+    def test_clear_homework_notes_deletes_note_entity(self):
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # Create note link
+        note = Note.objects.create(
+            title='Test',
+            content={'ops': [{'insert': 'Some notes\n'}]},
+            user=user
+        )
+        NoteLink.objects.create(note=note, homework=homework)
+        note_pk = note.pk
+
+        # WHEN - clear notes via homework API
+        data = {
+            'title': homework.title,
+            'all_day': homework.all_day,
+            'show_end_time': homework.show_end_time,
+            'start': homework.start.isoformat(),
+            'end': homework.end.isoformat(),
+            'priority': homework.priority,
+            'completed': homework.completed,
+            'current_grade': homework.current_grade,
+            'materials': [],
+            'notes': {},  # Empty notes
+            'course': course.pk,
+        }
+        response = self.client.put(
+            reverse('planner_coursegroups_courses_homework_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+        self.assertFalse(homework.note_links.exists())

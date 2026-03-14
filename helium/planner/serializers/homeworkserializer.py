@@ -46,6 +46,15 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+
+        # Dual-write: sync inline notes to linked Note entity
+        if 'notes' in validated_data:
+            self._sync_notes_to_note_entity(instance, validated_data['notes'])
+
+        return instance
+
     def update(self, instance, validated_data):
         old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
                                                                                   validated_data['category'] else None
@@ -55,7 +64,34 @@ class HomeworkSerializer(serializers.ModelSerializer):
         if old_category:
             recalculate_category_grade(old_category.pk)
 
+        # Dual-write: sync inline notes to linked Note entity
+        if 'notes' in validated_data:
+            self._sync_notes_to_note_entity(instance, validated_data['notes'])
+
         return instance
+
+    def _sync_notes_to_note_entity(self, instance, notes_content):
+        """Sync inline notes field to the linked Note entity (dual-write)."""
+        from helium.planner.models import Note, NoteLink
+
+        link = instance.note_links.select_related('note').first()
+
+        if notes_content and notes_content != {}:
+            if link:
+                # Update existing Note
+                link.note.content = notes_content
+                link.note.save(update_fields=['content', 'updated_at'])
+            else:
+                # Create new Note and link
+                note = Note.objects.create(
+                    title=f'Notes for: {instance.title}',
+                    content=notes_content,
+                    user=instance.course.course_group.user,
+                )
+                NoteLink.objects.create(note=note, homework=instance)
+        elif link:
+            # Notes cleared - delete the linked Note
+            link.note.delete()
 
 
 class HomeworkExtendedSerializer(HomeworkSerializer):

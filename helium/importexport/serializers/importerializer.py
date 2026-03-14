@@ -28,3 +28,5 @@ class ImportSerializer(serializers.Serializer):
     homework = serializers.IntegerField()
 
     reminders = serializers.IntegerField()
+
+    notes = serializers.IntegerField()

@@ -10,7 +10,10 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Note, NoteLink
-from helium.planner.tests.helpers import notehelper, eventhelper, homeworkhelper, coursegrouphelper, coursehelper
+from helium.planner.tests.helpers import (
+    notehelper, eventhelper, homeworkhelper, coursegrouphelper, coursehelper,
+    materialgrouphelper, materialhelper
+)
 
 
 class TestCaseNoteViews(APITestCase):
@@ -360,3 +363,89 @@ class TestCaseNoteDualWrite(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         note.refresh_from_db()
         self.assertEqual(note.content, new_content)
+
+    def test_update_note_syncs_to_linked_material(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_material(user, material)
+
+        # WHEN
+        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
+        data = {'title': note.title, 'content': new_content}
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        material.refresh_from_db()
+        self.assertEqual(material.notes, new_content)
+
+    def test_get_note_includes_link_info_with_homework(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('link', response.data)
+        self.assertEqual(response.data['link']['homework'], homework.pk)
+        self.assertEqual(response.data['link']['linked_entity_type'], 'homework')
+        self.assertEqual(response.data['link']['linked_entity_title'], homework.title)
+        self.assertEqual(response.data['link']['linked_entity_color'], course.color)
+
+    def test_get_note_includes_link_info_with_material(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_linked_to_material(user, material)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('link', response.data)
+        self.assertEqual(response.data['link']['material'], material.pk)
+        self.assertEqual(response.data['link']['linked_entity_type'], 'material')
+        self.assertEqual(response.data['link']['linked_entity_title'], material.title)
+
+    def test_ordering_by_title(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        notehelper.given_note_exists(user, title='Zebra')
+        notehelper.given_note_exists(user, title='Apple')
+        notehelper.given_note_exists(user, title='Mango')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?ordering=title')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data[0]['title'], 'Apple')
+        self.assertEqual(response.data[1]['title'], 'Mango')
+        self.assertEqual(response.data[2]['title'], 'Zebra')
+
+    def test_ordering_by_title_descending(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        notehelper.given_note_exists(user, title='Zebra')
+        notehelper.given_note_exists(user, title='Apple')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?ordering=-title')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['title'], 'Zebra')
+        self.assertEqual(response.data[1]['title'], 'Apple')
