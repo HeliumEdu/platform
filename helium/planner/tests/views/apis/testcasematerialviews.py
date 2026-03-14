@@ -421,7 +421,7 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
         # Create initial note link
         initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
         note = Note.objects.create(title='Test', content=initial_content, user=user)
-        NoteLink.objects.create(note=note, material=material)
+        NoteLink.objects.create(note=note, resource=material)
 
         # WHEN - update notes via material API
         new_content = {'ops': [{'insert': 'Updated notes\n'}]}
@@ -459,7 +459,7 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
             content={'ops': [{'insert': 'Some notes\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note, material=material)
+        NoteLink.objects.create(note=note, resource=material)
         note_pk = note.pk
 
         # WHEN - clear notes via material API
