@@ -13,7 +13,7 @@ from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import NoteFilter
 from helium.planner.models import Note
-from helium.planner.serializers.noteserializer import NoteSerializer, NoteExtendedSerializer
+from helium.planner.serializers.noteserializer import NoteSerializer, NoteExtendedSerializer, NoteListSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +38,13 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
-            return NoteExtendedSerializer
+            return NoteListSerializer
         return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """
         Return a list of all Note instances for the authenticated user.
+        Excludes content field to reduce payload size.
         """
         return self.list(request, *args, **kwargs)
 
