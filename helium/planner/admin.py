@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.conf import settings
-from django.contrib import admin
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
 
@@ -514,15 +513,6 @@ class ReminderAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
-
-
-class NoteLinkInline(admin.TabularInline):
-    model = NoteLink
-    extra = 0
-    raw_id_fields = ('homework', 'event', 'resource')
-
-    def get_readonly_fields(self, request, obj=None):
-        return 'linked_entity_type', 'linked_entity_title'
 
 
 class NoteAdmin(BaseModelAdmin):

@@ -152,7 +152,7 @@ def purge_refresh_tokens(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("token.refresh.purge", priority="low", published_at_ms=published_at_ms)
 
-    deleted, num_deleted = OutstandingToken.objects.filter(
+    _, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
