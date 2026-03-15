@@ -15,12 +15,15 @@ class NoteLinkSerializer(serializers.ModelSerializer):
     linked_entity_type = serializers.ReadOnlyField()
     linked_entity_title = serializers.ReadOnlyField()
     linked_entity_color = serializers.ReadOnlyField()
+    linked_entity_color_alt = serializers.ReadOnlyField()
 
     class Meta:
         model = NoteLink
         fields = ('id', 'note', 'homework', 'event', 'resource',
-                  'linked_entity_type', 'linked_entity_title', 'linked_entity_color')
-        read_only_fields = ('linked_entity_type', 'linked_entity_title', 'linked_entity_color')
+                  'linked_entity_type', 'linked_entity_title', 'linked_entity_color',
+                  'linked_entity_color_alt')
+        read_only_fields = ('linked_entity_type', 'linked_entity_title', 'linked_entity_color',
+                            'linked_entity_color_alt')
 
     def validate(self, attrs):
         if not self.instance:
