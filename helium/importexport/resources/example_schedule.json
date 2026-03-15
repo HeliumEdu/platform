@@ -1976,6 +1976,12 @@
             "insert": "Track grades with weighted categories, trend indicators, and a calculator to see what you need on upcoming assignments"
           },
           {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
             "insert": "Sync external calendars (Google, Apple, etc.) into one view"
           },
           {
@@ -1985,7 +1991,7 @@
             }
           },
           {
-            "insert": "Set reminders so you never miss a deadline"
+            "insert": "Set reminders so you never miss a deadline again"
           },
           {
             "insert": "\n",
@@ -1994,7 +2000,7 @@
             }
           },
           {
-            "insert": "Know when a class's grade is at-risk and needs your attention"
+            "insert": "Know when a class's grade is at-risk and might need attention"
           },
           {
             "insert": "\n",
@@ -2012,7 +2018,7 @@
             }
           },
           {
-            "insert": "Organize resources (textbooks, links, supplies) by class"
+            "insert": "Organize resources (textbooks, links, supplies) by class so you know what to bring to your next study session"
           },
           {
             "insert": "\n",
@@ -2036,52 +2042,7 @@
             "insert": "\n"
           },
           {
-            "insert": "Every assignment and event has a built-in note for lecture highlights, study guides, or quick thoughts.\n"
-          },
-          {
-            "insert": "Use checklists to track your progress:"
-          },
-          {
-            "insert": "\n"
-          },
-          {
-            "insert": "Review chapter 5",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "Complete practice problems",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "Prepare questions for office hours",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n"
+            "insert": "Every assignment and event has a built-in note for lecture highlights, study guides, or quick thoughts.\n\n"
           },
           {
             "insert": "Add "
@@ -2147,6 +2108,48 @@
             "insert": "\n",
             "attributes": {
               "blockquote": true
+            }
+          },
+          {
+            "insert": "\nUse checklists to track your progress:\n"
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Review chapter 5",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Complete practice problems",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Prepare questions for office hours",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
             }
           },
           {
