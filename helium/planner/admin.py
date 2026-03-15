@@ -59,6 +59,9 @@ class AttachmentAdmin(BaseModelAdmin):
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
 
+    def has_add_permission(self, request):
+        return False
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
@@ -519,6 +522,9 @@ class ReminderAdmin(BaseModelAdmin):
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
 
+    def has_add_permission(self, request):
+        return False
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
@@ -536,7 +542,7 @@ class ReminderAdmin(BaseModelAdmin):
     def linked_entity(self, obj):
         if obj.course:
             url = reverse('admin:planner_course_change', args=[obj.course.pk])
-            return format_html('<a href="{}">{} (Course)</a>', url, obj.event.title)
+            return format_html('<a href="{}">{} (Course)</a>', url, obj.course.title)
         elif obj.event:
             url = reverse('admin:planner_event_change', args=[obj.event.pk])
             return format_html('<a href="{}">{} (Event)</a>', url, obj.event.title)
