@@ -533,3 +533,59 @@ class TestCaseEventNotesDualWrite(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
         self.assertFalse(event.note_links.exists())
+
+    def test_delete_all_events_cascades_to_notes(self):
+        """Test that bulk deleting all events also deletes associated notes."""
+        # GIVEN
+        from helium.planner.models import Note, NoteLink
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # Create two events with associated notes
+        event1 = eventhelper.given_event_exists(user, title='Event 1')
+        event2 = eventhelper.given_event_exists(user, title='Event 2')
+
+        note1 = Note.objects.create(
+            title='Note for Event 1',
+            content={'ops': [{'insert': 'Notes for event 1\n'}]},
+            user=user
+        )
+        NoteLink.objects.create(note=note1, event=event1)
+
+        note2 = Note.objects.create(
+            title='Note for Event 2',
+            content={'ops': [{'insert': 'Notes for event 2\n'}]},
+            user=user
+        )
+        NoteLink.objects.create(note=note2, event=event2)
+
+        # Create an unassociated note (not linked to any event)
+        unassociated_note = Note.objects.create(
+            title='Standalone Note',
+            content={'ops': [{'insert': 'This note has no event\n'}]},
+            user=user
+        )
+
+        # Verify initial state
+        self.assertEqual(Event.objects.filter(user=user).count(), 2)
+        self.assertEqual(Note.objects.filter(user=user).count(), 3)
+        self.assertEqual(NoteLink.objects.filter(event__user=user).count(), 2)
+
+        # WHEN - delete all events
+        response = self.client.delete(reverse('planner_events_resource_delete'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # All events should be deleted
+        self.assertEqual(Event.objects.filter(user=user).count(), 0)
+
+        # Associated notes should be deleted
+        self.assertFalse(Note.objects.filter(pk=note1.pk).exists())
+        self.assertFalse(Note.objects.filter(pk=note2.pk).exists())
+
+        # NoteLinks should be deleted
+        self.assertEqual(NoteLink.objects.filter(event__user=user).count(), 0)
+
+        # Unassociated note should NOT be deleted
+        self.assertTrue(Note.objects.filter(pk=unassociated_note.pk).exists())
+        self.assertEqual(Note.objects.filter(user=user).count(), 1)
