@@ -20,7 +20,7 @@ from helium.auth.utils.userutils import generate_verification_code, generate_uni
 from helium.common.utils import metricutils
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
-from helium.planner.models import CourseGroup, MaterialGroup, Event
+from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
 
 logger = logging.getLogger(__name__)
 
@@ -354,6 +354,12 @@ def delete_example_schedule(user_id):
     (Event.objects
      .for_user(user_id)
      .filter(example_schedule=True)
+     .delete())
+    # Only delete standalone notes (no links) - linked notes are already
+    # cascade-deleted when their parent entities are deleted above
+    (Note.objects
+     .for_user(user_id)
+     .filter(example_schedule=True, links__isnull=True)
      .delete())
 
     metricutils.task_stop(metrics, user=user)
