@@ -733,3 +733,53 @@ class TestCaseNoteEdgeCases(APITestCase):
         self.assertTrue(Note.objects.filter(pk=note_pk).exists())
         note.refresh_from_db()
         self.assertEqual(note.content, {})
+
+
+class TestCaseNoteLinkValidation(APITestCase):
+    """Test NoteLink validation to enforce one-to-one relationship."""
+
+    def test_notelink_serializer_rejects_second_link_for_note(self):
+        """Creating a second NoteLink for a Note that already has one should fail."""
+        from rest_framework.exceptions import ValidationError
+        from helium.planner.serializers.noteserializer import NoteLinkSerializer
+
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event1 = eventhelper.given_event_exists(user)
+        event2 = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event1)
+
+        # Verify the note already has a link
+        self.assertEqual(note.links.count(), 1)
+
+        # WHEN - Try to create a second link via the serializer
+        serializer = NoteLinkSerializer(data={
+            'note': note.pk,
+            'event': event2.pk,
+        })
+
+        # THEN - Validation should fail
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('already has a link', str(serializer.errors))
+
+    def test_notelink_serializer_allows_first_link(self):
+        """Creating the first NoteLink for a Note should succeed."""
+        from helium.planner.serializers.noteserializer import NoteLinkSerializer
+
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_exists(user)
+
+        # Verify the note has no links
+        self.assertEqual(note.links.count(), 0)
+
+        # WHEN - Create first link via serializer
+        serializer = NoteLinkSerializer(data={
+            'note': note.pk,
+            'event': event.pk,
+        })
+
+        # THEN - Validation should pass
+        self.assertTrue(serializer.is_valid(), serializer.errors)
