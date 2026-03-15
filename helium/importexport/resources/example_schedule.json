@@ -1932,5 +1932,190 @@
             "event": null,
             "user": 118
         }
+    ],
+    "notes": [
+        {
+            "id": 1,
+            "title": "Ace Your Classes - Welcome to Helium!",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "Ace Your Classes - Welcome to Helium!"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "header": 2
+                        }
+                    },
+                    {
+                        "insert": "\nThis is your personal student planner. Use it to organize courses, track assignments, and stay on top of deadlines.\n\n"
+                    },
+                    {
+                        "insert": "Getting Started"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "header": 2
+                        }
+                    },
+                    {
+                        "insert": "Add your courses from the Classes tab"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Create homework and events to track your schedule"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Set up reminders so you never miss a deadline"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Use the Calendar to see everything at a glance"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Rich Text Notes"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "header": 2
+                        }
+                    },
+                    {
+                        "insert": "Notes support "
+                    },
+                    {
+                        "insert": "bold",
+                        "attributes": {
+                            "bold": true
+                        }
+                    },
+                    {
+                        "insert": ", "
+                    },
+                    {
+                        "insert": "italic",
+                        "attributes": {
+                            "italic": true
+                        }
+                    },
+                    {
+                        "insert": ", "
+                    },
+                    {
+                        "insert": "underline",
+                        "attributes": {
+                            "underline": true
+                        }
+                    },
+                    {
+                        "insert": ", "
+                    },
+                    {
+                        "insert": "strikethrough",
+                        "attributes": {
+                            "strike": true
+                        }
+                    },
+                    {
+                        "insert": ", and "
+                    },
+                    {
+                        "insert": "colored text",
+                        "attributes": {
+                            "color": "#2196f3"
+                        }
+                    },
+                    {
+                        "insert": ". You can also add "
+                    },
+                    {
+                        "insert": "links",
+                        "attributes": {
+                            "link": "https://heliumedu.com"
+                        }
+                    },
+                    {
+                        "insert": " to external resources.\n\n"
+                    },
+                    {
+                        "insert": "Use numbered lists for steps:"
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Open the assignment"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "ordered"
+                        }
+                    },
+                    {
+                        "insert": "Complete the work"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "ordered"
+                        }
+                    },
+                    {
+                        "insert": "Submit before the deadline"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "ordered"
+                        }
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Pro tip: Attach notes to your homework and events to keep everything organized in one place!"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "blockquote": true
+                        }
+                    },
+                    {
+                        "insert": "\nFeel free to edit or delete this note. Happy studying!\n"
+                    }
+                ]
+            },
+            "links": []
+        }
     ]
 }
