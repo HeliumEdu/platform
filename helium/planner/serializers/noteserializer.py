@@ -42,6 +42,14 @@ class NoteSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def should_delete_on_empty_content(self, instance, validated_data):
+        """Check if Note should be deleted due to empty content with linked entities."""
+        if 'content' not in validated_data:
+            return False
+        content = validated_data.get('content')
+        content_is_empty = not content or content == {} or content == {'ops': [{'insert': '\n'}]}
+        return content_is_empty and instance.links.exists()
+
 
 class NoteExtendedSerializer(NoteSerializer):
     """Includes link info on GET requests.

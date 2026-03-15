@@ -6,8 +6,10 @@ import logging
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters
+from rest_framework import status
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
@@ -95,22 +97,44 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     def put(self, request, *args, **kwargs):
         """
         Update the given Note instance.
+
+        If content is cleared and Note has linked entities, the Note is deleted
+        and 204 No Content is returned.
         """
-        response = self.update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        # Check if Note should be deleted due to empty content with linked entities
+        if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
+            instance.delete()
+            logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        result = serializer.save()
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
-
-        return response
+        return Response(self.get_serializer(result).data)
 
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Note instance.
+
+        If content is cleared and Note has linked entities, the Note is deleted
+        and 204 No Content is returned.
         """
-        response = self.partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
 
+        # Check if Note should be deleted due to empty content with linked entities
+        if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
+            instance.delete()
+            logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        result = serializer.save()
         logger.info(f"Note {kwargs['pk']} patched for user {request.user.pk}")
-
-        return response
+        return Response(self.get_serializer(result).data)
 
     def delete(self, request, *args, **kwargs):
         """
