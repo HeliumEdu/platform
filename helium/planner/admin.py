@@ -4,6 +4,8 @@ __license__ = "MIT"
 from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
+from django.urls import reverse
+from django.utils.html import format_html
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
@@ -53,13 +55,17 @@ class AttachmentAdmin(BaseModelAdmin):
     list_display = ('title', 'get_attachment', 'size', 'created_at', 'updated_at', 'get_user',)
     list_filter = (AttachmentType,)
     search_fields = ('id', 'user__username', 'user__email', 'title')
-    autocomplete_fields = ('course', 'event', 'homework', 'user')
+    autocomplete_fields = ('user',)
+    exclude = ('course', 'event', 'homework')
+
+    def has_add_permission(self, request):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('course', 'event', 'homework', 'user')
+            return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
 
         return readonly_fields + self.readonly_fields
 
@@ -74,6 +80,20 @@ class AttachmentAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
+    def linked_entity(self, obj):
+        if obj.course:
+            url = reverse('admin:planner_course_change', args=[obj.course.pk])
+            return format_html('<a href="{}">{} (Course)</a>', url, obj.course.title)
+        elif obj.event:
+            url = reverse('admin:planner_event_change', args=[obj.event.pk])
+            return format_html('<a href="{}">{} (Event)</a>', url, obj.event.title)
+        elif obj.homework:
+            url = reverse('admin:planner_homework_change', args=[obj.homework.pk])
+            return format_html('<a href="{}">{} (Homework)</a>', url, obj.homework.title)
+        return '-'
+
+    linked_entity.short_description = 'Linked Entity'
 
 
 class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
@@ -498,13 +518,17 @@ class ReminderAdmin(BaseModelAdmin):
     list_filter = ('type', 'sent', 'dismissed')
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
-    autocomplete_fields = ('event', 'homework', 'user')
+    autocomplete_fields = ('user',)
+    exclude = ('course', 'event', 'homework')
+
+    def has_add_permission(self, request):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('event', 'homework', 'user')
+            return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
 
         return readonly_fields + self.readonly_fields
 
@@ -514,19 +538,77 @@ class ReminderAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
 
+    def linked_entity(self, obj):
+        if obj.course:
+            url = reverse('admin:planner_course_change', args=[obj.course.pk])
+            return format_html('<a href="{}">{} (Course)</a>', url, obj.course.title)
+        elif obj.event:
+            url = reverse('admin:planner_event_change', args=[obj.event.pk])
+            return format_html('<a href="{}">{} (Event)</a>', url, obj.event.title)
+        elif obj.homework:
+            url = reverse('admin:planner_homework_change', args=[obj.homework.pk])
+            return format_html('<a href="{}">{} (Homework)</a>', url, obj.homework.title)
+        return '-'
+
+    linked_entity.short_description = 'Linked Entity'
+
+
+class NoteLinkedToFilter(SimpleListFilter):
+    title = 'Linked To'
+    parameter_name = 'linked_to'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('homework', 'Homework'),
+            ('event', 'Event'),
+            ('resource', 'Resource'),
+            ('none', 'Unlinked'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'homework':
+            return queryset.filter(links__homework__isnull=False)
+        elif self.value() == 'event':
+            return queryset.filter(links__event__isnull=False)
+        elif self.value() == 'resource':
+            return queryset.filter(links__resource__isnull=False)
+        elif self.value() == 'none':
+            return queryset.filter(links__isnull=True)
+        return queryset
+
+
+class NoteExampleScheduleFilter(SimpleListFilter):
+    title = 'Example Schedule'
+    parameter_name = 'example_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(example_schedule=True)
+        elif self.value() == 'no':
+            return queryset.filter(example_schedule=False)
+        return queryset
+
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_user', 'created_at', 'updated_at')
-    list_filter = ('created_at', 'updated_at')
+    list_display = ('title', 'updated_at', 'get_user')
+    list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
-    inlines = [NoteLinkInline]
+
+    def has_add_permission(self, request):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
+            return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
 
         return readonly_fields + self.readonly_fields
 
@@ -536,20 +618,21 @@ class NoteAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
 
+    def linked_entity(self, obj):
+        link = obj.links.select_related('homework', 'event', 'resource').first()
+        if not link:
+            return '-'
 
-class NoteLinkAdmin(BaseModelAdmin):
-    list_display = ('note', 'linked_entity_type', 'linked_entity_title', 'created_at')
-    list_filter = ('created_at',)
-    search_fields = ('note__title',)
-    autocomplete_fields = ('note', 'homework', 'event', 'resource')
+        entity = link.linked_entity
+        if not entity:
+            return '-'
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
+        entity_type = link.linked_entity_type
+        model_name = 'material' if entity_type == 'resource' else entity_type
+        url = reverse(f'admin:planner_{model_name}_change', args=[entity.pk])
+        return format_html('<a href="{}">{} ({})</a>', url, entity.title, entity_type.title())
 
-        if obj:
-            return readonly_fields + self.readonly_fields + ('note',)
-
-        return readonly_fields + self.readonly_fields
+    linked_entity.short_description = 'Linked Entity'
 
 
 # Register the models in the Admin
@@ -563,5 +646,4 @@ admin_site.register(Homework, HomeworkAdmin)
 admin_site.register(MaterialGroup, MaterialGroupAdmin)
 admin_site.register(Material, MaterialAdmin)
 admin_site.register(Note, NoteAdmin)
-admin_site.register(NoteLink, NoteLinkAdmin)
 admin_site.register(Reminder, ReminderAdmin)

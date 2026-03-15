@@ -24,6 +24,11 @@ class Note(BaseModel):
         null=True
     )
 
+    example_schedule = models.BooleanField(
+        help_text='Whether it is part of the example schedule.',
+        default=False
+    )
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='notes',

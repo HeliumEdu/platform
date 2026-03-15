@@ -258,7 +258,7 @@ def oauth_login(request):
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
         elif user:
-            # No OAuth link, but found user by email - link and login
+            # No OAuth link by UID, but found user by email - link/update and login
             # Activate inactive users since OAuth provides verified email
             if not user.is_active:
                 user.is_active = True
@@ -269,13 +269,18 @@ def oauth_login(request):
             logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
-            # Link OAuth provider to this existing user
-            UserOAuthProvider.objects.create(
+            # Link or update OAuth provider for this existing user
+            # Uses (user, provider) as the lookup key since the provider_user_id may have
+            # changed if the Firebase user was deleted and recreated
+            _, created = UserOAuthProvider.objects.update_or_create(
                 user=user,
                 provider=provider_key,
-                provider_user_id=provider_uid,
+                defaults={'provider_user_id': provider_uid},
             )
-            logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
+            if created:
+                logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
+            else:
+                logger.info(f'Updated {provider_name} OAuth provider UID for user {user.id}')
 
         else:
             # No OAuth link and no user with this email - create new user
