@@ -106,3 +106,17 @@ class NoteLink(BaseModel):
         if self.homework and self.homework.course:
             return self.homework.course.color
         return None
+
+    @property
+    def linked_entity_color_alt(self):
+        """Returns alternate hex color of linked entity for frontend display.
+
+        Used to support 'color by category' preference on the frontend.
+
+        - Homework: color from homework.category.color (category color)
+        - Event: same as linked_entity_color (no alternate)
+        - Resource: same as linked_entity_color (no alternate)
+        """
+        if self.homework and self.homework.category:
+            return self.homework.category.color
+        return self.linked_entity_color
