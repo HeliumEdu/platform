@@ -98,3 +98,24 @@ class TestCaseQuillUtils(TestCase):
         self.assertIn('Line1', all_text)
         self.assertIn('\n', all_text)
         self.assertIn('Line2', all_text)
+
+    def test_text_before_list_gets_newline(self):
+        """Text before a list should be separated by a newline."""
+        result = html_to_quill(
+            '<font face="Arial">Intro text:</font>'
+            '<div><ul><li><strike>Item 1</strike></li><li>Item 2</li></ul></div>'
+        )
+
+        ops = result['ops']
+        # Find the intro text op
+        intro_op = next(op for op in ops if 'Intro text' in op.get('insert', ''))
+        intro_idx = ops.index(intro_op)
+
+        # The next op should be a plain newline (not a list newline)
+        next_op = ops[intro_idx + 1]
+        self.assertEqual(next_op['insert'], '\n')
+        self.assertNotIn('list', next_op.get('attributes', {}))
+
+        # Strikethrough should be preserved
+        strike_op = next(op for op in ops if 'Item 1' in op.get('insert', ''))
+        self.assertTrue(strike_op.get('attributes', {}).get('strike'))
