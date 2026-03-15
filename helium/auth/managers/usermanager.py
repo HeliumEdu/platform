@@ -21,7 +21,7 @@ class UserQuerySet(models.query.QuerySet):
         return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
 
     def num_events(self):
-        return self.aggregate(events_count=Count('events'))['event_count']
+        return self.aggregate(events_count=Count('events'))['events_count']
 
     def num_attachments(self):
         return self.aggregate(attachments_count=Count('attachments'))['attachments_count']
