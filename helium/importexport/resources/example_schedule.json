@@ -1949,160 +1949,196 @@
                         }
                     },
                     {
-                        "insert": "\nThis is your personal student planner. Use it to organize courses, track assignments, and stay on top of deadlines.\n\n"
+                        "insert": "\nHelium is your personal student planner\u2014schedules, assignments, grades, and notes all in one place, so you can focus on "
                     },
                     {
-                        "insert": "Getting Started"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "header": 2
-                        }
-                    },
-                    {
-                        "insert": "Add your courses from the Classes tab"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "bullet"
-                        }
-                    },
-                    {
-                        "insert": "Create homework and events to track your schedule"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "bullet"
-                        }
-                    },
-                    {
-                        "insert": "Set up reminders so you never miss a deadline"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "bullet"
-                        }
-                    },
-                    {
-                        "insert": "Use the Calendar to see everything at a glance"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "bullet"
-                        }
-                    },
-                    {
-                        "insert": "\n"
-                    },
-                    {
-                        "insert": "Rich Text Notes"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "header": 2
-                        }
-                    },
-                    {
-                        "insert": "Notes support "
-                    },
-                    {
-                        "insert": "bold",
-                        "attributes": {
-                            "bold": true
-                        }
-                    },
-                    {
-                        "insert": ", "
-                    },
-                    {
-                        "insert": "italic",
+                        "insert": "learning",
                         "attributes": {
                             "italic": true
                         }
                     },
                     {
-                        "insert": ", "
+                        "insert": ".\n\n"
                     },
                     {
-                        "insert": "underline",
+                        "insert": "Stay on Top of Your Work"
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "\n",
                         "attributes": {
-                            "underline": true
+                            "header": 2
+                        }
+                    },
+                    {
+                        "insert": "Track grades with weighted categories, trend indicators, and a calculator to see what you need on upcoming assignments"
+                    },
+                    {
+                        "insert": "Sync external calendars (Google, Apple, etc.) into one view"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Set reminders so you never miss a deadline"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Know when a class's grade is at-risk and needs your attention"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Keep attachments with their assignments\u2014no more digging through folders"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "Organize resources (textbooks, links, supplies) by class"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "bullet"
+                        }
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Rich Notes, Everywhere"
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "header": 2
+                        }
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Every assignment and event has a built-in note for lecture highlights, study guides, or quick thoughts. The "
+                    },
+                    {
+                        "insert": "Notebook",
+                        "attributes": {
+                            "bold": true
+                        }
+                    },
+                    {
+                        "insert": " tab shows all your notes in one place.\n\n"
+                    },
+                    {
+                        "insert": "Use checklists to track your progress:"
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Review chapter 5",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "Complete practice problems",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "Prepare questions for office hours",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "\n",
+                        "attributes": {
+                            "list": "unchecked"
+                        }
+                    },
+                    {
+                        "insert": "\n"
+                    },
+                    {
+                        "insert": "Add "
+                    },
+                    {
+                        "insert": "links to external resources",
+                        "attributes": {
+                            "link": "https://automatetheboringstuff.com/"
                         }
                     },
                     {
                         "insert": ", "
                     },
                     {
-                        "insert": "strikethrough",
-                        "attributes": {
-                            "strike": true
-                        }
-                    },
-                    {
-                        "insert": ", and "
-                    },
-                    {
-                        "insert": "colored text",
+                        "insert": "highlight",
                         "attributes": {
                             "color": "#2196f3"
                         }
                     },
                     {
-                        "insert": ". You can also add "
+                        "insert": " "
                     },
                     {
-                        "insert": "links",
+                        "insert": "key",
                         "attributes": {
-                            "link": "https://heliumedu.com"
+                            "color": "#ab47bc"
                         }
                     },
                     {
-                        "insert": " to external resources.\n\n"
+                        "insert": " "
                     },
                     {
-                        "insert": "Use numbered lists for steps:"
+                        "insert": "concepts",
+                        "attributes": {
+                            "color": "#26a69a"
+                        }
+                    },
+                    {
+                        "insert": ", or save memorable quotes:"
                     },
                     {
                         "insert": "\n"
                     },
                     {
-                        "insert": "Open the assignment"
-                    },
-                    {
-                        "insert": "\n",
+                        "insert": "\n\u2014 Steve Jobs",
                         "attributes": {
-                            "list": "ordered"
+                            "italic": true
                         }
-                    },
-                    {
-                        "insert": "Complete the work"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "ordered"
-                        }
-                    },
-                    {
-                        "insert": "Submit before the deadline"
-                    },
-                    {
-                        "insert": "\n",
-                        "attributes": {
-                            "list": "ordered"
-                        }
-                    },
-                    {
-                        "insert": "\n"
-                    },
-                    {
-                        "insert": "Pro tip: Attach notes to your homework and events to keep everything organized in one place!"
                     },
                     {
                         "insert": "\n",
