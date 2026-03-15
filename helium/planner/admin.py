@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.conf import settings
-from django.contrib import admin
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
 from django.urls import reverse
