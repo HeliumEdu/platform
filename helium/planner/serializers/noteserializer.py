@@ -34,7 +34,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
         # Dual-write: sync content to linked entity's notes field
         if 'content' in validated_data:
-            for link in instance.links.select_related('homework', 'event', 'resource'):
+            for link in instance.links.select_related('homework', 'event', 'resource').all():
                 entity = link.linked_entity
                 if entity and hasattr(entity, 'notes'):
                     entity.notes = instance.content
