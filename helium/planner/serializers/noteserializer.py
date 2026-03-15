@@ -64,7 +64,7 @@ class NoteExtendedSerializer(NoteSerializer):
 
     def get_link(self, obj):
         # Return first link (v1: one link per note max)
-        link = obj.links.select_related('homework__course', 'event', 'resource').first()
+        link = obj.links.first()
         if link:
             return NoteLinkSerializer(link).data
         return None

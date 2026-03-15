@@ -106,7 +106,7 @@ class HomeworkExtendedSerializer(HomeworkSerializer):
 
     def get_note(self, obj):
         """Return the linked Note's id if one exists."""
-        link = obj.note_links.select_related('note').first()
+        link = obj.note_links.first()
         if link:
             return {'id': link.note.id, 'title': link.note.title}
         return None

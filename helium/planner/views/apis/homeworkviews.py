@@ -37,7 +37,7 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials')
+            return Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'note_links__note')
         else:
             return Homework.objects.none()
 
