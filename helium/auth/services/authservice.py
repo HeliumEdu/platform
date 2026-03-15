@@ -212,10 +212,53 @@ def oauth_login(request):
         if not email_verified:
             raise AuthenticationFailed(f"Email not verified by {provider_name}")
 
+        provider_uid = decoded_token.get('uid')
+        provider_key = provider_name.lower()
+
+        # Check if this OAuth provider UID is already linked to a user
+        existing_oauth = UserOAuthProvider.objects.select_related('user').filter(
+            provider=provider_key,
+            provider_user_id=provider_uid,
+        ).first()
+
         # Try to find existing user by email
         try:
             user = get_user_model().objects.get(email=email)
+        except get_user_model().DoesNotExist:
+            user = None
 
+        # Security check: if UID is linked to a different user than the email lookup found,
+        # fail loudly rather than guess which account to use
+        if existing_oauth and user and existing_oauth.user_id != user.id:
+            logger.error(
+                f'{provider_name} Sign-In conflict: provider UID {provider_uid} is linked to user '
+                f'{existing_oauth.user_id}, but email {email} belongs to user {user.id}. '
+                f'Manual investigation required.'
+            )
+            raise AuthenticationFailed(
+                f'{provider_name} Sign-In failed due to an account conflict. '
+                f'Please contact support for assistance.'
+            )
+
+        if existing_oauth:
+            # UID already linked - use that user
+            user = existing_oauth.user
+
+            # Update last_used_at timestamp (auto_now field)
+            existing_oauth.save(update_fields=['last_used_at'])
+
+            # Activate inactive users since OAuth provides verified email
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
+                metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
+
+            logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In (matched by provider UID)')
+            metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
+
+        elif user:
+            # No OAuth link, but found user by email - link and login
             # Activate inactive users since OAuth provides verified email
             if not user.is_active:
                 user.is_active = True
@@ -225,8 +268,17 @@ def oauth_login(request):
 
             logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
-        except get_user_model().DoesNotExist:
-            # Generate unique username from email
+
+            # Link OAuth provider to this existing user
+            UserOAuthProvider.objects.create(
+                user=user,
+                provider=provider_key,
+                provider_user_id=provider_uid,
+            )
+            logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
+
+        else:
+            # No OAuth link and no user with this email - create new user
             username = generate_unique_username_from_email(email)
 
             serializer = UserSerializer()
@@ -245,22 +297,13 @@ def oauth_login(request):
 
             metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
 
-        # Link or update OAuth provider for this user
-        provider_uid = decoded_token.get('uid')
-        provider_key = provider_name.lower()
-
-        oauth_provider, created = UserOAuthProvider.objects.update_or_create(
-            user=user,
-            provider=provider_key,
-            defaults={
-                'provider_user_id': provider_uid,
-            }
-        )
-
-        if created:
-            logger.info(f'Linked {provider_name} OAuth provider to user {user.id}')
-        else:
-            logger.info(f'Updated {provider_name} OAuth provider last_used_at for user {user.id}')
+            # Link OAuth provider to the new user
+            UserOAuthProvider.objects.create(
+                user=user,
+                provider=provider_key,
+                provider_user_id=provider_uid,
+            )
+            logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
 
         token = RefreshToken.for_user(user)
 

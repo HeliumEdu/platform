@@ -40,6 +40,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             user = self.request.user
             return user.events.all().prefetch_related(
                 'attachments',
+                'note_links__note',
                 Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
             )
         else:
@@ -99,6 +100,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
             user = self.request.user
             return user.events.all().prefetch_related(
                 'attachments',
+                'note_links__note',
                 Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
             )
         else:

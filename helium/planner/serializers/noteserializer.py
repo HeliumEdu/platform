@@ -34,13 +34,21 @@ class NoteSerializer(serializers.ModelSerializer):
 
         # Dual-write: sync content to linked entity's notes field
         if 'content' in validated_data:
-            for link in instance.links.select_related('homework', 'event', 'resource'):
+            for link in instance.links.select_related('homework', 'event', 'resource').all():
                 entity = link.linked_entity
                 if entity and hasattr(entity, 'notes'):
                     entity.notes = instance.content
                     entity.save(update_fields=['notes', 'updated_at'])
 
         return instance
+
+    def should_delete_on_empty_content(self, instance, validated_data):
+        """Check if Note should be deleted due to empty content with linked entities."""
+        if 'content' not in validated_data:
+            return False
+        content = validated_data.get('content')
+        content_is_empty = not content or content == {} or content == {'ops': [{'insert': '\n'}]}
+        return content_is_empty and instance.links.exists()
 
 
 class NoteExtendedSerializer(NoteSerializer):
@@ -56,7 +64,7 @@ class NoteExtendedSerializer(NoteSerializer):
 
     def get_link(self, obj):
         # Return first link (v1: one link per note max)
-        link = obj.links.select_related('homework__course', 'event', 'resource').first()
+        link = obj.links.first()
         if link:
             return NoteLinkSerializer(link).data
         return None

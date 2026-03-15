@@ -677,3 +677,59 @@ class TestCaseNoteEdgeCases(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+
+    def test_clear_note_content_via_note_api_deletes_linked_note(self):
+        """Clearing content via the Note API should delete the Note if it has linked entities."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(
+            user, event, content={'ops': [{'insert': 'Some notes\n'}]}
+        )
+        note_pk = note.pk
+
+        # Verify note exists and has a link
+        self.assertTrue(Note.objects.filter(pk=note_pk).exists())
+        self.assertTrue(NoteLink.objects.filter(note_id=note_pk).exists())
+
+        # WHEN - Clear content via Note API (PATCH)
+        data = {'content': {}}
+        response = self.client.patch(
+            reverse('planner_notes_detail', kwargs={'pk': note_pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN - Note should be deleted and return 204
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Note.objects.filter(pk=note_pk).exists())
+        self.assertFalse(NoteLink.objects.filter(note_id=note_pk).exists())
+        # Entity's notes field should also be cleared
+        event.refresh_from_db()
+        self.assertIsNone(event.notes)
+
+    def test_clear_note_content_standalone_note_not_deleted(self):
+        """Clearing content on a standalone Note (no linked entities) should NOT delete it."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        note = notehelper.given_note_exists(
+            user, title='Standalone', content={'ops': [{'insert': 'Some content\n'}]}
+        )
+        note_pk = note.pk
+
+        # Verify no links exist
+        self.assertFalse(NoteLink.objects.filter(note_id=note_pk).exists())
+
+        # WHEN - Clear content via Note API (PATCH)
+        data = {'content': {}}
+        response = self.client.patch(
+            reverse('planner_notes_detail', kwargs={'pk': note_pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN - Note should still exist with empty content
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Note.objects.filter(pk=note_pk).exists())
+        note.refresh_from_db()
+        self.assertEqual(note.content, {})

@@ -122,8 +122,13 @@ def delete_notelink(sender, instance, **kwargs):
     """
     try:
         note_id = instance.note_id
+        logger.info(f"NoteLink {instance.pk} pre_delete signal: note_id={note_id}, "
+                    f"linked_entity_type={instance.linked_entity_type}")
         if note_id and note_id not in _notes_being_deleted:
             _notes_being_deleted.add(note_id)
+            logger.info(f"Deleting Note {note_id} due to NoteLink cascade")
             instance.note.delete()
+        elif note_id in _notes_being_deleted:
+            logger.info(f"Note {note_id} already being deleted, skipping cascade")
     except Note.DoesNotExist:
-        pass
+        logger.info(f"Note {note_id} does not exist, nothing to cascade")
