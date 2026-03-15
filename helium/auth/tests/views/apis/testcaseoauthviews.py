@@ -498,3 +498,36 @@ class TestCaseOAuthViews(APITestCase):
         # Verify OAuth provider was linked
         oauth_provider = UserOAuthProvider.objects.get(user=inactive_user, provider='google')
         self.assertEqual(oauth_provider.provider_user_id, 'google-user-inactive')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_conflict_uid_linked_to_different_user(self, mock_verify_token):
+        """Test that OAuth login fails when UID is linked to a different user than email lookup finds."""
+        # GIVEN - user A with Google OAuth linked
+        user_a = userhelper.given_a_user_exists(username='user_a', email='user_a@gmail.com')
+        UserOAuthProvider.objects.create(
+            user=user_a,
+            provider='google',
+            provider_user_id='shared-google-uid',
+        )
+
+        # AND - user B with a different email (no OAuth)
+        userhelper.given_a_user_exists(username='user_b', email='user_b@gmail.com')
+
+        # WHEN - Someone tries to login with user A's Google UID but user B's email
+        # (This shouldn't happen normally, but could indicate bad data or attack)
+        mock_verify_token.return_value = {
+            'uid': 'shared-google-uid',  # Linked to user_a
+            'email': 'user_b@gmail.com',  # Belongs to user_b
+            'email_verified': True
+        }
+
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN - Should fail with account conflict error
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn('account conflict', response.data['detail'].lower())
