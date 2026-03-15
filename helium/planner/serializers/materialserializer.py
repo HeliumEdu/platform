@@ -70,6 +70,7 @@ class MaterialSerializer(serializers.ModelSerializer):
                     title=instance.title,
                     content=notes_content,
                     user=instance.material_group.user,
+                    example_schedule=instance.material_group.example_schedule,
                 )
                 NoteLink.objects.create(note=note, resource=instance)
         elif link:

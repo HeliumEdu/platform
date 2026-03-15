@@ -87,6 +87,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
                     title=instance.title,
                     content=notes_content,
                     user=instance.course.course_group.user,
+                    example_schedule=instance.course.course_group.example_schedule,
                 )
                 NoteLink.objects.create(note=note, homework=instance)
         elif link:

@@ -75,6 +75,7 @@ class EventSerializer(serializers.ModelSerializer):
                     title=instance.title,
                     content=notes_content,
                     user=instance.user,
+                    example_schedule=instance.example_schedule,
                 )
                 NoteLink.objects.create(note=note, event=instance)
         elif link:

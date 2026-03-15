@@ -296,7 +296,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
     return len(reminders)
 
 
-def _import_notes(notes, user, homework_remap, event_remap, material_remap):
+def _import_notes(notes, user, homework_remap, event_remap, material_remap, example_schedule):
     """Import standalone notes that aren't created via dual-write.
 
     Notes linked to homework/events/materials are created automatically via
@@ -326,6 +326,7 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap):
             title=note_data.get('title', 'Imported Note'),
             content=note_data.get('content', {}),
             user=user,
+            example_schedule=example_schedule,
         )
         notes_count += 1
 
@@ -376,7 +377,8 @@ def import_user(request, data, example_schedule=False):
     reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap) if reminders else 0
 
     notes = data.get('notes', [])
-    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap) if notes else 0
+    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,
+                                example_schedule) if notes else 0
 
     metricutils.increment("user.import.schedule")
 
