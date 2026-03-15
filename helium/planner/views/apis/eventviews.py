@@ -17,7 +17,7 @@ from rest_framework.viewsets import ViewSet
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
-from helium.planner.models import Event, Reminder
+from helium.planner.models import Event, Reminder, Note, NoteLink
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView
 
@@ -175,6 +175,12 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
+        # Delete associated notes first since bulk delete doesn't trigger signals
+        note_ids = NoteLink.objects.filter(event__in=queryset).values_list('note_id', flat=True)
+        Note.objects.filter(pk__in=note_ids).delete()
+
         queryset.delete()
+
+        logger.info(f"All events deleted for user {request.user.pk}")
 
         return Response(status=status.HTTP_204_NO_CONTENT)

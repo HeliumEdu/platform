@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from helium.planner.models import Note, NoteLink
 
@@ -17,9 +18,19 @@ class NoteLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NoteLink
-        fields = ('id', 'homework', 'event', 'resource',
+        fields = ('id', 'note', 'homework', 'event', 'resource',
                   'linked_entity_type', 'linked_entity_title', 'linked_entity_color')
         read_only_fields = ('linked_entity_type', 'linked_entity_title', 'linked_entity_color')
+
+    def validate(self, attrs):
+        if not self.instance:
+            note = attrs.get('note')
+            if note and note.links.exists():
+                raise ValidationError(
+                    f'Note {note.pk} already has a link and cannot have more than one.'
+                )
+
+        return attrs
 
 
 class NoteSerializer(serializers.ModelSerializer):

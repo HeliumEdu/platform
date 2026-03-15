@@ -531,3 +531,49 @@ class TestCaseOAuthViews(APITestCase):
         # THEN - Should fail with account conflict error
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn('account conflict', response.data['detail'].lower())
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_updates_uid_when_firebase_user_recreated(self, mock_verify_token):
+        """Test that OAuth login updates the provider UID when the Firebase user was recreated.
+
+        This handles the case where a user's Firebase account was deleted and recreated,
+        resulting in a new UID for the same email/provider combination.
+        """
+        # GIVEN - existing user with Google OAuth linked to old UID
+        existing_user = userhelper.given_a_user_exists(
+            username='recreated_user',
+            email='recreated@gmail.com'
+        )
+        old_oauth = UserOAuthProvider.objects.create(
+            user=existing_user,
+            provider='google',
+            provider_user_id='old-firebase-uid-123',
+        )
+        old_last_used = old_oauth.last_used_at
+
+        # WHEN - user logs in with same email but different UID (Firebase user was recreated)
+        mock_verify_token.return_value = {
+            'uid': 'new-firebase-uid-456',  # Different UID
+            'email': 'recreated@gmail.com',  # Same email
+            'email_verified': True
+        }
+
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN - login succeeds
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+        # Verify the OAuth provider UID was updated (not duplicated)
+        oauth_providers = UserOAuthProvider.objects.filter(user=existing_user, provider='google')
+        self.assertEqual(oauth_providers.count(), 1)
+
+        updated_oauth = oauth_providers.first()
+        self.assertEqual(updated_oauth.provider_user_id, 'new-firebase-uid-456')
+        self.assertGreater(updated_oauth.last_used_at, old_last_used)
