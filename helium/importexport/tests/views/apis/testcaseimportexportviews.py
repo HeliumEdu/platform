@@ -479,8 +479,16 @@ class TestCaseImportExportViews(APITestCase):
         self.assertGreater(materials_with_notes.count(), 0)
 
         # Verify Note and NoteLink entries were created for items with notes
-        self.assertEqual(Note.objects.count(), homework_with_notes.count() + events_with_notes.count() + materials_with_notes.count())
-        self.assertEqual(NoteLink.objects.count(), Note.objects.count())
+        linked_notes_count = homework_with_notes.count() + events_with_notes.count() + materials_with_notes.count()
+        standalone_notes = Note.objects.filter(links__isnull=True)
+        self.assertEqual(Note.objects.count(), linked_notes_count + standalone_notes.count())
+        self.assertEqual(NoteLink.objects.count(), linked_notes_count)
+
+        # Verify standalone note was imported
+        self.assertEqual(standalone_notes.count(), 1)
+        welcome_note = standalone_notes.first()
+        self.assertEqual(welcome_note.title, 'Ace Your Classes - Welcome to Helium!')
+        self.assertIn('ops', welcome_note.content)
 
         # Verify a specific homework's notes content structure
         hw = homework_with_notes.first()

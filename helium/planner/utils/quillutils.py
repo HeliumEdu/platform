@@ -61,6 +61,12 @@ class _QuillHTMLParser(HTMLParser):
         if len(self._attr_stack) > 1:
             self._attr_stack.pop()
 
+    def _ensure_newline_before_list(self):
+        """Ensure there's a newline before a list starts (if there's preceding content)."""
+        if self.ops and self.ops[-1].get('insert', '').rstrip('\n') != '':
+            # There's content that doesn't end with a newline - add one
+            self.ops.append({'insert': '\n'})
+
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
         inline_attrs = {}
@@ -121,9 +127,11 @@ class _QuillHTMLParser(HTMLParser):
             is_block = True
             block_attrs = {'blockquote': True}
         elif tag == 'ul':
+            self._ensure_newline_before_list()
             self._list_type_stack.append('bullet')
             return
         elif tag == 'ol':
+            self._ensure_newline_before_list()
             self._list_type_stack.append('ordered')
             return
         elif tag == 'li':
