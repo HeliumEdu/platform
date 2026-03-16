@@ -437,7 +437,7 @@ class TestCaseEventNotesDualWrite(APITestCase):
 
     def test_create_event_with_notes_creates_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
@@ -461,22 +461,22 @@ class TestCaseEventNotesDualWrite(APITestCase):
         event = Event.objects.get(pk=response.data['id'])
         self.assertEqual(event.notes, notes_content)
 
-        # Verify Note and NoteLink were created
-        self.assertTrue(event.note_links.exists())
-        note = event.note_links.first().note
+        # Verify Note was created and linked
+        self.assertTrue(event.notes_set.exists())
+        note = event.notes_set.first()
         self.assertEqual(note.content, notes_content)
         self.assertEqual(note.user, user)
 
     def test_update_event_notes_syncs_to_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # Create initial note link
         initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
-        note = Note.objects.create(title='Test', content=initial_content, user=user)
-        NoteLink.objects.create(note=note, event=event)
+        note = Note.objects.create(title='', content=initial_content, user=user)
+        note.events.add(event)
 
         # WHEN - update notes via event API
         new_content = {'ops': [{'insert': 'Updated notes\n'}]}
@@ -501,17 +501,17 @@ class TestCaseEventNotesDualWrite(APITestCase):
 
     def test_clear_event_notes_deletes_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
 
         # Create note link
         note = Note.objects.create(
-            title='Test',
+            title='',
             content={'ops': [{'insert': 'Some notes\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note, event=event)
+        note.events.add(event)
         note_pk = note.pk
 
         # WHEN - clear notes via event API
@@ -532,12 +532,12 @@ class TestCaseEventNotesDualWrite(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
-        self.assertFalse(event.note_links.exists())
+        self.assertFalse(event.notes_set.exists())
 
     def test_delete_all_events_cascades_to_notes(self):
         """Test that bulk deleting all events also deletes associated notes."""
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # Create two events with associated notes
@@ -545,18 +545,18 @@ class TestCaseEventNotesDualWrite(APITestCase):
         event2 = eventhelper.given_event_exists(user, title='Event 2')
 
         note1 = Note.objects.create(
-            title='Note for Event 1',
+            title='',
             content={'ops': [{'insert': 'Notes for event 1\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note1, event=event1)
+        note1.events.add(event1)
 
         note2 = Note.objects.create(
-            title='Note for Event 2',
+            title='',
             content={'ops': [{'insert': 'Notes for event 2\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note2, event=event2)
+        note2.events.add(event2)
 
         # Create an unassociated note (not linked to any event)
         unassociated_note = Note.objects.create(
@@ -568,7 +568,6 @@ class TestCaseEventNotesDualWrite(APITestCase):
         # Verify initial state
         self.assertEqual(Event.objects.filter(user=user).count(), 2)
         self.assertEqual(Note.objects.filter(user=user).count(), 3)
-        self.assertEqual(NoteLink.objects.filter(event__user=user).count(), 2)
 
         # WHEN - delete all events
         response = self.client.delete(reverse('planner_events_resource_delete'))
@@ -582,9 +581,6 @@ class TestCaseEventNotesDualWrite(APITestCase):
         # Associated notes should be deleted
         self.assertFalse(Note.objects.filter(pk=note1.pk).exists())
         self.assertFalse(Note.objects.filter(pk=note2.pk).exists())
-
-        # NoteLinks should be deleted
-        self.assertEqual(NoteLink.objects.filter(event__user=user).count(), 0)
 
         # Unassociated note should NOT be deleted
         self.assertTrue(Note.objects.filter(pk=unassociated_note.pk).exists())

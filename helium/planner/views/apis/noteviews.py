@@ -32,10 +32,10 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
             return self.request.user.notes.prefetch_related(
-                'links__homework__course',
-                'links__homework__category',
-                'links__event',
-                'links__resource'
+                'homework__course',
+                'homework__category',
+                'events',
+                'resources'
             ).all()
         return Note.objects.none()
 
@@ -51,23 +51,22 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         """
         return self.list(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
     @extend_schema(
         responses={
-            201: NoteSerializer
+            201: NoteExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
         """
         Create a new Note instance for the authenticated user.
         """
-        response = self.create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save(user=request.user)
 
-        logger.info(f"Note {response.data['id']} created for user {request.user.pk}")
+        logger.info(f"Note {instance.id} created for user {request.user.pk}")
 
-        return response
+        return Response(NoteExtendedSerializer(instance).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(tags=['planner.note'])
@@ -78,10 +77,10 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
             return self.request.user.notes.prefetch_related(
-                'links__homework__course',
-                'links__homework__category',
-                'links__event',
-                'links__resource'
+                'homework__course',
+                'homework__category',
+                'events',
+                'resources'
             ).all()
         return Note.objects.none()
 
@@ -115,7 +114,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
 
         result = serializer.save()
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
-        return Response(self.get_serializer(result).data)
+        return Response(NoteExtendedSerializer(result).data)
 
     def patch(self, request, *args, **kwargs):
         """
@@ -136,7 +135,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
 
         result = serializer.save()
         logger.info(f"Note {kwargs['pk']} patched for user {request.user.pk}")
-        return Response(self.get_serializer(result).data)
+        return Response(NoteExtendedSerializer(result).data)
 
     def delete(self, request, *args, **kwargs):
         """
