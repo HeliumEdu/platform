@@ -17,7 +17,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
-    Homework, Reminder, Note, NoteLink
+    Homework, Reminder, Note
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
 
@@ -180,9 +180,9 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIsNotNone(materials[1].notes)
         self.assertIn('ops', materials[1].notes)
         self.assertEqual(materials[1].notes['ops'][0]['insert'], 'Return by 7/1')
-        # Verify Note and NoteLink were created for material
-        self.assertTrue(materials[1].note_links.exists())
-        self.assertEqual(materials[1].note_links.first().note.content, materials[1].notes)
+        # Verify Note was created for material
+        self.assertTrue(materials[1].notes_set.exists())
+        self.assertEqual(materials[1].notes_set.first().content, materials[1].notes)
 
         # Legacy 'comments' field is converted to 'notes' on import
         eventhelper.verify_event_matches_data(self, events[2],
@@ -199,9 +199,9 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIsNotNone(events[2].notes)
         self.assertIn('ops', events[2].notes)
         self.assertEqual(events[2].notes['ops'][0]['insert'], 'A comment on an event.')
-        # Verify Note and NoteLink were created for event
-        self.assertTrue(events[2].note_links.exists())
-        self.assertEqual(events[2].note_links.first().note.content, events[2].notes)
+        # Verify Note was created for event
+        self.assertTrue(events[2].notes_set.exists())
+        self.assertEqual(events[2].notes_set.first().content, events[2].notes)
 
         # Legacy 'comments' field is converted to 'notes' on import
         homeworkhelper.verify_homework_matches_data(self, homework[2],
@@ -226,15 +226,14 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIsNotNone(homework[2].notes)
         self.assertIn('ops', homework[2].notes)
         self.assertEqual(homework[2].notes['ops'][0]['insert'], 'A comment on a homework.')
-        # Verify Note and NoteLink were created for homework
-        self.assertTrue(homework[2].note_links.exists())
-        self.assertEqual(homework[2].note_links.first().note.content, homework[2].notes)
+        # Verify Note was created for homework
+        self.assertTrue(homework[2].notes_set.exists())
+        self.assertEqual(homework[2].notes_set.first().content, homework[2].notes)
 
-        # Verify total Note and NoteLink counts (4 events + 4 homework + 2 materials = 10 with legacy content)
+        # Verify total Note counts (4 events + 4 homework + 2 materials = 10 with legacy content)
         # But we import twice, so 2x that, but items with empty comments don't create notes
         # Events: 4 with comments, Homework: 4 with comments, Materials: 2 with details
         self.assertEqual(Note.objects.filter(user=user).count(), 10)
-        self.assertEqual(NoteLink.objects.count(), 10)
         reminderhelper.verify_reminder_matches_data(self, reminders[2], {'id': 1, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
                                                                          'start_of_range': '2017-05-08T15:45:00Z',
@@ -478,11 +477,12 @@ class TestCaseImportExportViews(APITestCase):
         self.assertGreater(events_with_notes.count(), 0)
         self.assertGreater(materials_with_notes.count(), 0)
 
-        # Verify Note and NoteLink entries were created for items with notes
+        # Verify Note entries were created for items with notes
         linked_notes_count = homework_with_notes.count() + events_with_notes.count() + materials_with_notes.count()
-        standalone_notes = Note.objects.filter(links__isnull=True)
+        standalone_notes = Note.objects.filter(
+            homework__isnull=True, events__isnull=True, resources__isnull=True
+        )
         self.assertEqual(Note.objects.count(), linked_notes_count + standalone_notes.count())
-        self.assertEqual(NoteLink.objects.count(), linked_notes_count)
 
         # Verify standalone note was imported
         self.assertEqual(standalone_notes.count(), 1)
@@ -493,7 +493,7 @@ class TestCaseImportExportViews(APITestCase):
         # Verify a specific homework's notes content structure
         hw = homework_with_notes.first()
         self.assertIn('ops', hw.notes)
-        self.assertTrue(hw.note_links.exists())
+        self.assertTrue(hw.notes_set.exists())
 
     def test_import_legacy_notes_converted_to_quill(self):
         """Test that importing legacy HTML comments/details converts them to Quill JSON notes."""
@@ -625,9 +625,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIsNotNone(bold_op)
         self.assertEqual(bold_op['insert'], 'midnight')
 
-        # Verify Note and NoteLink entries were created
+        # Verify Note entries were created
         self.assertEqual(Note.objects.filter(user=user).count(), 3)
-        self.assertEqual(NoteLink.objects.count(), 3)
-        self.assertTrue(material.note_links.exists())
-        self.assertTrue(event.note_links.exists())
-        self.assertTrue(homework.note_links.exists())
+        self.assertTrue(material.notes_set.exists())
+        self.assertTrue(event.notes_set.exists())
+        self.assertTrue(homework.notes_set.exists())

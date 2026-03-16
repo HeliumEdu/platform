@@ -32,10 +32,10 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
             return self.request.user.notes.prefetch_related(
-                'links__homework__course',
-                'links__homework__category',
-                'links__event',
-                'links__resource'
+                'homework__course',
+                'homework__category',
+                'events',
+                'resources'
             ).all()
         return Note.objects.none()
 
@@ -78,10 +78,10 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
             return self.request.user.notes.prefetch_related(
-                'links__homework__course',
-                'links__homework__category',
-                'links__event',
-                'links__resource'
+                'homework__course',
+                'homework__category',
+                'events',
+                'resources'
             ).all()
         return Note.objects.none()
 

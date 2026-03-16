@@ -378,7 +378,7 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
 
     def test_create_material_with_notes_creates_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
 
@@ -405,23 +405,23 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
         material = Material.objects.get(pk=response.data['id'])
         self.assertEqual(material.notes, notes_content)
 
-        # Verify Note and NoteLink were created
-        self.assertTrue(material.note_links.exists())
-        note = material.note_links.first().note
+        # Verify Note was created and linked
+        self.assertTrue(material.notes_set.exists())
+        note = material.notes_set.first()
         self.assertEqual(note.content, notes_content)
         self.assertEqual(note.user, user)
 
     def test_update_material_notes_syncs_to_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
         # Create initial note link
         initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
-        note = Note.objects.create(title='Test', content=initial_content, user=user)
-        NoteLink.objects.create(note=note, resource=material)
+        note = Note.objects.create(title='', content=initial_content, user=user)
+        note.resources.add(material)
 
         # WHEN - update notes via material API
         new_content = {'ops': [{'insert': 'Updated notes\n'}]}
@@ -448,18 +448,18 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
 
     def test_clear_material_notes_deletes_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         material_group = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group)
 
         # Create note link
         note = Note.objects.create(
-            title='Test',
+            title='',
             content={'ops': [{'insert': 'Some notes\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note, resource=material)
+        note.resources.add(material)
         note_pk = note.pk
 
         # WHEN - clear notes via material API
@@ -482,4 +482,4 @@ class TestCaseMaterialNotesDualWrite(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
-        self.assertFalse(material.note_links.exists())
+        self.assertFalse(material.notes_set.exists())
