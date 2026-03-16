@@ -14,18 +14,18 @@ from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
 from helium.planner.serializers.materialserializer import MaterialSerializer
-from helium.planner.serializers.noteserializer import NoteSerializer, NoteLinkSerializer
+from helium.planner.serializers.noteserializer import NoteSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class NoteExportSerializer(NoteSerializer):
-    """Note serializer for export that includes link IDs for re-linking on import."""
-    links = NoteLinkSerializer(many=True, read_only=True)
+    """Note serializer for export that includes all link fields."""
 
     class Meta(NoteSerializer.Meta):
-        fields = NoteSerializer.Meta.fields + ('links',)
+        # homework, events, resources are already in NoteSerializer.Meta.fields
+        pass
 
 
 class HomeworkExportSerializer(HomeworkSerializer):

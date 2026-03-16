@@ -17,7 +17,7 @@ from rest_framework.viewsets import ViewSet
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
-from helium.planner.models import Event, Reminder, Note, NoteLink
+from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView
 
@@ -40,7 +40,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             user = self.request.user
             return user.events.all().prefetch_related(
                 'attachments',
-                'note_links__note',
+                'notes_set',
                 Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
             )
         else:
@@ -100,7 +100,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
             user = self.request.user
             return user.events.all().prefetch_related(
                 'attachments',
-                'note_links__note',
+                'notes_set',
                 Prefetch('reminders', queryset=Reminder.objects.select_related('homework', 'event'))
             )
         else:
@@ -176,8 +176,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
         queryset = self.filter_queryset(self.get_queryset())
 
         # Delete associated notes first since bulk delete doesn't trigger signals
-        note_ids = NoteLink.objects.filter(event__in=queryset).values_list('note_id', flat=True)
-        Note.objects.filter(pk__in=note_ids).delete()
+        Note.objects.filter(events__in=queryset).delete()
 
         queryset.delete()
 

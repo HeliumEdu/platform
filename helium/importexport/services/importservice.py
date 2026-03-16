@@ -16,7 +16,7 @@ from rest_framework.request import Request
 
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note, NoteLink
+from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer

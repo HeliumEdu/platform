@@ -6,41 +6,72 @@ import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from helium.planner.models import Note, NoteLink
+from helium.planner.models import Note
 
 logger = logging.getLogger(__name__)
-
-
-class NoteLinkSerializer(serializers.ModelSerializer):
-    linked_entity_type = serializers.ReadOnlyField()
-    linked_entity_title = serializers.ReadOnlyField()
-    linked_entity_color = serializers.ReadOnlyField()
-    linked_entity_color_alt = serializers.ReadOnlyField()
-
-    class Meta:
-        model = NoteLink
-        fields = ('id', 'note', 'homework', 'event', 'resource',
-                  'linked_entity_type', 'linked_entity_title', 'linked_entity_color',
-                  'linked_entity_color_alt')
-        read_only_fields = ('linked_entity_type', 'linked_entity_title', 'linked_entity_color',
-                            'linked_entity_color_alt')
-
-    def validate(self, attrs):
-        if not self.instance:
-            note = attrs.get('note')
-            if note and note.links.exists():
-                raise ValidationError(
-                    f'Note {note.pk} already has a link and cannot have more than one.'
-                )
-
-        return attrs
 
 
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ('id', 'title', 'content', 'created_at', 'updated_at')
+        fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'created_at', 'updated_at')
         read_only_fields = ('created_at', 'updated_at')
+
+    def validate(self, attrs):
+        """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""
+        homework = attrs.get('homework', [])
+        events = attrs.get('events', [])
+        resources = attrs.get('resources', [])
+
+        # For updates, also consider existing values if not being updated
+        if self.instance:
+            if 'homework' not in attrs:
+                homework = list(self.instance.homework.all())
+            if 'events' not in attrs:
+                events = list(self.instance.events.all())
+            if 'resources' not in attrs:
+                resources = list(self.instance.resources.all())
+
+        linked_count = sum([
+            len(homework) > 0 if homework else False,
+            len(events) > 0 if events else False,
+            len(resources) > 0 if resources else False,
+        ])
+
+        if linked_count > 1:
+            raise ValidationError(
+                'A note can only be linked to one type of entity (homework, event, or resource).'
+            )
+
+        # Enforce one-to-one: only allow one item per type
+        if homework and len(homework) > 1:
+            raise ValidationError(
+                'A note can only be linked to one homework assignment.'
+            )
+        if events and len(events) > 1:
+            raise ValidationError(
+                'A note can only be linked to one event.'
+            )
+        if resources and len(resources) > 1:
+            raise ValidationError(
+                'A note can only be linked to one resource.'
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        """Override to implement dual-write for legacy frontend compatibility."""
+        instance = super().create(validated_data)
+
+        # Dual-write: sync content to linked entity's notes field
+        content = validated_data.get('content')
+        if content:
+            entity = instance.linked_entity
+            if entity and hasattr(entity, 'notes'):
+                entity.notes = instance.content
+                entity.save(update_fields=['notes', 'updated_at'])
+
+        return instance
 
     def update(self, instance, validated_data):
         """Override to implement dual-write for legacy frontend compatibility."""
@@ -48,11 +79,10 @@ class NoteSerializer(serializers.ModelSerializer):
 
         # Dual-write: sync content to linked entity's notes field
         if 'content' in validated_data:
-            for link in instance.links.select_related('homework', 'event', 'resource').all():
-                entity = link.linked_entity
-                if entity and hasattr(entity, 'notes'):
-                    entity.notes = instance.content
-                    entity.save(update_fields=['notes', 'updated_at'])
+            entity = instance.linked_entity
+            if entity and hasattr(entity, 'notes'):
+                entity.notes = instance.content
+                entity.save(update_fields=['notes', 'updated_at'])
 
         return instance
 
@@ -62,26 +92,20 @@ class NoteSerializer(serializers.ModelSerializer):
             return False
         content = validated_data.get('content')
         content_is_empty = not content or content == {} or content == {'ops': [{'insert': '\n'}]}
-        return content_is_empty and instance.links.exists()
+        return content_is_empty and instance.has_linked_entity()
 
 
 class NoteExtendedSerializer(NoteSerializer):
-    """Includes link info on GET requests.
-
-    Note: Returns first link only. For v1, each Note has at most one link.
-    Future tagging may change this to return all links.
-    """
-    link = serializers.SerializerMethodField()
+    """Includes link info on GET requests for backward compatibility."""
+    linked_entity_type = serializers.ReadOnlyField()
+    linked_entity_title = serializers.ReadOnlyField()
+    course_color = serializers.ReadOnlyField()
+    category_color = serializers.ReadOnlyField()
 
     class Meta(NoteSerializer.Meta):
-        fields = NoteSerializer.Meta.fields + ('link',)
-
-    def get_link(self, obj):
-        # Return first link (v1: one link per note max)
-        link = obj.links.first()
-        if link:
-            return NoteLinkSerializer(link).data
-        return None
+        fields = NoteSerializer.Meta.fields + (
+            'linked_entity_type', 'linked_entity_title', 'course_color', 'category_color'
+        )
 
 
 class NoteListSerializer(NoteExtendedSerializer):

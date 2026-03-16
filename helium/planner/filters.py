@@ -176,16 +176,28 @@ class NoteFilter(django_filters.FilterSet):
 
     def filter_linked_type(self, queryset, name, value):
         if value == 'homework':
-            return queryset.filter(links__homework__isnull=False)
+            return queryset.filter(homework__isnull=False).distinct()
         if value == 'event':
-            return queryset.filter(links__event__isnull=False)
+            return queryset.filter(events__isnull=False).distinct()
         if value == 'resource':
-            return queryset.filter(links__resource__isnull=False)
+            return queryset.filter(resources__isnull=False).distinct()
         if value == 'standalone':
-            return queryset.filter(links__isnull=True)
+            return queryset.filter(
+                homework__isnull=True,
+                events__isnull=True,
+                resources__isnull=True
+            )
         return queryset
 
     def filter_has_link(self, queryset, name, value):
         if value:
-            return queryset.filter(links__isnull=False)
-        return queryset.filter(links__isnull=True)
+            return queryset.filter(
+                Q(homework__isnull=False) |
+                Q(events__isnull=False) |
+                Q(resources__isnull=False)
+            ).distinct()
+        return queryset.filter(
+            homework__isnull=True,
+            events__isnull=True,
+            resources__isnull=True
+        )

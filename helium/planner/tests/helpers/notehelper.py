@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from helium.planner.models import Note, NoteLink
+from helium.planner.models import Note
 
 
 def given_note_exists(user, title='Test Note', content=None):
@@ -15,32 +15,32 @@ def given_note_exists(user, title='Test Note', content=None):
 
 def given_note_linked_to_homework(user, homework, title=None, content=None):
     note = Note.objects.create(
-        title=title or homework.title,
+        title=title or '',
         content=content or {'ops': [{'insert': 'Homework notes\n'}]},
         user=user
     )
-    NoteLink.objects.create(note=note, homework=homework)
+    note.homework.add(homework)
     return note
 
 
 def given_note_linked_to_event(user, event, title=None, content=None):
     note = Note.objects.create(
-        title=title or event.title,
+        title=title or '',
         content=content or {'ops': [{'insert': 'Event notes\n'}]},
         user=user
     )
-    NoteLink.objects.create(note=note, event=event)
+    note.events.add(event)
     return note
 
 
 def given_note_linked_to_resource(user, resource, title=None, content=None):
     """Link a note to a resource (Material model)."""
     note = Note.objects.create(
-        title=title or resource.title,
+        title=title or '',
         content=content or {'ops': [{'insert': 'Resource notes\n'}]},
         user=user
     )
-    NoteLink.objects.create(note=note, resource=resource)
+    note.resources.add(resource)
     return note
 
 

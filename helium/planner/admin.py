@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
-    Reminder, CourseSchedule, Note, NoteLink
+    Reminder, CourseSchedule, Note
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
 
 
@@ -567,13 +567,13 @@ class NoteLinkedToFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'homework':
-            return queryset.filter(links__homework__isnull=False)
+            return queryset.filter(homework__isnull=False).distinct()
         elif self.value() == 'event':
-            return queryset.filter(links__event__isnull=False)
+            return queryset.filter(events__isnull=False).distinct()
         elif self.value() == 'resource':
-            return queryset.filter(links__resource__isnull=False)
+            return queryset.filter(resources__isnull=False).distinct()
         elif self.value() == 'none':
-            return queryset.filter(links__isnull=True)
+            return queryset.filter(homework__isnull=True, events__isnull=True, resources__isnull=True)
         return queryset
 
 
@@ -596,7 +596,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'get_user')
+    list_display = ('id', 'title', 'updated_at', 'get_user')
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -619,18 +619,22 @@ class NoteAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
     def linked_entity(self, obj):
-        link = obj.links.select_related('homework', 'event', 'resource').first()
-        if not link:
-            return '-'
+        hw = obj.homework.first()
+        if hw:
+            url = reverse('admin:planner_homework_change', args=[hw.pk])
+            return format_html('<a href="{}">{} (Homework)</a>', url, hw.title)
 
-        entity = link.linked_entity
-        if not entity:
-            return '-'
+        event = obj.events.first()
+        if event:
+            url = reverse('admin:planner_event_change', args=[event.pk])
+            return format_html('<a href="{}">{} (Event)</a>', url, event.title)
 
-        entity_type = link.linked_entity_type
-        model_name = 'material' if entity_type == 'resource' else entity_type
-        url = reverse(f'admin:planner_{model_name}_change', args=[entity.pk])
-        return format_html('<a href="{}">{} ({})</a>', url, entity.title, entity_type.title())
+        resource = obj.resources.first()
+        if resource:
+            url = reverse('admin:planner_material_change', args=[resource.pk])
+            return format_html('<a href="{}">{} (Resource)</a>', url, resource.title)
+
+        return '-'
 
     linked_entity.short_description = 'Linked Entity'
 

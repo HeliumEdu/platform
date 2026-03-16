@@ -895,7 +895,7 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
 
     def test_create_homework_with_notes_creates_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -926,15 +926,15 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
         homework = Homework.objects.get(pk=response.data['id'])
         self.assertEqual(homework.notes, notes_content)
 
-        # Verify Note and NoteLink were created
-        self.assertTrue(homework.note_links.exists())
-        note = homework.note_links.first().note
+        # Verify Note was created and linked
+        self.assertTrue(homework.notes_set.exists())
+        note = homework.notes_set.first()
         self.assertEqual(note.content, notes_content)
         self.assertEqual(note.user, user)
 
     def test_update_homework_notes_syncs_to_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -942,8 +942,8 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
 
         # Create initial note link
         initial_content = {'ops': [{'insert': 'Initial notes\n'}]}
-        note = Note.objects.create(title='Test', content=initial_content, user=user)
-        NoteLink.objects.create(note=note, homework=homework)
+        note = Note.objects.create(title='', content=initial_content, user=user)
+        note.homework.add(homework)
 
         # WHEN - update notes via homework API
         new_content = {'ops': [{'insert': 'Updated notes\n'}]}
@@ -973,7 +973,7 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
 
     def test_clear_homework_notes_deletes_note_entity(self):
         # GIVEN
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -981,11 +981,11 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
 
         # Create note link
         note = Note.objects.create(
-            title='Test',
+            title='',
             content={'ops': [{'insert': 'Some notes\n'}]},
             user=user
         )
-        NoteLink.objects.create(note=note, homework=homework)
+        note.homework.add(homework)
         note_pk = note.pk
 
         # WHEN - clear notes via homework API
@@ -1011,4 +1011,4 @@ class TestCaseHomeworkNotesDualWrite(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
-        self.assertFalse(homework.note_links.exists())
+        self.assertFalse(homework.notes_set.exists())

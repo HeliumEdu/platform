@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
-from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Note, NoteLink
+from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Note, Material
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -84,10 +84,6 @@ def delete_attachment(sender, instance, **kwargs):
         instance.attachment.delete(False)
 
 
-# Track notes being deleted to prevent signal recursion
-_notes_being_deleted = set()
-
-
 @receiver(pre_delete, sender=Note)
 def delete_note(sender, instance, **kwargs):
     """
@@ -96,39 +92,41 @@ def delete_note(sender, instance, **kwargs):
     This ensures dual-write consistency: if a user deletes a Note via the API,
     the linked entity's inline notes field is also cleared.
     """
-    _notes_being_deleted.add(instance.pk)
-    for link in instance.links.select_related('homework', 'event', 'resource').all():
-        entity = link.linked_entity
-        if entity and hasattr(entity, 'notes'):
-            entity.notes = None
-            entity.save(update_fields=['notes', 'updated_at'])
+    # Clear notes field on all linked homework
+    for hw in instance.homework.all():
+        if hasattr(hw, 'notes'):
+            hw.notes = None
+            hw.save(update_fields=['notes', 'updated_at'])
+
+    # Clear notes field on all linked events
+    for event in instance.events.all():
+        if hasattr(event, 'notes'):
+            event.notes = None
+            event.save(update_fields=['notes', 'updated_at'])
+
+    # Clear notes field on all linked resources
+    for resource in instance.resources.all():
+        if hasattr(resource, 'notes'):
+            resource.notes = None
+            resource.save(update_fields=['notes', 'updated_at'])
 
 
-@receiver(post_delete, sender=Note)
-def cleanup_note_deletion_tracking(sender, instance, **kwargs):
-    """Clean up tracking set after note deletion completes."""
-    _notes_being_deleted.discard(instance.pk)
+@receiver(pre_delete, sender=Homework)
+def delete_homework_notes(sender, instance, **kwargs):
+    """Delete linked Notes when a Homework is deleted."""
+    for note in instance.notes_set.all():
+        note.delete()
 
 
-@receiver(pre_delete, sender=NoteLink)
-def delete_notelink(sender, instance, **kwargs):
-    """
-    Delete the associated Note when a NoteLink is deleted.
+@receiver(pre_delete, sender=Event)
+def delete_event_notes(sender, instance, **kwargs):
+    """Delete linked Notes when an Event is deleted."""
+    for note in instance.notes_set.all():
+        note.delete()
 
-    This ensures that when an entity (Homework, Event, Material) is deleted,
-    the cascade to NoteLink also cascades to the Note itself.
 
-    Skips deletion if the Note is already being deleted (e.g., cascade from Note.delete()).
-    """
-    try:
-        note_id = instance.note_id
-        logger.info(f"NoteLink {instance.pk} pre_delete signal: note_id={note_id}, "
-                    f"linked_entity_type={instance.linked_entity_type}")
-        if note_id and note_id not in _notes_being_deleted:
-            _notes_being_deleted.add(note_id)
-            logger.info(f"Deleting Note {note_id} due to NoteLink cascade")
-            instance.note.delete()
-        elif note_id in _notes_being_deleted:
-            logger.info(f"Note {note_id} already being deleted, skipping cascade")
-    except Note.DoesNotExist:
-        logger.info(f"Note {note_id} does not exist, nothing to cascade")
+@receiver(pre_delete, sender=Material)
+def delete_material_notes(sender, instance, **kwargs):
+    """Delete linked Notes when a Material is deleted."""
+    for note in instance.notes_set.all():
+        note.delete()

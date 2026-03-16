@@ -355,11 +355,11 @@ def delete_example_schedule(user_id):
      .for_user(user_id)
      .filter(example_schedule=True)
      .delete())
-    # Only delete standalone notes (no links) - linked notes are already
+    # Only delete standalone notes (no linked entities) - linked notes are already
     # cascade-deleted when their parent entities are deleted above
     (Note.objects
      .for_user(user_id)
-     .filter(example_schedule=True, links__isnull=True)
+     .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
      .delete())
 
     metricutils.task_stop(metrics, user=user)

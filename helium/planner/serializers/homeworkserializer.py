@@ -72,27 +72,27 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
     def _sync_notes_to_note_entity(self, instance, notes_content):
         """Sync inline notes field to the linked Note entity (dual-write)."""
-        from helium.planner.models import Note, NoteLink
+        from helium.planner.models import Note
 
-        link = instance.note_links.select_related('note').first()
+        note = instance.notes_set.first()
 
         if notes_content and notes_content != {}:
-            if link:
+            if note:
                 # Update existing Note
-                link.note.content = notes_content
-                link.note.save(update_fields=['content', 'updated_at'])
+                note.content = notes_content
+                note.save(update_fields=['content', 'updated_at'])
             else:
                 # Create new Note and link
                 note = Note.objects.create(
-                    title=instance.title,
+                    title='',
                     content=notes_content,
                     user=instance.course.course_group.user,
                     example_schedule=instance.course.course_group.example_schedule,
                 )
-                NoteLink.objects.create(note=note, homework=instance)
-        elif link:
+                note.homework.add(instance)
+        elif note:
             # Notes cleared - delete the linked Note
-            link.note.delete()
+            note.delete()
 
 
 class HomeworkExtendedSerializer(HomeworkSerializer):
@@ -107,7 +107,7 @@ class HomeworkExtendedSerializer(HomeworkSerializer):
 
     def get_note(self, obj):
         """Return the linked Note's id if one exists."""
-        link = obj.note_links.first()
-        if link:
-            return {'id': link.note.id, 'title': link.note.title}
+        note = obj.notes_set.first()
+        if note:
+            return {'id': note.id, 'title': note.title}
         return None

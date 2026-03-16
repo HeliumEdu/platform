@@ -45,7 +45,7 @@ class ExportResourceView(ViewSet, HeliumAPIView):
             'events': Event.objects.for_user(user.pk),
             'homework': Homework.objects.for_user(user.pk),
             'reminders': Reminder.objects.for_user(user.pk),
-            'notes': Note.objects.for_user(user.pk).prefetch_related('links'),
+            'notes': Note.objects.for_user(user.pk).prefetch_related('homework', 'events', 'resources'),
         })
 
         json_str = JSONRenderer().render(serializer.data)
