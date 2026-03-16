@@ -59,6 +59,20 @@ class NoteSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def create(self, validated_data):
+        """Override to implement dual-write for legacy frontend compatibility."""
+        instance = super().create(validated_data)
+
+        # Dual-write: sync content to linked entity's notes field
+        content = validated_data.get('content')
+        if content:
+            entity = instance.linked_entity
+            if entity and hasattr(entity, 'notes'):
+                entity.notes = instance.content
+                entity.save(update_fields=['notes', 'updated_at'])
+
+        return instance
+
     def update(self, instance, validated_data):
         """Override to implement dual-write for legacy frontend compatibility."""
         instance = super().update(instance, validated_data)

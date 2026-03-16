@@ -264,6 +264,48 @@ class TestCaseNoteDualWrite(APITestCase):
         resource.refresh_from_db()
         self.assertEqual(resource.notes, new_content)
 
+    def test_create_note_with_homework_syncs_content(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        self.assertIsNone(homework.notes)
+        content = {'ops': [{'insert': 'Created via Note API\n'}]}
+        data = {'title': 'New Note', 'content': content, 'homework': [homework.pk]}
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        homework.refresh_from_db()
+        self.assertEqual(homework.notes, content)
+
+    def test_create_note_with_event_syncs_content(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        self.assertIsNone(event.notes)
+        content = {'ops': [{'insert': 'Created via Note API\n'}]}
+        data = {'title': 'New Note', 'content': content, 'events': [event.pk]}
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        event.refresh_from_db()
+        self.assertEqual(event.notes, content)
+
+    def test_create_note_with_resource_syncs_content(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        resource = materialhelper.given_material_exists(material_group)
+        self.assertIsNone(resource.notes)
+        content = {'ops': [{'insert': 'Created via Note API\n'}]}
+        data = {'title': 'New Note', 'content': content, 'resources': [resource.pk]}
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        resource.refresh_from_db()
+        self.assertEqual(resource.notes, content)
+
     def test_get_note_includes_colors_for_homework(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
