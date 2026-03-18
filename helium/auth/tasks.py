@@ -191,6 +191,27 @@ def emit_queue_depth(self):
         logger.warning(f"Failed to get queue depth: {e}")
 
 
+@app.task(bind=True)
+def emit_nightly_metrics(self):
+    """Emit nightly aggregate metrics."""
+    from django.db.models import Exists, OuterRef
+
+    from helium.planner.models import Event, Homework, Note
+
+    # Active users by window (users who modified events, homework, or notes)
+    for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+        cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
+        count = get_user_model().objects.filter(
+            is_active=True
+        ).filter(
+            Exists(Event.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
+            Exists(Note.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
+            Exists(Homework.objects.filter(course__course_group__user=OuterRef('pk'), updated_at__gte=cutoff))
+        ).count()
+        metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}'])
+        logger.debug(f"Emitted active users ({window_tag}): {count}")
+
+
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired refresh tokens periodically
@@ -199,3 +220,5 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s())
+    # Emit nightly aggregate metrics
+    sender.add_periodic_task(settings.NIGHTLY_METRICS_FREQUENCY_SEC, emit_nightly_metrics.s())
