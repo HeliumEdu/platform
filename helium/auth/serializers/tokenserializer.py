@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
 from django.db import IntegrityError
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
@@ -41,7 +42,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
                                      style={'input_type': 'password'},
                                      trim_whitespace=False)
 
-    def validate(self, attrs):
+    def validate(self, attrs, update_last_login_field=True):
         username = attrs.pop('username').strip()
         password = attrs.pop('password')
 
@@ -71,7 +72,10 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
 
-            update_last_login(None, user)
+            if update_last_login_field:
+                update_last_login(None, user)
+
+            self._authenticated_user = user
 
             logger.debug(f"User {user.pk} has been logged in")
 
@@ -95,11 +99,22 @@ class LegacyTokenObtainSerializer(TokenObtainSerializer):
     """
     Token obtain serializer for legacy frontend that doesn't properly support token refresh.
     Uses longer token lifetimes configured via LEGACY_*_TTL settings.
+
+    Deprecated: Remove when frontend-legacy is shut down.
     """
 
     @classmethod
     def get_token(cls, user):
         return LegacyRefreshToken.for_user(user)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs, update_last_login_field=False)
+
+        if user := getattr(self, '_authenticated_user', None):
+            user.last_login_legacy = timezone.now()
+            user.save(update_fields=['last_login_legacy'])
+
+        return attrs
 
 
 class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):

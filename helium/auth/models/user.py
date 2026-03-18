@@ -37,6 +37,10 @@ class User(AbstractBaseUser, BaseModel):
 
     is_superuser = models.BooleanField(default=False)
 
+    # Deprecated: tracks legacy frontend logins, remove when frontend-legacy is shut down
+    last_login_legacy = models.DateTimeField(blank=True, null=True,
+                                             help_text='Last login time via legacy frontend.')
+
     # Manager
     objects = UserManager()
 
