@@ -11,6 +11,7 @@ class TestCaseDocs(TestCase):
         # GIVEN
         user = get_user_model().objects.create_user(username='admin', email='admin@test.com',
                                                     password='test_pass_1!')
+        user.is_active = True
         user.is_superuser = True
         user.save()
         self.client.force_login(user)
