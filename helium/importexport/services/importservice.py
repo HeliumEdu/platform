@@ -300,34 +300,43 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
     """Import notes, including those linked to entities.
 
     Handles both standalone notes and notes linked to homework/events/materials.
-    For linked notes, the entity IDs are remapped to their new values.
+    For linked notes, the entity IDs are remapped to their new values, and the
+    entity's inline `notes` field is populated (reverse of dual-write sync).
     """
+    from helium.planner.models import Homework, Event, Material
+
     notes_count = 0
+    content = None
 
     for note_data in notes:
+        content = note_data.get('content', {})
+
         # Create the note
         note = Note.objects.create(
             title=note_data.get('title', ''),
-            content=note_data.get('content', {}),
+            content=content,
             user=user,
             example_schedule=example_schedule,
         )
 
-        # Set up entity links (remapping IDs to new values)
+        # Set up entity links and sync content to entity's inline notes field
         for old_hw_id in note_data.get('homework', []):
             new_hw_id = homework_remap.get(old_hw_id)
             if new_hw_id:
                 note.homework.add(new_hw_id)
+                Homework.objects.filter(pk=new_hw_id).update(notes=content)
 
         for old_event_id in note_data.get('events', []):
             new_event_id = event_remap.get(old_event_id)
             if new_event_id:
                 note.events.add(new_event_id)
+                Event.objects.filter(pk=new_event_id).update(notes=content)
 
         for old_material_id in note_data.get('resources', []):
             new_material_id = material_remap.get(old_material_id)
             if new_material_id:
                 note.resources.add(new_material_id)
+                Material.objects.filter(pk=new_material_id).update(notes=content)
 
         notes_count += 1
 
