@@ -161,7 +161,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'created_at', 'last_login', 'get_auth_type',
+    list_display = ('email', 'created_at', 'last_login', 'last_login_legacy', 'get_auth_type',
                     'num_course_groups', 'num_courses', 'num_homework', 'num_events', 'num_attachments',
                     'num_external_calendars', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
@@ -181,7 +181,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return self.readonly_fields + ('created_at', 'last_login', 'get_2fa_enabled',)
+            return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'get_2fa_enabled',)
 
         return self.readonly_fields
 

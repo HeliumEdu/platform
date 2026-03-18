@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.114"
+__version__ = "2.1.116"
 
 import os
 import socket
@@ -166,6 +166,8 @@ REMINDERS_FREQUENCY_SEC = 60
 PURGE_UNVERIFIED_USERS_FREQUENCY_SEC = 60 * 60 * 12
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
+
+NIGHTLY_METRICS_FREQUENCY_SEC = 60 * 60 * 24
 
 BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 

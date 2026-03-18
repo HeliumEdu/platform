@@ -239,7 +239,8 @@ class TestCaseLegacyTokenViews(APITestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
         user = get_user_model().objects.get(username=user.get_username())
-        self.assertIsNotNone(user.last_login)
+        self.assertIsNone(user.last_login)
+        self.assertIsNotNone(user.last_login_legacy)
         self.assertEqual(OutstandingToken.objects.count(), 1)
 
     def test_legacy_token_has_longer_lifetime(self):

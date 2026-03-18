@@ -513,9 +513,32 @@ class MaterialAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'material_group__user__username'
 
 
+class ReminderExampleScheduleFilter(SimpleListFilter):
+    title = 'Example Schedule'
+    parameter_name = 'example_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        example_schedule_q = (
+            Q(homework__course__course_group__example_schedule=True) |
+            Q(event__example_schedule=True) |
+            Q(course__course_group__example_schedule=True)
+        )
+        if self.value() == 'yes':
+            return queryset.filter(example_schedule_q)
+        elif self.value() == 'no':
+            return queryset.exclude(example_schedule_q)
+        return queryset
+
+
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
-    list_filter = ('type', 'sent', 'dismissed')
+    list_filter = ('type', 'sent', 'dismissed', ReminderExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
@@ -588,10 +611,16 @@ class NoteExampleScheduleFilter(SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        example_schedule_q = (
+            Q(example_schedule=True) |
+            Q(homework__course__course_group__example_schedule=True) |
+            Q(events__example_schedule=True) |
+            Q(resources__material_group__example_schedule=True)
+        )
         if self.value() == 'yes':
-            return queryset.filter(example_schedule=True)
+            return queryset.filter(example_schedule_q).distinct()
         elif self.value() == 'no':
-            return queryset.filter(example_schedule=False)
+            return queryset.exclude(example_schedule_q).distinct()
         return queryset
 
 
@@ -600,6 +629,7 @@ class NoteAdmin(BaseModelAdmin):
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
+    exclude = ('homework', 'events', 'resources')
 
     def has_add_permission(self, request):
         return False
