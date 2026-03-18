@@ -430,6 +430,20 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(float(category2.grade_by_weight), 17.52)
         self.assertEqual(float(category2.trend), 0.011699999999999875)
 
+        # Verify Notes were imported (1 standalone + 27 direct links + 2 legacy = 30)
+        self.assertEqual(Note.objects.count(), 30)
+
+        # Verify notes with titles were linked correctly
+        # 1 welcome + 8 events + 15 homework = 24 (materials have blank titles)
+        titled_notes = Note.objects.exclude(title='')
+        self.assertEqual(titled_notes.count(), 24)
+
+        # Verify entity.notes fields were populated for linked notes
+        homework_with_notes = Homework.objects.exclude(notes__isnull=True).exclude(notes={})
+        self.assertGreater(homework_with_notes.count(), 0)
+        for hw in homework_with_notes:
+            self.assertTrue(hw.notes_set.exists())
+
     def test_import_exampleschedule(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -466,34 +480,53 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Reminder.objects.count(), 14)
         self.assertEqual(Event.objects.count(), 9)
 
-        # Verify legacy 'comments'/'details' fields were converted to 'notes' on import
-        # Example schedule has items with legacy HTML content that should be upleveled
-        homework_with_notes = Homework.objects.exclude(notes__isnull=True).exclude(notes={})
-        events_with_notes = Event.objects.exclude(notes__isnull=True).exclude(notes={})
-        materials_with_notes = Material.objects.exclude(notes__isnull=True).exclude(notes={})
+        # Verify Notes were imported correctly
+        # Example schedule has: 1 standalone + 27 with direct links + 2 legacy conversions = 30 total
+        self.assertEqual(Note.objects.count(), 30)
 
-        # Verify some items have converted notes
-        self.assertGreater(homework_with_notes.count(), 0)
-        self.assertGreater(events_with_notes.count(), 0)
-        self.assertGreater(materials_with_notes.count(), 0)
-
-        # Verify Note entries were created for items with notes
-        linked_notes_count = homework_with_notes.count() + events_with_notes.count() + materials_with_notes.count()
+        # Verify standalone note (no entity links)
         standalone_notes = Note.objects.filter(
-            homework__isnull=True, events__isnull=True, resources__isnull=True
+            homework__isnull=True
+        ).filter(
+            events__isnull=True
+        ).filter(
+            resources__isnull=True
         )
-        self.assertEqual(Note.objects.count(), linked_notes_count + standalone_notes.count())
-
-        # Verify standalone note was imported
         self.assertEqual(standalone_notes.count(), 1)
         welcome_note = standalone_notes.first()
         self.assertEqual(welcome_note.title, 'Ace Your Classes - Welcome to Helium!')
         self.assertIn('ops', welcome_note.content)
 
-        # Verify a specific homework's notes content structure
-        hw = homework_with_notes.first()
-        self.assertIn('ops', hw.notes)
-        self.assertTrue(hw.notes_set.exists())
+        # Verify notes imported with direct entity links (new format)
+        # These have titles and are linked to entities
+        # 1 welcome + 8 events + 15 homework = 24 (materials have blank titles)
+        titled_notes = Note.objects.exclude(title='')
+        self.assertEqual(titled_notes.count(), 24)
+
+        # Verify a specific titled note linked to homework
+        sprint_note = Note.objects.filter(title='Sprint Planning').first()
+        self.assertIsNotNone(sprint_note)
+        self.assertTrue(sprint_note.events.exists())
+        self.assertIn('ops', sprint_note.content)
+        # Verify entity's notes field was synced
+        linked_event = sprint_note.events.first()
+        self.assertEqual(linked_event.notes, sprint_note.content)
+
+        material_notes = Note.objects.filter(resources__isnull=False)
+        self.assertEqual(material_notes.count(), 5)
+        material_note = material_notes.first()
+        self.assertIn('ops', material_note.content)
+        linked_material = material_note.resources.first()
+        self.assertEqual(linked_material.notes, material_note.content)
+
+        untitled_notes = Note.objects.filter(title='')
+        self.assertEqual(untitled_notes.count(), 6)
+
+        # Verify homework's notes field and linked Note for legacy item
+        hw_with_legacy = Homework.objects.filter(notes__isnull=False).exclude(notes={})
+        self.assertGreater(hw_with_legacy.count(), 0)
+        for hw in hw_with_legacy:
+            self.assertTrue(hw.notes_set.exists())
 
     def test_import_legacy_notes_converted_to_quill(self):
         """Test that importing legacy HTML comments/details converts them to Quill JSON notes."""
@@ -630,3 +663,172 @@ class TestCaseImportExportViews(APITestCase):
         self.assertTrue(material.notes_set.exists())
         self.assertTrue(event.notes_set.exists())
         self.assertTrue(homework.notes_set.exists())
+
+    def test_import_notes_with_direct_entity_links(self):
+        """Test importing notes with direct M2M links to entities (new format)."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        import_data = {
+            'course_groups': [{
+                'id': 1,
+                'title': 'Test Group',
+                'start_date': '2024-01-01',
+                'end_date': '2024-05-01',
+                'shown_on_calendar': True,
+                'overall_grade': '-1',
+                'user': 1
+            }],
+            'courses': [{
+                'id': 1,
+                'title': 'Test Course',
+                'room': '',
+                'credits': '3.00',
+                'color': '#4986e7',
+                'website': '',
+                'is_online': False,
+                'current_grade': '-1',
+                'teacher_name': '',
+                'teacher_email': '',
+                'start_date': '2024-01-01',
+                'end_date': '2024-05-01',
+                'course_group': 1
+            }],
+            'categories': [{
+                'id': 1,
+                'title': 'Homework',
+                'weight': '100.00',
+                'average_grade': '-1',
+                'grade_by_weight': '0',
+                'color': '#4986e7',
+                'course': 1
+            }],
+            'material_groups': [{
+                'id': 1,
+                'title': 'Test Materials',
+                'shown_on_calendar': True,
+                'user': 1
+            }],
+            'materials': [{
+                'id': 100,
+                'title': 'Test Textbook',
+                'status': 0,
+                'condition': 0,
+                'website': '',
+                'price': '$50.00',
+                'material_group': 1,
+                'courses': [1]
+            }],
+            'events': [{
+                'id': 200,
+                'title': 'Study Session',
+                'all_day': False,
+                'show_end_time': True,
+                'start': '2024-02-01T10:00:00Z',
+                'end': '2024-02-01T11:00:00Z',
+                'priority': 50,
+                'url': None,
+                'user': 1
+            }],
+            'homework': [{
+                'id': 300,
+                'title': 'Assignment 1',
+                'all_day': False,
+                'show_end_time': True,
+                'start': '2024-02-15T10:00:00Z',
+                'end': '2024-02-15T12:00:00Z',
+                'priority': 50,
+                'current_grade': '-1/100',
+                'completed': False,
+                'category': 1,
+                'materials': [100],
+                'course': 1
+            }],
+            'reminders': [],
+            'course_schedules': [],
+            'notes': [
+                {
+                    'id': 1,
+                    'title': 'Textbook ISBN',
+                    'content': {'ops': [{'insert': 'ISBN: 978-1234567890\n'}]},
+                    'homework': [],
+                    'events': [],
+                    'resources': [100]
+                },
+                {
+                    'id': 2,
+                    'title': 'Study Topics',
+                    'content': {
+                        'ops': [
+                            {'insert': 'Topics to review:\n'},
+                            {'insert': 'Chapter 1'},
+                            {'insert': '\n', 'attributes': {'list': 'bullet'}},
+                            {'insert': 'Chapter 2'},
+                            {'insert': '\n', 'attributes': {'list': 'bullet'}}
+                        ]
+                    },
+                    'homework': [],
+                    'events': [200],
+                    'resources': []
+                },
+                {
+                    'id': 3,
+                    'title': 'Assignment Notes',
+                    'content': {
+                        'ops': [
+                            {'insert': 'Remember to cite sources'},
+                            {'insert': '\n', 'attributes': {'list': 'checked'}},
+                            {'insert': 'Double-check math'},
+                            {'insert': '\n', 'attributes': {'list': 'unchecked'}}
+                        ]
+                    },
+                    'homework': [300],
+                    'events': [],
+                    'resources': []
+                },
+                {
+                    'id': 4,
+                    'title': 'Standalone Note',
+                    'content': {'ops': [{'insert': 'General study tips\n'}]},
+                    'homework': [],
+                    'events': [],
+                    'resources': []
+                }
+            ]
+        }
+
+        # WHEN
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(import_data, f)
+            f.flush()
+            with open(f.name, 'rb') as fp:
+                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Note.objects.count(), 4)
+
+        # Verify note linked to material (resource)
+        material = Material.objects.first()
+        textbook_note = Note.objects.get(title='Textbook ISBN')
+        self.assertTrue(textbook_note.resources.filter(pk=material.pk).exists())
+        self.assertEqual(material.notes, textbook_note.content)
+
+        # Verify note linked to event
+        event = Event.objects.first()
+        study_note = Note.objects.get(title='Study Topics')
+        self.assertTrue(study_note.events.filter(pk=event.pk).exists())
+        self.assertEqual(event.notes, study_note.content)
+
+        # Verify note linked to homework
+        homework = Homework.objects.first()
+        assignment_note = Note.objects.get(title='Assignment Notes')
+        self.assertTrue(assignment_note.homework.filter(pk=homework.pk).exists())
+        self.assertEqual(homework.notes, assignment_note.content)
+
+        # Verify standalone note (no entity links)
+        standalone_note = Note.objects.get(title='Standalone Note')
+        self.assertFalse(standalone_note.homework.exists())
+        self.assertFalse(standalone_note.events.exists())
+        self.assertFalse(standalone_note.resources.exists())

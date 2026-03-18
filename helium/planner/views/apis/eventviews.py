@@ -47,10 +47,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             return Event.objects.none()
 
     def get_serializer_class(self):
-        if self.request and self.request.method == 'GET':
-            return EventExtendedSerializer
-        else:
-            return self.serializer_class
+        return EventExtendedSerializer
 
     @extend_schema(
         parameters=[
@@ -74,7 +71,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
 
     @extend_schema(
         responses={
-            201: EventSerializer
+            201: EventExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
@@ -92,7 +89,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     tags=['planner.event']
 )
 class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    serializer_class = EventSerializer
+    serializer_class = EventExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
@@ -105,12 +102,6 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
             )
         else:
             return Event.objects.none()
-
-    def get_serializer_class(self):
-        if self.request and self.request.method == 'GET':
-            return EventExtendedSerializer
-        else:
-            return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """

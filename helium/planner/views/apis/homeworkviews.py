@@ -74,10 +74,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             return Homework.objects.none()
 
     def get_serializer_class(self):
-        if self.request and self.request.method == 'GET':
-            return HomeworkExtendedSerializer
-        else:
-            return self.serializer_class
+        return HomeworkExtendedSerializer
 
     @extend_schema(
         parameters=[
@@ -100,7 +97,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
 
     @extend_schema(
         responses={
-            201: HomeworkSerializer
+            201: HomeworkExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
@@ -128,7 +125,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     tags=['planner.homework']
 )
 class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    serializer_class = HomeworkSerializer
+    serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
@@ -137,12 +134,6 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
             return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
             return Homework.objects.none()
-
-    def get_serializer_class(self):
-        if self.request and self.request.method == 'GET':
-            return HomeworkExtendedSerializer
-        else:
-            return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """
