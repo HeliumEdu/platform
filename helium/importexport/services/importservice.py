@@ -297,40 +297,41 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
 
 
 def _import_notes(notes, user, homework_remap, event_remap, material_remap, example_schedule):
-    """Import standalone notes that aren't created via dual-write.
+    """Import notes, including those linked to entities.
 
-    Notes linked to homework/events/materials are created automatically via
-    dual-write when those entities are imported with notes content.
-    This function handles:
-    1. Standalone notes (no links)
-    2. Notes with links to entities that had no inline notes (edge case)
+    Handles both standalone notes and notes linked to homework/events/materials.
+    For linked notes, the entity IDs are remapped to their new values.
     """
     notes_count = 0
 
     for note_data in notes:
-        # Check if this note would be linked to an entity
-        links = note_data.get('links', [])
-
-        # Skip notes that are linked to entities - these are created via dual-write
-        # when the entity's inline notes field is imported
-        has_entity_link = any(
-            link.get('homework') or link.get('event') or link.get('material')
-            for link in links
-        )
-        if has_entity_link:
-            # The dual-write in homework/event/material serializers handles these
-            continue
-
-        # Import standalone note (no entity links)
+        # Create the note
         note = Note.objects.create(
-            title=note_data.get('title', 'Imported Note'),
+            title=note_data.get('title', ''),
             content=note_data.get('content', {}),
             user=user,
             example_schedule=example_schedule,
         )
+
+        # Set up entity links (remapping IDs to new values)
+        for old_hw_id in note_data.get('homework', []):
+            new_hw_id = homework_remap.get(old_hw_id)
+            if new_hw_id:
+                note.homework.add(new_hw_id)
+
+        for old_event_id in note_data.get('events', []):
+            new_event_id = event_remap.get(old_event_id)
+            if new_event_id:
+                note.events.add(new_event_id)
+
+        for old_material_id in note_data.get('resources', []):
+            new_material_id = material_remap.get(old_material_id)
+            if new_material_id:
+                note.resources.add(new_material_id)
+
         notes_count += 1
 
-    logger.info(f"Imported {notes_count} standalone notes.")
+    logger.info(f"Imported {notes_count} notes.")
 
     return notes_count
 
