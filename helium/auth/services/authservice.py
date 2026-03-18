@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, update_last_login
 from django.core.cache import cache
 from django.db.models import Q
 from firebase_admin import auth as firebase_auth
@@ -309,6 +309,8 @@ def oauth_login(request):
                 provider_user_id=provider_uid,
             )
             logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
+
+        update_last_login(None, user)
 
         token = RefreshToken.for_user(user)
 
