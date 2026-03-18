@@ -62,7 +62,9 @@ class EventSerializer(serializers.ModelSerializer):
         """Sync inline notes field to the linked Note entity (dual-write)."""
         from helium.planner.models import Note
 
-        note = instance.notes_set.first()
+        # Use list access to leverage prefetch cache if available
+        notes_list = list(instance.notes_set.all())
+        note = notes_list[0] if notes_list else None
 
         if notes_content and notes_content != {}:
             if note:
@@ -94,8 +96,12 @@ class EventExtendedSerializer(EventSerializer):
         fields = EventSerializer.Meta.fields + ('note',)
 
     def get_note(self, obj):
-        """Return the linked Note's id if one exists."""
-        note = obj.notes_set.first()
-        if note:
+        """Return the linked Note's id if one exists.
+
+        Uses prefetch cache when available to avoid N+1 queries.
+        """
+        notes_list = list(obj.notes_set.all())
+        if notes_list:
+            note = notes_list[0]
             return {'id': note.id, 'title': note.title}
         return None

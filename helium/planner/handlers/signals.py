@@ -91,42 +91,65 @@ def delete_note(sender, instance, **kwargs):
 
     This ensures dual-write consistency: if a user deletes a Note via the API,
     the linked entity's inline notes field is also cleared.
+
+    Uses bulk_update to avoid N+1 queries.
     """
-    # Clear notes field on all linked homework
-    for hw in instance.homework.all():
-        if hasattr(hw, 'notes'):
+    from django.utils import timezone
+    now = timezone.now()
+
+    # Clear notes field on all linked homework using bulk update
+    homework_list = list(instance.homework.all())
+    if homework_list:
+        for hw in homework_list:
             hw.notes = None
-            hw.save(update_fields=['notes', 'updated_at'])
+            hw.updated_at = now
+        Homework.objects.bulk_update(homework_list, ['notes', 'updated_at'])
 
-    # Clear notes field on all linked events
-    for event in instance.events.all():
-        if hasattr(event, 'notes'):
+    # Clear notes field on all linked events using bulk update
+    events_list = list(instance.events.all())
+    if events_list:
+        for event in events_list:
             event.notes = None
-            event.save(update_fields=['notes', 'updated_at'])
+            event.updated_at = now
+        Event.objects.bulk_update(events_list, ['notes', 'updated_at'])
 
-    # Clear notes field on all linked resources
-    for resource in instance.resources.all():
-        if hasattr(resource, 'notes'):
+    # Clear notes field on all linked resources using bulk update
+    resources_list = list(instance.resources.all())
+    if resources_list:
+        for resource in resources_list:
             resource.notes = None
-            resource.save(update_fields=['notes', 'updated_at'])
+            resource.updated_at = now
+        Material.objects.bulk_update(resources_list, ['notes', 'updated_at'])
 
 
 @receiver(pre_delete, sender=Homework)
 def delete_homework_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Homework is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when a Homework is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Homework) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()
 
 
 @receiver(pre_delete, sender=Event)
 def delete_event_notes(sender, instance, **kwargs):
-    """Delete linked Notes when an Event is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when an Event is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Event) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()
 
 
 @receiver(pre_delete, sender=Material)
 def delete_material_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Material is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when a Material is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Material) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()

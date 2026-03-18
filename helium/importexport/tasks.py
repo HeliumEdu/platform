@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
-def import_example_schedule(self, user_id):
+def import_example_schedule(self, user_id, example_schedule=True):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.import.schedule.example", priority="high", published_at_ms=published_at_ms)
     if settings.SENTRY_ENABLED:
@@ -25,7 +25,8 @@ def import_example_schedule(self, user_id):
     try:
         user = get_user_model().objects.get(pk=user_id)
 
-        importservice.import_example_schedule(user)
+        if example_schedule:
+            importservice.import_example_schedule(user)
 
         # Mark setup as complete now that example schedule is imported
         user.settings.is_setup_complete = True
