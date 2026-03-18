@@ -47,7 +47,9 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             return Event.objects.none()
 
     def get_serializer_class(self):
-        return EventExtendedSerializer
+        if self.request and self.request.method == 'GET':
+            return EventExtendedSerializer
+        return self.serializer_class
 
     @extend_schema(
         parameters=[
@@ -78,18 +80,24 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         """
         Create a new Helium Event instance for the authenticated user.
         """
-        response = self.create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
 
-        logger.info(f"Event {response.data['id']} created for user {request.user.pk}")
+        # Return extended serializer with note field
+        instance = serializer.instance
+        response_serializer = EventExtendedSerializer(instance)
 
-        return response
+        logger.info(f"Event {instance.pk} created for user {request.user.pk}")
+
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(
     tags=['planner.event']
 )
 class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
-    serializer_class = EventExtendedSerializer
+    serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
@@ -102,6 +110,11 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
             )
         else:
             return Event.objects.none()
+
+    def get_serializer_class(self):
+        if self.request and self.request.method == 'GET':
+            return EventExtendedSerializer
+        return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """
@@ -116,21 +129,29 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         """
         Update the given Helium Event instance.
         """
-        response = self.update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         logger.info(f"Event {kwargs['pk']} updated for user {request.user.pk}")
 
-        return response
+        # Return extended serializer with note field
+        return Response(EventExtendedSerializer(serializer.instance).data)
 
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Helium Event instance.
         """
-        response = self.partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         logger.info(f"Event {kwargs['pk']} patched for user {request.user.pk}")
 
-        return response
+        # Return extended serializer with note field
+        return Response(EventExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
         tags=['planner.event']
