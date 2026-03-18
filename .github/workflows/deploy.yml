@@ -259,6 +259,14 @@ jobs:
             -f suite=full \
             -f environment=${{ inputs.environment }}
 
+      - name: Trigger Playwright smoke tests
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run playwright.yml \
+            --repo HeliumEdu/frontend \
+            -f environment=${{ inputs.environment }}
+
       - name: Deployment summary
         env:
           VERSION: ${{ needs.determine-version.outputs.version }}
