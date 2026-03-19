@@ -170,7 +170,6 @@ class TestCaseImportExportViews(APITestCase):
         materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
                                                                {'title': '📚 Test Material Group',
                                                                 'shown_on_calendar': True, 'user': user.pk})
-        # Legacy 'details' field is converted to 'notes' on import
         materialhelper.verify_material_matches_data(self, materials[1],
                                                     {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
@@ -182,7 +181,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIn('ops', material_note.content)
         self.assertEqual(material_note.content['ops'][0]['insert'], 'Return by 7/1')
 
-        # Legacy 'comments' field is converted to 'notes' on import
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
@@ -193,13 +191,11 @@ class TestCaseImportExportViews(APITestCase):
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
                                                'priority': 75, 'url': None, 'comments': '',  # Legacy field not populated
                                                'owner_id': None, 'user': user.pk})
-        # Verify legacy 'comments' was converted to Note for events
         self.assertTrue(events[2].notes_set.exists())
         event_note = events[2].notes_set.first()
         self.assertIn('ops', event_note.content)
         self.assertEqual(event_note.content['ops'][0]['insert'], 'A comment on an event.')
 
-        # Legacy 'comments' field is converted to 'notes' on import
         homeworkhelper.verify_homework_matches_data(self, homework[2],
                                                     {'title': '💻 Test Homework', 'all_day': False,
                                                      'show_end_time': True,
@@ -218,7 +214,6 @@ class TestCaseImportExportViews(APITestCase):
                                                      'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[3].pk,
                                                      'course': courses[3].pk, 'materials': []})
-        # Verify legacy 'comments' was converted to Note for homework
         self.assertTrue(homework[2].notes_set.exists())
         homework_note = homework[2].notes_set.first()
         self.assertIn('ops', homework_note.content)
@@ -424,15 +419,13 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(float(category2.grade_by_weight), 17.52)
         self.assertEqual(float(category2.trend), 0.011699999999999875)
 
-        # Verify Notes were imported (1 standalone + 27 direct links + 2 legacy = 30)
+        # 1 standalone + 27 direct links + 2 legacy = 30
         self.assertEqual(Note.objects.count(), 30)
 
-        # Verify notes with titles were linked correctly
         # 1 welcome + 8 events + 15 homework = 24 (materials have blank titles)
         titled_notes = Note.objects.exclude(title='')
         self.assertEqual(titled_notes.count(), 24)
 
-        # Verify some homework has linked notes
         homework_with_notes = Homework.objects.filter(notes_set__isnull=False).distinct()
         self.assertGreater(homework_with_notes.count(), 0)
 
@@ -472,11 +465,9 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Reminder.objects.count(), 14)
         self.assertEqual(Event.objects.count(), 9)
 
-        # Verify Notes were imported correctly
-        # Example schedule has: 1 standalone + 27 with direct links + 2 legacy conversions = 30 total
+        # 1 standalone + 27 direct links + 2 legacy = 30
         self.assertEqual(Note.objects.count(), 30)
 
-        # Verify standalone note (no entity links)
         standalone_notes = Note.objects.filter(
             homework__isnull=True
         ).filter(
@@ -489,13 +480,10 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(welcome_note.title, 'Ace Your Classes - Welcome to Helium!')
         self.assertIn('ops', welcome_note.content)
 
-        # Verify notes imported with direct entity links (new format)
-        # These have titles and are linked to entities
         # 1 welcome + 8 events + 15 homework = 24 (materials have blank titles)
         titled_notes = Note.objects.exclude(title='')
         self.assertEqual(titled_notes.count(), 24)
 
-        # Verify a specific titled note linked to event
         sprint_note = Note.objects.filter(title='Sprint Planning').first()
         self.assertIsNotNone(sprint_note)
         self.assertTrue(sprint_note.events.exists())
@@ -509,7 +497,6 @@ class TestCaseImportExportViews(APITestCase):
         untitled_notes = Note.objects.filter(title='')
         self.assertEqual(untitled_notes.count(), 6)
 
-        # Verify some homework has linked notes
         hw_with_notes = Homework.objects.filter(notes_set__isnull=False).distinct()
         self.assertGreater(hw_with_notes.count(), 0)
 
@@ -613,40 +600,33 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Verify material's legacy 'details' was converted to Note
         material = Material.objects.first()
-        self.assertEqual(material.details, '')  # Legacy field should be empty
+        self.assertEqual(material.details, '')
         self.assertTrue(material.notes_set.exists())
         material_note = material.notes_set.first()
         self.assertIn('ops', material_note.content)
-        # Check bold formatting was preserved
         bold_op = next((op for op in material_note.content['ops'] if op.get('attributes', {}).get('bold')), None)
         self.assertIsNotNone(bold_op)
         self.assertEqual(bold_op['insert'], 'ISBN:')
 
-        # Verify event's legacy 'comments' was converted to Note (list structure)
         event = Event.objects.first()
-        self.assertEqual(event.comments, '')  # Legacy field should be empty
+        self.assertEqual(event.comments, '')
         self.assertTrue(event.notes_set.exists())
         event_note = event.notes_set.first()
         self.assertIn('ops', event_note.content)
-        # Check list formatting was preserved
         list_op = next((op for op in event_note.content['ops'] if op.get('attributes', {}).get('list')), None)
         self.assertIsNotNone(list_op)
         self.assertEqual(list_op['attributes']['list'], 'bullet')
 
-        # Verify homework's legacy 'comments' was converted to Note (paragraph with bold)
         homework = Homework.objects.first()
-        self.assertEqual(homework.comments, '')  # Legacy field should be empty
+        self.assertEqual(homework.comments, '')
         self.assertTrue(homework.notes_set.exists())
         homework_note = homework.notes_set.first()
         self.assertIn('ops', homework_note.content)
-        # Check bold formatting was preserved
         bold_op = next((op for op in homework_note.content['ops'] if op.get('attributes', {}).get('bold')), None)
         self.assertIsNotNone(bold_op)
         self.assertEqual(bold_op['insert'], 'midnight')
 
-        # Verify Note entries were created
         self.assertEqual(Note.objects.filter(user=user).count(), 3)
 
     def test_import_notes_with_direct_entity_links(self):
@@ -794,22 +774,18 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Note.objects.count(), 4)
 
-        # Verify note linked to material (resource)
         material = Material.objects.first()
         textbook_note = Note.objects.get(title='Textbook ISBN')
         self.assertTrue(textbook_note.resources.filter(pk=material.pk).exists())
 
-        # Verify note linked to event
         event = Event.objects.first()
         study_note = Note.objects.get(title='Study Topics')
         self.assertTrue(study_note.events.filter(pk=event.pk).exists())
 
-        # Verify note linked to homework
         homework = Homework.objects.first()
         assignment_note = Note.objects.get(title='Assignment Notes')
         self.assertTrue(assignment_note.homework.filter(pk=homework.pk).exists())
 
-        # Verify standalone note (no entity links)
         standalone_note = Note.objects.get(title='Standalone Note')
         self.assertFalse(standalone_note.homework.exists())
         self.assertFalse(standalone_note.events.exists())
