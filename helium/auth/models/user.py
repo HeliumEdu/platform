@@ -103,6 +103,10 @@ class User(AbstractBaseUser, BaseModel):
         return self.external_calendars.count()
 
     @property
+    def num_notes(self) -> int:
+        return self.notes.count()
+
+    @property
     def num_course_groups(self) -> int:
         return self.course_groups.count()
 
