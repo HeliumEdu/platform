@@ -42,12 +42,8 @@ def _normalize_user_agent_tag(user_agent):
 
 
 def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
-    if user:
-        user = user
-    elif request and hasattr(request, 'user'):
+    if not user and request and hasattr(request, 'user'):
         user = request.user
-    else:
-        user = None
 
     try:
         tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])

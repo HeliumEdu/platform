@@ -258,8 +258,8 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                                          subject, [email])
 
         metricutils.task_stop(metrics, user=reminder.user)
-    except:
-        logger.error("An unknown error occurred.", exc_info=True)
+    except Exception:
+        logger.error("An error occurred sending email reminder.", exc_info=True)
         metricutils.task_stop(metrics, value=0)
 
     timezone.deactivate()

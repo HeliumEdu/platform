@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2025 Helium Edu"
+__license__ = "MIT"
+
 import json
 
 from django.conf import settings

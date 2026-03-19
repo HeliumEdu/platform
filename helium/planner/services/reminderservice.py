@@ -126,8 +126,8 @@ def process_email_reminders():
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
                 create_next_repeating_reminder(reminder)
-        except:
-            logger.error("An unknown error occurred.", exc_info=True)
+        except Exception:
+            logger.error("An error occurred processing email reminder.", exc_info=True)
 
         timezone.deactivate()
 
@@ -170,8 +170,8 @@ def process_text_reminders():
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
                 create_next_repeating_reminder(reminder)
-        except:
-            logger.error("An unknown error occurred.", exc_info=True)
+        except Exception:
+            logger.error("An error occurred processing text reminder.", exc_info=True)
 
         timezone.deactivate()
 
@@ -222,7 +222,7 @@ def process_push_reminders(mark_sent_only=False):
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
                 create_next_repeating_reminder(reminder)
-        except:
-            logger.error("An unknown error occurred.", exc_info=True)
+        except Exception:
+            logger.error("An error occurred processing push reminder.", exc_info=True)
 
         timezone.deactivate()

@@ -233,8 +233,8 @@ def homework_to_private_ical_feed(user):
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
             calendar.add_component(calendar_event)
-    except:
-        logger.error("An unknown error occurred.", exc_info=True)
+    except Exception:
+        logger.error("An error occurred generating homework iCal feed.", exc_info=True)
 
     timezone.deactivate()
 
@@ -274,8 +274,8 @@ def courseschedules_to_private_ical_feed(user):
             calendar_event["DESCRIPTION"] = _create_event_description(event)
 
             calendar.add_component(calendar_event)
-    except:
-        logger.error("An unknown error occurred.", exc_info=True)
+    except Exception:
+        logger.error("An error occurred generating course schedule iCal feed.", exc_info=True)
 
     timezone.deactivate()
 

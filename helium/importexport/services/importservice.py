@@ -510,8 +510,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
         logger.info(
             f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
-    except:
-        logger.error("An unknown error occurred.", exc_info=True)
+    except Exception:
+        logger.error("An error occurred adjusting example schedule dates.", exc_info=True)
 
     timezone.deactivate()
 

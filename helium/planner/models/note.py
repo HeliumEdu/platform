@@ -69,19 +69,10 @@ class Note(BaseModel):
 
     def _get_cached_m2m(self, attr_name):
         """Get M2M relation as list, using prefetch cache if available."""
-        manager = getattr(self, attr_name)
-        # Check if prefetch cache exists to avoid extra query
-        if manager.all()._result_cache is not None:
-            return list(manager.all())
-        # Fallback: access without triggering full query if possible
-        return list(manager.all())
+        return list(getattr(self, attr_name).all())
 
     @property
     def linked_entity(self):
-        """Returns the first linked entity or None.
-
-        Uses prefetch cache when available to avoid N+1 queries.
-        """
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0]
@@ -95,10 +86,6 @@ class Note(BaseModel):
 
     @property
     def linked_entity_type(self):
-        """Returns string type of linked entity.
-
-        Uses prefetch cache when available to avoid N+1 queries.
-        """
         if self._get_cached_m2m('homework'):
             return 'homework'
         if self._get_cached_m2m('events'):
@@ -109,18 +96,11 @@ class Note(BaseModel):
 
     @property
     def linked_entity_title(self):
-        """Returns title of linked entity."""
         entity = self.linked_entity
         return entity.title if entity else ''
 
     @property
     def course_color(self):
-        """Returns hex color from linked homework's course.
-
-        Only applicable when linked entity is homework.
-        Returns None for events/resources or if no homework linked.
-        Uses prefetch cache when available (expects 'homework__course' prefetch).
-        """
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -130,12 +110,6 @@ class Note(BaseModel):
 
     @property
     def category_color(self):
-        """Returns hex color from linked homework's category.
-
-        Only applicable when linked entity is homework.
-        Returns None for events/resources or if no homework linked.
-        Uses prefetch cache when available (expects 'homework__category' prefetch).
-        """
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -144,10 +118,6 @@ class Note(BaseModel):
         return None
 
     def has_linked_entity(self):
-        """Check if note has any linked entity.
-
-        Uses prefetch cache when available to avoid N+1 queries.
-        """
         return bool(
             self._get_cached_m2m('homework') or
             self._get_cached_m2m('events') or
