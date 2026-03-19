@@ -31,9 +31,6 @@ class BaseCalendar(BaseModel):
     comments = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
                                 blank=True)
 
-    notes = models.JSONField(help_text='Rich text notes in Quill Delta format.',
-                             blank=True, null=True)
-
     class Meta:
         abstract = True
         ordering = ('start', 'title')

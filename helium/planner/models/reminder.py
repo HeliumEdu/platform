@@ -102,15 +102,10 @@ class Reminder(BaseModel):
         now = datetime.datetime.now(user_tz)
         today = now.date()
 
-        # Get exception dates to skip
         exceptions = self._parse_exceptions()
-
-        # Start from today or course start_date, whichever is later
         day = max(today, course.start_date)
 
-        # Look through days until we find the next occurrence or pass end_date
         while day <= course.end_date:
-            # Skip exception dates
             if day in exceptions:
                 day += datetime.timedelta(days=1)
                 continue
@@ -118,13 +113,9 @@ class Reminder(BaseModel):
             weekday = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]
 
             if course_schedule.days_of_week[weekday] == "1":
-                # Get the start time for this weekday
                 start_time = getattr(course_schedule, f'{["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday]}_start_time')
-
-                # Combine date and time in user's timezone
                 local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
 
-                # Only return if this occurrence is in the future
                 if local_start > now:
                     return local_start.astimezone(pytz.utc)
 

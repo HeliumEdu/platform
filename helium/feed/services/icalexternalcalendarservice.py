@@ -72,7 +72,7 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
 
             if _apply_event_filters(event, _from, to, search):
                 events.append(event)
-    except:
+    except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
 
     if invalid_data:
@@ -92,7 +92,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
         if component.name == "VTIMEZONE":
             time_zone = pytz.timezone(component.get("TZID"))
         elif component.name == "VEVENT":
-            if component.has_key("RRULE"):
+            if "RRULE" in component:
                 continue
 
             dt_start = component.get("DTSTART").dt

@@ -205,3 +205,42 @@ class TestCaseReminderService(TestCase):
         mock_send_notifications.assert_not_called()
         reminder.refresh_from_db()
         self.assertTrue(reminder.sent)
+
+    def test_get_subject_orphaned_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event)
+        reminder.event = None
+        reminder.homework = None
+        reminder.course = None
+
+        # WHEN
+        subject = reminderservice.get_subject(reminder)
+
+        # THEN
+        self.assertIsNone(subject)
+
+    def test_create_next_repeating_reminder_non_repeating(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, repeating=False)
+
+        # WHEN
+        result = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN
+        self.assertIsNone(result)
+
+    def test_create_next_repeating_reminder_no_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, repeating=True)
+
+        # WHEN
+        result = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN
+        self.assertIsNone(result)

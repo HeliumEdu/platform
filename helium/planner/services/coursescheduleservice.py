@@ -159,7 +159,7 @@ def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=No
 
             if _apply_event_filters(event, _from, to, search):
                 events.append(event)
-    except:
+    except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
 
     if invalid_data:
@@ -173,12 +173,10 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     events = []
     events_filtered = []
 
-    # Get exception dates to skip
     exceptions = _parse_exceptions(course)
 
     day = course.start_date
     while day <= course.end_date:
-        # Skip exception dates
         if day in exceptions:
             day += datetime.timedelta(days=1)
             continue

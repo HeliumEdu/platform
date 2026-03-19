@@ -11,7 +11,12 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from helium.auth.tasks import purge_unverified_users, purge_refresh_tokens
+from unittest import mock
+
+from helium.auth.tasks import (
+    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token,
+    emit_queue_depth, emit_nightly_metrics, delete_user
+)
 from helium.auth.tests.helpers import userhelper
 
 
@@ -96,3 +101,28 @@ class TestCaseTasks(APITestCase):
         # Make sure the raw + is NOT in the URL portion (it should only appear in the display text)
         self.assertNotIn(f'?email={email_with_plus}', html_content)
         self.assertNotIn(f'?email={email_with_plus}', txt_content)
+
+    def test_blacklist_refresh_token_already_blacklisted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        RefreshToken(user.refresh).blacklist()
+
+        # WHEN/THEN - should not raise, just log and continue
+        blacklist_refresh_token(user.refresh)
+
+    def test_delete_user_not_found(self):
+        # GIVEN - user ID that doesn't exist
+
+        # WHEN/THEN - should not raise, just log and continue
+        delete_user(99999)
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics(self, mock_gauge):
+        # GIVEN
+        userhelper.given_a_user_exists()
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        self.assertEqual(mock_gauge.call_count, 5)  # 5 time windows
