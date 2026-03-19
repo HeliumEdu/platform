@@ -39,14 +39,14 @@ def _extract_legacy_notes(data, legacy_field='comments'):
     """
     Extract and convert legacy HTML notes field to Quill JSON format.
 
-    Removes the legacy field from data and returns the converted Quill JSON content.
+    Reads the legacy field from data (preserving it) and returns the converted Quill JSON content.
     Returns None if no legacy content or conversion fails.
 
-    :param data: The entity data dict (modified in place to remove legacy field)
+    :param data: The entity data dict (legacy field is preserved)
     :param legacy_field: The name of the legacy field ('comments' or 'details')
     :return: Quill JSON content dict or None
     """
-    legacy_content = data.pop(legacy_field, None)
+    legacy_content = data.get(legacy_field, None)
 
     if legacy_content:
         return html_to_quill(legacy_content)
