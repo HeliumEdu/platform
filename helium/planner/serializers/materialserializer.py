@@ -1,40 +1,21 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import logging
-
 from rest_framework import serializers
 
 from helium.planner.models import Material, MaterialGroup, Course
 
-logger = logging.getLogger(__name__)
-
 
 class MaterialSerializer(serializers.ModelSerializer):
-    note = serializers.SerializerMethodField()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if self.context.get('request', None):
             self.fields['material_group'].queryset = MaterialGroup.objects.for_user(self.context['request'].user.pk)
-            # ManyToMany fields need to have their `child_relation` queryset modified instead
             self.fields['courses'].child_relation.queryset = Course.objects.for_user(self.context['request'].user.pk)
 
     class Meta:
         model = Material
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group',
-            'courses', 'note')
-        read_only_fields = ('note',)
-
-    def get_note(self, obj):
-        """Return the linked Note's id if one exists.
-
-        Uses prefetch cache when available to avoid N+1 queries.
-        """
-        notes_list = list(obj.notes_set.all())
-        if notes_list:
-            note = notes_list[0]
-            return {'id': note.id, 'title': note.title}
-        return None
+            'courses',)
