@@ -344,3 +344,117 @@ class TestCaseNoteValidation(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('only be linked to one event', str(response.data))
+
+    def test_note_rejects_multiple_homework(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        hw1 = homeworkhelper.given_homework_exists(course)
+        hw2 = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_exists(user)
+        data = {
+            'title': note.title,
+            'content': note.content,
+            'homework': [hw1.pk, hw2.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('only be linked to one homework', str(response.data))
+
+    def test_note_rejects_multiple_resources(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        resource1 = materialhelper.given_material_exists(material_group)
+        resource2 = materialhelper.given_material_exists(material_group)
+        note = notehelper.given_note_exists(user)
+        data = {
+            'title': note.title,
+            'content': note.content,
+            'resources': [resource1.pk, resource2.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('only be linked to one resource', str(response.data))
+
+    def test_note_rejects_linking_to_homework_with_existing_note(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        notehelper.given_note_linked_to_homework(user, homework)
+        new_note = notehelper.given_note_exists(user)
+        data = {
+            'title': new_note.title,
+            'content': new_note.content,
+            'homework': [homework.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': new_note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('already has a linked note', str(response.data))
+
+    def test_note_rejects_linking_to_event_with_existing_note(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        notehelper.given_note_linked_to_event(user, event)
+        new_note = notehelper.given_note_exists(user)
+        data = {
+            'title': new_note.title,
+            'content': new_note.content,
+            'events': [event.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': new_note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('already has a linked note', str(response.data))
+
+    def test_note_rejects_linking_to_resource_with_existing_note(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        resource = materialhelper.given_material_exists(material_group)
+        notehelper.given_note_linked_to_resource(user, resource)
+        new_note = notehelper.given_note_exists(user)
+        data = {
+            'title': new_note.title,
+            'content': new_note.content,
+            'resources': [resource.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': new_note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('already has a linked note', str(response.data))
+
+    def test_note_allows_update_own_link(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        data = {
+            'title': 'Updated Title',
+            'content': {'ops': [{'insert': 'Updated content\n'}]},
+            'events': [event.pk],
+        }
+        response = self.client.put(
+            reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.title, 'Updated Title')

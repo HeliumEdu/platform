@@ -10,6 +10,7 @@ from rest_framework.test import APITestCase
 
 from helium.auth.models import UserSettings, UserProfile
 from helium.auth.tests.helpers import userhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
 
 class TestCaseUserViews(APITestCase):
@@ -563,3 +564,22 @@ class TestCaseUserViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['has_oauth_providers'])
+
+    def test_delete_example_schedule(self):
+        # GIVEN
+        from helium.planner.models import Homework, CourseGroup
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course_group.example_schedule = True
+        course_group.save()
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course)
+        self.assertEqual(Homework.objects.filter(course__course_group__user=user).count(), 1)
+        self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 1)
+
+        # WHEN
+        response = self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 0)
