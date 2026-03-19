@@ -27,7 +27,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Homework
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments', 'notes',
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
             'current_grade', 'completed', 'category', 'materials', 'attachments', 'reminders', 'course',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
@@ -46,15 +46,6 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-
-        # Dual-write: sync inline notes to linked Note entity
-        if 'notes' in validated_data:
-            self._sync_notes_to_note_entity(instance, validated_data['notes'])
-
-        return instance
-
     def update(self, instance, validated_data):
         old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
                                                                                   validated_data['category'] else None
@@ -64,37 +55,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         if old_category:
             recalculate_category_grade(old_category.pk)
 
-        # Dual-write: sync inline notes to linked Note entity
-        if 'notes' in validated_data:
-            self._sync_notes_to_note_entity(instance, validated_data['notes'])
-
         return instance
-
-    def _sync_notes_to_note_entity(self, instance, notes_content):
-        """Sync inline notes field to the linked Note entity (dual-write)."""
-        from helium.planner.models import Note
-
-        # Use list access to leverage prefetch cache if available
-        notes_list = list(instance.notes_set.all())
-        note = notes_list[0] if notes_list else None
-
-        if notes_content and notes_content != {}:
-            if note:
-                # Update existing Note
-                note.content = notes_content
-                note.save(update_fields=['content', 'updated_at'])
-            else:
-                # Create new Note and link
-                note = Note.objects.create(
-                    title='',
-                    content=notes_content,
-                    user=instance.course.course_group.user,
-                    example_schedule=instance.course.course_group.example_schedule,
-                )
-                note.homework.add(instance)
-        elif note:
-            # Notes cleared - delete the linked Note
-            note.delete()
 
 
 class HomeworkExtendedSerializer(HomeworkSerializer):

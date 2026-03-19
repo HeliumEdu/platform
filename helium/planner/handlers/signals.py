@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
-from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Note, Material
+from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Material
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -82,44 +82,6 @@ def delete_attachment(sender, instance, **kwargs):
     """
     if instance.attachment:
         instance.attachment.delete(False)
-
-
-@receiver(pre_delete, sender=Note)
-def delete_note(sender, instance, **kwargs):
-    """
-    Clear the linked entity's notes field when a Note is deleted.
-
-    This ensures dual-write consistency: if a user deletes a Note via the API,
-    the linked entity's inline notes field is also cleared.
-
-    Uses bulk_update to avoid N+1 queries.
-    """
-    from django.utils import timezone
-    now = timezone.now()
-
-    # Clear notes field on all linked homework using bulk update
-    homework_list = list(instance.homework.all())
-    if homework_list:
-        for hw in homework_list:
-            hw.notes = None
-            hw.updated_at = now
-        Homework.objects.bulk_update(homework_list, ['notes', 'updated_at'])
-
-    # Clear notes field on all linked events using bulk update
-    events_list = list(instance.events.all())
-    if events_list:
-        for event in events_list:
-            event.notes = None
-            event.updated_at = now
-        Event.objects.bulk_update(events_list, ['notes', 'updated_at'])
-
-    # Clear notes field on all linked resources using bulk update
-    resources_list = list(instance.resources.all())
-    if resources_list:
-        for resource in resources_list:
-            resource.notes = None
-            resource.updated_at = now
-        Material.objects.bulk_update(resources_list, ['notes', 'updated_at'])
 
 
 @receiver(pre_delete, sender=Homework)

@@ -24,7 +24,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
         fields = (
-            'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'notes', 'material_group',
+            'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group',
             'courses', 'note')
         read_only_fields = ('note',)
 
@@ -38,47 +38,3 @@ class MaterialSerializer(serializers.ModelSerializer):
             note = notes_list[0]
             return {'id': note.id, 'title': note.title}
         return None
-
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-
-        # Dual-write: sync inline notes to linked Note entity
-        if 'notes' in validated_data:
-            self._sync_notes_to_note_entity(instance, validated_data['notes'])
-
-        return instance
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-
-        # Dual-write: sync inline notes to linked Note entity
-        if 'notes' in validated_data:
-            self._sync_notes_to_note_entity(instance, validated_data['notes'])
-
-        return instance
-
-    def _sync_notes_to_note_entity(self, instance, notes_content):
-        """Sync inline notes field to the linked Note entity (dual-write)."""
-        from helium.planner.models import Note
-
-        # Use list access to leverage prefetch cache if available
-        notes_list = list(instance.notes_set.all())
-        note = notes_list[0] if notes_list else None
-
-        if notes_content and notes_content != {}:
-            if note:
-                # Update existing Note
-                note.content = notes_content
-                note.save(update_fields=['content', 'updated_at'])
-            else:
-                # Create new Note and link
-                note = Note.objects.create(
-                    title='',
-                    content=notes_content,
-                    user=instance.material_group.user,
-                    example_schedule=instance.material_group.example_schedule,
-                )
-                note.resources.add(instance)
-        elif note:
-            # Notes cleared - delete the linked Note
-            note.delete()

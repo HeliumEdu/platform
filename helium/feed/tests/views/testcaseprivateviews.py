@@ -11,7 +11,7 @@ from django.utils.http import http_date
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
-    homeworkhelper, eventhelper
+    homeworkhelper, eventhelper, notehelper, materialgrouphelper, materialhelper
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,40 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, event2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], f"Comments: {event2.comments}")
+
+    def test_events_feed_with_linked_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user, comments='Legacy comment')
+        notehelper.given_note_linked_to_event(
+            user, event, content={'ops': [{'insert': 'Note content from linked note\n'}]}
+        )
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        self.assertEqual(len(calendar.subcomponents), 1)
+        self.assertIn('Note content from linked note', calendar.subcomponents[0]['DESCRIPTION'])
+        self.assertNotIn('Legacy comment', calendar.subcomponents[0]['DESCRIPTION'])
+
+    def test_events_feed_with_url(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user, url='https://example.com/event')
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        self.assertEqual(len(calendar.subcomponents), 1)
+        description = calendar.subcomponents[0]['DESCRIPTION']
+        self.assertIn('URL: https://example.com/event', description)
+        self.assertIn('Comments:', description)
 
     def test_homework_feed(self):
         # GIVEN
@@ -78,6 +112,51 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, homework2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
                          f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}\nComments: {homework2.comments}')
+
+    def test_homework_feed_with_linked_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, room='')
+        category = categoryhelper.given_category_exists(course, title='Uncategorized')
+        homework = homeworkhelper.given_homework_exists(course, category=category, comments='Legacy comment')
+        notehelper.given_note_linked_to_homework(
+            user, homework, content={'ops': [{'insert': 'Homework note content\n'}]}
+        )
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        self.assertEqual(len(calendar.subcomponents), 1)
+        self.assertIn('Homework note content', calendar.subcomponents[0]['DESCRIPTION'])
+        self.assertNotIn('Legacy comment', calendar.subcomponents[0]['DESCRIPTION'])
+
+    def test_homework_feed_with_materials_and_url(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group, courses=[course])
+        homework = homeworkhelper.given_homework_exists(
+            course, category=category, url='https://example.com/assignment'
+        )
+        homework.materials.add(material)
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        self.assertEqual(len(calendar.subcomponents), 1)
+        description = calendar.subcomponents[0]['DESCRIPTION']
+        self.assertIn(f'Materials: {material.title}', description)
+        self.assertIn('URL: https://example.com/assignment', description)
 
     def test_courseschedules_feed(self):
         # GIVEN

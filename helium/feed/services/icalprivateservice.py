@@ -7,7 +7,7 @@ import logging
 import icalendar
 import pytz
 from django.conf import settings
-from django.db.models import Max
+from django.db.models import Max, Prefetch
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.http import http_date, parse_http_date_safe
@@ -129,7 +129,11 @@ def _delta_to_plain_text(delta):
 
 
 def _create_event_description(event):
-    comments = _delta_to_plain_text(event.notes) if event.notes else event.comments
+    notes = list(event.notes_set.all())
+    if notes and notes[0].content:
+        comments = _delta_to_plain_text(notes[0].content)
+    else:
+        comments = event.comments or ""
     description = f"Comments: {comments}"
 
     if event.url:
@@ -160,7 +164,11 @@ def _create_homework_description(homework):
     if homework.completed and homework.current_grade != "-1/100":
         description += f"Grade: {homework.current_grade}\n"
 
-    comments = _delta_to_plain_text(homework.notes) if homework.notes else homework.comments
+    notes = list(homework.notes_set.all())
+    if notes and notes[0].content:
+        comments = _delta_to_plain_text(notes[0].content)
+    else:
+        comments = homework.comments or ""
     description += f"Comments: {comments}"
 
     return description
@@ -178,7 +186,7 @@ def events_to_private_ical_feed(user):
     try:
         calendar = _create_calendar(user)
 
-        for event in user.events.iterator():
+        for event in user.events.prefetch_related('notes_set'):
             calendar_event = icalendar.Event()
             calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
             calendar_event["SUMMARY"] = event.title
@@ -192,7 +200,7 @@ def events_to_private_ical_feed(user):
             calendar_event["DESCRIPTION"] = _create_event_description(event)
 
             calendar.add_component(calendar_event)
-    except:
+    except Exception:
         logger.error("An unknown error occurred.", exc_info=True)
     timezone.deactivate()
 
@@ -211,7 +219,7 @@ def homework_to_private_ical_feed(user):
     try:
         calendar = _create_calendar(user)
 
-        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('materials'):
+        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('materials', 'notes_set'):
             calendar_event = icalendar.Event()
             calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
             calendar_event["SUMMARY"] = homework.title

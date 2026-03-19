@@ -196,49 +196,8 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.data[0]['id'], note2.pk)
 
 
-class TestCaseNoteDualWrite(APITestCase):
-    def test_update_note_syncs_to_linked_homework(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
-        note = notehelper.given_note_linked_to_homework(user, homework)
-        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
-        data = {'title': note.title, 'content': new_content}
-        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        homework.refresh_from_db()
-        self.assertEqual(homework.notes, new_content)
-
-    def test_update_note_syncs_to_linked_event(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)
-        note = notehelper.given_note_linked_to_event(user, event)
-        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
-        data = {'title': note.title, 'content': new_content}
-        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event.refresh_from_db()
-        self.assertEqual(event.notes, new_content)
-
-    def test_patch_note_content_syncs_to_linked_entity(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)
-        note = notehelper.given_note_linked_to_event(user, event)
-        new_content = {'ops': [{'insert': 'Patched content\n'}]}
-        data = {'content': new_content}
-        response = self.client.patch(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
-                                     json.dumps(data),
-                                     content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event.refresh_from_db()
-        self.assertEqual(event.notes, new_content)
-
-    def test_update_standalone_note_no_sync(self):
+class TestCaseNoteExtendedFields(APITestCase):
+    def test_update_standalone_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         note = notehelper.given_note_exists(user)
         new_content = {'ops': [{'insert': 'Updated standalone\n'}]}
@@ -249,62 +208,6 @@ class TestCaseNoteDualWrite(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         note.refresh_from_db()
         self.assertEqual(note.content, new_content)
-
-    def test_update_note_syncs_to_linked_resource(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
-        note = notehelper.given_note_linked_to_resource(user, resource)
-        new_content = {'ops': [{'insert': 'Updated via Note API\n'}]}
-        data = {'title': note.title, 'content': new_content}
-        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': note.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        resource.refresh_from_db()
-        self.assertEqual(resource.notes, new_content)
-
-    def test_create_note_with_homework_syncs_content(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
-        self.assertIsNone(homework.notes)
-        content = {'ops': [{'insert': 'Created via Note API\n'}]}
-        data = {'title': 'New Note', 'content': content, 'homework': [homework.pk]}
-        response = self.client.post(reverse('planner_notes_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        homework.refresh_from_db()
-        self.assertEqual(homework.notes, content)
-
-    def test_create_note_with_event_syncs_content(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)
-        self.assertIsNone(event.notes)
-        content = {'ops': [{'insert': 'Created via Note API\n'}]}
-        data = {'title': 'New Note', 'content': content, 'events': [event.pk]}
-        response = self.client.post(reverse('planner_notes_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        event.refresh_from_db()
-        self.assertEqual(event.notes, content)
-
-    def test_create_note_with_resource_syncs_content(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
-        self.assertIsNone(resource.notes)
-        content = {'ops': [{'insert': 'Created via Note API\n'}]}
-        data = {'title': 'New Note', 'content': content, 'resources': [resource.pk]}
-        response = self.client.post(reverse('planner_notes_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        resource.refresh_from_db()
-        self.assertEqual(resource.notes, content)
 
     def test_get_note_includes_colors_for_homework(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -356,41 +259,7 @@ class TestCaseNoteDualWrite(APITestCase):
         self.assertIn('content', response.data)
         self.assertEqual(response.data['content'], content)
 
-    def test_delete_note_clears_linked_entity_notes(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)
-        event.notes = {'ops': [{'insert': 'Event notes\n'}]}
-        event.save()
-        note = notehelper.given_note_linked_to_event(user, event, content=event.notes)
-        response = self.client.delete(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        event.refresh_from_db()
-        self.assertIsNone(event.notes)
-
-
 class TestCaseNoteEdgeCases(APITestCase):
-    def test_create_entity_with_empty_notes_no_note_created(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        data = {
-            'title': 'Event Without Notes',
-            'all_day': False,
-            'show_end_time': True,
-            'start': '2024-05-08T10:00:00Z',
-            'end': '2024-05-08T14:00:00Z',
-            'priority': 50,
-            'notes': {},
-        }
-        response = self.client.post(
-            reverse('planner_events_list'),
-            json.dumps(data),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        from helium.planner.models import Event
-        event = Event.objects.get(pk=response.data['id'])
-        self.assertFalse(event.notes_set.exists())
-        self.assertEqual(Note.objects.filter(user=user).count(), 0)
-
     def test_delete_entity_deletes_linked_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
@@ -416,8 +285,6 @@ class TestCaseNoteEdgeCases(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
-        event.refresh_from_db()
-        self.assertIsNone(event.notes)
 
     def test_clear_note_content_standalone_note_not_deleted(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
