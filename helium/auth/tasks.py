@@ -196,22 +196,32 @@ def emit_queue_depth(self):
 @app.task(bind=True)
 def emit_nightly_metrics(self):
     """Emit nightly aggregate metrics."""
-    from django.db.models import Exists, OuterRef
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
 
-    from helium.planner.models import Event, Homework, Note
+    try:
+        from django.db.models import Exists, OuterRef
 
-    # Active users by window (users who modified events, homework, or notes)
-    for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
-        cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
-        count = get_user_model().objects.filter(
-            is_active=True
-        ).filter(
-            Exists(Event.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
-            Exists(Note.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
-            Exists(Homework.objects.filter(course__course_group__user=OuterRef('pk'), updated_at__gte=cutoff))
-        ).count()
-        metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}'])
-        logger.debug(f"Emitted active users ({window_tag}): {count}")
+        from helium.planner.models import Event, Homework, Note
+
+        # Active users by window (users who modified events, homework, or notes)
+        for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+            cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
+            count = get_user_model().objects.filter(
+                is_active=True
+            ).filter(
+                Exists(Event.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
+                Exists(Note.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)) |
+                Exists(Homework.objects.filter(course__course_group__user=OuterRef('pk'), updated_at__gte=cutoff))
+            ).count()
+            metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}'])
+            logger.debug(f"Emitted active users ({window_tag}): {count}")
+    except Exception as e:
+        logger.error(f"Failed to emit nightly metrics: {e}", exc_info=True)
+        metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
+        raise
+
+    metricutils.task_stop(metrics)
 
 
 @app.on_after_finalize.connect

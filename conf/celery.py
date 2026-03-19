@@ -36,8 +36,8 @@ def add_publish_time(sender=None, headers=None, **kwargs):
 @beat_init.connect
 def on_beat_init(sender, **kwargs):
     """Emit nightly metrics on Beat startup for immediate validation."""
-    from helium.auth.tasks import emit_nightly_metrics
-    emit_nightly_metrics.delay()
+    # Use send_task to avoid import issues before Django is fully ready
+    app.send_task('helium.auth.tasks.emit_nightly_metrics')
 
 
 if 'celery' in sys.argv[0]:
