@@ -57,6 +57,33 @@ class NoteSerializer(serializers.ModelSerializer):
                 'A note can only be linked to one resource.'
             )
 
+        # Enforce one-to-one from entity side: entity can only have one linked note
+        exclude_pk = self.instance.pk if self.instance else None
+        if homework:
+            existing = Note.objects.filter(homework__in=homework)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This homework assignment already has a linked note.'
+                )
+        if events:
+            existing = Note.objects.filter(events__in=events)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This event already has a linked note.'
+                )
+        if resources:
+            existing = Note.objects.filter(resources__in=resources)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This resource already has a linked note.'
+                )
+
         return attrs
 
     def should_delete_on_empty_content(self, instance, validated_data):
