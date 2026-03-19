@@ -41,6 +41,9 @@ class User(AbstractBaseUser, BaseModel):
     last_login_legacy = models.DateTimeField(blank=True, null=True,
                                              help_text='Last login time via legacy frontend.')
 
+    last_activity = models.DateTimeField(blank=True, null=True, db_index=True,
+                                         help_text='Last user activity (login or token refresh).')
+
     # Manager
     objects = UserManager()
 

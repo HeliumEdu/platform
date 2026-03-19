@@ -75,6 +75,9 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             if update_last_login_field:
                 update_last_login(None, user)
 
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
+
             self._authenticated_user = user
 
             logger.debug(f"User {user.pk} has been logged in")
@@ -122,6 +125,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         refresh = self.token_class(attrs["refresh"])
 
         user_id = refresh.payload.get(api_settings.USER_ID_CLAIM, None)
+        user = None
         try:
             if user_id and (
                     user := get_user_model().objects.get(
@@ -133,6 +137,10 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         except get_user_model().DoesNotExist:
             raise PermissionDenied(
                 'Sorry, the given token does have permissions for the given account, or the account is inactive.')
+
+        if user:
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
 
         data = {"access": str(refresh.access_token)}
 

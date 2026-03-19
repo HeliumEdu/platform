@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from django.core.cache import cache
 from django.db.models import Q
+from django.utils import timezone
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
@@ -312,6 +313,8 @@ def oauth_login(request):
             logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
 
         update_last_login(None, user)
+        user.last_activity = timezone.now()
+        user.save(update_fields=['last_activity'])
 
         token = RefreshToken.for_user(user)
 
