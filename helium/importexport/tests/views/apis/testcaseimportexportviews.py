@@ -173,7 +173,7 @@ class TestCaseImportExportViews(APITestCase):
         materialhelper.verify_material_matches_data(self, materials[1],
                                                     {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
-                                                     'details': '',  # Legacy field is not populated on import
+                                                     'details': 'Return by 7/1',  # Legacy field preserved on import
                                                      'material_group': material_groups[1].pk, 'courses': []})
         # Verify legacy 'details' was converted to Note
         self.assertTrue(materials[1].notes_set.exists())
@@ -184,12 +184,12 @@ class TestCaseImportExportViews(APITestCase):
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': '',  # Legacy field not populated
+                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
                                                'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': '',  # Legacy field not populated
+                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
                                                'owner_id': None, 'user': user.pk})
         self.assertTrue(events[2].notes_set.exists())
         event_note = events[2].notes_set.first()
@@ -201,7 +201,7 @@ class TestCaseImportExportViews(APITestCase):
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': '',  # Legacy field not populated
+                                                     'comments': 'A comment on a homework.',
                                                      'current_grade': '20/30',
                                                      'completed': True, 'category': categories[1].pk,
                                                      'course': courses[2].pk, 'materials': [materials[1].pk]})
@@ -210,7 +210,7 @@ class TestCaseImportExportViews(APITestCase):
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': '',  # Legacy field not populated
+                                                     'comments': 'A comment on a homework.',
                                                      'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[3].pk,
                                                      'course': courses[3].pk, 'materials': []})
@@ -600,8 +600,9 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # Legacy fields should be preserved (not cleared) for backward compatibility
         material = Material.objects.first()
-        self.assertEqual(material.details, '')
+        self.assertEqual(material.details, '<b>ISBN:</b> 978-1234567890')
         self.assertTrue(material.notes_set.exists())
         material_note = material.notes_set.first()
         self.assertIn('ops', material_note.content)
@@ -610,7 +611,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(bold_op['insert'], 'ISBN:')
 
         event = Event.objects.first()
-        self.assertEqual(event.comments, '')
+        self.assertEqual(event.comments, '<ul><li>Item 1</li><li>Item 2</li></ul>')
         self.assertTrue(event.notes_set.exists())
         event_note = event.notes_set.first()
         self.assertIn('ops', event_note.content)
@@ -619,7 +620,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(list_op['attributes']['list'], 'bullet')
 
         homework = Homework.objects.first()
-        self.assertEqual(homework.comments, '')
+        self.assertEqual(homework.comments, '<p>Due by <strong>midnight</strong></p>')
         self.assertTrue(homework.notes_set.exists())
         homework_note = homework.notes_set.first()
         self.assertIn('ops', homework_note.content)
