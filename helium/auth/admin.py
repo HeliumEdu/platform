@@ -211,7 +211,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login', 'get_last_activity']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def has_add_permission(self, request):
@@ -247,7 +247,7 @@ class UserSettingsAdmin(BaseModelAdmin):
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
                    'calendar_use_category_colors', 'default_reminder_type']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def get_user(self, obj):
