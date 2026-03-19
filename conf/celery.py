@@ -12,7 +12,7 @@ import time
 from django.conf import settings
 
 from celery import Celery
-from celery.signals import before_task_publish
+from celery.signals import beat_init, before_task_publish
 
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
@@ -31,6 +31,13 @@ def add_publish_time(sender=None, headers=None, **kwargs):
         # Also add to nested headers dict which becomes self.request.headers on the worker
         if 'headers' in headers and isinstance(headers['headers'], dict):
             headers['headers']['published_at'] = published_at
+
+
+@beat_init.connect
+def on_beat_init(sender, **kwargs):
+    """Emit nightly metrics on Beat startup for immediate validation."""
+    from helium.auth.tasks import emit_nightly_metrics
+    emit_nightly_metrics.delay()
 
 
 if 'celery' in sys.argv[0]:
