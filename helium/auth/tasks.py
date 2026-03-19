@@ -13,6 +13,8 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from rest_framework_simplejwt.tokens import RefreshToken
 from firebase_admin import auth as firebase_auth
 
+from celery.schedules import crontab
+
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
 
@@ -216,9 +218,9 @@ def emit_nightly_metrics(self):
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired refresh tokens periodically
     sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
-    # Add schedule to purge unverified users that don't finish setting up their account
-    sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s())
-    # Emit nightly aggregate metrics
-    sender.add_periodic_task(settings.NIGHTLY_METRICS_FREQUENCY_SEC, emit_nightly_metrics.s())
+    # Purge unverified users daily at 4am UTC
+    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s())
+    # Emit nightly aggregate metrics at 3am UTC
+    sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())
