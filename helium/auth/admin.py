@@ -161,9 +161,9 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'created_at', 'last_login_legacy', 'last_activity', 'get_auth_type',
+    list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_course_groups', 'num_courses', 'num_homework', 'num_events',
-                    'num_attachments', 'num_external_calendars', 'is_active')
+                    'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
@@ -211,7 +211,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login', 'get_last_activity']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def has_add_permission(self, request):
@@ -247,7 +247,7 @@ class UserSettingsAdmin(BaseModelAdmin):
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
                    'calendar_use_category_colors', 'default_reminder_type']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def get_user(self, obj):
