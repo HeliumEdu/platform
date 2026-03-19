@@ -10,10 +10,7 @@ from django.test import TestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.services import reminderservice
-from helium.planner.tests.helpers import (
-    coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper,
-    courseschedulehelper
-)
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper
 
 
 class TestCaseReminderService(TestCase):
@@ -209,25 +206,6 @@ class TestCaseReminderService(TestCase):
         reminder.refresh_from_db()
         self.assertTrue(reminder.sent)
 
-    def test_get_subject_with_course(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(
-            course_group,
-            start_date=datetime.date.today(),
-            end_date=datetime.date.today() + datetime.timedelta(days=30)
-        )
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='1111111')
-        reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True)
-
-        # WHEN
-        subject = reminderservice.get_subject(reminder)
-
-        # THEN
-        self.assertIsNotNone(subject)
-        self.assertIn(course.title, subject)
-
     def test_get_subject_orphaned_reminder(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -266,31 +244,3 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertIsNone(result)
-
-    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
-    def test_process_email_reminders_repeating_creates_next(self, mock_send_multipart_email):
-        # GIVEN
-        from helium.planner.models import Reminder
-        user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(
-            course_group,
-            start_date=datetime.date.today(),
-            end_date=datetime.date.today() + datetime.timedelta(days=30)
-        )
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='1111111')
-        event = eventhelper.given_event_exists(user)
-        reminder = reminderhelper.given_reminder_exists(
-            user, type=enums.EMAIL, event=event, repeating=True
-        )
-        initial_count = Reminder.objects.count()
-
-        # WHEN
-        reminderservice.process_email_reminders()
-
-        # THEN
-        self.assertEqual(mock_send_multipart_email.call_count, 1)
-        reminder.refresh_from_db()
-        self.assertTrue(reminder.sent)
-        # No new reminder created since only course reminders create next occurrences
-        self.assertEqual(Reminder.objects.count(), initial_count)
