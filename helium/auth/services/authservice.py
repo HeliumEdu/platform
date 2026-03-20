@@ -242,6 +242,7 @@ def oauth_login(request):
                 f'Please contact support for assistance.'
             )
 
+        is_new_user = False
         if existing_oauth:
             # UID already linked - use that user
             user = existing_oauth.user
@@ -286,6 +287,7 @@ def oauth_login(request):
 
         else:
             # No OAuth link and no user with this email - create new user
+            is_new_user = True
             username = generate_unique_username_from_email(email)
 
             serializer = UserSerializer()
@@ -313,8 +315,9 @@ def oauth_login(request):
             logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
 
         update_last_login(None, user)
-        user.last_activity = timezone.now()
-        user.save(update_fields=['last_activity'])
+        if not is_new_user:
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
 
         token = RefreshToken.for_user(user)
 
