@@ -271,7 +271,10 @@ def courseschedules_to_private_ical_feed(user):
             else:
                 calendar_event["DTSTART"] = icalendar.vDate(event.start)
                 calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
-            calendar_event["DESCRIPTION"] = _create_event_description(event)
+            description = f"Comments: {event.comments or ''}"
+            if event.url:
+                description = f"URL: {event.url}\n" + description
+            calendar_event["DESCRIPTION"] = description
 
             calendar.add_component(calendar_event)
     except Exception:
