@@ -99,8 +99,6 @@ def recalculate_category_grade(self, category_id, retries=0):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.category", priority="low", published_at_ms=published_at_ms)
 
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     try:
         course_id = Category.objects.select_related('course').get(pk=category_id).course.id
 
@@ -207,8 +205,6 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.reminder.sent", priority="high", published_at_ms=published_at_ms)
 
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     try:
         reminder = Reminder.objects.select_related('user', 'user__settings').get(pk=reminder_id)
     except Reminder.DoesNotExist:

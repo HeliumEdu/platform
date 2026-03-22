@@ -33,7 +33,7 @@ class Reminder(BaseModel):
 
     sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False, db_index=True)
 
-    dismissed = models.BooleanField(help_text='Whether the reminder has been dismieed.', default=False, db_index=True)
+    dismissed = models.BooleanField(help_text='Whether the reminder has been dismissed.', default=False, db_index=True)
 
     repeating = models.BooleanField(help_text='Whether the reminder repeats (for courses).', default=False)
 

@@ -53,11 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_has_usable_password(self, obj) -> bool:
-        """Return whether the user has a usable password."""
         return obj.has_usable_password()
 
     def get_has_oauth_providers(self, obj) -> bool:
-        """Return whether the user has any OAuth providers linked."""
         return obj.oauth_providers.exists()
 
     def validate(self, attrs):

@@ -2243,7 +2243,7 @@
       "content": {
         "ops": [
           {"insert": "Covers chapters 7-12", "attributes": {"bold": true}},
-          {"insert": ", remind study partners:\n"},
+          {"insert": " with study partners:\n"},
           {"insert": "Jenna"},
           {"insert": "\n", "attributes": {"list": "bullet"}},
           {"insert": "Andrew"},
