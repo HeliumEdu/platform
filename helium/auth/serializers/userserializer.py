@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
         username = attrs.get('username', self.instance.username if self.instance else None)
 
         if (username and username.startswith("heliumedu-cluster") and
-                not is_admin_allowed_email(email)):
+                not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
             raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
 
         # If setting a password and user has a usable password, require old_password for security
