@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import json
+
 from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q
@@ -625,7 +627,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('id', 'title', 'updated_at', 'get_user')
+    list_display = ('id', 'title', 'get_content_size', 'updated_at', 'get_user')
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -647,6 +649,13 @@ class NoteAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
+    def get_content_size(self, obj):
+        if obj.content is None:
+            return '-'
+        return f'{len(json.dumps(obj.content).encode("utf-8"))} B'
+
+    get_content_size.short_description = 'Content Size'
 
     def linked_entity(self, obj):
         hw = obj.homework.first()
