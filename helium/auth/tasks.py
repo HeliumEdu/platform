@@ -99,8 +99,6 @@ def delete_user(self, user_id):
         import sentry_sdk
         sentry_sdk.set_user({"id": user_id})
 
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     user = None
     try:
         user = get_user_model().objects.get(pk=user_id)

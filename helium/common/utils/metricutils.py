@@ -123,11 +123,10 @@ def request_stop(metrics, request, response):
 
 def task_start(task_name, priority="low", published_at_ms=None):
     try:
-        metric_id = f"{task_name}"
         start_time = int(round(time.time() * 1000))
 
         metrics = {
-            'Task-Metric-ID': metric_id,
+            'Task-Metric-ID': task_name,
             'Task-Metric-Start': start_time,
             'Task-Metric-Priority': priority,
         }
@@ -136,7 +135,7 @@ def task_start(task_name, priority="low", published_at_ms=None):
         if published_at_ms is not None:
             metrics['Task-Metric-Queue'] = published_at_ms
             queue_wait_ms = max(0, start_time - published_at_ms)
-            timing('task.queue_time', queue_wait_ms, extra_tags=[f"name:{metric_id}", f"priority:{priority}"])
+            timing('task.queue_time', queue_wait_ms, extra_tags=[f"name:{task_name}", f"priority:{priority}"])
 
         return metrics
     except Exception:
@@ -170,11 +169,8 @@ def get_published_at_ms(celery_task):
     Get the timestamp (in ms) when a task was published to the queue.
     Uses Celery's task request headers to determine when the task was published.
 
-    Args:
-        celery_task: The Celery task instance (self in a bound task)
-
-    Returns:
-        Publish timestamp in milliseconds, or None if not available
+    :param celery_task: The Celery task instance (self in a bound task)
+    :return: Publish timestamp in milliseconds, or None if not available
     """
     try:
         request = celery_task.request

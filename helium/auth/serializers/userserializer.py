@@ -53,11 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_has_usable_password(self, obj) -> bool:
-        """Return whether the user has a usable password."""
         return obj.has_usable_password()
 
     def get_has_oauth_providers(self, obj) -> bool:
-        """Return whether the user has any OAuth providers linked."""
         return obj.oauth_providers.exists()
 
     def validate(self, attrs):
@@ -65,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
         username = attrs.get('username', self.instance.username if self.instance else None)
 
         if (username and username.startswith("heliumedu-cluster") and
-                not (email.endswith("heliumedu.dev") or email.endswith("heliumedu.com"))):
+                not is_admin_allowed_email(email)):
             raise serializers.ValidationError("Sorry, this username is reserved for Helium staff.")
 
         # If setting a password and user has a usable password, require old_password for security
