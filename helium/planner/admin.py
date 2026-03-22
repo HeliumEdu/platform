@@ -5,7 +5,8 @@ import json
 
 from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
-from django.db.models import Count, Q
+from django.db.models import Count, Q, TextField
+from django.db.models.functions import Cast, Length
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -650,12 +651,18 @@ class NoteAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            content_size=Length(Cast('content', output_field=TextField()))
+        )
+
     def get_content_size(self, obj):
         if obj.content is None:
             return '-'
         return f'{len(json.dumps(obj.content).encode("utf-8"))} B'
 
     get_content_size.short_description = 'Content Size'
+    get_content_size.admin_order_field = 'content_size'
 
     def linked_entity(self, obj):
         hw = obj.homework.first()
