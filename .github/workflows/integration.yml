@@ -53,10 +53,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: "integration-tests"
-  cancel-in-progress: false
-
 env:
   PLATFORM: amd64
 
@@ -74,6 +70,8 @@ jobs:
       AWS_INTEGRATION_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}
       PLATFORM_EMAIL_HOST_USER: ${{ secrets.PLATFORM_EMAIL_HOST_USER }}
       PLATFORM_EMAIL_HOST_PASSWORD: ${{ secrets.PLATFORM_EMAIL_HOST_PASSWORD }}
+      # Point to locally built images (not ECR)
+      INTEGRATION_EMAIL_SUFFIX: github-platform-${{ github.run_id }}
       # Point to locally built images (not ECR)
       PLATFORM_RESOURCE_IMAGE: helium/platform-resource:amd64-latest
       PLATFORM_API_IMAGE: helium/platform-api:amd64-latest
@@ -188,7 +186,7 @@ jobs:
             make test-integration \
               ENVIRONMENT=dev-local \
               INTEGRATION_LOG_LEVEL=${{ inputs.log_level || 'fine' }} \
-              INTEGRATION_EMAIL_SUFFIX=github-platform \
+              INTEGRATION_EMAIL_SUFFIX="${{ env.INTEGRATION_EMAIL_SUFFIX }}" \
               AWS_INTEGRATION_S3_ACCESS_KEY_ID="${{ env.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}" \
               AWS_INTEGRATION_S3_SECRET_ACCESS_KEY="${{ env.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}"
           fi
@@ -201,6 +199,29 @@ jobs:
           path: frontend/build/integration-screenshots/
           if-no-files-found: ignore
           retention-days: 30
+
+      - name: Cleanup test account
+        if: always()
+        run: |
+          PASSWORD="IntegrationTestPassword123!"
+          EMAIL="heliumedu-cluster+${{ env.INTEGRATION_EMAIL_SUFFIX }}@dev-local.heliumedu.dev"
+          API_HOST="http://localhost:8000"
+
+          LOGIN=$(curl -s -X POST "${API_HOST}/auth/token/" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\": \"${EMAIL}\", \"password\": \"${PASSWORD}\"}" 2>/dev/null || echo "{}")
+          TOKEN=$(echo "$LOGIN" | jq -r '.access // empty')
+
+          if [ -n "$TOKEN" ]; then
+            curl -s -X DELETE "${API_HOST}/auth/user/delete/" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -d "{\"password\": \"${PASSWORD}\"}" || true
+          else
+            curl -s -X DELETE "${API_HOST}/auth/user/delete/inactive/" \
+              -H "Content-Type: application/json" \
+              -d "{\"username\": \"${EMAIL}\", \"password\": \"${PASSWORD}\"}" || true
+          fi
 
       - name: Dump Docker logs on failure
         if: failure()
