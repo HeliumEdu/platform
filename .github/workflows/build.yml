@@ -20,10 +20,6 @@ permissions:
   issues: none
   pull-requests: none
 
-concurrency:
-  group: "helium-platform-build-${{ github.ref }}"
-  cancel-in-progress: true
-
 jobs:
   integration-test:
     name: Integration Test
