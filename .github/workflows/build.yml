@@ -23,7 +23,7 @@ permissions:
 jobs:
   integration-test:
     name: Integration Test
-    if: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'workflow_dispatch' || inputs.run_integration_tests) }}
+    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, '[skip ci]') && (github.event_name != 'workflow_dispatch' || inputs.run_integration_tests) }}
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
