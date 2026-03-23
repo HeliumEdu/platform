@@ -20,18 +20,14 @@ permissions:
   issues: none
   pull-requests: none
 
-concurrency:
-  group: "helium-platform-build-${{ github.ref }}"
-  cancel-in-progress: true
-
 jobs:
   integration-test:
     name: Integration Test
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_integration_tests }}
+    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, '[skip ci]') && (github.event_name != 'workflow_dispatch' || inputs.run_integration_tests) }}
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
-      frontend_ref: ${{ github.ref_name }}
+      frontend_ref: ${{ github.ref_name == 'main' && github.ref_name || 'main' }}
       caller: build
     secrets: inherit
 
