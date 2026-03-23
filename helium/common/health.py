@@ -11,7 +11,7 @@ from health_check.cache.backends import CacheBackend
 from health_check.contrib.celery.backends import CeleryHealthCheck
 from health_check.contrib.s3boto3_storage.backends import S3Boto3StorageHealthCheck
 from health_check.db.backends import DatabaseBackend
-from health_check.exceptions import HealthCheckException
+from health_check.exceptions import HealthCheckException, ServiceUnavailable
 
 
 class IdentifiedDatabaseBackend(DatabaseBackend):
@@ -40,7 +40,7 @@ class IdentifiedCeleryBeatHealthCheck(BaseHealthCheckBackend):
             time_threshold = timezone.now() - timedelta(minutes=3)
             if not TaskResult.objects.filter(date_done__gte=time_threshold,
                                              status=states.SUCCESS).exists():
-                self.add_error("CeleryBeat check failed: no recent results.")
+                self.add_error(ServiceUnavailable("CeleryBeat check failed: no recent results."))
         except Exception as e:
             raise HealthCheckException(f"CeleryBeat health check failed: {e}")
 
