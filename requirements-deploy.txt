@@ -2,5 +2,5 @@ django-storages==1.14.6
 boto3==1.42.68
 mysqlclient==2.2.8
 django-redis==6.0.0
-sentry-sdk==2.54.0
+sentry-sdk==2.55.0
 gunicorn==23.0.0
