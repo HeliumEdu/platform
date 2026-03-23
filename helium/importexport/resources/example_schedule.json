@@ -360,7 +360,7 @@
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
       "trend": null,
-      "color": "#cfa25e",
+      "color": "#3033cf",
       "course": 514,
       "num_homework": 6,
       "num_homework_graded": 0
@@ -372,7 +372,7 @@
       "average_grade": "-1.0000",
       "grade_by_weight": "0.0000",
       "trend": null,
-      "color": "#cfa25e",
+      "color": "#792a69",
       "course": 512,
       "num_homework": 4,
       "num_homework_graded": 0
@@ -418,7 +418,6 @@
       "condition": 0,
       "website": "https://automatetheboringstuff.com",
       "price": "$28.99",
-      "details": "<font face=\"Helvetica\"><b>ISBN-13:</b>&nbsp;978-1718503403</font>",
       "material_group": 495,
       "courses": [
         513
@@ -431,7 +430,6 @@
       "condition": 0,
       "website": "https://www.amazon.com/Bird-Some-Instructions-Writing-Life/dp/0385480016",
       "price": "$16.00",
-      "details": "<font face=\"Helvetica\" style=\"\"><b>ISBN-13:</b>&nbsp;978-0385480017</font>",
       "material_group": 495,
       "courses": [
         512
@@ -444,7 +442,6 @@
       "condition": 8,
       "website": "https://workspace.google.com/",
       "price": "Free",
-      "details": "Login with school email for Drive access",
       "material_group": 493,
       "courses": [
         512,
@@ -473,7 +470,6 @@
       "condition": 0,
       "website": "https://www.pearson.com/en-us/subject-catalog/p/psychology/P200000009860",
       "price": "$45.00",
-      "details": "<font face=\"Helvetica\"><b>ISBN-13:</b> 9780137988082</font>",
       "material_group": 495,
       "courses": [
         514
@@ -490,7 +486,6 @@
       "end": "2025-10-07T21:30:00Z",
       "priority": 50,
       "url": null,
-      "comments": "<font face=\"Arial\">Peer review of short stories. <b style=\"\">Bring printed copies.</b></font>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -506,7 +501,6 @@
       "end": "2025-10-18T21:30:00Z",
       "priority": 50,
       "url": null,
-      "comments": "<div><font face=\"Arial\">Come ready to discuss:</font></div><div><ul><li><strike><font face=\"Arial\">Final project milestones</font></strike></li><li><strike><font face=\"Arial\">GitHub merge workflow</font></strike></li></ul></div>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -522,7 +516,6 @@
       "end": "2025-10-21T21:30:00Z",
       "priority": 50,
       "url": null,
-      "comments": "<font face=\"Arial\">Peer review of short stories.&nbsp;<b style=\"\">Bring printed copies.</b></font>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -538,7 +531,6 @@
       "end": "2025-10-28T19:30:00Z",
       "priority": 60,
       "url": null,
-      "comments": "<font face=\"Arial\">Come ready to review:</font><div><ul><li><strike><font face=\"Arial\">Loops</font></strike></li><li><strike><font face=\"Arial\">Conditionals</font></strike></li><li><font face=\"Arial\">Basic data structures</font></li></ul></div>",
       "owner_id": null,
       "attachments": [],
       "reminders": [
@@ -557,7 +549,6 @@
       "end": "2025-11-03T06:00:00Z",
       "priority": 50,
       "url": null,
-      "comments": "",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -573,7 +564,6 @@
       "end": "2025-11-04T21:30:00Z",
       "priority": 50,
       "url": null,
-      "comments": "<font face=\"Arial\">Peer review of short stories.&nbsp;<b style=\"\">Bring printed copies.</b></font>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -589,7 +579,6 @@
       "end": "2025-11-18T21:30:00Z",
       "priority": 50,
       "url": null,
-      "comments": "<font face=\"Arial\">Peer review of final portfolio. <b style=\"\">Bring printed copies.</b></font>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -605,7 +594,6 @@
       "end": "2025-11-29T20:00:00Z",
       "priority": 60,
       "url": null,
-      "comments": "<font face=\"Arial\"><b>Covers chapters 7-12</b>, remind study partners:</font><div><ul><li><font face=\"Arial\" style=\"\">Jenna</font></li><li><font face=\"Arial\">Andrew</font></li><li><font face=\"Arial\" style=\"\">Sara</font></li></ul></div>",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -621,7 +609,6 @@
       "end": "2025-12-03T20:00:00Z",
       "priority": 60,
       "url": null,
-      "comments": "Review loops, conditionals, and basic data structures.",
       "owner_id": null,
       "attachments": [],
       "reminders": [],
@@ -638,7 +625,6 @@
       "start": "2025-10-06T16:00:00Z",
       "end": "2025-10-06T16:30:00Z",
       "priority": 47,
-      "comments": "",
       "current_grade": "41.5/50",
       "completed": true,
       "category": 2604,
@@ -658,7 +644,6 @@
       "start": "2025-10-07T16:00:00Z",
       "end": "2025-10-07T16:30:00Z",
       "priority": 47,
-      "comments": "",
       "current_grade": "87.5/100",
       "completed": true,
       "category": 2608,
@@ -700,7 +685,6 @@
       "start": "2025-10-10T16:00:00Z",
       "end": "2025-10-10T16:30:00Z",
       "priority": 45,
-      "comments": "",
       "current_grade": "40/50",
       "completed": true,
       "category": 2600,
@@ -721,7 +705,6 @@
       "start": "2025-10-11T06:00:00Z",
       "end": "2025-10-12T06:00:00Z",
       "priority": 26,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2607,
@@ -741,7 +724,6 @@
       "start": "2025-10-12T06:00:00Z",
       "end": "2025-10-13T06:00:00Z",
       "priority": 25,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
@@ -761,7 +743,6 @@
       "start": "2025-10-13T16:00:00Z",
       "end": "2025-10-13T16:30:00Z",
       "priority": 47,
-      "comments": "",
       "current_grade": "41/50",
       "completed": true,
       "category": 2604,
@@ -781,7 +762,6 @@
       "start": "2025-10-13T18:00:00Z",
       "end": "2025-10-13T18:30:00Z",
       "priority": 46,
-      "comments": "<ul><li><strike>Review background article (Canvas)</strike></li><li><strike>Note ethical issues for discussion</strike></li><li>Compare to theories of critical periods</li><li>Post reflection on Google Drive</li></ul>",
       "current_grade": "78/100",
       "completed": true,
       "category": 2595,
@@ -803,7 +783,6 @@
       "start": "2025-10-15T18:00:00Z",
       "end": "2025-10-15T18:30:00Z",
       "priority": 50,
-      "comments": "",
       "current_grade": "75/100",
       "completed": true,
       "category": 2605,
@@ -823,7 +802,6 @@
       "start": "2025-10-16T16:00:00Z",
       "end": "2025-10-16T16:30:00Z",
       "priority": 43,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "98/100",
       "completed": true,
       "category": 2596,
@@ -844,7 +822,6 @@
       "start": "2025-10-17T16:00:00Z",
       "end": "2025-10-17T16:30:00Z",
       "priority": 48,
-      "comments": "",
       "current_grade": "44/50",
       "completed": true,
       "category": 2600,
@@ -865,7 +842,6 @@
       "start": "2025-10-19T06:00:00Z",
       "end": "2025-10-20T06:00:00Z",
       "priority": 26,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
@@ -885,7 +861,6 @@
       "start": "2025-10-20T16:00:00Z",
       "end": "2025-10-20T16:30:00Z",
       "priority": 48,
-      "comments": "",
       "current_grade": "41/50",
       "completed": true,
       "category": 2604,
@@ -905,7 +880,6 @@
       "start": "2025-10-21T16:00:00Z",
       "end": "2025-10-21T16:30:00Z",
       "priority": 45,
-      "comments": "<br>",
       "current_grade": "96/100",
       "completed": true,
       "category": 2608,
@@ -926,7 +900,6 @@
       "start": "2025-10-22T18:00:00Z",
       "end": "2025-10-22T18:30:00Z",
       "priority": 48,
-      "comments": "",
       "current_grade": "81.25/100",
       "completed": true,
       "category": 2605,
@@ -946,7 +919,6 @@
       "start": "2025-10-23T16:00:00Z",
       "end": "2025-10-23T16:30:00Z",
       "priority": 47,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "70/100",
       "completed": true,
       "category": 2596,
@@ -967,7 +939,6 @@
       "start": "2025-10-24T06:00:00Z",
       "end": "2025-10-25T06:00:00Z",
       "priority": 77,
-      "comments": "<b><font face=\"Arial\">Due by midnight</font></b>",
       "current_grade": "70/100",
       "completed": true,
       "category": 2603,
@@ -987,7 +958,6 @@
       "start": "2025-10-24T16:00:00Z",
       "end": "2025-10-24T16:30:00Z",
       "priority": 47,
-      "comments": "",
       "current_grade": "95/100",
       "completed": true,
       "category": 2600,
@@ -1008,7 +978,6 @@
       "start": "2025-10-25T06:00:00Z",
       "end": "2025-10-26T06:00:00Z",
       "priority": 27,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2607,
@@ -1028,7 +997,6 @@
       "start": "2025-10-26T06:00:00Z",
       "end": "2025-10-27T06:00:00Z",
       "priority": 25,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
@@ -1048,7 +1016,6 @@
       "start": "2025-10-27T16:00:00Z",
       "end": "2025-10-27T16:30:00Z",
       "priority": 100,
-      "comments": "",
       "current_grade": "55/50",
       "completed": true,
       "category": 2601,
@@ -1071,7 +1038,6 @@
       "start": "2025-10-27T18:00:00Z",
       "end": "2025-10-27T18:30:00Z",
       "priority": 50,
-      "comments": "",
       "current_grade": "100/100",
       "completed": true,
       "category": 2595,
@@ -1093,7 +1059,6 @@
       "start": "2025-10-29T16:00:00Z",
       "end": "2025-10-29T16:30:00Z",
       "priority": 45,
-      "comments": "",
       "current_grade": "46.5/50",
       "completed": true,
       "category": 2604,
@@ -1113,7 +1078,6 @@
       "start": "2025-10-29T18:00:00Z",
       "end": "2025-10-29T18:30:00Z",
       "priority": 100,
-      "comments": "<font face=\"Arial\"><b>Covers chapters 1\u20136</b></font>",
       "current_grade": "89.75/100",
       "completed": true,
       "category": 2602,
@@ -1136,7 +1100,6 @@
       "start": "2025-10-30T16:00:00Z",
       "end": "2025-10-30T16:30:00Z",
       "priority": 68,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "85/100",
       "completed": true,
       "category": 2596,
@@ -1157,7 +1120,6 @@
       "start": "2025-10-31T16:00:00Z",
       "end": "2025-10-31T16:30:00Z",
       "priority": 34,
-      "comments": "",
       "current_grade": "49/50",
       "completed": true,
       "category": 2600,
@@ -1178,7 +1140,6 @@
       "start": "2025-11-03T17:00:00Z",
       "end": "2025-11-03T17:30:00Z",
       "priority": 49,
-      "comments": "",
       "current_grade": "49/50",
       "completed": true,
       "category": 2604,
@@ -1198,7 +1159,6 @@
       "start": "2025-11-04T17:00:00Z",
       "end": "2025-11-04T17:30:00Z",
       "priority": 72,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2608,
@@ -1219,7 +1179,6 @@
       "start": "2025-11-05T19:00:00Z",
       "end": "2025-11-05T19:30:00Z",
       "priority": 45,
-      "comments": "",
       "current_grade": "85/100",
       "completed": true,
       "category": 2605,
@@ -1239,7 +1198,6 @@
       "start": "2025-11-06T17:00:00Z",
       "end": "2025-11-06T17:30:00Z",
       "priority": 29,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "95/100",
       "completed": true,
       "category": 2596,
@@ -1260,7 +1218,6 @@
       "start": "2025-11-07T06:00:00Z",
       "end": "2025-11-08T06:00:00Z",
       "priority": 80,
-      "comments": "<font face=\"Arial\"><b>Due by midnight</b></font>",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2603,
@@ -1283,7 +1240,6 @@
       "start": "2025-11-07T17:00:00Z",
       "end": "2025-11-07T17:30:00Z",
       "priority": 61,
-      "comments": "",
       "current_grade": "100/100",
       "completed": true,
       "category": 2600,
@@ -1304,7 +1260,6 @@
       "start": "2025-11-08T06:00:00Z",
       "end": "2025-11-09T06:00:00Z",
       "priority": 24,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2607,
@@ -1324,7 +1279,6 @@
       "start": "2025-11-09T06:00:00Z",
       "end": "2025-11-10T06:00:00Z",
       "priority": 25,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
@@ -1344,7 +1298,6 @@
       "start": "2025-11-10T17:00:00Z",
       "end": "2025-11-10T17:30:00Z",
       "priority": 51,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2604,
@@ -1364,7 +1317,6 @@
       "start": "2025-11-12T19:00:00Z",
       "end": "2025-11-12T19:30:00Z",
       "priority": 49,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2605,
@@ -1384,7 +1336,6 @@
       "start": "2025-11-13T17:00:00Z",
       "end": "2025-11-13T17:30:00Z",
       "priority": 29,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "-1/100",
       "completed": true,
       "category": 2596,
@@ -1405,7 +1356,6 @@
       "start": "2025-11-14T17:00:00Z",
       "end": "2025-11-14T17:30:00Z",
       "priority": 61,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2600,
@@ -1426,7 +1376,6 @@
       "start": "2025-11-16T06:00:00Z",
       "end": "2025-11-17T06:00:00Z",
       "priority": 26,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2606,
@@ -1446,7 +1395,6 @@
       "start": "2025-11-17T17:00:00Z",
       "end": "2025-11-17T17:30:00Z",
       "priority": 28,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2604,
@@ -1466,7 +1414,6 @@
       "start": "2025-11-17T19:00:00Z",
       "end": "2025-11-17T19:30:00Z",
       "priority": 50,
-      "comments": "<ul><li><strike><font face=\"Arial\">Read case description (textbook Ch. 15)</font></strike></li><li><strike><font face=\"Arial\">Watch 5-min video on prefrontal cortex injury</font></strike></li><li><font face=\"Arial\">Summarize behavioral changes (100 words)</font></li><li><font face=\"Arial\">Relate findings to modern neuropsychology</font></li></ul>",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2595,
@@ -1488,7 +1435,6 @@
       "start": "2025-11-18T17:00:00Z",
       "end": "2025-11-18T17:30:00Z",
       "priority": 72,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2608,
@@ -1509,7 +1455,6 @@
       "start": "2025-11-19T19:00:00Z",
       "end": "2025-11-19T19:30:00Z",
       "priority": 50,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2605,
@@ -1529,7 +1474,6 @@
       "start": "2025-11-20T17:00:00Z",
       "end": "2025-11-20T17:30:00Z",
       "priority": 29,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2596,
@@ -1550,7 +1494,6 @@
       "start": "2025-11-21T17:00:00Z",
       "end": "2025-11-21T17:30:00Z",
       "priority": 61,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2600,
@@ -1571,7 +1514,6 @@
       "start": "2025-11-22T06:00:00Z",
       "end": "2025-11-23T06:00:00Z",
       "priority": 25,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2607,
@@ -1591,7 +1533,6 @@
       "start": "2025-11-23T06:00:00Z",
       "end": "2025-11-24T06:00:00Z",
       "priority": 19,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2606,
@@ -1611,7 +1552,6 @@
       "start": "2025-11-24T17:00:00Z",
       "end": "2025-11-24T17:30:00Z",
       "priority": 28,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2604,
@@ -1631,7 +1571,6 @@
       "start": "2025-11-26T19:00:00Z",
       "end": "2025-11-26T19:30:00Z",
       "priority": 100,
-      "comments": "<font face=\"Arial\">Need parts from group partners to compile before turning in:</font><div><ul><li><strike><font face=\"Arial\">Jenna</font></strike></li><li><font face=\"Arial\">Andrew</font></li><li><strike><font face=\"Arial\">Sara</font></strike></li></ul></div>",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2594,
@@ -1656,7 +1595,6 @@
       "start": "2025-11-28T06:00:00Z",
       "end": "2025-11-29T06:00:00Z",
       "priority": 81,
-      "comments": "<font face=\"Arial\"><b>Due by midnight</b></font>",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2603,
@@ -1676,7 +1614,6 @@
       "start": "2025-12-01T19:00:00Z",
       "end": "2025-12-01T19:30:00Z",
       "priority": 100,
-      "comments": "<font face=\"Arial\"><b>Covers chapters 7-12</b></font>",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2598,
@@ -1699,7 +1636,6 @@
       "start": "2025-12-04T17:00:00Z",
       "end": "2025-12-04T17:30:00Z",
       "priority": 100,
-      "comments": "Upload portfolio to shared Google Drive folder before class.",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2599,
@@ -1719,7 +1655,6 @@
       "start": "2025-12-05T17:00:00Z",
       "end": "2025-12-05T17:30:00Z",
       "priority": 100,
-      "comments": "",
       "current_grade": "-1/100",
       "completed": false,
       "category": 2597,
@@ -2157,7 +2092,386 @@
           }
         ]
       },
-      "links": []
+      "homework": [],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 2,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "ISBN-13:", "attributes": {"bold": true}},
+          {"insert": " 978-1718503403\n"}
+        ]
+      },
+      "homework": [],
+      "events": [],
+      "resources": [931]
+    },
+    {
+      "id": 3,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "ISBN-13:", "attributes": {"bold": true}},
+          {"insert": " 978-0385480017\n"}
+        ]
+      },
+      "homework": [],
+      "events": [],
+      "resources": [932]
+    },
+    {
+      "id": 4,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "Login with school email for Drive access\n"}
+        ]
+      },
+      "homework": [],
+      "events": [],
+      "resources": [933]
+    },
+    {
+      "id": 5,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "ISBN-13:", "attributes": {"bold": true}},
+          {"insert": " 9780137988082\n"}
+        ]
+      },
+      "homework": [],
+      "events": [],
+      "resources": [935]
+    },
+    {
+      "id": 6,
+      "title": "Sprint Planning",
+      "content": {
+        "ops": [
+          {"insert": "Come ready to discuss:\n"},
+          {"insert": "Final project milestones"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "GitHub merge workflow"},
+          {"insert": "\n", "attributes": {"list": "checked"}}
+        ]
+      },
+      "homework": [],
+      "events": [1088],
+      "resources": []
+    },
+    {
+      "id": 7,
+      "title": "Python Fundamentals",
+      "content": {
+        "ops": [
+          {"insert": "Come ready to review:\n"},
+          {"insert": "Loops"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Conditionals"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Basic data structures"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}}
+        ]
+      },
+      "homework": [],
+      "events": [1090],
+      "resources": []
+    },
+    {
+      "id": 8,
+      "title": "Short Story Feedback",
+      "content": {
+        "ops": [
+          {"insert": "Peer review of short stories. "},
+          {"insert": "Bring printed copies.", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [],
+      "events": [1091],
+      "resources": []
+    },
+    {
+      "id": 9,
+      "title": "Dialogue & Voice",
+      "content": {
+        "ops": [
+          {"insert": "Peer review of short stories. "},
+          {"insert": "Bring printed copies.", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [],
+      "events": [1092],
+      "resources": []
+    },
+    {
+      "id": 10,
+      "title": "Character Development",
+      "content": {
+        "ops": [
+          {"insert": "Peer review of short stories. "},
+          {"insert": "Bring printed copies.", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [],
+      "events": [1089],
+      "resources": []
+    },
+    {
+      "id": 11,
+      "title": "Portfolio Revisions",
+      "content": {
+        "ops": [
+          {"insert": "Peer review of final portfolio. "},
+          {"insert": "Bring printed copies.", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [],
+      "events": [1095],
+      "resources": []
+    },
+    {
+      "id": 12,
+      "title": "Memory & Cognition",
+      "content": {
+        "ops": [
+          {"insert": "Covers chapters 7-12", "attributes": {"bold": true}},
+          {"insert": " with study partners:\n"},
+          {"insert": "Jenna"},
+          {"insert": "\n", "attributes": {"list": "bullet"}},
+          {"insert": "Andrew"},
+          {"insert": "\n", "attributes": {"list": "bullet"}},
+          {"insert": "Sara"},
+          {"insert": "\n", "attributes": {"list": "bullet"}}
+        ]
+      },
+      "homework": [],
+      "events": [1093],
+      "resources": []
+    },
+    {
+      "id": 13,
+      "title": "Data Structures Review",
+      "content": {
+        "ops": [
+          {"insert": "Review loops, conditionals, and basic data structures.\n"}
+        ]
+      },
+      "homework": [],
+      "events": [1096],
+      "resources": []
+    },
+    {
+      "id": 14,
+      "title": "Little Albert Experiment",
+      "content": {
+        "ops": [
+          {"insert": "Review background article (Canvas)"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Note ethical issues for discussion"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Compare to theories of critical periods"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Post reflection on Google Drive"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}}
+        ]
+      },
+      "homework": [7822],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 15,
+      "title": "Learning & Memory",
+      "content": {
+        "ops": [
+          {"insert": "Covers chapters 1–6", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [7838],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 16,
+      "title": "Phineas Gage Analysis",
+      "content": {
+        "ops": [
+          {"insert": "Read case description (textbook Ch. 15)"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Watch 5-min video on prefrontal cortex injury"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Summarize behavioral changes (100 words)"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Relate findings to modern neuropsychology"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}}
+        ]
+      },
+      "homework": [7855],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 17,
+      "title": "Split-Brain Research",
+      "content": {
+        "ops": [
+          {"insert": "Need parts from group partners to compile before turning in:\n"},
+          {"insert": "Jenna"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Andrew"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Sara"},
+          {"insert": "\n", "attributes": {"list": "checked"}}
+        ]
+      },
+      "homework": [7863],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 18,
+      "title": "Personality Theories",
+      "content": {
+        "ops": [
+          {"insert": "Covers chapters 7-12", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [7865],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 19,
+      "title": "File Organizer Script",
+      "content": {
+        "ops": [
+          {"insert": "Due by midnight", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [7831],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 20,
+      "title": "Web Scraper",
+      "content": {
+        "ops": [
+          {"insert": "Due by midnight", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [7845],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 21,
+      "title": "Email Automation",
+      "content": {
+        "ops": [
+          {"insert": "Due by midnight", "attributes": {"bold": true}},
+          {"insert": "\n"}
+        ]
+      },
+      "homework": [7864],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 22,
+      "title": "Voice & Tone",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7824],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 23,
+      "title": "Setting & Atmosphere",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7830],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 24,
+      "title": "Narrative Arc",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7839],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 25,
+      "title": "Show Don't Tell",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7844],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 26,
+      "title": "Revision Notes",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7851],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 27,
+      "title": "Workshop Feedback",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7858],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 28,
+      "title": "Portfolio Reflection",
+      "content": {
+        "ops": [
+          {"insert": "Upload portfolio to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7866],
+      "events": [],
+      "resources": []
     }
   ]
 }

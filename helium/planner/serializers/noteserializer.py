@@ -57,34 +57,34 @@ class NoteSerializer(serializers.ModelSerializer):
                 'A note can only be linked to one resource.'
             )
 
+        # Enforce one-to-one from entity side: entity can only have one linked note
+        exclude_pk = self.instance.pk if self.instance else None
+        if homework:
+            existing = Note.objects.filter(homework__in=homework)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This homework assignment already has a linked note.'
+                )
+        if events:
+            existing = Note.objects.filter(events__in=events)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This event already has a linked note.'
+                )
+        if resources:
+            existing = Note.objects.filter(resources__in=resources)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This resource already has a linked note.'
+                )
+
         return attrs
-
-    def create(self, validated_data):
-        """Override to implement dual-write for legacy frontend compatibility."""
-        instance = super().create(validated_data)
-
-        # Dual-write: sync content to linked entity's notes field
-        content = validated_data.get('content')
-        if content:
-            entity = instance.linked_entity
-            if entity and hasattr(entity, 'notes'):
-                entity.notes = instance.content
-                entity.save(update_fields=['notes', 'updated_at'])
-
-        return instance
-
-    def update(self, instance, validated_data):
-        """Override to implement dual-write for legacy frontend compatibility."""
-        instance = super().update(instance, validated_data)
-
-        # Dual-write: sync content to linked entity's notes field
-        if 'content' in validated_data:
-            entity = instance.linked_entity
-            if entity and hasattr(entity, 'notes'):
-                entity.notes = instance.content
-                entity.save(update_fields=['notes', 'updated_at'])
-
-        return instance
 
     def should_delete_on_empty_content(self, instance, validated_data):
         """Check if Note should be deleted due to empty content with linked entities."""

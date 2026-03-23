@@ -166,6 +166,9 @@ class AttachmentFilter(django_filters.FilterSet):
 class NoteFilter(django_filters.FilterSet):
     linked_entity_type = django_filters.CharFilter(method='filter_linked_type')
     has_link = django_filters.BooleanFilter(method='filter_has_link')
+    homework = django_filters.NumberFilter(field_name='homework__id')
+    event = django_filters.NumberFilter(field_name='events__id')
+    resource = django_filters.NumberFilter(field_name='resources__id')
 
     class Meta:
         model = Note

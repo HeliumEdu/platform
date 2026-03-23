@@ -5,8 +5,10 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import update_last_login
 from django.core.cache import cache
 from django.db.models import Q
+from django.utils import timezone
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
@@ -240,6 +242,7 @@ def oauth_login(request):
                 f'Please contact support for assistance.'
             )
 
+        is_new_user = False
         if existing_oauth:
             # UID already linked - use that user
             user = existing_oauth.user
@@ -284,6 +287,7 @@ def oauth_login(request):
 
         else:
             # No OAuth link and no user with this email - create new user
+            is_new_user = True
             username = generate_unique_username_from_email(email)
 
             serializer = UserSerializer()
@@ -309,6 +313,11 @@ def oauth_login(request):
                 provider_user_id=provider_uid,
             )
             logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
+
+        update_last_login(None, user)
+        if not is_new_user:
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
 
         token = RefreshToken.for_user(user)
 
@@ -355,11 +364,11 @@ def delete_example_schedule(user_id):
      .for_user(user_id)
      .filter(example_schedule=True)
      .delete())
-    # Only delete standalone notes (no links) - linked notes are already
+    # Only delete standalone notes (no linked entities) - linked notes are already
     # cascade-deleted when their parent entities are deleted above
     (Note.objects
      .for_user(user_id)
-     .filter(example_schedule=True, links__isnull=True)
+     .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
      .delete())
 
     metricutils.task_stop(metrics, user=user)

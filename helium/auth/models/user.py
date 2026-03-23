@@ -37,6 +37,13 @@ class User(AbstractBaseUser, BaseModel):
 
     is_superuser = models.BooleanField(default=False)
 
+    # Deprecated: tracks legacy frontend logins, remove when frontend-legacy is shut down
+    last_login_legacy = models.DateTimeField(blank=True, null=True,
+                                             help_text='Last login time via legacy frontend.')
+
+    last_activity = models.DateTimeField(blank=True, null=True, db_index=True,
+                                         help_text='Last user activity (login or token refresh).')
+
     # Manager
     objects = UserManager()
 
@@ -94,6 +101,10 @@ class User(AbstractBaseUser, BaseModel):
     @property
     def num_external_calendars(self) -> int:
         return self.external_calendars.count()
+
+    @property
+    def num_notes(self) -> int:
+        return self.notes.count()
 
     @property
     def num_course_groups(self) -> int:

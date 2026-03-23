@@ -67,61 +67,59 @@ class Note(BaseModel):
     def get_user(self):
         return self.user
 
+    def _get_cached_m2m(self, attr_name):
+        """Get M2M relation as list, using prefetch cache if available."""
+        return list(getattr(self, attr_name).all())
+
     @property
     def linked_entity(self):
-        """Returns the first linked entity or None."""
-        hw = self.homework.first()
-        if hw:
-            return hw
-        event = self.events.first()
-        if event:
-            return event
-        resource = self.resources.first()
-        if resource:
-            return resource
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            return hw_list[0]
+        events_list = self._get_cached_m2m('events')
+        if events_list:
+            return events_list[0]
+        resources_list = self._get_cached_m2m('resources')
+        if resources_list:
+            return resources_list[0]
         return None
 
     @property
     def linked_entity_type(self):
-        """Returns string type of linked entity."""
-        if self.homework.exists():
+        if self._get_cached_m2m('homework'):
             return 'homework'
-        if self.events.exists():
+        if self._get_cached_m2m('events'):
             return 'event'
-        if self.resources.exists():
+        if self._get_cached_m2m('resources'):
             return 'resource'
         return ''
 
     @property
     def linked_entity_title(self):
-        """Returns title of linked entity."""
         entity = self.linked_entity
         return entity.title if entity else ''
 
     @property
     def course_color(self):
-        """Returns hex color from linked homework's course.
-
-        Only applicable when linked entity is homework.
-        Returns None for events/resources or if no homework linked.
-        """
-        hw = self.homework.select_related('course').first()
-        if hw and hw.course:
-            return hw.course.color
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            hw = hw_list[0]
+            if hw.course:
+                return hw.course.color
         return None
 
     @property
     def category_color(self):
-        """Returns hex color from linked homework's category.
-
-        Only applicable when linked entity is homework.
-        Returns None for events/resources or if no homework linked.
-        """
-        hw = self.homework.select_related('category').first()
-        if hw and hw.category:
-            return hw.category.color
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            hw = hw_list[0]
+            if hw.category:
+                return hw.category.color
         return None
 
     def has_linked_entity(self):
-        """Check if note has any linked entity."""
-        return self.homework.exists() or self.events.exists() or self.resources.exists()
+        return bool(
+            self._get_cached_m2m('homework') or
+            self._get_cached_m2m('events') or
+            self._get_cached_m2m('resources')
+        )

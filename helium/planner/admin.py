@@ -1,9 +1,12 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import json
+
 from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
-from django.db.models import Count, Q
+from django.db.models import Count, Q, TextField
+from django.db.models.functions import Cast, Length
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -513,9 +516,32 @@ class MaterialAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'material_group__user__username'
 
 
+class ReminderExampleScheduleFilter(SimpleListFilter):
+    title = 'Example Schedule'
+    parameter_name = 'example_schedule'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        example_schedule_q = (
+            Q(homework__course__course_group__example_schedule=True) |
+            Q(event__example_schedule=True) |
+            Q(course__course_group__example_schedule=True)
+        )
+        if self.value() == 'yes':
+            return queryset.filter(example_schedule_q)
+        elif self.value() == 'no':
+            return queryset.exclude(example_schedule_q)
+        return queryset
+
+
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
-    list_filter = ('type', 'sent', 'dismissed')
+    list_filter = ('type', 'sent', 'dismissed', ReminderExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
@@ -588,18 +614,25 @@ class NoteExampleScheduleFilter(SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        example_schedule_q = (
+            Q(example_schedule=True) |
+            Q(homework__course__course_group__example_schedule=True) |
+            Q(events__example_schedule=True) |
+            Q(resources__material_group__example_schedule=True)
+        )
         if self.value() == 'yes':
-            return queryset.filter(example_schedule=True)
+            return queryset.filter(example_schedule_q).distinct()
         elif self.value() == 'no':
-            return queryset.filter(example_schedule=False)
+            return queryset.exclude(example_schedule_q).distinct()
         return queryset
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('id', 'title', 'updated_at', 'get_user')
+    list_display = ('id', 'title', 'get_content_size', 'updated_at', 'get_user')
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
+    exclude = ('homework', 'events', 'resources')
 
     def has_add_permission(self, request):
         return False
@@ -617,6 +650,19 @@ class NoteAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            content_size=Length(Cast('content', output_field=TextField()))
+        )
+
+    def get_content_size(self, obj):
+        if obj.content is None:
+            return '-'
+        return f'{len(json.dumps(obj.content).encode("utf-8"))} B'
+
+    get_content_size.short_description = 'Content Size'
+    get_content_size.admin_order_field = 'content_size'
 
     def linked_entity(self, obj):
         hw = obj.homework.first()

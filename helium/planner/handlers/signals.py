@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
-from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Note, Material
+from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Material
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -84,49 +84,34 @@ def delete_attachment(sender, instance, **kwargs):
         instance.attachment.delete(False)
 
 
-@receiver(pre_delete, sender=Note)
-def delete_note(sender, instance, **kwargs):
-    """
-    Clear the linked entity's notes field when a Note is deleted.
-
-    This ensures dual-write consistency: if a user deletes a Note via the API,
-    the linked entity's inline notes field is also cleared.
-    """
-    # Clear notes field on all linked homework
-    for hw in instance.homework.all():
-        if hasattr(hw, 'notes'):
-            hw.notes = None
-            hw.save(update_fields=['notes', 'updated_at'])
-
-    # Clear notes field on all linked events
-    for event in instance.events.all():
-        if hasattr(event, 'notes'):
-            event.notes = None
-            event.save(update_fields=['notes', 'updated_at'])
-
-    # Clear notes field on all linked resources
-    for resource in instance.resources.all():
-        if hasattr(resource, 'notes'):
-            resource.notes = None
-            resource.save(update_fields=['notes', 'updated_at'])
-
-
 @receiver(pre_delete, sender=Homework)
 def delete_homework_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Homework is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when a Homework is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Homework) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()
 
 
 @receiver(pre_delete, sender=Event)
 def delete_event_notes(sender, instance, **kwargs):
-    """Delete linked Notes when an Event is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when an Event is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Event) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()
 
 
 @receiver(pre_delete, sender=Material)
 def delete_material_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Material is deleted."""
-    for note in instance.notes_set.all():
-        note.delete()
+    """Delete linked Notes when a Material is deleted.
+
+    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
+    Note's pre_delete signal, but that's OK since the linked entity (this
+    Material) is being deleted anyway.
+    """
+    instance.notes_set.all().delete()

@@ -2,10 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import json
-from datetime import timedelta, datetime
 
 import jwt
-import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -38,44 +36,12 @@ class TestCaseTokenViews(APITestCase):
         self.assertIn('access', response1.data)
         self.assertIn('refresh', response1.data)
         user = get_user_model().objects.get(username=user.get_username())
-        self.assertIsNone(user.last_login)
+        self.assertIsNotNone(user.last_login)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response1.data['access'], response2.data['access'])
         self.assertEqual(OutstandingToken.objects.count(), 2)
         token1 = OutstandingToken.objects.get(token=response1.data['refresh'])
         self.assertEqual(token1.user, user)
-
-    def test_token_update_last_login(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.last_login = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=1)
-        user.save()
-        last_login = user.last_login
-
-        # WHEN
-        data = {
-            'username': user.get_username(),
-            'password': 'test_pass_1!'
-        }
-        self.client.post(reverse('auth_token_obtain'),
-                         json.dumps(data),
-                         content_type='application/json')
-
-        # THEN
-        self.assertEqual(get_user_model().objects.get(pk=user.pk).last_login, last_login)
-
-        # WHEN
-        data = {
-            'username': user.get_username(),
-            'password': 'test_pass_1!',
-            'last_login_now': True
-        }
-        self.client.post(reverse('auth_token_obtain'),
-                         json.dumps(data),
-                         content_type='application/json')
-
-        # THEN
-        self.assertNotEqual(get_user_model().objects.get(pk=user.pk).last_login, last_login)
 
     def test_delete_user_deletes_token(self):
         # GIVEN
@@ -161,6 +127,7 @@ class TestCaseTokenViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+        self.assertIsNone(user.last_login)
         self.assertNotEqual(response.data['access'], user.access)
         self.assertNotEqual(response.data['refresh'], user.refresh)
         self.assertEqual(OutstandingToken.objects.count(), 2)
@@ -271,6 +238,9 @@ class TestCaseLegacyTokenViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+        user = get_user_model().objects.get(username=user.get_username())
+        self.assertIsNone(user.last_login)
+        self.assertIsNotNone(user.last_login_legacy)
         self.assertEqual(OutstandingToken.objects.count(), 1)
 
     def test_legacy_token_has_longer_lifetime(self):

@@ -114,12 +114,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+      - name: Get Chrome version
+        id: chrome-version
+        run: echo "version=$(google-chrome-stable --version | awk '{print $3}')" >> $GITHUB_OUTPUT
+
+      - name: Cache ChromeDriver
+        id: cache-chromedriver
+        uses: actions/cache@v4
         with:
-          chrome-version: stable
+          path: /usr/local/bin/chromedriver
+          key: ${{ runner.os }}-chromedriver-${{ steps.chrome-version.outputs.version }}
 
       - name: Install ChromeDriver
+        if: steps.cache-chromedriver.outputs.cache-hit != 'true'
         uses: nanasess/setup-chromedriver@v2
 
       - name: Start ChromeDriver

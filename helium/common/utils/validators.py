@@ -27,7 +27,7 @@ def validate_fraction(value):
             raise ValidationError(f'Values must be less than or equal to {sys.maxsize}.')
 
         return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
-    except:
+    except (ValueError, decimal.InvalidOperation):
         raise ValidationError('The fraction must contain valid integers.')
 
 

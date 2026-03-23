@@ -35,28 +35,23 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 logger = logging.getLogger(__name__)
 
 
-def _convert_legacy_notes(data, legacy_field='comments'):
+def _extract_legacy_notes(data, legacy_field='comments'):
     """
-    Convert legacy HTML notes field to Quill JSON format.
+    Extract and convert legacy HTML notes field to Quill JSON format.
 
-    If the data has a legacy field (comments/details) but no notes field,
-    convert the legacy HTML to Quill JSON and set it as notes.
-    The legacy field is removed from the data to prevent it from being saved.
+    Reads the legacy field from data (preserving it) and returns the converted Quill JSON content.
+    Returns None if no legacy content or conversion fails.
 
-    :param data: The entity data dict (modified in place)
+    :param data: The entity data dict (legacy field is preserved)
     :param legacy_field: The name of the legacy field ('comments' or 'details')
+    :return: Quill JSON content dict or None
     """
-    legacy_content = data.get(legacy_field)
-    notes_content = data.get('notes')
+    legacy_content = data.get(legacy_field, None)
 
-    if legacy_content and not notes_content:
-        quill_content = html_to_quill(legacy_content)
-        if quill_content:
-            data['notes'] = quill_content
+    if legacy_content:
+        return html_to_quill(legacy_content)
 
-    # Remove legacy field so it's not saved (field still exists on model but
-    # we don't want to populate it on import)
-    data.pop(legacy_field, None)
+    return None
 
 
 def _import_external_calendars(external_calendars, user, example_schedule):
@@ -191,7 +186,7 @@ def _import_material_groups(material_groups, user, example_schedule):
     return material_group_remap
 
 
-def _import_materials(materials, material_group_remap, course_remap):
+def _import_materials(materials, material_group_remap, course_remap, user, example_schedule):
     material_remap = {}
 
     for material in materials:
@@ -199,14 +194,21 @@ def _import_materials(materials, material_group_remap, course_remap):
         for i, course in enumerate(material['courses']):
             material['courses'][i] = course_remap.get(course, None)
 
-        # Convert legacy 'details' field to 'notes' if present
-        _convert_legacy_notes(material, legacy_field='details')
-
+        legacy_notes_content = _extract_legacy_notes(material, legacy_field='details')
         serializer = MaterialSerializer(data=material)
 
         if serializer.is_valid():
             instance = serializer.save(material_group_id=material['material_group'])
             material_remap[material['id']] = instance.pk
+
+            if legacy_notes_content:
+                note = Note.objects.create(
+                    title='',
+                    content=legacy_notes_content,
+                    user=user,
+                    example_schedule=example_schedule,
+                )
+                note.resources.add(instance)
         else:
             raise ValidationError({
                 'materials': {
@@ -223,14 +225,21 @@ def _import_events(events, user, example_schedule):
     event_remap = {}
 
     for event in events:
-        # Convert legacy 'comments' field to 'notes' if present
-        _convert_legacy_notes(event, legacy_field='comments')
-
+        legacy_notes_content = _extract_legacy_notes(event, legacy_field='comments')
         serializer = EventSerializer(data=event)
 
         if serializer.is_valid():
             instance = serializer.save(user=user, example_schedule=example_schedule)
             event_remap[event['id']] = instance.pk
+
+            if legacy_notes_content:
+                note = Note.objects.create(
+                    title='',
+                    content=legacy_notes_content,
+                    user=user,
+                    example_schedule=example_schedule,
+                )
+                note.events.add(instance)
         else:
             raise ValidationError({
                 'events': {
@@ -243,7 +252,7 @@ def _import_events(events, user, example_schedule):
     return event_remap
 
 
-def _import_homework(homework, course_remap, category_remap, material_remap):
+def _import_homework(homework, course_remap, category_remap, material_remap, user, example_schedule):
     homework_remap = {}
 
     for h in homework:
@@ -253,14 +262,21 @@ def _import_homework(homework, course_remap, category_remap, material_remap):
         for i, material in enumerate(h['materials']):
             h['materials'][i] = material_remap.get(material, None)
 
-        # Convert legacy 'comments' field to 'notes' if present
-        _convert_legacy_notes(h, legacy_field='comments')
-
+        legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
         serializer = HomeworkSerializer(data=h)
 
         if serializer.is_valid():
             instance = serializer.save(course_id=h['course'])
             homework_remap[h['id']] = instance.pk
+
+            if legacy_notes_content:
+                note = Note.objects.create(
+                    title='',
+                    content=legacy_notes_content,
+                    user=user,
+                    example_schedule=example_schedule,
+                )
+                note.homework.add(instance)
         else:
             raise ValidationError({
                 'homework': {
@@ -297,40 +313,39 @@ def _import_reminders(reminders, user, event_remap, homework_remap):
 
 
 def _import_notes(notes, user, homework_remap, event_remap, material_remap, example_schedule):
-    """Import standalone notes that aren't created via dual-write.
+    """Import notes, including those linked to entities.
 
-    Notes linked to homework/events/materials are created automatically via
-    dual-write when those entities are imported with notes content.
-    This function handles:
-    1. Standalone notes (no links)
-    2. Notes with links to entities that had no inline notes (edge case)
+    Handles both standalone notes and notes linked to homework/events/materials.
+    For linked notes, the entity IDs are remapped to their new values.
     """
     notes_count = 0
 
     for note_data in notes:
-        # Check if this note would be linked to an entity
-        links = note_data.get('links', [])
-
-        # Skip notes that are linked to entities - these are created via dual-write
-        # when the entity's inline notes field is imported
-        has_entity_link = any(
-            link.get('homework') or link.get('event') or link.get('material')
-            for link in links
-        )
-        if has_entity_link:
-            # The dual-write in homework/event/material serializers handles these
-            continue
-
-        # Import standalone note (no entity links)
         note = Note.objects.create(
-            title=note_data.get('title', 'Imported Note'),
+            title=note_data.get('title', ''),
             content=note_data.get('content', {}),
             user=user,
             example_schedule=example_schedule,
         )
+
+        for old_hw_id in note_data.get('homework', []):
+            new_hw_id = homework_remap.get(old_hw_id)
+            if new_hw_id:
+                note.homework.add(new_hw_id)
+
+        for old_event_id in note_data.get('events', []):
+            new_event_id = event_remap.get(old_event_id)
+            if new_event_id:
+                note.events.add(new_event_id)
+
+        for old_material_id in note_data.get('resources', []):
+            new_material_id = material_remap.get(old_material_id)
+            if new_material_id:
+                note.resources.add(new_material_id)
+
         notes_count += 1
 
-    logger.info(f"Imported {notes_count} standalone notes.")
+    logger.info(f"Imported {notes_count} notes.")
 
     return notes_count
 
@@ -365,13 +380,15 @@ def import_user(request, data, example_schedule=False):
                                                    example_schedule) if material_groups else {}
 
     materials = data.get('materials', [])
-    material_remap = _import_materials(materials, material_group_remap, course_remap) if materials else {}
+    material_remap = _import_materials(materials, material_group_remap, course_remap, request.user,
+                                       example_schedule) if materials else {}
 
     events = data.get('events', [])
     event_remap = _import_events(events, request.user, example_schedule) if events else {}
 
     homework = data.get('homework', [])
-    homework_remap = _import_homework(homework, course_remap, category_remap, material_remap) if homework else {}
+    homework_remap = _import_homework(homework, course_remap, category_remap, material_remap, request.user,
+                                      example_schedule) if homework else {}
 
     reminders = data.get('reminders', [])
     reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap) if reminders else 0
@@ -493,8 +510,8 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
         logger.info(
             f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
-    except:
-        logger.error("An unknown error occurred.", exc_info=True)
+    except Exception:
+        logger.error("An error occurred adjusting example schedule dates.", exc_info=True)
 
     timezone.deactivate()
 

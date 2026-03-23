@@ -41,13 +41,16 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
+            # Include content field when explicitly requested
+            if self.request.query_params.get('include_content') == 'true':
+                return NoteExtendedSerializer
             return NoteListSerializer
         return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """
         Return a list of all Note instances for the authenticated user.
-        Excludes content field to reduce payload size.
+        Excludes content field by default to reduce payload size.
         """
         return self.list(request, *args, **kwargs)
 

@@ -6,10 +6,11 @@ from datetime import datetime
 
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import filters
+from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
@@ -69,15 +70,14 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials')
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
             return Homework.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
             return HomeworkExtendedSerializer
-        else:
-            return self.serializer_class
+        return self.serializer_class
 
     @extend_schema(
         parameters=[
@@ -100,7 +100,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
 
     @extend_schema(
         responses={
-            201: HomeworkSerializer
+            201: HomeworkExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
@@ -116,12 +116,18 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             for material_id in materials:
                 permissions.check_material_permission(request.user.pk, material_id)
 
-        response = self.create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # Return extended serializer with note field
+        instance = serializer.instance
+        response_serializer = HomeworkExtendedSerializer(instance)
 
         logger.info(
-            f"Category {response.data['id']} created in Course {kwargs['course']} for user {request.user.pk}")
+            f"Homework {instance.pk} created in Course {kwargs['course']} for user {request.user.pk}")
 
-        return response
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(
@@ -134,15 +140,14 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials')
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
             return Homework.objects.none()
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
             return HomeworkExtendedSerializer
-        else:
-            return self.serializer_class
+        return self.serializer_class
 
     def get(self, request, *args, **kwargs):
         """
@@ -166,11 +171,15 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
             for material_id in materials:
                 permissions.check_material_permission(request.user.pk, material_id)
 
-        response = self.update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         logger.info(f"Homework {kwargs['pk']} updated for user {request.user.pk}")
 
-        return response
+        # Return extended serializer with note field
+        return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
     def patch(self, request, *args, **kwargs):
         """
@@ -186,11 +195,15 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
             for material_id in materials:
                 permissions.check_material_permission(request.user.pk, material_id)
 
-        response = self.partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         logger.info(f"Homework {kwargs['pk']} patched for user {request.user.pk}")
 
-        return response
+        # Return extended serializer with note field
+        return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
         tags=['planner.homework']

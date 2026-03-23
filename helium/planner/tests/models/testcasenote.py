@@ -115,16 +115,6 @@ class TestCaseNoteLinks(TestCase):
         resource.delete()
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
 
-    def test_delete_note_clears_entity_notes_field(self):
-        user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(user)
-        event.notes = {'ops': [{'insert': 'Some notes\n'}]}
-        event.save()
-        note = notehelper.given_note_linked_to_event(user, event, content=event.notes)
-        note.delete()
-        event.refresh_from_db()
-        self.assertIsNone(event.notes)
-
     def test_has_linked_entity(self):
         user = userhelper.given_a_user_exists()
         standalone = notehelper.given_note_exists(user)

@@ -13,6 +13,8 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from rest_framework_simplejwt.tokens import RefreshToken
 from firebase_admin import auth as firebase_auth
 
+from celery.schedules import crontab
+
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
 
@@ -97,8 +99,6 @@ def delete_user(self, user_id):
         import sentry_sdk
         sentry_sdk.set_user({"id": user_id})
 
-    # The instance may no longer exist by the time this request is processed, in which case we can simply and safely
-    # skip it
     user = None
     try:
         user = get_user_model().objects.get(pk=user_id)
@@ -191,11 +191,42 @@ def emit_queue_depth(self):
         logger.warning(f"Failed to get queue depth: {e}")
 
 
+@app.task(bind=True)
+def emit_nightly_metrics(self):
+    """Emit nightly aggregate metrics."""
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
+
+    try:
+        from django.db.models import Q
+
+        # Active users by window (users with recent login/token refresh activity)
+        staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
+        for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+            cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
+            base_qs = get_user_model().objects.filter(
+                is_active=True,
+                last_activity__gte=cutoff
+            )
+            for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
+                count = base_qs.filter(qs_filter).count()
+                metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}'])
+            logger.debug(f"Emitted active users ({window_tag})")
+    except Exception as e:
+        logger.error(f"Failed to emit nightly metrics: {e}", exc_info=True)
+        metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
+        raise
+
+    metricutils.task_stop(metrics)
+
+
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired refresh tokens periodically
     sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
-    # Add schedule to purge unverified users that don't finish setting up their account
-    sender.add_periodic_task(settings.PURGE_UNVERIFIED_USERS_FREQUENCY_SEC, purge_unverified_users.s())
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s())
+    # Purge unverified users daily at 4am UTC
+    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s())
+    # Emit nightly aggregate metrics at 3am UTC
+    sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())

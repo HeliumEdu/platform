@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
 from django.db import IntegrityError
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
@@ -41,7 +42,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
                                      style={'input_type': 'password'},
                                      trim_whitespace=False)
 
-    def validate(self, attrs):
+    def validate(self, attrs, update_last_login_field=True):
         username = attrs.pop('username').strip()
         password = attrs.pop('password')
 
@@ -71,12 +72,17 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
 
-            if api_settings.UPDATE_LAST_LOGIN or self.context.get('request').data.get('last_login_now', False):
+            if update_last_login_field:
                 update_last_login(None, user)
 
-                logger.debug(f"User {user.pk} has been logged in")
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
 
-                metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
+            self._authenticated_user = user
+
+            logger.debug(f"User {user.pk} has been logged in")
+
+            metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
 
         return attrs
 
@@ -96,11 +102,22 @@ class LegacyTokenObtainSerializer(TokenObtainSerializer):
     """
     Token obtain serializer for legacy frontend that doesn't properly support token refresh.
     Uses longer token lifetimes configured via LEGACY_*_TTL settings.
+
+    Deprecated: Remove when frontend-legacy is shut down.
     """
 
     @classmethod
     def get_token(cls, user):
         return LegacyRefreshToken.for_user(user)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs, update_last_login_field=False)
+
+        if user := getattr(self, '_authenticated_user', None):
+            user.last_login_legacy = timezone.now()
+            user.save(update_fields=['last_login_legacy'])
+
+        return attrs
 
 
 class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
@@ -108,6 +125,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         refresh = self.token_class(attrs["refresh"])
 
         user_id = refresh.payload.get(api_settings.USER_ID_CLAIM, None)
+        user = None
         try:
             if user_id and (
                     user := get_user_model().objects.get(
@@ -119,6 +137,10 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         except get_user_model().DoesNotExist:
             raise PermissionDenied(
                 'Sorry, the given token does have permissions for the given account, or the account is inactive.')
+
+        if user:
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
 
         data = {"access": str(refresh.access_token)}
 

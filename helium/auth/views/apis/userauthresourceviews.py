@@ -49,6 +49,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         # Import the example schedule for the user (after timezone is set)
         import_example_schedule.apply_async(
             args=(response.data['id'],),
+            kwargs={'example_schedule': request.data.get('example_schedule', True)},
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 

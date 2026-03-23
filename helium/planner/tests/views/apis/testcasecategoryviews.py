@@ -428,3 +428,40 @@ class TestCaseCategoryViews(APITestCase):
         self.assertIn(category2.pk, returned_ids)
         self.assertIn(category3.pk, returned_ids)
         self.assertNotIn(category1.pk, returned_ids)
+
+    def test_delete_uncategorized_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        uncategorized = Category.objects.get_uncategorized(course.pk)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_coursegroups_courses_categories_detail',
+                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                      'pk': uncategorized.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Uncategorized', str(response.data))
+        self.assertTrue(Category.objects.filter(pk=uncategorized.pk).exists())
+
+    def test_delete_category_moves_homework_to_uncategorized(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category1 = categoryhelper.given_category_exists(course)
+        category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
+        hw = homeworkhelper.given_homework_exists(course, category=category1)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_coursegroups_courses_categories_detail',
+                                              kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                      'pk': category1.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Category.objects.filter(pk=category1.pk).exists())
+        hw.refresh_from_db()
+        self.assertEqual(hw.category.title, 'Uncategorized')

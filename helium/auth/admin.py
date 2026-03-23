@@ -161,15 +161,15 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
 
-    list_display = ('email', 'created_at', 'last_login', 'get_auth_type',
-                    'num_course_groups', 'num_courses', 'num_homework', 'num_events', 'num_attachments',
-                    'num_external_calendars', 'is_active')
+    list_display = ('email', 'last_activity', 'get_auth_type',
+                    'num_notes', 'num_course_groups', 'num_courses', 'num_homework', 'num_events',
+                    'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
                    HasCreditsFilter, HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
-    ordering = ('-last_login',)
+    ordering = ('-last_activity',)
     add_fieldsets = (
         (None, {
             'fields': ('username', 'email', 'password1', 'password2',),
@@ -181,7 +181,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return self.readonly_fields + ('created_at', 'last_login', 'get_2fa_enabled',)
+            return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
+                                           'get_2fa_enabled',)
 
         return self.readonly_fields
 
@@ -208,9 +209,9 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
 
 class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login']
+    list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login', 'get_last_activity']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def has_add_permission(self, request):
@@ -225,6 +226,12 @@ class UserProfileAdmin(BaseModelAdmin):
     def get_last_login(self, obj):
         if obj.user:
             return obj.user.last_login
+        else:
+            return ''
+
+    def get_last_activity(self, obj):
+        if obj.user:
+            return obj.user.last_activity
         else:
             return ''
 
@@ -236,11 +243,11 @@ class UserProfileAdmin(BaseModelAdmin):
 
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'receive_emails_from_admin',
-                    'get_last_login']
+                    'get_last_activity']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
                    'calendar_use_category_colors', 'default_reminder_type']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
 
     def get_user(self, obj):
@@ -249,9 +256,9 @@ class UserSettingsAdmin(BaseModelAdmin):
         else:
             return ''
 
-    def get_last_login(self, obj):
+    def get_last_activity(self, obj):
         if obj.user:
-            return obj.user.last_login
+            return obj.user.last_activity
         else:
             return ''
 
@@ -260,14 +267,14 @@ class UserSettingsAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
-    get_last_login.short_description = 'Last Login'
-    get_last_login.admin_order_field = 'user__last_login'
+    get_last_activity.short_description = 'Last Activity'
+    get_last_activity.admin_order_field = 'user__last_activity'
 
 
 class UserPushTokenAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'device_id', 'token', 'get_last_login']
+    list_display = ['get_user', 'device_id', 'token', 'get_last_activity']
     search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_login',)
+    ordering = ('-user__last_activity',)
     autocomplete_fields = ('user',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -287,14 +294,14 @@ class UserPushTokenAdmin(BaseModelAdmin):
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
 
-    def get_last_login(self, obj):
+    def get_last_activity(self, obj):
         if obj.user:
-            return obj.user.last_login
+            return obj.user.last_activity
         else:
             return ''
 
-    get_last_login.short_description = 'Last Login'
-    get_last_login.admin_order_field = 'user__last_login'
+    get_last_activity.short_description = 'Last Activity'
+    get_last_activity.admin_order_field = 'user__last_activity'
 
 
 class UserOAuthProviderAdmin(BaseModelAdmin):
@@ -323,7 +330,7 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
     search_fields = ('token__jti', 'tokne__user__id', 'token__user__email', 'token__user__username')
-    ordering = ('-token__user__last_login',)
+    ordering = ('-token__user__last_activity',)
     autocomplete_fields = ('token',)
 
     def get_readonly_fields(self, request, obj=None):
