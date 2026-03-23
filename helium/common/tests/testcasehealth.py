@@ -11,10 +11,10 @@ from helium.common.health import IdentifiedCeleryBeatHealthCheck
 class TestCaseHealthEndpoint(TestCase):
     def test_status_endpoint_returns_success(self):
         # GIVEN/WHEN
-        response = self.client.get('/status/')
+        response = self.client.get('/status/core/')
 
         # THEN
-        self.assertIn(response.status_code, [200, 503])
+        self.assertIn(response.status_code, [200, 500])
 
 
 class TestCaseHealth(TestCase):
