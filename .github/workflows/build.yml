@@ -27,7 +27,7 @@ concurrency:
 jobs:
   integration-test:
     name: Integration Test
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_integration_tests }}
+    if: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'workflow_dispatch' || inputs.run_integration_tests) }}
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
