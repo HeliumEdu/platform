@@ -44,6 +44,14 @@ class User(AbstractBaseUser, BaseModel):
     last_activity = models.DateTimeField(blank=True, null=True, db_index=True,
                                          help_text='Last user activity (login or token refresh).')
 
+    deletion_warning_count = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Number of deletion warning emails sent due to inactivity (0-4). Resets on login.')
+
+    deletion_warning_sent_at = models.DateTimeField(
+        blank=True, null=True,
+        help_text='When the last deletion warning email was sent.')
+
     # Manager
     objects = UserManager()
 

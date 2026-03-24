@@ -317,7 +317,9 @@ def oauth_login(request):
         update_last_login(None, user)
         if not is_new_user:
             user.last_activity = timezone.now()
-            user.save(update_fields=['last_activity'])
+            user.deletion_warning_count = 0
+            user.deletion_warning_sent_at = None
+            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
         token = RefreshToken.for_user(user)
 

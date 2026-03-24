@@ -8,6 +8,7 @@ import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.db.models import Q
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -198,8 +199,6 @@ def emit_nightly_metrics(self):
     metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
 
     try:
-        from django.db.models import Q
-
         # Active users by window (users with recent login/token refresh activity)
         staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
@@ -220,6 +219,183 @@ def emit_nightly_metrics(self):
     metricutils.task_stop(metrics)
 
 
+@app.task(bind=True)
+def send_dormant_user_warning_email(self, user_id):
+    """Send a dormancy warning email to a user and increment their warning count."""
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("email.dormant-warning.sent", priority="low", published_at_ms=published_at_ms)
+
+    if settings.SENTRY_ENABLED:
+        import sentry_sdk
+        sentry_sdk.set_user({"id": user_id})
+
+    if settings.DISABLE_EMAILS:
+        logger.warning('Emails disabled. Dormant warning email not sent.')
+        metricutils.task_stop(metrics, value=0)
+        return
+
+    try:
+        user = get_user_model().objects.get(pk=user_id)
+    except get_user_model().DoesNotExist:
+        logger.info(f'User {user_id} does not exist. Skipping dormant warning email.')
+        metricutils.task_stop(metrics, value=0)
+        return
+
+    warning_number = user.deletion_warning_count + 1
+    if warning_number > 4:
+        logger.warning(f'User {user_id} already has {user.deletion_warning_count} warnings. Skipping.')
+        metricutils.task_stop(metrics, value=0)
+        return
+
+    days_remaining = settings.DORMANT_USER_WARNING_DAYS[warning_number - 1]
+    is_final_warning = warning_number == 4
+    subject_map = {
+        1: f'Your Account Will Be Deleted in {days_remaining} Days',
+        2: f'Reminder: {days_remaining} Days Until Account Deletion',
+        3: f'Reminder: Only {days_remaining} Days Left',
+        4: 'Final Notice: Account Deletion Tomorrow',
+    }
+    subject = subject_map[warning_number]
+
+    try:
+        commonutils.send_multipart_email(
+            'email/dormant_warning',
+            {
+                'subject': subject,
+                'days_remaining': days_remaining,
+                'dormancy_years': settings.DORMANT_USER_THRESHOLD_YEARS,
+                'is_final_warning': is_final_warning,
+                'login_url': f"{settings.PROJECT_APP_HOST}/login",
+                'export_url': 'https://heliumedu.freshdesk.com/support/solutions/articles/159000418665',
+                'delete_account_url': 'https://heliumedu.freshdesk.com/support/solutions/articles/159000418643',
+                'support_url': settings.SUPPORT_URL,
+            },
+            subject,
+            [user.email]
+        )
+
+        user.deletion_warning_count = warning_number
+        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=pytz.utc)
+        user.save(update_fields=['deletion_warning_count', 'deletion_warning_sent_at'])
+
+        logger.info(f'Sent dormant warning email #{warning_number} to user {user_id}')
+        metricutils.task_stop(metrics)
+
+    except Exception as e:
+        logger.error(f'Failed to send dormant warning email to user {user_id}: {e}', exc_info=True)
+        metricutils.task_failure("email.dormant-warning.sent", exception_type=type(e).__name__, priority="low")
+        raise
+
+
+@app.task(bind=True)
+def process_dormant_users(self):
+    """Process dormant users: send warning emails and delete accounts that have received all warnings."""
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.dormant.process", priority="low", published_at_ms=published_at_ms)
+
+    now = datetime.now().replace(tzinfo=pytz.utc)
+    dormancy_cutoff = now - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365)
+    warning_days = settings.DORMANT_USER_WARNING_DAYS
+    max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN
+    rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
+
+    # User is dormant if last_login_legacy is null or also old
+    legacy_dormant = Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff)
+
+    num_warnings_sent = 0
+    num_deletions_queued = 0
+    total_queued = 0
+
+    def get_stagger_delay(index):
+        """Calculate countdown delay to stagger operations under SES rate limit."""
+        return index / rate_per_sec
+
+    try:
+        # Find users needing first warning (dormant and no warnings sent yet)
+        first_warning_users = get_user_model().objects.filter(
+            legacy_dormant,
+            is_active=True,
+            last_login__lte=dormancy_cutoff,
+            last_activity__lte=dormancy_cutoff,
+            deletion_warning_count=0,
+        )
+        for user in first_warning_users:
+            if total_queued >= max_per_run:
+                logger.info(f'Reached max per run ({max_per_run}), stopping.')
+                break
+            send_dormant_user_warning_email.apply_async(
+                args=(user.pk,),
+                countdown=get_stagger_delay(total_queued),
+                priority=settings.CELERY_PRIORITY_LOW
+            )
+            num_warnings_sent += 1
+            total_queued += 1
+            logger.info(f'Queued first dormant warning for user {user.pk}')
+
+        # Calculate intervals between warnings from warning_days
+        # warning_days = [30, 14, 7, 1] -> intervals = [16, 7, 6] (days since previous warning)
+        intervals = [warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)]
+
+        # Find users needing subsequent warnings (2, 3, 4)
+        for warning_num in range(2, 5):
+            if total_queued >= max_per_run:
+                break
+            interval_days = intervals[warning_num - 2]
+            interval_cutoff = now - timedelta(days=interval_days)
+
+            subsequent_warning_users = get_user_model().objects.filter(
+                legacy_dormant,
+                is_active=True,
+                last_login__lte=dormancy_cutoff,
+                last_activity__lte=dormancy_cutoff,
+                deletion_warning_count=warning_num - 1,
+                deletion_warning_sent_at__lte=interval_cutoff,
+            )
+            for user in subsequent_warning_users:
+                if total_queued >= max_per_run:
+                    logger.info(f'Reached max per run ({max_per_run}), stopping.')
+                    break
+                send_dormant_user_warning_email.apply_async(
+                    args=(user.pk,),
+                    countdown=get_stagger_delay(total_queued),
+                    priority=settings.CELERY_PRIORITY_LOW
+                )
+                num_warnings_sent += 1
+                total_queued += 1
+                logger.info(f'Queued dormant warning #{warning_num} for user {user.pk}')
+
+        # Find users ready for deletion (all 4 warnings sent, still dormant)
+        if total_queued < max_per_run:
+            deletion_users = get_user_model().objects.filter(
+                legacy_dormant,
+                is_active=True,
+                last_login__lte=dormancy_cutoff,
+                last_activity__lte=dormancy_cutoff,
+                deletion_warning_count=4,
+            )
+            for user in deletion_users:
+                if total_queued >= max_per_run:
+                    logger.info(f'Reached max per run ({max_per_run}), stopping.')
+                    break
+                delete_user.apply_async(
+                    args=(user.pk,),
+                    countdown=get_stagger_delay(total_queued),
+                    priority=settings.CELERY_PRIORITY_LOW
+                )
+                num_deletions_queued += 1
+                total_queued += 1
+                logger.info(f'Queued deletion for dormant user {user.pk}')
+
+        metricutils.task_stop(metrics, value=num_warnings_sent + num_deletions_queued)
+        metricutils.gauge('users.dormant.warnings_sent', num_warnings_sent)
+        metricutils.gauge('users.dormant.deletions_queued', num_deletions_queued)
+
+    except Exception as e:
+        logger.error(f'Failed to process dormant users: {e}', exc_info=True)
+        metricutils.task_failure("user.dormant.process", exception_type=type(e).__name__, priority="low")
+        raise
+
+
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to check for expired refresh tokens periodically
@@ -230,3 +406,5 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s())
     # Emit nightly aggregate metrics at 3am UTC
     sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())
+    # Process dormant users daily at 2am UTC
+    sender.add_periodic_task(crontab(hour=2, minute=0), process_dormant_users.s())

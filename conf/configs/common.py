@@ -166,6 +166,13 @@ REMINDERS_FREQUENCY_SEC = 60
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
 
+# Dormant user purge settings
+DORMANT_USER_THRESHOLD_YEARS = 2
+DORMANT_USER_WARNING_DAYS = [30, 14, 7, 1]
+DORMANT_USER_PURGE_MAX_PER_RUN = 10
+
+EMAIL_SEND_RATE_PER_SEC = 7
+
 BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 
 # Application definition
