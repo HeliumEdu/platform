@@ -742,3 +742,17 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         # The reminder should skip the first Monday (exception) and target the following Monday
         self.assertEqual(reminder.start_of_range.date(), following_monday)
+
+    def test_filter_id_cannot_access_other_users_data(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        event = eventhelper.given_event_exists(user1)
+        reminder = reminderhelper.given_reminder_exists(user1, event=event)
+
+        # WHEN
+        response = self.client.get(reverse('planner_reminders_list') + f'?id={reminder.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)

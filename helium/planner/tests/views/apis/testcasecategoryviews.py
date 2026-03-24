@@ -465,3 +465,18 @@ class TestCaseCategoryViews(APITestCase):
         self.assertFalse(Category.objects.filter(pk=category1.pk).exists())
         hw.refresh_from_db()
         self.assertEqual(hw.category.title, 'Uncategorized')
+
+    def test_filter_id_cannot_access_other_users_data(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user1)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_categories_list') + f'?id={category.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
