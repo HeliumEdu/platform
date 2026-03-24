@@ -299,24 +299,34 @@ def process_dormant_users(self):
     max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN
     rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
 
+    # Intervals between warnings: [30, 14, 7, 1] -> {1: 16, 2: 7, 3: 6} days to wait
+    intervals = {i + 1: warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)}
+
     num_warnings_sent = 0
     num_deletions_queued = 0
     total_queued = 0
 
     def get_stagger_delay(index):
-        """Calculate countdown delay to stagger operations under SES rate limit."""
         return index / rate_per_sec
 
     try:
-        # Find users needing first warning (dormant and no warnings sent yet)
-        first_warning_users = get_user_model().objects.filter(
-            Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
+        # Base dormancy criteria: active user with all login timestamps old
+        dormancy_filter = Q(
             is_active=True,
             last_login__lte=dormancy_cutoff,
             last_activity__lte=dormancy_cutoff,
-            deletion_warning_count=0,
-        )
-        for user in first_warning_users:
+        ) & (Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff))
+
+        # Users needing warnings: count < 4, and either first warning or enough time since last
+        needs_warning = Q(deletion_warning_count=0)
+        for count, interval_days in intervals.items():
+            needs_warning |= Q(
+                deletion_warning_count=count,
+                deletion_warning_sent_at__lte=now - timedelta(days=interval_days)
+            )
+
+        warning_users = get_user_model().objects.filter(dormancy_filter & needs_warning)
+        for user in warning_users:
             if total_queued >= max_per_run:
                 logger.info(f'Reached max per run ({max_per_run}), stopping.')
                 break
@@ -327,48 +337,14 @@ def process_dormant_users(self):
             )
             num_warnings_sent += 1
             total_queued += 1
-            logger.info(f'Queued first dormant warning for user {user.pk}')
+            logger.info(f'Queued dormant warning #{user.deletion_warning_count + 1} for user {user.pk}')
 
-        # Calculate intervals between warnings from warning_days
-        # warning_days = [30, 14, 7, 1] -> intervals = [16, 7, 6] (days since previous warning)
-        intervals = [warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)]
-
-        # Find users needing subsequent warnings (2, 3, 4)
-        for warning_num in range(2, 5):
-            if total_queued >= max_per_run:
-                break
-            interval_days = intervals[warning_num - 2]
-            interval_cutoff = now - timedelta(days=interval_days)
-
-            subsequent_warning_users = get_user_model().objects.filter(
-                Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
-                is_active=True,
-                last_login__lte=dormancy_cutoff,
-                last_activity__lte=dormancy_cutoff,
-                deletion_warning_count=warning_num - 1,
-                deletion_warning_sent_at__lte=interval_cutoff,
-            )
-            for user in subsequent_warning_users:
-                if total_queued >= max_per_run:
-                    logger.info(f'Reached max per run ({max_per_run}), stopping.')
-                    break
-                send_dormant_user_warning_email.apply_async(
-                    args=(user.pk,),
-                    countdown=get_stagger_delay(total_queued),
-                    priority=settings.CELERY_PRIORITY_LOW
-                )
-                num_warnings_sent += 1
-                total_queued += 1
-                logger.info(f'Queued dormant warning #{warning_num} for user {user.pk}')
-
-        # Find users ready for deletion (all 4 warnings sent, still dormant)
+        # Users ready for deletion: all 4 warnings sent, with last_activity as safety check
         if total_queued < max_per_run:
             deletion_users = get_user_model().objects.filter(
-                Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
                 is_active=True,
-                last_login__lte=dormancy_cutoff,
                 last_activity__lte=dormancy_cutoff,
-                deletion_warning_count=4,
+                deletion_warning_count__gte=4,
             )
             for user in deletion_users:
                 if total_queued >= max_per_run:
