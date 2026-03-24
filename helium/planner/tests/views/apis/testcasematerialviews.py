@@ -371,3 +371,17 @@ class TestCaseMaterialViews(APITestCase):
         self.assertIn(material2.pk, returned_ids)
         self.assertIn(material3.pk, returned_ids)
         self.assertNotIn(material1.pk, returned_ids)
+
+    def test_filter_id_cannot_access_other_users_data(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        material_group = materialgrouphelper.given_material_group_exists(user1)
+        material = materialhelper.given_material_exists(material_group)
+
+        # WHEN
+        response = self.client.get(reverse('planner_materials_list') + f'?id={material.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)

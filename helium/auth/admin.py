@@ -163,7 +163,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_course_groups', 'num_courses', 'num_homework', 'num_events',
-                    'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy', 'is_active')
+                    'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy',
+                    'deletion_warning_count', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
@@ -182,7 +183,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
-                                           'get_2fa_enabled',)
+                                           'deletion_warning_count', 'deletion_warning_sent_at', 'get_2fa_enabled',)
 
         return self.readonly_fields
 

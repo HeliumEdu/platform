@@ -888,3 +888,18 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn('3_middle', titles)
         self.assertIn('4_at_to', titles)
         self.assertNotIn('5_after_to', titles)
+
+    def test_filter_id_cannot_access_other_users_data(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user1)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_homework_list') + f'?id={homework.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)

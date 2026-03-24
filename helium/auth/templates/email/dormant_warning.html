@@ -1,0 +1,38 @@
+{% extends "email/base.html" %}
+{% load humanize %}
+
+{% block greeting %}{{ subject }}{% endblock %}
+
+{% block content %}
+    <tr>
+        <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+            {% if is_final_warning %}<strong style="color: #c0392b;">This is your final notice.</strong> Your{% else %}Your{% endif %}
+            Helium account {% if is_final_warning %}will be permanently deleted tomorrow{% else %}is scheduled for deletion in <strong>{{ days_remaining }} days</strong>{% endif %}
+            due to {{ dormancy_years }}+ years of inactivity.
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+            When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered,
+            including your classes, assignments, grades, notes, and attachments.
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+            <strong>To keep your free account,</strong> simply <a href="{{ login_url }}" target="_blank">log in</a>.
+            That's all it takes.
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+            If you'd like to delete your account, but also want a copy of your data, see our guide on
+            <a href="{{ export_url }}" target="_blank">exporting your data</a>, and our guide on
+            <a href="{{ delete_account_url }}" target="_blank">deleting your account manually</a>.
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+            Questions? <a href="{{ support_url }}" target="_blank">Contact support</a>.
+        </td>
+    </tr>
+{% endblock %}

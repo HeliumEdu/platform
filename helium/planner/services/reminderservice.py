@@ -77,6 +77,9 @@ def create_next_repeating_reminder(reminder):
 def process_email_reminders():
     from helium.planner.tasks import send_email_reminder
 
+    rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
+    queued_count = 0
+
     for reminder in (Reminder.objects
                      .with_type(enums.EMAIL)
                      .unsent()
@@ -114,8 +117,10 @@ def process_email_reminders():
 
                     send_email_reminder.apply_async(
                         args=(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type),
+                        countdown=queued_count / rate_per_sec,
                         priority=settings.CELERY_PRIORITY_HIGH,
                     )
+                    queued_count += 1
             else:
                 logger.warning(
                     f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')

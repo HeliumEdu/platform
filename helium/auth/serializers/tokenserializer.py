@@ -76,7 +76,9 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
                 update_last_login(None, user)
 
             user.last_activity = timezone.now()
-            user.save(update_fields=['last_activity'])
+            user.deletion_warning_count = 0
+            user.deletion_warning_sent_at = None
+            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
             self._authenticated_user = user
 
@@ -140,7 +142,9 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
 
         if user:
             user.last_activity = timezone.now()
-            user.save(update_fields=['last_activity'])
+            user.deletion_warning_count = 0
+            user.deletion_warning_sent_at = None
+            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
         data = {"access": str(refresh.access_token)}
 

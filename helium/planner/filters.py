@@ -21,6 +21,7 @@ class EventFilter(django_filters.FilterSet):
     class Meta:
         model = Event
         fields = {
+            'id': ['exact'],
             'title': ['exact'],
             'updated_at': ['gte'],
         }
@@ -66,6 +67,7 @@ class CourseGroupFilter(django_filters.FilterSet):
     class Meta:
         model = CourseGroup
         fields = {
+            'id': ['exact'],
             'shown_on_calendar': ['exact'],
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
@@ -80,6 +82,7 @@ class CourseFilter(django_filters.FilterSet):
     class Meta:
         model = Course
         fields = {
+            'id': ['exact'],
             'start_date': ['exact', 'gte'],
             'end_date': ['exact', 'lte'],
             'title': ['exact'],
@@ -96,6 +99,7 @@ class CategoryFilter(django_filters.FilterSet):
     class Meta:
         model = Category
         fields = {
+            'id': ['exact'],
             'course': ['exact'],
             'title': ['exact'],
             'updated_at': ['gte'],
@@ -109,6 +113,7 @@ class ReminderFilter(django_filters.FilterSet):
     class Meta:
         model = Reminder
         fields = {
+            'id': ['exact'],
             'event': ['exact'],
             'homework': ['exact'],
             'type': ['exact'],
@@ -124,6 +129,7 @@ class MaterialGroupFilter(django_filters.FilterSet):
     class Meta:
         model = MaterialGroup
         fields = {
+            'id': ['exact'],
             'shown_on_calendar': ['exact'],
             'title': ['exact'],
             'updated_at': ['gte'],
@@ -136,6 +142,7 @@ class MaterialFilter(django_filters.FilterSet):
     class Meta:
         model = Material
         fields = {
+            'id': ['exact'],
             'title': ['exact'],
             'updated_at': ['gte'],
         }
@@ -148,6 +155,7 @@ class CourseScheduleFilter(django_filters.FilterSet):
     class Meta:
         model = CourseSchedule
         fields = {
+            'id': ['exact'],
             'updated_at': ['gte'],
         }
 
@@ -156,6 +164,7 @@ class AttachmentFilter(django_filters.FilterSet):
     class Meta:
         model = Attachment
         fields = {
+            'id': ['exact'],
             'course': ['exact'],
             'event': ['exact'],
             'homework': ['exact'],

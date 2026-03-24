@@ -329,3 +329,17 @@ class TestCaseAttachmentViews(APITestCase):
         self.assertIn(attachment2.pk, returned_ids)
         self.assertIn(attachment3.pk, returned_ids)
         self.assertNotIn(attachment1.pk, returned_ids)
+
+    def test_filter_id_cannot_access_other_users_data(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        event = eventhelper.given_event_exists(user1)
+        attachment = attachmenthelper.given_attachment_exists(user1, event=event)
+
+        # WHEN
+        response = self.client.get(reverse('planner_attachments_list') + f'?id={attachment.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)

@@ -1,0 +1,14 @@
+{{ subject }}
+
+{% if is_final_warning %}This is your final notice. Your Helium account will be permanently deleted tomorrow{% else %}Your Helium account is scheduled for deletion in {{ days_remaining }} days{% endif %} due to {{ dormancy_years }}+ years of inactivity.
+
+When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered, including your classes, assignments, grades, notes, and attachments.
+
+To keep your free account, simply log in at {{ login_url }}. That's all it takes.
+
+If you'd like to delete your account, but also want a copy of your data, see our guide on exporting your data ({{ export_url }}), and our guide on deleting your account manually ({{ delete_account_url }}).
+
+Questions? Contact support at {{ support_url }}.
+
+Thanks,
+The Helium Team
