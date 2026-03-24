@@ -299,8 +299,7 @@ def process_dormant_users(self):
     max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN
     rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
 
-    # Intervals between warnings: [30, 14, 7, 1] -> {1: 16, 2: 7, 3: 6} days to wait
-    intervals = {i + 1: warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)}
+    warning_intervals = {i + 1: warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)}
 
     num_warnings_sent = 0
     num_deletions_queued = 0
@@ -310,15 +309,10 @@ def process_dormant_users(self):
         return index / rate_per_sec
 
     try:
-        # Base dormancy criteria: active user with old last_activity
-        dormancy_filter = Q(
-            is_active=True,
-            last_activity__lte=dormancy_cutoff,
-        )
+        dormancy_filter = Q(is_active=True, last_activity__lte=dormancy_cutoff)
 
-        # Users needing warnings: count < 4, and either first warning or enough time since last
         needs_warning = Q(deletion_warning_count=0)
-        for count, interval_days in intervals.items():
+        for count, interval_days in warning_intervals.items():
             needs_warning |= Q(
                 deletion_warning_count=count,
                 deletion_warning_sent_at__lte=now - timedelta(days=interval_days)
@@ -338,7 +332,6 @@ def process_dormant_users(self):
             total_queued += 1
             logger.info(f'Queued dormant warning #{user.deletion_warning_count + 1} for user {user.pk}')
 
-        # Users ready for deletion: all 4 warnings sent, with last_activity as safety check
         if total_queued < max_per_run:
             deletion_users = get_user_model().objects.filter(
                 is_active=True,
