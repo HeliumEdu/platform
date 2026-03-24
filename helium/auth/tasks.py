@@ -310,12 +310,11 @@ def process_dormant_users(self):
         return index / rate_per_sec
 
     try:
-        # Base dormancy criteria: active user with all login timestamps old
+        # Base dormancy criteria: active user with old last_activity
         dormancy_filter = Q(
             is_active=True,
-            last_login__lte=dormancy_cutoff,
             last_activity__lte=dormancy_cutoff,
-        ) & (Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff))
+        )
 
         # Users needing warnings: count < 4, and either first warning or enough time since last
         needs_warning = Q(deletion_warning_count=0)

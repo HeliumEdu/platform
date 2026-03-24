@@ -129,11 +129,11 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
+    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
         dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 1)
-        user.last_login = dormant_date
         user.last_activity = dormant_date
         user.deletion_warning_count = 0
         user.save()
@@ -148,11 +148,11 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
+    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_deletes_after_all_warnings(self, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
         dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 31)
-        user.last_login = dormant_date
         user.last_activity = dormant_date
         user.deletion_warning_count = 4
         user.deletion_warning_sent_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=2)
@@ -168,11 +168,11 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
+    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_ignores_active_users(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
         recent_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
-        user.last_login = recent_date
         user.last_activity = recent_date
         user.save()
 
