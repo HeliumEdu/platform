@@ -129,7 +129,6 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
-    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -148,7 +147,6 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
-    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_deletes_after_all_warnings(self, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -168,7 +166,6 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
-    @mock.patch('helium.auth.tasks.settings.DORMANT_USER_PURGE_MAX_PER_RUN', 10)
     def test_process_dormant_users_ignores_active_users(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
