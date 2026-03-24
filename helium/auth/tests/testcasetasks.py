@@ -14,7 +14,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from unittest import mock
 
 from helium.auth.tasks import (
-    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics, delete_user
+    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics, delete_user,
+    process_dormant_users, send_dormant_user_warning_email
 )
 from helium.auth.tests.helpers import userhelper
 
@@ -125,3 +126,60 @@ class TestCaseTasks(APITestCase):
 
         # THEN
         self.assertEqual(mock_gauge.call_count, 10)  # 5 time windows for staff/non-staff
+
+    @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
+    @mock.patch('helium.auth.tasks.delete_user.apply_async')
+    def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 1)
+        user.last_login = dormant_date
+        user.last_activity = dormant_date
+        user.deletion_warning_count = 0
+        user.save()
+
+        # WHEN
+        process_dormant_users()
+
+        # THEN
+        mock_send_warning.assert_called_once()
+        self.assertEqual(mock_send_warning.call_args[1]['args'], (user.pk,))
+        mock_delete.assert_not_called()
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+    @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
+    def test_process_dormant_users_deletes_after_all_warnings(self, mock_send_warning):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 31)
+        user.last_login = dormant_date
+        user.last_activity = dormant_date
+        user.deletion_warning_count = 4
+        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=2)
+        user.save()
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+        # WHEN
+        process_dormant_users()
+
+        # THEN
+        mock_send_warning.assert_not_called()
+        self.assertEqual(get_user_model().objects.count(), 0)
+
+    @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
+    @mock.patch('helium.auth.tasks.delete_user.apply_async')
+    def test_process_dormant_users_ignores_active_users(self, mock_delete, mock_send_warning):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        recent_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
+        user.last_login = recent_date
+        user.last_activity = recent_date
+        user.save()
+
+        # WHEN
+        process_dormant_users()
+
+        # THEN
+        mock_send_warning.assert_not_called()
+        mock_delete.assert_not_called()
+        self.assertEqual(get_user_model().objects.count(), 1)

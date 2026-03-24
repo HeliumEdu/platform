@@ -299,9 +299,6 @@ def process_dormant_users(self):
     max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN
     rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
 
-    # User is dormant if last_login_legacy is null or also old
-    legacy_dormant = Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff)
-
     num_warnings_sent = 0
     num_deletions_queued = 0
     total_queued = 0
@@ -313,7 +310,7 @@ def process_dormant_users(self):
     try:
         # Find users needing first warning (dormant and no warnings sent yet)
         first_warning_users = get_user_model().objects.filter(
-            legacy_dormant,
+            Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
             is_active=True,
             last_login__lte=dormancy_cutoff,
             last_activity__lte=dormancy_cutoff,
@@ -344,7 +341,7 @@ def process_dormant_users(self):
             interval_cutoff = now - timedelta(days=interval_days)
 
             subsequent_warning_users = get_user_model().objects.filter(
-                legacy_dormant,
+                Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
                 is_active=True,
                 last_login__lte=dormancy_cutoff,
                 last_activity__lte=dormancy_cutoff,
@@ -367,7 +364,7 @@ def process_dormant_users(self):
         # Find users ready for deletion (all 4 warnings sent, still dormant)
         if total_queued < max_per_run:
             deletion_users = get_user_model().objects.filter(
-                legacy_dormant,
+                Q(last_login_legacy__isnull=True) | Q(last_login_legacy__lte=dormancy_cutoff),
                 is_active=True,
                 last_login__lte=dormancy_cutoff,
                 last_activity__lte=dormancy_cutoff,
