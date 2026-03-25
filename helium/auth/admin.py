@@ -162,7 +162,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     add_form = AdminUserCreationForm
 
     list_display = ('email', 'last_activity', 'get_auth_type',
-                    'num_notes', 'num_course_groups', 'num_courses', 'num_homework', 'num_events',
+                    'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy',
                     'deletion_warning_count', 'is_active')
     list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
