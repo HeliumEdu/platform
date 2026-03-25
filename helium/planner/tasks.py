@@ -251,7 +251,8 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                                              'comments': comments,
                                              'notifications_url': f"{settings.PROJECT_APP_HOST}/notifications",
                                          },
-                                         subject, [email])
+                                         subject, [email],
+                                         email_type='reminder')
 
         metricutils.task_stop(metrics, user=reminder.user)
     except Exception:
