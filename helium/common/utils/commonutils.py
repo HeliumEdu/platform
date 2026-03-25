@@ -21,7 +21,7 @@ class HeliumError(Exception):
     pass
 
 
-def send_multipart_email(template_name, context, subject, to, bcc=None):
+def send_multipart_email(template_name, context, subject, to, bcc=None, email_type=None):
     """
     Send a multipart text/html email.
 
@@ -30,6 +30,7 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     :param subject: The subject of the email
     :param to: A list of email addresses to which to send
     :param bcc: A list of email addresses to which to BCC
+    :param email_type: The type of email for metric tagging (e.g. "reminder", "registration", "verification")
     :return:
     """
     plaintext = get_template(f'{template_name}.txt')
@@ -40,13 +41,15 @@ def send_multipart_email(template_name, context, subject, to, bcc=None):
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.attach_alternative(html_content, "text/html")
 
+    extra_tags = [f"type:{email_type}"] if email_type else []
+
     try:
         msg.send()
         logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
-        metricutils.increment('action.email.sent')
+        metricutils.increment('action.email.sent', extra_tags=extra_tags)
     except Exception:
         logger.error("Failed to send email", exc_info=True)
-        metricutils.increment('action.email.failed')
+        metricutils.increment('action.email.failed', extra_tags=extra_tags)
         raise
 
 

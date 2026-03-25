@@ -39,7 +39,8 @@ def send_verification_email(self, email, username, verification_code):
                                          'verification_code': verification_code,
                                          'verify_url': f"{settings.PROJECT_APP_HOST}/verify",
                                      },
-                                     'Verify Your Email Address with Helium', [email])
+                                     'Verify Your Email Address with Helium', [email],
+                                     email_type='verification')
 
     logger.debug("Verification email sent successfully")
 
@@ -61,7 +62,8 @@ def send_registration_email(self, email):
                                          'PROJECT_NAME': settings.PROJECT_NAME,
                                          'login_url': f"{settings.PROJECT_APP_HOST}/login",
                                      },
-                                     'Welcome to Helium', [email])
+                                     'Welcome to Helium', [email],
+                                     email_type='registration')
 
     logger.debug(f"Registration email sent successfully")
 
@@ -85,7 +87,8 @@ def send_password_reset_email(self, email, temp_password):
                                          'support_url': settings.SUPPORT_URL,
                                          'status_url': settings.STATUS_URL
                                      },
-                                     'Your Helium Password Has Been Reset', [email])
+                                     'Your Helium Password Has Been Reset', [email],
+                                     email_type='password_reset')
 
     logger.debug(f"Password reset email sent successfully")
 
@@ -271,7 +274,8 @@ def send_dormant_user_warning_email(self, user_id):
                 'support_url': settings.SUPPORT_URL,
             },
             subject,
-            [user.email]
+            [user.email],
+            email_type='dormant_warning',
         )
 
         user.deletion_warning_count = warning_number
