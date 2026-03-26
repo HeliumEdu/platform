@@ -39,6 +39,7 @@ def send_multipart_email(template_name, context, subject, to, bcc=None, email_ty
     html_content = html.render(context)
 
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
+    msg.extra_headers['X-SES-CONFIGURATION-SET'] = settings.SES_CONFIGURATION_SET
     msg.attach_alternative(html_content, "text/html")
 
     extra_tags = [f"type:{email_type}"] if email_type else []
