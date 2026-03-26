@@ -17,6 +17,41 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
+def clear_ses_suppression_if_exists(email: str) -> bool:
+    """
+    Remove an email from the SES account suppression list if present.
+
+    This handles the edge case where a previously-bounced email address is now owned
+    by a different person attempting to register (e.g., recycled .edu addresses).
+
+    :param email: The email address to remove from suppression
+    :return: True if the email was removed, False if it wasn't suppressed
+    """
+    if settings.DISABLE_EMAILS:
+        return False
+
+    try:
+        import boto3
+        from botocore.exceptions import ClientError
+
+        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
+
+        try:
+            client.delete_suppressed_destination(EmailAddress=email)
+            logger.info(f'Removed {email} from SES suppression list')
+            metricutils.increment('ses.suppression.cleared')
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NotFoundException':
+                return False
+            raise
+
+    except Exception as e:
+        logger.warning(f'Failed to clear SES suppression for {email}: {e}')
+        metricutils.increment('ses.suppression.check_failed')
+        return False
+
+
 class HeliumError(Exception):
     pass
 

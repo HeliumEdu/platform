@@ -20,6 +20,7 @@ from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
+from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
@@ -158,6 +159,8 @@ def resend_verification_email(request):
 
         # Send to email_changing if set (active user changing email), otherwise to email (new registration)
         target_email = user.email_changing if user.email_changing else user.email
+
+        clear_ses_suppression_if_exists(target_email)
 
         send_verification_email.apply_async(
             args=(target_email, user.username, user.verification_code),
