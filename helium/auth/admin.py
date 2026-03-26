@@ -9,7 +9,8 @@ from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
-from django.db.models import Q
+from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -18,6 +19,8 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.planner.models.course import Course
+from helium.planner.models.homework import Homework
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin
 
@@ -180,6 +183,31 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     filter_horizontal = ()
     inlines = [UserOAuthProviderInline]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        course_count = Subquery(
+            Course.objects.filter(course_group__user=OuterRef('pk'))
+            .values('course_group__user')
+            .annotate(c=Count('id'))
+            .values('c')[:1]
+        )
+        homework_count = Subquery(
+            Homework.objects.filter(course__course_group__user=OuterRef('pk'))
+            .values('course__course_group__user')
+            .annotate(c=Count('id'))
+            .values('c')[:1]
+        )
+
+        return qs.prefetch_related('oauth_providers').annotate(
+            _num_notes=Count('notes', distinct=True),
+            _num_courses=Coalesce(course_count, 0),
+            _num_homework=Coalesce(homework_count, 0),
+            _num_events=Count('events', distinct=True),
+            _num_attachments=Count('attachments', distinct=True),
+            _num_external_calendars=Count('external_calendars', distinct=True),
+        )
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
@@ -194,19 +222,52 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     get_2fa_enabled.boolean = True
 
     def get_auth_type(self, obj):
-        """Display the authentication types for the user."""
         auth_types = []
         if obj.has_usable_password():
             auth_types.append('Password')
 
-        oauth_providers = obj.oauth_providers.all()
-        if oauth_providers:
-            provider_names = [provider.get_provider_display() for provider in oauth_providers]
-            auth_types.extend(provider_names)
+        for provider in obj.oauth_providers.all():
+            auth_types.append(provider.get_provider_display())
 
         return ', '.join(auth_types) if auth_types else 'None'
 
     get_auth_type.short_description = 'Auth Type'
+
+    def num_notes(self, obj):
+        return obj._num_notes
+
+    num_notes.short_description = 'Notes'
+    num_notes.admin_order_field = '_num_notes'
+
+    def num_courses(self, obj):
+        return obj._num_courses
+
+    num_courses.short_description = 'Courses'
+    num_courses.admin_order_field = '_num_courses'
+
+    def num_homework(self, obj):
+        return obj._num_homework
+
+    num_homework.short_description = 'Homework'
+    num_homework.admin_order_field = '_num_homework'
+
+    def num_events(self, obj):
+        return obj._num_events
+
+    num_events.short_description = 'Events'
+    num_events.admin_order_field = '_num_events'
+
+    def num_attachments(self, obj):
+        return obj._num_attachments
+
+    num_attachments.short_description = 'Attachments'
+    num_attachments.admin_order_field = '_num_attachments'
+
+    def num_external_calendars(self, obj):
+        return obj._num_external_calendars
+
+    num_external_calendars.short_description = 'Ext Calendars'
+    num_external_calendars.admin_order_field = '_num_external_calendars'
 
 
 class UserProfileAdmin(BaseModelAdmin):
