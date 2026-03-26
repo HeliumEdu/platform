@@ -19,8 +19,12 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.feed.models.externalcalendar import ExternalCalendar
+from helium.planner.models.attachment import Attachment
 from helium.planner.models.course import Course
+from helium.planner.models.event import Event
 from helium.planner.models.homework import Homework
+from helium.planner.models.note import Note
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin
 
@@ -186,26 +190,21 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        course_count = Subquery(
-            Course.objects.filter(course_group__user=OuterRef('pk'))
-            .values('course_group__user')
-            .annotate(c=Count('id'))
-            .values('c')[:1]
-        )
-        homework_count = Subquery(
-            Homework.objects.filter(course__course_group__user=OuterRef('pk'))
-            .values('course__course_group__user')
-            .annotate(c=Count('id'))
-            .values('c')[:1]
-        )
+        def _user_count_subquery(model, user_path='user'):
+            return Coalesce(Subquery(
+                model.objects.filter(**{user_path: OuterRef('pk')})
+                .values(user_path)
+                .annotate(c=Count('id'))
+                .values('c')[:1]
+            ), 0)
 
         return qs.prefetch_related('oauth_providers').annotate(
-            _num_notes=Count('notes', distinct=True),
-            _num_courses=Coalesce(course_count, 0),
-            _num_homework=Coalesce(homework_count, 0),
-            _num_events=Count('events', distinct=True),
-            _num_attachments=Count('attachments', distinct=True),
-            _num_external_calendars=Count('external_calendars', distinct=True),
+            _num_notes=_user_count_subquery(Note),
+            _num_courses=_user_count_subquery(Course, 'course_group__user'),
+            _num_homework=_user_count_subquery(Homework, 'course__course_group__user'),
+            _num_events=_user_count_subquery(Event),
+            _num_attachments=_user_count_subquery(Attachment),
+            _num_external_calendars=_user_count_subquery(ExternalCalendar),
         )
 
     def get_readonly_fields(self, request, obj=None):
