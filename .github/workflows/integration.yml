@@ -79,10 +79,10 @@ jobs:
 
     steps:
       - name: Checkout platform
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout frontend
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: HeliumEdu/frontend
           ref: ${{ inputs.frontend_ref || 'main' }}
@@ -105,7 +105,7 @@ jobs:
           cache: true
 
       - name: Cache pub dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('frontend/**/pubspec.lock') }}
@@ -118,7 +118,7 @@ jobs:
 
       - name: Cache ChromeDriver
         id: cache-chromedriver
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /usr/local/bin/chromedriver
           key: ${{ runner.os }}-chromedriver-${{ steps.chrome-version.outputs.version }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Upload screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: integration-screenshots
           path: frontend/build/integration-screenshots/
