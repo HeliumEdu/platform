@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.141"
+__version__ = "2.1.142"
 
 import os
 import socket
@@ -161,12 +161,11 @@ DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
 
-REMINDERS_FREQUENCY_SEC = 60
-
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
 
 # Dormant user purge settings
+PROCESS_DORMANT_USERS_FREQUENCY_SEC = 3600
 DORMANT_USER_THRESHOLD_YEARS = 2
 DORMANT_USER_WARNING_DAYS = [30, 14, 7, 1]
 DORMANT_USER_PURGE_MAX_PER_RUN = 100

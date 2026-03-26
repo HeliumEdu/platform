@@ -367,15 +367,17 @@ def process_dormant_users(self):
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Add schedule to check for expired refresh tokens periodically
+    # Purge expired refresh tokens periodically
     sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
+
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s())
-    # Purge unverified users daily at 4am UTC
+
+    # Purge unverified users nightly
     sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s())
-    # Emit nightly aggregate metrics at 3am UTC
+
+    # Emit aggregate metrics nightly
     sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())
-    # Process dormant users daily at 2am UTC
-    # sender.add_periodic_task(crontab(hour=2, minute=0), process_dormant_users.s())
-    # For now, process users every 60 mins until we get through the backlog
-    sender.add_periodic_task(3600, process_dormant_users.s())
+    
+    # Process dormant users periodically
+    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s())

@@ -264,11 +264,11 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Add schedule for email reminders periodically
-    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, email_reminders.s())
+    # Process email reminders
+    sender.add_periodic_task(60, email_reminders.s())
 
-    # Add schedule for text reminders periodically
-    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, text_reminders.s())
+    # Process push reminders
+    sender.add_periodic_task(60, push_reminders.s())
 
-    # Add schedule for push reminders periodically
-    sender.add_periodic_task(settings.REMINDERS_FREQUENCY_SEC, push_reminders.s())
+    # Process text reminders
+    sender.add_periodic_task(60, text_reminders.s())
