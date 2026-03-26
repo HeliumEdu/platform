@@ -118,14 +118,14 @@ jobs:
 
     steps:
       - name: Checkout infra monorepo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: HeliumEdu/infra
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: deploy
 
       - name: Set up Python "3.12"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -143,7 +143,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Checkout platform repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: HeliumEdu/platform
           ref: ${{ needs.determine-version.outputs.version }}
@@ -172,7 +172,7 @@ jobs:
 
       - name: Upload test output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cluster-test-output-${{ needs.determine-version.outputs.version }}
           path: deploy/projects/cluster-tests/build/screenshots/
@@ -200,10 +200,10 @@ jobs:
 
     steps:
       - name: Checkout platform repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Checkout infra repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: HeliumEdu/infra
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -211,7 +211,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python "3.12"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
