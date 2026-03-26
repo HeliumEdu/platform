@@ -377,5 +377,5 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())
     # Process dormant users daily at 2am UTC
     # sender.add_periodic_task(crontab(hour=2, minute=0), process_dormant_users.s())
-    # For now, process users every 30 mins until we get through the backlog
-    sender.add_periodic_task(1800, process_dormant_users.s())
+    # For now, process users every 60 mins until we get through the backlog
+    sender.add_periodic_task(3600, process_dormant_users.s())
