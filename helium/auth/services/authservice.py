@@ -260,7 +260,7 @@ def oauth_login(request):
                 logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
                 metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
 
-            logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In (matched by provider UID)')
+            logger.info(f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In (matched by provider UID)')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
         elif user:
@@ -272,7 +272,7 @@ def oauth_login(request):
                 logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
                 metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
 
-            logger.info(f'Existing user {user.id} logged in via {provider_name} Sign-In')
+            logger.info(f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
             # Link or update OAuth provider for this existing user
@@ -305,7 +305,7 @@ def oauth_login(request):
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
-            logger.info(f'New user {user.id} created via {provider_name} Sign-In')
+            logger.info(f'New user {user.id} ({redact_email(user.email)}) created via {provider_name} Sign-In')
 
             metricutils.increment(f'action.user.{provider_name.lower()}-signup', request=request, user=user)
 
