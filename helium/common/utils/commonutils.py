@@ -143,6 +143,14 @@ def send_multipart_email(template_name, context, subject, to, bcc=None, email_ty
         for rejected_email in e.recipients:
             add_to_ses_suppression_list(rejected_email)
         raise EmailSuppressedException(to, original_error=e) from e
+    except smtplib.SMTPDataError as e:
+        logger.warning(f"SES rejected message data: {e.smtp_code} {e.smtp_error}")
+        metricutils.increment('action.email.failed', extra_tags=extra_tags)
+        raise EmailSuppressedException(to, original_error=e) from e
+    except ValueError as e:
+        logger.warning(f"Invalid email address: {e}")
+        metricutils.increment('action.email.failed', extra_tags=extra_tags)
+        raise EmailSuppressedException(to, original_error=e) from e
     except Exception:
         logger.error("Failed to send email", exc_info=True)
         metricutils.increment('action.email.failed', extra_tags=extra_tags)
