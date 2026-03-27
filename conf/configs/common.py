@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.147"
+__version__ = "2.1.148"
 
 import os
 import socket
@@ -169,7 +169,7 @@ PROCESS_DORMANT_USERS_FREQUENCY_SEC = 3600
 DORMANT_USER_THRESHOLD_YEARS = 2
 DORMANT_USER_WARNING_DAYS = [30, 14, 7, 1]
 # Set to 0 to pause dormant email warnings / account deletions
-DORMANT_USER_PURGE_MAX_PER_RUN = 25
+DORMANT_USER_PURGE_MAX_PER_RUN = 50
 
 EMAIL_SEND_RATE_PER_SEC = 7
 
