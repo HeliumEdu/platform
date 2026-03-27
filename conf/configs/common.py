@@ -168,7 +168,9 @@ UNVERIFIED_USER_TTL_DAYS = 7
 PROCESS_DORMANT_USERS_FREQUENCY_SEC = 3600
 DORMANT_USER_THRESHOLD_YEARS = 2
 DORMANT_USER_WARNING_DAYS = [30, 14, 7, 1]
-DORMANT_USER_PURGE_MAX_PER_RUN = 100
+# Set to 0 to pause, setting above ~50 with dormant accounts runs closer to risk of
+# AWS SES bounce "at risk" zone, so stay low
+DORMANT_USER_PURGE_MAX_PER_RUN = 0
 
 EMAIL_SEND_RATE_PER_SEC = 7
 
