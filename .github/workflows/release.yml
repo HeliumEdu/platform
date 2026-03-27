@@ -81,7 +81,7 @@ jobs:
       base_sha: ${{ steps.create_branch.outputs.base_sha }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: ${{ github.sha }}
@@ -108,12 +108,12 @@ jobs:
       PYTHONDONTWRITEBYTECODE: 1
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs['create-release-branch'].outputs.base_sha }}
 
       - name: Set up Python "3.12"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -140,13 +140,13 @@ jobs:
       commit_sha: ${{ steps.get_commit.outputs.commit_sha }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: ${{ needs['create-release-branch'].outputs.branch_name }}
 
       - name: Set up Python "3.12"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -215,7 +215,7 @@ jobs:
       merged_commit_sha: ${{ steps.merge.outputs.merged_commit_sha }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: main
@@ -273,17 +273,17 @@ jobs:
       ENVIRONMENT: prod
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
 
       - name: Set up Python "3.12"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to AWS ECR Public
         run: |
@@ -303,7 +303,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0

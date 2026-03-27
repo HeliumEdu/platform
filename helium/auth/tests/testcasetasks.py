@@ -7,6 +7,7 @@ import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.template.loader import get_template
+from django.test import override_settings
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -127,6 +128,7 @@ class TestCaseTasks(APITestCase):
         # THEN
         self.assertEqual(mock_gauge.call_count, 10)  # 5 time windows for staff/non-staff
 
+    @override_settings(DORMANT_USER_PURGE_MAX_PER_RUN=1)
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
@@ -146,6 +148,7 @@ class TestCaseTasks(APITestCase):
         mock_delete.assert_not_called()
         self.assertEqual(get_user_model().objects.count(), 1)
 
+    @override_settings(DORMANT_USER_PURGE_MAX_PER_RUN=1)
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     def test_process_dormant_users_deletes_after_all_warnings(self, mock_send_warning):
         # GIVEN
@@ -164,6 +167,7 @@ class TestCaseTasks(APITestCase):
         mock_send_warning.assert_not_called()
         self.assertEqual(get_user_model().objects.count(), 0)
 
+    @override_settings(DORMANT_USER_PURGE_MAX_PER_RUN=1)
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
     def test_process_dormant_users_ignores_active_users(self, mock_delete, mock_send_warning):
