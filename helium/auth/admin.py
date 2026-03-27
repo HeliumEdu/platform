@@ -153,6 +153,24 @@ class HasCourseScheduleFilter(SimpleListFilter):
             return queryset
 
 
+class ActiveStatusFilter(SimpleListFilter):
+    title = 'active'
+    parameter_name = 'is_active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', 'Active'),
+            ('dormant', 'Dormant'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'active':
+            return queryset.filter(deletion_warning_sent_at__isnull=True, is_active=True)
+        elif self.value() == 'dormant':
+            return queryset.filter(deletion_warning_sent_at__isnull=False)
+        return queryset
+
+
 class UserOAuthProviderInline(django_admin.TabularInline):
     model = UserOAuthProvider
     extra = 0
@@ -172,8 +190,9 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy',
                     'deletion_warning_count', 'is_active')
-    list_filter = ('is_active', 'profile__phone_verified', 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
+    list_filter = (ActiveStatusFilter, 'profile__phone_verified', 'settings__default_view',
+                   'settings__remember_filter_state', 'settings__calendar_event_limit',
+                   'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
                    HasCreditsFilter, HasCourseScheduleFilter)
     search_fields = ('id', 'email', 'username')
