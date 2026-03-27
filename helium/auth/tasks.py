@@ -18,6 +18,7 @@ from celery.schedules import crontab
 
 from conf.celery import app
 from helium.common.utils import commonutils, metricutils
+from helium.common.utils.commonutils import redact_email
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def send_verification_email(self, email, username, verification_code):
                                      'Verify Your Email Address with Helium', [email],
                                      email_type='verification')
 
-    logger.debug("Verification email sent successfully")
+    logger.debug(f"Verification email sent to {redact_email(email)}")
 
     metricutils.task_stop(metrics)
 
@@ -65,7 +66,7 @@ def send_registration_email(self, email):
                                      'Welcome to Helium', [email],
                                      email_type='registration')
 
-    logger.debug(f"Registration email sent successfully")
+    logger.debug(f"Registration email sent to {redact_email(email)}")
 
     metricutils.task_stop(metrics)
 
@@ -90,7 +91,7 @@ def send_password_reset_email(self, email, temp_password):
                                      'Your Helium Password Has Been Reset', [email],
                                      email_type='password_reset')
 
-    logger.debug(f"Password reset email sent successfully")
+    logger.debug(f"Password reset email sent to {redact_email(email)}")
 
     metricutils.task_stop(metrics)
 
@@ -284,6 +285,11 @@ def send_dormant_user_warning_email(self, user_id):
 
         logger.info(f'Sent dormant warning email #{warning_number} to user {user_id}')
         metricutils.task_stop(metrics)
+
+    except commonutils.EmailSuppressedException:
+        logger.info(f'Email undeliverable for user {user_id}, queuing for deletion')
+        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+        metricutils.task_stop(metrics, value=0)
 
     except Exception as e:
         logger.error(f'Failed to send dormant warning email to user {user_id}: {e}', exc_info=True)
