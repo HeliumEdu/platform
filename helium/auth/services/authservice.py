@@ -20,7 +20,7 @@ from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import clear_ses_suppression_if_exists
+from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
@@ -49,7 +49,7 @@ def forgot_password(request):
             user.set_password(password)
             user.save()
 
-            logger.info(f'Reset password for user {user.pk}')
+            logger.info(f'Reset password for user {user.pk} ({redact_email(user.email)})')
 
             send_password_reset_email.apply_async(
                 args=(user.email, password),
@@ -62,7 +62,7 @@ def forgot_password(request):
             logger.info(f'Password reset requested for OAuth-only user {user.pk}, ignoring for security')
             metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
     except get_user_model().DoesNotExist:
-        logger.info(f'Password reset requested for unknown account identifier')
+        logger.info(f'Password reset requested for unknown account {redact_email(request.data["email"])}')
 
     return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -90,7 +90,7 @@ def verify_email(request):
             user.is_active = True
             user.save()
 
-            logger.info(f'Completed registration and verification for user {user.pk}')
+            logger.info(f'Completed registration and verification for user {user.pk} ({redact_email(user.email)})')
 
             if request.GET.get('welcome-email', 'true') == 'true':
                 send_registration_email.apply_async(
@@ -106,7 +106,7 @@ def verify_email(request):
             user.email_changing = None
             user.save()
 
-            logger.info(f'Verified new email for user {user.pk}')
+            logger.info(f'Verified new email for user {user.pk} ({redact_email(user.email)})')
 
             metricutils.increment('action.user.email-changed', request=request, user=user)
 
@@ -167,7 +167,7 @@ def resend_verification_email(request):
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 
-        logger.info(f'Resent verification email for user {user.pk} to {target_email}')
+        logger.info(f'Resent verification email for user {user.pk} to {redact_email(target_email)}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
@@ -237,7 +237,7 @@ def oauth_login(request):
         if existing_oauth and user and existing_oauth.user_id != user.id:
             logger.error(
                 f'{provider_name} Sign-In conflict: provider UID {provider_uid} is linked to user '
-                f'{existing_oauth.user_id}, but email {email} belongs to user {user.id}. '
+                f'{existing_oauth.user_id}, but email {redact_email(email)} belongs to user {user.id}. '
                 f'Manual investigation required.'
             )
             raise AuthenticationFailed(

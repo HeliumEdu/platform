@@ -5,6 +5,7 @@ import csv
 import io
 import logging
 import random
+import smtplib
 from decimal import Decimal
 
 from django.conf import settings
@@ -15,6 +16,22 @@ from helium.common import enums
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
+
+
+def redact_email(email: str) -> str:
+    """
+    Redact an email address for safe logging. Preserves the first character of the local part,
+    the first character of the domain, and the TLD.
+
+    :param email: The email address to redact
+    :return: A redacted representation, e.g. ``j***@g***.com``
+    """
+    try:
+        local, domain = email.rsplit('@', 1)
+        domain_name, tld = domain.rsplit('.', 1)
+        return f'{local[0]}***@{domain_name[0]}***.{tld}'
+    except (ValueError, IndexError):
+        return '***'
 
 
 def clear_ses_suppression_if_exists(email: str) -> bool:
@@ -38,7 +55,7 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
 
         try:
             client.delete_suppressed_destination(EmailAddress=email)
-            logger.info(f'Removed {email} from SES suppression list')
+            logger.info(f'Removed {redact_email(email)} from SES suppression list')
             metricutils.increment('ses.suppression.cleared')
             return True
         except ClientError as e:
@@ -47,13 +64,50 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
             raise
 
     except Exception as e:
-        logger.warning(f'Failed to clear SES suppression for {email}: {e}')
+        logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
         metricutils.increment('ses.suppression.check_failed')
         return False
 
 
 class HeliumError(Exception):
     pass
+
+
+class EmailSuppressedException(HeliumError):
+    """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
+
+    def __init__(self, email, original_error=None):
+        self.email = email
+        self.original_error = original_error
+        super().__init__('Email was suppressed due to rejected recipient')
+
+
+def add_to_ses_suppression_list(email: str) -> bool:
+    """
+    Add an email to the SES account suppression list.
+
+    :param email: The email address to suppress
+    :return: True if the email was added, False on failure
+    """
+    if settings.DISABLE_EMAILS:
+        return False
+
+    try:
+        import boto3
+
+        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
+        client.put_suppressed_destination(
+            EmailAddress=email,
+            Reason='BOUNCE',
+        )
+        logger.info(f'Added {redact_email(email)} to SES suppression list')
+        metricutils.increment('ses.suppression.added')
+        return True
+
+    except Exception as e:
+        logger.warning(f'Failed to add {redact_email(email)} to SES suppression list: {e}')
+        metricutils.increment('ses.suppression.add_failed')
+        return False
 
 
 def send_multipart_email(template_name, context, subject, to, bcc=None, email_type=None):
@@ -83,6 +137,12 @@ def send_multipart_email(template_name, context, subject, to, bcc=None, email_ty
         msg.send()
         logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
         metricutils.increment('action.email.sent', extra_tags=extra_tags)
+    except smtplib.SMTPRecipientsRefused as e:
+        logger.warning(f"Recipients refused by SES: {e.recipients}")
+        metricutils.increment('action.email.failed', extra_tags=extra_tags)
+        for rejected_email in e.recipients:
+            add_to_ses_suppression_list(rejected_email)
+        raise EmailSuppressedException(to, original_error=e) from e
     except Exception:
         logger.error("Failed to send email", exc_info=True)
         metricutils.increment('action.email.failed', extra_tags=extra_tags)
