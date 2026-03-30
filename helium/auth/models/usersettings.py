@@ -22,6 +22,7 @@ class UserSettings(BaseModel):
     week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
 
+    # Deprecated: only used by frontend-legacy; remove once frontend-legacy is shut down.
     all_day_offset = models.PositiveIntegerField(default=30)
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
