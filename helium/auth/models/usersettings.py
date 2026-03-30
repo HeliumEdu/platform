@@ -93,6 +93,14 @@ class UserSettings(BaseModel):
         help_text='The grade percentage below which a course is flagged as at-risk.',
         default=70)
 
+    on_track_tolerance = models.PositiveIntegerField(
+        help_text='The percentage tolerance within which a course grade is considered on track.',
+        default=10)
+
+    show_week_numbers = models.BooleanField(
+        help_text='Whether week numbers should be shown on the calendar.',
+        default=False)
+
     private_slug = models.SlugField(blank=True, null=True)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
