@@ -22,6 +22,7 @@ class UserSettings(BaseModel):
     week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
 
+    # Deprecated: only used by frontend-legacy; remove once frontend-legacy is shut down.
     all_day_offset = models.PositiveIntegerField(default=30)
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
@@ -87,6 +88,18 @@ class UserSettings(BaseModel):
         help_text='A valid color scheme theme.',
         default=enums.SYSTEM,
         choices=enums.COLOR_SCHEME_THEME)
+
+    at_risk_threshold = models.PositiveIntegerField(
+        help_text='The grade percentage below which a course is flagged as at-risk.',
+        default=70)
+
+    on_track_tolerance = models.PositiveIntegerField(
+        help_text='The percentage tolerance within which a course grade is considered on track.',
+        default=10)
+
+    show_week_numbers = models.BooleanField(
+        help_text='Whether week numbers should be shown on the calendar.',
+        default=True)
 
     private_slug = models.SlugField(blank=True, null=True)
 
