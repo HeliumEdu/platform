@@ -99,7 +99,7 @@ class UserSettings(BaseModel):
 
     show_week_numbers = models.BooleanField(
         help_text='Whether week numbers should be shown on the calendar.',
-        default=False)
+        default=True)
 
     private_slug = models.SlugField(blank=True, null=True)
 

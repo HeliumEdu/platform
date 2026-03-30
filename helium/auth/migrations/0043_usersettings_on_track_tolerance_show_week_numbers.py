@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             model_name='usersettings',
             name='show_week_numbers',
             field=models.BooleanField(
-                default=False,
+                default=True,
                 help_text='Whether week numbers should be shown on the calendar.',
             ),
         ),
