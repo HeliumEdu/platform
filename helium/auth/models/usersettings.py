@@ -88,6 +88,10 @@ class UserSettings(BaseModel):
         default=enums.SYSTEM,
         choices=enums.COLOR_SCHEME_THEME)
 
+    at_risk_threshold = models.PositiveIntegerField(
+        help_text='The grade percentage below which a course is flagged as at-risk.',
+        default=70)
+
     private_slug = models.SlugField(blank=True, null=True)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
