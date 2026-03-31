@@ -10,11 +10,28 @@ from django.utils import timezone
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.common import enums
 from helium.common.tasks import send_text, send_pushes
+from helium.common.utils.commonutils import format_short_time
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
 from helium.planner.serializers.reminderserializer import ReminderExtendedSerializer
 
 logger = logging.getLogger(__name__)
+
+
+def _push_body(reminder):
+    from datetime import timedelta
+    if reminder.homework:
+        local_time = timezone.localtime(reminder.homework.start)
+    elif reminder.event:
+        local_time = timezone.localtime(reminder.event.start)
+    elif reminder.course:
+        class_start = reminder.start_of_range + timedelta(
+            **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+        local_time = timezone.localtime(class_start)
+    else:
+        return reminder.message
+
+    return f'{reminder.message} · {format_short_time(local_time)}'
 
 
 def _offset_label(reminder):
@@ -147,7 +164,7 @@ def process_text_reminders():
         try:
             if user.profile.phone and user.profile.phone_verified:
                 subject = get_subject(reminder)
-                message = f'({subject}) {reminder.message}'
+                message = f'({subject}) {_push_body(reminder)}'
 
                 if not subject:
                     logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
@@ -207,7 +224,7 @@ def process_push_reminders(mark_sent_only=False):
                         reminder_data = serializer.data
 
                         send_pushes.apply_async(
-                            args=(push_tokens, user.username, subject, reminder.message, reminder_data),
+                            args=(push_tokens, user.username, subject, _push_body(reminder), reminder_data),
                             priority=settings.CELERY_PRIORITY_HIGH,
                         )
                     else:
