@@ -222,11 +222,13 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             calendar_item = Event.objects.get(pk=calendar_item_id)
         elif calendar_item_type == enums.HOMEWORK:
             calendar_item = Homework.objects.get(pk=calendar_item_id)
+        elif calendar_item_type == enums.COURSE:
+            calendar_item = Course.objects.prefetch_related('schedules').get(pk=calendar_item_id)
         else:
             logger.info(f'Nothing to do here, as a calendar_item_type of {calendar_item_type} does not exist.')
             metricutils.task_stop(metrics, value=0)
             return
-    except (Event.DoesNotExist, Homework.DoesNotExist):
+    except (Event.DoesNotExist, Homework.DoesNotExist, Course.DoesNotExist):
         logger.info(f'calendar_item_id {calendar_item_id} does not exist. Nothing to do.')
         metricutils.task_stop(metrics, value=0)
         return
@@ -234,13 +236,34 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
     timezone.activate(pytz.timezone(reminder.user.settings.time_zone))
 
     try:
-        start = timezone.localtime(calendar_item.start).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        end = timezone.localtime(calendar_item.end).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
+        if calendar_item_type == enums.COURSE:
+            from datetime import timedelta
+            class_start = reminder.start_of_range + timedelta(
+                **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+            local_start = timezone.localtime(class_start)
+            start_str = local_start.strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
 
-        comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
+            course_schedule = calendar_item.schedules.first()
+            if course_schedule:
+                weekday_idx = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[local_start.weekday()]
+                day_name = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday_idx]
+                end_time = getattr(course_schedule, f'{day_name}_end_time')
+                end_str = local_start.replace(
+                    hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0
+                ).strftime('%I:%M %p')
+                normalized_datetime = f'{start_str} to {end_str}'
+            else:
+                normalized_datetime = start_str
+
+            comments = None
+        else:
+            start = timezone.localtime(calendar_item.start).strftime(
+                settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+            end = timezone.localtime(calendar_item.end).strftime(
+                settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+            normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
+
+            comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
 
         commonutils.send_multipart_email('email/reminder',
                                          {

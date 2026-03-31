@@ -17,27 +17,22 @@ from helium.planner.serializers.reminderserializer import ReminderExtendedSerial
 logger = logging.getLogger(__name__)
 
 
+def _offset_label(reminder):
+    unit = enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]
+    if reminder.offset == 1:
+        unit = unit.rstrip('s')
+    return f'{reminder.offset} {unit}'
+
+
 def get_subject(reminder):
+    offset = _offset_label(reminder)
     if reminder.homework:
         calendar_item = reminder.homework
-        subject = f'{calendar_item.title} in {calendar_item.course.title}'
-        start = timezone.localtime(calendar_item.start).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        subject += f' on {start}'
+        subject = f'{calendar_item.title} in {calendar_item.course.title} in {offset}'
     elif reminder.event:
-        calendar_item = reminder.event
-        subject = calendar_item.title
-        start = timezone.localtime(calendar_item.start).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        subject += f' on {start}'
+        subject = f'{reminder.event.title} in {offset}'
     elif reminder.course:
-        course = reminder.course
-        subject = f'{course.title}'
-        # Calculate the next occurrence time for display
-        next_start = reminder._get_next_course_occurrence_start()
-        if next_start:
-            start = timezone.localtime(next_start).strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
-            subject += f' on {start}'
+        subject = f'{reminder.course.title} in {offset}'
     else:
         return None
 
