@@ -142,8 +142,8 @@ def process_text_reminders():
                      .with_type(enums.TEXT)
                      .unsent()
                      .for_today()
-                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event',
-                                     'course', 'course__course_group')
+                     .filter(course__isnull=True)
+                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event')
                      .iterator()):
         user = reminder.get_user()
 
