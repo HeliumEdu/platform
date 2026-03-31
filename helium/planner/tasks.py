@@ -201,6 +201,15 @@ def push_reminders(self):
 
 
 @app.task(bind=True)
+def heal_orphaned_repeating_reminders(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.repeating.heal", priority="low", published_at_ms=published_at_ms)
+
+    reminderservice.heal_orphaned_repeating_reminders()
+    metricutils.task_stop(metrics)
+
+
+@app.task(bind=True)
 def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, calendar_item_type):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.reminder.sent", priority="high", published_at_ms=published_at_ms)

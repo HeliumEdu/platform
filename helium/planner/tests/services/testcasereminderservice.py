@@ -231,6 +231,73 @@ class TestCaseReminderService(TestCase):
         reminder.refresh_from_db()
         self.assertTrue(reminder.sent)
 
+    def test_heal_orphaned_repeating_reminders_creates_successor(self):
+        # GIVEN: a sent repeating course reminder with no unsent successor (orphaned series)
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        reminder = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=30, offset_type=enums.MINUTES,
+            type=enums.PUSH,
+            sent=True, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([reminder])
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN: next occurrence is created, original remains unchanged
+        self.assertEqual(Reminder.objects.count(), 2)
+        self.assertTrue(Reminder.objects.filter(sent=False, repeating=True, course=course).exists())
+
+    def test_heal_orphaned_repeating_reminders_skips_healthy_series(self):
+        # GIVEN: a sent repeating reminder that already has an unsent successor (healthy series)
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        sent_reminder = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=30, offset_type=enums.MINUTES,
+            type=enums.PUSH,
+            sent=True, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        unsent_reminder = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() + datetime.timedelta(days=2),
+            offset=30, offset_type=enums.MINUTES,
+            type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([sent_reminder, unsent_reminder])
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN: no new reminders created, healthy series left untouched
+        self.assertEqual(Reminder.objects.count(), 2)
+
     def test_get_subject_orphaned_reminder(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
