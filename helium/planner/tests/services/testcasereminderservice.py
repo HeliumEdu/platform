@@ -9,8 +9,9 @@ from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.planner.models import Reminder
 from helium.planner.services import reminderservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper, reminderhelper
 
 
 class TestCaseReminderService(TestCase):
@@ -244,3 +245,67 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertIsNone(result)
+
+    def test_create_next_repeating_reminder_creates_next_occurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH)
+
+        # WHEN
+        new_reminder = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN
+        self.assertIsNotNone(new_reminder)
+        self.assertEqual(Reminder.objects.count(), 2)
+        self.assertEqual(new_reminder.course, course)
+        self.assertEqual(new_reminder.user, user)
+        self.assertEqual(new_reminder.type, enums.PUSH)
+        self.assertTrue(new_reminder.repeating)
+        self.assertFalse(new_reminder.sent)
+        self.assertIsNotNone(new_reminder.start_of_range)
+
+    def test_create_next_repeating_reminder_no_future_occurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        # Course that has already ended
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2020, 1, 6),
+            end_date=datetime.date(2020, 5, 8)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        # Manually build a reminder bypassing save() since the course has no future occurrence
+        reminder = Reminder(
+            title='Test',
+            message='Test',
+            start_of_range=datetime.datetime(2020, 5, 4, 9, 30, tzinfo=pytz.utc),
+            offset=30,
+            offset_type=enums.MINUTES,
+            type=enums.PUSH,
+            repeating=True,
+            course=course,
+            user=user,
+        )
+        Reminder.objects.bulk_create([reminder])
+        reminder = Reminder.objects.get(course=course)
+
+        # WHEN
+        result = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN
+        self.assertIsNone(result)
+        self.assertEqual(Reminder.objects.count(), 1)

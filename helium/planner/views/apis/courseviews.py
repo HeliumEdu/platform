@@ -135,6 +135,19 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
+    def patch(self, request, *args, **kwargs):
+        """
+        Partially update the given course instance.
+        """
+        if 'course_group' in request.data:
+            permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
+
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info(f"Course {kwargs['pk']} partially updated for user {request.user.pk}")
+
+        return response
+
     @extend_schema(
         tags=['planner.course']
     )
