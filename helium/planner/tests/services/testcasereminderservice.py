@@ -6,6 +6,7 @@ from unittest import mock
 
 import pytz
 from django.test import TestCase
+from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
@@ -21,8 +22,12 @@ class TestCaseReminderService(TestCase):
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
-        event1 = eventhelper.given_event_exists(user)
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + datetime.timedelta(minutes=8),
+                                                        end=timezone.now() + datetime.timedelta(minutes=10))
+        event1 = eventhelper.given_event_exists(user,
+                                                start=timezone.now() + datetime.timedelta(minutes=8),
+                                                end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
                                                     tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
@@ -58,8 +63,12 @@ class TestCaseReminderService(TestCase):
         user.profile.save()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
-        event1 = eventhelper.given_event_exists(user)
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + datetime.timedelta(minutes=8),
+                                                        end=timezone.now() + datetime.timedelta(minutes=10))
+        event1 = eventhelper.given_event_exists(user,
+                                                start=timezone.now() + datetime.timedelta(minutes=8),
+                                                end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
                                                     tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
@@ -93,8 +102,12 @@ class TestCaseReminderService(TestCase):
         userhelper.given_user_push_token_exists(user)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)
-        event1 = eventhelper.given_event_exists(user)
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + datetime.timedelta(minutes=8),
+                                                        end=timezone.now() + datetime.timedelta(minutes=10))
+        event1 = eventhelper.given_event_exists(user,
+                                                start=timezone.now() + datetime.timedelta(minutes=8),
+                                                end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
                                                     tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
@@ -125,7 +138,9 @@ class TestCaseReminderService(TestCase):
     def test_process_email_reminders_inactive_user(self, mock_send_multipart_email):
         # GIVEN
         user = userhelper.given_an_inactive_user_exists()
-        event = eventhelper.given_event_exists(user)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=8),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
         reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
 
         # WHEN
@@ -142,7 +157,9 @@ class TestCaseReminderService(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         # User has no phone set (default)
-        event = eventhelper.given_event_exists(user)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=8),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
         reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
 
         # WHEN
@@ -161,7 +178,9 @@ class TestCaseReminderService(TestCase):
         user.profile.phone = '5555555'
         user.profile.phone_verified = False  # Phone not verified
         user.profile.save()
-        event = eventhelper.given_event_exists(user)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=8),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
         reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
 
         # WHEN
@@ -178,7 +197,9 @@ class TestCaseReminderService(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         # No push tokens created for user
-        event = eventhelper.given_event_exists(user)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=8),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
         reminder = reminderhelper.given_reminder_exists(user, type=enums.PUSH, event=event)
 
         # WHEN
@@ -195,7 +216,9 @@ class TestCaseReminderService(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         userhelper.given_user_push_token_exists(user)
-        event = eventhelper.given_event_exists(user)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=8),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
         reminder = reminderhelper.given_reminder_exists(user, type=enums.PUSH, event=event)
 
         # WHEN
