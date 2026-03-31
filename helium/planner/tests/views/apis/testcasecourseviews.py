@@ -410,3 +410,20 @@ class TestCaseCourseViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+    def test_patch_course_exceptions_outside_date_range_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN - exception date is one day after course end_date (2017-05-08)
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_detail',
+                    kwargs={'course_group': course_group.pk, 'pk': course.pk}),
+            json.dumps({'exceptions': '20170509'}),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
