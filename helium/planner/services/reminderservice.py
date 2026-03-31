@@ -206,7 +206,9 @@ def process_push_reminders(mark_sent_only=False):
         timezone.activate(pytz.timezone(user.settings.time_zone))
 
         try:
-            if not mark_sent_only:
+            # TODO: Remove this guard once the new frontend version supporting course reminders is released.
+            # if not mark_sent_only and not reminder.course:
+            if not mark_sent_only and not reminder.course:
                 subject = get_subject(reminder)
 
                 if not subject:
