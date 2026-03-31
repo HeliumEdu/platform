@@ -2,9 +2,11 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import timedelta
 
 from rest_framework import serializers
 
+from helium.common import enums
 from helium.planner.models import Reminder, Homework, Event, Course
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,10 @@ class ReminderSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
             'repeating', 'homework', 'event', 'course', 'user',)
-        read_only_fields = ('start_of_range', 'user',)
+        read_only_fields = ('user',)
+        extra_kwargs = {
+            'start_of_range': {'required': False},
+        }
 
     def validate(self, attrs):
         # Check what's being explicitly set in this request
@@ -61,6 +66,30 @@ class ReminderSerializer(serializers.ModelSerializer):
             self.instance.event = None
             self.instance.homework = None
             self.instance.course = None
+
+        # Recompute start_of_range when the parent or offset changes, or on create
+        parent_changed = 'homework' in attrs or 'event' in attrs or 'course' in attrs
+        offset_changed = 'offset' in attrs or 'offset_type' in attrs
+        if not self.instance or parent_changed or offset_changed:
+            homework = attrs.get('homework') or (self.instance and self.instance.homework)
+            event = attrs.get('event') or (self.instance and self.instance.event)
+            course = attrs.get('course') or (self.instance and self.instance.course)
+            offset = attrs.get('offset', getattr(self.instance, 'offset', None))
+            offset_type = attrs.get('offset_type', getattr(self.instance, 'offset_type', None))
+            offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[offset_type][1]: int(offset)})
+
+            if homework:
+                attrs['start_of_range'] = homework.start - offset_delta
+            elif event:
+                attrs['start_of_range'] = event.start - offset_delta
+            elif course:
+                temp = Reminder(course=course, offset=offset, offset_type=offset_type)
+                next_start = temp._get_next_course_occurrence_start()
+                if next_start:
+                    attrs['start_of_range'] = next_start - offset_delta
+                elif not attrs.get('start_of_range'):
+                    raise serializers.ValidationError(
+                        "The course has no upcoming class sessions; a `start_of_range` could not be determined.")
 
         return attrs
 

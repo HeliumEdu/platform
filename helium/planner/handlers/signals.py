@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
+from helium.common import enums
 from helium.planner.models import Category, Course, Event, Homework, CourseSchedule, Attachment, Material
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 def save_course(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance)
     recalculate_course_grade.apply_async(args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
+    adjust_reminder_times.apply_async(args=(instance.pk, enums.COURSE), priority=settings.CELERY_PRIORITY_LOW)
 
 
 @receiver(post_delete, sender=Course)
@@ -31,6 +33,9 @@ def delete_course(sender, instance, **kwargs):
 @receiver(post_save, sender=CourseSchedule)
 def save_course_schedule(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance.course)
+    adjust_reminder_times.apply_async(
+        args=(instance.course.pk, enums.COURSE), priority=settings.CELERY_PRIORITY_LOW
+    )
 
 
 @receiver(post_save, sender=Category)

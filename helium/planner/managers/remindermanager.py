@@ -1,8 +1,10 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import logging
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -23,14 +25,19 @@ class ReminderQuerySet(models.query.QuerySet):
         return self.filter(sent=False)
 
     def for_today(self):
-        today = timezone.now()
-        return self.filter(start_of_range__lte=today).filter(Q(homework__isnull=False) | Q(event__isnull=False))
+        now = timezone.now()
+        window_start = now - datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+        return self.filter(start_of_range__lte=now, start_of_range__gte=window_start).filter(
+            Q(homework__isnull=False) | Q(event__isnull=False) | Q(course__isnull=False)
+        )
 
     def for_calendar_item(self, calendar_item_id, calendar_item_type):
         if calendar_item_type == enums.EVENT:
             return self.filter(event__pk=calendar_item_id)
         elif calendar_item_type == enums.HOMEWORK:
             return self.filter(homework__pk=calendar_item_id)
+        elif calendar_item_type == enums.COURSE:
+            return self.filter(course__pk=calendar_item_id)
         else:
             return self.none()
 

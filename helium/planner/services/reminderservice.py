@@ -10,6 +10,7 @@ from django.utils import timezone
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.common import enums
 from helium.common.tasks import send_text, send_pushes
+from helium.common.utils.commonutils import format_short_time
 from helium.common.utils import metricutils
 from helium.planner.models import Reminder
 from helium.planner.serializers.reminderserializer import ReminderExtendedSerializer
@@ -17,27 +18,38 @@ from helium.planner.serializers.reminderserializer import ReminderExtendedSerial
 logger = logging.getLogger(__name__)
 
 
+def _push_body(reminder):
+    from datetime import timedelta
+    if reminder.homework:
+        local_time = timezone.localtime(reminder.homework.start)
+    elif reminder.event:
+        local_time = timezone.localtime(reminder.event.start)
+    elif reminder.course:
+        class_start = reminder.start_of_range + timedelta(
+            **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+        local_time = timezone.localtime(class_start)
+    else:
+        return reminder.message
+
+    return f'{reminder.message} · {format_short_time(local_time)}'
+
+
+def _offset_label(reminder):
+    unit = enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]
+    if reminder.offset == 1:
+        unit = unit.rstrip('s')
+    return f'{reminder.offset} {unit}'
+
+
 def get_subject(reminder):
+    offset = _offset_label(reminder)
     if reminder.homework:
         calendar_item = reminder.homework
-        subject = f'{calendar_item.title} in {calendar_item.course.title}'
-        start = timezone.localtime(calendar_item.start).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        subject += f' on {start}'
+        subject = f'{calendar_item.title} in {calendar_item.course.title} in {offset}'
     elif reminder.event:
-        calendar_item = reminder.event
-        subject = calendar_item.title
-        start = timezone.localtime(calendar_item.start).strftime(
-            settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-        subject += f' on {start}'
+        subject = f'{reminder.event.title} in {offset}'
     elif reminder.course:
-        course = reminder.course
-        subject = f'{course.title}'
-        # Calculate the next occurrence time for display
-        next_start = reminder._get_next_course_occurrence_start()
-        if next_start:
-            start = timezone.localtime(next_start).strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
-            subject += f' on {start}'
+        subject = f'{reminder.course.title} in {offset}'
     else:
         return None
 
@@ -142,8 +154,8 @@ def process_text_reminders():
                      .with_type(enums.TEXT)
                      .unsent()
                      .for_today()
-                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event',
-                                     'course', 'course__course_group')
+                     .filter(course__isnull=True)
+                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event')
                      .iterator()):
         user = reminder.get_user()
 
@@ -152,7 +164,7 @@ def process_text_reminders():
         try:
             if user.profile.phone and user.profile.phone_verified:
                 subject = get_subject(reminder)
-                message = f'({subject}) {reminder.message}'
+                message = f'({subject}) {_push_body(reminder)}'
 
                 if not subject:
                     logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
@@ -194,7 +206,9 @@ def process_push_reminders(mark_sent_only=False):
         timezone.activate(pytz.timezone(user.settings.time_zone))
 
         try:
-            if not mark_sent_only:
+            # TODO: Remove this guard once the new frontend version supporting course reminders is released.
+            # if not mark_sent_only and not reminder.course:
+            if not mark_sent_only and not reminder.course:
                 subject = get_subject(reminder)
 
                 if not subject:
@@ -212,7 +226,7 @@ def process_push_reminders(mark_sent_only=False):
                         reminder_data = serializer.data
 
                         send_pushes.apply_async(
-                            args=(push_tokens, user.username, subject, reminder.message, reminder_data),
+                            args=(push_tokens, user.username, subject, _push_body(reminder), reminder_data),
                             priority=settings.CELERY_PRIORITY_HIGH,
                         )
                     else:

@@ -289,12 +289,14 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
     return homework_remap
 
 
-def _import_reminders(reminders, user, event_remap, homework_remap):
+def _import_reminders(reminders, user, event_remap, homework_remap, course_remap):
     for reminder in reminders:
         reminder['homework'] = homework_remap.get(reminder['homework'], None) if \
             ('homework' in reminder and reminder['homework']) else None
         reminder['event'] = event_remap.get(reminder['event'], None) if \
             ('event' in reminder and reminder['event']) else None
+        reminder['course'] = course_remap.get(reminder['course'], None) if \
+            ('course' in reminder and reminder['course']) else None
 
         serializer = ReminderSerializer(data=reminder)
 
@@ -391,7 +393,7 @@ def import_user(request, data, example_schedule=False):
                                       example_schedule) if homework else {}
 
     reminders = data.get('reminders', [])
-    reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap) if reminders else 0
+    reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
 
     notes = data.get('notes', [])
     notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,

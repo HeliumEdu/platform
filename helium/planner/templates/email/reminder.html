@@ -18,8 +18,17 @@
 
         {% if reminder.homework %}<p><em>Info</em>:
         {% if calendar_item.category.title %}{{ calendar_item.category.title }} in {% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}
-            {{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}</p><p><em>Room:</em> {{ calendar_item.course.room }}{% endif %}
+            {{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}</p><p><em>Location:</em> {{ calendar_item.course.room }}{% endif %}
         </p>{% endif %}
+        {% if reminder.course %}<p><em>Info</em>:
+        {% if calendar_item.website %}<a target="_blank" href="{{ calendar_item.website }}">{% endif %}
+            {{ calendar_item.title }}{% if calendar_item.website %}</a>{% endif %}{% if calendar_item.room and not calendar_item.is_online %}</p><p><em>Location:</em> {{ calendar_item.room }}{% endif %}
+        </p>
+        {% if calendar_item.teacher_name %}<p><em>Teacher:</em>
+        {% if calendar_item.teacher_email %}<a href="mailto:{{ calendar_item.teacher_email }}">{% endif %}
+            {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %}</a>{% endif %}
+        </p>{% endif %}{% endif %}
+        {% if reminder.homework or reminder.event %}
         {% if calendar_item.materials and calendar_item.materials.count > 0 %}
         <h4>Materials</h4>
         <ul>
@@ -40,6 +49,7 @@
                    href="{{ attachment.attachment.url }}">{{ attachment.title }}</a></li>
             {% endfor %}
         </ul>
+        {% endif %}
         {% endif %}
         {% if comments %}<br/>
         <p>{{ comments }}</p>{% endif %}

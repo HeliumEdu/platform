@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.152"
+__version__ = "2.1.153"
 
 import os
 import socket
@@ -282,6 +282,8 @@ MAX_UPLOAD_SIZE = 10485760
 DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
 DISABLE_TEXTS = config('PROJECT_DISABLE_TEXTS', 'False') == 'True'
 DISABLE_PUSH = config('PROJECT_DISABLE_PUSH', 'False') == 'True'
+
+REMINDER_SEND_WINDOW_MINUTES = int(config('PROJECT_REMINDER_SEND_WINDOW_MINUTES', '8'))
 
 ADMIN_EMAIL_ADDRESS = f'support@{ENVIRONMENT_PREFIX}heliumedu.com'
 SERVER_EMAIL = ADMIN_EMAIL_ADDRESS
