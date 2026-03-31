@@ -116,6 +116,7 @@ class ReminderFilter(django_filters.FilterSet):
             'id': ['exact'],
             'event': ['exact'],
             'homework': ['exact'],
+            'course': ['exact'],
             'type': ['exact'],
             'sent': ['exact'],
             'dismissed': ['exact'],

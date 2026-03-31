@@ -32,7 +32,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             return user.reminders.all().select_related(
                 'homework__category',
                 'homework__course',
-                'event__user'
+                'event__user',
+                'course',
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
@@ -73,6 +74,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             permissions.check_event_permission(request.user.pk, request.data['event'])
         if 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
+        if 'course' in request.data:
+            permissions.check_course_permission(request.user.pk, request.data['course'])
 
         response = self.create(request, *args, **kwargs)
 
@@ -94,7 +97,8 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
             return user.reminders.all().select_related(
                 'homework__category',
                 'homework__course',
-                'event__user'
+                'event__user',
+                'course',
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
@@ -124,6 +128,8 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
             permissions.check_event_permission(request.user.pk, request.data['event'])
         elif 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
+        elif 'course' in request.data:
+            permissions.check_course_permission(request.user.pk, request.data['course'])
 
         response = self.partial_update(request, *args, **kwargs)
 

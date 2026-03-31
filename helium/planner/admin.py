@@ -222,12 +222,31 @@ class CourseHasCreditsFilter(SimpleListFilter):
             return queryset
 
 
+class HasReminderFilter(SimpleListFilter):
+    title = 'has seminders'
+    parameter_name = 'has_reminders'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count__gt=0).distinct()
+        elif self.value() == 'no':
+            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count=0).distinct()
+        else:
+            return queryset
+
+
 class CourseAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_attachments',
-                    'get_user',)
+    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_reminders',
+                    'num_attachments', 'get_user',)
     list_filter = ('course_group__shown_on_calendar', 'course_group__example_schedule', CourseHasCourseScheduleFilter,
                    CourseHasWeightedGradingFilter,
-                   CourseHasCreditsFilter, HasAttachmentFilter,)
+                   CourseHasCreditsFilter, HasReminderFilter, HasAttachmentFilter,)
     search_fields = ('id', 'title', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
@@ -364,25 +383,6 @@ class CategoryAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'course__course_group__user__username'
-
-
-class HasReminderFilter(SimpleListFilter):
-    title = 'has seminders'
-    parameter_name = 'has_reminders'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.annotate(reminders_count=Count('reminders')).filter(reminders_count=0).distinct()
-        else:
-            return queryset
 
 
 class EventAdmin(BaseModelAdmin):

@@ -756,3 +756,48 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+    def test_filter_by_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        reminderhelper.given_reminder_exists(user, course=course1)
+        reminderhelper.given_reminder_exists(user, course=course1)
+        reminderhelper.given_reminder_exists(user, course=course2)
+
+        # WHEN
+        response = self.client.get(reverse('planner_reminders_list') + f'?course={course1.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        for reminder_data in response.data:
+            self.assertIsInstance(reminder_data['course'], dict)
+            self.assertEqual(reminder_data['course']['id'], course1.pk)
+
+    def test_course_related_field_owned_by_another_user_forbidden(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        course_group1 = coursegrouphelper.given_course_group_exists(user1)
+        course_group2 = coursegrouphelper.given_course_group_exists(user2)
+        course1 = coursehelper.given_course_exists(course_group1)
+        course2 = coursehelper.given_course_exists(course_group2)
+        reminder = reminderhelper.given_reminder_exists(user1, course=course1)
+
+        # WHEN
+        responses = [
+            self.client.post(reverse('planner_reminders_list'),
+                             json.dumps({'course': course2.pk}),
+                             content_type='application/json'),
+            self.client.put(
+                reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                json.dumps({'course': course2.pk}),
+                content_type='application/json'),
+        ]
+
+        # THEN
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
