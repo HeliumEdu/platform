@@ -1,8 +1,10 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import logging
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -23,8 +25,9 @@ class ReminderQuerySet(models.query.QuerySet):
         return self.filter(sent=False)
 
     def for_today(self):
-        today = timezone.now()
-        return self.filter(start_of_range__lte=today).filter(
+        now = timezone.now()
+        window_start = now - datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+        return self.filter(start_of_range__lte=now, start_of_range__gte=window_start).filter(
             Q(homework__isnull=False) | Q(event__isnull=False) | Q(course__isnull=False)
         )
 
