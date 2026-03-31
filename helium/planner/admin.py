@@ -223,7 +223,7 @@ class CourseHasCreditsFilter(SimpleListFilter):
 
 
 class HasReminderFilter(SimpleListFilter):
-    title = 'has seminders'
+    title = 'has reminders'
     parameter_name = 'has_reminders'
 
     def lookups(self, request, model_admin):
@@ -516,6 +516,28 @@ class MaterialAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'material_group__user__username'
 
 
+class ReminderType(SimpleListFilter):
+    title = 'Reminder Type'
+    parameter_name = 'reminder_type'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('course', 'Course'),
+            ('homework', 'Homework'),
+            ('event', 'Event'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'course':
+            return queryset.filter(course__isnull=False)
+        elif self.value() == 'homework':
+            return queryset.filter(homework__isnull=False)
+        elif self.value() == 'event':
+            return queryset.filter(event__isnull=False)
+        else:
+            return queryset
+
+
 class ReminderExampleScheduleFilter(SimpleListFilter):
     title = 'Example Schedule'
     parameter_name = 'example_schedule'
@@ -541,7 +563,7 @@ class ReminderExampleScheduleFilter(SimpleListFilter):
 
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
-    list_filter = ('type', 'sent', 'dismissed', ReminderExampleScheduleFilter)
+    list_filter = ('type', 'sent', 'dismissed', ReminderType, ReminderExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
