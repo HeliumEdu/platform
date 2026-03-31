@@ -1865,6 +1865,23 @@
       "dismissed": false,
       "homework": 7835,
       "event": null,
+      "course": null,
+      "user": 118
+    },
+    {
+      "id": 1325,
+      "title": "Time for class!",
+      "message": "Time for class!",
+      "start_of_range": "2025-10-07T10:50:00Z",
+      "offset": 10,
+      "offset_type": 0,
+      "type": 3,
+      "sent": true,
+      "dismissed": false,
+      "repeating": true,
+      "homework": null,
+      "event": null,
+      "course": 512,
       "user": 118
     }
   ],
