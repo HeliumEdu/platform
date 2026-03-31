@@ -146,6 +146,8 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         if 'exceptions' in request.data:
             course = self.get_object()
+            seen = set()
+            deduped = []
             for token in request.data['exceptions'].split(','):
                 token = token.strip()
                 if not token:
@@ -156,6 +158,10 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
                     raise ValidationError({'exceptions': f'Invalid date format: {token}'})
                 if not (course.start_date <= date <= course.end_date):
                     raise ValidationError({'exceptions': 'Exception dates must fall within the course date range.'})
+                if date not in seen:
+                    seen.add(date)
+                    deduped.append(date)
+            request.data['exceptions'] = ','.join(d.strftime('%Y%m%d') for d in sorted(deduped))
 
         response = self.partial_update(request, *args, **kwargs)
 
