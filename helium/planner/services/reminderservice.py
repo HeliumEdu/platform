@@ -138,7 +138,7 @@ def process_email_reminders():
                     f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
 
             reminder.sent = True
-            reminder.save()
+            reminder.save(update_fields=['sent', 'updated_at'])
 
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
@@ -182,7 +182,7 @@ def process_text_reminders():
                     f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
 
             reminder.sent = True
-            reminder.save()
+            reminder.save(update_fields=['sent', 'updated_at'])
 
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
@@ -236,7 +236,7 @@ def process_push_reminders(mark_sent_only=False):
                 logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")
 
             reminder.sent = True
-            reminder.save()
+            reminder.save(update_fields=['sent', 'updated_at'])
 
             # Create next reminder if this is a repeating reminder
             if reminder.repeating:
