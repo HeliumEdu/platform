@@ -4,6 +4,8 @@ __license__ = "MIT"
 import logging
 from datetime import timedelta
 
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import serializers
 
 from helium.common import enums
@@ -90,6 +92,13 @@ class ReminderSerializer(serializers.ModelSerializer):
                 elif not attrs.get('start_of_range'):
                     raise serializers.ValidationError(
                         "The course has no upcoming class sessions; a `start_of_range` could not be determined.")
+
+        # On update, if start_of_range was recomputed and the send window hasn't passed, reset sent so
+        # the reminder fires again at the new time.
+        if self.instance and 'start_of_range' in attrs:
+            window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+            if attrs['start_of_range'] >= window_start:
+                attrs['sent'] = False
 
         return attrs
 

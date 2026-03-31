@@ -56,6 +56,51 @@ def get_subject(reminder):
     return subject
 
 
+def heal_orphaned_repeating_reminders():
+    """
+    Detect sent repeating course reminders with no unsent successor and create the next occurrence.
+
+    A series becomes orphaned when create_next_repeating_reminder fails or is never reached (e.g.,
+    worker downtime during the send window, or a course reschedule that moves start_of_range into the
+    past before processing). This runs periodically so recovery happens well before the next class
+    occurrence, not after it is already missed.
+    """
+    from django.db.models import Exists, OuterRef
+
+    unsent_successor = Reminder.objects.filter(
+        sent=False,
+        repeating=True,
+        course=OuterRef('course'),
+        user=OuterRef('user'),
+        type=OuterRef('type'),
+    )
+
+    orphaned_combos = (
+        Reminder.objects
+        .filter(sent=True, repeating=True, course__isnull=False)
+        .annotate(has_unsent=Exists(unsent_successor))
+        .filter(has_unsent=False)
+        .values('course', 'user', 'type')
+        .distinct()
+    )
+
+    for combo in orphaned_combos:
+        reminder = (
+            Reminder.objects
+            .filter(sent=True, repeating=True, **combo)
+            .select_related('user', 'user__settings', 'course', 'course__course_group')
+            .order_by('-start_of_range')
+            .first()
+        )
+        if reminder:
+            try:
+                logger.info(
+                    f'Healing orphaned repeating reminder series for course {reminder.course_id}, user {reminder.user_id}')
+                create_next_repeating_reminder(reminder)
+            except Exception:
+                logger.error("An error occurred healing orphaned repeating reminder.", exc_info=True)
+
+
 def create_next_repeating_reminder(reminder):
     """
     For a repeating reminder (course), create the next occurrence.

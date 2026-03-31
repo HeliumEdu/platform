@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.157"
+__version__ = "2.1.158"
 
 import os
 import socket
@@ -149,6 +149,8 @@ TEMPLATES = [{
 SERVE_LOCAL = False
 
 REFRESH_TOKEN_PURGE_FREQUENCY_SEC = 60 * 60
+
+CLEANUP_TASKS_FREQUENCY_SEC = 60 * 60
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 
