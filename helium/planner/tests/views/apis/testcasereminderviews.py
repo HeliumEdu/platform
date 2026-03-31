@@ -761,8 +761,20 @@ class TestCaseReminderViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        course1 = coursehelper.given_course_exists(course_group)
-        course2 = coursehelper.given_course_exists(course_group)
+        course1 = coursehelper.given_course_exists(course_group,
+                                                   start_date=(timezone.now() - timedelta(days=7)).date(),
+                                                   end_date=(timezone.now() + timedelta(days=30)).date())
+        course2 = coursehelper.given_course_exists(course_group,
+                                                   start_date=(timezone.now() - timedelta(days=7)).date(),
+                                                   end_date=(timezone.now() + timedelta(days=30)).date())
+        courseschedulehelper.given_course_schedule_exists(course1, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        courseschedulehelper.given_course_schedule_exists(course2, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
         reminderhelper.given_reminder_exists(user, course=course1)
         reminderhelper.given_reminder_exists(user, course=course1)
         reminderhelper.given_reminder_exists(user, course=course2)
@@ -783,8 +795,14 @@ class TestCaseReminderViews(APITestCase):
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
-        course1 = coursehelper.given_course_exists(course_group1)
+        course1 = coursehelper.given_course_exists(course_group1,
+                                                   start_date=(timezone.now() - timedelta(days=7)).date(),
+                                                   end_date=(timezone.now() + timedelta(days=30)).date())
         course2 = coursehelper.given_course_exists(course_group2)
+        courseschedulehelper.given_course_schedule_exists(course1, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
         reminder = reminderhelper.given_reminder_exists(user1, course=course1)
 
         # WHEN
