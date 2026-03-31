@@ -1870,8 +1870,8 @@
     },
     {
       "id": 1325,
-      "title": "Class starts in 10 minutes",
-      "message": "Class starts in 10 minutes",
+      "title": "Class starts soon",
+      "message": "Class starts soon",
       "start_of_range": "2025-10-07T10:50:00Z",
       "offset": 10,
       "offset_type": 0,
