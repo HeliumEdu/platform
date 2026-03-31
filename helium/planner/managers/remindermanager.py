@@ -24,13 +24,17 @@ class ReminderQuerySet(models.query.QuerySet):
 
     def for_today(self):
         today = timezone.now()
-        return self.filter(start_of_range__lte=today).filter(Q(homework__isnull=False) | Q(event__isnull=False))
+        return self.filter(start_of_range__lte=today).filter(
+            Q(homework__isnull=False) | Q(event__isnull=False) | Q(course__isnull=False)
+        )
 
     def for_calendar_item(self, calendar_item_id, calendar_item_type):
         if calendar_item_type == enums.EVENT:
             return self.filter(event__pk=calendar_item_id)
         elif calendar_item_type == enums.HOMEWORK:
             return self.filter(homework__pk=calendar_item_id)
+        elif calendar_item_type == enums.COURSE:
+            return self.filter(course__pk=calendar_item_id)
         else:
             return self.none()
 
