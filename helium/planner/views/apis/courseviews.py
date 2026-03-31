@@ -1,10 +1,12 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import logging
 
 from django.db.models import Count, Q, Exists, OuterRef
 from drf_spectacular.utils import extend_schema
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -141,6 +143,19 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         """
         if 'course_group' in request.data:
             permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
+
+        if 'exceptions' in request.data:
+            course = self.get_object()
+            for token in request.data['exceptions'].split(','):
+                token = token.strip()
+                if not token:
+                    continue
+                try:
+                    date = datetime.datetime.strptime(token, '%Y%m%d').date()
+                except ValueError:
+                    raise ValidationError({'exceptions': f'Invalid date format: {token}'})
+                if not (course.start_date <= date <= course.end_date):
+                    raise ValidationError({'exceptions': 'Exception dates must fall within the course date range.'})
 
         response = self.partial_update(request, *args, **kwargs)
 
