@@ -115,8 +115,11 @@ class Reminder(BaseModel):
             if course_schedule.days_of_week[weekday] == "1":
                 start_time = getattr(course_schedule, f'{["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday]}_start_time')
                 local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
+                offset_delta = datetime.timedelta(
+                    **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+                window_start = now - datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
-                if local_start > now:
+                if local_start > now and (local_start - offset_delta) >= window_start:
                     return local_start.astimezone(pytz.utc)
 
             day += datetime.timedelta(days=1)

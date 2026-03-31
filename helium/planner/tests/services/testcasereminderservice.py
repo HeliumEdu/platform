@@ -298,6 +298,57 @@ class TestCaseReminderService(TestCase):
         self.assertFalse(new_reminder.sent)
         self.assertIsNotNone(new_reminder.start_of_range)
 
+    @mock.patch('helium.planner.models.reminder.datetime')
+    def test_create_next_repeating_reminder_skips_occurrence_outside_send_window(self, mock_datetime):
+        # GIVEN
+        # Freeze "now" to Monday 2026-03-30 09:58 UTC. Course meets M/W/F at 10:00 AM UTC.
+        # Offset = 30 min → Monday start_of_range = 09:30 UTC.
+        # window_start = 09:58 - 15min = 09:43 UTC. 09:30 < 09:43 → Monday is outside the window.
+        # Wednesday start_of_range = 09:30 Apr 1 UTC, which is beyond Monday's window_start → valid.
+        frozen_now = datetime.datetime(2026, 3, 30, 9, 58, 0, tzinfo=pytz.utc)
+        mock_datetime.datetime.now.return_value = frozen_now
+        mock_datetime.datetime.combine = datetime.datetime.combine
+        mock_datetime.timedelta = datetime.timedelta
+        mock_datetime.date = datetime.date
+
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2026, 3, 23),
+            end_date=datetime.date(2026, 4, 30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        reminder = Reminder(
+            title='Test',
+            message='Test',
+            start_of_range=frozen_now,
+            offset=30,
+            offset_type=enums.MINUTES,
+            type=enums.PUSH,
+            sent=True,
+            dismissed=False,
+            repeating=True,
+            course=course,
+            user=user,
+        )
+        Reminder.objects.bulk_create([reminder])
+        reminder = Reminder.objects.get(course=course)
+
+        # WHEN
+        new_reminder = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN - Wednesday's occurrence is returned, Monday's is skipped (its window has passed)
+        self.assertIsNotNone(new_reminder)
+        expected_start_of_range = datetime.datetime(2026, 4, 1, 9, 30, 0, tzinfo=pytz.utc)
+        self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
+
     def test_create_next_repeating_reminder_no_future_occurrence(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
