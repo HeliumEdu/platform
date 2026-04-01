@@ -8,7 +8,15 @@ from rest_framework import serializers
 from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
+
+
 from helium.planner.tasks import recalculate_category_grade
+
+
+class _MaterialTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Material
+        fields = ('id', 'title')
 
 logger = logging.getLogger(__name__)
 
@@ -60,5 +68,5 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
-
     reminders = ReminderSerializer(many=True)
+    materials = _MaterialTitleSerializer(many=True, read_only=True)

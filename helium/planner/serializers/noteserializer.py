@@ -32,29 +32,9 @@ class NoteSerializer(serializers.ModelSerializer):
             if 'resources' not in attrs:
                 resources = list(self.instance.resources.all())
 
-        linked_count = sum([
-            len(homework) > 0 if homework else False,
-            len(events) > 0 if events else False,
-            len(resources) > 0 if resources else False,
-        ])
-
-        if linked_count > 1:
+        if sum([bool(homework), bool(events), bool(resources)]) > 1:
             raise ValidationError(
                 'A note can only be linked to one type of entity (homework, event, or resource).'
-            )
-
-        # Enforce one-to-one: only allow one item per type
-        if homework and len(homework) > 1:
-            raise ValidationError(
-                'A note can only be linked to one homework assignment.'
-            )
-        if events and len(events) > 1:
-            raise ValidationError(
-                'A note can only be linked to one event.'
-            )
-        if resources and len(resources) > 1:
-            raise ValidationError(
-                'A note can only be linked to one resource.'
             )
 
         # Enforce one-to-one from entity side: entity can only have one linked note
@@ -96,15 +76,17 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class NoteExtendedSerializer(NoteSerializer):
-    """Includes link info on GET requests for backward compatibility."""
     linked_entity_type = serializers.ReadOnlyField()
     linked_entity_title = serializers.ReadOnlyField()
+    linked_entity_due_date = serializers.ReadOnlyField()
+    linked_entity_completed = serializers.ReadOnlyField()
     course_color = serializers.ReadOnlyField()
     category_color = serializers.ReadOnlyField()
 
     class Meta(NoteSerializer.Meta):
         fields = NoteSerializer.Meta.fields + (
-            'linked_entity_type', 'linked_entity_title', 'course_color', 'category_color'
+            'linked_entity_type', 'linked_entity_title', 'linked_entity_due_date', 'linked_entity_completed',
+            'course_color', 'category_color'
         )
 
 
