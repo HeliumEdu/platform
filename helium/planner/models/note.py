@@ -117,6 +117,20 @@ class Note(BaseModel):
                 return hw.category.color
         return None
 
+    @property
+    def linked_entity_due_date(self):
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            return hw_list[0].start
+        return None
+
+    @property
+    def linked_entity_completed(self):
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            return hw_list[0].completed
+        return None
+
     def has_linked_entity(self):
         return bool(
             self._get_cached_m2m('homework') or

@@ -60,5 +60,4 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
-
     reminders = ReminderSerializer(many=True)
