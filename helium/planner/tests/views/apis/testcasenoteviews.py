@@ -220,7 +220,7 @@ class TestCaseNoteExtendedFields(APITestCase):
         self.assertEqual(response.data['linked_entity_type'], 'homework')
         self.assertEqual(response.data['course_color'], course.color)
 
-    def test_get_note_includes_homework_due_date_and_completed(self):
+    def test_get_note_includes_homework_due_and_completed(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -229,12 +229,12 @@ class TestCaseNoteExtendedFields(APITestCase):
         # WHEN fetching detail
         response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['linked_entity_due_date'], homework.start)
+        self.assertEqual(response.data['linked_entity_due'], homework.start)
         self.assertEqual(response.data['linked_entity_completed'], True)
         # WHEN fetching list
         response = self.client.get(reverse('planner_notes_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['linked_entity_due_date'], homework.start)
+        self.assertEqual(response.data[0]['linked_entity_due'], homework.start)
         self.assertEqual(response.data[0]['linked_entity_completed'], True)
 
     def test_get_note_homework_fields_null_for_non_homework_link(self):
@@ -243,7 +243,7 @@ class TestCaseNoteExtendedFields(APITestCase):
         notehelper.given_note_linked_to_event(user, event)
         response = self.client.get(reverse('planner_notes_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(response.data[0]['linked_entity_due_date'])
+        self.assertIsNone(response.data[0]['linked_entity_due'])
         self.assertIsNone(response.data[0]['linked_entity_completed'])
 
     def test_get_note_includes_link_info_with_resource(self):

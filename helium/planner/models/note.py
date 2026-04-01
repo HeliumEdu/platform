@@ -118,7 +118,7 @@ class Note(BaseModel):
         return None
 
     @property
-    def linked_entity_due_date(self):
+    def linked_entity_due(self):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].start
