@@ -436,7 +436,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
     user_tz = pytz.timezone(user.settings.time_zone)
     timezone.activate(user_tz)
 
-    now = timezone.now()
+    now = timezone.now().astimezone(user_tz)
     adjusted_month = now.month + adjust_month
     adjusted_year = now.year
     if adjusted_month == 0:
