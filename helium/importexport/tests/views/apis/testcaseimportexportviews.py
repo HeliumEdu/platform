@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+import pytz
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -362,8 +363,9 @@ class TestCaseImportExportViews(APITestCase):
                                                 'time_zone': 'America/Chicago'}),
                                     content_type='application/json')
 
-        # GIVEN
-        now = timezone.now()
+        # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
+        user_tz = pytz.timezone('America/Chicago')
+        now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
         adjusted_year = now.year
         if adjusted_month == 0:
@@ -436,14 +438,15 @@ class TestCaseImportExportViews(APITestCase):
         # WHEN
         response = self.client.post(reverse('importexport_import_exampleschedule'))
 
-        now = timezone.now()
+        # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
+        user_tz = pytz.timezone('America/Los_Angeles')
+        now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
         adjusted_year = now.year
         if adjusted_month == 0:
             adjusted_month = 12
             adjusted_year -= 1
 
-        # GIVEN
         adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
                                      microsecond=0)
         days_ahead = 0 - adjusted_month.weekday()
