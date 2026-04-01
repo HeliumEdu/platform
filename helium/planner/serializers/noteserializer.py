@@ -37,6 +37,19 @@ class NoteSerializer(serializers.ModelSerializer):
                 'A note can only be linked to one type of entity (homework, event, or resource).'
             )
 
+        if homework and len(homework) > 1:
+            raise ValidationError(
+                'A note can only be linked to one homework assignment.'
+            )
+        if events and len(events) > 1:
+            raise ValidationError(
+                'A note can only be linked to one event.'
+            )
+        if resources and len(resources) > 1:
+            raise ValidationError(
+                'A note can only be linked to one resource.'
+            )
+
         # Enforce one-to-one from entity side: entity can only have one linked note
         exclude_pk = self.instance.pk if self.instance else None
         if homework:
