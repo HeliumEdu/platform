@@ -252,11 +252,14 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             local_start = timezone.localtime(class_start)
             start_str = local_start.strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
 
-            course_schedule = calendar_item.schedules.first()
-            if course_schedule:
-                weekday_idx = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[local_start.weekday()]
-                day_name = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday_idx]
-                end_time = getattr(course_schedule, f'{day_name}_end_time')
+            weekday_idx = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[local_start.weekday()]
+            day_name = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday_idx]
+            active_schedule = next(
+                (s for s in calendar_item.schedules.all() if s.days_of_week[weekday_idx] == "1"),
+                None,
+            )
+            if active_schedule:
+                end_time = getattr(active_schedule, f'{day_name}_end_time')
                 end_str = local_start.replace(
                     hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0
                 ).strftime('%I:%M %p')
