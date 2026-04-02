@@ -94,8 +94,8 @@ class Reminder(BaseModel):
         Returns None if no future occurrence exists within the course date range.
         """
         course = self.course
-        course_schedule = course.schedules.first()
-        if not course_schedule:
+        course_schedules = list(course.schedules.all())
+        if not course_schedules:
             return None
 
         user_tz = pytz.timezone(course.get_user().settings.time_zone)
@@ -104,6 +104,7 @@ class Reminder(BaseModel):
 
         exceptions = self._parse_exceptions()
         day = max(today, course.start_date)
+        day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
         while day <= course.end_date:
             if day in exceptions:
@@ -112,8 +113,12 @@ class Reminder(BaseModel):
 
             weekday = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]
 
-            if course_schedule.days_of_week[weekday] == "1":
-                start_time = getattr(course_schedule, f'{["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday]}_start_time')
+            active_schedule = next(
+                (s for s in course_schedules if s.days_of_week[weekday] == "1"),
+                None,
+            )
+            if active_schedule:
+                start_time = getattr(active_schedule, f'{day_names[weekday]}_start_time')
                 local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
                 offset_delta = datetime.timedelta(
                     **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
