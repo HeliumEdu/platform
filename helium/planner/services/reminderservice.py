@@ -104,8 +104,22 @@ def heal_orphaned_repeating_reminders():
 def create_next_repeating_reminder(reminder):
     """
     For a repeating reminder (course), create the next occurrence.
+
+    Guards against duplicate creation (e.g. concurrent workers) by checking whether an unsent
+    reminder for the same series already exists before saving. After saving, any undismissed
+    reminders from earlier in the series are dismissed so only the current occurrence is active.
     """
     if not reminder.repeating or not reminder.course:
+        return None
+
+    series_filter = dict(
+        repeating=True,
+        course=reminder.course,
+        user=reminder.user,
+        type=reminder.type,
+    )
+
+    if Reminder.objects.filter(sent=False, **series_filter).exists():
         return None
 
     # Create a new reminder with the same settings
@@ -126,6 +140,9 @@ def create_next_repeating_reminder(reminder):
     next_start = new_reminder._get_next_course_occurrence_start()
     if next_start:
         new_reminder.save()
+
+        Reminder.objects.filter(dismissed=False, **series_filter).exclude(pk=new_reminder.pk).update(dismissed=True)
+
         return new_reminder
 
     return None
