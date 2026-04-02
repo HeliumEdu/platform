@@ -113,16 +113,18 @@ def heal_orphaned_repeating_reminders():
         type=OuterRef('type'),
     )
 
-    orphaned_combos = (
-        Reminder.objects
-        .filter(repeating=True, course__isnull=False)
-        .annotate(has_active=Exists(active_unsent))
-        .filter(has_active=False)
-        .values('course', 'user', 'type')
-        .distinct()
-    )
+    orphaned_combos = {
+        (row['course'], row['user'], row['type'])
+        for row in (
+            Reminder.objects
+            .filter(repeating=True, course__isnull=False)
+            .annotate(has_active=Exists(active_unsent))
+            .filter(has_active=False)
+            .values('course', 'user', 'type')
+        )
+    }
 
-    for combo in orphaned_combos:
+    for combo in [{'course': c, 'user': u, 'type': t} for c, u, t in orphaned_combos]:
         reminder = (
             Reminder.objects
             .filter(repeating=True, **combo)
