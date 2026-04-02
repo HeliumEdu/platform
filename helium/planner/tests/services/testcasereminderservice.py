@@ -365,6 +365,39 @@ class TestCaseReminderService(TestCase):
         self.assertFalse(new_reminder.sent)
         self.assertIsNotNone(new_reminder.start_of_range)
 
+    def test_create_next_repeating_reminder_dismisses_stale_series_reminders(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        stale_reminder_1 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
+                                                                 sent=True, dismissed=False)
+        stale_reminder_2 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
+                                                                 sent=True, dismissed=False)
+        source_reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
+                                                               sent=True, dismissed=False)
+
+        # WHEN
+        new_reminder = reminderservice.create_next_repeating_reminder(source_reminder)
+
+        # THEN
+        self.assertIsNotNone(new_reminder)
+        self.assertFalse(new_reminder.dismissed)
+        stale_reminder_1.refresh_from_db()
+        stale_reminder_2.refresh_from_db()
+        source_reminder.refresh_from_db()
+        self.assertTrue(stale_reminder_1.dismissed)
+        self.assertTrue(stale_reminder_2.dismissed)
+        self.assertTrue(source_reminder.dismissed)
+
     @mock.patch('helium.planner.models.reminder.datetime')
     def test_create_next_repeating_reminder_skips_occurrence_outside_send_window(self, mock_datetime):
         # GIVEN

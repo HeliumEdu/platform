@@ -119,7 +119,7 @@ def create_next_repeating_reminder(reminder):
         type=reminder.type,
     )
 
-    if Reminder.objects.filter(sent=False, **series_filter).exists():
+    if Reminder.objects.filter(sent=False, **series_filter).exclude(pk=reminder.pk).exists():
         return None
 
     # Create a new reminder with the same settings
