@@ -89,6 +89,9 @@ def heal_orphaned_repeating_reminders():
             .order_by('-start_of_range')
         )
 
+        if not undismissed:
+            continue
+
         most_recent = undismissed[0]
         to_dismiss = [r.pk for r in undismissed[1:]]
 
