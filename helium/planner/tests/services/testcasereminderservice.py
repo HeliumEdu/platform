@@ -298,6 +298,85 @@ class TestCaseReminderService(TestCase):
         # THEN: no new reminders created, healthy series left untouched
         self.assertEqual(Reminder.objects.count(), 2)
 
+    def test_heal_orphaned_repeating_reminders_dismisses_duplicate_undismissed(self):
+        # GIVEN: three undismissed repeating reminders for the same series (the duplication bug scenario);
+        # none are stale — the most recent is in the future, so it should be kept active.
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        older = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True, course=course, user=user,
+        )
+        duplicate = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True, course=course, user=user,
+        )
+        most_recent = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() + datetime.timedelta(days=2),
+            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True, course=course, user=user,
+        )
+        Reminder.objects.bulk_create([older, duplicate, most_recent])
+        most_recent_pk = Reminder.objects.order_by('-start_of_range').first().pk
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN: only the most recent remains active; the two older duplicates are dismissed;
+        # no new occurrence is created because the most recent is still valid.
+        self.assertEqual(Reminder.objects.filter(dismissed=False).count(), 1)
+        self.assertEqual(Reminder.objects.filter(dismissed=False).first().pk, most_recent_pk)
+        self.assertEqual(Reminder.objects.count(), 3)
+
+    def test_heal_orphaned_repeating_reminders_dismisses_all_stale_and_creates_successor(self):
+        # GIVEN: multiple undismissed reminders for the same series, all with start_of_range past
+        # the send window (the class already happened and nothing was ever sent or dismissed).
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        stale_1 = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=3),
+            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True, course=course, user=user,
+        )
+        stale_2 = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, repeating=True, course=course, user=user,
+        )
+        Reminder.objects.bulk_create([stale_1, stale_2])
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN: both stale reminders are dismissed and a new occurrence is created for the next class.
+        self.assertEqual(Reminder.objects.filter(dismissed=True).count(), 2)
+        self.assertEqual(Reminder.objects.filter(dismissed=False, sent=False, repeating=True).count(), 1)
+
     def test_get_subject_orphaned_reminder(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -364,39 +443,6 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(new_reminder.repeating)
         self.assertFalse(new_reminder.sent)
         self.assertIsNotNone(new_reminder.start_of_range)
-
-    def test_create_next_repeating_reminder_dismisses_stale_series_reminders(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(
-            course_group,
-            start_date=datetime.date.today() - datetime.timedelta(days=7),
-            end_date=datetime.date.today() + datetime.timedelta(days=30)
-        )
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
-                                                          mon_start_time=datetime.time(10, 0, 0),
-                                                          wed_start_time=datetime.time(10, 0, 0),
-                                                          fri_start_time=datetime.time(10, 0, 0))
-        stale_reminder_1 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
-                                                                 sent=True, dismissed=False)
-        stale_reminder_2 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
-                                                                 sent=True, dismissed=False)
-        source_reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH,
-                                                               sent=True, dismissed=False)
-
-        # WHEN
-        new_reminder = reminderservice.create_next_repeating_reminder(source_reminder)
-
-        # THEN
-        self.assertIsNotNone(new_reminder)
-        self.assertFalse(new_reminder.dismissed)
-        stale_reminder_1.refresh_from_db()
-        stale_reminder_2.refresh_from_db()
-        source_reminder.refresh_from_db()
-        self.assertTrue(stale_reminder_1.dismissed)
-        self.assertTrue(stale_reminder_2.dismissed)
-        self.assertTrue(source_reminder.dismissed)
 
     @mock.patch('helium.planner.models.reminder.datetime')
     def test_create_next_repeating_reminder_skips_occurrence_outside_send_window(self, mock_datetime):
