@@ -58,17 +58,52 @@ def get_subject(reminder):
 
 def heal_orphaned_repeating_reminders():
     """
-    Detect sent repeating course reminders with no unsent successor and create the next occurrence.
+    Periodic maintenance for repeating course reminder series.
 
-    A series becomes orphaned when create_next_repeating_reminder fails or is never reached (e.g.,
-    worker downtime during the send window, or a course reschedule that moves start_of_range into the
-    past before processing). This runs periodically so recovery happens well before the next class
-    occurrence, not after it is already missed.
+    Step 1 — dismiss stale/duplicate undismissed reminders: for each series, keep only the most
+    recent undismissed reminder and dismiss the rest. If that most recent reminder is itself past
+    the send window (the class already started), dismiss it too so the series is clean.
+
+    Step 2 — recreate missing successors: any series with no active (unsent + undismissed) reminder
+    gets a new occurrence created. This covers both the classic orphan case (sent=True, no successor
+    due to worker downtime) and series cleaned up in step 1 where all reminders were stale.
     """
+    import datetime as dt
     from django.db.models import Exists, OuterRef
 
-    unsent_successor = Reminder.objects.filter(
+    now = timezone.now()
+    window_start = now - dt.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+
+    # Step 1: Dismiss stale and duplicate undismissed reminders.
+    active_series = (
+        Reminder.objects
+        .filter(repeating=True, course__isnull=False, dismissed=False)
+        .values('course', 'user', 'type')
+        .distinct()
+    )
+
+    for combo in active_series:
+        undismissed = list(
+            Reminder.objects
+            .filter(dismissed=False, repeating=True, **combo)
+            .order_by('-start_of_range')
+        )
+
+        most_recent = undismissed[0]
+        to_dismiss = [r.pk for r in undismissed[1:]]
+
+        if most_recent.start_of_range <= window_start:
+            to_dismiss.append(most_recent.pk)
+
+        if to_dismiss:
+            logger.info(
+                f'Dismissing {len(to_dismiss)} stale/duplicate reminder(s) for course {combo["course"]}, user {combo["user"]}')
+            Reminder.objects.filter(pk__in=to_dismiss).update(dismissed=True)
+
+    # Step 2: Recreate missing successors for any series with no active unsent reminder.
+    active_unsent = Reminder.objects.filter(
         sent=False,
+        dismissed=False,
         repeating=True,
         course=OuterRef('course'),
         user=OuterRef('user'),
@@ -77,9 +112,9 @@ def heal_orphaned_repeating_reminders():
 
     orphaned_combos = (
         Reminder.objects
-        .filter(sent=True, repeating=True, course__isnull=False)
-        .annotate(has_unsent=Exists(unsent_successor))
-        .filter(has_unsent=False)
+        .filter(repeating=True, course__isnull=False)
+        .annotate(has_active=Exists(active_unsent))
+        .filter(has_active=False)
         .values('course', 'user', 'type')
         .distinct()
     )
@@ -87,7 +122,7 @@ def heal_orphaned_repeating_reminders():
     for combo in orphaned_combos:
         reminder = (
             Reminder.objects
-            .filter(sent=True, repeating=True, **combo)
+            .filter(repeating=True, **combo)
             .select_related('user', 'user__settings', 'course', 'course__course_group')
             .order_by('-start_of_range')
             .first()
@@ -105,9 +140,9 @@ def create_next_repeating_reminder(reminder):
     """
     For a repeating reminder (course), create the next occurrence.
 
-    Guards against duplicate creation (e.g. concurrent workers) by checking whether an unsent
-    reminder for the same series already exists before saving. After saving, any undismissed
-    reminders from earlier in the series are dismissed so only the current occurrence is active.
+    Guards against duplicate creation (e.g. concurrent workers) by checking whether an active
+    (unsent + undismissed) reminder for the same series already exists before saving.
+    Stale cleanup and series maintenance are handled exclusively by heal_orphaned_repeating_reminders.
     """
     if not reminder.repeating or not reminder.course:
         return None
@@ -119,7 +154,7 @@ def create_next_repeating_reminder(reminder):
         type=reminder.type,
     )
 
-    if Reminder.objects.filter(sent=False, **series_filter).exclude(pk=reminder.pk).exists():
+    if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exclude(pk=reminder.pk).exists():
         return None
 
     # Create a new reminder with the same settings
@@ -140,9 +175,6 @@ def create_next_repeating_reminder(reminder):
     next_start = new_reminder._get_next_course_occurrence_start()
     if next_start:
         new_reminder.save()
-
-        Reminder.objects.filter(dismissed=False, **series_filter).exclude(pk=new_reminder.pk).update(dismissed=True)
-
         return new_reminder
 
     return None
