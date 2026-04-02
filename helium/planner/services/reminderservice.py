@@ -129,6 +129,7 @@ def heal_orphaned_repeating_reminders():
             Reminder.objects
             .filter(repeating=True, **combo)
             .select_related('user', 'user__settings', 'course', 'course__course_group')
+            .prefetch_related('course__schedules')
             .order_by('-start_of_range')
             .first()
         )
