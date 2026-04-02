@@ -1,5 +1,5 @@
 django-storages==1.14.6
-boto3==1.42.80
+boto3==1.42.81
 mysqlclient==2.2.8
 django-redis==6.0.0
 sentry-sdk==2.55.0
