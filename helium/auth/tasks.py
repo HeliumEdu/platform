@@ -391,6 +391,7 @@ def emit_nightly_metrics(self):
     # Engagement quality metrics (staff-separated, computed over 30d active users)
     try:
         cutoff_30d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
+        cutoff_14d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=14)
         today = datetime.now().replace(tzinfo=pytz.utc).date()
 
         for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
@@ -410,15 +411,14 @@ def emit_nightly_metrics(self):
                 course__course_group__example_schedule=False,
             )
 
-            past_due_hw_qs = hw_qs.filter(end__lte=datetime.now().replace(tzinfo=pytz.utc))
-            total_past_due = past_due_hw_qs.count()
-            metricutils.gauge('users.engagement.homework_completion_rate',
-                              past_due_hw_qs.filter(completed=True).count() / total_past_due if total_past_due else 0.0,
+            total_users = active_qs.count()
+
+            metricutils.gauge('users.engagement.avg_completions_per_user',
+                              hw_qs.filter(completed=True, completed_at__gte=cutoff_14d).count() / total_users if total_users else 0.0,
                               extra_tags=staff_tags)
 
-            total_hw = hw_qs.count()
-            metricutils.gauge('users.engagement.grade_entry_rate',
-                              hw_qs.exclude(current_grade='').count() / total_hw if total_hw else 0.0,
+            metricutils.gauge('users.engagement.avg_graded_homework_per_user',
+                              hw_qs.exclude(current_grade='').count() / total_users if total_users else 0.0,
                               extra_tags=staff_tags)
 
             metricutils.gauge('users.engagement.has_active_courses',
