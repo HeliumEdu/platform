@@ -10,7 +10,7 @@ def seed_next_review_prompt_date(apps, schema_editor):
 
     to_update = []
     for user_settings in UserSettings.objects.select_related('user').filter(user__is_active=True):
-        user_settings.next_review_prompt_date = user_settings.user.date_joined + timedelta(days=21)
+        user_settings.next_review_prompt_date = user_settings.user.created_at + timedelta(days=21)
         to_update.append(user_settings)
 
     UserSettings.objects.bulk_update(to_update, ['next_review_prompt_date'])
