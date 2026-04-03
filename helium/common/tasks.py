@@ -14,19 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
-def run_cleanup_tasks(self):
-    """Periodic orchestrator for low-priority cross-app cleanup tasks."""
-    from helium.planner.tasks import heal_orphaned_repeating_reminders
-
-    heal_orphaned_repeating_reminders.apply_async(priority=settings.CELERY_PRIORITY_LOW)
-
-
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    sender.add_periodic_task(settings.CLEANUP_TASKS_FREQUENCY_SEC, run_cleanup_tasks.s())
-
-
-@app.task(bind=True)
 def send_text(self, phone, message):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("text.sent", priority="high", published_at_ms=published_at_ms)

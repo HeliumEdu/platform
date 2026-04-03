@@ -25,4 +25,4 @@ def reindex_feeds(self):
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Add schedule to reindex external calendars periodically
-    sender.add_periodic_task(settings.REINDEX_FEED_FREQUENCY_SEC, reindex_feeds.s())
+    sender.add_periodic_task(settings.REINDEX_FEED_FREQUENCY_SEC, reindex_feeds.s().set(priority=settings.CELERY_PRIORITY_LOW))

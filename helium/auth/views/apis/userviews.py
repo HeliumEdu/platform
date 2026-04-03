@@ -92,13 +92,14 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
+        UserModel = get_user_model()
         identifier = self.request.data['username']
         try:
             # Look up by username or email to support both identifiers
-            return get_user_model().objects.get(
+            return UserModel.objects.get(
                 Q(username__iexact=identifier) | Q(email__iexact=identifier)
             )
-        except get_user_model().DoesNotExist:
+        except UserModel.DoesNotExist:
             raise NotFound('No User matches the given query.')
 
     # Excluded from API docs - this endpoint is only needed by integration tests for cleanup

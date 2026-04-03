@@ -55,7 +55,7 @@ class AttachmentType(SimpleListFilter):
 
 
 class AttachmentAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_attachment', 'size', 'created_at', 'updated_at', 'get_user',)
+    list_display = ('title', 'get_attachment', 'size', 'updated_at', 'get_user',)
     list_filter = (AttachmentType,)
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
@@ -121,8 +121,8 @@ class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
 
 
 class CourseGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'start_date', 'shown_on_calendar', 'num_courses', 'num_homework',
-                    'num_attachments', 'get_user',)
+    list_display = ('title', 'shown_on_calendar', 'start_date', 'num_courses', 'num_homework',
+                    'num_attachments', 'updated_at', 'get_user',)
     list_filter = ('shown_on_calendar', 'example_schedule', CourseGroupHasCourseScheduleFilter)
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
@@ -242,12 +242,12 @@ class HasReminderFilter(SimpleListFilter):
 
 
 class CourseAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'get_course_group', 'start_date', 'num_homework', 'num_reminders',
-                    'num_attachments', 'get_user',)
-    list_filter = ('course_group__shown_on_calendar', 'course_group__example_schedule', CourseHasCourseScheduleFilter,
-                   CourseHasWeightedGradingFilter,
+    list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_reminders',
+                    'num_attachments', 'updated_at', 'get_user',)
+    list_filter = ('is_online', 'course_group__shown_on_calendar', 'course_group__example_schedule',
+                   CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
                    CourseHasCreditsFilter, HasReminderFilter, HasAttachmentFilter,)
-    search_fields = ('id', 'title', 'course_group__user__username', 'course_group__user__email')
+    search_fields = ('id', 'title', 'teacher_email', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
 
@@ -298,7 +298,7 @@ class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'updated_at', 'get_user')
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
                    HasCourseScheduleFilter)
-    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
+    search_fields = ('id', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -351,7 +351,7 @@ class CategoryHasWeightedGradingFilter(SimpleListFilter):
 
 
 class CategoryAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'updated_at', 'weight', 'num_homework', 'get_user',)
+    list_display = ('title', 'get_course_group', 'get_course', 'weight', 'num_homework', 'updated_at', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
                    CategoryHasWeightedGradingFilter)
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
@@ -386,8 +386,8 @@ class CategoryAdmin(BaseModelAdmin):
 
 
 class EventAdmin(BaseModelAdmin):
-    list_display = ('title', 'start', 'updated_at', 'num_reminders', 'num_attachments', 'get_user',)
-    list_filter = ('example_schedule', HasReminderFilter, HasAttachmentFilter)
+    list_display = ('title', 'start', 'num_reminders', 'num_attachments', 'updated_at', 'get_user',)
+    list_filter = ('all_day', 'example_schedule', HasReminderFilter, HasAttachmentFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start',)
     autocomplete_fields = ('user',)
@@ -427,9 +427,10 @@ class HomeworkHasWeightedGradingFilter(SimpleListFilter):
 
 
 class HomeworkAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_course_group', 'get_course', 'start', 'updated_at', 'num_reminders',
-                    'num_attachments', 'get_user',)
-    list_filter = ('completed', 'course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
+    list_display = ('title', 'get_course_group', 'get_course', 'start', 'num_reminders',
+                    'num_attachments', 'completed_at', 'updated_at', 'get_user',)
+    list_filter = ('all_day', 'completed', 'course__course_group__shown_on_calendar',
+                   'course__course_group__example_schedule',
                    HomeworkHasWeightedGradingFilter, HasReminderFilter, HasAttachmentFilter)
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     ordering = ('-start',)
@@ -463,7 +464,7 @@ class HomeworkAdmin(BaseModelAdmin):
 
 
 class MaterialGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'updated_at', 'shown_on_calendar', 'num_materials', 'get_user',)
+    list_display = ('title', 'shown_on_calendar', 'num_materials', 'updated_at', 'get_user',)
     list_filter = ('shown_on_calendar', 'example_schedule')
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -487,8 +488,8 @@ class MaterialGroupAdmin(BaseModelAdmin):
 
 
 class MaterialAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_material_group', 'updated_at', 'get_user',)
-    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule')
+    list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
+    list_filter = ('status', 'condition', 'material_group__shown_on_calendar', 'material_group__example_schedule')
     search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group', 'courses',)
 
@@ -562,7 +563,7 @@ class ReminderExampleScheduleFilter(SimpleListFilter):
 
 
 class ReminderAdmin(BaseModelAdmin):
-    list_display = ('title', 'start_of_range', 'updated_at', 'type', 'get_user',)
+    list_display = ('title', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
     list_filter = ('type', 'sent', 'dismissed', ReminderType, ReminderExampleScheduleFilter)
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)

@@ -201,9 +201,9 @@ def push_reminders(self):
 
 
 @app.task(bind=True)
-def heal_orphaned_repeating_reminders(self):
+def reminder_watchdog(self):
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("reminder.repeating.heal", priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("reminder.watchdog", priority="low", published_at_ms=published_at_ms)
 
     reminderservice.heal_orphaned_repeating_reminders()
     metricutils.task_stop(metrics)
@@ -307,3 +307,5 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
 
     # Process text reminders
     sender.add_periodic_task(60, text_reminders.s())
+
+    sender.add_periodic_task(settings.REMINDER_WATCHDOG_FREQUENCY_SEC, reminder_watchdog.s().set(priority=settings.CELERY_PRIORITY_LOW))

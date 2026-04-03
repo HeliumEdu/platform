@@ -299,8 +299,10 @@ class TestCaseReminderService(TestCase):
         self.assertEqual(Reminder.objects.count(), 2)
 
     def test_heal_orphaned_repeating_reminders_dismisses_duplicate_undismissed(self):
-        # GIVEN: three undismissed repeating reminders for the same series (the duplication bug scenario);
-        # none are stale — the most recent is in the future, so it should be kept active.
+        # GIVEN: three undismissed repeating reminders for the same series (e.g. duplicate creation
+        # bug); the most recent is in the future, two older ones are stale. The new one has not yet
+        # entered the send window, so the previous sent reminder should be preserved — only excess
+        # duplicates beyond the 2-reminder cap are dismissed.
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -312,13 +314,13 @@ class TestCaseReminderService(TestCase):
                                                           mon_start_time=datetime.time(10, 0, 0),
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
-        older = Reminder(
+        oldest = Reminder(
             title='Test', message='Test',
-            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            start_of_range=timezone.now() - datetime.timedelta(hours=3),
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
             sent=False, dismissed=False, repeating=True, course=course, user=user,
         )
-        duplicate = Reminder(
+        previous = Reminder(
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
@@ -330,16 +332,17 @@ class TestCaseReminderService(TestCase):
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
             sent=False, dismissed=False, repeating=True, course=course, user=user,
         )
-        Reminder.objects.bulk_create([older, duplicate, most_recent])
+        Reminder.objects.bulk_create([oldest, previous, most_recent])
         most_recent_pk = Reminder.objects.order_by('-start_of_range').first().pk
 
         # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: only the most recent remains active; the two older duplicates are dismissed;
-        # no new occurrence is created because the most recent is still valid.
-        self.assertEqual(Reminder.objects.filter(dismissed=False).count(), 1)
-        self.assertEqual(Reminder.objects.filter(dismissed=False).first().pk, most_recent_pk)
+        # THEN: oldest excess is dismissed (cap of 2); most_recent and previous remain undismissed
+        # because most_recent has not yet entered the send window. No new occurrence is created.
+        self.assertEqual(Reminder.objects.filter(dismissed=True).count(), 1)
+        self.assertEqual(Reminder.objects.filter(dismissed=False).count(), 2)
+        self.assertTrue(Reminder.objects.filter(dismissed=False, pk=most_recent_pk).exists())
         self.assertEqual(Reminder.objects.count(), 3)
 
     def test_heal_orphaned_repeating_reminders_dismisses_all_stale_and_creates_successor(self):

@@ -36,10 +36,12 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         """
         Register a new user.
         """
+        UserModel = get_user_model()
+
         response = self.create(request, *args, **kwargs)
 
         if 'time_zone' in request.data:
-            user_settings = get_user_model().objects.get(pk=response.data['id']).settings
+            user_settings = UserModel.objects.get(pk=response.data['id']).settings
             serializer = UserSettingsSerializer(user_settings, data={'time_zone': request.data['time_zone']}, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()

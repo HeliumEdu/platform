@@ -80,6 +80,12 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
+            if not user.settings.next_review_prompt_date:
+                user.settings.next_review_prompt_date = (
+                    timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
+                )
+                user.settings.save(update_fields=['next_review_prompt_date'])
+
             self._authenticated_user = user
 
             logger.debug(f"User {user.pk} has been logged in")
@@ -124,19 +130,21 @@ class LegacyTokenObtainSerializer(TokenObtainSerializer):
 
 class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
     def validate(self, attrs):
+        UserModel = get_user_model()
+
         refresh = self.token_class(attrs["refresh"])
 
         user_id = refresh.payload.get(api_settings.USER_ID_CLAIM, None)
         user = None
         try:
             if user_id and (
-                    user := get_user_model().objects.get(
+                    user := UserModel.objects.get(
                         **{api_settings.USER_ID_FIELD: user_id}
                     )
             ):
                 if not api_settings.USER_AUTHENTICATION_RULE(user):
                     raise PermissionDenied('Sorry, your account is no longer active.')
-        except get_user_model().DoesNotExist:
+        except UserModel.DoesNotExist:
             raise PermissionDenied(
                 'Sorry, the given token does have permissions for the given account, or the account is inactive.')
 

@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.db import models
+from django.utils import timezone
 
 from helium.common import enums
 from helium.common.utils.validators import validate_fraction
@@ -16,6 +17,12 @@ class Homework(BaseCalendar):
 
     completed = models.BooleanField(help_text='Whether the homework has been completed.',
                                     default=False)
+
+    completed_at = models.DateTimeField(
+        help_text='When the homework was first marked as completed. Set automatically.',
+        null=True,
+        blank=True,
+    )
 
     category = models.ForeignKey('Category', help_text='The category with which to associate.',
                                  related_name='homework', blank=True, null=True, default=None,
@@ -61,5 +68,8 @@ class Homework(BaseCalendar):
         """
         if not self.category:
             self.category = Category.objects.get_uncategorized(self.course_id)
+
+        if self.completed and self.completed_at is None:
+            self.completed_at = timezone.now()
 
         super().save(*args, **kwargs)
