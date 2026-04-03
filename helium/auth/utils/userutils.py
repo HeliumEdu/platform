@@ -28,7 +28,9 @@ def generate_unique_username_from_email(email):
     """
     Generate a unique username from an email local-part, appending a counter on collisions.
     """
-    max_length = get_user_model()._meta.get_field('username').max_length
+    UserModel = get_user_model()
+
+    max_length = UserModel._meta.get_field('username').max_length
 
     local_part = (email or '').split('@', 1)[0].strip().lower()
     base_username = re.sub(r'[^\w.+-]', '', local_part) or 'user'
@@ -37,7 +39,7 @@ def generate_unique_username_from_email(email):
     username = base_username
     counter = 1
 
-    while get_user_model().objects.filter(username=username).exists():
+    while UserModel.objects.filter(username=username).exists():
         suffix = str(counter)
         truncated_base = base_username[:max_length - len(suffix)]
         username = f'{truncated_base}{suffix}'

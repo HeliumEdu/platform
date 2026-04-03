@@ -100,6 +100,8 @@ def send_password_reset_email(self, email, temp_password):
 
 @app.task(bind=True)
 def delete_user(self, user_id):
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.delete", priority="low", published_at_ms=published_at_ms)
     if settings.SENTRY_ENABLED:
@@ -108,7 +110,7 @@ def delete_user(self, user_id):
 
     user = None
     try:
-        user = get_user_model().objects.get(pk=user_id)
+        user = UserModel.objects.get(pk=user_id)
 
         outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
         blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
@@ -133,7 +135,7 @@ def delete_user(self, user_id):
                 logger.info('Skipping, token is already deleted.')
 
         value = 1
-    except (get_user_model().DoesNotExist, IntegrityError):
+    except (UserModel.DoesNotExist, IntegrityError):
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         value = 0
@@ -167,11 +169,13 @@ def purge_refresh_tokens(self):
 
 @app.task(bind=True)
 def purge_unverified_users(self):
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.unverified.purge", priority="low", published_at_ms=published_at_ms)
 
     num_purged = 0
-    for user in get_user_model().objects.filter(
+    for user in UserModel.objects.filter(
             is_active=False,
             created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
                 days=settings.UNVERIFIED_USER_TTL_DAYS)):
@@ -200,6 +204,8 @@ def emit_queue_depth(self):
 
 @app.task(bind=True)
 def user_watchdog(self):
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.watchdog", priority="low", published_at_ms=published_at_ms)
 
@@ -209,7 +215,7 @@ def user_watchdog(self):
         staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
             cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
-            base_qs = get_user_model().objects.filter(
+            base_qs = UserModel.objects.filter(
                 is_active=True,
                 last_activity__gte=cutoff
             )
@@ -258,6 +264,8 @@ def user_watchdog(self):
 @app.task(bind=True)
 def send_dormant_user_warning_email(self, user_id):
     """Send a dormancy warning email to a user and increment their warning count."""
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.dormant-warning.sent", priority="low", published_at_ms=published_at_ms)
 
@@ -271,8 +279,8 @@ def send_dormant_user_warning_email(self, user_id):
         return
 
     try:
-        user = get_user_model().objects.get(pk=user_id)
-    except get_user_model().DoesNotExist:
+        user = UserModel.objects.get(pk=user_id)
+    except UserModel.DoesNotExist:
         logger.info(f'User {user_id} does not exist. Skipping dormant warning email.')
         metricutils.task_stop(metrics, value=0)
         return
@@ -332,6 +340,8 @@ def send_dormant_user_warning_email(self, user_id):
 @app.task(bind=True)
 def process_dormant_users(self):
     """Process dormant users: send warning emails and delete accounts that have received all warnings."""
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.dormant.process", priority="low", published_at_ms=published_at_ms)
 
@@ -360,7 +370,7 @@ def process_dormant_users(self):
                 deletion_warning_sent_at__lte=now - timedelta(days=interval_days)
             )
 
-        warning_users = get_user_model().objects.filter(dormancy_filter & needs_warning)
+        warning_users = UserModel.objects.filter(dormancy_filter & needs_warning)
         for user in warning_users:
             if total_queued >= max_per_run:
                 logger.info(f'Reached max per run ({max_per_run}), stopping.')
@@ -375,7 +385,7 @@ def process_dormant_users(self):
             logger.info(f'Queued dormant warning #{user.deletion_warning_count + 1} for user {user.pk}')
 
         if total_queued < max_per_run:
-            deletion_users = get_user_model().objects.filter(
+            deletion_users = UserModel.objects.filter(
                 is_active=True,
                 last_activity__lte=dormancy_cutoff,
                 deletion_warning_count__gte=4,

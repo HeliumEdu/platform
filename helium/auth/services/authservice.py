@@ -37,16 +37,18 @@ def forgot_password(request):
     :param request: the request being processed
     :return: a 202 Response upon success
     """
+    UserModel = get_user_model()
+
     if 'email' not in request.data:
         raise ValidationError("'email' is required")
 
     try:
-        user = get_user_model().objects.get(email=request.data['email'])
+        user = UserModel.objects.get(email=request.data['email'])
 
         # Only reset password for users with usable passwords (not OAuth-only users)
         if user.has_usable_password():
             # Generate a random password for the user
-            password = get_user_model().objects.make_random_password()
+            password = UserModel.objects.make_random_password()
             user.set_password(password)
             user.save()
 
@@ -62,7 +64,7 @@ def forgot_password(request):
             # OAuth-only user - don't create a password for security reasons
             logger.info(f'Password reset requested for OAuth-only user {user.pk}, ignoring for security')
             metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
-    except get_user_model().DoesNotExist:
+    except UserModel.DoesNotExist:
         logger.info(f'Password reset requested for unknown account {redact_email(request.data["email"])}')
 
     return Response(status=status.HTTP_202_ACCEPTED)
@@ -75,6 +77,8 @@ def verify_email(request):
     :param request: the request being processed
     :return: a 202 Response upon success, with user data and auth tokens
     """
+    UserModel = get_user_model()
+
     if 'username' not in request.GET or 'code' not in request.GET:
         raise ValidationError("'username' and 'code' must be given as query parameters")
 
@@ -82,7 +86,7 @@ def verify_email(request):
     code = request.GET['code']
 
     try:
-        user = get_user_model().objects.get(
+        user = UserModel.objects.get(
             (Q(username__iexact=identifier) | Q(email__iexact=identifier) | Q(email_changing__iexact=identifier)),
             verification_code=code,
         )
@@ -118,7 +122,7 @@ def verify_email(request):
             'access': str(token.access_token),
             'refresh': str(token),
         }, status=status.HTTP_202_ACCEPTED)
-    except get_user_model().DoesNotExist:
+    except UserModel.DoesNotExist:
         raise NotFound('No User matches the given query.')
 
 
@@ -133,6 +137,8 @@ def resend_verification_email(request):
     :param request: the request being processed
     :return: a 202 Response upon success, 429 if rate limited
     """
+    UserModel = get_user_model()
+
     if 'username' not in request.GET:
         raise ValidationError("'username' must be given as a query parameter")
 
@@ -144,7 +150,7 @@ def resend_verification_email(request):
         raise Throttled(detail='Please wait before requesting another verification email.')
 
     try:
-        user = get_user_model().objects.get(
+        user = UserModel.objects.get(
             Q(username__iexact=identifier) | Q(email__iexact=identifier)
         )
 
@@ -176,7 +182,7 @@ def resend_verification_email(request):
         cache.set(cache_key, True, RESEND_VERIFICATION_COOLDOWN_SECONDS)
 
         return Response(status=status.HTTP_202_ACCEPTED)
-    except get_user_model().DoesNotExist:
+    except UserModel.DoesNotExist:
         # Don't reveal whether user exists - return success anyway
         logger.info(f'Resend verification requested for unknown account identifier')
         return Response(status=status.HTTP_202_ACCEPTED)
@@ -192,6 +198,8 @@ def oauth_login(request):
     :param request: the request being processed (must contain 'id_token' and 'provider' in data)
     :return: a 200 Response with access and refresh tokens
     """
+    UserModel = get_user_model()
+
     if 'id_token' not in request.data:
         raise ValidationError("'id_token' is required")
 
@@ -229,8 +237,8 @@ def oauth_login(request):
 
         # Try to find existing user by email
         try:
-            user = get_user_model().objects.get(email=email)
-        except get_user_model().DoesNotExist:
+            user = UserModel.objects.get(email=email)
+        except UserModel.DoesNotExist:
             user = None
 
         # Security check: if UID is linked to a different user than the email lookup found,
@@ -355,9 +363,11 @@ def oauth_login(request):
 def delete_example_schedule(user_id):
     metrics = metricutils.task_start("user.exampleschedule.delete")
 
+    UserModel = get_user_model()
+
     try:
-        user = get_user_model().objects.get(pk=user_id)
-    except get_user_model().DoesNotExist:
+        user = UserModel.objects.get(pk=user_id)
+    except UserModel.DoesNotExist:
         user = None
 
     (ExternalCalendar.objects

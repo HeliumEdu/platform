@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(bind=True)
 def import_example_schedule(self, user_id, example_schedule=True):
+    UserModel = get_user_model()
+
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.import.schedule.example", priority="high", published_at_ms=published_at_ms)
     if settings.SENTRY_ENABLED:
@@ -23,7 +25,7 @@ def import_example_schedule(self, user_id, example_schedule=True):
 
     user = None
     try:
-        user = get_user_model().objects.get(pk=user_id)
+        user = UserModel.objects.get(pk=user_id)
 
         if example_schedule:
             importservice.import_example_schedule(user)
@@ -33,7 +35,7 @@ def import_example_schedule(self, user_id, example_schedule=True):
         user.settings.save()
 
         value = 1
-    except get_user_model().DoesNotExist:
+    except UserModel.DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
 
         value = 0

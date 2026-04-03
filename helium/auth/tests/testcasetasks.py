@@ -15,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from unittest import mock
 
 from helium.auth.tasks import (
-    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics, delete_user,
+    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, user_watchdog, delete_user,
     process_dormant_users, send_dormant_user_warning_email
 )
 from helium.auth.tests.helpers import userhelper
@@ -118,12 +118,12 @@ class TestCaseTasks(APITestCase):
         delete_user(99999)
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
-    def test_emit_nightly_metrics(self, mock_gauge):
+    def test_user_watchdog(self, mock_gauge):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
-        emit_nightly_metrics()
+        user_watchdog()
 
         # THEN
         self.assertEqual(mock_gauge.call_count, 10)  # 5 time windows for staff/non-staff

@@ -40,10 +40,11 @@ class AdminUserChangeForm(UserChangeForm):
             self.fields['username'].disabled = True
 
     def clean_email(self):
+        UserModel = get_user_model()
         email = self.cleaned_data.get('email')
         if self.instance and email != self.instance.email:
             # Check uniqueness against both email and email_changing fields
-            if get_user_model().objects.email_used(self.instance.pk, email):
+            if UserModel.objects.email_used(self.instance.pk, email):
                 raise forms.ValidationError("Sorry, that email is already in use.")
             if self.instance.is_superuser:
                 if not is_admin_allowed_email(email):
@@ -54,6 +55,7 @@ class AdminUserChangeForm(UserChangeForm):
 
 class AdminUserCreationForm(UserCreationForm):
     def clean_password2(self):
+        UserModel = get_user_model()
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
@@ -61,7 +63,7 @@ class AdminUserCreationForm(UserCreationForm):
             raise forms.ValidationError("You must enter matching passwords.")
 
         try:
-            password_validation.validate_password(password=password1, user=get_user_model())
+            password_validation.validate_password(password=password1, user=UserModel)
         except exceptions.ValidationError as e:
             raise forms.ValidationError(list(e.messages))
 

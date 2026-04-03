@@ -89,13 +89,15 @@ class UserSerializer(serializers.ModelSerializer):
 
         :param email: the new email address
         """
+        UserModel = get_user_model()
+
         if self.instance and self.instance.is_superuser and self.instance.email != email:
             if not is_admin_allowed_email(email):
                 raise serializers.ValidationError(
                     f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
 
-        if self.instance and self.instance.email != email and get_user_model().objects.email_used(self.instance.pk,
-                                                                                                  email):
+        if self.instance and self.instance.email != email and UserModel.objects.email_used(self.instance.pk,
+                                                                                           email):
             raise serializers.ValidationError("Sorry, that email is already in use.")
 
         return email
@@ -107,8 +109,9 @@ class UserSerializer(serializers.ModelSerializer):
         return old_password
 
     def validate_password(self, password):
+        UserModel = get_user_model()
         try:
-            password_validation.validate_password(password=password, user=get_user_model())
+            password_validation.validate_password(password=password, user=UserModel)
         except exceptions.ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
 

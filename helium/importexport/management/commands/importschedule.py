@@ -23,11 +23,13 @@ class Command(BaseCommand):
                             help="Adjust month in the imported schedule relative this many months (the default is -1, which is what happens with the example schedule for a new user registration")
 
     def handle(self, *args, **options):
+        UserModel = get_user_model()
+
         user_id = options['user_id']
         path = options['path']
         adjust_month = options['adjust_month']
 
-        user = get_user_model().objects.get(pk=user_id)
+        user = UserModel.objects.get(pk=user_id)
 
         request = Request(HttpRequest(), parser_context={'kwargs': {}})
         request.user = user

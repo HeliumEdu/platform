@@ -34,8 +34,10 @@ class PrivateEventsICALResourceView(HeliumAPIView):
         contain a `Content-Disposition` of `attachment; filename=Helium_<username>_events.ics`, so if the request is
         initiated from an HTML form, the response will be a downloadable file in a browser.
         """
+        UserModel = get_user_model()
+
         try:
-            user = get_user_model().objects.get_by_private_slug(private_slug)
+            user = UserModel.objects.get_by_private_slug(private_slug)
 
             last_modified = icalprivateservice.get_events_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)
@@ -54,7 +56,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
                 response['Last-Modified'] = http_date(last_modified.timestamp())
             response['Cache-Control'] = 'private, max-age=0, must-revalidate'
             return response
-        except get_user_model().DoesNotExist:
+        except UserModel.DoesNotExist:
             raise NotFound()
 
 
@@ -76,8 +78,10 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
         The response will contain a `Content-Disposition` of `attachment; filename=Helium_<username>_homework.ics`,
         so if the request is initiated from an HTML form, the response will be a downloadable file in a browser.
         """
+        UserModel = get_user_model()
+
         try:
-            user = get_user_model().objects.get_by_private_slug(private_slug)
+            user = UserModel.objects.get_by_private_slug(private_slug)
 
             last_modified = icalprivateservice.get_homework_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)
@@ -96,7 +100,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
                 response['Last-Modified'] = http_date(last_modified.timestamp())
             response['Cache-Control'] = 'private, max-age=0, must-revalidate'
             return response
-        except get_user_model().DoesNotExist:
+        except UserModel.DoesNotExist:
             raise NotFound()
 
 
@@ -119,8 +123,10 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
         `attachment; filename=Helium_<username>_coursescheduleevents.ics`, so if the request is initiated from an HTML
         form, the response will be a downloadable file in a browser.
         """
+        UserModel = get_user_model()
+
         try:
-            user = get_user_model().objects.get_by_private_slug(private_slug)
+            user = UserModel.objects.get_by_private_slug(private_slug)
 
             last_modified = icalprivateservice.get_courseschedules_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)
@@ -140,5 +146,5 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
                 response['Last-Modified'] = http_date(last_modified.timestamp())
             response['Cache-Control'] = 'private, max-age=0, must-revalidate'
             return response
-        except get_user_model().DoesNotExist:
+        except UserModel.DoesNotExist:
             raise NotFound()
