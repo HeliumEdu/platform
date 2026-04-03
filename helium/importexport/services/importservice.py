@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
+from helium.common import enums
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note
@@ -509,6 +510,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 end_date=first_monday_date + datetime.timedelta(days=delta))
 
             coursescheduleservice.clear_cached_course_schedule(course)
+            adjust_reminder_times(course.pk, enums.COURSE)
 
         logger.info(
             f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
