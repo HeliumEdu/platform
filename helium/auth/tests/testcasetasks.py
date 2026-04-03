@@ -17,8 +17,8 @@ from unittest import mock
 from django.utils import timezone
 
 from helium.auth.tasks import (
-    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, user_watchdog, delete_user,
-    process_dormant_users, send_dormant_user_warning_email
+    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
+    evaluate_review_prompts, delete_user, process_dormant_users, send_dormant_user_warning_email
 )
 from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
@@ -121,15 +121,16 @@ class TestCaseTasks(APITestCase):
         delete_user(99999)
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
-    def test_user_watchdog_emits_active_user_metrics(self, mock_gauge):
+    def test_emit_nightly_metrics_emits_active_user_metrics(self, mock_gauge):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
-        user_watchdog()
+        emit_nightly_metrics()
 
         # THEN
-        self.assertEqual(mock_gauge.call_count, 10)  # 5 time windows × staff/non-staff
+        active_user_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.active']
+        self.assertEqual(len(active_user_calls), 10)  # 5 time windows × staff/non-staff
 
     def _setup_review_prompt_candidate(self, username='test_user', email='user@test.com'):
         user = userhelper.given_a_user_exists(username=username, email=email)
@@ -139,7 +140,7 @@ class TestCaseTasks(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         return user, course
 
-    def test_user_watchdog_flags_user_with_sufficient_total_and_recent_completions(self):
+    def test_evaluate_review_prompts_flags_user_with_sufficient_total_and_recent_completions(self):
         # GIVEN: 7 total completed, 4 of them within the last 7 days
         user, course = self._setup_review_prompt_candidate()
         recent_date = timezone.now() - timedelta(days=3)
@@ -154,13 +155,13 @@ class TestCaseTasks(APITestCase):
             hw.save(update_fields=['completed_at'])
 
         # WHEN
-        user_watchdog()
+        evaluate_review_prompts()
 
         # THEN
         user.settings.refresh_from_db()
         self.assertTrue(user.settings.prompt_for_review)
 
-    def test_user_watchdog_does_not_flag_user_with_insufficient_recent_completions(self):
+    def test_evaluate_review_prompts_does_not_flag_user_with_insufficient_recent_completions(self):
         # GIVEN: 7 total completed but only 3 within the last 7 days
         user, course = self._setup_review_prompt_candidate()
         recent_date = timezone.now() - timedelta(days=3)
@@ -175,14 +176,14 @@ class TestCaseTasks(APITestCase):
             hw.save(update_fields=['completed_at'])
 
         # WHEN
-        user_watchdog()
+        evaluate_review_prompts()
 
         # THEN
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
     @override_settings(REVIEW_PROMPT_MAX_SHOWN=1)
-    def test_user_watchdog_does_not_flag_user_at_max_prompts_shown(self):
+    def test_evaluate_review_prompts_does_not_flag_user_at_max_prompts_shown(self):
         # GIVEN: eligible by homework count but already at max prompts shown
         user, course = self._setup_review_prompt_candidate()
         user.settings.review_prompts_shown = 1
@@ -194,7 +195,7 @@ class TestCaseTasks(APITestCase):
             hw.save(update_fields=['completed_at'])
 
         # WHEN
-        user_watchdog()
+        evaluate_review_prompts()
 
         # THEN
         user.settings.refresh_from_db()
