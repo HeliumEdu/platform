@@ -80,6 +80,12 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
+            if not user.settings.next_review_prompt_date:
+                user.settings.next_review_prompt_date = (
+                    timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
+                )
+                user.settings.save(update_fields=['next_review_prompt_date'])
+
             self._authenticated_user = user
 
             logger.debug(f"User {user.pk} has been logged in")

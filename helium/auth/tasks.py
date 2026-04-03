@@ -17,8 +17,10 @@ from firebase_admin import auth as firebase_auth
 from celery.schedules import crontab
 
 from conf.celery import app
+from helium.auth.models import UserSettings
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import redact_email
+from helium.planner.models import Homework
 
 logger = logging.getLogger(__name__)
 
@@ -197,11 +199,11 @@ def emit_queue_depth(self):
 
 
 @app.task(bind=True)
-def emit_nightly_metrics(self):
-    """Emit nightly aggregate metrics."""
+def user_watchdog(self):
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("user.watchdog", priority="low", published_at_ms=published_at_ms)
 
+    # Emit nightly user metrics
     try:
         # Active users by window (users with recent login/token refresh activity)
         staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
@@ -220,7 +222,37 @@ def emit_nightly_metrics(self):
         metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
         raise
 
-    metricutils.task_stop(metrics)
+    # Evaluate user behavior for review-request candidates
+    now = datetime.now().replace(tzinfo=pytz.utc)
+
+    try:
+        candidates = UserSettings.objects.select_related('user').filter(
+            user__is_active=True,
+            prompt_for_review=False,
+            next_review_prompt_date__isnull=False,
+            next_review_prompt_date__lte=now,
+            review_prompts_shown__lt=settings.REVIEW_PROMPT_MAX_SHOWN,
+        )
+
+        to_update = []
+        for user_settings in candidates:
+            completed_count = (
+                Homework.objects.for_user(user_settings.user.pk).filter(completed=True).count()
+            )
+            if completed_count >= settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD:
+                user_settings.prompt_for_review = True
+                to_update.append(user_settings)
+
+        if to_update:
+            UserSettings.objects.bulk_update(to_update, ['prompt_for_review'])
+
+        metricutils.task_stop(metrics, value=len(to_update))
+        logger.info(f"Review prompt evaluation complete: {len(to_update)} user(s) flagged")
+
+    except Exception as e:
+        logger.error(f'Failed to evaluate review prompts: {e}', exc_info=True)
+        metricutils.task_failure("user.review-prompt.evaluate", exception_type=type(e).__name__, priority="low")
+        raise
 
 
 @app.task(bind=True)
@@ -374,16 +406,16 @@ def process_dormant_users(self):
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Purge expired refresh tokens periodically
-    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s())
+    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Emit queue depth every minute for monitoring
-    sender.add_periodic_task(60, emit_queue_depth.s())
+    sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Purge unverified users nightly
-    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s())
+    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
-    # Emit aggregate metrics nightly
-    sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s())
-    
+    # User watchdog nightly
+    sender.add_periodic_task(crontab(hour=3, minute=0), user_watchdog.s().set(priority=settings.CELERY_PRIORITY_LOW))
+
     # Process dormant users periodically
-    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s())
+    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))

@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -323,6 +324,12 @@ def oauth_login(request):
             user.deletion_warning_count = 0
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+
+        if not user.settings.next_review_prompt_date:
+            user.settings.next_review_prompt_date = (
+                timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
+            )
+            user.settings.save(update_fields=['next_review_prompt_date'])
 
         token = RefreshToken.for_user(user)
 

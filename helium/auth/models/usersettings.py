@@ -103,6 +103,19 @@ class UserSettings(BaseModel):
 
     private_slug = models.SlugField(blank=True, null=True)
 
+    prompt_for_review = models.BooleanField(
+        help_text='Whether the user should be prompted to review the app on their next eligible mobile session.',
+        default=False)
+
+    next_review_prompt_date = models.DateTimeField(
+        help_text='The earliest date/time the user is eligible to be prompted to review the app. '
+                  'Null until first login.',
+        blank=True, null=True)
+
+    review_prompts_shown = models.PositiveIntegerField(
+        help_text='The number of times the user has been shown the app review prompt.',
+        default=0)
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
 
     class Meta:
