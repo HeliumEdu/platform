@@ -232,7 +232,6 @@ def emit_nightly_metrics(self):
     # Data richness and feature adoption metrics, emitted per active-user window
     try:
         now_utc = datetime.now().replace(tzinfo=pytz.utc)
-        today = now_utc.date()
 
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
             cutoff = now_utc - timedelta(days=days)
@@ -265,6 +264,10 @@ def emit_nightly_metrics(self):
 
                 metricutils.gauge('users.data.avg_homework_per_course',
                                   hw_qs.count() / total_courses if total_courses else 0.0,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_homework_per_user',
+                                  hw_qs.count() / total_users,
                                   extra_tags=window_staff_tags)
 
                 metricutils.gauge('users.data.avg_courses_per_group',
