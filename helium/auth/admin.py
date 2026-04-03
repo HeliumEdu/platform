@@ -19,14 +19,14 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.common.admin import admin_site, BaseModelAdmin
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
 from helium.planner.models.course import Course
 from helium.planner.models.event import Event
 from helium.planner.models.homework import Homework
 from helium.planner.models.note import Note
-from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.admin import admin_site, BaseModelAdmin
 
 
 class AdminUserChangeForm(UserChangeForm):
@@ -190,8 +190,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
-                    'num_attachments', 'num_external_calendars', 'created_at', 'last_login_legacy',
-                    'deletion_warning_count', 'is_active')
+                    'num_attachments', 'num_external_calendars', 'last_login_legacy',
+                    'deletion_warning_count', 'created_at', 'is_active')
     list_filter = (ActiveStatusFilter, 'profile__phone_verified', 'settings__default_view',
                    'settings__remember_filter_state', 'settings__calendar_event_limit',
                    'settings__default_reminder_type', 'settings__color_scheme_theme',
@@ -324,7 +324,7 @@ class UserProfileAdmin(BaseModelAdmin):
 
 
 class UserSettingsAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'receive_emails_from_admin',
+    list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'review_prompts_shown',
                     'get_last_activity']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
                    'calendar_use_category_colors', 'default_reminder_type']
