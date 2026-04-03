@@ -232,7 +232,6 @@ def emit_nightly_metrics(self):
     # Data richness and feature adoption metrics, emitted per active-user window
     try:
         now_utc = datetime.now().replace(tzinfo=pytz.utc)
-        today = now_utc.date()
 
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
             cutoff = now_utc - timedelta(days=days)
@@ -265,6 +264,10 @@ def emit_nightly_metrics(self):
 
                 metricutils.gauge('users.data.avg_homework_per_course',
                                   hw_qs.count() / total_courses if total_courses else 0.0,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_homework_per_user',
+                                  hw_qs.count() / total_users,
                                   extra_tags=window_staff_tags)
 
                 metricutils.gauge('users.data.avg_courses_per_group',
@@ -388,6 +391,7 @@ def emit_nightly_metrics(self):
     # Engagement quality metrics (staff-separated, computed over 30d active users)
     try:
         cutoff_30d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
+        cutoff_14d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=14)
         today = datetime.now().replace(tzinfo=pytz.utc).date()
 
         for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
@@ -407,15 +411,14 @@ def emit_nightly_metrics(self):
                 course__course_group__example_schedule=False,
             )
 
-            past_due_hw_qs = hw_qs.filter(end__lte=datetime.now().replace(tzinfo=pytz.utc))
-            total_past_due = past_due_hw_qs.count()
-            metricutils.gauge('users.engagement.homework_completion_rate',
-                              past_due_hw_qs.filter(completed=True).count() / total_past_due if total_past_due else 0.0,
+            total_users = active_qs.count()
+
+            metricutils.gauge('users.engagement.avg_completions_per_user',
+                              hw_qs.filter(completed=True, completed_at__gte=cutoff_14d).count() / total_users if total_users else 0.0,
                               extra_tags=staff_tags)
 
-            total_hw = hw_qs.count()
-            metricutils.gauge('users.engagement.grade_entry_rate',
-                              hw_qs.exclude(current_grade='').count() / total_hw if total_hw else 0.0,
+            metricutils.gauge('users.engagement.avg_graded_homework_per_user',
+                              hw_qs.exclude(current_grade='').count() / total_users if total_users else 0.0,
                               extra_tags=staff_tags)
 
             metricutils.gauge('users.engagement.has_active_courses',
@@ -459,7 +462,10 @@ def evaluate_review_prompts(self):
         to_update = []
         for user_settings in candidates:
             threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_shown + 1)
-            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(completed=True)
+            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
+                completed=True,
+                course__course_group__example_schedule=False,
+            )
             total_completed = base_qs.count()
             recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
             if total_completed >= threshold and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD:
@@ -639,11 +645,11 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Purge unverified users nightly
-    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=2, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Nightly metrics and review prompt evaluation
     sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
-    sender.add_periodic_task(crontab(hour=3, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=4, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Process dormant users periodically
     sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
