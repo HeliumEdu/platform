@@ -192,12 +192,11 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'last_login_legacy',
                     'deletion_warning_count', 'created_at', 'is_active')
-    list_filter = (ActiveStatusFilter, 'profile__phone_verified', 'settings__default_view',
-                   'settings__remember_filter_state', 'settings__calendar_event_limit',
-                   'settings__default_reminder_type', 'settings__color_scheme_theme',
+    list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
+                   'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
                    HasCreditsFilter, HasCourseScheduleFilter)
-    search_fields = ('id', 'email', 'username')
+    search_fields = ('id', 'email', 'username', 'email_changing')
     ordering = ('-last_activity',)
     add_fieldsets = (
         (None, {
