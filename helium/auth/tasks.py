@@ -642,11 +642,11 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Purge unverified users nightly
-    sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=2, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Nightly metrics and review prompt evaluation
     sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
-    sender.add_periodic_task(crontab(hour=3, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=4, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Process dormant users periodically
     sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
