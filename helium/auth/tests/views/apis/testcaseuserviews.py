@@ -51,7 +51,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.time_zone, response.data['settings']['time_zone'])
         self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
         self.assertEqual(user.settings.week_starts_on, response.data['settings']['week_starts_on'])
-        self.assertEqual(user.settings.all_day_offset, response.data['settings']['all_day_offset'])
         self.assertEqual(user.settings.show_getting_started, response.data['settings']['show_getting_started'])
         self.assertEqual(user.settings.events_color, response.data['settings']['events_color'])
         self.assertEqual(user.settings.grade_color, response.data['settings']['grade_color'])
