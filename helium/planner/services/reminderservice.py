@@ -93,9 +93,11 @@ def heal_orphaned_repeating_reminders():
             continue
 
         most_recent = undismissed[0]
-        to_dismiss = [r.pk for r in undismissed[1:]]
+        to_dismiss = [r.pk for r in undismissed[2:]]
 
         if most_recent.start_of_range <= window_start:
+            if len(undismissed) > 1:
+                to_dismiss.append(undismissed[1].pk)
             to_dismiss.append(most_recent.pk)
 
         if to_dismiss:
