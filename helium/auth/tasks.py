@@ -240,12 +240,15 @@ def user_watchdog(self):
             review_prompts_shown__lt=settings.REVIEW_PROMPT_MAX_SHOWN,
         )
 
+        recent_cutoff = now - timedelta(days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
+
         to_update = []
         for user_settings in candidates:
-            completed_count = (
-                Homework.objects.for_user(user_settings.user.pk).filter(completed=True).count()
-            )
-            if completed_count >= settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD:
+            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_shown + 1)
+            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(completed=True)
+            total_completed = base_qs.count()
+            recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
+            if total_completed >= threshold and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD:
                 user_settings.prompt_for_review = True
                 to_update.append(user_settings)
 
