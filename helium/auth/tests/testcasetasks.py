@@ -182,6 +182,26 @@ class TestCaseTasks(APITestCase):
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
+    def test_evaluate_review_prompts_excludes_example_schedule_homework(self):
+        # GIVEN: enough completions to trigger, but all from an example schedule course group
+        user, _ = self._setup_review_prompt_candidate()
+        example_course_group = coursegrouphelper.given_course_group_exists(user, title='Example')
+        example_course_group.example_schedule = True
+        example_course_group.save(update_fields=['example_schedule'])
+        example_course = coursehelper.given_course_exists(example_course_group)
+        recent_date = timezone.now() - timedelta(days=3)
+        for _ in range(7):
+            hw = homeworkhelper.given_homework_exists(example_course, completed=True)
+            hw.completed_at = recent_date
+            hw.save(update_fields=['completed_at'])
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN: not flagged because all completed homework is from the example schedule
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)
+
     @override_settings(REVIEW_PROMPT_MAX_SHOWN=1)
     def test_evaluate_review_prompts_does_not_flag_user_at_max_prompts_shown(self):
         # GIVEN: eligible by homework count but already at max prompts shown

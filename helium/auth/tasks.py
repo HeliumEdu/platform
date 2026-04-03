@@ -459,7 +459,10 @@ def evaluate_review_prompts(self):
         to_update = []
         for user_settings in candidates:
             threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_shown + 1)
-            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(completed=True)
+            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
+                completed=True,
+                course__course_group__example_schedule=False,
+            )
             total_completed = base_qs.count()
             recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
             if total_completed >= threshold and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD:
