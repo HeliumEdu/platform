@@ -8,7 +8,7 @@ import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,7 +20,8 @@ from conf.celery import app
 from helium.auth.models import UserSettings
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import redact_email
-from helium.planner.models import Homework
+from helium.feed.models import ExternalCalendar
+from helium.planner.models import Attachment, Category, Course, CourseGroup, Event, Homework, Material, Note, Reminder
 
 logger = logging.getLogger(__name__)
 
@@ -203,16 +204,16 @@ def emit_queue_depth(self):
 
 
 @app.task(bind=True)
-def user_watchdog(self):
+def emit_nightly_metrics(self):
     UserModel = get_user_model()
 
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("user.watchdog", priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
 
-    # Emit nightly user metrics
+    staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
+
+    # Active users by window
     try:
-        # Active users by window (users with recent login/token refresh activity)
-        staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
             cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
             base_qs = UserModel.objects.filter(
@@ -228,7 +229,220 @@ def user_watchdog(self):
         metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
         raise
 
-    # Evaluate user behavior for review-request candidates
+    # Data richness and feature adoption metrics, emitted per active-user window
+    try:
+        now_utc = datetime.now().replace(tzinfo=pytz.utc)
+        today = now_utc.date()
+
+        for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+            cutoff = now_utc - timedelta(days=days)
+            base_qs = UserModel.objects.filter(is_active=True, last_activity__gte=cutoff)
+
+            for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
+                active_qs = base_qs.filter(qs_filter)
+                user_ids = active_qs.values_list('pk', flat=True)
+                total_users = active_qs.count()
+                window_staff_tags = [f'window:{window_tag}', f'staff:{staff_tag}']
+
+                if total_users == 0:
+                    continue
+
+                # --- Data richness ---
+
+                course_qs = Course.objects.filter(
+                    course_group__user__in=user_ids,
+                    course_group__example_schedule=False,
+                )
+                total_courses = course_qs.count()
+
+                cg_qs = CourseGroup.objects.filter(user__in=user_ids, example_schedule=False)
+                total_groups = cg_qs.count()
+
+                hw_qs = Homework.objects.filter(
+                    course__in=course_qs,
+                    course__course_group__example_schedule=False,
+                )
+
+                metricutils.gauge('users.data.avg_homework_per_course',
+                                  hw_qs.count() / total_courses if total_courses else 0.0,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_courses_per_group',
+                                  total_courses / total_groups if total_groups else 0.0,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_events_per_user',
+                                  Event.objects.filter(
+                                      user__in=user_ids,
+                                      example_schedule=False,
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_external_calendars_per_user',
+                                  ExternalCalendar.objects.filter(
+                                      user__in=user_ids,
+                                      example_schedule=False,
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_notes_per_user',
+                                  Note.objects.filter(
+                                      user__in=user_ids,
+                                      example_schedule=False,
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_reminders_per_user',
+                                  Reminder.objects.filter(user__in=user_ids).exclude(
+                                      Q(homework__course__course_group__example_schedule=True) |
+                                      Q(event__example_schedule=True) |
+                                      Q(course__course_group__example_schedule=True)
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_graded_homework_per_course',
+                                  hw_qs.exclude(current_grade='').count() / total_courses if total_courses else 0.0,
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.data.avg_attachments_per_user',
+                                  Attachment.objects.filter(user__in=user_ids).exclude(
+                                      Q(course__course_group__example_schedule=True) |
+                                      Q(event__example_schedule=True) |
+                                      Q(homework__course__course_group__example_schedule=True)
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
+                # --- Feature adoption ---
+
+                metricutils.gauge('users.adoption.grade_tracking',
+                                  active_qs.filter(
+                                      Exists(Category.objects.filter(
+                                          course__course_group__user=OuterRef('pk'),
+                                          course__course_group__example_schedule=False,
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.external_calendars',
+                                  active_qs.filter(
+                                      Exists(ExternalCalendar.objects.filter(
+                                          user=OuterRef('pk'),
+                                          example_schedule=False,
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.notebook',
+                                  active_qs.filter(
+                                      Exists(Note.objects.filter(
+                                          user=OuterRef('pk'),
+                                          example_schedule=False,
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.materials',
+                                  active_qs.filter(
+                                      Exists(Material.objects.filter(
+                                          material_group__user=OuterRef('pk'),
+                                          material_group__example_schedule=False,
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.reminders',
+                                  active_qs.filter(
+                                      Exists(Reminder.objects.filter(
+                                          user=OuterRef('pk'),
+                                          sent=False,
+                                      ).exclude(
+                                          Q(homework__course__course_group__example_schedule=True) |
+                                          Q(event__example_schedule=True) |
+                                          Q(course__course_group__example_schedule=True)
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.attachments',
+                                  active_qs.filter(
+                                      Exists(Attachment.objects.filter(
+                                          user=OuterRef('pk'),
+                                      ).exclude(
+                                          Q(course__course_group__example_schedule=True) |
+                                          Q(event__example_schedule=True) |
+                                          Q(homework__course__course_group__example_schedule=True)
+                                      ))
+                                  ).count(),
+                                  extra_tags=window_staff_tags)
+
+                metricutils.gauge('users.adoption.feeds',
+                                  active_qs.filter(settings__private_slug__isnull=False).count(),
+                                  extra_tags=window_staff_tags)
+
+            logger.debug(f"Emitted data richness and adoption metrics ({window_tag})")
+    except Exception as e:
+        logger.error(f"Failed to emit data richness/adoption metrics: {e}", exc_info=True)
+        metricutils.task_failure("metrics.nightly.richness", exception_type=type(e).__name__)
+        raise
+
+    # Engagement quality metrics (staff-separated, computed over 30d active users)
+    try:
+        cutoff_30d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
+        today = datetime.now().replace(tzinfo=pytz.utc).date()
+
+        for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
+            active_qs = UserModel.objects.filter(
+                is_active=True,
+                last_activity__gte=cutoff_30d,
+            ).filter(qs_filter)
+            user_ids = active_qs.values_list('pk', flat=True)
+            staff_tags = [f'staff:{staff_tag}']
+
+            course_qs = Course.objects.filter(
+                course_group__user__in=user_ids,
+                course_group__example_schedule=False,
+            )
+            hw_qs = Homework.objects.filter(
+                course__in=course_qs,
+                course__course_group__example_schedule=False,
+            )
+
+            past_due_hw_qs = hw_qs.filter(end__lte=datetime.now().replace(tzinfo=pytz.utc))
+            total_past_due = past_due_hw_qs.count()
+            metricutils.gauge('users.engagement.homework_completion_rate',
+                              past_due_hw_qs.filter(completed=True).count() / total_past_due if total_past_due else 0.0,
+                              extra_tags=staff_tags)
+
+            total_hw = hw_qs.count()
+            metricutils.gauge('users.engagement.grade_entry_rate',
+                              hw_qs.exclude(current_grade='').count() / total_hw if total_hw else 0.0,
+                              extra_tags=staff_tags)
+
+            metricutils.gauge('users.engagement.has_active_courses',
+                              active_qs.filter(
+                                  Exists(Course.objects.filter(
+                                      course_group__user=OuterRef('pk'),
+                                      course_group__example_schedule=False,
+                                      course_group__start_date__lte=today,
+                                      course_group__end_date__gte=today,
+                                  ))
+                              ).count(),
+                              extra_tags=staff_tags)
+
+        logger.debug("Emitted engagement quality metrics")
+    except Exception as e:
+        logger.error(f"Failed to emit engagement quality metrics: {e}", exc_info=True)
+        metricutils.task_failure("metrics.nightly.engagement", exception_type=type(e).__name__)
+        raise
+
+    metricutils.task_stop(metrics)
+
+
+@app.task(bind=True)
+def evaluate_review_prompts(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
+
     now = datetime.now().replace(tzinfo=pytz.utc)
 
     try:
@@ -427,8 +641,9 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Purge unverified users nightly
     sender.add_periodic_task(crontab(hour=4, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
-    # User watchdog nightly
-    sender.add_periodic_task(crontab(hour=3, minute=0), user_watchdog.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    # Nightly metrics and review prompt evaluation
+    sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=3, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Process dormant users periodically
     sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
