@@ -433,6 +433,47 @@ def _shift_datetime_to_target_date(original_dt, target_date, user_tz):
     return aware_target.astimezone(pytz.UTC)
 
 
+def _get_most_recent_course_occurrence_start(reminder):
+    """
+    Calculate the most recent past occurrence start time for a course reminder.
+    Walks backward from today to find the last class session that already happened.
+    """
+    course = reminder.course
+    course_schedules = list(course.schedules.all())
+    if not course_schedules:
+        return None
+
+    user_tz = pytz.timezone(course.get_user().settings.time_zone)
+    now = datetime.datetime.now(user_tz)
+    today = now.date()
+
+    exceptions = reminder._parse_exceptions()
+    day = min(today, course.end_date)
+    day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+
+    while day >= course.start_date:
+        if day in exceptions:
+            day -= datetime.timedelta(days=1)
+            continue
+
+        weekday = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]
+
+        active_schedule = next(
+            (s for s in course_schedules if s.days_of_week[weekday] == "1"),
+            None,
+        )
+        if active_schedule:
+            start_time = getattr(active_schedule, f'{day_names[weekday]}_start_time')
+            local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
+
+            if local_start <= now:
+                return local_start.astimezone(pytz.utc)
+
+        day -= datetime.timedelta(days=1)
+
+    return None
+
+
 def _adjust_schedule_relative_to(user, adjust_month):
     user_tz = pytz.timezone(user.settings.time_zone)
     timezone.activate(user_tz)
@@ -510,13 +551,19 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 end_date=first_monday_date + datetime.timedelta(days=delta))
 
             coursescheduleservice.clear_cached_course_schedule(course)
-            adjust_reminder_times(course.pk, enums.COURSE)
 
         for reminder in (Reminder.objects
                 .filter(repeating=True, sent=True, course__course_group__example_schedule=True, user=user)
                 .select_related('user', 'user__settings', 'course', 'course__course_group')
                 .prefetch_related('course__schedules')
                 .iterator()):
+            past_start = _get_most_recent_course_occurrence_start(reminder)
+            if past_start:
+                offset_delta = datetime.timedelta(
+                    **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+                Reminder.objects.filter(pk=reminder.pk).update(
+                    start_of_range=past_start - offset_delta)
+
             reminderservice.create_next_repeating_reminder(reminder)
 
         logger.info(
