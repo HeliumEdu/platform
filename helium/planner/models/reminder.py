@@ -176,7 +176,7 @@ class Reminder(BaseModel):
             calendar_item = self.homework or self.event
             offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
             new_start_of_range = calendar_item.start - offset_delta
-            if self.pk and self.sent:
+            if self.pk and self.sent and new_start_of_range != self.start_of_range:
                 window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
                 if new_start_of_range >= window_start:
                     self.sent = False
