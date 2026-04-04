@@ -592,7 +592,52 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         self.assertEqual(reminder.course.pk, course.pk)
         self.assertTrue(reminder.repeating)
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
         self.assertIsNotNone(reminder.start_of_range)
+        # start_of_range must equal next_class_start - offset (30 min)
+        user_tz = pytz.timezone(user.settings.time_zone)
+        next_class_start_utc = reminder.start_of_range + timedelta(minutes=30)
+        next_class_start_local = next_class_start_utc.astimezone(user_tz)
+        self.assertEqual(next_class_start_local.time().replace(second=0, microsecond=0), datetime.time(10, 0, 0))
+
+    def test_create_course_reminder_no_future_occurrence(self):
+        """Course with no future class sessions: reminder is created with start_of_range=None."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2020, 1, 6),
+            end_date=datetime.date(2020, 5, 8)
+        )
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='0101010',
+            mon_start_time=datetime.time(10, 0, 0),
+            wed_start_time=datetime.time(10, 0, 0),
+            fri_start_time=datetime.time(10, 0, 0)
+        )
+
+        # WHEN
+        data = {
+            'title': 'Class reminder',
+            'message': 'Time to go to class!',
+            'offset': 30,
+            'offset_type': enums.MINUTES,
+            'type': enums.PUSH,
+            'course': course.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN: created successfully but inactive (no qualifying future occurrence)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        self.assertIsNone(reminder.start_of_range)
+        self.assertIsNone(response.data['start_of_range'])
 
     def test_create_reminder_course_and_homework_fails(self):
         # GIVEN
@@ -690,8 +735,12 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         reminder = Reminder.objects.get(pk=response.data['id'])
-        # The reminder should skip the first Monday (exception) and target the following Monday
-        self.assertEqual(reminder.start_of_range.date(), following_monday)
+        # The reminder should skip the first Monday (exception) and target the following Monday.
+        # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
+        expected_class_start = user_tz.localize(
+            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_course_reminder_skips_course_exception(self):
         """Verify that course reminders skip dates in the course's own exceptions."""
@@ -740,8 +789,12 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         reminder = Reminder.objects.get(pk=response.data['id'])
-        # The reminder should skip the first Monday (exception) and target the following Monday
-        self.assertEqual(reminder.start_of_range.date(), following_monday)
+        # The reminder should skip the first Monday (exception) and target the following Monday.
+        # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
+        expected_class_start = user_tz.localize(
+            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_filter_id_cannot_access_other_users_data(self):
         # GIVEN

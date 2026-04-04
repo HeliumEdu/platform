@@ -30,7 +30,7 @@ class ReminderSerializer(serializers.ModelSerializer):
             'repeating', 'homework', 'event', 'course', 'user',)
         read_only_fields = ('user',)
         extra_kwargs = {
-            'start_of_range': {'required': False},
+            'start_of_range': {'required': False, 'allow_null': True},
         }
 
     def validate(self, attrs):
@@ -89,13 +89,12 @@ class ReminderSerializer(serializers.ModelSerializer):
                 next_start = temp._get_next_course_occurrence_start()
                 if next_start:
                     attrs['start_of_range'] = next_start - offset_delta
-                elif not attrs.get('start_of_range'):
-                    raise serializers.ValidationError(
-                        "The course has no upcoming class sessions; a `start_of_range` could not be determined.")
+                else:
+                    attrs['start_of_range'] = None
 
         # On update, if start_of_range was recomputed and the send window hasn't passed, reset sent so
         # the reminder fires again at the new time.
-        if self.instance and 'start_of_range' in attrs:
+        if self.instance and 'start_of_range' in attrs and attrs['start_of_range'] is not None:
             window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
             if attrs['start_of_range'] >= window_start:
                 attrs['sent'] = False

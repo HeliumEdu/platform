@@ -102,8 +102,8 @@ def heal_orphaned_repeating_reminders():
 
         if to_dismiss:
             logger.info(
-                f'Dismissing {len(to_dismiss)} stale/duplicate reminder(s) for course {combo["course"]}, user {combo["user"]}')
-            Reminder.objects.filter(pk__in=to_dismiss).update(dismissed=True)
+                f'Deleting {len(to_dismiss)} stale/duplicate reminder(s) for course {combo["course"]}, user {combo["user"]}')
+            Reminder.objects.filter(pk__in=to_dismiss).delete()
 
     # Step 2: Recreate missing successors for any series with no active unsent reminder.
     active_unsent = Reminder.objects.filter(
@@ -148,9 +148,10 @@ def create_next_repeating_reminder(reminder):
     """
     For a repeating reminder (course), create the next occurrence.
 
-    Guards against duplicate creation (e.g. concurrent workers) by checking whether an active
-    (unsent + undismissed) reminder for the same series already exists before saving.
-    Stale cleanup and series maintenance are handled exclusively by heal_orphaned_repeating_reminders.
+    Passes the fired class's start time as after_datetime so the search begins strictly after
+    the class that just fired, preventing the same occurrence from being queued again. Guards
+    against duplicate creation (e.g. concurrent workers) by checking for an existing active
+    (unsent + undismissed) reminder for the same series before saving.
     """
     if not reminder.repeating or not reminder.course:
         return None
@@ -165,7 +166,11 @@ def create_next_repeating_reminder(reminder):
     if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exclude(pk=reminder.pk).exists():
         return None
 
-    # Create a new reminder with the same settings
+    # Compute the start time of the class that just fired so we skip it when searching.
+    from datetime import timedelta
+    offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+    fired_class_start = reminder.start_of_range + offset_delta if reminder.start_of_range else None
+
     new_reminder = Reminder(
         title=reminder.title,
         message=reminder.message,
@@ -179,13 +184,27 @@ def create_next_repeating_reminder(reminder):
         user=reminder.user
     )
 
-    # Check if there's a next occurrence (save() will calculate start_of_range)
-    next_start = new_reminder._get_next_course_occurrence_start()
+    next_start = new_reminder._get_next_course_occurrence_start(after_datetime=fired_class_start)
     if next_start:
         new_reminder.save()
         return new_reminder
 
     return None
+
+
+def _delete_excess_past_reminders(just_fired):
+    """
+    After a repeating course reminder fires, delete any other sent+undismissed reminders for
+    the same series. Only the reminder that just fired is kept as the single past record.
+    """
+    Reminder.objects.filter(
+        repeating=True,
+        course=just_fired.course,
+        user=just_fired.user,
+        type=just_fired.type,
+        sent=True,
+        dismissed=False,
+    ).exclude(pk=just_fired.pk).delete()
 
 
 def process_email_reminders():
@@ -242,8 +261,8 @@ def process_email_reminders():
             reminder.sent = True
             reminder.save()
 
-            # Create next reminder if this is a repeating reminder
-            if reminder.repeating:
+            if reminder.repeating and reminder.course:
+                _delete_excess_past_reminders(reminder)
                 create_next_repeating_reminder(reminder)
         except Exception:
             logger.error("An error occurred processing email reminder.", exc_info=True)
@@ -285,10 +304,6 @@ def process_text_reminders():
 
             reminder.sent = True
             reminder.save()
-
-            # Create next reminder if this is a repeating reminder
-            if reminder.repeating:
-                create_next_repeating_reminder(reminder)
         except Exception:
             logger.error("An error occurred processing text reminder.", exc_info=True)
 
@@ -308,8 +323,7 @@ def process_push_reminders(mark_sent_only=False):
         timezone.activate(pytz.timezone(user.settings.time_zone))
 
         try:
-            # TODO: Remove this guard once the new frontend version supporting course reminders is released
-            if not mark_sent_only and not reminder.course:
+            if not mark_sent_only:
                 subject = get_subject(reminder)
 
                 if not subject:
@@ -339,8 +353,8 @@ def process_push_reminders(mark_sent_only=False):
             reminder.sent = True
             reminder.save()
 
-            # Create next reminder if this is a repeating reminder
-            if reminder.repeating:
+            if reminder.repeating and reminder.course:
+                _delete_excess_past_reminders(reminder)
                 create_next_repeating_reminder(reminder)
         except Exception:
             logger.error("An error occurred processing push reminder.", exc_info=True)
