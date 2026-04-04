@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytz
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from helium.common import enums
 from helium.common.models import BaseModel
@@ -156,29 +157,36 @@ class Reminder(BaseModel):
         """
         Recalculate start_of_range based on the linked calendar item.
 
-        Already-fired reminders (sent=True) are historical records and must not be modified.
-        Recalculation is therefore skipped for them; only pending (sent=False) reminders are
-        updated. For course reminders with no qualifying future occurrence, start_of_range is
-        set to None — the series becomes inactive until the course schedule changes, at which
-        point the adjust_reminder_times signal triggers a fresh recalculation.
-        """
-        if not self.sent:
-            if self.homework:
-                calendar_item = self.homework
-            elif self.event:
-                calendar_item = self.event
-            else:
-                calendar_item = None
+        For homework and event reminders, start_of_range is always recalculated so that
+        moving a due date or event time is reflected immediately. If the recalculated
+        start_of_range falls within or after the send window (i.e. the reminder hasn't
+        meaningfully expired), a previously-sent reminder is reset to sent=False so it
+        re-fires at the new time. Reminders whose start_of_range lands more than
+        REMINDER_SEND_WINDOW_MINUTES in the past are left as-is — the window acts as the
+        natural guard against re-fires for trivial date nudges.
 
-            if calendar_item:
-                self.start_of_range = calendar_item.start - timedelta(
+        Course reminders retain the sent=False gate because their recalculation logic is
+        being refactored separately.
+
+        For course reminders with no qualifying future occurrence, start_of_range is set to
+        None — the series becomes inactive until the course schedule changes, at which point
+        the adjust_reminder_times signal triggers a fresh recalculation.
+        """
+        if self.homework or self.event:
+            calendar_item = self.homework or self.event
+            offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+            new_start_of_range = calendar_item.start - offset_delta
+            if self.pk and self.sent:
+                window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+                if new_start_of_range >= window_start:
+                    self.sent = False
+            self.start_of_range = new_start_of_range
+        elif self.course and not self.sent:
+            next_start = self._get_next_course_occurrence_start()
+            if next_start:
+                self.start_of_range = next_start - timedelta(
                     **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
-            elif self.course:
-                next_start = self._get_next_course_occurrence_start()
-                if next_start:
-                    self.start_of_range = next_start - timedelta(
-                        **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
-                else:
-                    self.start_of_range = None
+            else:
+                self.start_of_range = None
 
         super().save(*args, **kwargs)

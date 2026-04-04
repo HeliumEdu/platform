@@ -247,6 +247,94 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.data['homework'], homework.pk)
         self.assertIsNone(response.data['event'])
 
+    def test_update_event_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
+        # GIVEN a sent reminder whose event is in the near future; the current offset places
+        # start_of_range outside the send window, so changing to a smaller offset should move
+        # start_of_range into the future (>= window_start) and reset sent=False.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user, start=timezone.now() + timedelta(minutes=30),
+                                               end=timezone.now() + timedelta(minutes=90))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=60,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is reduced so start_of_range moves into the future
+        data = {'offset': 5, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        event.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, event.start - timedelta(minutes=5))
+        self.assertFalse(reminder.sent)
+
+    def test_update_event_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
+        # GIVEN a sent reminder on a far-past event; any offset still leaves start_of_range
+        # well outside the send window, so sent should remain True.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)  # default start=2017-05-08 12:00 UTC
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=15,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is changed (start_of_range stays deep in the past)
+        data = {'offset': 30, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2017, 5, 8, 11, 30, 0, tzinfo=timezone.utc))
+        self.assertTrue(reminder.sent)
+
+    def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
+        # GIVEN a sent reminder whose homework is in the near future; reducing the offset moves
+        # start_of_range into the future, which should reset sent=False.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + timedelta(minutes=30),
+                                                        end=timezone.now() + timedelta(minutes=90))
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=60,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is reduced so start_of_range moves into the future
+        data = {'offset': 5, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        homework.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, homework.start - timedelta(minutes=5))
+        self.assertFalse(reminder.sent)
+
+    def test_update_homework_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
+        # GIVEN a sent reminder on far-past homework; changing the offset leaves start_of_range
+        # well outside the send window, so sent should remain True.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)  # default start=2017-05-08 16:00 UTC
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=15,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is changed (start_of_range stays deep in the past)
+        data = {'offset': 30, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2017, 5, 8, 15, 30, 0, tzinfo=timezone.utc))
+        self.assertTrue(reminder.sent)
+
     def test_delete_reminder_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
