@@ -17,7 +17,7 @@ from rest_framework.request import Request
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note
+from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note, Reminder
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -511,6 +511,13 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
             coursescheduleservice.clear_cached_course_schedule(course)
             adjust_reminder_times(course.pk, enums.COURSE)
+
+        for reminder in (Reminder.objects
+                .filter(repeating=True, sent=True, course__course_group__example_schedule=True, user=user)
+                .select_related('user', 'user__settings', 'course', 'course__course_group')
+                .prefetch_related('course__schedules')
+                .iterator()):
+            reminderservice.create_next_repeating_reminder(reminder)
 
         logger.info(
             f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
