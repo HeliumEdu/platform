@@ -100,6 +100,10 @@ class UserSettings(BaseModel):
 
     private_slug = models.SlugField(blank=True, null=True)
 
+    last_deletion_at = models.DateTimeField(
+        help_text='Timestamp of the most recent deletion of planner data by this user.',
+        blank=True, null=True)
+
     prompt_for_review = models.BooleanField(
         help_text='Whether the user should be prompted to review the app on their next eligible mobile session.',
         default=False)

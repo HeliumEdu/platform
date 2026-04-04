@@ -21,12 +21,15 @@ logger = logging.getLogger(__name__)
 
 def get_events_last_modified(user) -> datetime.datetime | None:
     """
-    Get the maximum updated_at timestamp from all events for a user.
+    Get the maximum updated_at timestamp from all events for a user, also
+    accounting for any deletions via the user's last_deletion_at timestamp.
 
     :param user: The user whose events to check.
-    :return: The max updated_at datetime, or None if no events exist.
+    :return: The max updated_at datetime, or None if no events exist and no deletions have occurred.
     """
-    return user.events.aggregate(Max('updated_at'))['updated_at__max']
+    event_max = user.events.aggregate(Max('updated_at'))['updated_at__max']
+    timestamps = [t for t in [event_max, user.settings.last_deletion_at] if t is not None]
+    return max(timestamps) if timestamps else None
 
 
 def get_homework_last_modified(user) -> datetime.datetime | None:
@@ -40,7 +43,7 @@ def get_homework_last_modified(user) -> datetime.datetime | None:
     course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     category_max = Category.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [homework_max, course_max, category_max] if t is not None]
+    timestamps = [t for t in [homework_max, course_max, category_max, user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
@@ -55,7 +58,7 @@ def get_courseschedules_last_modified(user) -> datetime.datetime | None:
     course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [schedule_max, course_max, course_group_max] if t is not None]
+    timestamps = [t for t in [schedule_max, course_max, course_group_max, user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
