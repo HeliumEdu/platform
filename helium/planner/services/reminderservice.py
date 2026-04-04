@@ -249,8 +249,9 @@ def process_email_reminders():
                 logger.warning(
                     f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
 
+            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
+                continue
             reminder.sent = True
-            reminder.save()
 
             if reminder.repeating and reminder.course:
                 _delete_excess_past_reminders(reminder)
@@ -293,8 +294,9 @@ def process_text_reminders():
                 logger.warning(
                     f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
 
+            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
+                continue
             reminder.sent = True
-            reminder.save()
         except Exception:
             logger.error("An error occurred processing text reminder.", exc_info=True)
 
@@ -341,8 +343,9 @@ def process_push_reminders(mark_sent_only=False):
             else:
                 logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")
 
+            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
+                continue
             reminder.sent = True
-            reminder.save()
 
             if reminder.repeating and reminder.course:
                 _delete_excess_past_reminders(reminder)

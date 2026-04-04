@@ -116,12 +116,15 @@ class Reminder(BaseModel):
         if after_datetime is not None:
             cutoff = after_datetime.astimezone(user_tz)
             use_window_check = False
+            if course.end_date < today:
+                return None
+            day = max(course.start_date, cutoff.date())
         else:
             cutoff = now
             use_window_check = True
+            day = max(today, course.start_date)
 
         exceptions = self._parse_exceptions()
-        day = max(today, course.start_date)
         day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
         while day <= course.end_date:
