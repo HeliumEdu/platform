@@ -350,6 +350,33 @@ class TestCaseReminderViews(APITestCase):
         self.assertFalse(Reminder.objects.filter(pk=reminder.pk).exists())
         self.assertEqual(Reminder.objects.count(), 0)
 
+    def test_delete_repeating_course_reminder_cleans_up_series(self):
+        # GIVEN a repeating course reminder series with one unsent (active) and one sent (past) reminder
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        unsent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                      type=enums.PUSH)
+        sent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+                                                    type=enums.PUSH)
+        # A reminder in a different series (different course) that must not be deleted
+        other_course_reminder = reminderhelper.given_reminder_exists(user, course=course2, repeating=True,
+                                                                     sent=False, type=enums.PUSH)
+        # A reminder in a different series (different type) that must not be deleted
+        other_type_reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True,
+                                                                   sent=False, type=enums.EMAIL)
+
+        # WHEN the unsent reminder is deleted
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}))
+
+        # THEN the unsent and its sent series counterpart are both deleted; unrelated reminders are untouched
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk=unsent.pk).exists())
+        self.assertFalse(Reminder.objects.filter(pk=sent.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=other_course_reminder.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=other_type_reminder.pk).exists())
+
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)

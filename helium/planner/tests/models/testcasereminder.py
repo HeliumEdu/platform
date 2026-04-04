@@ -208,3 +208,4 @@ class TestCaseReminder(TestCase):
         reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range, datetime.datetime(2017, 5, 8, 13, 45, 0, tzinfo=timezone.utc))
         self.assertTrue(reminder.sent)
+
