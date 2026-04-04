@@ -60,88 +60,78 @@ def heal_orphaned_repeating_reminders():
     """
     Periodic maintenance for repeating course reminder series.
 
-    Step 1 — dismiss stale/duplicate undismissed reminders: for each series, keep only the most
-    recent undismissed reminder and dismiss the rest. If that most recent reminder is itself past
-    the send window (the class already started), dismiss it too so the series is clean.
+    Phase 1 — collect series state and build delete list: for each series, examine unsent
+    undismissed reminders only. Keep the most recent if it's still within the send window;
+    delete excess duplicates and stale entries. Sent reminders are intentionally past their
+    window and are never touched here. Templates for series that will have no active unsent
+    reminder after cleanup are collected before any deletions occur.
 
-    Step 2 — recreate missing successors: any series with no active (unsent + undismissed) reminder
-    gets a new occurrence created. This covers both the classic orphan case (sent=True, no successor
-    due to worker downtime) and series cleaned up in step 1 where all reminders were stale.
+    Phase 2 — delete stale/duplicate unsent reminders.
+
+    Phase 3 — recreate missing successors: any series that ends up with no active
+    (unsent + undismissed) reminder gets a new occurrence created using the template
+    collected in phase 1.
     """
     import datetime as dt
-    from django.db.models import Exists, OuterRef
 
     now = timezone.now()
     window_start = now - dt.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
-    # Step 1: Dismiss stale and duplicate undismissed reminders.
-    active_series = (
+    all_series = list(
         Reminder.objects
-        .filter(repeating=True, course__isnull=False, dismissed=False)
+        .filter(repeating=True, course__isnull=False)
         .values('course', 'user', 'type')
         .distinct()
     )
 
-    for combo in active_series:
-        undismissed = list(
+    to_delete_pks = []
+    successor_templates = []
+
+    for combo in all_series:
+        unsent = list(
             Reminder.objects
-            .filter(dismissed=False, repeating=True, **combo)
+            .filter(dismissed=False, sent=False, repeating=True, **combo)
             .order_by('-start_of_range')
         )
 
-        if not undismissed:
+        to_delete = [r.pk for r in unsent[2:]]
+
+        if unsent:
+            most_recent = unsent[0]
+            if most_recent.start_of_range is None or most_recent.start_of_range <= window_start:
+                if len(unsent) > 1:
+                    to_delete.append(unsent[1].pk)
+                to_delete.append(most_recent.pk)
+
+        to_delete_pks.extend(to_delete)
+
+        surviving_unsent = [r for r in unsent if r.pk not in to_delete]
+        if not surviving_unsent:
+            template = (
+                Reminder.objects
+                .filter(repeating=True, **combo)
+                .select_related('user', 'user__settings', 'course', 'course__course_group')
+                .prefetch_related('course__schedules')
+                .order_by('-start_of_range')
+                .first()
+            )
+            if template:
+                successor_templates.append(template)
+
+    if to_delete_pks:
+        logger.info(f'Deleting {len(to_delete_pks)} stale/duplicate reminder(s)')
+        Reminder.objects.filter(pk__in=to_delete_pks).delete()
+
+    for reminder in successor_templates:
+        series_filter = dict(repeating=True, course=reminder.course, user=reminder.user, type=reminder.type)
+        if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exists():
             continue
-
-        most_recent = undismissed[0]
-        to_dismiss = [r.pk for r in undismissed[2:]]
-
-        if most_recent.start_of_range <= window_start:
-            if len(undismissed) > 1:
-                to_dismiss.append(undismissed[1].pk)
-            to_dismiss.append(most_recent.pk)
-
-        if to_dismiss:
+        try:
             logger.info(
-                f'Deleting {len(to_dismiss)} stale/duplicate reminder(s) for course {combo["course"]}, user {combo["user"]}')
-            Reminder.objects.filter(pk__in=to_dismiss).delete()
-
-    # Step 2: Recreate missing successors for any series with no active unsent reminder.
-    active_unsent = Reminder.objects.filter(
-        sent=False,
-        dismissed=False,
-        repeating=True,
-        course=OuterRef('course'),
-        user=OuterRef('user'),
-        type=OuterRef('type'),
-    )
-
-    orphaned_combos = {
-        (row['course'], row['user'], row['type'])
-        for row in (
-            Reminder.objects
-            .filter(repeating=True, course__isnull=False)
-            .annotate(has_active=Exists(active_unsent))
-            .filter(has_active=False)
-            .values('course', 'user', 'type')
-        )
-    }
-
-    for combo in [{'course': c, 'user': u, 'type': t} for c, u, t in orphaned_combos]:
-        reminder = (
-            Reminder.objects
-            .filter(repeating=True, **combo)
-            .select_related('user', 'user__settings', 'course', 'course__course_group')
-            .prefetch_related('course__schedules')
-            .order_by('-start_of_range')
-            .first()
-        )
-        if reminder:
-            try:
-                logger.info(
-                    f'Healing orphaned repeating reminder series for course {reminder.course_id}, user {reminder.user_id}')
-                create_next_repeating_reminder(reminder)
-            except Exception:
-                logger.error("An error occurred healing orphaned repeating reminder.", exc_info=True)
+                f'Healing orphaned repeating reminder series for course {reminder.course_id}, user {reminder.user_id}')
+            create_next_repeating_reminder(reminder)
+        except Exception:
+            logger.error("An error occurred healing orphaned repeating reminder.", exc_info=True)
 
 
 def create_next_repeating_reminder(reminder):
@@ -186,6 +176,7 @@ def create_next_repeating_reminder(reminder):
 
     next_start = new_reminder._get_next_course_occurrence_start(after_datetime=fired_class_start)
     if next_start:
+        new_reminder.start_of_range = next_start - offset_delta
         new_reminder.save()
         return new_reminder
 

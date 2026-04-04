@@ -182,11 +182,12 @@ class Reminder(BaseModel):
                     self.sent = False
             self.start_of_range = new_start_of_range
         elif self.course and not self.sent:
-            next_start = self._get_next_course_occurrence_start()
-            if next_start:
-                self.start_of_range = next_start - timedelta(
-                    **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
-            else:
-                self.start_of_range = None
+            if self.pk is not None or self.start_of_range is None:
+                next_start = self._get_next_course_occurrence_start()
+                if next_start:
+                    self.start_of_range = next_start - timedelta(
+                        **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+                else:
+                    self.start_of_range = None
 
         super().save(*args, **kwargs)
