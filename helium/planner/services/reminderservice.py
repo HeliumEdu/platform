@@ -215,6 +215,7 @@ def process_email_reminders():
                      .for_today()
                      .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
                                      'course', 'course__course_group')
+                     .prefetch_related('course__schedules')
                      .iterator()):
         user = reminder.get_user()
 
@@ -257,12 +258,20 @@ def process_email_reminders():
             if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
                 continue
             reminder.sent = True
-
-            if reminder.repeating and reminder.course:
-                _delete_excess_past_reminders(reminder)
-                create_next_repeating_reminder(reminder)
         except Exception:
             logger.error("An error occurred processing email reminder.", exc_info=True)
+            continue
+
+        if reminder.repeating and reminder.course:
+            _delete_excess_past_reminders(reminder)
+            try:
+                new_reminder = create_next_repeating_reminder(reminder)
+                if new_reminder is None:
+                    logger.warning(
+                        f'No next occurrence created for repeating email reminder series: '
+                        f'course={reminder.course_id}, user={reminder.user_id}')
+            except Exception:
+                logger.error("An error occurred creating next repeating email reminder.", exc_info=True)
 
         timezone.deactivate()
 
@@ -315,6 +324,7 @@ def process_push_reminders(mark_sent_only=False):
                      .for_today()
                      .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
                                      'course', 'course__course_group')
+                     .prefetch_related('course__schedules')
                      .iterator()):
         user = reminder.get_user()
 
@@ -351,11 +361,19 @@ def process_push_reminders(mark_sent_only=False):
             if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
                 continue
             reminder.sent = True
-
-            if reminder.repeating and reminder.course:
-                _delete_excess_past_reminders(reminder)
-                create_next_repeating_reminder(reminder)
         except Exception:
             logger.error("An error occurred processing push reminder.", exc_info=True)
+            continue
+
+        if reminder.repeating and reminder.course:
+            _delete_excess_past_reminders(reminder)
+            try:
+                new_reminder = create_next_repeating_reminder(reminder)
+                if new_reminder is None:
+                    logger.warning(
+                        f'No next occurrence created for repeating push reminder series: '
+                        f'course={reminder.course_id}, user={reminder.user_id}')
+            except Exception:
+                logger.error("An error occurred creating next repeating push reminder.", exc_info=True)
 
         timezone.deactivate()
