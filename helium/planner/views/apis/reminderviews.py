@@ -158,6 +158,8 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 course_id=instance.course_id,
                 user_id=instance.user_id,
                 type=instance.type,
+                offset=instance.offset,
+                offset_type=instance.offset_type,
             ).delete()
         else:
             instance.delete()

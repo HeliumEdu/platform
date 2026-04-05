@@ -80,7 +80,7 @@ def heal_orphaned_repeating_reminders():
     all_series = list(
         Reminder.objects
         .filter(repeating=True, course__isnull=False)
-        .values('course', 'user', 'type')
+        .values('course', 'user', 'type', 'offset', 'offset_type')
         .distinct()
     )
 
@@ -123,7 +123,8 @@ def heal_orphaned_repeating_reminders():
         Reminder.objects.filter(pk__in=to_delete_pks).delete()
 
     for reminder in successor_templates:
-        series_filter = dict(repeating=True, course=reminder.course, user=reminder.user, type=reminder.type)
+        series_filter = dict(repeating=True, course=reminder.course, user=reminder.user, type=reminder.type,
+                             offset=reminder.offset, offset_type=reminder.offset_type)
         if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exists():
             continue
         try:
@@ -151,6 +152,8 @@ def create_next_repeating_reminder(reminder):
         course=reminder.course,
         user=reminder.user,
         type=reminder.type,
+        offset=reminder.offset,
+        offset_type=reminder.offset_type,
     )
 
     if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exclude(pk=reminder.pk).exists():
@@ -193,6 +196,8 @@ def _delete_excess_past_reminders(just_fired):
         course=just_fired.course,
         user=just_fired.user,
         type=just_fired.type,
+        offset=just_fired.offset,
+        offset_type=just_fired.offset_type,
         sent=True,
         dismissed=False,
     ).exclude(pk=just_fired.pk).delete()
