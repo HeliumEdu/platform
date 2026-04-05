@@ -247,6 +247,94 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.data['homework'], homework.pk)
         self.assertIsNone(response.data['event'])
 
+    def test_update_event_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
+        # GIVEN a sent reminder whose event is in the near future; the current offset places
+        # start_of_range outside the send window, so changing to a smaller offset should move
+        # start_of_range into the future (>= window_start) and reset sent=False.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user, start=timezone.now() + timedelta(minutes=30),
+                                               end=timezone.now() + timedelta(minutes=90))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=60,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is reduced so start_of_range moves into the future
+        data = {'offset': 5, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        event.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, event.start - timedelta(minutes=5))
+        self.assertFalse(reminder.sent)
+
+    def test_update_event_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
+        # GIVEN a sent reminder on a far-past event; any offset still leaves start_of_range
+        # well outside the send window, so sent should remain True.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)  # default start=2017-05-08 12:00 UTC
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=15,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is changed (start_of_range stays deep in the past)
+        data = {'offset': 30, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2017, 5, 8, 11, 30, 0, tzinfo=timezone.utc))
+        self.assertTrue(reminder.sent)
+
+    def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
+        # GIVEN a sent reminder whose homework is in the near future; reducing the offset moves
+        # start_of_range into the future, which should reset sent=False.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + timedelta(minutes=30),
+                                                        end=timezone.now() + timedelta(minutes=90))
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=60,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is reduced so start_of_range moves into the future
+        data = {'offset': 5, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        homework.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, homework.start - timedelta(minutes=5))
+        self.assertFalse(reminder.sent)
+
+    def test_update_homework_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
+        # GIVEN a sent reminder on far-past homework; changing the offset leaves start_of_range
+        # well outside the send window, so sent should remain True.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)  # default start=2017-05-08 16:00 UTC
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=15,
+                                                        offset_type=enums.MINUTES, sent=True)
+
+        # WHEN the offset is changed (start_of_range stays deep in the past)
+        data = {'offset': 30, 'offset_type': enums.MINUTES}
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
+
+        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2017, 5, 8, 15, 30, 0, tzinfo=timezone.utc))
+        self.assertTrue(reminder.sent)
+
     def test_delete_reminder_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -261,6 +349,55 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reminder.objects.filter(pk=reminder.pk).exists())
         self.assertEqual(Reminder.objects.count(), 0)
+
+    def test_delete_repeating_course_reminder_cleans_up_series(self):
+        # GIVEN a repeating course reminder series with one unsent (active) and one sent (past) reminder
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group)
+        unsent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                      type=enums.PUSH)
+        sent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+                                                    type=enums.PUSH)
+        # A reminder in a different series (different course) that must not be deleted
+        other_course_reminder = reminderhelper.given_reminder_exists(user, course=course2, repeating=True,
+                                                                     sent=False, type=enums.PUSH)
+        # A reminder in a different series (different type) that must not be deleted
+        other_type_reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True,
+                                                                   sent=False, type=enums.EMAIL)
+
+        # WHEN the unsent reminder is deleted
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}))
+
+        # THEN the unsent and its sent series counterpart are both deleted; unrelated reminders are untouched
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk=unsent.pk).exists())
+        self.assertFalse(Reminder.objects.filter(pk=sent.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=other_course_reminder.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=other_type_reminder.pk).exists())
+
+    def test_delete_repeating_course_reminder_only_deletes_matching_offset_series(self):
+        # GIVEN two PUSH course reminder series on the same course differing only by offset:
+        # a 30-min series (unsent + sent history) and a 10-min series (unsent only)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        unsent_30 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                         type=enums.PUSH, offset=30)
+        sent_30 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+                                                       type=enums.PUSH, offset=30)
+        unsent_10 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                         type=enums.PUSH, offset=10)
+
+        # WHEN the 30-min reminder is deleted
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}))
+
+        # THEN only the 30-min series (unsent + sent) is deleted; the 10-min series is untouched
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk=unsent_30.pk).exists())
+        self.assertFalse(Reminder.objects.filter(pk=sent_30.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=unsent_10.pk).exists())
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN
@@ -592,7 +729,52 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         self.assertEqual(reminder.course.pk, course.pk)
         self.assertTrue(reminder.repeating)
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
         self.assertIsNotNone(reminder.start_of_range)
+        # start_of_range must equal next_class_start - offset (30 min)
+        user_tz = pytz.timezone(user.settings.time_zone)
+        next_class_start_utc = reminder.start_of_range + timedelta(minutes=30)
+        next_class_start_local = next_class_start_utc.astimezone(user_tz)
+        self.assertEqual(next_class_start_local.time().replace(second=0, microsecond=0), datetime.time(10, 0, 0))
+
+    def test_create_course_reminder_no_future_occurrence(self):
+        """Course with no future class sessions: reminder is created with start_of_range=None."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2020, 1, 6),
+            end_date=datetime.date(2020, 5, 8)
+        )
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='0101010',
+            mon_start_time=datetime.time(10, 0, 0),
+            wed_start_time=datetime.time(10, 0, 0),
+            fri_start_time=datetime.time(10, 0, 0)
+        )
+
+        # WHEN
+        data = {
+            'title': 'Class reminder',
+            'message': 'Time to go to class!',
+            'offset': 30,
+            'offset_type': enums.MINUTES,
+            'type': enums.PUSH,
+            'course': course.pk,
+            'repeating': True,
+        }
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN: created successfully but inactive (no qualifying future occurrence)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        self.assertIsNone(reminder.start_of_range)
+        self.assertIsNone(response.data['start_of_range'])
 
     def test_create_reminder_course_and_homework_fails(self):
         # GIVEN
@@ -690,8 +872,12 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         reminder = Reminder.objects.get(pk=response.data['id'])
-        # The reminder should skip the first Monday (exception) and target the following Monday
-        self.assertEqual(reminder.start_of_range.date(), following_monday)
+        # The reminder should skip the first Monday (exception) and target the following Monday.
+        # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
+        expected_class_start = user_tz.localize(
+            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_course_reminder_skips_course_exception(self):
         """Verify that course reminders skip dates in the course's own exceptions."""
@@ -740,8 +926,12 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         reminder = Reminder.objects.get(pk=response.data['id'])
-        # The reminder should skip the first Monday (exception) and target the following Monday
-        self.assertEqual(reminder.start_of_range.date(), following_monday)
+        # The reminder should skip the first Monday (exception) and target the following Monday.
+        # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
+        expected_class_start = user_tz.localize(
+            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_filter_id_cannot_access_other_users_data(self):
         # GIVEN

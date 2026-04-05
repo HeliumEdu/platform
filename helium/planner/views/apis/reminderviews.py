@@ -147,6 +147,19 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
+    def perform_destroy(self, instance):
+        if instance.repeating and instance.course_id:
+            Reminder.objects.filter(
+                repeating=True,
+                course_id=instance.course_id,
+                user_id=instance.user_id,
+                type=instance.type,
+                offset=instance.offset,
+                offset_type=instance.offset_type,
+            ).delete()
+        else:
+            instance.delete()
+
     @extend_schema(
         tags=['planner.reminder']
     )
