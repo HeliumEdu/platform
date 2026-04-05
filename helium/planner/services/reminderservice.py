@@ -7,7 +7,6 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
-from helium.auth.models.userpushtoken import UserPushToken
 from helium.common import enums
 from helium.common.tasks import send_text, send_pushes
 from helium.common.utils.commonutils import format_short_time
@@ -324,7 +323,7 @@ def process_push_reminders(mark_sent_only=False):
                      .for_today()
                      .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
                                      'course', 'course__course_group')
-                     .prefetch_related('course__schedules')
+                     .prefetch_related('course__schedules', 'user__push_tokens')
                      .iterator()):
         user = reminder.get_user()
 
@@ -339,7 +338,7 @@ def process_push_reminders(mark_sent_only=False):
                 else:
                     logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
 
-                    push_tokens = list(UserPushToken.objects.filter(user=user).values_list('token', flat=True))
+                    push_tokens = [t.token for t in user.push_tokens.all()]
 
                     if len(push_tokens) > 0:
                         metricutils.increment('task', value=len(push_tokens), user=reminder.user,
