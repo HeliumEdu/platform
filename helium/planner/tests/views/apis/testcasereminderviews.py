@@ -911,6 +911,28 @@ class TestCaseReminderViews(APITestCase):
         expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
         self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
+    def test_sent_repeating_course_reminder_excluded_from_list_and_detail(self):
+        # GIVEN a repeating course reminder series: one sent (history) and one unsent (pending)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        sent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+                                                    type=enums.PUSH)
+        unsent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                      type=enums.PUSH)
+
+        # WHEN fetching the list
+        list_response = self.client.get(reverse('planner_reminders_list'))
+        detail_sent = self.client.get(reverse('planner_reminders_detail', kwargs={'pk': sent.pk}))
+        detail_unsent = self.client.get(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}))
+
+        # THEN only the unsent reminder is visible; the sent history record is hidden
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data), 1)
+        self.assertEqual(list_response.data[0]['id'], unsent.pk)
+        self.assertEqual(detail_sent.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(detail_unsent.status_code, status.HTTP_200_OK)
+
     def test_filter_id_cannot_access_other_users_data(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
