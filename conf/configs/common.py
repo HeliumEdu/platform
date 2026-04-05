@@ -359,6 +359,9 @@ CORS_ALLOW_HEADERS = default_headers + (
     'baggage',
     'traceparent',
     'tracestate',
+    'x-client-version',
+    'x-client-platform',
+    'x-request-id',
 )
 
 if 'prod' not in ENVIRONMENT:
