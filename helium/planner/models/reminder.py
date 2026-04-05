@@ -185,6 +185,7 @@ class Reminder(BaseModel):
                     self.sent = False
             self.start_of_range = new_start_of_range
         elif self.course and not self.sent:
+            self.repeating = True
             if self.pk is not None or self.start_of_range is None:
                 next_start = self._get_next_course_occurrence_start()
                 if next_start:
