@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.177"
+__version__ = "2.1.178"
 
 import os
 import socket
@@ -165,6 +165,9 @@ DB_INTEGRITY_RETRY_DELAY_SECS = 2
 
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
+
+# Purge push tokens older than this many days (FCM invalidates tokens after ~60 days of non-use)
+PUSH_TOKEN_TTL_DAYS = 90
 
 # Dormant user purge settings
 PROCESS_DORMANT_USERS_FREQUENCY_SEC = 60 * 60

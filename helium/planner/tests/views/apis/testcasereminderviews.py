@@ -1046,14 +1046,26 @@ class TestCaseReminderViews(APITestCase):
             fri_start_time=datetime.time(10, 0, 0),
             sat_start_time=datetime.time(10, 0, 0),
         )
-        pending = Reminder(
-            title='Test', message='Test',
-            start_of_range=timezone.now() - datetime.timedelta(minutes=1),
-            offset=15, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
-            course=course, user=user,
+        # Create via API without 'repeating' in the payload — the real user flow.
+        # save() should enforce repeating=True for course reminders.
+        create_response = self.client.post(
+            reverse('planner_reminders_list'),
+            {
+                'title': 'Test',
+                'message': 'Test',
+                'offset': 15,
+                'offset_type': enums.MINUTES,
+                'type': enums.PUSH,
+                'course': course.pk,
+            },
+            HTTP_X_CLIENT_VERSION='3.5.0',
         )
-        Reminder.objects.bulk_create([pending])
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        # Force start_of_range into the send window — the API sets it to a future
+        # class occurrence, but we need it to fire immediately in this test.
+        Reminder.objects.filter(pk=create_response.data['id']).update(
+            start_of_range=timezone.now() - datetime.timedelta(minutes=1),
+        )
 
         # WHEN: the reminder processing task runs (simulating what happens every 60s in prod)
         reminderservice.process_push_reminders()

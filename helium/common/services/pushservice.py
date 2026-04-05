@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def send_notifications(push_tokens, subject, message, reminder_data):
+    """Send push notifications and return a list of token strings that are permanently invalid."""
     multicast_message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=subject,
@@ -30,6 +31,12 @@ def send_notifications(push_tokens, subject, message, reminder_data):
         if response.failure_count > 0:
             logger.warning(f"Failed to send {response.failure_count} push notifications")
             metricutils.increment('action.push.failed', value=response.failure_count)
+
+        return [
+            push_tokens[i]
+            for i, r in enumerate(response.responses)
+            if not r.success and isinstance(r.exception, (messaging.UnregisteredError, messaging.SenderIdMismatchError))
+        ]
     except Exception:
         logger.error("Failed to send push notifications", exc_info=True)
         metricutils.increment('action.push.failed', value=len(push_tokens))
