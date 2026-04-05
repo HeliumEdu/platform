@@ -5,19 +5,18 @@ import logging
 from datetime import datetime, timedelta
 
 import pytz
+from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.db.models import Exists, OuterRef, Q
+from firebase_admin import auth as firebase_auth
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
-from firebase_admin import auth as firebase_auth
-
-from celery.schedules import crontab
 
 from conf.celery import app
-from helium.auth.models import UserSettings
+from helium.auth.models import UserPushToken, UserSettings
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import redact_email
 from helium.feed.models import ExternalCalendar
@@ -164,6 +163,17 @@ def purge_refresh_tokens(self):
 
     _, num_deleted = OutstandingToken.objects.filter(
         expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+
+    metricutils.task_stop(metrics, value=num_deleted)
+
+
+@app.task(bind=True)
+def purge_push_tokens(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("push.token.purge", priority="low", published_at_ms=published_at_ms)
+
+    cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.PUSH_TOKEN_TTL_DAYS)
+    _, num_deleted = UserPushToken.objects.filter(created_at__lt=cutoff).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
 
@@ -414,7 +424,8 @@ def emit_nightly_metrics(self):
             total_users = active_qs.count()
 
             metricutils.gauge('users.engagement.avg_completions_per_user',
-                              hw_qs.filter(completed=True, completed_at__gte=cutoff_14d).count() / total_users if total_users else 0.0,
+                              hw_qs.filter(completed=True,
+                                           completed_at__gte=cutoff_14d).count() / total_users if total_users else 0.0,
                               extra_tags=staff_tags)
 
             metricutils.gauge('users.engagement.avg_graded_homework_per_user',
@@ -638,18 +649,27 @@ def process_dormant_users(self):
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Purge expired refresh tokens periodically
-    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC, purge_refresh_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    # Purge expired refresh tokens and stale push tokens periodically
+    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
+                             purge_refresh_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
+
+    # Purge stale push tokens periodically
+    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
+                             purge_push_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Purge unverified users nightly
-    sender.add_periodic_task(crontab(hour=2, minute=0), purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=2, minute=0),
+                             purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Nightly metrics and review prompt evaluation
-    sender.add_periodic_task(crontab(hour=3, minute=0), emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
-    sender.add_periodic_task(crontab(hour=4, minute=0), evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=3, minute=0),
+                             emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=4, minute=0),
+                             evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Process dormant users periodically
-    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC, process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC,
+                             process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
