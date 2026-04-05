@@ -368,7 +368,8 @@ class TestCaseReminderViews(APITestCase):
                                                                    sent=False, type=enums.EMAIL)
 
         # WHEN the unsent reminder is deleted
-        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}))
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}),
+                                      HTTP_X_CLIENT_VERSION='3.5.0')
 
         # THEN the unsent and its sent series counterpart are both deleted; unrelated reminders are untouched
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -391,7 +392,8 @@ class TestCaseReminderViews(APITestCase):
                                                          type=enums.PUSH, offset=10)
 
         # WHEN the 30-min reminder is deleted
-        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}))
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}),
+                                      HTTP_X_CLIENT_VERSION='3.5.0')
 
         # THEN only the 30-min series (unsent + sent) is deleted; the 10-min series is untouched
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -970,7 +972,8 @@ class TestCaseReminderViews(APITestCase):
         reminderhelper.given_reminder_exists(user, course=course2)
 
         # WHEN
-        response = self.client.get(reverse('planner_reminders_list') + f'?course={course1.pk}')
+        response = self.client.get(reverse('planner_reminders_list') + f'?course={course1.pk}',
+                                   HTTP_X_CLIENT_VERSION='3.5.0')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

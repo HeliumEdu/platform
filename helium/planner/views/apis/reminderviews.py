@@ -29,7 +29,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.reminders.all().select_related(
+            queryset = user.reminders.all().select_related(
                 'homework__category',
                 'homework__course',
                 'event__user',
@@ -41,6 +41,15 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
                 'event__attachments',
                 'event__reminders'
             )
+
+            # Frontend clients prior to 3.5.0 don't send X-Client-Version, and also have a bug
+            # where they'll crash on /notifications if course-based reminders are returned, so
+            # exclude them; this guard (and the one below) can be removed once all users are
+            # on 3.5.0 and higher
+            if not self.request.headers.get('X-Client-Version'):
+                queryset = queryset.exclude(homework=None, event=None, course__isnull=False)
+
+            return queryset
         else:
             return Reminder.objects.none()
 
@@ -94,7 +103,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return user.reminders.all().select_related(
+            queryset = user.reminders.all().select_related(
                 'homework__category',
                 'homework__course',
                 'event__user',
@@ -106,6 +115,15 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 'event__attachments',
                 'event__reminders'
             )
+
+            # Frontend clients prior to 3.5.0 don't send X-Client-Version, and also have a bug
+            # where they'll crash on /notifications if course-based reminders are returned, so
+            # exclude them; this guard (and the one above) can be removed once all users are
+            # on 3.5.0 and higher
+            if not self.request.headers.get('X-Client-Version'):
+                queryset = queryset.exclude(homework=None, event=None, course__isnull=False)
+
+            return queryset
         else:
             return Reminder.objects.none()
 
