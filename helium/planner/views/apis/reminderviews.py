@@ -39,7 +39,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
                 'homework__reminders',
                 'homework__materials',
                 'event__attachments',
-                'event__reminders'
+                'event__reminders',
+                'course__schedules',
             )
 
             # Frontend clients prior to 3.5.0 don't send X-Client-Version, and also have a bug

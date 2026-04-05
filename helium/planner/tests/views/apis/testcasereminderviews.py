@@ -15,6 +15,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Reminder
+from helium.planner.services import reminderservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, categoryhelper, courseschedulehelper
 
 
@@ -1012,3 +1013,125 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_course_push_reminder_fires_and_creates_next_pending(self):
+        """
+        Validates the full course-reminder cycle as seen by the frontend.
+
+        After process_push_reminders() fires a repeating course reminder:
+        - /notifications screen (GET ?sent=true&dismissed=false&type=3) should show the fired reminder
+        - course_reminders screen (GET ?course=X&sent=false) should show a new pending reminder for
+          the next class occurrence — with no gap between the two states.
+
+        If this test fails on the course_reminders assertion, there is a nominal gap in
+        create_next_repeating_reminder. Run test_course_push_reminder_watchdog_heals_gap to confirm
+        the watchdog heals it, then investigate why create_next_repeating_reminder returned None.
+        """
+        # GIVEN: a user with a course running daily for 30 days and a push reminder in the send window
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30),
+        )
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='1111111',
+            sun_start_time=datetime.time(10, 0, 0),
+            mon_start_time=datetime.time(10, 0, 0),
+            tue_start_time=datetime.time(10, 0, 0),
+            wed_start_time=datetime.time(10, 0, 0),
+            thu_start_time=datetime.time(10, 0, 0),
+            fri_start_time=datetime.time(10, 0, 0),
+            sat_start_time=datetime.time(10, 0, 0),
+        )
+        pending = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(minutes=1),
+            offset=15, offset_type=enums.MINUTES,
+            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([pending])
+
+        # WHEN: the reminder processing task runs (simulating what happens every 60s in prod)
+        reminderservice.process_push_reminders()
+
+        # THEN: the fired reminder appears in the /notifications screen query
+        notifications_response = self.client.get(
+            reverse('planner_reminders_list'),
+            {'sent': 'true', 'dismissed': 'false', 'type': enums.PUSH},
+            HTTP_X_CLIENT_VERSION='3.5.0',
+        )
+        self.assertEqual(notifications_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(notifications_response.data), 1,
+                         'Fired reminder should appear in /notifications')
+
+        # AND: the course_reminders screen immediately shows the next pending reminder — no gap
+        course_reminders_response = self.client.get(
+            reverse('planner_reminders_list'),
+            {'course': course.pk, 'sent': 'false'},
+            HTTP_X_CLIENT_VERSION='3.5.0',
+        )
+        self.assertEqual(course_reminders_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(course_reminders_response.data), 1,
+                         'A new pending reminder for the next class should exist immediately after firing '
+                         '(no gap). If this fails, create_next_repeating_reminder returned None — check '
+                         'logs for the warning and verify course end_date / schedule configuration.')
+
+    def test_course_push_reminder_watchdog_heals_gap(self):
+        """
+        Validates that heal_orphaned_repeating_reminders() recovers a series where the next pending
+        reminder was not created (e.g. due to a transient error). This is the safety-net path;
+        the nominal path is covered by test_course_push_reminder_fires_and_creates_next_pending.
+        """
+        # GIVEN: a series with only a sent reminder and no pending successor
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30),
+        )
+        courseschedulehelper.given_course_schedule_exists(
+            course,
+            days_of_week='1111111',
+            sun_start_time=datetime.time(10, 0, 0),
+            mon_start_time=datetime.time(10, 0, 0),
+            tue_start_time=datetime.time(10, 0, 0),
+            wed_start_time=datetime.time(10, 0, 0),
+            thu_start_time=datetime.time(10, 0, 0),
+            fri_start_time=datetime.time(10, 0, 0),
+            sat_start_time=datetime.time(10, 0, 0),
+        )
+        Reminder.objects.bulk_create([Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(hours=2),
+            offset=15, offset_type=enums.MINUTES,
+            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            course=course, user=user,
+        )])
+
+        # THEN: course_reminders screen shows nothing (gap state)
+        pre_heal_response = self.client.get(
+            reverse('planner_reminders_list'),
+            {'course': course.pk, 'sent': 'false'},
+            HTTP_X_CLIENT_VERSION='3.5.0',
+        )
+        self.assertEqual(pre_heal_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(pre_heal_response.data), 0,
+                         'No pending reminder should exist before the watchdog runs')
+
+        # WHEN: the watchdog task runs
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN: course_reminders screen now shows the next pending reminder
+        post_heal_response = self.client.get(
+            reverse('planner_reminders_list'),
+            {'course': course.pk, 'sent': 'false'},
+            HTTP_X_CLIENT_VERSION='3.5.0',
+        )
+        self.assertEqual(post_heal_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(post_heal_response.data), 1,
+                         'Watchdog should have created the next pending reminder for the series')

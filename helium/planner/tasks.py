@@ -147,7 +147,8 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
     count = 0
     for reminder in (Reminder.objects
                      .for_calendar_item(calendar_item_id, calendar_item_type)
-                     .select_related('homework', 'event', 'course')
+                     .select_related('homework', 'event', 'course', 'course__course_group')
+                     .prefetch_related('course__schedules')
                      .iterator()):
         logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
