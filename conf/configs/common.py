@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.173"
+__version__ = "2.1.174"
 
 import os
 import socket
@@ -359,6 +359,9 @@ CORS_ALLOW_HEADERS = default_headers + (
     'baggage',
     'traceparent',
     'tracestate',
+    'x-client-version',
+    'x-client-platform',
+    'x-request-id',
 )
 
 if 'prod' not in ENVIRONMENT:
