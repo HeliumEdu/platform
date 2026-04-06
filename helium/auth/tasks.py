@@ -298,32 +298,63 @@ def emit_nightly_metrics(self):
                                   ).count() / total_users,
                                   extra_tags=window_staff_tags)
 
+                note_qs = Note.objects.filter(
+                    user__in=user_ids,
+                    example_schedule=False,
+                )
                 metricutils.gauge('users.data.avg_notes_per_user',
-                                  Note.objects.filter(
-                                      user__in=user_ids,
-                                      example_schedule=False,
-                                  ).count() / total_users,
+                                  note_qs.count() / total_users,
                                   extra_tags=window_staff_tags)
+                has_homework = Exists(Homework.objects.filter(notes_set=OuterRef('pk')))
+                has_event = Exists(Event.objects.filter(notes_set=OuterRef('pk')))
+                has_resource = Exists(Material.objects.filter(notes_set=OuterRef('pk')))
+                for entity_tag, entity_filter in [
+                    ('homework', has_homework),
+                    ('event', ~has_homework & has_event),
+                    ('resource', ~has_homework & ~has_event & has_resource),
+                    ('standalone', ~has_homework & ~has_event & ~has_resource),
+                ]:
+                    metricutils.gauge('users.data.avg_notes_per_user',
+                                      note_qs.filter(entity_filter).count() / total_users,
+                                      extra_tags=window_staff_tags + [f'entity:{entity_tag}'])
 
+                reminder_qs = Reminder.objects.filter(user__in=user_ids).exclude(
+                    Q(homework__course__course_group__example_schedule=True) |
+                    Q(event__example_schedule=True) |
+                    Q(course__course_group__example_schedule=True)
+                )
                 metricutils.gauge('users.data.avg_reminders_per_user',
-                                  Reminder.objects.filter(user__in=user_ids).exclude(
-                                      Q(homework__course__course_group__example_schedule=True) |
-                                      Q(event__example_schedule=True) |
-                                      Q(course__course_group__example_schedule=True)
-                                  ).count() / total_users,
+                                  reminder_qs.count() / total_users,
                                   extra_tags=window_staff_tags)
+                for entity_tag, entity_filter in [
+                    ('homework', Q(homework__isnull=False)),
+                    ('event', Q(event__isnull=False)),
+                    ('course', Q(course__isnull=False)),
+                ]:
+                    metricutils.gauge('users.data.avg_reminders_per_user',
+                                      reminder_qs.filter(entity_filter).count() / total_users,
+                                      extra_tags=window_staff_tags + [f'entity:{entity_tag}'])
 
                 metricutils.gauge('users.data.avg_graded_homework_per_course',
                                   hw_qs.exclude(current_grade='').count() / total_courses if total_courses else 0.0,
                                   extra_tags=window_staff_tags)
 
+                attachment_qs = Attachment.objects.filter(user__in=user_ids).exclude(
+                    Q(course__course_group__example_schedule=True) |
+                    Q(event__example_schedule=True) |
+                    Q(homework__course__course_group__example_schedule=True)
+                )
                 metricutils.gauge('users.data.avg_attachments_per_user',
-                                  Attachment.objects.filter(user__in=user_ids).exclude(
-                                      Q(course__course_group__example_schedule=True) |
-                                      Q(event__example_schedule=True) |
-                                      Q(homework__course__course_group__example_schedule=True)
-                                  ).count() / total_users,
+                                  attachment_qs.count() / total_users,
                                   extra_tags=window_staff_tags)
+                for entity_tag, entity_filter in [
+                    ('homework', Q(homework__isnull=False)),
+                    ('event', Q(event__isnull=False)),
+                    ('course', Q(course__isnull=False)),
+                ]:
+                    metricutils.gauge('users.data.avg_attachments_per_user',
+                                      attachment_qs.filter(entity_filter).count() / total_users,
+                                      extra_tags=window_staff_tags + [f'entity:{entity_tag}'])
 
                 # --- Feature adoption ---
 
