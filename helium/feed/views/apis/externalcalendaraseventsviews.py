@@ -70,7 +70,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             except HeliumICalError:
                 external_calendar.shown_on_calendar = False
                 external_calendar.save()
-                logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.", exc_info=True)
+                logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
         # Re-assign sequential IDs to ensure uniqueness across all calendars
         for i, event in enumerate(events):
