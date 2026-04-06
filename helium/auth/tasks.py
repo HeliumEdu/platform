@@ -356,6 +356,13 @@ def emit_nightly_metrics(self):
                                       attachment_qs.filter(entity_filter).count() / total_users,
                                       extra_tags=window_staff_tags + [f'entity:{entity_tag}'])
 
+                metricutils.gauge('users.data.avg_resources_per_user',
+                                  Material.objects.filter(
+                                      material_group__user__in=user_ids,
+                                      material_group__example_schedule=False,
+                                  ).count() / total_users,
+                                  extra_tags=window_staff_tags)
+
                 # --- Feature adoption ---
 
                 metricutils.gauge('users.adoption.grade_tracking',
@@ -385,7 +392,7 @@ def emit_nightly_metrics(self):
                                   ).count(),
                                   extra_tags=window_staff_tags)
 
-                metricutils.gauge('users.adoption.materials',
+                metricutils.gauge('users.adoption.resources',
                                   active_qs.filter(
                                       Exists(Material.objects.filter(
                                           material_group__user=OuterRef('pk'),
