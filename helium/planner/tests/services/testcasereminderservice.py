@@ -336,11 +336,9 @@ class TestCaseReminderService(TestCase):
         # THEN: no new reminders created, healthy series left untouched
         self.assertEqual(Reminder.objects.count(), 2)
 
-    def test_heal_orphaned_repeating_reminders_deletes_duplicate_undismissed(self):
-        # GIVEN: three undismissed repeating reminders for the same series (e.g. duplicate creation
-        # bug); the most recent is in the future, two older ones are stale. The new one has not yet
-        # entered the send window, so the previous sent reminder should be preserved — only excess
-        # duplicates beyond the 2-reminder cap are deleted.
+    def test_heal_orphaned_repeating_reminders_deletes_stale_and_creates_successor(self):
+        # GIVEN: an unsent reminder whose start_of_range is past the send window (Celery was down
+        # during the class; nothing was ever sent or dismissed).
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -352,69 +350,19 @@ class TestCaseReminderService(TestCase):
                                                           mon_start_time=datetime.time(10, 0, 0),
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
-        oldest = Reminder(
+        stale = Reminder(
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=3),
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
             sent=False, dismissed=False, repeating=True, course=course, user=user,
         )
-        previous = Reminder(
-            title='Test', message='Test',
-            start_of_range=timezone.now() - datetime.timedelta(hours=2),
-            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True, course=course, user=user,
-        )
-        most_recent = Reminder(
-            title='Test', message='Test',
-            start_of_range=timezone.now() + datetime.timedelta(days=2),
-            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True, course=course, user=user,
-        )
-        Reminder.objects.bulk_create([oldest, previous, most_recent])
-        most_recent_pk = Reminder.objects.order_by('-start_of_range').first().pk
+        Reminder.objects.bulk_create([stale])
 
         # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: oldest excess is deleted (cap of 2); most_recent and previous remain.
-        # most_recent has not yet entered the send window so no new occurrence is created.
-        self.assertEqual(Reminder.objects.count(), 2)
-        self.assertTrue(Reminder.objects.filter(pk=most_recent_pk).exists())
-
-    def test_heal_orphaned_repeating_reminders_deletes_all_stale_and_creates_successor(self):
-        # GIVEN: multiple undismissed reminders for the same series, all with start_of_range past
-        # the send window (the class already happened and nothing was ever sent or dismissed).
-        user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(
-            course_group,
-            start_date=datetime.date.today() - datetime.timedelta(days=7),
-            end_date=datetime.date.today() + datetime.timedelta(days=30)
-        )
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
-                                                          mon_start_time=datetime.time(10, 0, 0),
-                                                          wed_start_time=datetime.time(10, 0, 0),
-                                                          fri_start_time=datetime.time(10, 0, 0))
-        stale_1 = Reminder(
-            title='Test', message='Test',
-            start_of_range=timezone.now() - datetime.timedelta(hours=3),
-            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True, course=course, user=user,
-        )
-        stale_2 = Reminder(
-            title='Test', message='Test',
-            start_of_range=timezone.now() - datetime.timedelta(hours=2),
-            offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True, course=course, user=user,
-        )
-        Reminder.objects.bulk_create([stale_1, stale_2])
-
-        # WHEN
-        reminderservice.heal_orphaned_repeating_reminders()
-
-        # THEN: both stale reminders are deleted and a new occurrence is created for the next class.
+        # THEN: stale reminder is deleted and a new occurrence is created for the next class.
         self.assertEqual(Reminder.objects.filter(dismissed=False, sent=False, repeating=True).count(), 1)
-        # The two stale reminders were deleted (not dismissed), leaving only the new successor.
         self.assertEqual(Reminder.objects.count(), 1)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
