@@ -380,8 +380,8 @@ class TestCaseReminderViews(APITestCase):
         self.assertTrue(Reminder.objects.filter(pk=other_type_reminder.pk).exists())
 
     def test_delete_repeating_course_reminder_only_deletes_matching_offset_series(self):
-        # GIVEN two PUSH course reminder series on the same course differing only by offset:
-        # a 30-min series (unsent + sent history) and a 10-min series (unsent only)
+        # GIVEN two PUSH course reminder series on the same course differing by offset.
+        # Deleting one should not remove the other's unsent (active) reminder.
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -396,11 +396,32 @@ class TestCaseReminderViews(APITestCase):
         response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}),
                                       HTTP_X_CLIENT_VERSION='3.5.0')
 
-        # THEN only the 30-min series (unsent + sent) is deleted; the 10-min series is untouched
+        # THEN the 30-min series is gone; the 10-min unsent reminder is untouched
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reminder.objects.filter(pk=unsent_30.pk).exists())
         self.assertFalse(Reminder.objects.filter(pk=sent_30.pk).exists())
         self.assertTrue(Reminder.objects.filter(pk=unsent_10.pk).exists())
+
+    def test_delete_repeating_course_reminder_cleans_up_stale_sent_different_offset(self):
+        # GIVEN an active 9-min series (unsent) and a stale sent+undismissed 10-min reminder left
+        # over from a prior offset edit. Deleting the active reminder should also remove the stale
+        # one so it doesn't linger in notifications.
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        unsent_9 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+                                                        type=enums.PUSH, offset=9)
+        stale_sent_10 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+                                                             type=enums.PUSH, offset=10)
+
+        # WHEN the active (9-min) reminder is deleted
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_9.pk}),
+                                      HTTP_X_CLIENT_VERSION='3.5.0')
+
+        # THEN both the 9-min series and the stale sent 10-min reminder are gone
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk=unsent_9.pk).exists())
+        self.assertFalse(Reminder.objects.filter(pk=stale_sent_10.pk).exists())
 
     def test_related_field_owned_by_another_user_forbidden(self):
         # GIVEN

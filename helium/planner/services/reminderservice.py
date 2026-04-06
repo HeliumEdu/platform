@@ -59,13 +59,13 @@ def heal_orphaned_repeating_reminders():
     """
     Periodic maintenance for repeating course reminder series.
 
-    Phase 1 — collect series state and build delete list: for each series, examine unsent
-    undismissed reminders only. Keep the most recent if it's still within the send window;
-    delete excess duplicates and stale entries. Sent reminders are intentionally past their
-    window and are never touched here. Templates for series that will have no active unsent
-    reminder after cleanup are collected before any deletions occur.
+    Phase 1 — collect series state and build delete list: for each series, examine the unsent
+    undismissed reminder (at most one per series). If it is stale (start_of_range past the send
+    window), mark it for deletion. Sent reminders are intentionally past their window and are
+    never touched here. Templates for series that will have no active unsent reminder after
+    cleanup are collected before any deletions occur.
 
-    Phase 2 — delete stale/duplicate unsent reminders.
+    Phase 2 — delete stale unsent reminders.
 
     Phase 3 — recreate missing successors: any series that ends up with no active
     (unsent + undismissed) reminder gets a new occurrence created using the template
@@ -87,25 +87,18 @@ def heal_orphaned_repeating_reminders():
     successor_templates = []
 
     for combo in all_series:
-        unsent = list(
+        unsent = (
             Reminder.objects
             .filter(dismissed=False, sent=False, repeating=True, **combo)
-            .order_by('-start_of_range')
+            .first()
         )
 
-        to_delete = [r.pk for r in unsent[2:]]
+        stale = unsent and (unsent.start_of_range is None or unsent.start_of_range <= window_start)
 
-        if unsent:
-            most_recent = unsent[0]
-            if most_recent.start_of_range is None or most_recent.start_of_range <= window_start:
-                if len(unsent) > 1:
-                    to_delete.append(unsent[1].pk)
-                to_delete.append(most_recent.pk)
+        if stale:
+            to_delete_pks.append(unsent.pk)
 
-        to_delete_pks.extend(to_delete)
-
-        surviving_unsent = [r for r in unsent if r.pk not in to_delete]
-        if not surviving_unsent:
+        if stale or not unsent:
             template = (
                 Reminder.objects
                 .filter(repeating=True, **combo)
@@ -118,7 +111,7 @@ def heal_orphaned_repeating_reminders():
                 successor_templates.append(template)
 
     if to_delete_pks:
-        logger.info(f'Deleting {len(to_delete_pks)} stale/duplicate reminder(s)')
+        logger.info(f'Deleting {len(to_delete_pks)} stale reminder(s)')
         Reminder.objects.filter(pk__in=to_delete_pks).delete()
 
     for reminder in successor_templates:
@@ -188,15 +181,15 @@ def create_next_repeating_reminder(reminder):
 def _delete_excess_past_reminders(just_fired):
     """
     After a repeating course reminder fires, delete any other sent+undismissed reminders for
-    the same series. Only the reminder that just fired is kept as the single past record.
+    the same course/user/type. Only the reminder that just fired is kept as the single past
+    record visible in notifications. Intentionally does not filter by offset/offset_type so
+    that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
     """
     Reminder.objects.filter(
         repeating=True,
         course=just_fired.course,
         user=just_fired.user,
         type=just_fired.type,
-        offset=just_fired.offset,
-        offset_type=just_fired.offset_type,
         sent=True,
         dismissed=False,
     ).exclude(pk=just_fired.pk).delete()
@@ -266,8 +259,8 @@ def process_email_reminders():
             try:
                 new_reminder = create_next_repeating_reminder(reminder)
                 if new_reminder is None:
-                    logger.warning(
-                        f'No next occurrence created for repeating email reminder series: '
+                    logger.info(
+                        f'No next occurrence for repeating email reminder series (course ended): '
                         f'course={reminder.course_id}, user={reminder.user_id}')
             except Exception:
                 logger.error("An error occurred creating next repeating email reminder.", exc_info=True)
@@ -369,8 +362,8 @@ def process_push_reminders(mark_sent_only=False):
             try:
                 new_reminder = create_next_repeating_reminder(reminder)
                 if new_reminder is None:
-                    logger.warning(
-                        f'No next occurrence created for repeating push reminder series: '
+                    logger.info(
+                        f'No next occurrence for repeating push reminder series (course ended): '
                         f'course={reminder.course_id}, user={reminder.user_id}')
             except Exception:
                 logger.error("An error occurred creating next repeating push reminder.", exc_info=True)
