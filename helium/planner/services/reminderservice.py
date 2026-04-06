@@ -259,8 +259,8 @@ def process_email_reminders():
             try:
                 new_reminder = create_next_repeating_reminder(reminder)
                 if new_reminder is None:
-                    logger.warning(
-                        f'No next occurrence created for repeating email reminder series: '
+                    logger.info(
+                        f'No next occurrence for repeating email reminder series (course ended): '
                         f'course={reminder.course_id}, user={reminder.user_id}')
             except Exception:
                 logger.error("An error occurred creating next repeating email reminder.", exc_info=True)
@@ -362,8 +362,8 @@ def process_push_reminders(mark_sent_only=False):
             try:
                 new_reminder = create_next_repeating_reminder(reminder)
                 if new_reminder is None:
-                    logger.warning(
-                        f'No next occurrence created for repeating push reminder series: '
+                    logger.info(
+                        f'No next occurrence for repeating push reminder series (course ended): '
                         f'course={reminder.course_id}, user={reminder.user_id}')
             except Exception:
                 logger.error("An error occurred creating next repeating push reminder.", exc_info=True)
