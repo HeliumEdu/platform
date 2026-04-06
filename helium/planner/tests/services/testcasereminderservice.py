@@ -447,6 +447,53 @@ class TestCaseReminderService(TestCase):
         # The old_past record must be gone
         self.assertFalse(Reminder.objects.filter(pk=old_past.pk).exists())
 
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminders_auto_deletes_past_with_different_offset(self, mock_send_notifications):
+        # GIVEN: a course push reminder fires for the same class after the user edited the offset
+        # (e.g. 10 min → 9 min). The previously-sent reminder has offset=10; the re-queued pending
+        # reminder has offset=9. The old reminder must be cleaned up even though the offset differs.
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='1111111',
+                                                          sun_start_time=datetime.time(10, 0, 0),
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          tue_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          thu_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0),
+                                                          sat_start_time=datetime.time(10, 0, 0))
+        old_past = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(minutes=2),
+            offset=10, offset_type=enums.MINUTES,
+            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        pending = Reminder(
+            title='Test', message='Test',
+            start_of_range=timezone.now() - datetime.timedelta(minutes=1),
+            offset=9, offset_type=enums.MINUTES,
+            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([old_past, pending])
+
+        # WHEN
+        reminderservice.process_push_reminders()
+
+        # THEN: old past (offset=10) is deleted despite having a different offset; pending (offset=9)
+        # fires and becomes the new past; next occurrence queued. Exactly 2 reminders remain.
+        self.assertEqual(Reminder.objects.count(), 2)
+        self.assertEqual(Reminder.objects.filter(sent=True, dismissed=False, course=course).count(), 1)
+        self.assertEqual(Reminder.objects.filter(sent=False, dismissed=False, course=course).count(), 1)
+        self.assertFalse(Reminder.objects.filter(pk=old_past.pk).exists())
+
     def test_get_subject_orphaned_reminder(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

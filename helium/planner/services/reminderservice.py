@@ -181,15 +181,15 @@ def create_next_repeating_reminder(reminder):
 def _delete_excess_past_reminders(just_fired):
     """
     After a repeating course reminder fires, delete any other sent+undismissed reminders for
-    the same series. Only the reminder that just fired is kept as the single past record.
+    the same course/user/type. Only the reminder that just fired is kept as the single past
+    record visible in notifications. Intentionally does not filter by offset/offset_type so
+    that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
     """
     Reminder.objects.filter(
         repeating=True,
         course=just_fired.course,
         user=just_fired.user,
         type=just_fired.type,
-        offset=just_fired.offset,
-        offset_type=just_fired.offset_type,
         sent=True,
         dismissed=False,
     ).exclude(pk=just_fired.pk).delete()
