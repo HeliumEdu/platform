@@ -145,8 +145,8 @@ class Reminder(BaseModel):
                 if use_window_check:
                     offset_delta = datetime.timedelta(
                         **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
-                    window_start = now - datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
-                    if local_start > now and (local_start - offset_delta) >= window_start:
+                    reminder_time = local_start - offset_delta
+                    if local_start > now and reminder_time > now:
                         return local_start.astimezone(pytz.utc)
                 else:
                     if local_start > cutoff:

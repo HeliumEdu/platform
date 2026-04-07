@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import re
-from random import randint
+import secrets
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -17,11 +17,7 @@ def is_admin_allowed_email(email):
 
 
 def generate_verification_code():
-    code = None
-    while not code:
-        code = randint(100000, 999999)
-
-    return code
+    return secrets.randbelow(900000) + 100000
 
 
 def generate_unique_username_from_email(email):

@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+import os
 
 from django.conf import settings
 from django.template.defaultfilters import filesizeformat
@@ -33,6 +34,13 @@ class AttachmentSerializer(serializers.ModelSerializer):
         if attachment.size > settings.MAX_UPLOAD_SIZE:
             raise ValidationError(
                 f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.')
+
+        ext = os.path.splitext(attachment.name)[1].lower()
+        if ext in settings.BLOCKED_ATTACHMENT_EXTENSIONS:
+            raise ValidationError('This file type is not allowed.')
+
+        if attachment.content_type in settings.BLOCKED_ATTACHMENT_MIME_TYPES:
+            raise ValidationError('This file type is not allowed.')
 
         return attachment
 

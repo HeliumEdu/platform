@@ -42,6 +42,10 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'False') == 'True'
 # Security
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 if 'celery' not in sys.argv[0]:

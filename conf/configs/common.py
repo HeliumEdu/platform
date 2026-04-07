@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.182"
+__version__ = "2.1.183"
 
 import os
 import socket
@@ -113,6 +113,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = (
+    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -233,6 +234,7 @@ REST_FRAMEWORK = {
         'anon': '10/min',
         'user': '120/min',
         'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
+        'delete_inactive': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -289,6 +291,27 @@ NORMALIZED_DATE_TIME_FORMAT = f'{NORMALIZED_DATE_FORMAT} at %I:%M %p'
 FILE_TYPES = ['json']
 
 MAX_UPLOAD_SIZE = 10485760
+
+BLOCKED_ATTACHMENT_EXTENSIONS = {
+    '.html', '.htm', '.shtml',
+    '.js', '.mjs', '.jsx', '.ts', '.tsx',
+    '.php', '.php3', '.php4', '.php5', '.phtml',
+    '.py', '.pyc', '.rb', '.pl',
+    '.sh', '.bash', '.zsh', '.fish',
+    '.ps1', '.psm1', '.psd1',
+    '.bat', '.cmd', '.com',
+    '.exe', '.dll', '.so', '.dylib',
+    '.svg',
+}
+
+BLOCKED_ATTACHMENT_MIME_TYPES = {
+    'text/html',
+    'application/javascript', 'text/javascript',
+    'application/x-httpd-php', 'application/x-php',
+    'application/x-sh', 'application/x-shellscript',
+    'application/x-msdownload', 'application/x-executable',
+    'image/svg+xml',
+}
 
 # Email settings
 
@@ -406,6 +429,9 @@ if 'local' in ENVIRONMENT:
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
 
+if 'prod' in ENVIRONMENT and DEBUG:
+    raise ImproperlyConfigured("DEBUG must not be enabled in production environments")
+
 # Static files (CSS, JavaScript, Images)
 
 STATIC_ROOT = 'static/'
@@ -417,6 +443,10 @@ STATICFILES_FINDERS = (
 )
 
 # Celery
+
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
 
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
