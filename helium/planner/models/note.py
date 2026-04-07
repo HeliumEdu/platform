@@ -15,7 +15,6 @@ class Note(BaseModel):
         help_text='Display title for the note.',
         max_length=255,
         blank=True,
-        db_index=True
     )
 
     content = models.JSONField(

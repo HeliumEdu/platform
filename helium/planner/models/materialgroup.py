@@ -10,7 +10,7 @@ from helium.planner.managers.materialgroupmanager import MaterialGroupManager
 
 class MaterialGroup(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True)

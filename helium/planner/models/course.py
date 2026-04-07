@@ -13,7 +13,7 @@ from helium.planner.managers.coursemanager import CourseManager
 
 class Course(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     room = models.CharField(help_text='An arbitrary string.',
                             max_length=255, blank=True)
@@ -41,10 +41,8 @@ class Course(BaseModel):
     teacher_email = models.EmailField(help_text='A valid email address.',
                                       default=None, blank=True, null=True)
 
-    start_date = models.DateField(help_text='An ISO-8601 date.',
-                                  db_index=True)
-    end_date = models.DateField(help_text='An ISO-8601 date.',
-                                db_index=True)
+    start_date = models.DateField(help_text='An ISO-8601 date.')
+    end_date = models.DateField(help_text='An ISO-8601 date.')
 
     course_group = models.ForeignKey('CourseGroup', help_text='The course group with which to associate.',
                                      related_name='courses', on_delete=models.CASCADE)

@@ -17,12 +17,12 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 class Reminder(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     message = models.TextField(
         help_text='A string that will be used as the reminder message (may contain HTML formatting).')
 
-    start_of_range = models.DateTimeField(db_index=True, null=True, blank=True)
+    start_of_range = models.DateTimeField(null=True, blank=True)
 
     offset = models.PositiveIntegerField(help_text='The number of units (in `offset_type`) from the offset.',
                                          default=30)
@@ -31,11 +31,11 @@ class Reminder(BaseModel):
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)
 
     type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
-                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP, db_index=True)
+                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP)
 
-    sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False, db_index=True)
+    sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False)
 
-    dismissed = models.BooleanField(help_text='Whether the reminder has been dismissed.', default=False, db_index=True)
+    dismissed = models.BooleanField(help_text='Whether the reminder has been dismissed.', default=False)
 
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
@@ -52,6 +52,10 @@ class Reminder(BaseModel):
 
     class Meta:
         ordering = ('start_of_range', 'title')
+        indexes = [
+            models.Index(fields=['sent', 'type', 'start_of_range'], name='reminder_celery_task_lookup'),
+            models.Index(fields=['user', 'sent', 'dismissed'], name='reminder_api_list_lookup'),
+        ]
         constraints = [
             models.CheckConstraint(
                 check=(
