@@ -13,8 +13,12 @@ logger = logging.getLogger(__name__)
 
 def send_notifications(push_tokens, subject, message, reminder_data):
     """Send push notifications and return a list of token strings that are permanently invalid."""
+    # Merge the computed notification title/body into json_payload so web clients
+    # (which receive data-only messages with no notification field) can display them.
+    payload_data = {**reminder_data, 'notification_title': subject, 'notification_body': message}
+
     multicast_message = messaging.MulticastMessage(
-        data={"json_payload": json.dumps(reminder_data)},
+        data={"json_payload": json.dumps(payload_data)},
         android=messaging.AndroidConfig(
             notification=messaging.AndroidNotification(
                 title=subject,
@@ -29,7 +33,6 @@ def send_notifications(push_tokens, subject, message, reminder_data):
                         body=message,
                     ),
                     sound='default',
-                    content_available=True,
                 ),
             ),
         ),
