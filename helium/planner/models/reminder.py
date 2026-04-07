@@ -61,6 +61,11 @@ class Reminder(BaseModel):
                 ),
                 name='reminder_exactly_one_parent',
             ),
+            models.UniqueConstraint(
+                fields=['course', 'user', 'type', 'offset', 'offset_type'],
+                condition=Q(sent=False, dismissed=False),
+                name='reminder_one_active_per_course_series',
+            ),
         ]
 
     def __str__(self):  # pragma: no cover
