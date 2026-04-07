@@ -14,11 +14,25 @@ logger = logging.getLogger(__name__)
 def send_notifications(push_tokens, subject, message, reminder_data):
     """Send push notifications and return a list of token strings that are permanently invalid."""
     multicast_message = messaging.MulticastMessage(
-        notification=messaging.Notification(
-            title=subject,
-            body=message,
-        ),
         data={"json_payload": json.dumps(reminder_data)},
+        android=messaging.AndroidConfig(
+            notification=messaging.AndroidNotification(
+                title=subject,
+                body=message,
+            ),
+        ),
+        apns=messaging.APNSConfig(
+            payload=messaging.APNSPayload(
+                aps=messaging.Aps(
+                    alert=messaging.ApsAlert(
+                        title=subject,
+                        body=message,
+                    ),
+                    sound='default',
+                    content_available=True,
+                ),
+            ),
+        ),
         tokens=push_tokens
     )
 
