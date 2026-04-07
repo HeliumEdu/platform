@@ -293,24 +293,18 @@ FILE_TYPES = ['json']
 MAX_UPLOAD_SIZE = 10485760
 
 BLOCKED_ATTACHMENT_EXTENSIONS = {
-    '.html', '.htm', '.shtml',
-    '.js', '.mjs', '.jsx', '.ts', '.tsx',
     '.php', '.php3', '.php4', '.php5', '.phtml',
-    '.py', '.pyc', '.rb', '.pl',
+    '.pyc', '.rb', '.pl',
     '.sh', '.bash', '.zsh', '.fish',
     '.ps1', '.psm1', '.psd1',
     '.bat', '.cmd', '.com',
     '.exe', '.dll', '.so', '.dylib',
-    '.svg',
 }
 
 BLOCKED_ATTACHMENT_MIME_TYPES = {
-    'text/html',
-    'application/javascript', 'text/javascript',
     'application/x-httpd-php', 'application/x-php',
     'application/x-sh', 'application/x-shellscript',
     'application/x-msdownload', 'application/x-executable',
-    'image/svg+xml',
 }
 
 # Email settings
