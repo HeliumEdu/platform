@@ -126,6 +126,9 @@ def delete_user(self, user_id):
             logger.warning(f'Failed to delete Firebase Auth user for user {user.pk}: {str(e)}')
             metricutils.increment('external.firebase.failed', extra_tags=['operation:delete_user'])
 
+        Attachment.objects.filter(user=user).delete()
+        Reminder.objects.filter(user=user).delete()
+
         user.delete()
 
         for token in outstanding_tokens + blacklisted_tokens:
