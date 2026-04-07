@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
+from helium.common.throttles import DeleteInactiveUserThrottle
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,12 @@ class UserDeleteResourceView(HeliumAPIView):
 
 class UserDeleteInactiveResourceView(HeliumAPIView):
     serializer_class = UserSerializer
+
+    def get_throttles(self):
+        from rest_framework.settings import api_settings
+        if not api_settings.DEFAULT_THROTTLE_CLASSES:
+            return []
+        return [DeleteInactiveUserThrottle()]
 
     def get_object(self):
         UserModel = get_user_model()
