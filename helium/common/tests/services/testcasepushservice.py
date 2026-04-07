@@ -83,6 +83,13 @@ class TestCasePushService(TestCase):
         self.assertEqual(message.android.notification.body, 'Message')
         self.assertEqual(message.apns.payload.aps.alert.title, 'Subject')
         self.assertEqual(message.apns.payload.aps.alert.body, 'Message')
+        self.assertIsNone(message.apns.payload.aps.content_available)
+
+        # AND: json_payload includes notification_title/body for web clients (no message.notification)
+        import json
+        payload = json.loads(message.data['json_payload'])
+        self.assertEqual(payload['notification_title'], 'Subject')
+        self.assertEqual(payload['notification_body'], 'Message')
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
