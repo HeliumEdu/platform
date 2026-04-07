@@ -17,7 +17,7 @@ class AttachmentError(HeliumError):
 
 class Attachment(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     attachment = models.FileField(help_text='The file to be uploaded.',
                                   upload_to=get_path_for_attachment, blank=True, null=True)

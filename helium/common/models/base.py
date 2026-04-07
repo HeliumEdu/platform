@@ -14,9 +14,9 @@ class BaseModel(models.Model):
     The abstract base model from which most other models should inherit to ensure common base attributes.
     """
 
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         abstract = True

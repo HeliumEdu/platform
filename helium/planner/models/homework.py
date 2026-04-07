@@ -39,6 +39,9 @@ class Homework(BaseCalendar):
     class Meta:
         verbose_name_plural = 'Homework'
         ordering = ('start', 'title')
+        indexes = [
+            models.Index(fields=['course', 'completed'], name='homework_grading_aggregation'),
+        ]
 
     def get_user(self):
         return self.course.get_user()

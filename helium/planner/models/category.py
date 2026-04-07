@@ -11,7 +11,7 @@ from helium.planner.managers.categorymanager import CategoryManager
 
 class Category(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     weight = models.DecimalField(
         help_text='A decimal weight for this category\'s homework (note that all weights associated with a single '

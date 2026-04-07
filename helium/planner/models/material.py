@@ -10,7 +10,7 @@ from helium.planner.managers.materialmanager import MaterialManager
 
 class Material(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     status = models.PositiveIntegerField(help_text='A valid material status choice.',
                                          choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)

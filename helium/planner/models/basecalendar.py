@@ -8,7 +8,7 @@ from helium.common.models import BaseModel
 
 class BaseCalendar(BaseModel):
     title = models.CharField(help_text='A display name.',
-                             max_length=255, db_index=True)
+                             max_length=255)
 
     all_day = models.BooleanField(help_text='Whether it is an all day event.',
                                   default=False)
