@@ -78,7 +78,7 @@ def heal_orphaned_repeating_reminders():
 
     all_series = list(
         Reminder.objects
-        .filter(repeating=True, course__isnull=False)
+        .filter(course__isnull=False)
         .values('course', 'user', 'type', 'offset', 'offset_type')
         .distinct()
     )
@@ -89,7 +89,7 @@ def heal_orphaned_repeating_reminders():
     for combo in all_series:
         unsent = (
             Reminder.objects
-            .filter(dismissed=False, sent=False, repeating=True, **combo)
+            .filter(dismissed=False, sent=False, **combo)
             .first()
         )
 
@@ -101,7 +101,7 @@ def heal_orphaned_repeating_reminders():
         if stale or not unsent:
             template = (
                 Reminder.objects
-                .filter(repeating=True, **combo)
+                .filter(**combo)
                 .select_related('user', 'user__settings', 'course', 'course__course_group')
                 .prefetch_related('course__schedules')
                 .order_by('-start_of_range')
@@ -115,7 +115,7 @@ def heal_orphaned_repeating_reminders():
         Reminder.objects.filter(pk__in=to_delete_pks).delete()
 
     for reminder in successor_templates:
-        series_filter = dict(repeating=True, course=reminder.course, user=reminder.user, type=reminder.type,
+        series_filter = dict(course=reminder.course, user=reminder.user, type=reminder.type,
                              offset=reminder.offset, offset_type=reminder.offset_type)
         if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exists():
             continue
@@ -136,11 +136,10 @@ def create_next_repeating_reminder(reminder):
     against duplicate creation (e.g. concurrent workers) by checking for an existing active
     (unsent + undismissed) reminder for the same series before saving.
     """
-    if not reminder.repeating or not reminder.course:
+    if not reminder.course_id:
         return None
 
     series_filter = dict(
-        repeating=True,
         course=reminder.course,
         user=reminder.user,
         type=reminder.type,
@@ -164,7 +163,6 @@ def create_next_repeating_reminder(reminder):
         type=reminder.type,
         sent=False,
         dismissed=False,
-        repeating=True,
         course=reminder.course,
         user=reminder.user
     )
@@ -186,7 +184,6 @@ def _delete_excess_past_reminders(just_fired):
     that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
     """
     Reminder.objects.filter(
-        repeating=True,
         course=just_fired.course,
         user=just_fired.user,
         type=just_fired.type,
@@ -254,7 +251,7 @@ def process_email_reminders():
             logger.error("An error occurred processing email reminder.", exc_info=True)
             continue
 
-        if reminder.repeating and reminder.course:
+        if reminder.course_id:
             _delete_excess_past_reminders(reminder)
             try:
                 new_reminder = create_next_repeating_reminder(reminder)
@@ -357,7 +354,7 @@ def process_push_reminders(mark_sent_only=False):
             logger.error("An error occurred processing push reminder.", exc_info=True)
             continue
 
-        if reminder.repeating and reminder.course:
+        if reminder.course_id:
             _delete_excess_past_reminders(reminder)
             try:
                 new_reminder = create_next_repeating_reminder(reminder)

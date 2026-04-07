@@ -553,7 +553,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
             coursescheduleservice.clear_cached_course_schedule(course)
 
         for reminder in (Reminder.objects
-                .filter(repeating=True, sent=True, course__course_group__example_schedule=True, user=user)
+                .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
                 .select_related('user', 'user__settings', 'course', 'course__course_group')
                 .prefetch_related('course__schedules')
                 .iterator()):

@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import HeliumError
@@ -38,6 +39,16 @@ class Attachment(BaseModel):
 
     class Meta:
         ordering = ('title',)
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=True, course__isnull=False)
+                ),
+                name='attachment_exactly_one_parent',
+            ),
+        ]
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
