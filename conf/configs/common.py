@@ -423,6 +423,10 @@ if 'local' in ENVIRONMENT:
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
 
+SILENCED_SYSTEM_CHECKS = [
+    'fields.W342',  # ForeignKey(unique=True) on CourseSchedule.course; intentional, not converting to OneToOneField
+]
+
 if 'prod' in ENVIRONMENT and DEBUG:
     raise ImproperlyConfigured("DEBUG must not be enabled in production environments")
 
