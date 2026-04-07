@@ -18,4 +18,11 @@ class Migration(migrations.Migration):
                 name='reminder_dismissed_requires_sent',
             ),
         ),
+        migrations.AddConstraint(
+            model_name='reminder',
+            constraint=models.CheckConstraint(
+                check=Q(course__isnull=False) | Q(start_of_range__isnull=False),
+                name='reminder_start_of_range_required_for_non_course',
+            ),
+        ),
     ]
