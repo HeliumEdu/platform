@@ -546,7 +546,8 @@ class TestCaseReminderService(TestCase):
                                                           mon_start_time=datetime.time(10, 0, 0),
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
-        reminder = reminderhelper.given_reminder_exists(user, course=course, type=enums.PUSH, sent=True)
+        reminder = reminderhelper.given_reminder_exists(user, course=course, type=enums.PUSH, sent=True,
+                                                        start_of_range=timezone.now() - datetime.timedelta(hours=1))
 
         # WHEN
         new_reminder = reminderservice.create_next_repeating_reminder(reminder)

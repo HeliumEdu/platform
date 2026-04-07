@@ -9,7 +9,7 @@ from helium.planner.models import Reminder
 
 def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to do something now.', offset=15,
                           offset_type=enums.MINUTES, type=enums.TEXT, sent=False, dismissed=False,
-                          event=None, homework=None, course=None):
+                          start_of_range=None, event=None, homework=None, course=None):
     reminder = Reminder.objects.create(title=title,
                                        message=message,
                                        offset=offset,
@@ -17,6 +17,7 @@ def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to
                                        type=type,
                                        sent=sent,
                                        dismissed=dismissed,
+                                       start_of_range=start_of_range,
                                        event=event,
                                        homework=homework,
                                        course=course,
