@@ -4,8 +4,6 @@ __license__ = "MIT"
 import logging
 from datetime import timedelta
 
-from django.conf import settings
-from django.utils import timezone
 from rest_framework import serializers
 
 from helium.common import enums
@@ -63,6 +61,11 @@ class ReminderSerializer(serializers.ModelSerializer):
         if is_repeating and not final_has_course:
             raise serializers.ValidationError("The `repeating` field can only be set to true for course reminders.")
 
+        # Capture original parent refs before nulling them out below, for the sent-reset check.
+        orig_homework = self.instance.homework if self.instance else None
+        orig_event = self.instance.event if self.instance else None
+        orig_course = self.instance.course if self.instance else None
+
         # We're setting these to None here as the serialization save will persist the new parent
         if self.instance and ('event' in attrs or 'homework' in attrs or 'course' in attrs):
             self.instance.event = None
@@ -92,12 +95,21 @@ class ReminderSerializer(serializers.ModelSerializer):
                 else:
                     attrs['start_of_range'] = None
 
-        # On update, if start_of_range was recomputed and the send window hasn't passed, reset sent so
-        # the reminder fires again at the new time.
-        if self.instance and 'start_of_range' in attrs and attrs['start_of_range'] is not None:
-            window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
-            if attrs['start_of_range'] >= window_start:
-                attrs['sent'] = False
+        # On update, only reset sent when offset or parent actually changed — not just because
+        # they appear in a full PUT payload.
+        if self.instance and self.instance.sent and 'start_of_range' in attrs:
+            offset_changed = (
+                ('offset' in attrs and attrs['offset'] != self.instance.offset) or
+                ('offset_type' in attrs and attrs['offset_type'] != self.instance.offset_type)
+            )
+            parent_changed = (
+                ('homework' in attrs and attrs.get('homework') != orig_homework) or
+                ('event' in attrs and attrs.get('event') != orig_event) or
+                ('course' in attrs and attrs.get('course') != orig_course)
+            )
+            if offset_changed or parent_changed:
+                if Reminder.should_reset_sent(attrs.get('start_of_range')):
+                    attrs['sent'] = False
 
         return attrs
 

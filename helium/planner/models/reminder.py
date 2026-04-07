@@ -156,6 +156,19 @@ class Reminder(BaseModel):
 
         return None
 
+    @staticmethod
+    def should_reset_sent(new_start_of_range):
+        """Return True if a sent reminder should re-queue itself at new_start_of_range.
+
+        Resets when the new time is still actionable: within the send window (recent past
+        the task will still catch) or in the future. Skips when the time has expired past
+        the window — the task won't pick it up and there's no value in clearing the flag.
+        """
+        if not new_start_of_range:
+            return False
+        window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+        return new_start_of_range >= window_start
+
     def save(self, *args, **kwargs):
         """
         Recalculate start_of_range based on the linked calendar item.
@@ -180,8 +193,7 @@ class Reminder(BaseModel):
             offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
             new_start_of_range = calendar_item.start - offset_delta
             if self.pk and self.sent and new_start_of_range != self.start_of_range:
-                window_start = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
-                if new_start_of_range >= window_start:
+                if Reminder.should_reset_sent(new_start_of_range):
                     self.sent = False
             self.start_of_range = new_start_of_range
         elif self.course and not self.sent:
