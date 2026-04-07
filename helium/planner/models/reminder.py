@@ -66,6 +66,10 @@ class Reminder(BaseModel):
                 condition=Q(sent=False, dismissed=False),
                 name='reminder_one_active_per_course_series',
             ),
+            models.CheckConstraint(
+                check=Q(dismissed=False) | Q(sent=True),
+                name='reminder_dismissed_requires_sent',
+            ),
         ]
 
     def __str__(self):  # pragma: no cover

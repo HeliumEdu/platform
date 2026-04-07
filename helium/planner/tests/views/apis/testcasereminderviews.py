@@ -962,8 +962,8 @@ class TestCaseReminderViews(APITestCase):
                                                           mon_start_time=datetime.time(10, 0, 0),
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
-        reminderhelper.given_reminder_exists(user, course=course1)
-        reminderhelper.given_reminder_exists(user, course=course1)
+        reminderhelper.given_reminder_exists(user, course=course1, offset=15)
+        reminderhelper.given_reminder_exists(user, course=course1, offset=30)
         reminderhelper.given_reminder_exists(user, course=course2)
 
         # WHEN
