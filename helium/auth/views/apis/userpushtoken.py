@@ -41,7 +41,12 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         return response
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        obj, _ = UserPushToken.objects.update_or_create(
+            user=self.request.user,
+            device_id=serializer.validated_data['device_id'],
+            defaults={'token': serializer.validated_data['token']},
+        )
+        serializer.instance = obj
 
     @extend_schema(
         responses={
@@ -50,11 +55,11 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new push token instance for the authenticated user.
+        Create or update the push token for the authenticated user's device.
         """
         response = self.create(request, *args, **kwargs)
 
-        logger.info(f"Push Token {response.data['id']} created for user {request.user.pk}")
+        logger.info(f"Push Token {response.data['id']} registered for user {request.user.pk}")
 
         return response
 
