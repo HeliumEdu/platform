@@ -86,7 +86,7 @@ class TestCaseReminderService(TestCase):
             title='Course reminder', message='Class soon',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.TEXT, sent=False, dismissed=False, repeating=True,
+            type=enums.TEXT, sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([course_text_reminder])
@@ -149,7 +149,7 @@ class TestCaseReminderService(TestCase):
             title='Course reminder', message='Class soon',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([course_reminder])
@@ -287,7 +287,7 @@ class TestCaseReminderService(TestCase):
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
-            sent=True, dismissed=False, repeating=True,
+            sent=True, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([reminder])
@@ -297,7 +297,7 @@ class TestCaseReminderService(TestCase):
 
         # THEN: next occurrence is created, original remains unchanged
         self.assertEqual(Reminder.objects.count(), 2)
-        self.assertTrue(Reminder.objects.filter(sent=False, repeating=True, course=course).exists())
+        self.assertTrue(Reminder.objects.filter(sent=False, course=course).exists())
 
     def test_heal_orphaned_repeating_reminders_skips_healthy_series(self):
         # GIVEN: a sent repeating reminder that already has an unsent successor (healthy series)
@@ -317,7 +317,7 @@ class TestCaseReminderService(TestCase):
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
-            sent=True, dismissed=False, repeating=True,
+            sent=True, dismissed=False,
             course=course, user=user,
         )
         unsent_reminder = Reminder(
@@ -325,7 +325,7 @@ class TestCaseReminderService(TestCase):
             start_of_range=timezone.now() + datetime.timedelta(days=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True,
+            sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([sent_reminder, unsent_reminder])
@@ -354,7 +354,7 @@ class TestCaseReminderService(TestCase):
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=3),
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
-            sent=False, dismissed=False, repeating=True, course=course, user=user,
+            sent=False, dismissed=False, course=course, user=user,
         )
         Reminder.objects.bulk_create([stale])
 
@@ -362,7 +362,7 @@ class TestCaseReminderService(TestCase):
         reminderservice.heal_orphaned_repeating_reminders()
 
         # THEN: stale reminder is deleted and a new occurrence is created for the next class.
-        self.assertEqual(Reminder.objects.filter(dismissed=False, sent=False, repeating=True).count(), 1)
+        self.assertEqual(Reminder.objects.filter(dismissed=False, sent=False).count(), 1)
         self.assertEqual(Reminder.objects.count(), 1)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
@@ -387,7 +387,7 @@ class TestCaseReminderService(TestCase):
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.EMAIL, sent=False, dismissed=False, repeating=True,
+            type=enums.EMAIL, sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([fired_reminder])
@@ -397,7 +397,7 @@ class TestCaseReminderService(TestCase):
 
         # THEN: original is marked sent; a new pending reminder for the next class is created
         self.assertEqual(Reminder.objects.filter(sent=True).count(), 1)
-        self.assertEqual(Reminder.objects.filter(sent=False, repeating=True, course=course).count(), 1)
+        self.assertEqual(Reminder.objects.filter(sent=False, course=course).count(), 1)
         self.assertEqual(Reminder.objects.count(), 2)
 
     @mock.patch('helium.common.tasks.send_notifications')
@@ -424,14 +424,14 @@ class TestCaseReminderService(TestCase):
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(days=2),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )
         pending = Reminder(
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([old_past, pending])
@@ -472,14 +472,14 @@ class TestCaseReminderService(TestCase):
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=2),
             offset=10, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )
         pending = Reminder(
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=9, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=False, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=False, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([old_past, pending])
@@ -513,7 +513,7 @@ class TestCaseReminderService(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         event = eventhelper.given_event_exists(user)
-        reminder = reminderhelper.given_reminder_exists(user, event=event, repeating=False)
+        reminder = reminderhelper.given_reminder_exists(user, event=event)
 
         # WHEN
         result = reminderservice.create_next_repeating_reminder(reminder)
@@ -525,7 +525,7 @@ class TestCaseReminderService(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         event = eventhelper.given_event_exists(user)
-        reminder = reminderhelper.given_reminder_exists(user, event=event, repeating=True)
+        reminder = reminderhelper.given_reminder_exists(user, event=event)
 
         # WHEN
         result = reminderservice.create_next_repeating_reminder(reminder)
@@ -546,7 +546,7 @@ class TestCaseReminderService(TestCase):
                                                           mon_start_time=datetime.time(10, 0, 0),
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
-        reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True, type=enums.PUSH)
+        reminder = reminderhelper.given_reminder_exists(user, course=course, type=enums.PUSH)
 
         # WHEN
         new_reminder = reminderservice.create_next_repeating_reminder(reminder)
@@ -592,7 +592,7 @@ class TestCaseReminderService(TestCase):
             title='Test', message='Test',
             start_of_range=monday_start_of_range,
             offset=30, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )
         Reminder.objects.bulk_create([reminder])
@@ -628,7 +628,6 @@ class TestCaseReminderService(TestCase):
             offset=30,
             offset_type=enums.MINUTES,
             type=enums.PUSH,
-            repeating=True,
             course=course,
             user=user,
         )

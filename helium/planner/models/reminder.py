@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytz
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 from helium.common import enums
@@ -36,8 +37,6 @@ class Reminder(BaseModel):
 
     dismissed = models.BooleanField(help_text='Whether the reminder has been dismissed.', default=False, db_index=True)
 
-    repeating = models.BooleanField(help_text='Whether the reminder repeats (for courses).', default=False)
-
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
@@ -53,9 +52,23 @@ class Reminder(BaseModel):
 
     class Meta:
         ordering = ('start_of_range', 'title')
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=True, course__isnull=False)
+                ),
+                name='reminder_exactly_one_parent',
+            ),
+        ]
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
+
+    @property
+    def repeating(self) -> bool:
+        return self.course_id is not None
 
     def get_user(self):
         return self.user
@@ -197,7 +210,6 @@ class Reminder(BaseModel):
                     self.sent = False
             self.start_of_range = new_start_of_range
         elif self.course and not self.sent:
-            self.repeating = True
             if self.pk is not None or self.start_of_range is None:
                 next_start = self._get_next_course_occurrence_start()
                 if next_start:

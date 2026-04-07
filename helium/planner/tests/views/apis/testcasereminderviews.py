@@ -357,15 +357,15 @@ class TestCaseReminderViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
-        unsent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+        unsent = reminderhelper.given_reminder_exists(user, course=course, sent=False,
                                                       type=enums.PUSH)
-        sent = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+        sent = reminderhelper.given_reminder_exists(user, course=course, sent=True,
                                                     type=enums.PUSH)
         # A reminder in a different series (different course) that must not be deleted
-        other_course_reminder = reminderhelper.given_reminder_exists(user, course=course2, repeating=True,
+        other_course_reminder = reminderhelper.given_reminder_exists(user, course=course2,
                                                                      sent=False, type=enums.PUSH)
         # A reminder in a different series (different type) that must not be deleted
-        other_type_reminder = reminderhelper.given_reminder_exists(user, course=course, repeating=True,
+        other_type_reminder = reminderhelper.given_reminder_exists(user, course=course,
                                                                    sent=False, type=enums.EMAIL)
 
         # WHEN the unsent reminder is deleted
@@ -385,11 +385,11 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        unsent_30 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+        unsent_30 = reminderhelper.given_reminder_exists(user, course=course, sent=False,
                                                          type=enums.PUSH, offset=30)
-        sent_30 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+        sent_30 = reminderhelper.given_reminder_exists(user, course=course, sent=True,
                                                        type=enums.PUSH, offset=30)
-        unsent_10 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+        unsent_10 = reminderhelper.given_reminder_exists(user, course=course, sent=False,
                                                          type=enums.PUSH, offset=10)
 
         # WHEN the 30-min reminder is deleted
@@ -409,9 +409,9 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        unsent_9 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=False,
+        unsent_9 = reminderhelper.given_reminder_exists(user, course=course, sent=False,
                                                         type=enums.PUSH, offset=9)
-        stale_sent_10 = reminderhelper.given_reminder_exists(user, course=course, repeating=True, sent=True,
+        stale_sent_10 = reminderhelper.given_reminder_exists(user, course=course, sent=True,
                                                              type=enums.PUSH, offset=10)
 
         # WHEN the active (9-min) reminder is deleted
@@ -741,7 +741,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.MINUTES,
             'type': enums.PUSH,
             'course': course.pk,
-            'repeating': True,
         }
         response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
@@ -788,7 +787,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.MINUTES,
             'type': enums.PUSH,
             'course': course.pk,
-            'repeating': True,
         }
         response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
@@ -824,29 +822,6 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Only one of', response.data['non_field_errors'][0])
-
-    def test_create_event_reminder_with_repeating_fails(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)
-
-        # WHEN
-        data = {
-            'title': 'some title',
-            'message': 'some message',
-            'offset': 1,
-            'offset_type': enums.HOURS,
-            'type': enums.POPUP,
-            'event': event.pk,
-            'repeating': True,
-        }
-        response = self.client.post(reverse('planner_reminders_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('repeating', response.data['non_field_errors'][0].lower())
 
     def test_course_reminder_skips_group_exception(self):
         """Verify that course reminders skip dates in the course group's exceptions."""
@@ -887,7 +862,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.MINUTES,
             'type': enums.PUSH,
             'course': course.pk,
-            'repeating': True,
         }
         response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
@@ -941,7 +915,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.MINUTES,
             'type': enums.PUSH,
             'course': course.pk,
-            'repeating': True,
         }
         response = self.client.post(reverse('planner_reminders_list'),
                                     json.dumps(data),
@@ -1142,7 +1115,7 @@ class TestCaseReminderViews(APITestCase):
             title='Test', message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=15, offset_type=enums.MINUTES,
-            type=enums.PUSH, sent=True, dismissed=False, repeating=True,
+            type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )])
 

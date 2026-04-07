@@ -167,9 +167,8 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         return response
 
     def perform_destroy(self, instance):
-        if instance.repeating and instance.course_id:
+        if instance.course_id:
             Reminder.objects.filter(
-                repeating=True,
                 course_id=instance.course_id,
                 user_id=instance.user_id,
                 type=instance.type,
@@ -177,7 +176,6 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 offset_type=instance.offset_type,
             ).delete()
             Reminder.objects.filter(
-                repeating=True,
                 course_id=instance.course_id,
                 user_id=instance.user_id,
                 type=instance.type,

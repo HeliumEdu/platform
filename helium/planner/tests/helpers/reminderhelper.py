@@ -8,7 +8,7 @@ from helium.planner.models import Reminder
 
 
 def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to do something now.', offset=15,
-                          offset_type=enums.MINUTES, type=enums.TEXT, sent=False, dismissed=False, repeating=False,
+                          offset_type=enums.MINUTES, type=enums.TEXT, sent=False, dismissed=False,
                           event=None, homework=None, course=None):
     reminder = Reminder.objects.create(title=title,
                                        message=message,
@@ -17,7 +17,6 @@ def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to
                                        type=type,
                                        sent=sent,
                                        dismissed=dismissed,
-                                       repeating=repeating,
                                        event=event,
                                        homework=homework,
                                        course=course,
@@ -38,7 +37,6 @@ def verify_reminder_matches_data(test_case, reminder, data):
     test_case.assertEqual(reminder.type, data['type'])
     test_case.assertEqual(reminder.sent, data['sent'])
     test_case.assertEqual(reminder.dismissed, data['dismissed'])
-    test_case.assertEqual(reminder.repeating, data.get('repeating', False))
     if 'event' in data and data['event']:
         if isinstance(data['event'], dict):
             test_case.assertEqual(reminder.event.pk, int(data['event']['id']))

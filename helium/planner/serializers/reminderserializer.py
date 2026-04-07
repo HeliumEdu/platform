@@ -25,7 +25,7 @@ class ReminderSerializer(serializers.ModelSerializer):
         model = Reminder
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
-            'repeating', 'homework', 'event', 'course', 'user',)
+            'homework', 'event', 'course', 'user',)
         read_only_fields = ('user',)
         extra_kwargs = {
             'start_of_range': {'required': False, 'allow_null': True},
@@ -55,11 +55,6 @@ class ReminderSerializer(serializers.ModelSerializer):
         else:
             # No new parent in request, keep existing
             final_has_course = self.instance and self.instance.course
-
-        # Validate that repeating is only allowed for course reminders
-        is_repeating = attrs.get('repeating', False) or (self.instance and self.instance.repeating and 'repeating' not in attrs)
-        if is_repeating and not final_has_course:
-            raise serializers.ValidationError("The `repeating` field can only be set to true for course reminders.")
 
         # Capture original parent refs before nulling them out below, for the sent-reset check.
         orig_homework = self.instance.homework if self.instance else None
