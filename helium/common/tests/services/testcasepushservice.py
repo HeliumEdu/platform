@@ -63,6 +63,27 @@ class TestCasePushService(TestCase):
         # THEN
         mock_increment.assert_called_once_with('action.push.failed', value=2)
 
+    @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
+    def test_send_notifications_uses_platform_specific_notification_fields(self, mock_send):
+        # GIVEN
+        mock_response = mock.MagicMock()
+        mock_response.success_count = 1
+        mock_response.failure_count = 0
+        mock_send.return_value = mock_response
+
+        # WHEN
+        pushservice.send_notifications(['token1'], 'Subject', 'Message', {'id': 1})
+
+        # THEN: no top-level notification field (causes web double-notification via FCM auto-display)
+        message = mock_send.call_args[0][0]
+        self.assertIsNone(message.notification)
+
+        # AND: native platforms receive notification via platform-specific configs
+        self.assertEqual(message.android.notification.title, 'Subject')
+        self.assertEqual(message.android.notification.body, 'Message')
+        self.assertEqual(message.apns.payload.aps.alert.title, 'Subject')
+        self.assertEqual(message.apns.payload.aps.alert.body, 'Message')
+
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
     def test_send_notifications_exception(self, mock_send, mock_increment):
