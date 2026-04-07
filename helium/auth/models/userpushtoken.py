@@ -21,6 +21,7 @@ class UserPushToken(BaseModel):
 
     class Meta:
         verbose_name_plural = 'User push tokens'
+        unique_together = [('user', 'device_id')]
 
     def __str__(self):  # pragma: no cover
         return f'{self.pk} ({self.user.get_username()})'

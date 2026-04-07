@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.184"
+__version__ = "2.1.185"
 
 import os
 import socket
@@ -422,6 +422,10 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
+
+SILENCED_SYSTEM_CHECKS = [
+    'fields.W342',  # ForeignKey(unique=True) on CourseSchedule.course; intentional, not converting to OneToOneField
+]
 
 if 'prod' in ENVIRONMENT and DEBUG:
     raise ImproperlyConfigured("DEBUG must not be enabled in production environments")

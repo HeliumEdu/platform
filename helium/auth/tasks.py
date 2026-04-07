@@ -173,7 +173,7 @@ def purge_push_tokens(self):
     metrics = metricutils.task_start("push.token.purge", priority="low", published_at_ms=published_at_ms)
 
     cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.PUSH_TOKEN_TTL_DAYS)
-    _, num_deleted = UserPushToken.objects.filter(created_at__lt=cutoff).delete()
+    _, num_deleted = UserPushToken.objects.filter(updated_at__lt=cutoff).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
 

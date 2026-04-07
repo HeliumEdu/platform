@@ -331,7 +331,7 @@ def process_push_reminders(mark_sent_only=False):
                 else:
                     logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
 
-                    push_tokens = [t.token for t in user.push_tokens.all()]
+                    push_tokens = list({t.device_id: t.token for t in user.push_tokens.all()}.values())
 
                     if len(push_tokens) > 0:
                         metricutils.increment('task', value=len(push_tokens), user=reminder.user,
