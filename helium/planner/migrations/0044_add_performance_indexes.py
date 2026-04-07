@@ -1,6 +1,5 @@
 # Generated manually
 
-from django.conf import settings
 from django.db import migrations, models
 
 
@@ -8,7 +7,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('planner', '0043_remove_wasteful_indexes'),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
