@@ -72,7 +72,11 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
                 external_calendar.save()
                 logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
-        # Re-assign sequential IDs to ensure uniqueness across all calendars
+        # Re-assign sequential IDs to ensure uniqueness across all calendars.
+        # TODO: Once the legacy frontend (frontend-legacy) is shut down, replace this with
+        # stable IDs derived from each event's ICS UID so the frontend can reliably
+        # deduplicate the same event returned by different date-range queries. The new
+        # frontend already works around this limitation with content-based deduplication.
         for i, event in enumerate(events):
             event.id = i
 
