@@ -174,7 +174,7 @@ def resend_verification_email(request):
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
         # Set rate limit
-        cache.set(cache_key, True, RESEND_VERIFICATION_COOLDOWN_SECONDS)
+        cache.set(cache_key, True, settings.RESEND_VERIFICATION_COOLDOWN_SECONDS)
 
         return Response(status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:

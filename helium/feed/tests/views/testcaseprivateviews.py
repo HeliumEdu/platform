@@ -5,6 +5,7 @@ import logging
 import time
 
 import icalendar
+from django.conf import settings
 from django.urls import reverse
 from django.utils.http import http_date
 
@@ -204,7 +205,7 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertIn('ETag', response)
         self.assertIn('Last-Modified', response)
         self.assertIn('Cache-Control', response)
-        self.assertEqual(response['Cache-Control'], 'private, max-age=0, must-revalidate')
+        self.assertEqual(response['Cache-Control'], f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate')
         self.assertIn(str(user.pk), response['ETag'])
 
     def test_events_feed_returns_etag_without_last_modified_when_empty(self):
@@ -307,7 +308,7 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertIn('ETag', response)
         self.assertIn('Last-Modified', response)
         self.assertIn('Cache-Control', response)
-        self.assertEqual(response['Cache-Control'], 'private, max-age=0, must-revalidate')
+        self.assertEqual(response['Cache-Control'], f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate')
 
     def test_homework_feed_returns_304_on_matching_etag(self):
         # GIVEN
@@ -396,7 +397,7 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertIn('ETag', response)
         self.assertIn('Last-Modified', response)
         self.assertIn('Cache-Control', response)
-        self.assertEqual(response['Cache-Control'], 'private, max-age=0, must-revalidate')
+        self.assertEqual(response['Cache-Control'], f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate')
 
     def test_courseschedules_feed_returns_304_on_matching_etag(self):
         # GIVEN
