@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.194"
+__version__ = "2.1.195"
 
 import os
 import socket
@@ -160,6 +160,13 @@ FEED_CACHE_TTL_SECONDS = 60 * 60 * 3
 FEED_CACHE_REFRESH_TTL_SECONDS = FEED_CACHE_TTL_SECONDS - (60 * 10)
 REINDEX_FEED_FREQUENCY_SEC = 75
 
+# How long calendar clients may cache ICS feeds before revalidating (15 minutes).
+# ETags still ensure correctness on revalidation; this only reduces server-side
+# aggregation query load from high-frequency pollers (e.g. iOS Calendar).
+FEED_ICS_MAX_AGE_SECONDS = 60 * 15
+
+RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
+
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
@@ -186,6 +193,8 @@ REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD = 4
 REVIEW_PROMPT_RECENT_WINDOW_DAYS = 7
 
 EMAIL_SEND_RATE_PER_SEC = 7
+
+RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
 
 BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 

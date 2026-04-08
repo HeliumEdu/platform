@@ -17,6 +17,29 @@ from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
+_ses_client = None
+
+
+class HeliumError(Exception):
+    pass
+
+
+class EmailSuppressedException(HeliumError):
+    """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
+
+    def __init__(self, email, original_error=None):
+        self.email = email
+        self.original_error = original_error
+        super().__init__('Email was suppressed due to rejected recipient')
+
+
+def _get_ses_client():
+    global _ses_client
+    if _ses_client is None:
+        import boto3
+        _ses_client = boto3.client('sesv2', region_name=settings.AWS_REGION)
+    return _ses_client
+
 
 def redact_email(email: str) -> str:
     """
@@ -48,38 +71,21 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
         return False
 
     try:
-        import boto3
         from botocore.exceptions import ClientError
-
-        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
-
-        try:
-            client.delete_suppressed_destination(EmailAddress=email)
-            logger.info(f'Removed {redact_email(email)} from SES suppression list')
-            metricutils.increment('ses.suppression.cleared')
-            return True
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'NotFoundException':
-                return False
-            raise
-
+        _get_ses_client().delete_suppressed_destination(EmailAddress=email)
+        logger.info(f'Removed {redact_email(email)} from SES suppression list')
+        metricutils.increment('ses.suppression.cleared')
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NotFoundException':
+            return False
+        logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
+        metricutils.increment('ses.suppression.check_failed')
+        return False
     except Exception as e:
         logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
         metricutils.increment('ses.suppression.check_failed')
         return False
-
-
-class HeliumError(Exception):
-    pass
-
-
-class EmailSuppressedException(HeliumError):
-    """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
-
-    def __init__(self, email, original_error=None):
-        self.email = email
-        self.original_error = original_error
-        super().__init__('Email was suppressed due to rejected recipient')
 
 
 def add_to_ses_suppression_list(email: str) -> bool:
@@ -93,10 +99,7 @@ def add_to_ses_suppression_list(email: str) -> bool:
         return False
 
     try:
-        import boto3
-
-        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
-        client.put_suppressed_destination(
+        _get_ses_client().put_suppressed_destination(
             EmailAddress=email,
             Reason='BOUNCE',
         )

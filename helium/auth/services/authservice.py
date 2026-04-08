@@ -18,16 +18,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.tasks import send_password_reset_email, send_registration_email, send_verification_email
+from helium.auth.tasks import clear_email_suppression, send_password_reset_email, send_registration_email, \
+    send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
+from helium.common.utils.commonutils import redact_email
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
 
 logger = logging.getLogger(__name__)
-
 
 def forgot_password(request):
     """
@@ -126,9 +126,6 @@ def verify_email(request):
         raise NotFound('No User matches the given query.')
 
 
-RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
-
-
 def resend_verification_email(request):
     """
     Resend the verification email for an inactive user account or an active user changing their email.
@@ -167,8 +164,6 @@ def resend_verification_email(request):
         # Send to email_changing if set (active user changing email), otherwise to email (new registration)
         target_email = user.email_changing if user.email_changing else user.email
 
-        clear_ses_suppression_if_exists(target_email)
-
         send_verification_email.apply_async(
             args=(target_email, user.username, user.verification_code),
             priority=settings.CELERY_PRIORITY_HIGH,
@@ -179,16 +174,13 @@ def resend_verification_email(request):
         metricutils.increment('action.user.verification-resent', request=request, user=user)
 
         # Set rate limit
-        cache.set(cache_key, True, RESEND_VERIFICATION_COOLDOWN_SECONDS)
+        cache.set(cache_key, True, settings.RESEND_VERIFICATION_COOLDOWN_SECONDS)
 
         return Response(status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:
         # Don't reveal whether user exists - return success anyway
         logger.info(f'Resend verification requested for unknown account identifier')
         return Response(status=status.HTTP_202_ACCEPTED)
-
-
-SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
 
 
 def oauth_login(request):
@@ -207,8 +199,9 @@ def oauth_login(request):
         raise ValidationError("'provider' is required")
 
     provider = request.data['provider'].lower()
-    if provider not in SUPPORTED_OAUTH_PROVIDERS:
-        raise ValidationError(f"'provider' must be one of: {', '.join(SUPPORTED_OAUTH_PROVIDERS)}")
+    supported_providers = [choice[0] for choice in UserOAuthProvider.PROVIDER_CHOICES]
+    if provider not in supported_providers:
+        raise ValidationError(f"'provider' must be one of: {', '.join(supported_providers)}")
 
     provider_name = provider.capitalize()
 
@@ -269,7 +262,8 @@ def oauth_login(request):
                 logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
                 metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
 
-            logger.info(f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In (matched by provider UID)')
+            logger.info(
+                f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In (matched by provider UID)')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
         elif user:
@@ -308,6 +302,11 @@ def oauth_login(request):
                 'email': email,
             })
 
+            clear_email_suppression.apply_async(
+                args=(email,),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
+
             # Import the example schedule for the user
             import_example_schedule.apply_async(
                 args=(user.pk,),
@@ -335,7 +334,7 @@ def oauth_login(request):
 
         if not user.settings.next_review_prompt_date:
             user.settings.next_review_prompt_date = (
-                timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
+                    timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
             )
             user.settings.save(update_fields=['next_review_prompt_date'])
 

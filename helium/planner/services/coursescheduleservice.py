@@ -174,6 +174,9 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     events_filtered = []
 
     exceptions = _parse_exceptions(course)
+    course_user = course.get_user()
+    user_tz = pytz.timezone(course_user.settings.time_zone)
+    comments = _get_comments(course)
 
     day = course.start_date
     while day <= course.end_date:
@@ -188,15 +191,12 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                 end_time = _get_end_time_for_weekday(course_schedule,
                                                      enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
 
-                user_tz = pytz.timezone(course.get_user().settings.time_zone)
                 start = user_tz.localize(
                     datetime.datetime.combine(day, start_time)).astimezone(pytz.utc)
                 end = user_tz.localize(
                     datetime.datetime.combine(day, end_time)).astimezone(pytz.utc)
 
-                comments = _get_comments(course)
-
-                unique_str = str(course.get_user().pk) + str(
+                unique_str = str(course_user.pk) + str(
                     course_schedule.pk) + start.isoformat() + end.isoformat()
                 event = Event(id=abs(hash(unique_str)) % (10 ** 8),
                               title=course.title,
@@ -206,7 +206,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                               end=end,
                               url=course.website,
                               owner_id=course.pk,
-                              user=course.get_user(),
+                              user=course_user,
                               calendar_item_type=enums.COURSE,
                               comments=comments)
                 event.color = course.color

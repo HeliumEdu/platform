@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.utils.http import http_date
@@ -54,7 +55,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
             response['ETag'] = etag
             if last_modified:
                 response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = 'private, max-age=0, must-revalidate'
+            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
             return response
         except UserModel.DoesNotExist:
             raise NotFound()
@@ -98,7 +99,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
             response['ETag'] = etag
             if last_modified:
                 response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = 'private, max-age=0, must-revalidate'
+            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
             return response
         except UserModel.DoesNotExist:
             raise NotFound()
@@ -144,7 +145,7 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
             response['ETag'] = etag
             if last_modified:
                 response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = 'private, max-age=0, must-revalidate'
+            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
             return response
         except UserModel.DoesNotExist:
             raise NotFound()
