@@ -18,7 +18,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.tasks import clear_email_suppression, send_password_reset_email, send_registration_email, send_verification_email
+from helium.auth.tasks import clear_email_suppression, send_password_reset_email, send_registration_email, \
+    send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import redact_email
@@ -27,6 +28,8 @@ from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
 
 logger = logging.getLogger(__name__)
+
+SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
 
 
 def forgot_password(request):
@@ -126,9 +129,6 @@ def verify_email(request):
         raise NotFound('No User matches the given query.')
 
 
-RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
-
-
 def resend_verification_email(request):
     """
     Resend the verification email for an inactive user account or an active user changing their email.
@@ -184,9 +184,6 @@ def resend_verification_email(request):
         # Don't reveal whether user exists - return success anyway
         logger.info(f'Resend verification requested for unknown account identifier')
         return Response(status=status.HTTP_202_ACCEPTED)
-
-
-SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
 
 
 def oauth_login(request):
@@ -267,7 +264,8 @@ def oauth_login(request):
                 logger.info(f'Activated inactive user {user.id} via {provider_name} Sign-In')
                 metricutils.increment(f'action.user.{provider_name.lower()}-activated', request=request, user=user)
 
-            logger.info(f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In (matched by provider UID)')
+            logger.info(
+                f'Existing user {user.id} ({redact_email(user.email)}) logged in via {provider_name} Sign-In (matched by provider UID)')
             metricutils.increment(f'action.user.{provider_name.lower()}-login', request=request, user=user)
 
         elif user:
@@ -338,7 +336,7 @@ def oauth_login(request):
 
         if not user.settings.next_review_prompt_date:
             user.settings.next_review_prompt_date = (
-                timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
+                    timezone.now() + timedelta(days=settings.REVIEW_PROMPT_INITIAL_DELAY_DAYS)
             )
             user.settings.save(update_fields=['next_review_prompt_date'])
 

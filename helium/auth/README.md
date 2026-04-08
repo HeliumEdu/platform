@@ -11,8 +11,6 @@ interact with user details.
 The following project variables must be defined in the parent project's configuration for this module to function.
 
 - `PROJECT_NAME`
-- `PROJECT_EMAIL`
 - `ADMIN_EMAIL_ADDRESS`
 - `DISABLE_EMAILS`
-- `DISABLE_TEXTS`
 - `DISABLE_PUSH`

@@ -22,6 +22,19 @@ logger = logging.getLogger(__name__)
 _ses_client = None
 
 
+class HeliumError(Exception):
+    pass
+
+
+class EmailSuppressedException(HeliumError):
+    """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
+
+    def __init__(self, email, original_error=None):
+        self.email = email
+        self.original_error = original_error
+        super().__init__('Email was suppressed due to rejected recipient')
+
+
 def _get_ses_client():
     global _ses_client
     if _ses_client is None:
@@ -73,19 +86,6 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
         logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
         metricutils.increment('ses.suppression.check_failed')
         return False
-
-
-class HeliumError(Exception):
-    pass
-
-
-class EmailSuppressedException(HeliumError):
-    """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
-
-    def __init__(self, email, original_error=None):
-        self.email = email
-        self.original_error = original_error
-        super().__init__('Email was suppressed due to rejected recipient')
 
 
 def add_to_ses_suppression_list(email: str) -> bool:
