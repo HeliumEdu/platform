@@ -8,8 +8,6 @@ import random
 import smtplib
 from decimal import Decimal
 
-import boto3
-from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
@@ -38,6 +36,7 @@ class EmailSuppressedException(HeliumError):
 def _get_ses_client():
     global _ses_client
     if _ses_client is None:
+        import boto3
         _ses_client = boto3.client('sesv2', region_name=settings.AWS_REGION)
     return _ses_client
 
@@ -72,6 +71,7 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
         return False
 
     try:
+        from botocore.exceptions import ClientError
         _get_ses_client().delete_suppressed_destination(EmailAddress=email)
         logger.info(f'Removed {redact_email(email)} from SES suppression list')
         metricutils.increment('ses.suppression.cleared')
