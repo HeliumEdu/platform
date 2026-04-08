@@ -29,9 +29,6 @@ from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_OAUTH_PROVIDERS = ['google', 'apple']
-
-
 def forgot_password(request):
     """
     Generate a new password and send an email to the address specified in the request. For security purposes, whether
@@ -202,8 +199,9 @@ def oauth_login(request):
         raise ValidationError("'provider' is required")
 
     provider = request.data['provider'].lower()
-    if provider not in SUPPORTED_OAUTH_PROVIDERS:
-        raise ValidationError(f"'provider' must be one of: {', '.join(SUPPORTED_OAUTH_PROVIDERS)}")
+    supported_providers = [choice[0] for choice in UserOAuthProvider.PROVIDER_CHOICES]
+    if provider not in supported_providers:
+        raise ValidationError(f"'provider' must be one of: {', '.join(supported_providers)}")
 
     provider_name = provider.capitalize()
 

@@ -17,6 +17,7 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
+from helium.auth.models import UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
 from helium.common.utils import metricutils
 
@@ -194,7 +195,7 @@ class OAuthLoginSerializer(serializers.Serializer):
         write_only=True
     )
     provider = serializers.ChoiceField(
-        choices=['google', 'apple'],
+        choices=UserOAuthProvider.PROVIDER_CHOICES,
         help_text='The OAuth provider (google or apple).',
         write_only=True
     )
