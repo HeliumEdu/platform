@@ -8,6 +8,8 @@ import random
 import smtplib
 from decimal import Decimal
 
+import boto3
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
@@ -16,6 +18,15 @@ from helium.common import enums
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
+
+_ses_client = None
+
+
+def _get_ses_client():
+    global _ses_client
+    if _ses_client is None:
+        _ses_client = boto3.client('sesv2', region_name=settings.AWS_REGION)
+    return _ses_client
 
 
 def redact_email(email: str) -> str:
@@ -48,21 +59,16 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
         return False
 
     try:
-        import boto3
-        from botocore.exceptions import ClientError
-
-        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
-
-        try:
-            client.delete_suppressed_destination(EmailAddress=email)
-            logger.info(f'Removed {redact_email(email)} from SES suppression list')
-            metricutils.increment('ses.suppression.cleared')
-            return True
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'NotFoundException':
-                return False
-            raise
-
+        _get_ses_client().delete_suppressed_destination(EmailAddress=email)
+        logger.info(f'Removed {redact_email(email)} from SES suppression list')
+        metricutils.increment('ses.suppression.cleared')
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NotFoundException':
+            return False
+        logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
+        metricutils.increment('ses.suppression.check_failed')
+        return False
     except Exception as e:
         logger.warning(f'Failed to clear SES suppression for {redact_email(email)}: {e}')
         metricutils.increment('ses.suppression.check_failed')
@@ -93,10 +99,7 @@ def add_to_ses_suppression_list(email: str) -> bool:
         return False
 
     try:
-        import boto3
-
-        client = boto3.client('sesv2', region_name=settings.AWS_REGION)
-        client.put_suppressed_destination(
+        _get_ses_client().put_suppressed_destination(
             EmailAddress=email,
             Reason='BOUNCE',
         )

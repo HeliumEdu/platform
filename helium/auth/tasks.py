@@ -18,7 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from conf.celery import app
 from helium.auth.models import UserPushToken, UserSettings
 from helium.common.utils import commonutils, metricutils
-from helium.common.utils.commonutils import redact_email
+from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Attachment, Category, Course, CourseGroup, Event, Homework, Material, Note, Reminder
 
@@ -26,7 +26,17 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
-def send_verification_email(self, email, username, verification_code):
+def clear_email_suppression(self, email):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("ses.suppression.clear", priority="high", published_at_ms=published_at_ms)
+
+    clear_ses_suppression_if_exists(email)
+
+    metricutils.task_stop(metrics)
+
+
+@app.task(bind=True)
+def send_verification_email(self, email, username, verification_code, clear_suppression=False):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.verification.sent", priority="high", published_at_ms=published_at_ms)
 
@@ -34,6 +44,9 @@ def send_verification_email(self, email, username, verification_code):
         logger.warning(f'Emails disabled. Verification code: {verification_code}')
         metricutils.task_stop(metrics, value=0)
         return
+
+    if clear_suppression:
+        clear_ses_suppression_if_exists(email)
 
     commonutils.send_multipart_email('email/verification',
                                      {
