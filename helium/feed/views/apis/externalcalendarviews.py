@@ -80,6 +80,17 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
         return response
 
+    def patch(self, request, *args, **kwargs):
+        """
+        Partially update the given external calendar instance.
+        """
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info(
+            f"ExternalCalendar {kwargs['pk']} partially updated for user {request.user.get_username()}")
+
+        return response
+
     @extend_schema(
         tags=['feed.externalcalendar']
     )
