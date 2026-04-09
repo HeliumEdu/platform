@@ -17,11 +17,20 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-from helium.auth.models import UserOAuthProvider
+from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
 from helium.common.utils import metricutils
+from helium.common.utils.metricutils import _normalize_user_agent_tag
 
 logger = logging.getLogger(__name__)
+
+
+def _record_mobile_activity_if_applicable(user, request):
+    if not request:
+        return
+    ua = request.headers.get('User-Agent', '')
+    if _normalize_user_agent_tag(ua) == 'mobile_app_flutter':
+        UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date())
 
 
 class TokenResponseFieldsMixin(serializers.Serializer):
@@ -80,6 +89,8 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             user.deletion_warning_count = 0
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+
+            _record_mobile_activity_if_applicable(user, self.context.get('request'))
 
             if not user.settings.next_review_prompt_date:
                 user.settings.next_review_prompt_date = (
@@ -154,6 +165,8 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
             user.deletion_warning_count = 0
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+
+            _record_mobile_activity_if_applicable(user, self.context.get('request'))
 
         data = {"access": str(refresh.access_token)}
 

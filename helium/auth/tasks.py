@@ -16,7 +16,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
-from helium.auth.models import UserPushToken, UserSettings
+from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
@@ -509,6 +509,62 @@ def emit_nightly_metrics(self):
 
 
 @app.task(bind=True)
+def rollup_client_activity(self):
+    UserModel = get_user_model()
+
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.client-activity.rollup", priority="low", published_at_ms=published_at_ms)
+
+    now = datetime.now().replace(tzinfo=pytz.utc)
+    today = now.date()
+
+    try:
+        cutoff_90d = today - timedelta(days=90)
+
+        # Prune rows outside the max window
+        _, num_pruned = UserClientActivity.objects.filter(date__lt=cutoff_90d).delete()
+        if num_pruned:
+            logger.info(f'Pruned {num_pruned} UserClientActivity row(s) older than 90 days')
+
+        # Rollup per-user mobile app usage and emit DataDog gauges
+        users_with_activity = (
+            UserClientActivity.objects
+            .filter(date__gte=cutoff_90d)
+            .values_list('user_id', flat=True)
+            .distinct()
+        )
+
+        to_update = []
+        for user_id in users_with_activity:
+            user = UserModel.objects.filter(pk=user_id).first()
+            if not user:
+                continue
+
+            for window_tag, days in [('7d', 7), ('30d', 30), ('90d', 90)]:
+                cutoff = today - timedelta(days=days)
+                mobile_days = UserClientActivity.objects.filter(user_id=user_id, date__gte=cutoff).count()
+                percent = mobile_days / days * 100
+                metricutils.gauge('users.mobile_app_usage_percent', percent,
+                                  extra_tags=[f'window:{window_tag}', f'user:{user_id}'])
+
+                if window_tag == '30d':
+                    user.mobile_app_usage_percent_30d = percent
+
+            to_update.append(user)
+
+        if to_update:
+            UserModel.objects.bulk_update(to_update, ['mobile_app_usage_percent_30d'])
+
+        metricutils.task_stop(metrics, value=len(to_update))
+        logger.info(f'Client activity rollup complete: {len(to_update)} user(s) updated')
+
+    except Exception as e:
+        logger.error(f'Failed to rollup client activity: {e}', exc_info=True)
+        metricutils.task_failure("user.client-activity.rollup", exception_type=type(e).__name__, priority="low")
+        raise
+
+
+@app.task(bind=True)
 def evaluate_review_prompts(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
@@ -720,9 +776,11 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     sender.add_periodic_task(crontab(hour=2, minute=0),
                              purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
-    # Nightly metrics and review prompt evaluation
+    # Nightly metrics, client activity rollup, and review prompt evaluation
     sender.add_periodic_task(crontab(hour=3, minute=0),
                              emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
+    sender.add_periodic_task(crontab(hour=3, minute=30),
+                             rollup_client_activity.s().set(priority=settings.CELERY_PRIORITY_LOW))
     sender.add_periodic_task(crontab(hour=4, minute=0),
                              evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
 

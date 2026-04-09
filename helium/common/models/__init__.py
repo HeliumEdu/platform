@@ -1,5 +1,7 @@
+__copyright__ = "Copyright (c) 2025 Helium Edu"
+__license__ = "MIT"
+
 from .base import BaseModel
-from .taskresult import TaskResultProxy
 from .emailreputationevent import (
     EmailReputationEvent,
     EMAIL_TYPE_VERIFICATION,
@@ -22,3 +24,4 @@ from .emailreputationevent import (
     COMPLAINT_SUBTYPE_OTHER,
     COMPLAINT_SUBTYPE_VIRUS,
 )
+from .taskresultproxy import TaskResultProxy

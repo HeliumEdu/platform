@@ -23,6 +23,7 @@ class MaterialGroup(BaseModel):
     objects = MaterialGroupManager()
 
     class Meta:
+        verbose_name = 'Resource group'
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover

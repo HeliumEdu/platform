@@ -36,6 +36,7 @@ class Material(BaseModel):
     objects = MaterialManager()
 
     class Meta:
+        verbose_name = 'Resource'
         ordering = ('title',)
 
     def __str__(self):  # pragma: no cover

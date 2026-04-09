@@ -18,6 +18,8 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
+from helium.auth.models.userclientactivity import UserClientActivity
+from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingTokenProxy
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
@@ -329,7 +331,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'last_login_legacy',
-                    'deletion_warning_count', 'created_at', 'is_active')
+                    'deletion_warning_count', 'mobile_app_usage_percent_30d', 'created_at', 'is_active')
     list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
@@ -402,13 +404,13 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     def num_courses(self, obj):
         return obj._num_courses
 
-    num_courses.short_description = 'Courses'
+    num_courses.short_description = 'Classes'
     num_courses.admin_order_field = '_num_courses'
 
     def num_homework(self, obj):
         return obj._num_homework
 
-    num_homework.short_description = 'Homework'
+    num_homework.short_description = 'Assignments'
     num_homework.admin_order_field = '_num_homework'
 
     def num_events(self, obj):
@@ -562,9 +564,8 @@ class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
 
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
-    search_fields = ('token__jti', 'tokne__user__id', 'token__user__email', 'token__user__username')
+    search_fields = ('token__jti', 'token__user__id', 'token__user__email', 'token__user__username')
     ordering = ('-token__user__last_activity',)
-    autocomplete_fields = ('token',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -574,6 +575,38 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
 
         return readonly_fields + self.readonly_fields
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class UserClientActivityAdmin(django_admin.ModelAdmin):
+    list_display = ('get_user', 'date')
+    list_filter = ('date',)
+    search_fields = ('user__id', 'user__email', 'user__username')
+    ordering = ('-date',)
+    readonly_fields = ('user', 'date')
+
+    def get_user(self, obj):
+        return obj.user.email if obj.user else ''
+
+    get_user.short_description = 'User'
+    get_user.admin_order_field = 'user__email'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
@@ -581,5 +614,6 @@ admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserPushToken, UserPushTokenAdmin)
 admin_site.register(UserOAuthProvider, UserOAuthProviderAdmin)
-admin_site.register(OutstandingToken, HeliumOutstandingTokenAdmin)
-admin_site.register(BlacklistedToken, HeliumBlacklistedTokenAdmin)
+admin_site.register(UserClientActivity, UserClientActivityAdmin)
+admin_site.register(OutstandingTokenProxy, HeliumOutstandingTokenAdmin)
+admin_site.register(BlacklistedTokenProxy, HeliumBlacklistedTokenAdmin)
