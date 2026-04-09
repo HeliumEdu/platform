@@ -41,18 +41,8 @@ COMPLAINT_SUBTYPE_VIRUS = 'virus'
 
 
 class EmailReputationEvent(models.Model):
-    """
-    Append-only log of individual SES bounce and complaint events received via SNS webhook.
-
-    The recipient email is never stored in plaintext. Only an HMAC-SHA256 hash is kept so
-    records can be looked up without exposing PII in the database. The ``user`` FK provides
-    the actionable link to an account when the recipient matched a registered user.
-    """
-
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
-    #: FK to the user account, if the destination email matched one at event time.
-    #: SET_NULL preserves reputation history even after account deletion.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -61,26 +51,21 @@ class EmailReputationEvent(models.Model):
         related_name='email_reputation_events',
     )
 
-    #: HMAC-SHA256 of the normalised recipient email address (lowercased, stripped).
-    email_hash = models.CharField(max_length=64, db_index=True)
+    email = models.EmailField(db_index=True)
 
-    #: The category of email that triggered the event, carried via X-SES-MESSAGE-TAGS.
     email_type = models.CharField(max_length=50, choices=EMAIL_TYPE_CHOICES, default=EMAIL_TYPE_UNKNOWN)
 
-    #: Top-level classification: bounce or complaint.
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
 
-    #: Finer-grained subtype (e.g. permanent/transient for bounces; abuse/fraud for complaints).
     event_subtype = models.CharField(max_length=50, null=True, blank=True)
 
-    #: SNS MessageId — deduplicates redeliveries.
     sns_message_id = models.CharField(max_length=100, unique=True)
 
     class Meta:
         app_label = 'helium_common'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['email_hash', 'event_type']),
+            models.Index(fields=['email', 'event_type']),
         ]
 
     def __str__(self):

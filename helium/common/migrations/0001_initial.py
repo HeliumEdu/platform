@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import django.db.models.deletion
-import django.utils.timezone
 from django.conf import settings
 from django.db import migrations, models
 
@@ -21,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('email_hash', models.CharField(db_index=True, max_length=64)),
+                ('email', models.EmailField(db_index=True, max_length=254)),
                 ('email_type', models.CharField(
                     choices=[
                         ('verification', 'Verification'),
@@ -52,38 +51,8 @@ class Migration(migrations.Migration):
                 'ordering': ['-created_at'],
             },
         ),
-        migrations.CreateModel(
-            name='EmailReputationSummary',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('email_hash', models.CharField(max_length=64, unique=True)),
-                ('hard_bounce_count', models.IntegerField(default=0)),
-                ('soft_bounce_count', models.IntegerField(default=0)),
-                ('complaint_count', models.IntegerField(default=0)),
-                ('last_event_at', models.DateTimeField(blank=True, null=True)),
-                ('last_event_type', models.CharField(
-                    blank=True,
-                    choices=[('bounce', 'Bounce'), ('complaint', 'Complaint')],
-                    max_length=20,
-                    null=True,
-                )),
-                ('user', models.OneToOneField(
-                    blank=True,
-                    null=True,
-                    on_delete=django.db.models.deletion.SET_NULL,
-                    related_name='email_reputation_summary',
-                    to=settings.AUTH_USER_MODEL,
-                )),
-            ],
-            options={
-                'verbose_name_plural': 'email reputation summaries',
-                'ordering': ['-updated_at'],
-            },
-        ),
         migrations.AddIndex(
             model_name='emailreputationevent',
-            index=models.Index(fields=['email_hash', 'event_type'], name='helium_comm_email_h_event_t_idx'),
+            index=models.Index(fields=['email', 'event_type'], name='helium_comm_email_event_type_idx'),
         ),
     ]

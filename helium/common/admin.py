@@ -110,75 +110,31 @@ class TaskResultAdmin(ModelAdmin):
 admin_site.register(TaskResult, TaskResultAdmin)
 
 
-class EmailReputationEventAdmin(ModelAdmin):
-    list_display = ('created_at', 'get_user', 'email_type', 'event_type', 'event_subtype')
-    list_filter = ('event_type', 'email_type')
-    search_fields = ('email_hash', 'user__email', 'user__username', 'sns_message_id')
-    ordering = ('-created_at',)
-    readonly_fields = ('created_at', 'user', 'email_hash', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def get_user(self, obj):
-        return obj.user.email if obj.user else '—'
-
-    get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__email'
-
-
-def suppress_selected_emails(modeladmin, request, queryset):
-    """
-    Django Admin action: add the selected email addresses to the SES suppression list
-    with reason COMPLAINT. Only rows with a resolved user FK can be actioned; unresolved
-    hashes (no matched account) are skipped with a warning.
-    """
+def suppress_selected_email_events(modeladmin, request, queryset):
+    """Django Admin action: suppress the distinct email addresses from the selected events."""
     from helium.common.utils.commonutils import add_to_ses_suppression_list
 
-    suppressed = []
-    skipped = 0
+    emails = list(queryset.values_list('email', flat=True).distinct())
+    for email in emails:
+        add_to_ses_suppression_list(email, reason='COMPLAINT')
 
-    for summary in queryset.select_related('user'):
-        if summary.user:
-            add_to_ses_suppression_list(summary.user.email, reason='COMPLAINT')
-            suppressed.append(summary.user.email)
-        else:
-            skipped += 1
-
-    if suppressed:
-        modeladmin.message_user(
-            request,
-            f"Suppressed {len(suppressed)} address(es): {', '.join(suppressed)}",
-            messages.SUCCESS,
-        )
-    if skipped:
-        modeladmin.message_user(
-            request,
-            f"{skipped} row(s) skipped — no linked user account (cannot resolve email from hash alone).",
-            messages.WARNING,
-        )
-
-
-suppress_selected_emails.short_description = "Add selected to SES suppression list (COMPLAINT)"
-
-
-class EmailReputationSummaryAdmin(ModelAdmin):
-    list_display = (
-        'get_user', 'hard_bounce_count', 'soft_bounce_count', 'complaint_count',
-        'last_event_type', 'last_event_at', 'updated_at',
+    modeladmin.message_user(
+        request,
+        f"Suppressed {len(emails)} address(es): {', '.join(emails)}",
+        messages.SUCCESS,
     )
-    list_filter = ('last_event_type',)
-    search_fields = ('email_hash', 'user__email', 'user__username')
-    ordering = ('-updated_at',)
-    readonly_fields = (
-        'created_at', 'updated_at', 'user', 'email_hash',
-        'hard_bounce_count', 'soft_bounce_count', 'complaint_count',
-        'last_event_at', 'last_event_type',
-    )
-    actions = [suppress_selected_emails]
+
+
+suppress_selected_email_events.short_description = "Add selected to SES suppression list (COMPLAINT)"
+
+
+class EmailReputationEventAdmin(ModelAdmin):
+    list_display = ('created_at', 'email', 'email_type', 'event_type', 'event_subtype')
+    list_filter = ('event_type', 'email_type')
+    search_fields = ('email', 'user__email', 'user__username', 'sns_message_id')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'user', 'email', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
+    actions = [suppress_selected_email_events]
 
     def has_add_permission(self, request):
         return False
@@ -186,14 +142,7 @@ class EmailReputationSummaryAdmin(ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    def get_user(self, obj):
-        return obj.user.email if obj.user else f'[no account — {obj.email_hash[:12]}…]'
 
-    get_user.short_description = 'User / Hash'
-    get_user.admin_order_field = 'user__email'
-
-
-from helium.common.models import EmailReputationEvent, EmailReputationSummary
+from helium.common.models import EmailReputationEvent
 
 admin_site.register(EmailReputationEvent, EmailReputationEventAdmin)
-admin_site.register(EmailReputationSummary, EmailReputationSummaryAdmin)

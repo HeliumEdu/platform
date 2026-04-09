@@ -21,4 +21,3 @@ from .emailreputationevent import (
     COMPLAINT_SUBTYPE_OTHER,
     COMPLAINT_SUBTYPE_VIRUS,
 )
-from .emailreputationsummary import EmailReputationSummary

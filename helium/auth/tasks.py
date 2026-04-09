@@ -96,6 +96,8 @@ def send_password_reset_email(self, email, temp_password):
         metricutils.task_stop(metrics, value=0)
         return
 
+    clear_ses_suppression_if_exists(email)
+
     commonutils.send_multipart_email('email/forgot',
                                      {
                                          'password': temp_password,

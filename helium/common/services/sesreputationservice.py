@@ -2,22 +2,16 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import base64
-import hashlib
-import hmac
 import json
 import logging
 import re
 import urllib.request
 from functools import lru_cache
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import F
-from django.utils import timezone
 
 from helium.common.models import (
     EmailReputationEvent,
-    EmailReputationSummary,
     EMAIL_TYPE_CHOICES,
     EMAIL_TYPE_UNKNOWN,
     EVENT_TYPE_BOUNCE,
@@ -46,23 +40,8 @@ _NEVER_SUPPRESS_ON_COMPLAINT = {
 }
 
 
-def make_email_hash(email: str) -> str:
-    """
-    Produce a stable HMAC-SHA256 hex digest of a normalised email address.
-
-    Using HMAC (keyed by SECRET_KEY) rather than a plain SHA-256 prevents
-    rainbow-table lookup of the stored hashes if the database is ever exposed.
-
-    :param email: The raw email address.
-    :return: A 64-character hex string.
-    """
-    normalised = email.lower().strip()
-    return hmac.new(settings.SECRET_KEY.encode(), normalised.encode(), hashlib.sha256).hexdigest()
-
-
 @lru_cache(maxsize=16)
 def _fetch_sns_cert(cert_url: str):
-    """Download and process-cache an SNS signing certificate by URL."""
     from cryptography.x509 import load_pem_x509_certificate
 
     if not _SNS_CERT_URL_PATTERN.match(cert_url):
@@ -140,9 +119,8 @@ def process_ses_notification(message_json: str) -> None:
         bounce = notification.get('bounce', {})
         bounce_type = bounce.get('bounceType', '').lower()
         bounce_subtype = bounce.get('bounceSubType', '').lower()
-        recipients = bounce.get('bouncedRecipients', [])
 
-        for recipient in recipients:
+        for recipient in bounce.get('bouncedRecipients', []):
             email = recipient.get('emailAddress', '')
             if email:
                 _record_bounce(email, email_type, bounce_type, bounce_subtype, sns_message_id)
@@ -150,9 +128,8 @@ def process_ses_notification(message_json: str) -> None:
     elif notification_type == 'Complaint':
         complaint = notification.get('complaint', {})
         feedback_type = (complaint.get('complaintFeedbackType') or 'other').lower()
-        recipients = complaint.get('complainedRecipients', [])
 
-        for recipient in recipients:
+        for recipient in complaint.get('complainedRecipients', []):
             email = recipient.get('emailAddress', '')
             if email:
                 _record_complaint(email, email_type, feedback_type, sns_message_id)
@@ -180,17 +157,13 @@ def _record_bounce(
 ) -> None:
     is_hard = bounce_type == BOUNCE_SUBTYPE_PERMANENT
     subtype = f'{bounce_type}_{bounce_subtype}' if bounce_subtype else bounce_type or None
-    event_type_label = EVENT_TYPE_BOUNCE
-
-    user = _lookup_user(email)
-    email_hash = make_email_hash(email)
 
     try:
         EmailReputationEvent.objects.create(
-            user=user,
-            email_hash=email_hash,
+            user=_lookup_user(email),
+            email=email,
             email_type=email_type,
-            event_type=event_type_label,
+            event_type=EVENT_TYPE_BOUNCE,
             event_subtype=subtype,
             sns_message_id=sns_message_id,
         )
@@ -201,15 +174,6 @@ def _record_bounce(
             exc_info=True,
         )
         return
-
-    _upsert_summary(
-        email_hash=email_hash,
-        user=user,
-        event_type=event_type_label,
-        hard_bounce_delta=1 if is_hard else 0,
-        soft_bounce_delta=0 if is_hard else 1,
-        complaint_delta=0,
-    )
 
     if is_hard:
         logger.info(f"Hard bounce for {redact_email(email)} ({email_type}); adding to suppression list")
@@ -225,13 +189,10 @@ def _record_complaint(
     feedback_type: str,
     sns_message_id: str,
 ) -> None:
-    user = _lookup_user(email)
-    email_hash = make_email_hash(email)
-
     try:
         EmailReputationEvent.objects.create(
-            user=user,
-            email_hash=email_hash,
+            user=_lookup_user(email),
+            email=email,
             email_type=email_type,
             event_type=EVENT_TYPE_COMPLAINT,
             event_subtype=feedback_type or None,
@@ -245,15 +206,6 @@ def _record_complaint(
         )
         return
 
-    summary = _upsert_summary(
-        email_hash=email_hash,
-        user=user,
-        event_type=EVENT_TYPE_COMPLAINT,
-        hard_bounce_delta=0,
-        soft_bounce_delta=0,
-        complaint_delta=1,
-    )
-
     metricutils.increment('ses.reputation.complaint', extra_tags=[f'email_type:{email_type}', f'feedback:{feedback_type}'])
 
     if email_type in _NEVER_SUPPRESS_ON_COMPLAINT:
@@ -266,8 +218,11 @@ def _record_complaint(
         metricutils.increment('ses.reputation.suppressed', extra_tags=[f'reason:complaint', f'email_type:{email_type}'])
         return
 
+    from django.conf import settings
     threshold = getattr(settings, 'SES_COMPLAINT_SUPPRESS_THRESHOLD', 2)
-    complaint_count = summary.complaint_count if summary else 0
+    complaint_count = EmailReputationEvent.objects.filter(
+        email__iexact=email, event_type=EVENT_TYPE_COMPLAINT
+    ).count()
     if complaint_count >= threshold:
         logger.info(
             f"Complaint #{complaint_count} ({email_type}) for {redact_email(email)}; "
@@ -281,43 +236,3 @@ def _lookup_user(email: str):
     """Return the User matching this email, or None."""
     UserModel = get_user_model()
     return UserModel.objects.filter(email__iexact=email).first()
-
-
-def _upsert_summary(
-    email_hash: str,
-    user,
-    event_type: str,
-    hard_bounce_delta: int,
-    soft_bounce_delta: int,
-    complaint_delta: int,
-) -> 'EmailReputationSummary':
-    """
-    Atomically create or update the summary row for this email hash.
-
-    :return: The updated (or freshly created) summary instance.
-    """
-    now = timezone.now()
-
-    summary, created = EmailReputationSummary.objects.get_or_create(
-        email_hash=email_hash,
-        defaults={
-            'user': user,
-            'hard_bounce_count': hard_bounce_delta,
-            'soft_bounce_count': soft_bounce_delta,
-            'complaint_count': complaint_delta,
-            'last_event_at': now,
-            'last_event_type': event_type,
-        },
-    )
-
-    if not created:
-        EmailReputationSummary.objects.filter(pk=summary.pk).update(
-            hard_bounce_count=F('hard_bounce_count') + hard_bounce_delta,
-            soft_bounce_count=F('soft_bounce_count') + soft_bounce_delta,
-            complaint_count=F('complaint_count') + complaint_delta,
-            last_event_at=now,
-            last_event_type=event_type,
-        )
-        summary.refresh_from_db()
-
-    return summary
