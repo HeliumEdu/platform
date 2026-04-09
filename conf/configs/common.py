@@ -336,6 +336,13 @@ EMAIL_HOST_USER = config('PLATFORM_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('PLATFORM_EMAIL_HOST_PASSWORD')
 SES_CONFIGURATION_SET = f'helium-{ENVIRONMENT}'
 
+# Suppress an email after this many complaint events on threshold-based email types (e.g. reminders).
+SES_COMPLAINT_SUPPRESS_THRESHOLD = int(config('PLATFORM_SES_COMPLAINT_SUPPRESS_THRESHOLD', '2'))
+
+# Expected SNS topic ARN for SES events — if set, the webhook validates incoming TopicArn.
+# Populated via Terraform output; left empty in non-prod environments.
+SES_SNS_TOPIC_ARN = config('PLATFORM_SES_SNS_TOPIC_ARN', '')
+
 # Authentication
 
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']

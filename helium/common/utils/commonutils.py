@@ -88,11 +88,12 @@ def clear_ses_suppression_if_exists(email: str) -> bool:
         return False
 
 
-def add_to_ses_suppression_list(email: str) -> bool:
+def add_to_ses_suppression_list(email: str, reason: str = 'BOUNCE') -> bool:
     """
     Add an email to the SES account suppression list.
 
     :param email: The email address to suppress
+    :param reason: SES suppression reason — ``'BOUNCE'`` (default) or ``'COMPLAINT'``
     :return: True if the email was added, False on failure
     """
     if settings.DISABLE_EMAILS:
@@ -101,9 +102,9 @@ def add_to_ses_suppression_list(email: str) -> bool:
     try:
         _get_ses_client().put_suppressed_destination(
             EmailAddress=email,
-            Reason='BOUNCE',
+            Reason=reason,
         )
-        logger.info(f'Added {redact_email(email)} to SES suppression list')
+        logger.info(f'Added {redact_email(email)} to SES suppression list (reason={reason})')
         metricutils.increment('ses.suppression.added')
         return True
 
@@ -132,6 +133,8 @@ def send_multipart_email(template_name, context, subject, to, bcc=None, email_ty
 
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, to, bcc)
     msg.extra_headers['X-SES-CONFIGURATION-SET'] = settings.SES_CONFIGURATION_SET
+    if email_type:
+        msg.extra_headers['X-SES-MESSAGE-TAGS'] = f'email_type={email_type}'
     msg.attach_alternative(html_content, "text/html")
 
     extra_tags = [f"type:{email_type}"] if email_type else []
