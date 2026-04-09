@@ -466,10 +466,10 @@ class UserProfileAdmin(BaseModelAdmin):
 
 
 class UserSettingsAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'review_prompts_shown',
-                    'get_last_activity']
+    list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'color_scheme_theme',
+                    'review_prompts_shown', 'get_last_activity']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
-                   'calendar_use_category_colors', 'default_reminder_type']
+                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme']
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
