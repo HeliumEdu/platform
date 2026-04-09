@@ -292,10 +292,10 @@ def reset_whats_new(modeladmin, request, queryset):
     modeladmin.message_user(request, f'"What\'s New" reset for {updated} user(s).')
 
 
-@django_admin.action(description='Force review prompt for selected users')
+@django_admin.action(description='Trigger review prompt for selected users')
 def force_review_prompt(modeladmin, request, queryset):
     updated = UserSettings.objects.filter(user__in=queryset).update(prompt_for_review=True)
-    modeladmin.message_user(request, f'Review prompt forced for {updated} user(s).')
+    modeladmin.message_user(request, f'Review prompt triggered for {updated} user(s).')
 
 
 @django_admin.action(description='Force logout selected users (invalidates next token refresh)')
