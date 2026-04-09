@@ -543,6 +543,9 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
     def get_user(self, obj):
         if obj.user:
             return obj.user.get_username()
@@ -551,6 +554,11 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
+
+
+class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
@@ -573,5 +581,5 @@ admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserPushToken, UserPushTokenAdmin)
 admin_site.register(UserOAuthProvider, UserOAuthProviderAdmin)
-admin_site.register(OutstandingToken, OutstandingTokenAdmin)
+admin_site.register(OutstandingToken, HeliumOutstandingTokenAdmin)
 admin_site.register(BlacklistedToken, HeliumBlacklistedTokenAdmin)

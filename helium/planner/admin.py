@@ -489,7 +489,7 @@ class MaterialGroupAdmin(BaseModelAdmin):
 
 class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
-    list_filter = ('status', 'condition', 'material_group__shown_on_calendar', 'material_group__example_schedule')
+    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule')
     search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group', 'courses',)
 
