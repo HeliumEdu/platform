@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.196"
+__version__ = "2.1.197"
 
 import os
 import socket
@@ -193,8 +193,6 @@ REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD = 4
 REVIEW_PROMPT_RECENT_WINDOW_DAYS = 7
 
 EMAIL_SEND_RATE_PER_SEC = 7
-
-RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
 
 BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
 
@@ -462,6 +460,9 @@ CELERY_RESULT_EXPIRES = 3600 * 24 * 7
 # Priority constants for Celery tasks (lower number = higher priority)
 CELERY_PRIORITY_HIGH = 0
 CELERY_PRIORITY_LOW = 9
+
+# Soft time limits for long-running tasks (None = no limit; overridden per environment)
+CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = None
 
 # Enable priority support in Redis broker
 CELERY_BROKER_TRANSPORT_OPTIONS = {

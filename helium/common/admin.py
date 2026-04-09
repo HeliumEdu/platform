@@ -102,5 +102,8 @@ class TaskResultAdmin(ModelAdmin):
     search_fields = ('task_id', 'task_name')
     ordering = ('-date_done',)
 
+    def has_add_permission(self, request):
+        return False
+
 
 admin_site.register(TaskResult, TaskResultAdmin)

@@ -4,6 +4,7 @@ __license__ = "MIT"
 from django import forms
 from django.conf import settings
 from django.contrib import admin as django_admin
+from django.contrib import messages
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
@@ -19,14 +20,18 @@ from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
 from helium.planner.models.course import Course
+from helium.planner.models.coursegroup import CourseGroup
 from helium.planner.models.event import Event
 from helium.planner.models.homework import Homework
 from helium.planner.models.note import Note
+from helium.planner.services.reminderservice import heal_orphaned_repeating_reminders
+from helium.planner.tasks import recalculate_course_grades_for_course_group
 
 
 class AdminUserChangeForm(UserChangeForm):
@@ -184,6 +189,100 @@ class UserOAuthProviderInline(django_admin.TabularInline):
         return False
 
 
+class UserPushTokenInline(django_admin.TabularInline):
+    model = UserPushToken
+    extra = 0
+    can_delete = True
+    fields = ('device_id', 'token', 'created_at', 'updated_at')
+    readonly_fields = ('device_id', 'token', 'created_at', 'updated_at')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@django_admin.action(description='Mark selected users as email verified')
+def mark_email_verified(modeladmin, request, queryset):
+    updated = queryset.filter(is_active=False).update(is_active=True)
+    modeladmin.message_user(request, f'{updated} user(s) marked as verified.')
+
+
+@django_admin.action(description='Send password reset email to selected users')
+def send_password_reset(modeladmin, request, queryset):
+    UserModel = get_user_model()
+    sent, skipped = 0, 0
+    for user in queryset:
+        if not user.has_usable_password():
+            skipped += 1
+            continue
+        password = UserModel.objects.make_random_password()
+        user.set_password(password)
+        user.save()
+        send_password_reset_email.apply_async(
+            args=(user.email, password),
+            priority=settings.CELERY_PRIORITY_HIGH,
+        )
+        sent += 1
+    modeladmin.message_user(request, f'Password reset sent to {sent} user(s).')
+    if skipped:
+        modeladmin.message_user(
+            request,
+            f'{skipped} OAuth-only user(s) skipped (no password to reset).',
+            messages.WARNING,
+        )
+
+
+@django_admin.action(description='Purge push tokens for selected users')
+def purge_push_tokens(modeladmin, request, queryset):
+    deleted, _ = UserPushToken.objects.filter(user__in=queryset).delete()
+    modeladmin.message_user(request, f'{deleted} push token(s) deleted.')
+
+
+@django_admin.action(description='Send dormant warning email to selected users')
+def send_dormant_warning(modeladmin, request, queryset):
+    queued, skipped = 0, 0
+    for user in queryset:
+        if user.deletion_warning_count >= 4:
+            skipped += 1
+            continue
+        send_dormant_user_warning_email.apply_async(
+            args=(user.pk,),
+            priority=settings.CELERY_PRIORITY_LOW,
+        )
+        queued += 1
+    modeladmin.message_user(request, f'Dormant warning email queued for {queued} user(s).')
+    if skipped:
+        modeladmin.message_user(
+            request,
+            f'{skipped} user(s) skipped (already at max warnings).',
+            messages.WARNING,
+        )
+
+
+@django_admin.action(description='Recalculate all grades for selected users')
+def recalculate_all_grades(modeladmin, request, queryset):
+    count = 0
+    for cg_id in CourseGroup.objects.filter(user__in=queryset).values_list('id', flat=True):
+        recalculate_course_grades_for_course_group.apply_async(
+            args=(cg_id,),
+            priority=settings.CELERY_PRIORITY_LOW,
+        )
+        count += 1
+    modeladmin.message_user(request, f'Grade recalculation queued for {count} course group(s).')
+
+
+@django_admin.action(description='Heal orphaned repeating reminders for selected users')
+def heal_orphaned_reminders(modeladmin, request, queryset):
+    for user in queryset:
+        heal_orphaned_repeating_reminders(user_id=user.pk)
+    modeladmin.message_user(request, f'Orphaned reminders healed for {queryset.count()} user(s).')
+
+
+@django_admin.action(description='Disable feeds for selected users')
+def disable_feeds(modeladmin, request, queryset):
+    updated = UserSettings.objects.filter(user__in=queryset, private_slug__isnull=False).update(private_slug=None)
+    modeladmin.message_user(request, f'Feeds disabled for {updated} user(s).')
+
+
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
@@ -205,7 +304,9 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     )
     fieldsets = None
     filter_horizontal = ()
-    inlines = [UserOAuthProviderInline]
+    actions = [mark_email_verified, send_password_reset, purge_push_tokens, send_dormant_warning,
+               recalculate_all_grades, heal_orphaned_reminders, disable_feeds]
+    inlines = [UserOAuthProviderInline, UserPushTokenInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -357,6 +458,9 @@ class UserPushTokenAdmin(BaseModelAdmin):
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
     autocomplete_fields = ('user',)
+
+    def has_add_permission(self, request):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
