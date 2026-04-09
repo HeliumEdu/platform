@@ -586,11 +586,11 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
 
 
 class UserClientActivityAdmin(django_admin.ModelAdmin):
-    list_display = ('get_user', 'date')
-    list_filter = ('date',)
+    list_display = ('get_user', 'date', 'client')
+    list_filter = ('client', 'date')
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-date',)
-    readonly_fields = ('user', 'date')
+    readonly_fields = ('user', 'date', 'client')
 
     def get_user(self, obj):
         return obj.user.email if obj.user else ''

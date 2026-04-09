@@ -542,7 +542,7 @@ def rollup_client_activity(self):
 
             for window_tag, days in [('7d', 7), ('30d', 30), ('90d', 90)]:
                 cutoff = today - timedelta(days=days)
-                mobile_days = UserClientActivity.objects.filter(user_id=user_id, date__gte=cutoff).count()
+                mobile_days = UserClientActivity.objects.filter(user_id=user_id, date__gte=cutoff, client=UserClientActivity.CLIENT_MOBILE_APP).count()
                 percent = mobile_days / days * 100
                 metricutils.gauge('users.mobile_app_usage_percent', percent,
                                   extra_tags=[f'window:{window_tag}', f'user:{user_id}'])

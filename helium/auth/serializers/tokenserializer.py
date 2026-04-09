@@ -25,12 +25,21 @@ from helium.common.utils.metricutils import _normalize_user_agent_tag
 logger = logging.getLogger(__name__)
 
 
-def _record_mobile_activity_if_applicable(user, request):
+_CLIENT_UA_MAP = {
+    'mobile_app_flutter': UserClientActivity.CLIENT_MOBILE_APP,
+    'web_browser': UserClientActivity.CLIENT_WEB,
+    'mobile_browser_ios': UserClientActivity.CLIENT_WEB,
+    'mobile_browser_android': UserClientActivity.CLIENT_WEB,
+}
+
+
+def _record_client_activity(user, request):
     if not request:
         return
     ua = request.headers.get('User-Agent', '')
-    if _normalize_user_agent_tag(ua) == 'mobile_app_flutter':
-        UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date())
+    client = _CLIENT_UA_MAP.get(_normalize_user_agent_tag(ua))
+    if client:
+        UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(), client=client)
 
 
 class TokenResponseFieldsMixin(serializers.Serializer):
@@ -90,7 +99,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
-            _record_mobile_activity_if_applicable(user, self.context.get('request'))
+            _record_client_activity(user, self.context.get('request'))
 
             if not user.settings.next_review_prompt_date:
                 user.settings.next_review_prompt_date = (
@@ -166,7 +175,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
             user.deletion_warning_sent_at = None
             user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
-            _record_mobile_activity_if_applicable(user, self.context.get('request'))
+            _record_client_activity(user, self.context.get('request'))
 
         data = {"access": str(refresh.access_token)}
 
