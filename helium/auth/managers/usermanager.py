@@ -88,7 +88,7 @@ class UserManager(BaseUserManager):
         return self.get(Q(username__iexact=username) | Q(email__iexact=username))
 
     def get_by_private_slug(self, private_slug):
-        return self.get(settings__private_slug=private_slug)
+        return self.select_related('settings').get(settings__private_slug=private_slug)
 
     def get_queryset(self):
         return UserQuerySet(self.model, using=self._db)
