@@ -283,15 +283,25 @@ def calendar_to_events(external_calendar, _from=None, to=None, search=None):
     return events
 
 
-def reindex_stale_feed_caches():
+def reindex_stale_feed_caches(calendar_ids=None):
+    """
+    :param calendar_ids: Optional list of ExternalCalendar PKs to reindex. When provided, bypasses
+        the stale-cache check and targets only those specific calendars. When None (default),
+        reindexes all calendars whose cache is stale.
+    """
     reindexed = []
     not_modified = []
 
-    for external_calendar in (ExternalCalendar.objects.needs_recached(
-            timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS))
-            .select_related('user', 'user__settings')
-            .iterator()):
+    if calendar_ids is not None:
+        queryset = (ExternalCalendar.objects
+                    .filter(pk__in=calendar_ids)
+                    .select_related('user', 'user__settings'))
+    else:
+        queryset = (ExternalCalendar.objects
+                    .needs_recached(timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS))
+                    .select_related('user', 'user__settings'))
 
+    for external_calendar in queryset.iterator():
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")
 
         try:
@@ -300,18 +310,22 @@ def reindex_stale_feed_caches():
             if calendar is None:
                 # 304 Not Modified - feed hasn't changed, just update last_index to extend cache
                 external_calendar.last_index = timezone.now()
-                external_calendar.save(update_fields=['last_index'])
+                external_calendar.last_sync_error = None
+                external_calendar.save(update_fields=['last_index', 'last_sync_error'])
                 not_modified.append(external_calendar)
             else:
                 # Feed was modified, clear cache and re-parse
                 cache.delete(_get_cache_prefix(external_calendar))
                 _create_events_from_calendar(external_calendar, calendar)
+                external_calendar.last_sync_error = None
+                external_calendar.save(update_fields=['last_sync_error'])
                 reindexed.append(external_calendar)
 
-        except HeliumICalError:
+        except HeliumICalError as e:
             logger.info(f"URL invalid, disabling calendar {external_calendar.pk}")
 
             external_calendar.shown_on_calendar = False
-            external_calendar.save()
+            external_calendar.last_sync_error = str(e)
+            external_calendar.save(update_fields=['shown_on_calendar', 'last_sync_error'])
 
     logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")
