@@ -4,7 +4,7 @@ __license__ = "MIT"
 from django.conf import settings
 from django.contrib import admin as django_admin
 
-from helium.common.admin import admin_site, BaseModelAdmin
+from helium.common.admin import admin_site, BaseModelAdmin, staff_filter
 from helium.feed.models import ExternalCalendar
 from helium.feed.tasks import reindex_feeds
 
@@ -22,7 +22,7 @@ def force_reindex_calendars(modeladmin, request, queryset):
 
 class ExternalCalendarAdmin(BaseModelAdmin):
     list_display = ['title', 'url', 'shown_on_calendar', 'last_index', 'last_sync_error', 'get_user']
-    list_filter = ['shown_on_calendar', 'example_schedule']
+    list_filter = ['shown_on_calendar', 'example_schedule', staff_filter('user')]
     search_fields = ('id', 'title', 'url', 'user__username', 'user__email')
     ordering = ('user__username',)
     autocomplete_fields = ('user',)

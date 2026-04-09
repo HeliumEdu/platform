@@ -3,9 +3,10 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin import ModelAdmin
+from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from helium.common.models import TaskResultProxy
@@ -78,6 +79,36 @@ class PlatformAdminSite(_AdminBase):
         return AdminTwoFactorLoginView.as_view()(request)
 
 
+def staff_filter(user_field=None):
+    """
+    Factory returning a SimpleListFilter that splits records by staff status.
+    Pass user_field as the FK path to the user (e.g. 'user', 'course_group__user').
+    Omit for models where the queryset operates directly on the User model.
+    """
+    prefix = f'{user_field}__' if user_field else ''
+    staff_q = (
+        Q(**{f'{prefix}is_superuser': True}) |
+        Q(**{f'{prefix}email__endswith': '@heliumedu.com'}) |
+        Q(**{f'{prefix}email__endswith': '@heliumedu.dev'})
+    )
+
+    class _StaffFilter(SimpleListFilter):
+        title = 'staff'
+        parameter_name = 'staff'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Staff'), ('no', 'Non-staff')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(staff_q)
+            if self.value() == 'no':
+                return queryset.exclude(staff_q)
+            return queryset
+
+    return _StaffFilter
+
+
 class BaseModelAdmin(ModelAdmin):
     """
     All Models that inherit from BaseModel should also inherit from this BaseModelAdmin, which makes sure the common
@@ -139,7 +170,7 @@ suppress_selected_email_events.short_description = "Add selected to SES suppress
 
 class EmailReputationEventAdmin(ModelAdmin):
     list_display = ('created_at', 'email', 'email_type', 'event_type', 'event_subtype')
-    list_filter = ('event_type', 'email_type')
+    list_filter = ('event_type', 'email_type', staff_filter('user'))
     search_fields = ('email', 'user__email', 'user__username', 'sns_message_id')
     ordering = ('-created_at',)
     readonly_fields = ('created_at', 'user', 'email', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
