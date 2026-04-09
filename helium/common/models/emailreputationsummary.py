@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import models
 
 from helium.common.models.emailreputationevent import EVENT_TYPE_CHOICES
@@ -21,7 +21,7 @@ class EmailReputationSummary(models.Model):
     #: FK to the matched user account (set when first matched; survives subsequent SET_NULL
     #: on the event rows if the user is later deleted, but also SET_NULL here).
     user = models.OneToOneField(
-        get_user_model(),
+        settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

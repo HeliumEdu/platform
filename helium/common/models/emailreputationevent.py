@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import models
 
 EMAIL_TYPE_VERIFICATION = 'verification'
@@ -54,7 +54,7 @@ class EmailReputationEvent(models.Model):
     #: FK to the user account, if the destination email matched one at event time.
     #: SET_NULL preserves reputation history even after account deletion.
     user = models.ForeignKey(
-        get_user_model(),
+        settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
