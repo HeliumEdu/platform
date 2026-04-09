@@ -23,6 +23,7 @@ from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin
+from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
 from helium.planner.models.course import Course
@@ -283,6 +284,24 @@ def disable_feeds(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Feeds disabled for {updated} user(s).')
 
 
+@django_admin.action(description='Remove selected users from SES suppression list')
+def remove_from_ses_suppression(modeladmin, request, queryset):
+    cleared, not_suppressed = [], []
+    for user in queryset:
+        if clear_ses_suppression_if_exists(user.email):
+            cleared.append(user.email)
+        else:
+            not_suppressed.append(user.email)
+    if cleared:
+        modeladmin.message_user(request, f'Removed {len(cleared)} user(s) from suppression list.')
+    if not_suppressed:
+        modeladmin.message_user(
+            request,
+            f'{len(not_suppressed)} user(s) were not on the suppression list.',
+            messages.INFO,
+        )
+
+
 class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
@@ -305,7 +324,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     fieldsets = None
     filter_horizontal = ()
     actions = [mark_email_verified, send_password_reset, purge_push_tokens, send_dormant_warning,
-               recalculate_all_grades, heal_orphaned_reminders, disable_feeds]
+               recalculate_all_grades, heal_orphaned_reminders, disable_feeds, remove_from_ses_suppression]
     inlines = [UserOAuthProviderInline, UserPushTokenInline]
 
     def get_queryset(self, request):

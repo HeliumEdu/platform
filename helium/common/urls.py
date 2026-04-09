@@ -9,6 +9,7 @@ from two_factor.urls import urlpatterns as tf_urlpatterns
 
 from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
+from helium.common.views.apis.webhooksesview import WebhookSESView
 
 urlpatterns = [
     # Base URL
@@ -30,4 +31,9 @@ urlpatterns = [
     ##############################
     path(r'status/', include('health_check.urls')),
     path('info/', InfoResourceView.as_view({'get': 'info'}), name='resource_info'),
+
+    ##############################
+    # Webhook URLs (unauthenticated, SNS-verified)
+    ##############################
+    path('api/common/webhook/ses/', WebhookSESView.as_view(), name='webhook_ses'),
 ]

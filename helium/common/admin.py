@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
@@ -107,3 +108,41 @@ class TaskResultAdmin(ModelAdmin):
 
 
 admin_site.register(TaskResult, TaskResultAdmin)
+
+
+def suppress_selected_email_events(modeladmin, request, queryset):
+    """Django Admin action: suppress the distinct email addresses from the selected events."""
+    from helium.common.utils.commonutils import add_to_ses_suppression_list
+
+    emails = list(queryset.values_list('email', flat=True).distinct())
+    for email in emails:
+        add_to_ses_suppression_list(email, reason='COMPLAINT')
+
+    modeladmin.message_user(
+        request,
+        f"Suppressed {len(emails)} address(es): {', '.join(emails)}",
+        messages.SUCCESS,
+    )
+
+
+suppress_selected_email_events.short_description = "Add selected to SES suppression list (COMPLAINT)"
+
+
+class EmailReputationEventAdmin(ModelAdmin):
+    list_display = ('created_at', 'email', 'email_type', 'event_type', 'event_subtype')
+    list_filter = ('event_type', 'email_type')
+    search_fields = ('email', 'user__email', 'user__username', 'sns_message_id')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'user', 'email', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
+    actions = [suppress_selected_email_events]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+from helium.common.models import EmailReputationEvent
+
+admin_site.register(EmailReputationEvent, EmailReputationEventAdmin)
