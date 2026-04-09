@@ -262,7 +262,7 @@ class CourseAdmin(BaseModelAdmin):
     def get_course_group(self, obj):
         return obj.course_group.title
 
-    get_course_group.short_description = 'Course Group'
+    get_course_group.short_description = 'Class Group'
     get_course_group.admin_order_field = 'course_group__title'
 
     def get_user(self, obj):
@@ -312,13 +312,13 @@ class CourseScheduleAdmin(BaseModelAdmin):
     def get_course(self, obj):
         return obj.course.title
 
-    get_course.short_description = 'Course'
+    get_course.short_description = 'Class'
     get_course.admin_order_field = 'course__title'
 
     def get_course_group(self, obj):
         return obj.course.course_group.title
 
-    get_course_group.short_description = 'Course group'
+    get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
     def get_user(self, obj):
@@ -369,13 +369,13 @@ class CategoryAdmin(BaseModelAdmin):
     def get_course(self, obj):
         return obj.course.title
 
-    get_course.short_description = 'Course'
+    get_course.short_description = 'Class'
     get_course.admin_order_field = 'course__title'
 
     def get_course_group(self, obj):
         return obj.course.course_group.title
 
-    get_course_group.short_description = 'Course group'
+    get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
     def get_user(self, obj):
@@ -447,13 +447,13 @@ class HomeworkAdmin(BaseModelAdmin):
     def get_course(self, obj):
         return obj.course.title
 
-    get_course.short_description = 'Course'
+    get_course.short_description = 'Class'
     get_course.admin_order_field = 'course__title'
 
     def get_course_group(self, obj):
         return obj.course.course_group.title
 
-    get_course_group.short_description = 'Course group'
+    get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
     def get_user(self, obj):
@@ -489,7 +489,7 @@ class MaterialGroupAdmin(BaseModelAdmin):
 
 class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
-    list_filter = ('status', 'condition', 'material_group__shown_on_calendar', 'material_group__example_schedule')
+    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule')
     search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group', 'courses',)
 
@@ -504,7 +504,7 @@ class MaterialAdmin(BaseModelAdmin):
     def get_material_group(self, obj):
         return obj.material_group.title
 
-    get_material_group.short_description = 'Material Group'
+    get_material_group.short_description = 'Resource group'
     get_material_group.admin_order_field = 'material_group__title'
 
     def get_user(self, obj):

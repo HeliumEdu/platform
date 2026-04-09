@@ -99,7 +99,7 @@ admin_site = PlatformAdminSite()
 
 class TaskResultAdmin(ModelAdmin):
     list_display = ('task_id', 'task_name', 'date_done', 'status', 'worker')
-    list_filter = ('status', 'date_done')
+    list_filter = ('status', 'worker', 'date_done')
     search_fields = ('task_id', 'task_name')
     ordering = ('-date_done',)
 
@@ -110,6 +110,9 @@ class TaskResultAdmin(ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
 
 

@@ -52,6 +52,10 @@ class User(AbstractBaseUser, BaseModel):
         blank=True, null=True,
         help_text='When the last deletion warning email was sent.')
 
+    mobile_app_usage_percent_30d = models.FloatField(
+        blank=True, null=True,
+        help_text='Percentage of the last 30 days the user was active on the mobile app. Updated nightly.')
+
     # Manager
     objects = UserManager()
 

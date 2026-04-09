@@ -55,6 +55,9 @@ class CourseSchedule(BaseModel):
 
     objects = CourseScheduleManager()
 
+    class Meta:
+        verbose_name = 'Class schedule'
+
     def __str__(self):  # pragma: no cover
         return str(f'{self.course.title}-{self.pk} ({self.get_user().get_username()})')
 

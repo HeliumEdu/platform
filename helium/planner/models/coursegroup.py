@@ -39,6 +39,7 @@ class CourseGroup(BaseModel):
     objects = CourseGroupManager()
 
     class Meta:
+        verbose_name = 'Class group'
         ordering = ('start_date', 'title')
 
     def __str__(self):  # pragma: no cover

@@ -8,5 +8,5 @@ class TaskResultProxy(TaskResult):
     class Meta:
         proxy = True
         app_label = 'helium_common'
-        verbose_name = 'Task result'
-        verbose_name_plural = 'Task results'
+        verbose_name = 'Task result event'
+        verbose_name_plural = 'Task results events'

@@ -37,7 +37,7 @@ class Homework(BaseCalendar):
     objects = HomeworkManager()
 
     class Meta:
-        verbose_name_plural = 'Homework'
+        verbose_name = 'Assignment'
         ordering = ('start', 'title')
         indexes = [
             models.Index(fields=['course', 'completed'], name='homework_grading_aggregation'),

@@ -54,6 +54,8 @@ class Course(BaseModel):
     objects = CourseManager()
 
     class Meta:
+        verbose_name = 'Class'
+        verbose_name_plural = 'Classes'
         ordering = ('start_date', 'title')
 
     def __str__(self):  # pragma: no cover

@@ -48,12 +48,12 @@ class UserOAuthProvider(models.Model):
 
     class Meta:
         unique_together = [
-            ('user', 'provider'),  # One provider per user
-            ('provider', 'provider_user_id'),  # One Firebase UID per provider
+            ('user', 'provider'),
+            ('provider', 'provider_user_id'),
         ]
         ordering = ['-created_at']
-        verbose_name = 'OAuth Provider'
-        verbose_name_plural = 'OAuth Providers'
+        verbose_name = 'OAuth provider'
+        verbose_name_plural = 'OAuth providers'
 
     def __str__(self):
         return f"{self.user.username} - {self.get_provider_display()}"
