@@ -296,6 +296,14 @@ def force_review_prompt(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Review prompt forced for {updated} user(s).')
 
 
+@django_admin.action(description='Force logout selected users (invalidates next token refresh)')
+def force_logout(modeladmin, request, queryset):
+    tokens = OutstandingToken.objects.filter(user__in=queryset)
+    for token in tokens:
+        BlacklistedToken.objects.get_or_create(token=token)
+    modeladmin.message_user(request, f'Logged out {queryset.count()} user(s).')
+
+
 @django_admin.action(description='Remove selected users from SES suppression list')
 def remove_from_ses_suppression(modeladmin, request, queryset):
     cleared, not_suppressed = [], []
@@ -335,9 +343,9 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     )
     fieldsets = None
     filter_horizontal = ()
-    actions = [mark_email_verified, send_password_reset, purge_push_tokens, send_dormant_warning,
-               recalculate_all_grades, heal_orphaned_reminders, disable_feeds, reset_whats_new,
-               force_review_prompt, remove_from_ses_suppression]
+    actions = [mark_email_verified, send_password_reset, purge_push_tokens, force_logout,
+               send_dormant_warning, recalculate_all_grades, heal_orphaned_reminders, disable_feeds,
+               reset_whats_new, force_review_prompt, remove_from_ses_suppression]
     inlines = [UserOAuthProviderInline, UserPushTokenInline]
 
     def get_queryset(self, request):
