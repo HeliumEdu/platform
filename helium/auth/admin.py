@@ -335,7 +335,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
-                   HasCreditsFilter, HasCourseScheduleFilter)
+                   HasCreditsFilter, HasCourseScheduleFilter, StaffFilter)
     search_fields = ('id', 'email', 'username', 'email_changing')
     ordering = ('-last_activity',)
     add_fieldsets = (
@@ -585,9 +585,33 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
         return False
 
 
+class StaffFilter(SimpleListFilter):
+    title = 'staff'
+    parameter_name = 'staff'
+
+    _staff_q = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
+
+    def lookups(self, request, model_admin):
+        return [
+            ('yes', 'Staff'),
+            ('no', 'Non-staff'),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(self._staff_q)
+        if self.value() == 'no':
+            return queryset.exclude(self._staff_q)
+        return queryset
+
+
+class UserClientActivityStaffFilter(StaffFilter):
+    _staff_q = Q(user__is_superuser=True) | Q(user__email__endswith='@heliumedu.com') | Q(user__email__endswith='@heliumedu.dev')
+
+
 class UserClientActivityAdmin(django_admin.ModelAdmin):
     list_display = ('get_user', 'date', 'client')
-    list_filter = ('client', 'date')
+    list_filter = ('client', 'date', UserClientActivityStaffFilter)
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-date',)
     readonly_fields = ('user', 'date', 'client')
