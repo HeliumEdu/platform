@@ -4,7 +4,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('common', '0001_initial'),
+        ('helium_common', '0001_initial'),
         ('django_celery_results', '0014_alter_taskresult_status'),
     ]
 

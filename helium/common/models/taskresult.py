@@ -7,6 +7,6 @@ from django_celery_results.models import TaskResult
 class TaskResultProxy(TaskResult):
     class Meta:
         proxy = True
-        app_label = 'common'
+        app_label = 'helium_common'
         verbose_name = 'Task result'
         verbose_name_plural = 'Task results'
