@@ -12,7 +12,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.http import http_date, parse_http_date_safe
 
-from helium.planner.models import Homework, Course, CourseGroup
+from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
 
 from helium.planner.services import coursescheduleservice
 
@@ -39,16 +39,11 @@ def get_homework_last_modified(user) -> datetime.datetime | None:
     :param user: The user whose homework-related models to check.
     :return: The max updated_at datetime across all related models, or None if no data exists.
     """
-    result = CourseGroup.objects.for_user(user.pk).aggregate(
-        homework_max=Max('courses__homework__updated_at'),
-        course_max=Max('courses__updated_at'),
-        category_max=Max('courses__categories__updated_at'),
-    )
+    homework_max = Homework.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    category_max = Category.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [
-        result['homework_max'], result['course_max'], result['category_max'],
-        user.settings.last_deletion_at,
-    ] if t is not None]
+    timestamps = [t for t in [homework_max, course_max, category_max, user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
@@ -59,16 +54,11 @@ def get_courseschedules_last_modified(user) -> datetime.datetime | None:
     :param user: The user whose course schedule-related models to check.
     :return: The max updated_at datetime across all related models, or None if no data exists.
     """
-    result = CourseGroup.objects.for_user(user.pk).aggregate(
-        course_group_max=Max('updated_at'),
-        course_max=Max('courses__updated_at'),
-        schedule_max=Max('courses__schedules__updated_at'),
-    )
+    schedule_max = CourseSchedule.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [
-        result['schedule_max'], result['course_max'], result['course_group_max'],
-        user.settings.last_deletion_at,
-    ] if t is not None]
+    timestamps = [t for t in [schedule_max, course_max, course_group_max, user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
