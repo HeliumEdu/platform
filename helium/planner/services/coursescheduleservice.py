@@ -178,13 +178,15 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     user_tz = pytz.timezone(course_user.settings.time_zone)
     comments = _get_comments(course)
 
+    schedule_list = list(course_schedules.all())
+
     day = course.start_date
     while day <= course.end_date:
         if day in exceptions:
             day += datetime.timedelta(days=1)
             continue
 
-        for course_schedule in course_schedules.all():
+        for course_schedule in schedule_list:
             if course_schedule.days_of_week[enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]] == "1":
                 start_time = _get_start_time_for_weekday(course_schedule,
                                                          enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])

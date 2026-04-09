@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
+from helium.auth.models import UserSettings
 from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
 from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
@@ -36,12 +37,10 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         """
         Register a new user.
         """
-        UserModel = get_user_model()
-
         response = self.create(request, *args, **kwargs)
 
         if 'time_zone' in request.data:
-            user_settings = UserModel.objects.get(pk=response.data['id']).settings
+            user_settings = UserSettings.objects.get(user_id=response.data['id'])
             serializer = UserSettingsSerializer(user_settings, data={'time_zone': request.data['time_zone']}, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
