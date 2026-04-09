@@ -8,7 +8,7 @@ from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
 from django.shortcuts import redirect
 from django.urls import reverse
-from django_celery_results.models import TaskResult
+from helium.common.models import TaskResultProxy
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
@@ -103,11 +103,17 @@ class TaskResultAdmin(ModelAdmin):
     search_fields = ('task_id', 'task_name')
     ordering = ('-date_done',)
 
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
     def has_add_permission(self, request):
         return False
 
+    def has_change_permission(self, request, obj=None):
+        return False
 
-admin_site.register(TaskResult, TaskResultAdmin)
+
+admin_site.register(TaskResultProxy, TaskResultAdmin)
 
 
 def suppress_selected_email_events(modeladmin, request, queryset):

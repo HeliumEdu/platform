@@ -1,4 +1,5 @@
 from .base import BaseModel
+from .taskresult import TaskResultProxy
 from .emailreputationevent import (
     EmailReputationEvent,
     EMAIL_TYPE_VERIFICATION,
