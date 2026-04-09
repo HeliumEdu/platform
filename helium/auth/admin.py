@@ -24,7 +24,8 @@ from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.admin import admin_site, BaseModelAdmin, staff_filter
+from helium.common.admin import admin_site, BaseModelAdmin, staff_filter, has_course_schedule_filter, \
+    has_credits_filter, has_weighted_grading_filter
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
@@ -100,67 +101,6 @@ class OAuthProviderFilter(SimpleListFilter):
         elif self.value():
             return queryset.filter(oauth_providers__provider=self.value()).distinct()
         return queryset
-
-
-class HasCreditsFilter(SimpleListFilter):
-    title = 'has credits'
-    parameter_name = 'has_credits'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(course_groups__courses__credits__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(course_groups__courses__credits=0).distinct()
-        else:
-            return queryset
-
-
-class HasWeightedGradingFilter(SimpleListFilter):
-    title = 'has weighted grading'
-    parameter_name = 'has_weighted_grading'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(course_groups__courses__categories__weight__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(course_groups__courses__categories__weight=0).distinct()
-        else:
-            return queryset
-
-
-class HasCourseScheduleFilter(SimpleListFilter):
-    title = 'has course schedule'
-    parameter_name = 'has_course_schedule'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(
-                Q(course_groups__courses__schedules__isnull=False) & ~Q(
-                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
-        elif self.value() == 'no':
-            return queryset.exclude(
-                Q(course_groups__courses__schedules__isnull=False) & ~Q(
-                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
-        else:
-            return queryset
 
 
 class ActiveStatusFilter(SimpleListFilter):
@@ -334,8 +274,10 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
                     'deletion_warning_count', 'mobile_app_usage_percent_30d', 'created_at', 'is_active')
     list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
-                   HasCreditsFilter, HasCourseScheduleFilter, staff_filter())
+                   'settings__calendar_use_category_colors', OAuthProviderFilter,
+                   has_weighted_grading_filter('course_groups__courses__categories__weight'),
+                   has_credits_filter('course_groups__courses__credits'),
+                   has_course_schedule_filter('course_groups__courses__schedules'), staff_filter())
     search_fields = ('id', 'email', 'username', 'email_changing')
     ordering = ('-last_activity',)
     add_fieldsets = (

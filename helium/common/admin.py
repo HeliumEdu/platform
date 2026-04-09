@@ -109,6 +109,76 @@ def staff_filter(user_field=None):
     return _StaffFilter
 
 
+def has_course_schedule_filter(schedules_prefix):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they have an active course schedule.
+    Pass schedules_prefix as the FK path to the schedules relation (e.g. 'schedules', 'courses__schedules').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has course schedule'
+        parameter_name = 'has_course_schedule'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            has_q = (
+                Q(**{f'{schedules_prefix}__isnull': False}) &
+                ~Q(**{f'{schedules_prefix}__days_of_week': '0000000'})
+            )
+            if self.value() == 'yes':
+                return queryset.filter(has_q).distinct()
+            if self.value() == 'no':
+                return queryset.exclude(has_q).distinct()
+            return queryset
+
+    return _Filter
+
+
+def has_weighted_grading_filter(weight_field):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they use weighted grading.
+    Pass weight_field as the FK path to the weight field (e.g. 'weight', 'categories__weight').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has weighted grading'
+        parameter_name = 'has_weighted_grading'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(**{f'{weight_field}__gt': 0}).distinct()
+            if self.value() == 'no':
+                return queryset.filter(**{f'{weight_field}': 0}).distinct()
+            return queryset
+
+    return _Filter
+
+
+def has_credits_filter(credits_field):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they have credits assigned.
+    Pass credits_field as the FK path to the credits field (e.g. 'credits', 'course_groups__courses__credits').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has credits'
+        parameter_name = 'has_credits'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(**{f'{credits_field}__gt': 0}).distinct()
+            if self.value() == 'no':
+                return queryset.filter(**{f'{credits_field}': 0}).distinct()
+            return queryset
+
+    return _Filter
+
+
 class BaseModelAdmin(ModelAdmin):
     """
     All Models that inherit from BaseModel should also inherit from this BaseModelAdmin, which makes sure the common
