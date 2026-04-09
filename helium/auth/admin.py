@@ -284,6 +284,18 @@ def disable_feeds(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Feeds disabled for {updated} user(s).')
 
 
+@django_admin.action(description="Reset \"What's New\" for selected users")
+def reset_whats_new(modeladmin, request, queryset):
+    updated = UserSettings.objects.filter(user__in=queryset).update(whats_new_version_seen=0)
+    modeladmin.message_user(request, f'"What\'s New" reset for {updated} user(s).')
+
+
+@django_admin.action(description='Force review prompt for selected users')
+def force_review_prompt(modeladmin, request, queryset):
+    updated = UserSettings.objects.filter(user__in=queryset).update(prompt_for_review=True)
+    modeladmin.message_user(request, f'Review prompt forced for {updated} user(s).')
+
+
 @django_admin.action(description='Remove selected users from SES suppression list')
 def remove_from_ses_suppression(modeladmin, request, queryset):
     cleared, not_suppressed = [], []
@@ -324,7 +336,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     fieldsets = None
     filter_horizontal = ()
     actions = [mark_email_verified, send_password_reset, purge_push_tokens, send_dormant_warning,
-               recalculate_all_grades, heal_orphaned_reminders, disable_feeds, remove_from_ses_suppression]
+               recalculate_all_grades, heal_orphaned_reminders, disable_feeds, reset_whats_new,
+               force_review_prompt, remove_from_ses_suppression]
     inlines = [UserOAuthProviderInline, UserPushTokenInline]
 
     def get_queryset(self, request):
