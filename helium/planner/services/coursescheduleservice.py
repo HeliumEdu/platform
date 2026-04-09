@@ -91,7 +91,7 @@ def _get_comments(course):
 
 
 def _get_cache_prefix(course):
-    return f"users:{course.get_user().pk}:courses:{course.pk}:coursescheduleevents:"
+    return f"users:{course.course_group.user_id}:courses:{course.pk}:coursescheduleevents:"
 
 
 def _apply_event_filters(event, _from, to, search):

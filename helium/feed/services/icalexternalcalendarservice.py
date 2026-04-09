@@ -33,7 +33,7 @@ class HeliumICalError(HeliumError):
 
 
 def _get_cache_prefix(external_calendar):
-    return f"users:{external_calendar.get_user().pk}:externalcalendars:{external_calendar.pk}:events"
+    return f"users:{external_calendar.user_id}:externalcalendars:{external_calendar.pk}:events"
 
 
 def _apply_event_filters(event, _from, to, search):
@@ -86,7 +86,8 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
     events = []
     events_filtered = []
 
-    time_zone = pytz.timezone(external_calendar.get_user().settings.time_zone)
+    user = external_calendar.user
+    time_zone = pytz.timezone(user.settings.time_zone)
 
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
@@ -130,7 +131,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           url=component.get("URL"),
                           owner_id=external_calendar.id,
                           comments=component.get("DESCRIPTION"),
-                          user=external_calendar.get_user(),
+                          user=user,
                           calendar_item_type=enums.EXTERNAL)
             event.color = external_calendar.color
             event.location = component.get("LOCATION")
@@ -146,7 +147,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
 
         external_calendar.last_index = timezone.now()
-        external_calendar.save()
+        external_calendar.save(update_fields=['last_index'])
     else:
         logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
             max_cache_size=len(events_json.encode('utf-8')),
