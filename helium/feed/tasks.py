@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True, soft_time_limit=settings.CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT)
-def reindex_feeds(self):
+def reindex_feeds(self, calendar_ids=None):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("feed.reindex", priority="low", published_at_ms=published_at_ms)
 
-    icalexternalcalendarservice.reindex_stale_feed_caches()
+    icalexternalcalendarservice.reindex_stale_feed_caches(calendar_ids=calendar_ids)
 
     metricutils.task_stop(metrics)
 

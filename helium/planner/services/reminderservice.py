@@ -55,7 +55,7 @@ def get_subject(reminder):
     return subject
 
 
-def heal_orphaned_repeating_reminders():
+def heal_orphaned_repeating_reminders(user_id=None):
     """
     Periodic maintenance for repeating course reminder series.
 
@@ -70,15 +70,22 @@ def heal_orphaned_repeating_reminders():
     Phase 3 — recreate missing successors: any series that ends up with no active
     (unsent + undismissed) reminder gets a new occurrence created using the template
     collected in phase 1.
+
+    :param user_id: Optional user ID to scope the operation to a single user. When None (default),
+        operates globally across all users.
     """
     import datetime as dt
 
     now = timezone.now()
     window_start = now - dt.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
+    base_filter = {'course__isnull': False}
+    if user_id is not None:
+        base_filter['user'] = user_id
+
     all_series = list(
         Reminder.objects
-        .filter(course__isnull=False)
+        .filter(**base_filter)
         .values('course', 'user', 'type', 'offset', 'offset_type')
         .distinct()
     )

@@ -463,6 +463,9 @@ CELERY_RESULT_EXPIRES = 3600 * 24 * 7
 CELERY_PRIORITY_HIGH = 0
 CELERY_PRIORITY_LOW = 9
 
+# Soft time limits for long-running tasks (None = no limit; overridden per environment)
+CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = None
+
 # Enable priority support in Redis broker
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': list(range(10)),

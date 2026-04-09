@@ -562,6 +562,12 @@ class ReminderExampleScheduleFilter(SimpleListFilter):
         return queryset
 
 
+@action(description='Mark selected reminders as unsent')
+def mark_reminders_unsent(modeladmin, request, queryset):
+    updated = queryset.update(sent=False, dismissed=False)
+    modeladmin.message_user(request, f'{updated} reminder(s) marked as unsent.')
+
+
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
     list_filter = ('type', 'sent', 'dismissed', ReminderType, ReminderExampleScheduleFilter)
@@ -569,6 +575,7 @@ class ReminderAdmin(BaseModelAdmin):
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
+    actions = [mark_reminders_unsent]
 
     def has_add_permission(self, request):
         return False
