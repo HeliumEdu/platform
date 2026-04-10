@@ -118,6 +118,21 @@ class CourseGroupAdmin(BaseModelAdmin):
 
         return readonly_fields + self.readonly_fields
 
+    def num_courses(self, obj):
+        return obj.num_courses
+
+    num_courses.short_description = 'Classes'
+
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         if obj.get_user():
             return obj.get_user().get_username()
@@ -190,6 +205,21 @@ class CourseAdmin(BaseModelAdmin):
 
     get_course_group.short_description = 'Class Group'
     get_course_group.admin_order_field = 'course_group__title'
+
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -285,6 +315,11 @@ class CategoryAdmin(BaseModelAdmin):
     get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
     def get_user(self, obj):
         return obj.get_user().username
 
@@ -306,6 +341,16 @@ class EventAdmin(BaseModelAdmin):
             return readonly_fields + self.readonly_fields + ('user',)
 
         return readonly_fields + self.readonly_fields
+
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
 
     def get_user(self, obj):
         return obj.get_user().username
@@ -345,6 +390,16 @@ class HomeworkAdmin(BaseModelAdmin):
     get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         return obj.get_user().username
 
@@ -365,6 +420,11 @@ class MaterialGroupAdmin(BaseModelAdmin):
             return readonly_fields + self.readonly_fields + ('user',)
 
         return readonly_fields + self.readonly_fields
+
+    def num_materials(self, obj):
+        return obj.num_materials
+
+    num_materials.short_description = 'Resources'
 
     def get_user(self, obj):
         if obj.get_user():

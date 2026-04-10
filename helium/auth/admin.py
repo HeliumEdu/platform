@@ -503,11 +503,14 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
 
 
 class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
+    list_filter = (staff_filter('user'),)
+
     def has_change_permission(self, request, obj=None):
         return False
 
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
+    list_filter = (staff_filter('token__user'),)
     search_fields = ('token__jti', 'token__user__id', 'token__user__email', 'token__user__username')
     ordering = ('-token__user__last_activity',)
 

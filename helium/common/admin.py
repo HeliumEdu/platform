@@ -240,7 +240,7 @@ suppress_selected_email_events.short_description = "Add selected to SES suppress
 
 class EmailReputationEventAdmin(ModelAdmin):
     list_display = ('created_at', 'email', 'email_type', 'event_type', 'event_subtype')
-    list_filter = ('event_type', 'email_type', staff_filter('user'))
+    list_filter = ('event_type', 'email_type')
     search_fields = ('email', 'user__email', 'user__username', 'sns_message_id')
     ordering = ('-created_at',)
     readonly_fields = ('created_at', 'user', 'email', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
