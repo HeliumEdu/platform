@@ -3,9 +3,10 @@ __license__ = "MIT"
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin import ModelAdmin
+from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from helium.common.models import TaskResultProxy
@@ -76,6 +77,106 @@ class PlatformAdminSite(_AdminBase):
         if request.user.is_authenticated and not any(devices_for_user(request.user)):
             return redirect(f"{reverse('two_factor:setup')}?next={request.get_full_path()}")
         return AdminTwoFactorLoginView.as_view()(request)
+
+
+def staff_filter(user_field=None):
+    """
+    Factory returning a SimpleListFilter that splits records by staff status.
+    Pass user_field as the FK path to the user (e.g. 'user', 'course_group__user').
+    Omit for models where the queryset operates directly on the User model.
+    """
+    prefix = f'{user_field}__' if user_field else ''
+    staff_q = (
+        Q(**{f'{prefix}is_superuser': True}) |
+        Q(**{f'{prefix}email__endswith': '@heliumedu.com'}) |
+        Q(**{f'{prefix}email__endswith': '@heliumedu.dev'})
+    )
+
+    class _StaffFilter(SimpleListFilter):
+        title = 'staff'
+        parameter_name = 'staff'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Staff'), ('no', 'Non-staff')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(staff_q)
+            if self.value() == 'no':
+                return queryset.exclude(staff_q)
+            return queryset
+
+    return _StaffFilter
+
+
+def has_course_schedule_filter(schedules_prefix):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they have an active course schedule.
+    Pass schedules_prefix as the FK path to the schedules relation (e.g. 'schedules', 'courses__schedules').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has course schedule'
+        parameter_name = 'has_course_schedule'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            has_q = (
+                Q(**{f'{schedules_prefix}__isnull': False}) &
+                ~Q(**{f'{schedules_prefix}__days_of_week': '0000000'})
+            )
+            if self.value() == 'yes':
+                return queryset.filter(has_q).distinct()
+            if self.value() == 'no':
+                return queryset.exclude(has_q).distinct()
+            return queryset
+
+    return _Filter
+
+
+def has_weighted_grading_filter(weight_field):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they use weighted grading.
+    Pass weight_field as the FK path to the weight field (e.g. 'weight', 'categories__weight').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has weighted grading'
+        parameter_name = 'has_weighted_grading'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(**{f'{weight_field}__gt': 0}).distinct()
+            if self.value() == 'no':
+                return queryset.filter(**{f'{weight_field}': 0}).distinct()
+            return queryset
+
+    return _Filter
+
+
+def has_credits_filter(credits_field):
+    """
+    Factory returning a SimpleListFilter that splits records by whether they have credits assigned.
+    Pass credits_field as the FK path to the credits field (e.g. 'credits', 'course_groups__courses__credits').
+    """
+    class _Filter(SimpleListFilter):
+        title = 'has credits'
+        parameter_name = 'has_credits'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(**{f'{credits_field}__gt': 0}).distinct()
+            if self.value() == 'no':
+                return queryset.filter(**{f'{credits_field}': 0}).distinct()
+            return queryset
+
+    return _Filter
 
 
 class BaseModelAdmin(ModelAdmin):

@@ -10,7 +10,8 @@ from django.db.models.functions import Cast, Length
 from django.urls import reverse
 from django.utils.html import format_html
 
-from helium.common.admin import admin_site, BaseModelAdmin
+from helium.common.admin import admin_site, BaseModelAdmin, staff_filter, has_course_schedule_filter, \
+    has_credits_filter, has_weighted_grading_filter
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule, Note
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
@@ -32,31 +33,32 @@ def recalculate_grade(modeladmin, request, queryset):
                             f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")
 
 
-class AttachmentType(SimpleListFilter):
-    title = 'Attachment Type'
-    parameter_name = 'attachment_type'
+def planner_entity_type_filter(title, parameter_name):
+    """
+    Factory returning a SimpleListFilter that splits planner records by their linked entity type
+    (course, homework, or event).
+    """
+    class _Filter(SimpleListFilter):
+        def lookups(self, request, model_admin):
+            return [('course', 'Course'), ('homework', 'Homework'), ('event', 'Event')]
 
-    def lookups(self, request, model_admin):
-        return (
-            ('course', 'Course'),
-            ('homework', 'Homework'),
-            ('event', 'Event'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'course':
-            return queryset.filter(course__isnull=False)
-        elif self.value() == 'homework':
-            return queryset.filter(homework__isnull=False)
-        elif self.value() == 'event':
-            return queryset.filter(event__isnull=False)
-        else:
+        def queryset(self, request, queryset):
+            if self.value() == 'course':
+                return queryset.filter(course__isnull=False)
+            if self.value() == 'homework':
+                return queryset.filter(homework__isnull=False)
+            if self.value() == 'event':
+                return queryset.filter(event__isnull=False)
             return queryset
+
+    _Filter.title = title
+    _Filter.parameter_name = parameter_name
+    return _Filter
 
 
 class AttachmentAdmin(BaseModelAdmin):
     list_display = ('title', 'get_attachment', 'size', 'updated_at', 'get_user',)
-    list_filter = (AttachmentType,)
+    list_filter = (planner_entity_type_filter('Attachment Type', 'attachment_type'), staff_filter('user'))
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
@@ -99,31 +101,11 @@ class AttachmentAdmin(BaseModelAdmin):
     linked_entity.short_description = 'Linked Entity'
 
 
-class CourseGroupHasCourseScheduleFilter(SimpleListFilter):
-    title = 'has course schedule'
-    parameter_name = 'has_course_schedule'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(
-                Q(courses__schedules__isnull=False) & ~Q(courses__schedules__days_of_week="0000000")).distinct()
-        elif self.value() == 'no':
-            return queryset.exclude(
-                Q(courses__schedules__isnull=False) & ~Q(courses__schedules__days_of_week="0000000")).distinct()
-        else:
-            return queryset
-
-
 class CourseGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'shown_on_calendar', 'start_date', 'num_courses', 'num_homework',
                     'num_attachments', 'updated_at', 'get_user',)
-    list_filter = ('shown_on_calendar', 'example_schedule', CourseGroupHasCourseScheduleFilter)
+    list_filter = ('shown_on_calendar', 'example_schedule', has_course_schedule_filter('courses__schedules'),
+                   staff_filter('user'))
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
     actions = [recalculate_grade]
@@ -136,6 +118,21 @@ class CourseGroupAdmin(BaseModelAdmin):
 
         return readonly_fields + self.readonly_fields
 
+    def num_courses(self, obj):
+        return obj.num_courses
+
+    num_courses.short_description = 'Classes'
+
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         if obj.get_user():
             return obj.get_user().get_username()
@@ -144,25 +141,6 @@ class CourseGroupAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'user__username'
-
-
-class CourseHasCourseScheduleFilter(SimpleListFilter):
-    title = 'has course schedule'
-    parameter_name = 'has_course_schedule'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(Q(schedules__isnull=False) & ~Q(schedules__days_of_week="0000000")).distinct()
-        elif self.value() == 'no':
-            return queryset.exclude(Q(schedules__isnull=False) & ~Q(schedules__days_of_week="0000000")).distinct()
-        else:
-            return queryset
 
 
 class HasAttachmentFilter(SimpleListFilter):
@@ -180,44 +158,6 @@ class HasAttachmentFilter(SimpleListFilter):
             return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count__gt=0).distinct()
         elif self.value() == 'no':
             return queryset.annotate(attachments_count=Count('attachments')).filter(attachments_count=0).distinct()
-        else:
-            return queryset
-
-
-class CourseHasWeightedGradingFilter(SimpleListFilter):
-    title = 'has weighted grading'
-    parameter_name = 'has_weighted_grading'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(categories__weight__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(categories__weight=0).distinct()
-        else:
-            return queryset
-
-
-class CourseHasCreditsFilter(SimpleListFilter):
-    title = 'has credits'
-    parameter_name = 'has_credits'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(credits__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(credits=0).distinct()
         else:
             return queryset
 
@@ -245,8 +185,9 @@ class CourseAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_reminders',
                     'num_attachments', 'updated_at', 'get_user',)
     list_filter = ('is_online', 'course_group__shown_on_calendar', 'course_group__example_schedule',
-                   CourseHasCourseScheduleFilter, CourseHasWeightedGradingFilter,
-                   CourseHasCreditsFilter, HasReminderFilter, HasAttachmentFilter,)
+                   has_course_schedule_filter('schedules'), has_weighted_grading_filter('categories__weight'),
+                   has_credits_filter('credits'), HasReminderFilter, HasAttachmentFilter,
+                   staff_filter('course_group__user'))
     search_fields = ('id', 'title', 'teacher_email', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
@@ -264,6 +205,21 @@ class CourseAdmin(BaseModelAdmin):
 
     get_course_group.short_description = 'Class Group'
     get_course_group.admin_order_field = 'course_group__title'
+
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -297,7 +253,7 @@ class HasCourseScheduleFilter(SimpleListFilter):
 class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'updated_at', 'get_user')
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
-                   HasCourseScheduleFilter)
+                   HasCourseScheduleFilter, staff_filter('course__course_group__user'))
     search_fields = ('id', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
 
@@ -331,29 +287,10 @@ class CourseScheduleAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'course_group__user__username'
 
 
-class CategoryHasWeightedGradingFilter(SimpleListFilter):
-    title = 'has weighted grading'
-    parameter_name = 'has_weighted_grading'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(weight__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(weight=0).distinct()
-        else:
-            return queryset
-
-
 class CategoryAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'weight', 'num_homework', 'updated_at', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
-                   CategoryHasWeightedGradingFilter)
+                   has_weighted_grading_filter('weight'), staff_filter('course__course_group__user'))
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
     actions = [recalculate_grade]
@@ -378,6 +315,11 @@ class CategoryAdmin(BaseModelAdmin):
     get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
+    def num_homework(self, obj):
+        return obj.num_homework
+
+    num_homework.short_description = 'Assignments'
+
     def get_user(self, obj):
         return obj.get_user().username
 
@@ -387,7 +329,7 @@ class CategoryAdmin(BaseModelAdmin):
 
 class EventAdmin(BaseModelAdmin):
     list_display = ('title', 'start', 'num_reminders', 'num_attachments', 'updated_at', 'get_user',)
-    list_filter = ('all_day', 'example_schedule', HasReminderFilter, HasAttachmentFilter)
+    list_filter = ('all_day', 'example_schedule', HasReminderFilter, HasAttachmentFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start',)
     autocomplete_fields = ('user',)
@@ -400,6 +342,16 @@ class EventAdmin(BaseModelAdmin):
 
         return readonly_fields + self.readonly_fields
 
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         return obj.get_user().username
 
@@ -407,31 +359,13 @@ class EventAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class HomeworkHasWeightedGradingFilter(SimpleListFilter):
-    title = 'has weighted grading'
-    parameter_name = 'has_weighted_grading'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(course__categories__weight__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(course__categories__weight=0).distinct()
-        else:
-            return queryset
-
-
 class HomeworkAdmin(BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'start', 'num_reminders',
                     'num_attachments', 'completed_at', 'updated_at', 'get_user',)
     list_filter = ('all_day', 'completed', 'course__course_group__shown_on_calendar',
                    'course__course_group__example_schedule',
-                   HomeworkHasWeightedGradingFilter, HasReminderFilter, HasAttachmentFilter)
+                   has_weighted_grading_filter('course__categories__weight'), HasReminderFilter, HasAttachmentFilter,
+                   staff_filter('course__course_group__user'))
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     ordering = ('-start',)
     autocomplete_fields = ('category', 'materials', 'course')
@@ -456,6 +390,16 @@ class HomeworkAdmin(BaseModelAdmin):
     get_course_group.short_description = 'Class group'
     get_course_group.admin_order_field = 'course__course_group__title'
 
+    def num_reminders(self, obj):
+        return obj.num_reminders
+
+    num_reminders.short_description = 'Reminders'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         return obj.get_user().username
 
@@ -465,7 +409,7 @@ class HomeworkAdmin(BaseModelAdmin):
 
 class MaterialGroupAdmin(BaseModelAdmin):
     list_display = ('title', 'shown_on_calendar', 'num_materials', 'updated_at', 'get_user',)
-    list_filter = ('shown_on_calendar', 'example_schedule')
+    list_filter = ('shown_on_calendar', 'example_schedule', staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
 
@@ -476,6 +420,11 @@ class MaterialGroupAdmin(BaseModelAdmin):
             return readonly_fields + self.readonly_fields + ('user',)
 
         return readonly_fields + self.readonly_fields
+
+    def num_materials(self, obj):
+        return obj.num_materials
+
+    num_materials.short_description = 'Resources'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -489,7 +438,8 @@ class MaterialGroupAdmin(BaseModelAdmin):
 
 class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
-    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule')
+    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule',
+                   staff_filter('material_group__user'))
     search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group', 'courses',)
 
@@ -515,28 +465,6 @@ class MaterialAdmin(BaseModelAdmin):
 
     get_user.short_description = 'User'
     get_user.admin_order_field = 'material_group__user__username'
-
-
-class ReminderType(SimpleListFilter):
-    title = 'Reminder Type'
-    parameter_name = 'reminder_type'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('course', 'Course'),
-            ('homework', 'Homework'),
-            ('event', 'Event'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'course':
-            return queryset.filter(course__isnull=False)
-        elif self.value() == 'homework':
-            return queryset.filter(homework__isnull=False)
-        elif self.value() == 'event':
-            return queryset.filter(event__isnull=False)
-        else:
-            return queryset
 
 
 class ReminderExampleScheduleFilter(SimpleListFilter):
@@ -570,7 +498,8 @@ def mark_reminders_unsent(modeladmin, request, queryset):
 
 class ReminderAdmin(BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
-    list_filter = ('type', 'sent', 'dismissed', ReminderType, ReminderExampleScheduleFilter)
+    list_filter = ('type', 'sent', 'dismissed', planner_entity_type_filter('Reminder Type', 'reminder_type'),
+                   ReminderExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
@@ -659,7 +588,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
 class NoteAdmin(BaseModelAdmin):
     list_display = ('id', 'title', 'get_content_size', 'updated_at', 'get_user')
-    list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter)
+    list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
     exclude = ('homework', 'events', 'resources')

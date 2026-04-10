@@ -99,6 +99,10 @@ def add_to_ses_suppression_list(email: str, reason: str = 'BOUNCE') -> bool:
     if settings.DISABLE_EMAILS:
         return False
 
+    if email.endswith('@heliumedu.com') or email.endswith('@heliumedu.dev'):
+        logger.info(f'Skipping SES suppression for staff email {redact_email(email)}')
+        return False
+
     try:
         _get_ses_client().put_suppressed_destination(
             EmailAddress=email,

@@ -24,7 +24,8 @@ from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.admin import admin_site, BaseModelAdmin
+from helium.common.admin import admin_site, BaseModelAdmin, staff_filter, has_course_schedule_filter, \
+    has_credits_filter, has_weighted_grading_filter
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
@@ -100,67 +101,6 @@ class OAuthProviderFilter(SimpleListFilter):
         elif self.value():
             return queryset.filter(oauth_providers__provider=self.value()).distinct()
         return queryset
-
-
-class HasCreditsFilter(SimpleListFilter):
-    title = 'has credits'
-    parameter_name = 'has_credits'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(course_groups__courses__credits__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(course_groups__courses__credits=0).distinct()
-        else:
-            return queryset
-
-
-class HasWeightedGradingFilter(SimpleListFilter):
-    title = 'has weighted grading'
-    parameter_name = 'has_weighted_grading'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(course_groups__courses__categories__weight__gt=0).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(course_groups__courses__categories__weight=0).distinct()
-        else:
-            return queryset
-
-
-class HasCourseScheduleFilter(SimpleListFilter):
-    title = 'has course schedule'
-    parameter_name = 'has_course_schedule'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(
-                Q(course_groups__courses__schedules__isnull=False) & ~Q(
-                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
-        elif self.value() == 'no':
-            return queryset.exclude(
-                Q(course_groups__courses__schedules__isnull=False) & ~Q(
-                    course_groups__courses__schedules__days_of_week="0000000")).distinct()
-        else:
-            return queryset
 
 
 class ActiveStatusFilter(SimpleListFilter):
@@ -334,8 +274,10 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
                     'deletion_warning_count', 'mobile_app_usage_percent_30d', 'created_at', 'is_active')
     list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', OAuthProviderFilter, HasWeightedGradingFilter,
-                   HasCreditsFilter, HasCourseScheduleFilter)
+                   'settings__calendar_use_category_colors', OAuthProviderFilter,
+                   has_weighted_grading_filter('course_groups__courses__categories__weight'),
+                   has_credits_filter('course_groups__courses__credits'),
+                   has_course_schedule_filter('course_groups__courses__schedules'), staff_filter())
     search_fields = ('id', 'email', 'username', 'email_changing')
     ordering = ('-last_activity',)
     add_fieldsets = (
@@ -434,6 +376,7 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
 
 class UserProfileAdmin(BaseModelAdmin):
     list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login', 'get_last_activity']
+    list_filter = [staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
@@ -469,7 +412,7 @@ class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'color_scheme_theme',
                     'review_prompts_shown', 'get_last_activity']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
-                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme']
+                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme', staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
     readonly_fields = ('user',)
@@ -497,6 +440,7 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 class UserPushTokenAdmin(BaseModelAdmin):
     list_display = ['get_user', 'device_id', 'token', 'get_last_activity']
+    list_filter = [staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
     autocomplete_fields = ('user',)
@@ -533,7 +477,7 @@ class UserPushTokenAdmin(BaseModelAdmin):
 
 class UserOAuthProviderAdmin(BaseModelAdmin):
     list_display = ['get_user', 'provider', 'provider_user_id', 'created_at', 'last_used_at']
-    list_filter = ['provider']
+    list_filter = ['provider', staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username', 'provider_user_id')
     ordering = ('-last_used_at',)
     readonly_fields = ('user', 'provider', 'provider_user_id', 'created_at', 'last_used_at')
@@ -559,11 +503,14 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
 
 
 class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
+    list_filter = (staff_filter('user'),)
+
     def has_change_permission(self, request, obj=None):
         return False
 
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
+    list_filter = (staff_filter('token__user'),)
     search_fields = ('token__jti', 'token__user__id', 'token__user__email', 'token__user__username')
     ordering = ('-token__user__last_activity',)
 
@@ -585,9 +532,11 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
         return False
 
 
+
+
 class UserClientActivityAdmin(django_admin.ModelAdmin):
     list_display = ('get_user', 'date', 'client')
-    list_filter = ('client', 'date')
+    list_filter = ('client', 'date', staff_filter('user'))
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-date',)
     readonly_fields = ('user', 'date', 'client')
