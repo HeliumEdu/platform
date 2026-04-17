@@ -3,8 +3,10 @@ __license__ = "MIT"
 
 import logging
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.models import CourseGroup
 
 logger = logging.getLogger(__name__)
@@ -51,5 +53,16 @@ class CourseGroupSerializer(serializers.ModelSerializer):
 
         if start_date and end_date and start_date > end_date:
             raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
+
+        if 'exceptions' in attrs or 'start_date' in attrs or 'end_date' in attrs:
+            exceptions = attrs.get('exceptions', None)
+            if exceptions is None and self.instance:
+                exceptions = self.instance.exceptions
+            if exceptions:
+                try:
+                    attrs['exceptions'] = validate_and_normalize_date_csv(
+                        exceptions, start_date, end_date, range_label='course group date range')
+                except DjangoValidationError as e:
+                    raise serializers.ValidationError({'exceptions': e.message})
 
         return attrs

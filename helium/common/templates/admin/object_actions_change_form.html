@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block after_related_objects %}
+{{ block.super }}
+{% if object_actions and original %}
+<fieldset class="module aligned">
+    <h2>{% translate "Actions" %}</h2>
+    <div class="form-row" style="padding: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+        {% for action_name, label in object_actions %}
+        <input type="submit" name="_action_{{ action_name }}" value="{{ label }}" class="default"
+               style="background: var(--button-bg); font-weight: normal;">
+        {% endfor %}
+    </div>
+</fieldset>
+{% endif %}
+{% endblock %}

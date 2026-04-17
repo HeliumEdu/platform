@@ -8,13 +8,22 @@ from django.contrib.admin import action, SimpleListFilter
 from django.db.models import Count, Q, TextField
 from django.db.models.functions import Cast, Length
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
-from helium.common.admin import admin_site, BaseModelAdmin, staff_filter, has_course_schedule_filter, \
-    has_credits_filter, has_weighted_grading_filter
+from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
+    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule, Note
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
+
+
+def _linked_notes(obj):
+    notes = obj.notes_set.all()
+    if not notes:
+        return '-'
+    return format_html_join(
+        ', ', '<a href="{}">{}</a>',
+        ((reverse('admin:planner_note_change', args=[n.pk]), n.title or 'Untitled') for n in notes))
 
 
 @action(description="Recalculate grades for selected items")
@@ -38,6 +47,7 @@ def planner_entity_type_filter(title, parameter_name):
     Factory returning a SimpleListFilter that splits planner records by their linked entity type
     (course, homework, or event).
     """
+
     class _Filter(SimpleListFilter):
         def lookups(self, request, model_admin):
             return [('course', 'Course'), ('homework', 'Homework'), ('event', 'Event')]
@@ -70,7 +80,7 @@ class AttachmentAdmin(BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
+            return readonly_fields + self.readonly_fields + ('linked_entity', 'user', 'size')
 
         return readonly_fields + self.readonly_fields
 
@@ -101,7 +111,7 @@ class AttachmentAdmin(BaseModelAdmin):
     linked_entity.short_description = 'Linked Entity'
 
 
-class CourseGroupAdmin(BaseModelAdmin):
+class CourseGroupAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('title', 'shown_on_calendar', 'start_date', 'num_courses', 'num_homework',
                     'num_attachments', 'updated_at', 'get_user',)
     list_filter = ('shown_on_calendar', 'example_schedule', has_course_schedule_filter('courses__schedules'),
@@ -109,6 +119,9 @@ class CourseGroupAdmin(BaseModelAdmin):
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
     actions = [recalculate_grade]
+    object_actions = [
+        (recalculate_grade, 'Recalculate grades'),
+    ]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -181,7 +194,7 @@ class HasReminderFilter(SimpleListFilter):
             return queryset
 
 
-class CourseAdmin(BaseModelAdmin):
+class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'start_date', 'num_homework', 'num_reminders',
                     'num_attachments', 'updated_at', 'get_user',)
     list_filter = ('is_online', 'course_group__shown_on_calendar', 'course_group__example_schedule',
@@ -191,6 +204,9 @@ class CourseAdmin(BaseModelAdmin):
     search_fields = ('id', 'title', 'teacher_email', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
+    object_actions = [
+        (recalculate_grade, 'Recalculate grades'),
+    ]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -287,13 +303,16 @@ class CourseScheduleAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'course_group__user__username'
 
 
-class CategoryAdmin(BaseModelAdmin):
+class CategoryAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'weight', 'num_homework', 'updated_at', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
                    has_weighted_grading_filter('weight'), staff_filter('course__course_group__user'))
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
     actions = [recalculate_grade]
+    object_actions = [
+        (recalculate_grade, 'Recalculate grades'),
+    ]
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -333,14 +352,20 @@ class EventAdmin(BaseModelAdmin):
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start',)
     autocomplete_fields = ('user',)
+    exclude = ('comments',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
+            return readonly_fields + self.readonly_fields + ('owner_id', 'user', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
+
+    def linked_notes(self, obj):
+        return _linked_notes(obj)
+
+    linked_notes.short_description = 'Notes'
 
     def num_reminders(self, obj):
         return obj.num_reminders
@@ -368,15 +393,31 @@ class HomeworkAdmin(BaseModelAdmin):
                    staff_filter('course__course_group__user'))
     search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
     ordering = ('-start',)
-    autocomplete_fields = ('category', 'materials', 'course')
+    autocomplete_fields = ('category', 'course')
+    exclude = ('comments', 'materials',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('category', 'materials', 'course')
+            return readonly_fields + self.readonly_fields + ('completed_at', 'category', 'course', 'linked_materials', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
+
+    def linked_materials(self, obj):
+        materials = obj.materials.all()
+        if not materials:
+            return '-'
+        return format_html_join(
+            ', ', '<a href="{}">{}</a>',
+            ((reverse('admin:planner_material_change', args=[m.pk]), m.title) for m in materials))
+
+    linked_materials.short_description = 'Resources'
+
+    def linked_notes(self, obj):
+        return _linked_notes(obj)
+
+    linked_notes.short_description = 'Notes'
 
     def get_course(self, obj):
         return obj.course.title
@@ -441,15 +482,31 @@ class MaterialAdmin(BaseModelAdmin):
     list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule',
                    staff_filter('material_group__user'))
     search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
-    autocomplete_fields = ('material_group', 'courses',)
+    autocomplete_fields = ('material_group',)
+    exclude = ('details', 'courses',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('material_group', 'courses')
+            return readonly_fields + self.readonly_fields + ('material_group', 'linked_courses', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
+
+    def linked_courses(self, obj):
+        courses = obj.courses.all()
+        if not courses:
+            return '-'
+        return format_html_join(
+            ', ', '<a href="{}">{}</a>',
+            ((reverse('admin:planner_course_change', args=[c.pk]), c.title) for c in courses))
+
+    linked_courses.short_description = 'Classes'
+
+    def linked_notes(self, obj):
+        return _linked_notes(obj)
+
+    linked_notes.short_description = 'Notes'
 
     def get_material_group(self, obj):
         return obj.material_group.title
@@ -479,9 +536,9 @@ class ReminderExampleScheduleFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         example_schedule_q = (
-            Q(homework__course__course_group__example_schedule=True) |
-            Q(event__example_schedule=True) |
-            Q(course__course_group__example_schedule=True)
+                Q(homework__course__course_group__example_schedule=True) |
+                Q(event__example_schedule=True) |
+                Q(course__course_group__example_schedule=True)
         )
         if self.value() == 'yes':
             return queryset.filter(example_schedule_q)
@@ -496,7 +553,7 @@ def mark_reminders_unsent(modeladmin, request, queryset):
     modeladmin.message_user(request, f'{updated} reminder(s) marked as unsent.')
 
 
-class ReminderAdmin(BaseModelAdmin):
+class ReminderAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('title', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
     list_filter = ('type', 'sent', 'dismissed', planner_entity_type_filter('Reminder Type', 'reminder_type'),
                    ReminderExampleScheduleFilter, staff_filter('user'))
@@ -505,6 +562,9 @@ class ReminderAdmin(BaseModelAdmin):
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
     actions = [mark_reminders_unsent]
+    object_actions = [
+        (mark_reminders_unsent, 'Mark as unsent'),
+    ]
 
     def has_add_permission(self, request):
         return False
@@ -574,10 +634,10 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         example_schedule_q = (
-            Q(example_schedule=True) |
-            Q(homework__course__course_group__example_schedule=True) |
-            Q(events__example_schedule=True) |
-            Q(resources__material_group__example_schedule=True)
+                Q(example_schedule=True) |
+                Q(homework__course__course_group__example_schedule=True) |
+                Q(events__example_schedule=True) |
+                Q(resources__material_group__example_schedule=True)
         )
         if self.value() == 'yes':
             return queryset.filter(example_schedule_q).distinct()
@@ -587,7 +647,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('id', 'title', 'get_content_size', 'updated_at', 'get_user')
+    list_display = ('get_id', 'title', 'get_content_size', 'updated_at', 'get_user')
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -603,6 +663,12 @@ class NoteAdmin(BaseModelAdmin):
             return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
 
         return readonly_fields + self.readonly_fields
+
+    def get_id(self, obj):
+        return str(obj.pk)
+
+    get_id.short_description = 'ID'
+    get_id.admin_order_field = 'id'
 
     def get_user(self, obj):
         return obj.user.username

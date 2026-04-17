@@ -10,7 +10,7 @@ from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
-from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models import Count, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
@@ -18,14 +18,14 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
-from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingTokenProxy
+from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.admin import admin_site, BaseModelAdmin, staff_filter, has_course_schedule_filter, \
-    has_credits_filter, has_weighted_grading_filter
+from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
+    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
@@ -264,7 +264,7 @@ def remove_from_ses_suppression(modeladmin, request, queryset):
         )
 
 
-class UserAdmin(admin.UserAdmin, BaseModelAdmin):
+class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
 
@@ -290,6 +290,19 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     actions = [mark_email_verified, send_password_reset, purge_push_tokens, force_logout,
                send_dormant_warning, recalculate_all_grades, heal_orphaned_reminders, disable_feeds,
                reset_whats_new, force_review_prompt, remove_from_ses_suppression]
+    object_actions = [
+        (mark_email_verified, 'Mark email verified'),
+        (send_password_reset, 'Send password reset'),
+        (purge_push_tokens, 'Purge push tokens'),
+        (force_logout, 'Force logout'),
+        (send_dormant_warning, 'Send dormant warning'),
+        (recalculate_all_grades, 'Recalculate all grades'),
+        (heal_orphaned_reminders, 'Heal orphaned reminders'),
+        (disable_feeds, 'Disable feeds'),
+        (reset_whats_new, "Reset What's New"),
+        (force_review_prompt, 'Trigger review prompt'),
+        (remove_from_ses_suppression, 'Remove from SES suppression'),
+    ]
     inlines = [UserOAuthProviderInline, UserPushTokenInline]
 
     def get_queryset(self, request):
@@ -315,7 +328,8 @@ class UserAdmin(admin.UserAdmin, BaseModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
-                                           'deletion_warning_count', 'deletion_warning_sent_at', 'get_2fa_enabled',)
+                                           'mobile_app_usage_percent_30d', 'deletion_warning_count',
+                                           'deletion_warning_sent_at', 'get_2fa_enabled',)
 
         return self.readonly_fields
 
@@ -384,6 +398,9 @@ class UserProfileAdmin(BaseModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     def get_user(self, obj):
         if obj.user:
             return obj.user.get_username()
@@ -430,6 +447,9 @@ class UserSettingsAdmin(BaseModelAdmin):
             return ''
 
     def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
 
     get_user.short_description = 'User'
@@ -530,8 +550,6 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-
 
 
 class UserClientActivityAdmin(django_admin.ModelAdmin):

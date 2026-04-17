@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import models
 
 from helium.common.models import BaseModel
+from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
 
@@ -41,6 +42,12 @@ class CourseGroup(BaseModel):
     class Meta:
         verbose_name = 'Class group'
         ordering = ('start_date', 'title')
+
+    def clean(self):
+        super().clean()
+        if self.exceptions:
+            self.exceptions = validate_and_normalize_date_csv(
+                self.exceptions, self.start_date, self.end_date, range_label='course group date range')
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'

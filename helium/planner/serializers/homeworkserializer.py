@@ -31,7 +31,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
             'current_grade', 'completed', 'category', 'materials', 'attachments', 'reminders', 'course',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
-        read_only_fields = ('attachments', 'reminders', 'calendar_item_type',)
+        read_only_fields = ('attachments', 'reminders', 'calendar_item_type', 'completed_at',)
 
     def validate(self, attrs):
         start = attrs.get('start', None)
