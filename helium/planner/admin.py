@@ -127,7 +127,7 @@ class CourseGroupAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
+            return readonly_fields + self.readonly_fields + ('user', 'overall_grade', 'trend',)
 
         return readonly_fields + self.readonly_fields
 
@@ -212,7 +212,7 @@ class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('course_group',)
+            return readonly_fields + self.readonly_fields + ('course_group', 'current_grade', 'trend',)
 
         return readonly_fields + self.readonly_fields
 
@@ -318,7 +318,7 @@ class CategoryAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('course',)
+            return readonly_fields + self.readonly_fields + ('course', 'average_grade', 'grade_by_weight', 'trend',)
 
         return readonly_fields + self.readonly_fields
 
@@ -573,7 +573,7 @@ class ReminderAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
+            return readonly_fields + self.readonly_fields + ('linked_entity', 'user', 'start_of_range',)
 
         return readonly_fields + self.readonly_fields
 

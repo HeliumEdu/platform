@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from helium.common.models import BaseModel
@@ -23,7 +25,7 @@ class BaseCalendar(BaseModel):
                                db_index=True)
 
     priority = models.PositiveIntegerField(help_text='A priority integer between 0 and 100.',
-                                           default=50)
+                                           default=50, validators=[MaxValueValidator(100)])
 
     url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
                           blank=True, null=True)
@@ -34,6 +36,11 @@ class BaseCalendar(BaseModel):
     class Meta:
         abstract = True
         ordering = ('start', 'title')
+
+    def clean(self):
+        super().clean()
+        if self.start and self.end and self.start > self.end:
+            raise ValidationError("The 'start' must be before the 'end'")
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'

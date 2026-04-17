@@ -329,7 +329,8 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
                                            'mobile_app_usage_percent_30d', 'deletion_warning_count',
-                                           'deletion_warning_sent_at', 'get_2fa_enabled',)
+                                           'deletion_warning_sent_at', 'get_2fa_enabled',
+                                           'verification_code', 'email_changing',)
 
         return self.readonly_fields
 
@@ -393,7 +394,7 @@ class UserProfileAdmin(BaseModelAdmin):
     list_filter = [staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    readonly_fields = ('user',)
+    readonly_fields = ('user', 'phone_changing', 'phone_verification_code', 'phone_verified',)
 
     def has_add_permission(self, request):
         return False
@@ -432,7 +433,8 @@ class UserSettingsAdmin(BaseModelAdmin):
                    'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme', staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    readonly_fields = ('user',)
+    readonly_fields = ('user', 'is_setup_complete', 'prompt_for_review',
+                       'next_review_prompt_date', 'review_prompts_shown', 'last_deletion_at',)
 
     def get_user(self, obj):
         if obj.user:

@@ -35,7 +35,8 @@ class ExternalCalendarAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
+            return readonly_fields + self.readonly_fields + ('user', 'etag', 'last_modified_header',
+                                                                'last_index', 'last_sync_error',)
 
         return readonly_fields + self.readonly_fields
 

@@ -1,7 +1,10 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Sum
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import random_color
@@ -16,7 +19,7 @@ class Category(BaseModel):
     weight = models.DecimalField(
         help_text='A decimal weight for this category\'s homework (note that all weights associated with a single '
                   'course cannot exceed a value of 100).',
-        max_digits=5, decimal_places=2)
+        max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
@@ -39,6 +42,18 @@ class Category(BaseModel):
             ('course', 'title'),
         )
         ordering = ('title',)
+
+    def clean(self):
+        super().clean()
+        if self.weight is not None and self.course_id:
+            qs = Category.objects.filter(course_id=self.course_id)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            sibling_total = qs.aggregate(Sum('weight'))['weight__sum'] or 0
+            if sibling_total + self.weight > 100:
+                raise ValidationError({
+                    'weight': 'The cumulative weights of all categories associated with a course cannot exceed 100%.'
+                })
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
