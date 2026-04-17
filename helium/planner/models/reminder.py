@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import pytz
 from django.conf import settings
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -25,7 +26,7 @@ class Reminder(BaseModel):
     start_of_range = models.DateTimeField(null=True, blank=True)
 
     offset = models.PositiveIntegerField(help_text='The number of units (in `offset_type`) from the offset.',
-                                         default=30)
+                                         default=30, validators=[MaxValueValidator(100)])
 
     offset_type = models.PositiveIntegerField(help_text='A valid reminder offset type choice.',
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)

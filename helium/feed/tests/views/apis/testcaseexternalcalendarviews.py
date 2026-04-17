@@ -164,7 +164,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_create_invalid_url_disables_calendar(self, mock_urlopen):
+    def test_create_invalid_url_returns_400(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         commonhelper.given_urlopen_response_value(status.HTTP_404_NOT_FOUND, mock_urlopen)
@@ -180,12 +180,11 @@ class TestCaseExternalCalendarViews(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['url'], data['url'])
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('url', response.data)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_update_invalid_url_disables_calendar(self, mock_urlopen):
+    def test_update_invalid_url_returns_400(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
@@ -194,19 +193,17 @@ class TestCaseExternalCalendarViews(APITestCase):
         # WHEN
         data = {
             'url': 'http://www.not-a-valid-ical-url.com/nope',
-            # Intentionally NOT changing these value
             'title': external_calendar.title
         }
         response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['url'], data['url'])
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('url', response.data)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_create_invalid_ical(self, mock_urlopen):
+    def test_create_invalid_ical_returns_400(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
@@ -222,12 +219,11 @@ class TestCaseExternalCalendarViews(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['url'], data['url'])
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('url', response.data)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
-    def test_update_invalid_ical(self, mock_urlopen):
+    def test_update_invalid_ical_returns_400(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
@@ -236,16 +232,14 @@ class TestCaseExternalCalendarViews(APITestCase):
         # WHEN
         data = {
             'url': 'http://www.example.com/bad-ical',
-            # Intentionally NOT changing these value
             'title': external_calendar.title
         }
         response = self.client.put(reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
                                    json.dumps(data), content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['url'], data['url'])
-        self.assertFalse(response.data['shown_on_calendar'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('url', response.data)
 
     def test_not_found(self):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
