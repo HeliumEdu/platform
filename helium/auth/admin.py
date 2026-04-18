@@ -104,6 +104,30 @@ class OAuthProviderFilter(SimpleListFilter):
         return queryset
 
 
+class ClientFilter(SimpleListFilter):
+    title = 'client activity'
+    parameter_name = 'client'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('web', 'Web'),
+            ('mobile_app', 'Mobile'),
+            ('both', 'Both'),
+        )
+
+    def queryset(self, request, queryset):
+        web = UserClientActivity.CLIENT_WEB
+        mobile = UserClientActivity.CLIENT_MOBILE_APP
+        if self.value() == 'web':
+            return queryset.filter(client_activity__client=web).distinct()
+        elif self.value() == 'mobile_app':
+            return queryset.filter(client_activity__client=mobile).distinct()
+        elif self.value() == 'both':
+            return queryset.filter(client_activity__client=web) \
+                           .filter(client_activity__client=mobile).distinct()
+        return queryset
+
+
 class ActiveStatusFilter(SimpleListFilter):
     title = 'active'
     parameter_name = 'is_active'
@@ -292,7 +316,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     list_filter = (ActiveStatusFilter, 'settings__show_getting_started', 'settings__default_view',
                    'settings__remember_filter_state', 'settings__calendar_event_limit',
                    'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', OAuthProviderFilter,
+                   'settings__calendar_use_category_colors', OAuthProviderFilter, ClientFilter,
                    has_weighted_grading_filter('course_groups__courses__categories__weight'),
                    has_credits_filter('course_groups__courses__credits'),
                    has_course_schedule_filter('course_groups__courses__schedules'),
