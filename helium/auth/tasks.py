@@ -580,14 +580,14 @@ def evaluate_review_prompts(self):
             prompt_for_review=False,
             next_review_prompt_date__isnull=False,
             next_review_prompt_date__lte=now,
-            review_prompts_shown__lt=settings.REVIEW_PROMPT_MAX_SHOWN,
+            review_prompts_requested__lt=settings.REVIEW_PROMPT_MAX_REQUESTED,
         )
 
         recent_cutoff = now - timedelta(days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
 
         to_update = []
         for user_settings in candidates:
-            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_shown + 1)
+            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_requested + 1)
             base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
                 completed=True,
                 course__course_group__example_schedule=False,

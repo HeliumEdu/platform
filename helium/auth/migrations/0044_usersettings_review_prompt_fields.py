@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='usersettings',
-            name='review_prompts_shown',
+            name='review_prompts_requested',
             field=models.PositiveIntegerField(
                 default=0,
                 help_text='The number of times the user has been shown the app review prompt.',

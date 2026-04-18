@@ -114,8 +114,8 @@ class UserSettings(BaseModel):
                   'Null until first login.',
         blank=True, null=True)
 
-    review_prompts_shown = models.PositiveIntegerField(
-        help_text='The number of times the user has been shown the app review prompt.',
+    review_prompts_requested = models.PositiveIntegerField(
+        help_text='The number of times the system has requested a review prompt from the native OS (not guaranteed to have shown a prompt).',
         default=0)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)

@@ -25,7 +25,8 @@ from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
-    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter
+    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, prompt_for_review_filter, \
+    review_prompts_requested_filter
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
@@ -246,6 +247,22 @@ def force_logout(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Logged out {queryset.count()} user(s).')
 
 
+@django_admin.action(description='Trigger review prompt for users of selected activities')
+def force_review_prompt_for_activities(modeladmin, request, queryset):
+    user_ids = queryset.values_list('user_id', flat=True).distinct()
+    updated = UserSettings.objects.filter(user_id__in=user_ids).update(prompt_for_review=True)
+    modeladmin.message_user(request, f'Review prompt triggered for {updated} user(s).')
+
+
+@django_admin.action(description='Force logout users of selected activities (invalidates next token refresh)')
+def force_logout_for_activities(modeladmin, request, queryset):
+    user_ids = list(queryset.values_list('user_id', flat=True).distinct())
+    tokens = OutstandingToken.objects.filter(user_id__in=user_ids)
+    for token in tokens:
+        BlacklistedToken.objects.get_or_create(token=token)
+    modeladmin.message_user(request, f'Logged out {len(user_ids)} user(s).')
+
+
 @django_admin.action(description='Remove selected users from SES suppression list')
 def remove_from_ses_suppression(modeladmin, request, queryset):
     cleared, not_suppressed = [], []
@@ -272,12 +289,15 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'last_login_legacy',
                     'deletion_warning_count', 'mobile_app_usage_percent_30d', 'created_at', 'is_active')
-    list_filter = (ActiveStatusFilter, 'settings__default_view', 'settings__remember_filter_state',
-                   'settings__calendar_event_limit', 'settings__default_reminder_type', 'settings__color_scheme_theme',
+    list_filter = (ActiveStatusFilter, 'settings__show_getting_started', 'settings__default_view',
+                   'settings__remember_filter_state', 'settings__calendar_event_limit',
+                   'settings__default_reminder_type', 'settings__color_scheme_theme',
                    'settings__calendar_use_category_colors', OAuthProviderFilter,
                    has_weighted_grading_filter('course_groups__courses__categories__weight'),
                    has_credits_filter('course_groups__courses__credits'),
-                   has_course_schedule_filter('course_groups__courses__schedules'), staff_filter())
+                   has_course_schedule_filter('course_groups__courses__schedules'),
+                   prompt_for_review_filter('settings__prompt_for_review'),
+                   review_prompts_requested_filter('settings__review_prompts_requested'), staff_filter())
     search_fields = ('id', 'email', 'username', 'email_changing')
     ordering = ('-last_activity',)
     add_fieldsets = (
@@ -428,12 +448,14 @@ class UserProfileAdmin(BaseModelAdmin):
 
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'color_scheme_theme',
-                    'review_prompts_shown', 'get_last_activity']
+                    'review_prompts_requested', 'get_last_activity']
     list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
-                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme', staff_filter('user')]
+                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme',
+                   prompt_for_review_filter('prompt_for_review'),
+                   review_prompts_requested_filter('review_prompts_requested'), staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    readonly_fields = ('user', 'is_setup_complete', 'next_review_prompt_date', 'review_prompts_shown', 'last_deletion_at',)
+    readonly_fields = ('user', 'is_setup_complete', 'next_review_prompt_date', 'review_prompts_requested', 'last_deletion_at',)
 
     def get_user(self, obj):
         if obj.user:
@@ -555,10 +577,14 @@ class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
 
 class UserClientActivityAdmin(django_admin.ModelAdmin):
     list_display = ('get_user', 'date', 'client')
-    list_filter = ('client', 'date', staff_filter('user'))
+    list_filter = ('client', 'date',
+                   prompt_for_review_filter('user__settings__prompt_for_review'),
+                   review_prompts_requested_filter('user__settings__review_prompts_requested'),
+                   staff_filter('user'))
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-date',)
     readonly_fields = ('user', 'date', 'client')
+    actions = [force_review_prompt_for_activities, force_logout_for_activities]
 
     def get_user(self, obj):
         return obj.user.email if obj.user else ''
