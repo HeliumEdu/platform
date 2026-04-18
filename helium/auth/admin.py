@@ -433,8 +433,7 @@ class UserSettingsAdmin(BaseModelAdmin):
                    'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme', staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    readonly_fields = ('user', 'is_setup_complete', 'prompt_for_review',
-                       'next_review_prompt_date', 'review_prompts_shown', 'last_deletion_at',)
+    readonly_fields = ('user', 'is_setup_complete', 'next_review_prompt_date', 'review_prompts_shown', 'last_deletion_at',)
 
     def get_user(self, obj):
         if obj.user:
