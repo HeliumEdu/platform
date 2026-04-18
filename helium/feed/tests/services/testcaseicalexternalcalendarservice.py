@@ -205,7 +205,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
-    def test_reindex_disables_calendar_on_invalid_url(self, mock_urlopen):
+    def test_reindex_increments_consecutive_failures(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
         external_calendar.last_index = timezone.now() - timezone.timedelta(hours=5)
@@ -221,7 +221,30 @@ class TestCaseReindexStaleFeedCaches(TestCase):
 
         # THEN
         external_calendar.refresh_from_db()
+        self.assertTrue(external_calendar.shown_on_calendar)
+        self.assertEqual(external_calendar.consecutive_failures, 1)
+        self.assertIsNotNone(external_calendar.last_sync_error)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0, FEED_CONSECUTIVE_FAILURE_THRESHOLD=3)
+    def test_reindex_disables_calendar_after_threshold(self, mock_urlopen):
+        # GIVEN
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
+        external_calendar.last_index = timezone.now() - timezone.timedelta(hours=5)
+        external_calendar.consecutive_failures = 2
+        external_calendar.save()
+
+        magic_mock = mock.MagicMock()
+        magic_mock.getcode.return_value = status.HTTP_404_NOT_FOUND
+        mock_urlopen.return_value = magic_mock
+
+        # WHEN
+        icalexternalcalendarservice.reindex_stale_feed_caches()
+
+        # THEN
+        external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
+        self.assertEqual(external_calendar.consecutive_failures, 3)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
