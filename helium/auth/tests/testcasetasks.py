@@ -202,12 +202,12 @@ class TestCaseTasks(APITestCase):
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
-    @override_settings(REVIEW_PROMPT_MAX_SHOWN=1)
+    @override_settings(REVIEW_PROMPT_MAX_REQUESTED=1)
     def test_evaluate_review_prompts_does_not_flag_user_at_max_prompts_shown(self):
         # GIVEN: eligible by homework count but already at max prompts shown
         user, course = self._setup_review_prompt_candidate()
-        user.settings.review_prompts_shown = 1
-        user.settings.save(update_fields=['review_prompts_shown'])
+        user.settings.review_prompts_requested = 1
+        user.settings.save(update_fields=['review_prompts_requested'])
         recent_date = timezone.now() - timedelta(days=3)
         for _ in range(7):
             hw = homeworkhelper.given_homework_exists(course, completed=True)

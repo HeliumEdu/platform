@@ -159,6 +159,55 @@ def has_weighted_grading_filter(weight_field):
     return _Filter
 
 
+def prompt_for_review_filter(field_path):
+    """
+    Factory returning a SimpleListFilter that splits records by whether the user is queued for a review prompt.
+    Pass field_path as the FK path to the boolean (e.g. 'prompt_for_review', 'settings__prompt_for_review').
+    """
+
+    class _Filter(SimpleListFilter):
+        title = 'prompt for review'
+        parameter_name = 'prompt_for_review'
+
+        def lookups(self, request, model_admin):
+            return [('yes', 'Yes'), ('no', 'No')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'yes':
+                return queryset.filter(**{field_path: True})
+            if self.value() == 'no':
+                return queryset.filter(**{field_path: False})
+            return queryset
+
+    return _Filter
+
+
+def review_prompts_requested_filter(field_path):
+    """
+    Factory returning a SimpleListFilter that buckets records by the count of review prompts requested from the OS.
+    Pass field_path as the FK path to the integer (e.g. 'review_prompts_requested',
+    'settings__review_prompts_requested').
+    """
+
+    class _Filter(SimpleListFilter):
+        title = 'review prompts requested'
+        parameter_name = 'review_prompts_requested'
+
+        def lookups(self, request, model_admin):
+            return [('never', 'Never'), ('once', 'Once'), ('multiple', 'Multiple')]
+
+        def queryset(self, request, queryset):
+            if self.value() == 'never':
+                return queryset.filter(**{field_path: 0})
+            if self.value() == 'once':
+                return queryset.filter(**{field_path: 1})
+            if self.value() == 'multiple':
+                return queryset.filter(**{f'{field_path}__gte': 2})
+            return queryset
+
+    return _Filter
+
+
 def has_credits_filter(credits_field):
     """
     Factory returning a SimpleListFilter that splits records by whether they have credits assigned.

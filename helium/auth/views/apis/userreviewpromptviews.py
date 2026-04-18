@@ -27,11 +27,11 @@ class UserReviewPromptAckView(HeliumAPIView):
         user_settings = request.user.settings
 
         user_settings.prompt_for_review = False
-        user_settings.review_prompts_shown += 1
+        user_settings.review_prompts_requested += 1
         user_settings.next_review_prompt_date = timezone.now() + timedelta(days=settings.REVIEW_PROMPT_COOLDOWN_DAYS)
-        user_settings.save(update_fields=['prompt_for_review', 'review_prompts_shown', 'next_review_prompt_date'])
+        user_settings.save(update_fields=['prompt_for_review', 'review_prompts_requested', 'next_review_prompt_date'])
 
         logger.info(
-            f'User {request.user.pk} acknowledged review prompt (shown {user_settings.review_prompts_shown} time(s))')
+            f'User {request.user.pk} acknowledged review prompt (shown {user_settings.review_prompts_requested} time(s))')
 
         return Response(status=status.HTTP_204_NO_CONTENT)

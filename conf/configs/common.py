@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.210"
+__version__ = "2.1.211"
 
 import os
 import socket
@@ -188,7 +188,7 @@ DORMANT_USER_PURGE_MAX_PER_RUN = 50
 # App store review prompt settings
 REVIEW_PROMPT_INITIAL_DELAY_DAYS = 21
 REVIEW_PROMPT_COOLDOWN_DAYS = 90
-REVIEW_PROMPT_MAX_SHOWN = 5
+REVIEW_PROMPT_MAX_REQUESTED = 5
 REVIEW_PROMPT_HOMEWORK_THRESHOLD = 7
 REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD = 4
 REVIEW_PROMPT_RECENT_WINDOW_DAYS = 7
