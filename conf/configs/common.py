@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.209"
+__version__ = "2.1.210"
 
 import os
 import socket
@@ -159,6 +159,7 @@ FEED_CACHE_TTL_SECONDS = 60 * 60 * 3
 # Refresh cache before it expires
 FEED_CACHE_REFRESH_TTL_SECONDS = FEED_CACHE_TTL_SECONDS - (60 * 10)
 REINDEX_FEED_FREQUENCY_SEC = 75
+FEED_CONSECUTIVE_FAILURE_THRESHOLD = 10
 
 # How long calendar clients may cache ICS feeds before revalidating (15 minutes).
 # ETags still ensure correctness on revalidation; this only reduces server-side

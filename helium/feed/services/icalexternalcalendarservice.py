@@ -178,15 +178,15 @@ def validate_url(url):
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
         logger.info(f"The URL is invalid: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
+
         raise HeliumICalError(ex.message)
     except URLError as ex:
         logger.info(f"The URL is not reachable: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
+
         raise HeliumICalError("The URL is not reachable.")
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
+
         raise HeliumICalError("The URL did not return a valid iCal feed.")
 
 
@@ -202,11 +202,9 @@ def fetch_ical_conditional(external_calendar):
 
     :param external_calendar: The ExternalCalendar model instance
     :return: Parsed icalendar.Calendar object, or None if not modified (304)
-    :raises HeliumICalError: If the URL is invalid or unreachable
+    :raises HeliumICalError: If the URL is unreachable or returns invalid data
     """
     try:
-        url_validator(external_calendar.url)
-
         request = Request(external_calendar.url)
 
         # Add conditional request headers if we have cached values
@@ -243,10 +241,6 @@ def fetch_ical_conditional(external_calendar):
         metricutils.increment('feed.ical.fetched')
         return icalendar.Calendar.from_ical(response.read())
 
-    except ValidationError as ex:
-        logger.info(f"The URL is invalid: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_url'])
-        raise HeliumICalError(ex.message)
     except URLError as ex:
         logger.info(f"The URL is not reachable: {ex}")
         metricutils.increment('feed.ical.failed', extra_tags=['reason:unreachable'])
@@ -311,21 +305,34 @@ def reindex_stale_feed_caches(calendar_ids=None):
                 # 304 Not Modified - feed hasn't changed, just update last_index to extend cache
                 external_calendar.last_index = timezone.now()
                 external_calendar.last_sync_error = None
-                external_calendar.save(update_fields=['last_index', 'last_sync_error'])
+                external_calendar.consecutive_failures = 0
+                external_calendar.save(update_fields=['last_index', 'last_sync_error', 'consecutive_failures'])
                 not_modified.append(external_calendar)
             else:
                 # Feed was modified, clear cache and re-parse
                 cache.delete(_get_cache_prefix(external_calendar))
                 _create_events_from_calendar(external_calendar, calendar)
                 external_calendar.last_sync_error = None
-                external_calendar.save(update_fields=['last_sync_error'])
+                external_calendar.consecutive_failures = 0
+                external_calendar.save(update_fields=['last_sync_error', 'consecutive_failures'])
                 reindexed.append(external_calendar)
 
         except HeliumICalError as e:
-            logger.info(f"URL invalid, disabling calendar {external_calendar.pk}")
-
-            external_calendar.shown_on_calendar = False
+            external_calendar.consecutive_failures += 1
             external_calendar.last_sync_error = str(e)
-            external_calendar.save(update_fields=['shown_on_calendar', 'last_sync_error'])
+            update_fields = ['consecutive_failures', 'last_sync_error']
+
+            if external_calendar.consecutive_failures >= settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD:
+                logger.info(
+                    f"Disabling calendar {external_calendar.pk} after "
+                    f"{external_calendar.consecutive_failures} consecutive failures")
+                external_calendar.shown_on_calendar = False
+                update_fields.append('shown_on_calendar')
+            else:
+                logger.info(
+                    f"Calendar {external_calendar.pk} failure "
+                    f"{external_calendar.consecutive_failures}/{settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD}: {e}")
+
+            external_calendar.save(update_fields=update_fields)
 
     logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")

@@ -36,6 +36,10 @@ class ExternalCalendar(BaseModel):
     last_sync_error = models.TextField(help_text='Error message from the most recent failed sync attempt, if any.',
                                        blank=True, null=True)
 
+    consecutive_failures = models.PositiveIntegerField(
+        help_text='Number of consecutive reindex failures. Resets to 0 on success.',
+        default=0)
+
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
