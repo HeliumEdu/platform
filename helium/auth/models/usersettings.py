@@ -4,6 +4,7 @@ __license__ = "MIT"
 import time
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.utils.text import slugify
 
@@ -88,11 +89,11 @@ class UserSettings(BaseModel):
 
     at_risk_threshold = models.PositiveIntegerField(
         help_text='The grade percentage below which a course is flagged as at-risk.',
-        default=70)
+        default=70, validators=[MaxValueValidator(100)])
 
     on_track_tolerance = models.PositiveIntegerField(
         help_text='The percentage tolerance within which a course grade is considered on track.',
-        default=10)
+        default=10, validators=[MaxValueValidator(100)])
 
     show_week_numbers = models.BooleanField(
         help_text='Whether week numbers should be shown on the calendar.',

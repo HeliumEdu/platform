@@ -9,12 +9,12 @@ from django.contrib.admin.sites import AdminSite
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
-from helium.common.models import TaskResultProxy
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
 
 from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.common.models import TaskResultProxy
 
 _AdminBase = AdminSiteOTPRequired if settings.ADMIN_ENFORCE_2FA else AdminSite
 
@@ -87,9 +87,9 @@ def staff_filter(user_field=None):
     """
     prefix = f'{user_field}__' if user_field else ''
     staff_q = (
-        Q(**{f'{prefix}is_superuser': True}) |
-        Q(**{f'{prefix}email__endswith': '@heliumedu.com'}) |
-        Q(**{f'{prefix}email__endswith': '@heliumedu.dev'})
+            Q(**{f'{prefix}is_superuser': True}) |
+            Q(**{f'{prefix}email__endswith': '@heliumedu.com'}) |
+            Q(**{f'{prefix}email__endswith': '@heliumedu.dev'})
     )
 
     class _StaffFilter(SimpleListFilter):
@@ -114,6 +114,7 @@ def has_course_schedule_filter(schedules_prefix):
     Factory returning a SimpleListFilter that splits records by whether they have an active course schedule.
     Pass schedules_prefix as the FK path to the schedules relation (e.g. 'schedules', 'courses__schedules').
     """
+
     class _Filter(SimpleListFilter):
         title = 'has course schedule'
         parameter_name = 'has_course_schedule'
@@ -123,8 +124,8 @@ def has_course_schedule_filter(schedules_prefix):
 
         def queryset(self, request, queryset):
             has_q = (
-                Q(**{f'{schedules_prefix}__isnull': False}) &
-                ~Q(**{f'{schedules_prefix}__days_of_week': '0000000'})
+                    Q(**{f'{schedules_prefix}__isnull': False}) &
+                    ~Q(**{f'{schedules_prefix}__days_of_week': '0000000'})
             )
             if self.value() == 'yes':
                 return queryset.filter(has_q).distinct()
@@ -140,6 +141,7 @@ def has_weighted_grading_filter(weight_field):
     Factory returning a SimpleListFilter that splits records by whether they use weighted grading.
     Pass weight_field as the FK path to the weight field (e.g. 'weight', 'categories__weight').
     """
+
     class _Filter(SimpleListFilter):
         title = 'has weighted grading'
         parameter_name = 'has_weighted_grading'
@@ -162,6 +164,7 @@ def has_credits_filter(credits_field):
     Factory returning a SimpleListFilter that splits records by whether they have credits assigned.
     Pass credits_field as the FK path to the credits field (e.g. 'credits', 'course_groups__courses__credits').
     """
+
     class _Filter(SimpleListFilter):
         title = 'has credits'
         parameter_name = 'has_credits'
@@ -179,6 +182,31 @@ def has_credits_filter(credits_field):
     return _Filter
 
 
+class ObjectActionsMixin:
+    """
+    Mixin that renders per-object action buttons on the change form. Subclasses declare ``object_actions`` as a list
+    of ``(action_func, 'Button label')`` tuples. Each action_func must accept the standard Django admin action
+    signature ``(modeladmin, request, queryset)``.
+    """
+    object_actions = ()
+    change_form_template = 'admin/object_actions_change_form.html'
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['object_actions'] = [
+            (func.__name__, label) for func, label in self.object_actions
+        ]
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def response_change(self, request, obj):
+        for func, label in self.object_actions:
+            if f'_action_{func.__name__}' in request.POST:
+                queryset = self.model.objects.filter(pk=obj.pk)
+                func(self, request, queryset)
+                return redirect(request.get_full_path())
+        return super().response_change(request, obj)
+
+
 class BaseModelAdmin(ModelAdmin):
     """
     All Models that inherit from BaseModel should also inherit from this BaseModelAdmin, which makes sure the common
@@ -192,6 +220,17 @@ class BaseModelAdmin(ModelAdmin):
             return self.readonly_fields + ('created_at', 'updated_at',)
 
         return self.readonly_fields
+
+    def _inject_extra_context(self, extra_context):
+        extra_context = extra_context or {}
+        extra_context.setdefault('show_save_and_add_another', False)
+        return extra_context
+
+    def add_view(self, request, form_url='', extra_context=None):
+        return super().add_view(request, form_url, self._inject_extra_context(extra_context))
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        return super().change_view(request, object_id, form_url, self._inject_extra_context(extra_context))
 
 
 # Instantiate the Admin site
@@ -239,8 +278,8 @@ suppress_selected_email_events.short_description = "Add selected to SES suppress
 
 
 class EmailReputationEventAdmin(ModelAdmin):
-    list_display = ('created_at', 'email', 'email_type', 'event_type', 'event_subtype')
-    list_filter = ('event_type', 'email_type')
+    list_display = ('email', 'created_at', 'email_type', 'event_type', 'event_subtype')
+    list_filter = ('event_type', 'email_type', 'event_subtype')
     search_fields = ('email', 'user__email', 'user__username', 'sns_message_id')
     ordering = ('-created_at',)
     readonly_fields = ('created_at', 'user', 'email', 'email_type', 'event_type', 'event_subtype', 'sns_message_id')
@@ -250,6 +289,9 @@ class EmailReputationEventAdmin(ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
 
 

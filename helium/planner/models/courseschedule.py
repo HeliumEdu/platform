@@ -4,6 +4,7 @@ __license__ = "MIT"
 import datetime
 
 from django.core import validators
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from helium.common.models import BaseModel
@@ -57,6 +58,14 @@ class CourseSchedule(BaseModel):
 
     class Meta:
         verbose_name = 'Class schedule'
+
+    def clean(self):
+        super().clean()
+        for day in ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'):
+            start_time = getattr(self, f'{day}_start_time')
+            end_time = getattr(self, f'{day}_end_time')
+            if start_time and end_time and start_time > end_time:
+                raise ValidationError(f"The 'start_time' of '{day}' must be before 'end_time'")
 
     def __str__(self):  # pragma: no cover
         return str(f'{self.course.title}-{self.pk} ({self.get_user().get_username()})')

@@ -1,12 +1,10 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import datetime
 import logging
 
 from django.db.models import Count, Q
 from drf_spectacular.utils import extend_schema
-from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -108,25 +106,6 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
         """
         Partially update the given course group instance.
         """
-        if 'exceptions' in request.data:
-            course_group = self.get_object()
-            seen = set()
-            deduped = []
-            for token in request.data['exceptions'].split(','):
-                token = token.strip()
-                if not token:
-                    continue
-                try:
-                    date = datetime.datetime.strptime(token, '%Y%m%d').date()
-                except ValueError:
-                    raise ValidationError({'exceptions': f'Invalid date format: {token}'})
-                if not (course_group.start_date <= date <= course_group.end_date):
-                    raise ValidationError({'exceptions': 'Exception dates must fall within the course group date range.'})
-                if date not in seen:
-                    seen.add(date)
-                    deduped.append(date)
-            request.data['exceptions'] = ','.join(d.strftime('%Y%m%d') for d in sorted(deduped))
-
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info(f"CourseGroup {kwargs['pk']} partially updated for user {request.user.pk}")

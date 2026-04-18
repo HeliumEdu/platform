@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+from unittest import mock
 
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -40,7 +41,8 @@ class TestCaseImportExportViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_import_success(self):
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
+    def test_import_success(self, mock_validate_url):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -94,7 +96,7 @@ class TestCaseImportExportViews(APITestCase):
         externalcalendarhelper.verify_externalcalendar_matches_data(self, external_calendars[1],
                                                                     {'id': 2, 'title': '📅 My Calendar',
                                                                      'url': 'http://go.com/valid-ical-feed',
-                                                                     'color': '#fad165', 'shown_on_calendar': False,
+                                                                     'color': '#fad165', 'shown_on_calendar': True,
                                                                      'user': user.pk})
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'overall_grade': 66.6667,
                                                                                     'start_date': '2017-01-06',

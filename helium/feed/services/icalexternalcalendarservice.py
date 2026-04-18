@@ -178,16 +178,16 @@ def validate_url(url):
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
         logger.info(f"The URL is invalid: {ex}")
-
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
         raise HeliumICalError(ex.message)
     except URLError as ex:
         logger.info(f"The URL is not reachable: {ex}")
-
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
         raise HeliumICalError("The URL is not reachable.")
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
-
-        raise HeliumICalError("The URL did not return a valid ICAL feed.")
+        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
+        raise HeliumICalError("The URL did not return a valid iCal feed.")
 
 
 def fetch_ical_conditional(external_calendar):
@@ -254,7 +254,7 @@ def fetch_ical_conditional(external_calendar):
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
         metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
-        raise HeliumICalError("The URL did not return a valid ICAL feed.")
+        raise HeliumICalError("The URL did not return a valid iCal feed.")
 
 
 def calendar_to_events(external_calendar, _from=None, to=None, search=None):

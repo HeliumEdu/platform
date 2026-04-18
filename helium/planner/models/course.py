@@ -7,7 +7,7 @@ from django.db import models
 
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import random_color
-from helium.common.utils.validators import validate_hex_color
+from helium.common.utils.validators import validate_and_normalize_date_csv, validate_hex_color
 from helium.planner.managers.coursemanager import CourseManager
 
 
@@ -57,6 +57,12 @@ class Course(BaseModel):
         verbose_name = 'Class'
         verbose_name_plural = 'Classes'
         ordering = ('start_date', 'title')
+
+    def clean(self):
+        super().clean()
+        if self.exceptions:
+            self.exceptions = validate_and_normalize_date_csv(
+                self.exceptions, self.start_date, self.end_date, range_label='course date range')
 
     def __str__(self):  # pragma: no cover
         return str(f'{self.title} ({self.get_user().get_username()})')
