@@ -10,6 +10,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RenameField(
+            model_name='usersettings',
+            old_name='review_prompts_shown',
+            new_name='review_prompts_requested',
+        ),
         migrations.AlterField(
             model_name='usersettings',
             name='review_prompts_requested',
