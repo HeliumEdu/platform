@@ -103,25 +103,27 @@ def delete_attachment(sender, instance, **kwargs):
 
 
 @receiver(pre_delete, sender=Homework)
-def delete_homework_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Homework is deleted.
-
-    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
-    Note's pre_delete signal, but that's OK since the linked entity (this
-    Homework) is being deleted anyway.
+def delete_homework_children(sender, instance, **kwargs):
+    """Explicitly delete Homework's children before the outer Collector reaches its
+    field_updates step. Attachment and Reminder both carry a three-FK exactly_one_parent
+    CHECK constraint; on MySQL (no deferrable constraints) Django's CASCADE for nullable
+    FKs emits UPDATE homework_id=NULL before DELETE, which transiently leaves all three
+    parent columns NULL and violates the CHECK. Deleting them here zero-rows that UPDATE.
+    Notes use the same pattern for N+1 avoidance.
     """
     instance.notes_set.all().delete()
+    instance.attachments.all().delete()
+    instance.reminders.all().delete()
 
 
 @receiver(pre_delete, sender=Event)
-def delete_event_notes(sender, instance, **kwargs):
-    """Delete linked Notes when an Event is deleted.
-
-    Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
-    Note's pre_delete signal, but that's OK since the linked entity (this
-    Event) is being deleted anyway.
+def delete_event_children(sender, instance, **kwargs):
+    """Explicitly delete Event's children before the outer Collector reaches its
+    field_updates step — see delete_homework_children for the full rationale.
     """
     instance.notes_set.all().delete()
+    instance.attachments.all().delete()
+    instance.reminders.all().delete()
 
 
 @receiver(pre_delete, sender=Material)
@@ -133,6 +135,17 @@ def delete_material_notes(sender, instance, **kwargs):
     Material) is being deleted anyway.
     """
     instance.notes_set.all().delete()
+
+
+@receiver(pre_delete, sender=Course)
+def delete_course_children(sender, instance, **kwargs):
+    """Explicitly delete Course's direct Attachment and Reminder children before the outer
+    Collector reaches its field_updates step — see delete_homework_children for the full
+    rationale. Homework-owned children are handled by delete_homework_children when the
+    Homework cascade itself fires.
+    """
+    instance.attachments.all().delete()
+    instance.reminders.all().delete()
 
 
 @receiver(post_delete, sender=Event)
