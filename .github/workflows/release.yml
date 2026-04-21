@@ -261,7 +261,7 @@ jobs:
           echo "merged_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Cleanup release branch
-        if: always()
+        if: success()
         env:
           RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
         run: |
