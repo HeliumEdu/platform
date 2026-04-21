@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView, SafeDestroyMixin
+from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
@@ -96,7 +96,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
 @extend_schema(
     tags=['planner.event']
 )
-class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, SafeDestroyMixin, DestroyModelMixin):
+class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
