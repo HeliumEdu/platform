@@ -18,8 +18,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.tasks import clear_email_suppression, send_password_reset_email, send_registration_email, \
-    send_verification_email
+from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
+    send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import redact_email
@@ -391,5 +391,17 @@ def delete_example_schedule(user_id):
      .for_user(user_id)
      .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
      .delete())
+
+    if user is not None and user.onboarding_completed_at is None:
+        user.onboarding_completed_at = timezone.now()
+        user.save(update_fields=['onboarding_completed_at'])
+
+        duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
+
+        send_analytics_event.apply_async(
+            args=(user.pk, 'helium_onboarding_complete'),
+            kwargs={'params': {'onboarding_duration_seconds': duration_seconds}},
+            priority=settings.CELERY_PRIORITY_LOW,
+        )
 
     metricutils.task_stop(metrics, user=user)

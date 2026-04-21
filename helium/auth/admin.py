@@ -373,7 +373,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
         if obj:
             return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
                                            'mobile_app_usage_percent_30d', 'deletion_warning_count',
-                                           'deletion_warning_sent_at', 'get_2fa_enabled',
+                                           'deletion_warning_sent_at', 'onboarding_completed_at', 'get_2fa_enabled',
                                            'verification_code', 'email_changing',)
 
         return self.readonly_fields
