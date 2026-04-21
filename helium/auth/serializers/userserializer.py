@@ -46,10 +46,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
-                  'profile', 'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',
-                  'created_at',)
-        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',
-                            'created_at',)
+                  'profile', 'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
+        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
             'username': {'required': False, 'allow_blank': True},
         }

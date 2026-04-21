@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.214"
+__version__ = "2.1.215"
 
 import os
 import socket
@@ -53,6 +53,11 @@ AWS_S3_SECRET_ACCESS_KEY = config('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
 TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
 TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
+
+# Google Analytics
+
+GA4_MEASUREMENT_ID = config('PLATFORM_GA4_MEASUREMENT_ID', default=None)
+GA4_API_SECRET = config('PLATFORM_GA4_API_SECRET', default=None)
 
 # Firebase
 

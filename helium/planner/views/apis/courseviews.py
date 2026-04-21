@@ -10,7 +10,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView, SafeDestroyMixin
+from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import CourseFilter
 from helium.planner.models import Course, Category
@@ -98,7 +98,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
 @extend_schema(
     tags=['planner.course']
 )
-class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, SafeDestroyMixin, DestroyModelMixin):
+class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
 

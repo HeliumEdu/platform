@@ -56,6 +56,11 @@ class User(AbstractBaseUser, BaseModel):
         blank=True, null=True,
         help_text='Percentage of the last 30 days the user was active on the mobile app. Updated nightly.')
 
+    onboarding_completed_at = models.DateTimeField(
+        blank=True, null=True,
+        help_text='When the user first cleared the example schedule (end of onboarding). '
+                  'Write-once: set on the first successful clear and never updated afterward.')
+
     # Manager
     objects = UserManager()
 

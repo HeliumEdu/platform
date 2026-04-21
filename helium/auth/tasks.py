@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
+from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
@@ -59,6 +60,29 @@ def send_verification_email(self, email, username, verification_code, clear_supp
                                      email_type='verification')
 
     logger.debug(f"Verification email sent to {redact_email(email)}")
+
+    metricutils.task_stop(metrics)
+
+
+@app.task(bind=True)
+def send_analytics_event(self, user_id, name, params=None):
+    """
+    Asynchronously emit a GA4 event via the Measurement Protocol for the given user. Best-effort:
+    swallows failures downstream so analytics delivery never blocks the triggering request.
+    """
+    UserModel = get_user_model()
+
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start(f'analytics.event.{name}', priority='low', published_at_ms=published_at_ms)
+
+    try:
+        user = UserModel.objects.get(pk=user_id)
+    except UserModel.DoesNotExist:
+        logger.warning(f'send_analytics_event: user {user_id} not found, skipping event {name}')
+        metricutils.task_stop(metrics, value=0)
+        return
+
+    analyticsservice.send_event(user, name, params=params)
 
     metricutils.task_stop(metrics)
 
