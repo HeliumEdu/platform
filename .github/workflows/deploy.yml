@@ -67,10 +67,17 @@ jobs:
       version_number: ${{ steps.version.outputs.version_number }}
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.HELIUM_BOT_APP_ID }}
+          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+
       - name: Determine version to deploy
         id: version
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if [ "${{ inputs.version_type }}" = "latest" ]; then
             VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
@@ -117,11 +124,18 @@ jobs:
       CI_TWILIO_RECIPIENT_PHONE_NUMBER: ${{ secrets.CI_TWILIO_RECIPIENT_PHONE_NUMBER }}
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.HELIUM_BOT_APP_ID }}
+          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+
       - name: Checkout infra monorepo
         uses: actions/checkout@v6
         with:
           repository: HeliumEdu/infra
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           path: deploy
 
       - name: Set up Python "3.12"
@@ -199,6 +213,13 @@ jobs:
       VERSION_NUMBER: ${{ needs.determine-version.outputs.version_number }}
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.HELIUM_BOT_APP_ID }}
+          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+
       - name: Checkout platform repository
         uses: actions/checkout@v6
 
@@ -206,7 +227,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: HeliumEdu/infra
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           path: deploy
           fetch-depth: 0
 
@@ -228,7 +249,7 @@ jobs:
 
       - name: Run deployment script
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           ./bin/deploy-release.py \
             "$VERSION_NUMBER" \
@@ -246,13 +267,13 @@ jobs:
       - name: Trigger legacy cluster-tests run
         run: |
           curl -s -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
-            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Authorization: token ${{ steps.app-token.outputs.token }}" \
             -H "Accept: application/vnd.github+json" \
             -d "{\"event_type\":\"\`platform\` triggered for \`${{ needs.determine-version.outputs.version }}\` to \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
 
       - name: Trigger frontend integration tests
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh workflow run integration.yml \
             --repo HeliumEdu/frontend \
@@ -261,7 +282,7 @@ jobs:
 
       - name: Trigger canary tests
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh workflow run canary.yml \
             --repo HeliumEdu/frontend \
