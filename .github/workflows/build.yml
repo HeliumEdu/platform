@@ -99,10 +99,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate GitHub App token
+        if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
+          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+          skip-token-revoke: true
+
       - name: Trigger deployment to dev
         if: ${{ github.ref_name == 'main' && env.DEV_ENV_ENABLED == 'true' }}
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh workflow run deploy.yml \
             --ref main \
