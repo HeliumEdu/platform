@@ -221,6 +221,7 @@ jobs:
         with:
           client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
           private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+          owner: HeliumEdu
           skip-token-revoke: true
 
       - name: Checkout platform repository
