@@ -157,7 +157,7 @@ class TestCaseAuthenticationViews(TestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertContains(response, 'username is reserved', status_code=status.HTTP_400_BAD_REQUEST)
+        self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_verification_success(self):
         # GIVEN

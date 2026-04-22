@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
+from helium.auth.utils.userutils import is_staff_user
 from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
@@ -564,8 +565,7 @@ def rollup_client_activity(self):
             if not user:
                 continue
 
-            is_staff = user.is_superuser or user.email.endswith('@heliumedu.com') or user.email.endswith('@heliumedu.dev')
-            staff_tag = 'true' if is_staff else 'false'
+            staff_tag = 'true' if is_staff_user(user) else 'false'
 
             for window_tag, days in [('7d', 7), ('30d', 30), ('90d', 90)]:
                 cutoff = today - timedelta(days=days)

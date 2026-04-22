@@ -67,9 +67,37 @@ class TestCaseAnalyticsService(TestCase):
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
     @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
-    def test_send_event_skips_staff_user(self, mock_urlopen, mock_increment):
+    def test_send_event_skips_heliumedu_com_user(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists(email='admin@heliumedu.com')
+
+        # WHEN
+        analyticsservice.send_event(user, 'helium_onboarding_complete')
+
+        # THEN
+        mock_urlopen.assert_not_called()
+        mock_increment.assert_not_called()
+
+    @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
+    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    def test_send_event_skips_heliumedu_dev_user(self, mock_urlopen, mock_increment):
+        # GIVEN
+        user = userhelper.given_a_user_exists(email='dev@heliumedu.dev')
+
+        # WHEN
+        analyticsservice.send_event(user, 'helium_onboarding_complete')
+
+        # THEN
+        mock_urlopen.assert_not_called()
+        mock_increment.assert_not_called()
+
+    @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
+    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    def test_send_event_skips_superuser(self, mock_urlopen, mock_increment):
+        # GIVEN
+        user = userhelper.given_a_user_exists(email='outside@example.com')
+        user.is_superuser = True
+        user.save(update_fields=['is_superuser'])
 
         # WHEN
         analyticsservice.send_event(user, 'helium_onboarding_complete')

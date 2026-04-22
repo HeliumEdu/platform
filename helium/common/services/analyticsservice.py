@@ -9,7 +9,7 @@ import urllib.request
 
 from django.conf import settings
 
-from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.auth.utils.userutils import is_staff_user
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def _should_emit(user):
     if not getattr(settings, 'GA4_MEASUREMENT_ID', None) or not getattr(settings, 'GA4_API_SECRET', None):
         return False
 
-    if user is not None and is_admin_allowed_email(user.email):
+    if is_staff_user(user):
         return False
 
     return True

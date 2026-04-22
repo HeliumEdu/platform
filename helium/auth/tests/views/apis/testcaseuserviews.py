@@ -300,7 +300,7 @@ class TestCaseUserViews(APITestCase):
                                    content_type='application/json')
 
         # THEN
-        self.assertContains(response, 'username is reserved', status_code=status.HTTP_400_BAD_REQUEST)
+        self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_email_already_exists(self):
         # GIVEN
