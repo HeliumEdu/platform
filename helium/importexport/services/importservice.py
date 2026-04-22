@@ -407,29 +407,34 @@ def import_user(request, data, example_schedule=False):
             reminders_count, notes_count)
 
 
-def _shift_datetime_to_target_date(original_dt, target_date, user_tz):
+def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=False):
     """
     Shift a datetime to a new target date while preserving the local wall-clock time.
     Uses pytz to handle DST transitions automatically.
 
+    For all-day events, wall-clock time is meaningless (the fixture's stored hour is an
+    artifact of whichever timezone authored it), so midnight in the user's timezone is
+    used instead.
+
     :param original_dt: The original aware datetime (in UTC)
     :param target_date: The target date to shift to
     :param user_tz: The user's pytz timezone
+    :param all_day: If True, use midnight instead of preserving wall-clock time
     :return: New aware datetime in UTC with same local time on target date
     """
-    # Convert to user's local time to get the wall-clock hour/minute
-    local_dt = original_dt.astimezone(user_tz)
+    if all_day:
+        naive_target = datetime.datetime(
+            target_date.year, target_date.month, target_date.day,
+            0, 0, 0, 0
+        )
+    else:
+        local_dt = original_dt.astimezone(user_tz)
+        naive_target = datetime.datetime(
+            target_date.year, target_date.month, target_date.day,
+            local_dt.hour, local_dt.minute, 0, 0
+        )
 
-    # Create a naive datetime on the target date with the same local hour/minute
-    naive_target = datetime.datetime(
-        target_date.year, target_date.month, target_date.day,
-        local_dt.hour, local_dt.minute, 0, 0
-    )
-
-    # Localize to user's timezone (pytz handles DST automatically)
     aware_target = user_tz.localize(naive_target)
-
-    # Convert back to UTC for storage
     return aware_target.astimezone(pytz.UTC)
 
 
@@ -515,8 +520,10 @@ def _adjust_schedule_relative_to(user, adjust_month):
             target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
             target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            new_start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz)
-            new_end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz)
+            new_start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
+                                                        all_day=homework.all_day)
+            new_end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
+                                                      all_day=homework.all_day)
 
             Homework.objects.filter(pk=homework.pk).update(start=new_start, end=new_end)
             adjust_reminder_times(homework.pk, homework.calendar_item_type)
@@ -537,8 +544,10 @@ def _adjust_schedule_relative_to(user, adjust_month):
             target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
             target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            new_start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz)
-            new_end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz)
+            new_start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
+                                                        all_day=event.all_day)
+            new_end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
+                                                      all_day=event.all_day)
 
             Event.objects.filter(pk=event.pk).update(start=new_start, end=new_end)
             adjust_reminder_times(event.pk, event.calendar_item_type)
