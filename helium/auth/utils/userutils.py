@@ -10,10 +10,34 @@ from django.contrib.auth import get_user_model
 
 def is_admin_allowed_email(email):
     """
-    Return True if the email's domain is in ADMIN_ALLOWED_DOMAINS.
+    Return True if the email's domain is in ADMIN_ALLOWED_DOMAINS. Security boundary — governs
+    who can be promoted to superuser. Not the right predicate for filtering internal staff out
+    of analytics/metrics; use `is_staff_user` for that.
     """
     domain = email.split('@')[-1].lower() if '@' in email else ''
     return domain in settings.ADMIN_ALLOWED_DOMAINS
+
+
+def is_staff_email(email):
+    """
+    Return True if the email belongs to a staff domain. Matches the frontend's `setStaffStatus`
+    filter. Use when a User object isn't available (e.g. bounce handling with just an address).
+    """
+    lowered = (email or '').lower()
+    return lowered.endswith('@heliumedu.com') or lowered.endswith('@heliumedu.dev')
+
+
+def is_staff_user(user):
+    """
+    Return True if the user is internal staff — superuser or has a staff email domain. Matches
+    the admin-area `staff_filter` predicate, so the same users are excluded from analytics and
+    metrics across the stack.
+    """
+    if user is None:
+        return False
+    if user.is_superuser:
+        return True
+    return is_staff_email(user.email)
 
 
 def generate_verification_code():

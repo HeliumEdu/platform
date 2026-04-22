@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
+from helium.auth.utils.userutils import is_staff_email
 from helium.common import enums
 from helium.common.utils import metricutils
 
@@ -99,7 +100,7 @@ def add_to_ses_suppression_list(email: str, reason: str = 'BOUNCE') -> bool:
     if settings.DISABLE_EMAILS:
         return False
 
-    if email.endswith('@heliumedu.com') or email.endswith('@heliumedu.dev'):
+    if is_staff_email(email):
         logger.info(f'Skipping SES suppression for staff email {redact_email(email)}')
         return False
 

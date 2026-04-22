@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 from datadog import initialize, statsd
 
+from helium.auth.utils.userutils import is_staff_user
+
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
 DATADOG_METRICS = True
@@ -51,8 +53,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         if user:
             tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
             if user.is_authenticated:
-                is_staff = user.is_staff or user.email.endswith("heliumedu.com") or user.email.endswith("heliumedu.dev")
-                tags.append(f"staff:{str(is_staff).lower()}")
+                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
 
         if request:
             tags.append(f"method:{request.method}")
