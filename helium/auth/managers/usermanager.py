@@ -107,6 +107,9 @@ class UserManager(BaseUserManager):
     def email_used(self, user_id, email):
         return self.get_queryset().email_used(user_id, email)
 
+    def can_login(self):
+        return self.get_queryset().can_login()
+
     def num_homework(self):
         return self.get_queryset().num_homework()
 
