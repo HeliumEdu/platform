@@ -24,7 +24,9 @@ def is_staff_email(email):
     filter. Use when a User object isn't available (e.g. bounce handling with just an address).
     """
     lowered = (email or '').lower()
-    return lowered.endswith('@heliumedu.com') or lowered.endswith('@heliumedu.dev')
+    domain = lowered.split('@')[-1] if '@' in lowered else ''
+    return domain == 'heliumedu.com' or domain.endswith('.heliumedu.com') or \
+           domain == 'heliumedu.dev' or domain.endswith('.heliumedu.dev')
 
 
 def is_staff_user(user):
