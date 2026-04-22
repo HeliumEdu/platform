@@ -43,7 +43,7 @@ def forgot_password(request):
         raise ValidationError("'email' is required")
 
     try:
-        user = UserModel.objects.get(email=request.data['email'])
+        user = UserModel.objects.can_login().get(email=request.data['email'])
 
         # Only reset password for users with usable passwords (not OAuth-only users)
         if user.has_usable_password():
@@ -86,7 +86,7 @@ def verify_email(request):
     code = request.GET['code']
 
     try:
-        user = UserModel.objects.get(
+        user = UserModel.objects.can_login().get(
             (Q(username__iexact=identifier) | Q(email__iexact=identifier) | Q(email_changing__iexact=identifier)),
             verification_code=code,
         )
@@ -147,7 +147,7 @@ def resend_verification_email(request):
         raise Throttled(detail='Please wait before requesting another verification email.')
 
     try:
-        user = UserModel.objects.get(
+        user = UserModel.objects.can_login().get(
             Q(username__iexact=identifier) | Q(email__iexact=identifier)
         )
 
@@ -222,15 +222,19 @@ def oauth_login(request):
         provider_uid = decoded_token.get('uid')
         provider_key = provider_name.lower()
 
-        # Check if this OAuth provider UID is already linked to a user
+        # Check if this OAuth provider UID is already linked to a user. Exclude links whose
+        # user is pending-delete — treat as if the link doesn't exist so the flow falls through
+        # to the email lookup (which is also pending-delete-aware) and ultimately to the
+        # "create new" branch, where the email's unique constraint surfaces "already in use".
         existing_oauth = UserOAuthProvider.objects.select_related('user').filter(
             provider=provider_key,
             provider_user_id=provider_uid,
+            user__deletion_requested_at__isnull=True,
         ).first()
 
         # Try to find existing user by email
         try:
-            user = UserModel.objects.get(email=email)
+            user = UserModel.objects.can_login().get(email=email)
         except UserModel.DoesNotExist:
             user = None
 

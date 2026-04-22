@@ -159,7 +159,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         user = None
         try:
             if user_id and (
-                    user := UserModel.objects.get(
+                    user := UserModel.objects.can_login().get(
                         **{api_settings.USER_ID_FIELD: user_id}
                     )
             ):

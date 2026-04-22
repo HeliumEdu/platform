@@ -17,6 +17,13 @@ class UserQuerySet(models.query.QuerySet):
     def email_used(self, user_id, email):
         return self.filter(Q(email=email) | Q(email_changing=email)).exclude(pk=user_id).exists()
 
+    def can_login(self):
+        """Exclude users with a pending async deletion. Use for any lookup in a login /
+        verification / password-reset path, so a user mid-cascade-delete behaves as 'not found'
+        while their email/username remain reserved against re-registration.
+        """
+        return self.filter(deletion_requested_at__isnull=True)
+
     def num_homework(self):
         return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
 
@@ -80,12 +87,16 @@ class UserManager(BaseUserManager):
 
     def get_by_natural_key(self, username):
         """
-        Get the user for authentication/login from the database.
+        Get the user for authentication/login from the database. Called by Django's auth
+        backends, so filtering pending-delete here is what makes password/JWT login reject
+        users mid-cascade-delete without touching the serializer.
 
         :param username: the username to lookup
         :return: the user
         """
-        return self.get(Q(username__iexact=username) | Q(email__iexact=username))
+        return self.get_queryset().can_login().get(
+            Q(username__iexact=username) | Q(email__iexact=username)
+        )
 
     def get_by_private_slug(self, private_slug):
         return self.select_related('settings').get(settings__private_slug=private_slug)

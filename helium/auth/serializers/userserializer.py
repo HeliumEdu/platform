@@ -173,7 +173,10 @@ class UserSerializer(serializers.ModelSerializer):
         # OAuth users can bypass email verification
         validated_data['is_active'] = True
 
-        instance = super().create(validated_data)
+        try:
+            instance = super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
 
         # OAuth users bypass local passwords
         instance.set_unusable_password()

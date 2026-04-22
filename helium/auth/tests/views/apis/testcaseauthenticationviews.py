@@ -6,6 +6,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from helium.auth.models import UserProfile
@@ -158,6 +159,51 @@ class TestCaseAuthenticationViews(TestCase):
 
         # THEN
         self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_registration_fails_when_email_pending_deletion(self):
+        """A user whose cascade-delete is still in flight keeps their email reserved so the
+        next signup attempt collides on the unique constraint and surfaces as a clean
+        ValidationError instead of a 500."""
+        # GIVEN: an existing user whose deletion is in flight
+        existing = userhelper.given_a_user_exists(email='pending@test.com', username='pending_user')
+        existing.deletion_requested_at = timezone.now()
+        existing.save(update_fields=['deletion_requested_at'])
+
+        # WHEN: a new registration attempts the same email
+        response = self.client.post(
+            reverse('auth_user_resource_register'),
+            json.dumps({
+                'email': 'pending@test.com',
+                'username': 'new_user',
+                'password': 'test_pass_1!',
+                'time_zone': 'America/Chicago',
+            }),
+            content_type='application/json',
+        )
+
+        # THEN: expected conflict error, existing user row is untouched
+        self.assertContains(response, 'Registration failed due to a conflict',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(get_user_model().objects.filter(email='pending@test.com').count(), 1)
+        self.assertFalse(get_user_model().objects.filter(username='new_user').exists())
+
+    def test_login_fails_when_user_pending_deletion(self):
+        """Password login for a pending-delete user should behave as 'no such account'."""
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.deletion_requested_at = timezone.now()
+        user.save(update_fields=['deletion_requested_at'])
+
+        # WHEN
+        response = self.client.post(
+            reverse('auth_token_obtain'),
+            json.dumps({'username': user.get_username(), 'password': 'test_pass_1!'}),
+            content_type='application/json',
+        )
+
+        # THEN
+        self.assertContains(response, "don't recognize that account",
+                            status_code=status.HTTP_401_UNAUTHORIZED)
 
     def test_verification_success(self):
         # GIVEN

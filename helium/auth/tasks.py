@@ -8,6 +8,7 @@ import pytz
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Exists, OuterRef, Q
 from firebase_admin import auth as firebase_auth
@@ -222,17 +223,27 @@ def purge_push_tokens(self):
 
 
 @app.task(bind=True)
-def purge_unverified_users(self):
+def sweep_dangling_users(self):
+    """Nightly cleanup for two classes of dangling users:
+
+    1. Never-verified users past `UNVERIFIED_USER_TTL_DAYS` — enqueue `delete_user`.
+    2. Stuck pending-delete accounts — the async `delete_user` task raised or was lost but the
+       row is still reserved. This is a rare case (usually indicates a real bug), so rather than
+       silently retry, notify support so a human can investigate. The email is a digest so the
+       admin doesn't get spammed if several accounts are stuck simultaneously.
+    """
     UserModel = get_user_model()
 
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("user.unverified.purge", priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("user.dangling.purge", priority="low", published_at_ms=published_at_ms)
+
+    now = datetime.now().replace(tzinfo=pytz.utc)
 
     num_purged = 0
     for user in UserModel.objects.filter(
             is_active=False,
-            created_at__lte=datetime.now().replace(tzinfo=pytz.utc) - timedelta(
-                days=settings.UNVERIFIED_USER_TTL_DAYS)):
+            deletion_requested_at__isnull=True,
+            created_at__lte=now - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS)):
         logger.info(
             f'Deleting user {user.pk}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
@@ -240,6 +251,33 @@ def purge_unverified_users(self):
 
         num_purged += 1
 
+    stuck_users = list(UserModel.objects.filter(
+        deletion_requested_at__lte=now - timedelta(minutes=10),
+    ))
+    if stuck_users:
+        logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); notifying support.')
+
+        lines = [
+            f'- user {u.pk} ({redact_email(u.email)}) requested at {u.deletion_requested_at.isoformat()}'
+            for u in stuck_users
+        ]
+        body = (
+            f'{len(stuck_users)} user account(s) have been stuck in pending-delete state, meaning '
+            f'the cascade-delete task failed, and at least some data still exists for this user.'
+            f'Login and manually delete these users to complete the process, or investigate if the'
+            f'manual delete also fails.\n'
+            + '\n'.join(lines)
+        )
+
+        send_mail(
+            subject=f'[{settings.ENVIRONMENT}] {len(stuck_users)} stuck pending-delete user(s)',
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL_ADDRESS],
+            fail_silently=False,
+        )
+
+    metricutils.gauge('users.pending_delete.stuck', len(stuck_users))
     metricutils.task_stop(metrics, value=num_purged)
 
 
@@ -799,9 +837,9 @@ def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
     # Emit queue depth every minute for monitoring
     sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
-    # Purge unverified users nightly
+    # Purge dangling users (unverified + stuck pending-delete notifications) nightly
     sender.add_periodic_task(crontab(hour=2, minute=0),
-                             purge_unverified_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+                             sweep_dangling_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
 
     # Nightly metrics, client activity rollup, and review prompt evaluation
     sender.add_periodic_task(crontab(hour=3, minute=0),

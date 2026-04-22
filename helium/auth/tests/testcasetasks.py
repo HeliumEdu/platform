@@ -17,7 +17,7 @@ from unittest import mock
 from django.utils import timezone
 
 from helium.auth.tasks import (
-    purge_unverified_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
+    sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
     evaluate_review_prompts, delete_user, process_dormant_users, send_dormant_user_warning_email
 )
 from helium.auth.tests.helpers import userhelper
@@ -51,7 +51,7 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(BlacklistedToken.objects.count(), 0)
         self.assertTrue(OutstandingToken.objects.filter(token=user3.refresh).exists())
 
-    def test_purge_unverified_users(self):
+    def test_sweep_dangling_users(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         user1.created_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
@@ -72,13 +72,54 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(get_user_model().objects.count(), 4)
 
         # WHEN
-        purge_unverified_users()
+        sweep_dangling_users()
 
         # THEN
         users = get_user_model().objects.all()
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0].pk, user1.pk)
         self.assertEqual(users[1].pk, user2.pk)
+
+    @mock.patch('helium.auth.tasks.send_mail')
+    def test_sweep_dangling_users_emails_admin_about_stuck_pending_delete(self, mock_send_mail):
+        """Users stuck pending-delete beyond the 10-minute grace period get surfaced to support
+        via email so a human can investigate. In-flight deletions (< 10 min old) are left alone
+        so the sweep doesn't race with the running Celery task."""
+        # GIVEN: one stuck user (past grace period) and one fresh (within grace)
+        stuck = userhelper.given_a_user_exists(username='stuck', email='stuck@test.com')
+        stuck.deletion_requested_at = timezone.now() - timedelta(minutes=30)
+        stuck.save(update_fields=['deletion_requested_at'])
+
+        fresh = userhelper.given_a_user_exists(username='fresh', email='fresh@test.com')
+        fresh.deletion_requested_at = timezone.now() - timedelta(minutes=2)
+        fresh.save(update_fields=['deletion_requested_at'])
+
+        # WHEN
+        sweep_dangling_users()
+
+        # THEN: admin email sent, referencing only the stuck user
+        mock_send_mail.assert_called_once()
+        kwargs = mock_send_mail.call_args.kwargs
+        self.assertEqual(kwargs['recipient_list'], [settings.ADMIN_EMAIL_ADDRESS])
+        self.assertIn(f'user {stuck.pk}', kwargs['message'])
+        self.assertNotIn(f'user {fresh.pk}', kwargs['message'])
+
+        # AND: neither user was actually deleted — sweep only notifies on stuck rows
+        self.assertTrue(get_user_model().objects.filter(pk=stuck.pk).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=fresh.pk).exists())
+
+    @mock.patch('helium.auth.tasks.send_mail')
+    def test_sweep_dangling_users_no_email_when_no_stuck_users(self, mock_send_mail):
+        # GIVEN: a user with a recent pending-delete (within grace period)
+        user = userhelper.given_a_user_exists()
+        user.deletion_requested_at = timezone.now() - timedelta(minutes=2)
+        user.save(update_fields=['deletion_requested_at'])
+
+        # WHEN
+        sweep_dangling_users()
+
+        # THEN
+        mock_send_mail.assert_not_called()
 
     def test_verification_email_url_encodes_special_characters(self):
         """Test that verification email properly URL-encodes email addresses with special characters like +."""
