@@ -25,7 +25,9 @@ class TestCasePushService(TestCase):
 
         # THEN
         mock_send.assert_called_once()
-        mock_increment.assert_called_once_with('action.push.sent', value=2)
+        self.assertEqual(mock_increment.call_count, 2)
+        mock_increment.assert_any_call('action.push.sent', value=2)
+        mock_increment.assert_any_call('action.reminder.sent', value=2, extra_tags=['channel:push'])
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
@@ -42,8 +44,9 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(push_tokens, 'Subject', 'Message', reminder_data)
 
         # THEN
-        self.assertEqual(mock_increment.call_count, 2)
+        self.assertEqual(mock_increment.call_count, 3)
         mock_increment.assert_any_call('action.push.sent', value=1)
+        mock_increment.assert_any_call('action.reminder.sent', value=1, extra_tags=['channel:push'])
         mock_increment.assert_any_call('action.push.failed', value=1)
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
