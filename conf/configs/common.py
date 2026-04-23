@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.1.223"
+__version__ = "2.1.224"
 
 import os
 import socket
