@@ -196,15 +196,22 @@ jobs:
 
           sed -i "s/__version__ = \".*\"/__version__ = \"${NEW_VERSION}\"/" conf/configs/common.py
 
+      - name: Get GitHub App bot user ID
+        id: get-bot-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
       - name: Commit version bump
         run: |
-          git config --global user.name "GitHub Release Bot"
-          git config --global user.email "support@heliumedu.com"
+          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
 
           git add conf/configs/common.py
 
           NEW_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
-          git commit -m "Bump version to ${NEW_VERSION}"
+          git commit -m "[skip build] Bump version to ${NEW_VERSION}"
 
           git push origin "HEAD:refs/heads/${{ needs['create-release-branch'].outputs.branch_name }}"
 
@@ -245,17 +252,24 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Get GitHub App bot user ID
+        id: get-bot-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
       - name: Merge release branch
         id: merge
         env:
           RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
         run: |
-          git config --global user.name "GitHub Release Bot"
-          git config --global user.email "support@heliumedu.com"
+          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
 
           git fetch origin "$RELEASE_BRANCH" main
           git checkout -B main origin/main
-          git merge --no-ff --no-edit "origin/$RELEASE_BRANCH"
+          git merge --no-ff -m "[skip build] Merge release branch ${RELEASE_BRANCH} into main" "origin/$RELEASE_BRANCH"
           git push origin main
 
           echo "merged_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -272,7 +286,7 @@ jobs:
         run: |
           git fetch origin develop
           git checkout -B develop origin/develop
-          if git merge --no-ff --no-edit origin/main; then
+          if git merge --no-ff -m "[skip build] Merge main into develop" origin/main; then
             git push origin develop
             echo "Successfully merged main to develop"
           else
@@ -344,13 +358,20 @@ jobs:
         run: |
           echo "### Release ${{ needs['bump-version'].outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
+      - name: Get GitHub App bot user ID
+        id: get-bot-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
       - name: Create and push tag
         env:
           VERSION: ${{ needs['bump-version'].outputs.version }}
           COMMIT_SHA: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
         run: |
-          git config --global user.name "GitHub Release Bot"
-          git config --global user.email "support@heliumedu.com"
+          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
 
           # Fetch latest changes to ensure we have the version bump commit
           git fetch origin main
