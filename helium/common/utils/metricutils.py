@@ -58,7 +58,9 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         if request:
             tags.append(f"method:{request.method}")
             if request.headers and 'User-Agent' in request.headers:
-                tags.append(f"user_agent:{_normalize_user_agent_tag(request.headers.get('User-Agent'))}")
+                normalized_ua = _normalize_user_agent_tag(request.headers.get('User-Agent'))
+                tags.append(f"user_agent:{normalized_ua}")
+                tags.append(f"client:{'app' if normalized_ua == 'mobile_app_flutter' else 'web'}")
         if response:
             tags.append(f"status_code:{response.status_code}")
 

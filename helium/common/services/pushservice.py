@@ -44,6 +44,7 @@ def send_notifications(push_tokens, subject, message, reminder_data):
 
         if response.success_count > 0:
             metricutils.increment('action.push.sent', value=response.success_count)
+            metricutils.increment('action.reminder.sent', value=response.success_count, extra_tags=['channel:push'])
 
         if response.failure_count > 0:
             logger.warning(f"Failed to send {response.failure_count} push notifications")
