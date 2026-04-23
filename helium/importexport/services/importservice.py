@@ -402,10 +402,8 @@ def _bulk_import_example_schedule(data, user):
         course_group_remap[cg['id']] = instance.pk
 
     # --- Course ---
-    course_objects = []
-    course_fixture_ids = []
     for c in data.get('courses', []):
-        course_objects.append(Course(
+        instance = Course.objects.create(
             title=c['title'],
             room=c.get('room', ''),
             credits=Decimal(c.get('credits', '0')),
@@ -419,12 +417,8 @@ def _bulk_import_example_schedule(data, user):
             start_date=c['start_date'],
             end_date=c['end_date'],
             course_group_id=course_group_remap[c['course_group']],
-        ))
-        course_fixture_ids.append(c['id'])
-
-    created_courses = Course.objects.bulk_create(course_objects)
-    for fixture_id, instance in zip(course_fixture_ids, created_courses):
-        course_remap[fixture_id] = instance.pk
+        )
+        course_remap[c['id']] = instance.pk
 
     # --- CourseSchedule ---
     schedule_objects = []
@@ -450,10 +444,8 @@ def _bulk_import_example_schedule(data, user):
     CourseSchedule.objects.bulk_create(schedule_objects)
 
     # --- Category ---
-    category_objects = []
-    category_fixture_ids = []
     for cat in data.get('categories', []):
-        category_objects.append(Category(
+        instance = Category.objects.create(
             title=cat['title'],
             weight=Decimal(cat.get('weight', '0')),
             color=cat.get('color', '#000000'),
@@ -461,69 +453,46 @@ def _bulk_import_example_schedule(data, user):
             grade_by_weight=Decimal(cat.get('grade_by_weight', '0')),
             trend=cat.get('trend'),
             course_id=course_remap[cat['course']],
-        ))
-        category_fixture_ids.append(cat['id'])
-
-    created_categories = Category.objects.bulk_create(category_objects)
-    for fixture_id, instance in zip(category_fixture_ids, created_categories):
-        category_remap[fixture_id] = instance.pk
+        )
+        category_remap[cat['id']] = instance.pk
 
     # --- MaterialGroup ---
-    mg_objects = []
-    mg_fixture_ids = []
     for mg in data.get('material_groups', []):
-        mg_objects.append(MaterialGroup(
+        instance = MaterialGroup.objects.create(
             title=mg['title'],
             shown_on_calendar=mg.get('shown_on_calendar', True),
             example_schedule=True,
             user=user,
-        ))
-        mg_fixture_ids.append(mg['id'])
-
-    created_mgs = MaterialGroup.objects.bulk_create(mg_objects)
-    for fixture_id, instance in zip(mg_fixture_ids, created_mgs):
-        material_group_remap[fixture_id] = instance.pk
+        )
+        material_group_remap[mg['id']] = instance.pk
 
     # --- Material (with M2M courses + legacy details→notes) ---
-    mat_objects = []
-    mat_fixture_ids = []
-    mat_course_m2m = []
-    mat_legacy_notes = []
+    MaterialCourseThrough = Material.courses.through
+    m2m_rows = []
     for m in data.get('materials', []):
-        mat_objects.append(Material(
+        instance = Material.objects.create(
             title=m['title'],
             status=m.get('status', enums.OWNED),
             condition=m.get('condition', enums.BRAND_NEW),
             website=m.get('website') or None,
             price=m.get('price', ''),
             material_group_id=material_group_remap[m['material_group']],
-        ))
-        mat_fixture_ids.append(m['id'])
-        mat_course_m2m.append([course_remap[c] for c in m.get('courses', [])])
-        mat_legacy_notes.append(_extract_legacy_notes(m, legacy_field='details'))
-
-    created_mats = Material.objects.bulk_create(mat_objects)
-    for fixture_id, instance in zip(mat_fixture_ids, created_mats):
-        material_remap[fixture_id] = instance.pk
-
-    MaterialCourseThrough = Material.courses.through
-    m2m_rows = []
-    for instance, course_ids in zip(created_mats, mat_course_m2m):
-        for course_id in course_ids:
+        )
+        material_remap[m['id']] = instance.pk
+        for course_id in [course_remap[c] for c in m.get('courses', [])]:
             m2m_rows.append(MaterialCourseThrough(material_id=instance.pk, course_id=course_id))
-    if m2m_rows:
-        MaterialCourseThrough.objects.bulk_create(m2m_rows)
 
-    for instance, legacy_content in zip(created_mats, mat_legacy_notes):
+        legacy_content = _extract_legacy_notes(m, legacy_field='details')
         if legacy_content:
             note = Note.objects.create(title='', content=legacy_content, user=user, example_schedule=True)
             note.resources.add(instance)
 
+    if m2m_rows:
+        MaterialCourseThrough.objects.bulk_create(m2m_rows)
+
     # --- Event ---
-    event_objects = []
-    event_fixture_ids = []
     for e in data.get('events', []):
-        event_objects.append(Event(
+        instance = Event.objects.create(
             title=e['title'],
             all_day=e.get('all_day', False),
             show_end_time=e.get('show_end_time', False),
@@ -534,12 +503,8 @@ def _bulk_import_example_schedule(data, user):
             owner_id=e.get('owner_id') or None,
             example_schedule=True,
             user=user,
-        ))
-        event_fixture_ids.append(e['id'])
-
-    created_events = Event.objects.bulk_create(event_objects)
-    for fixture_id, instance in zip(event_fixture_ids, created_events):
-        event_remap[fixture_id] = instance.pk
+        )
+        event_remap[e['id']] = instance.pk
 
     # --- Homework (individual save for auto-category + completed_at) ---
     hw_material_m2m = []
@@ -595,34 +560,27 @@ def _bulk_import_example_schedule(data, user):
         instance.save()
 
     # --- Note (with M2M links) ---
-    note_objects = []
-    note_m2m_data = []
-    for n in data.get('notes', []):
-        note_objects.append(Note(
-            title=n.get('title', ''),
-            content=n.get('content'),
-            example_schedule=True,
-            user=user,
-        ))
-        note_m2m_data.append({
-            'homework': [homework_remap[hw_id] for hw_id in n.get('homework', []) if hw_id in homework_remap],
-            'events': [event_remap[e_id] for e_id in n.get('events', []) if e_id in event_remap],
-            'resources': [material_remap[m_id] for m_id in n.get('resources', []) if m_id in material_remap],
-        })
-
-    created_notes = Note.objects.bulk_create(note_objects)
-
     NoteHwThrough = Note.homework.through
     NoteEventThrough = Note.events.through
     NoteResourceThrough = Note.resources.through
     hw_rows, event_rows, resource_rows = [], [], []
-    for note, m2m in zip(created_notes, note_m2m_data):
-        for hw_id in m2m['homework']:
-            hw_rows.append(NoteHwThrough(note_id=note.pk, homework_id=hw_id))
-        for event_id in m2m['events']:
-            event_rows.append(NoteEventThrough(note_id=note.pk, event_id=event_id))
-        for material_id in m2m['resources']:
-            resource_rows.append(NoteResourceThrough(note_id=note.pk, material_id=material_id))
+    for n in data.get('notes', []):
+        note = Note.objects.create(
+            title=n.get('title', ''),
+            content=n.get('content'),
+            example_schedule=True,
+            user=user,
+        )
+        for hw_id in n.get('homework', []):
+            if hw_id in homework_remap:
+                hw_rows.append(NoteHwThrough(note_id=note.pk, homework_id=homework_remap[hw_id]))
+        for e_id in n.get('events', []):
+            if e_id in event_remap:
+                event_rows.append(NoteEventThrough(note_id=note.pk, event_id=event_remap[e_id]))
+        for m_id in n.get('resources', []):
+            if m_id in material_remap:
+                resource_rows.append(NoteResourceThrough(note_id=note.pk, material_id=material_remap[m_id]))
+
     if hw_rows:
         NoteHwThrough.objects.bulk_create(hw_rows)
     if event_rows:
@@ -638,7 +596,7 @@ def _bulk_import_example_schedule(data, user):
         f"{len(category_remap)} categories, {len(material_group_remap)} material groups, "
         f"{len(material_remap)} materials, {len(event_remap)} events, "
         f"{len(homework_remap)} homework, {len(data.get('reminders', []))} reminders, "
-        f"{len(created_notes)} notes"
+        f"{len(data.get('notes', []))} notes"
     )
 
 
