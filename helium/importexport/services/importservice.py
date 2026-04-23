@@ -5,10 +5,13 @@ import datetime
 import json
 import logging
 import os
+from contextlib import contextmanager
+from decimal import Decimal
 
 import pytz
 from django.conf import settings
 from django.db import transaction
+from django.db.models.signals import post_save
 from django.http import HttpRequest
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -17,7 +20,8 @@ from rest_framework.request import Request
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
-from helium.planner.models import CourseGroup, Course, Homework, Event, Category, Note, Reminder
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Note, Reminder, \
+    MaterialGroup, Material
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -28,8 +32,9 @@ from helium.planner.serializers.materialgroupserializer import MaterialGroupSeri
 from helium.planner.serializers.materialserializer import MaterialSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
+from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
-from helium.planner.tasks import adjust_reminder_times, recalculate_category_grade
+from helium.planner.tasks import adjust_reminder_times
 from helium.planner.utils.quillutils import html_to_quill
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
@@ -353,6 +358,290 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
     return notes_count
 
 
+_SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
+
+
+@contextmanager
+def _suppress_post_save_signals():
+    sender_ids = {id(s) for s in _SUPPRESSED_SENDERS}
+    original_receivers = post_save.receivers
+    post_save.receivers = [
+        (key, ref) for key, ref in original_receivers
+        if not (isinstance(key, tuple) and len(key) >= 2 and key[1] in sender_ids)
+    ]
+    post_save.sender_receivers_cache.clear()
+    try:
+        yield
+    finally:
+        post_save.receivers = original_receivers
+        post_save.sender_receivers_cache.clear()
+
+
+@transaction.atomic
+def _bulk_import_example_schedule(data, user):
+    course_group_remap = {}
+    course_remap = {}
+    category_remap = {}
+    material_group_remap = {}
+    material_remap = {}
+    event_remap = {}
+    homework_remap = {}
+
+    # --- CourseGroup ---
+    for cg in data.get('course_groups', []):
+        instance = CourseGroup.objects.create(
+            title=cg['title'],
+            start_date=cg['start_date'],
+            end_date=cg['end_date'],
+            shown_on_calendar=cg.get('shown_on_calendar', True),
+            overall_grade=Decimal(cg.get('overall_grade', '-1')),
+            trend=cg.get('trend'),
+            example_schedule=True,
+            user=user,
+        )
+        course_group_remap[cg['id']] = instance.pk
+
+    # --- Course ---
+    course_objects = []
+    course_fixture_ids = []
+    for c in data.get('courses', []):
+        course_objects.append(Course(
+            title=c['title'],
+            room=c.get('room', ''),
+            credits=Decimal(c.get('credits', '0')),
+            color=c.get('color', '#000000'),
+            website=c.get('website') or None,
+            is_online=c.get('is_online', False),
+            current_grade=Decimal(c.get('current_grade', '-1')),
+            trend=c.get('trend'),
+            teacher_name=c.get('teacher_name', ''),
+            teacher_email=c.get('teacher_email') or None,
+            start_date=c['start_date'],
+            end_date=c['end_date'],
+            course_group_id=course_group_remap[c['course_group']],
+        ))
+        course_fixture_ids.append(c['id'])
+
+    created_courses = Course.objects.bulk_create(course_objects)
+    for fixture_id, instance in zip(course_fixture_ids, created_courses):
+        course_remap[fixture_id] = instance.pk
+
+    # --- CourseSchedule ---
+    schedule_objects = []
+    for cs in data.get('course_schedules', []):
+        schedule_objects.append(CourseSchedule(
+            days_of_week=cs['days_of_week'],
+            sun_start_time=cs['sun_start_time'],
+            sun_end_time=cs['sun_end_time'],
+            mon_start_time=cs['mon_start_time'],
+            mon_end_time=cs['mon_end_time'],
+            tue_start_time=cs['tue_start_time'],
+            tue_end_time=cs['tue_end_time'],
+            wed_start_time=cs['wed_start_time'],
+            wed_end_time=cs['wed_end_time'],
+            thu_start_time=cs['thu_start_time'],
+            thu_end_time=cs['thu_end_time'],
+            fri_start_time=cs['fri_start_time'],
+            fri_end_time=cs['fri_end_time'],
+            sat_start_time=cs['sat_start_time'],
+            sat_end_time=cs['sat_end_time'],
+            course_id=course_remap[cs['course']],
+        ))
+    CourseSchedule.objects.bulk_create(schedule_objects)
+
+    # --- Category ---
+    category_objects = []
+    category_fixture_ids = []
+    for cat in data.get('categories', []):
+        category_objects.append(Category(
+            title=cat['title'],
+            weight=Decimal(cat.get('weight', '0')),
+            color=cat.get('color', '#000000'),
+            average_grade=Decimal(cat.get('average_grade', '-1')),
+            grade_by_weight=Decimal(cat.get('grade_by_weight', '0')),
+            trend=cat.get('trend'),
+            course_id=course_remap[cat['course']],
+        ))
+        category_fixture_ids.append(cat['id'])
+
+    created_categories = Category.objects.bulk_create(category_objects)
+    for fixture_id, instance in zip(category_fixture_ids, created_categories):
+        category_remap[fixture_id] = instance.pk
+
+    # --- MaterialGroup ---
+    mg_objects = []
+    mg_fixture_ids = []
+    for mg in data.get('material_groups', []):
+        mg_objects.append(MaterialGroup(
+            title=mg['title'],
+            shown_on_calendar=mg.get('shown_on_calendar', True),
+            example_schedule=True,
+            user=user,
+        ))
+        mg_fixture_ids.append(mg['id'])
+
+    created_mgs = MaterialGroup.objects.bulk_create(mg_objects)
+    for fixture_id, instance in zip(mg_fixture_ids, created_mgs):
+        material_group_remap[fixture_id] = instance.pk
+
+    # --- Material (with M2M courses + legacy details→notes) ---
+    mat_objects = []
+    mat_fixture_ids = []
+    mat_course_m2m = []
+    mat_legacy_notes = []
+    for m in data.get('materials', []):
+        mat_objects.append(Material(
+            title=m['title'],
+            status=m.get('status', enums.OWNED),
+            condition=m.get('condition', enums.BRAND_NEW),
+            website=m.get('website') or None,
+            price=m.get('price', ''),
+            material_group_id=material_group_remap[m['material_group']],
+        ))
+        mat_fixture_ids.append(m['id'])
+        mat_course_m2m.append([course_remap[c] for c in m.get('courses', [])])
+        mat_legacy_notes.append(_extract_legacy_notes(m, legacy_field='details'))
+
+    created_mats = Material.objects.bulk_create(mat_objects)
+    for fixture_id, instance in zip(mat_fixture_ids, created_mats):
+        material_remap[fixture_id] = instance.pk
+
+    MaterialCourseThrough = Material.courses.through
+    m2m_rows = []
+    for instance, course_ids in zip(created_mats, mat_course_m2m):
+        for course_id in course_ids:
+            m2m_rows.append(MaterialCourseThrough(material_id=instance.pk, course_id=course_id))
+    if m2m_rows:
+        MaterialCourseThrough.objects.bulk_create(m2m_rows)
+
+    for instance, legacy_content in zip(created_mats, mat_legacy_notes):
+        if legacy_content:
+            note = Note.objects.create(title='', content=legacy_content, user=user, example_schedule=True)
+            note.resources.add(instance)
+
+    # --- Event ---
+    event_objects = []
+    event_fixture_ids = []
+    for e in data.get('events', []):
+        event_objects.append(Event(
+            title=e['title'],
+            all_day=e.get('all_day', False),
+            show_end_time=e.get('show_end_time', False),
+            start=e['start'],
+            end=e['end'],
+            priority=e.get('priority', 50),
+            url=e.get('url') or None,
+            owner_id=e.get('owner_id') or None,
+            example_schedule=True,
+            user=user,
+        ))
+        event_fixture_ids.append(e['id'])
+
+    created_events = Event.objects.bulk_create(event_objects)
+    for fixture_id, instance in zip(event_fixture_ids, created_events):
+        event_remap[fixture_id] = instance.pk
+
+    # --- Homework (individual save for auto-category + completed_at) ---
+    hw_material_m2m = []
+    hw_legacy_notes = []
+    for h in data.get('homework', []):
+        legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
+        instance = Homework(
+            title=h['title'],
+            all_day=h.get('all_day', False),
+            show_end_time=h.get('show_end_time', False),
+            start=h['start'],
+            end=h['end'],
+            priority=h.get('priority', 50),
+            url=h.get('url') or None,
+            current_grade=h.get('current_grade', ''),
+            completed=h.get('completed', False),
+            category_id=category_remap.get(h['category']) if h.get('category') else None,
+            course_id=course_remap[h['course']],
+        )
+        instance.save()
+        homework_remap[h['id']] = instance.pk
+        hw_material_m2m.append((instance.pk, [material_remap[m] for m in h.get('materials', [])]))
+        hw_legacy_notes.append((instance, legacy_notes_content))
+
+    HomeworkMaterialThrough = Homework.materials.through
+    hw_m2m_rows = []
+    for hw_pk, material_ids in hw_material_m2m:
+        for material_id in material_ids:
+            hw_m2m_rows.append(HomeworkMaterialThrough(homework_id=hw_pk, material_id=material_id))
+    if hw_m2m_rows:
+        HomeworkMaterialThrough.objects.bulk_create(hw_m2m_rows)
+
+    for instance, legacy_content in hw_legacy_notes:
+        if legacy_content:
+            note = Note.objects.create(title='', content=legacy_content, user=user, example_schedule=True)
+            note.homework.add(instance)
+
+    # --- Reminder (individual save for start_of_range computation) ---
+    for r in data.get('reminders', []):
+        instance = Reminder(
+            title=r['title'],
+            message=r.get('message', ''),
+            offset=r.get('offset', 30),
+            offset_type=r.get('offset_type', enums.MINUTES),
+            type=r.get('type', enums.POPUP),
+            sent=r.get('sent', False),
+            dismissed=r.get('dismissed', False),
+            homework_id=homework_remap[r['homework']] if r.get('homework') else None,
+            event_id=event_remap[r['event']] if r.get('event') else None,
+            course_id=course_remap[r['course']] if r.get('course') else None,
+            user=user,
+        )
+        instance.save()
+
+    # --- Note (with M2M links) ---
+    note_objects = []
+    note_m2m_data = []
+    for n in data.get('notes', []):
+        note_objects.append(Note(
+            title=n.get('title', ''),
+            content=n.get('content'),
+            example_schedule=True,
+            user=user,
+        ))
+        note_m2m_data.append({
+            'homework': [homework_remap[hw_id] for hw_id in n.get('homework', []) if hw_id in homework_remap],
+            'events': [event_remap[e_id] for e_id in n.get('events', []) if e_id in event_remap],
+            'resources': [material_remap[m_id] for m_id in n.get('resources', []) if m_id in material_remap],
+        })
+
+    created_notes = Note.objects.bulk_create(note_objects)
+
+    NoteHwThrough = Note.homework.through
+    NoteEventThrough = Note.events.through
+    NoteResourceThrough = Note.resources.through
+    hw_rows, event_rows, resource_rows = [], [], []
+    for note, m2m in zip(created_notes, note_m2m_data):
+        for hw_id in m2m['homework']:
+            hw_rows.append(NoteHwThrough(note_id=note.pk, homework_id=hw_id))
+        for event_id in m2m['events']:
+            event_rows.append(NoteEventThrough(note_id=note.pk, event_id=event_id))
+        for material_id in m2m['resources']:
+            resource_rows.append(NoteResourceThrough(note_id=note.pk, material_id=material_id))
+    if hw_rows:
+        NoteHwThrough.objects.bulk_create(hw_rows)
+    if event_rows:
+        NoteEventThrough.objects.bulk_create(event_rows)
+    if resource_rows:
+        NoteResourceThrough.objects.bulk_create(resource_rows)
+
+    metricutils.increment("user.import.schedule")
+
+    logger.info(
+        f"Bulk imported example schedule: {len(course_group_remap)} course groups, "
+        f"{len(course_remap)} courses, {len(data.get('course_schedules', []))} schedules, "
+        f"{len(category_remap)} categories, {len(material_group_remap)} material groups, "
+        f"{len(material_remap)} materials, {len(event_remap)} events, "
+        f"{len(homework_remap)} homework, {len(data.get('reminders', []))} reminders, "
+        f"{len(created_notes)} notes"
+    )
+
+
 @transaction.atomic
 def import_user(request, data, example_schedule=False):
     """
@@ -510,23 +799,26 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 start_date=first_monday_date,
                 end_date=first_monday_date + datetime.timedelta(days=delta))
 
+        homework_to_update = []
         for homework in (Homework.objects.for_user(user.pk)
                 .filter(course__course_group__example_schedule=True)
-                .select_related('course')
-                .iterator()):
+                .select_related('course')):
             course = homework.course
             start_delta = (homework.start.date() - course.start_date).days
             end_delta = (homework.end.date() - course.start_date).days
             target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
             target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            new_start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
-                                                        all_day=homework.all_day)
-            new_end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
-                                                      all_day=homework.all_day)
+            homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
+                                                             all_day=homework.all_day)
+            homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
+                                                           all_day=homework.all_day)
+            homework_to_update.append(homework)
 
-            Homework.objects.filter(pk=homework.pk).update(start=new_start, end=new_end)
-            adjust_reminder_times(homework.pk, homework.calendar_item_type)
+        if homework_to_update:
+            Homework.objects.bulk_update(homework_to_update, ['start', 'end'])
+            for homework in homework_to_update:
+                adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
         first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
 
@@ -537,20 +829,24 @@ def _adjust_schedule_relative_to(user, adjust_month):
         first_event_monday = first_event_month + datetime.timedelta(days_ahead)
         events_delta = (first_monday - first_event_monday).days
 
+        events_to_update = []
         for event in (Event.objects.for_user(user.pk)
-                .filter(example_schedule=True).iterator()):
+                .filter(example_schedule=True)):
             start_delta = (event.start.date() - first_monday.date()).days + events_delta
             end_delta = (event.end.date() - first_monday.date()).days + events_delta
             target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
             target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            new_start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
+            event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
+                                                          all_day=event.all_day)
+            event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
                                                         all_day=event.all_day)
-            new_end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
-                                                      all_day=event.all_day)
+            events_to_update.append(event)
 
-            Event.objects.filter(pk=event.pk).update(start=new_start, end=new_end)
-            adjust_reminder_times(event.pk, event.calendar_item_type)
+        if events_to_update:
+            Event.objects.bulk_update(events_to_update, ['start', 'end'])
+            for event in events_to_update:
+                adjust_reminder_times(event.pk, event.calendar_item_type)
 
         for course in (Course.objects.for_user(user.pk)
                 .filter(course_group__example_schedule=True).iterator()):
@@ -584,25 +880,31 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
 
 def import_example_schedule(user):
-    request = Request(HttpRequest(), parser_context={'kwargs': {}})
-    request.user = user
+    with open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb') as f:
+        json_str = f.read().decode('utf-8')
 
-    example_file = open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb')
-
-    json_str = example_file.read().decode('utf-8')
     try:
         data = json.loads(json_str)
 
-        import_user(request, data, True)
+        with _suppress_post_save_signals():
+            _bulk_import_example_schedule(data, user)
 
         _adjust_schedule_relative_to(user, -1)
 
         reminderservice.process_push_reminders(True)
 
-        for category in Category.objects.for_user(user.pk).iterator():
-            recalculate_category_grade.apply_async(
-                args=(category.pk,), priority=settings.CELERY_PRIORITY_LOW
-            )
+        for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
+            gradingservice.recalculate_category_grade(category_id)
+
+        course_group_ids = set()
+        for course in (Course.objects.for_user(user.pk)
+                .filter(course_group__example_schedule=True)
+                .select_related('course_group')):
+            gradingservice.recalculate_course_grade(course.pk)
+            course_group_ids.add(course.course_group_id)
+
+        for course_group_id in course_group_ids:
+            gradingservice.recalculate_course_group_grade(course_group_id)
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'
