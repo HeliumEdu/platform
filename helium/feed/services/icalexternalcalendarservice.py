@@ -158,6 +158,21 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
     return events_filtered
 
 
+def invalidate_calendar_cache(external_calendar):
+    cache.delete(_get_cache_prefix(external_calendar))
+
+    external_calendar.etag = None
+    external_calendar.last_modified_header = None
+    external_calendar.last_index = None
+    external_calendar.last_sync_error = None
+    external_calendar.consecutive_failures = 0
+    external_calendar.save(update_fields=[
+        'etag', 'last_modified_header', 'last_index', 'last_sync_error', 'consecutive_failures',
+    ])
+
+    logger.info(f"Cache invalidated for External Calendar {external_calendar.pk}")
+
+
 def validate_url(url):
     """
     Validates that a given URL maps to a valid ICAL feed. Validation includes both simple HTTP validation as well as

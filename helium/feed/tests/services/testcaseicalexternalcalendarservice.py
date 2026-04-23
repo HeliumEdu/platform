@@ -27,6 +27,41 @@ class TestCaseICALExternalCalendarService(TestCase):
         self.assertEqual(str(ctx.exception), 'Enter a valid URL.')
 
 
+class TestCaseInvalidateCalendarCache(TestCase):
+    def setUp(self):
+        self.user = userhelper.given_a_user_exists()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_invalidate_clears_cache_and_resets_fields(self):
+        # GIVEN
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
+        external_calendar.etag = '"old-etag"'
+        external_calendar.last_modified_header = 'Wed, 01 Jan 2025 00:00:00 GMT'
+        external_calendar.last_index = timezone.now()
+        external_calendar.last_sync_error = 'some error'
+        external_calendar.consecutive_failures = 3
+        external_calendar.save()
+
+        cache_key = f"users:{self.user.pk}:externalcalendars:{external_calendar.pk}:events"
+        cache.set(cache_key, '[{"id": 0, "title": "Stale Event"}]', 3600)
+        self.assertIsNotNone(cache.get(cache_key))
+
+        # WHEN
+        icalexternalcalendarservice.invalidate_calendar_cache(external_calendar)
+
+        # THEN
+        self.assertIsNone(cache.get(cache_key))
+        external_calendar.refresh_from_db()
+        self.assertIsNone(external_calendar.etag)
+        self.assertIsNone(external_calendar.last_modified_header)
+        self.assertIsNone(external_calendar.last_index)
+        self.assertIsNone(external_calendar.last_sync_error)
+        self.assertEqual(external_calendar.consecutive_failures, 0)
+
+
 class TestCaseFetchIcalConditional(TestCase):
     def setUp(self):
         self.user = userhelper.given_a_user_exists()
