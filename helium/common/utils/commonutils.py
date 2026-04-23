@@ -148,6 +148,8 @@ def send_multipart_email(template_name, context, subject, to, bcc=None, email_ty
         msg.send()
         logger.debug(f"Sent email successfully to {len(to)} recipient(s)")
         metricutils.increment('action.email.sent', extra_tags=extra_tags)
+        if email_type == 'reminder':
+            metricutils.increment('action.reminder.sent', extra_tags=['channel:email'])
     except smtplib.SMTPRecipientsRefused as e:
         logger.warning(f"Recipients refused by SES: {e.recipients}")
         metricutils.increment('action.email.failed', extra_tags=extra_tags)

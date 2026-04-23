@@ -817,6 +817,8 @@ def process_dormant_users(self):
         metricutils.task_stop(metrics, value=num_warnings_sent + num_deletions_queued)
         metricutils.gauge('users.dormant.warnings_sent', num_warnings_sent)
         metricutils.gauge('users.dormant.deletions_queued', num_deletions_queued)
+        metricutils.gauge('users.dormant.operations', num_warnings_sent, extra_tags=['operation:warning'])
+        metricutils.gauge('users.dormant.operations', num_deletions_queued, extra_tags=['operation:deletion'])
 
     except Exception as e:
         logger.error(f'Failed to process dormant users: {e}', exc_info=True)
