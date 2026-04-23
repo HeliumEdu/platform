@@ -5,13 +5,17 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from django.db.models import Q
 from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
@@ -20,6 +24,18 @@ from helium.common.throttles import DeleteInactiveUserThrottle
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
+
+
+def _reserve_pending_delete(user):
+    user.deletion_requested_at = timezone.now()
+    user.save(update_fields=['deletion_requested_at'])
+
+    for outstanding in OutstandingToken.objects.filter(user=user):
+        try:
+            RefreshToken(outstanding.token).blacklist()
+        except TokenError:
+            # Already expired or blacklisted — safe to ignore
+            pass
 
 
 class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
@@ -84,6 +100,8 @@ class UserDeleteResourceView(HeliumAPIView):
 
         logger.info(f'User {user.pk} will be deleted')
 
+        _reserve_pending_delete(user)
+
         delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -132,6 +150,8 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
             raise AuthenticationFailed({'password': ['The password is incorrect.']})
 
         logger.info(f'User {user.pk} will be deleted')
+
+        _reserve_pending_delete(user)
 
         delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 

@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
@@ -131,6 +132,42 @@ class TestCaseOAuthViews(APITestCase):
         # Verify same user
         user = get_user_model().objects.get(email='existing@gmail.com')
         self.assertEqual(user.pk, existing_user.pk)
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_fails_when_user_pending_deletion(self, mock_verify_token):
+        """A pending-delete user is invisible to the UID and email lookups, so OAuth falls
+        through to the create branch and collides on the reserved email — surfacing as a clean
+        ValidationError rather than a 500 from the FK race."""
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(
+            username='existing_user',
+            email='existing@gmail.com',
+        )
+        UserOAuthProvider.objects.create(
+            user=existing_user,
+            provider='google',
+            provider_user_id='google-user-789',
+        )
+        existing_user.deletion_requested_at = timezone.now()
+        existing_user.save(update_fields=['deletion_requested_at'])
+
+        mock_verify_token.return_value = {
+            'uid': 'google-user-789',
+            'email': 'existing@gmail.com',
+            'email_verified': True,
+        }
+
+        # WHEN
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps({'id_token': 'valid-firebase-id-token', 'provider': 'google'}),
+            content_type='application/json',
+        )
+
+        # THEN: conflict error surfaced, existing row is untouched, no duplicate created
+        self.assertContains(response, 'Registration failed due to a conflict',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(get_user_model().objects.filter(email='existing@gmail.com').count(), 1)
 
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')

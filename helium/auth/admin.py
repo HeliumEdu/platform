@@ -146,6 +146,21 @@ class ActiveStatusFilter(SimpleListFilter):
         return queryset
 
 
+class PendingDeletionFilter(SimpleListFilter):
+    title = 'pending deletion'
+    parameter_name = 'pending_deletion'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('pending', 'Pending deletion'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'pending':
+            return queryset.filter(deletion_requested_at__isnull=False)
+        return queryset
+
+
 class UserOAuthProviderInline(django_admin.TabularInline):
     model = UserOAuthProvider
     extra = 0
@@ -312,11 +327,13 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'last_login_legacy',
-                    'deletion_warning_count', 'mobile_app_usage_percent_30d', 'created_at', 'is_active')
-    list_filter = (ActiveStatusFilter, 'settings__show_getting_started', 'settings__default_view',
-                   'settings__remember_filter_state', 'settings__calendar_event_limit',
-                   'settings__default_reminder_type', 'settings__color_scheme_theme',
-                   'settings__calendar_use_category_colors', OAuthProviderFilter, ClientFilter,
+                    'deletion_warning_count', 'deletion_requested_at', 'mobile_app_usage_percent_30d',
+                    'created_at', 'is_active')
+    list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'settings__show_getting_started',
+                   'settings__default_view', 'settings__remember_filter_state',
+                   'settings__calendar_event_limit', 'settings__default_reminder_type',
+                   'settings__color_scheme_theme', 'settings__calendar_use_category_colors',
+                   OAuthProviderFilter, ClientFilter,
                    has_weighted_grading_filter('course_groups__courses__categories__weight'),
                    has_credits_filter('course_groups__courses__credits'),
                    has_course_schedule_filter('course_groups__courses__schedules'),
@@ -371,12 +388,25 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
+            base = self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
                                            'mobile_app_usage_percent_30d', 'deletion_warning_count',
-                                           'deletion_warning_sent_at', 'onboarding_completed_at', 'get_2fa_enabled',
+                                           'deletion_warning_sent_at', 'onboarding_completed_at',
+                                           'deletion_requested_at', 'get_2fa_enabled',
                                            'verification_code', 'email_changing',)
+            # While a user is pending async cascade-delete, freeze all admin-editable fields
+            # to prevent a staff edit from racing with the Celery delete task.
+            if obj.deletion_requested_at is not None:
+                return base + tuple(f.name for f in obj._meta.fields if f.name not in base)
+            return base
 
         return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        # Don't let admins manually delete a user that's already mid-cascade; the Celery task
+        # owns the deletion and will complete or be resumed by the nightly sweep.
+        if obj is not None and obj.deletion_requested_at is not None:
+            return False
+        return super().has_delete_permission(request, obj)
 
     def get_2fa_enabled(self, obj):
         return TOTPDevice.objects.filter(user=obj, confirmed=True).exists()

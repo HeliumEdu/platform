@@ -61,6 +61,12 @@ class User(AbstractBaseUser, BaseModel):
         help_text='When the user first cleared the example schedule (end of onboarding). '
                   'Write-once: set on the first successful clear and never updated afterward.')
 
+    deletion_requested_at = models.DateTimeField(
+        blank=True, null=True, db_index=True,
+        help_text='When the user requested account deletion. Non-null means the account is '
+                  'pending async cascade-delete: login/OAuth/verification paths treat the user '
+                  'as not-found, but the email/username remain reserved so new signups collide.')
+
     # Manager
     objects = UserManager()
 

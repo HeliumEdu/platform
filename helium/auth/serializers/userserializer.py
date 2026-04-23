@@ -6,7 +6,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
@@ -50,6 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
             'username': {'required': False, 'allow_blank': True},
+            'email': {'validators': []},
         }
 
     def get_has_usable_password(self, obj) -> bool:
@@ -154,7 +155,8 @@ class UserSerializer(serializers.ModelSerializer):
                 validated_data.get('email')
             )
         try:
-            instance = super().create(validated_data)
+            with transaction.atomic():
+                instance = super().create(validated_data)
         except IntegrityError:
             raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
 
@@ -173,7 +175,11 @@ class UserSerializer(serializers.ModelSerializer):
         # OAuth users can bypass email verification
         validated_data['is_active'] = True
 
-        instance = super().create(validated_data)
+        try:
+            with transaction.atomic():
+                instance = super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
 
         # OAuth users bypass local passwords
         instance.set_unusable_password()
