@@ -775,8 +775,13 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
         if homework_to_update:
             Homework.objects.bulk_update(homework_to_update, ['start', 'end'])
+            hw_ids_with_reminders = set(
+                Reminder.objects.filter(homework__in=[h.pk for h in homework_to_update])
+                .values_list('homework_id', flat=True).distinct()
+            )
             for homework in homework_to_update:
-                adjust_reminder_times(homework.pk, homework.calendar_item_type)
+                if homework.pk in hw_ids_with_reminders:
+                    adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
         first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
 
@@ -803,8 +808,13 @@ def _adjust_schedule_relative_to(user, adjust_month):
 
         if events_to_update:
             Event.objects.bulk_update(events_to_update, ['start', 'end'])
+            event_ids_with_reminders = set(
+                Reminder.objects.filter(event__in=[e.pk for e in events_to_update])
+                .values_list('event_id', flat=True).distinct()
+            )
             for event in events_to_update:
-                adjust_reminder_times(event.pk, event.calendar_item_type)
+                if event.pk in event_ids_with_reminders:
+                    adjust_reminder_times(event.pk, event.calendar_item_type)
 
         for course in (Course.objects.for_user(user.pk)
                 .filter(course_group__example_schedule=True).iterator()):
@@ -848,8 +858,6 @@ def import_example_schedule(user):
             _bulk_import_example_schedule(data, user)
 
         _adjust_schedule_relative_to(user, -1)
-
-        reminderservice.process_push_reminders(True)
 
         for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
             gradingservice.recalculate_category_grade(category_id)
