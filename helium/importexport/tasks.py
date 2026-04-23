@@ -5,6 +5,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from conf.celery import app
 from helium.common.utils import metricutils
@@ -30,9 +31,11 @@ def import_example_schedule(self, user_id, example_schedule=True):
         if example_schedule:
             importservice.import_example_schedule(user)
 
-        # Mark setup as complete now that example schedule is imported
         user.settings.is_setup_complete = True
         user.settings.save()
+
+        elapsed_ms = int((timezone.now() - user.created_at).total_seconds() * 1000)
+        metricutils.timing("user.setup.total_duration", elapsed_ms)
 
         value = 1
     except UserModel.DoesNotExist:
