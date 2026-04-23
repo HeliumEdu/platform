@@ -30,3 +30,13 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'url': str(e)})
 
         return attrs
+
+    def update(self, instance, validated_data):
+        url_changed = 'url' in validated_data and validated_data['url'] != instance.url
+
+        instance = super().update(instance, validated_data)
+
+        if url_changed:
+            icalexternalcalendarservice.invalidate_calendar_cache(instance)
+
+        return instance
