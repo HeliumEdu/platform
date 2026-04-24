@@ -295,7 +295,7 @@ jobs:
           fi
 
   build-and-publish:
-    name: Build and Publish Containers
+    name: Build and Publish AMD64 Containers
     needs: [merge-release-branch, bump-version]
     if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
     runs-on: ubuntu-latest
