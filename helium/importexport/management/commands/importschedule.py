@@ -11,6 +11,7 @@ from rest_framework.request import Request
 
 from helium.importexport.services.importservice import import_user, _adjust_schedule_relative_to
 from helium.planner.models import Category
+from helium.common.utils import taskutils
 from helium.planner.services import reminderservice
 from helium.planner.tasks import recalculate_category_grade
 
@@ -46,6 +47,6 @@ class Command(BaseCommand):
             reminderservice.process_push_reminders(True)
 
             for category in Category.objects.for_user(user.pk).iterator():
-                recalculate_category_grade.apply_async(
+                taskutils.safe_apply_async(recalculate_category_grade,
                     args=(category.pk,), priority=settings.CELERY_PRIORITY_LOW
                 )

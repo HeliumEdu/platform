@@ -20,6 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
+from helium.common.utils import taskutils
 from helium.common.throttles import DeleteInactiveUserThrottle
 from helium.common.views.base import HeliumAPIView
 
@@ -102,7 +103,7 @@ class UserDeleteResourceView(HeliumAPIView):
 
         _reserve_pending_delete(user)
 
-        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+        taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -153,6 +154,6 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
 
         _reserve_pending_delete(user)
 
-        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+        taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -14,6 +14,7 @@ from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, 
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule, Note
+from helium.common.utils import taskutils
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
 
 
@@ -32,11 +33,11 @@ def recalculate_grade(modeladmin, request, queryset):
 
     for model in queryset:
         if model_class.__name__ == "CourseGroup":
-            recalculate_course_group_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
+            taskutils.safe_apply_async(recalculate_course_group_grade, args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
         elif model_class.__name__ == "Course":
-            recalculate_course_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
+            taskutils.safe_apply_async(recalculate_course_grade, args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
         elif model_class.__name__ == "Category":
-            recalculate_category_grade.apply_async(args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
+            taskutils.safe_apply_async(recalculate_category_grade, args=(model.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
     modeladmin.message_user(request,
                             f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")

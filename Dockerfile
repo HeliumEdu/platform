@@ -76,7 +76,7 @@ COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
 EXPOSE 8000
 
-CMD ["gunicorn", "conf.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--threads", "8", "--timeout", "60", "--keep-alive", "65", "--preload", "--access-logfile", "-", "--error-logfile", "-"]
+CMD ["sh", "-c", "gunicorn conf.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-8} --timeout 60 --keep-alive 65 --preload --access-logfile - --error-logfile -"]
 
 ######################################################################
 
@@ -93,6 +93,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
 ENV TZ=UTC
 ENV SSL_CERT_FILE=/venv/lib/python3.12/site-packages/certifi/cacert.pem
+ENV CELERY_CONCURRENCY=2
 
 WORKDIR /app
 

@@ -12,7 +12,7 @@ from django.utils import timezone
 from conf.celery import app
 from helium.common import enums
 from helium.common.utils import commonutils
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import gradingservice
@@ -35,7 +35,7 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
 
-            recalculate_course_group_grade.apply_async(
+            taskutils.safe_apply_async(recalculate_course_group_grade,
                 (course_group_id, retries + 1),
                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
                 priority=settings.CELERY_PRIORITY_LOW,
@@ -67,7 +67,7 @@ def recalculate_course_grade(self, course_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
 
-            recalculate_course_grade.apply_async(
+            taskutils.safe_apply_async(recalculate_course_grade,
                 (course_id, retries + 1),
                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
                 priority=settings.CELERY_PRIORITY_LOW,
@@ -112,7 +112,7 @@ def recalculate_category_grade(self, category_id, retries=0):
             # This error is common when importing schedules, as async tasks may come in different orders
             logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
 
-            recalculate_category_grade.apply_async(
+            taskutils.safe_apply_async(recalculate_category_grade,
                 (category_id, retries + 1),
                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
                 priority=settings.CELERY_PRIORITY_LOW,

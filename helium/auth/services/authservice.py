@@ -21,7 +21,7 @@ from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
@@ -54,7 +54,7 @@ def forgot_password(request):
 
             logger.info(f'Reset password for user {user.pk} ({redact_email(user.email)})')
 
-            send_password_reset_email.apply_async(
+            taskutils.safe_apply_async(send_password_reset_email,
                 args=(user.email, password),
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
@@ -98,7 +98,7 @@ def verify_email(request):
             logger.info(f'Completed registration and verification for user {user.pk} ({redact_email(user.email)})')
 
             if request.GET.get('welcome-email', 'true') == 'true':
-                send_registration_email.apply_async(
+                taskutils.safe_apply_async(send_registration_email,
                     args=(user.email,),
                     priority=settings.CELERY_PRIORITY_HIGH,
                 )
@@ -164,7 +164,7 @@ def resend_verification_email(request):
         # Send to email_changing if set (active user changing email), otherwise to email (new registration)
         target_email = user.email_changing if user.email_changing else user.email
 
-        send_verification_email.apply_async(
+        taskutils.safe_apply_async(send_verification_email,
             args=(target_email, user.username, user.verification_code),
             priority=settings.CELERY_PRIORITY_HIGH,
         )
@@ -306,13 +306,13 @@ def oauth_login(request):
                 'email': email,
             })
 
-            clear_email_suppression.apply_async(
+            taskutils.safe_apply_async(clear_email_suppression,
                 args=(email,),
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
             # Import the example schedule for the user
-            import_example_schedule.apply_async(
+            taskutils.safe_apply_async(import_example_schedule,
                 args=(user.pk,),
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
@@ -402,7 +402,7 @@ def delete_example_schedule(user_id):
 
         duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 
-        send_analytics_event.apply_async(
+        taskutils.safe_apply_async(send_analytics_event,
             args=(user.pk, 'helium_onboarding_complete'),
             kwargs={'params': {'onboarding_duration_seconds': duration_seconds}},
             priority=settings.CELERY_PRIORITY_LOW,

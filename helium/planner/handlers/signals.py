@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from helium.common import enums
+from helium.common.utils import taskutils
 from helium.planner.models import Category, Course, CourseGroup, Event, Homework, CourseSchedule, Attachment, Material
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
@@ -29,14 +30,14 @@ def _mark_user_data_deleted(instance):
 @receiver(post_save, sender=Course)
 def save_course(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance)
-    recalculate_course_grade.apply_async(args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
-    adjust_reminder_times.apply_async(args=(instance.pk, enums.COURSE), priority=settings.CELERY_PRIORITY_LOW)
+    taskutils.safe_apply_async(recalculate_course_grade, args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
+    taskutils.safe_apply_async(adjust_reminder_times, args=(instance.pk, enums.COURSE), priority=settings.CELERY_PRIORITY_LOW)
 
 
 @receiver(post_delete, sender=Course)
 def delete_course(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    recalculate_course_grades_for_course_group.apply_async(
+    taskutils.safe_apply_async(recalculate_course_grades_for_course_group,
         args=(instance.course_group.pk,), priority=settings.CELERY_PRIORITY_LOW
     )
 
@@ -44,20 +45,20 @@ def delete_course(sender, instance, **kwargs):
 @receiver(post_save, sender=CourseSchedule)
 def save_course_schedule(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance.course)
-    adjust_reminder_times.apply_async(
+    taskutils.safe_apply_async(adjust_reminder_times,
         args=(instance.course.pk, enums.COURSE), priority=settings.CELERY_PRIORITY_LOW
     )
 
 
 @receiver(post_save, sender=Category)
 def save_category(sender, instance, **kwargs):
-    recalculate_category_grade.apply_async(args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
+    taskutils.safe_apply_async(recalculate_category_grade, args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
 
 @receiver(post_delete, sender=Category)
 def delete_category(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    recalculate_category_grades_for_course.apply_async(
+    taskutils.safe_apply_async(recalculate_category_grades_for_course,
         args=(instance.course.pk,), priority=settings.CELERY_PRIORITY_LOW
     )
 
@@ -67,7 +68,7 @@ def delete_homework(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
     try:
         if instance.category:
-            recalculate_category_grade.apply_async(
+            taskutils.safe_apply_async(recalculate_category_grade,
                 args=(instance.category.pk,), priority=settings.CELERY_PRIORITY_LOW
             )
     except Category.DoesNotExist:
@@ -76,7 +77,7 @@ def delete_homework(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Event)
 def save_event(sender, instance, **kwargs):
-    adjust_reminder_times.apply_async(
+    taskutils.safe_apply_async(adjust_reminder_times,
         args=(instance.pk, instance.calendar_item_type), priority=settings.CELERY_PRIORITY_LOW
     )
 
@@ -84,11 +85,11 @@ def save_event(sender, instance, **kwargs):
 @receiver(post_save, sender=Homework)
 def save_homework(sender, instance, **kwargs):
     if instance.category:
-        recalculate_category_grade.apply_async(
+        taskutils.safe_apply_async(recalculate_category_grade,
             args=(instance.category.pk,), priority=settings.CELERY_PRIORITY_LOW
         )
 
-    adjust_reminder_times.apply_async(
+    taskutils.safe_apply_async(adjust_reminder_times,
         args=(instance.pk, instance.calendar_item_type), priority=settings.CELERY_PRIORITY_LOW
     )
 

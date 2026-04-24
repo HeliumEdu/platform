@@ -19,7 +19,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 from helium.common.utils.metricutils import _normalize_user_agent_tag
 
 logger = logging.getLogger(__name__)
@@ -181,7 +181,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
 
         if api_settings.ROTATE_REFRESH_TOKENS:
             if api_settings.BLACKLIST_AFTER_ROTATION:
-                blacklist_refresh_token.apply_async(
+                taskutils.safe_apply_async(blacklist_refresh_token,
                     (refresh.token,),
                     countdown=settings.BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
                     priority=settings.CELERY_PRIORITY_LOW,

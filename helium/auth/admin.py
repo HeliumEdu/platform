@@ -36,6 +36,7 @@ from helium.planner.models.event import Event
 from helium.planner.models.homework import Homework
 from helium.planner.models.note import Note
 from helium.planner.services.reminderservice import heal_orphaned_repeating_reminders
+from helium.common.utils import taskutils
 from helium.planner.tasks import recalculate_course_grades_for_course_group
 
 
@@ -200,7 +201,8 @@ def send_password_reset(modeladmin, request, queryset):
         password = UserModel.objects.make_random_password()
         user.set_password(password)
         user.save()
-        send_password_reset_email.apply_async(
+        taskutils.safe_apply_async(
+            send_password_reset_email,
             args=(user.email, password),
             priority=settings.CELERY_PRIORITY_HIGH,
         )
@@ -227,7 +229,8 @@ def send_dormant_warning(modeladmin, request, queryset):
         if user.deletion_warning_count >= 4:
             skipped += 1
             continue
-        send_dormant_user_warning_email.apply_async(
+        taskutils.safe_apply_async(
+            send_dormant_user_warning_email,
             args=(user.pk,),
             priority=settings.CELERY_PRIORITY_LOW,
         )
@@ -245,7 +248,8 @@ def send_dormant_warning(modeladmin, request, queryset):
 def recalculate_all_grades(modeladmin, request, queryset):
     count = 0
     for cg_id in CourseGroup.objects.filter(user__in=queryset).values_list('id', flat=True):
-        recalculate_course_grades_for_course_group.apply_async(
+        taskutils.safe_apply_async(
+            recalculate_course_grades_for_course_group,
             args=(cg_id,),
             priority=settings.CELERY_PRIORITY_LOW,
         )

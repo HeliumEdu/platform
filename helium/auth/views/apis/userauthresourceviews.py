@@ -14,6 +14,7 @@ from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
 from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
+from helium.common.utils import taskutils
 from helium.common.views.base import HeliumAPIView
 from helium.importexport.tasks import import_example_schedule
 
@@ -48,7 +49,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
             response.data['settings'] = serializer.data
 
         # Import the example schedule for the user (after timezone is set)
-        import_example_schedule.apply_async(
+        taskutils.safe_apply_async(import_example_schedule,
             args=(response.data['id'],),
             kwargs={'example_schedule': request.data.get('example_schedule', True)},
             priority=settings.CELERY_PRIORITY_HIGH,

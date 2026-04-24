@@ -10,7 +10,7 @@ from helium.auth.models import UserProfile
 from helium.auth.utils.userutils import generate_verification_code
 from helium.common.services.phoneservice import verify_number, HeliumPhoneError
 from helium.common.tasks import send_text
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.phone != phone and phone:
             instance.phone_verification_code = generate_verification_code()
 
-            send_text.apply_async(
+            taskutils.safe_apply_async(send_text,
                 args=(phone, f'Enter this verification code on Helium\'s "Settings" page: {instance.phone_verification_code}'),
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
