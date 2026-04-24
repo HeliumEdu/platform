@@ -211,6 +211,8 @@ DATABASES = {
         'HOST': config('PLATFORM_DB_HOST'),
         'USER': config('PLATFORM_DB_USER'),
         'PASSWORD': config('PLATFORM_DB_PASSWORD'),
+        'CONN_MAX_AGE': int(config('PLATFORM_DB_CONN_MAX_AGE', 600)),
+        'CONN_HEALTH_CHECKS': True,
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
