@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker publish start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -133,6 +133,23 @@ stop-docker: docker-env
 	docker compose stop
 
 restart-docker: stop-docker run-docker
+
+smoke-test-docker:
+	@echo "Starting platform for smoke test ..."
+	@docker compose up -d
+	@echo "Waiting for platform API to be ready ..."
+	@for i in $$(seq 1 60); do \
+		if curl -sf http://localhost:8000/status/ > /dev/null 2>&1; then \
+			echo "Smoke test passed: /status/ returned 200"; \
+			docker compose stop; \
+			exit 0; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "Smoke test failed: /status/ did not return 200 within 120s"; \
+	docker compose logs api; \
+	docker compose stop; \
+	exit 1
 
 publish: build-docker
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
