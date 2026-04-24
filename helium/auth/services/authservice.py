@@ -56,6 +56,7 @@ def forgot_password(request):
 
             taskutils.safe_apply_async(send_password_reset_email,
                 args=(user.email, password),
+                critical=True,
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
@@ -166,6 +167,7 @@ def resend_verification_email(request):
 
         taskutils.safe_apply_async(send_verification_email,
             args=(target_email, user.username, user.verification_code),
+            critical=True,
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 
@@ -308,12 +310,14 @@ def oauth_login(request):
 
             taskutils.safe_apply_async(clear_email_suppression,
                 args=(email,),
+                critical=True,
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
             # Import the example schedule for the user
             taskutils.safe_apply_async(import_example_schedule,
                 args=(user.pk,),
+                critical=True,
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 

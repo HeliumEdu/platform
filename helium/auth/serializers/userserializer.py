@@ -129,6 +129,7 @@ class UserSerializer(serializers.ModelSerializer):
                 taskutils.safe_apply_async(send_verification_email,
                     args=(instance.email_changing, instance.username, instance.verification_code),
                     kwargs={'clear_suppression': True},
+                    critical=True,
                     priority=settings.CELERY_PRIORITY_HIGH,
                 )
             elif instance.email_changing:
@@ -167,6 +168,7 @@ class UserSerializer(serializers.ModelSerializer):
         taskutils.safe_apply_async(send_verification_email,
             args=(instance.email, instance.username, instance.verification_code),
             kwargs={'clear_suppression': True},
+            critical=True,
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 

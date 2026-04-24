@@ -183,6 +183,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
             if api_settings.BLACKLIST_AFTER_ROTATION:
                 taskutils.safe_apply_async(blacklist_refresh_token,
                     (refresh.token,),
+                    critical=True,
                     countdown=settings.BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
                     priority=settings.CELERY_PRIORITY_LOW,
                 )

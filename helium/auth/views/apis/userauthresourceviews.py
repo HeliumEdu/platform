@@ -52,6 +52,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         taskutils.safe_apply_async(import_example_schedule,
             args=(response.data['id'],),
             kwargs={'example_schedule': request.data.get('example_schedule', True)},
+            critical=True,
             priority=settings.CELERY_PRIORITY_HIGH,
         )
 
