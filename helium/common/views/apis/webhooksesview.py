@@ -84,16 +84,17 @@ class WebhookSESView(APIView):
 
     def _handle_notification(self, body: dict) -> Response:
         from helium.common.tasks import process_ses_event
+        from helium.common.utils import taskutils
 
         message_id = body.get('MessageId', '')
         if message_id:
             cache_key = f'sns:processed:{message_id}'
-            if not cache.add(cache_key, 1, timeout=86400):
+            if cache.add(cache_key, 1, timeout=86400) is False:
                 logger.debug(f"Skipping already-processed SNS message: {message_id}")
                 return Response(status=status.HTTP_200_OK)
 
         message_json = body.get('Message', '')
         if message_json:
-            process_ses_event.delay(message_json)
+            taskutils.safe_delay(process_ses_event, message_json)
 
         return Response(status=status.HTTP_200_OK)

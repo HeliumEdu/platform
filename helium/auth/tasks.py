@@ -20,7 +20,7 @@ from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.services import analyticsservice
-from helium.common.utils import commonutils, metricutils
+from helium.common.utils import commonutils, metricutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Attachment, Category, Course, CourseGroup, Event, Homework, Material, Note, Reminder
@@ -247,7 +247,7 @@ def sweep_dangling_users(self):
         logger.info(
             f'Deleting user {user.pk}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
-        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+        taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
 
         num_purged += 1
 
@@ -739,7 +739,7 @@ def send_dormant_user_warning_email(self, user_id):
 
     except commonutils.EmailSuppressedException:
         logger.info(f'Email undeliverable for user {user_id}, queuing for deletion')
-        delete_user.apply_async(args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+        taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
         metricutils.task_stop(metrics, value=0)
 
     except Exception as e:
@@ -786,7 +786,8 @@ def process_dormant_users(self):
             if total_queued >= max_per_run:
                 logger.info(f'Reached max per run ({max_per_run}), stopping.')
                 break
-            send_dormant_user_warning_email.apply_async(
+            taskutils.safe_apply_async(
+                send_dormant_user_warning_email,
                 args=(user.pk,),
                 countdown=get_stagger_delay(total_queued),
                 priority=settings.CELERY_PRIORITY_LOW
@@ -805,7 +806,8 @@ def process_dormant_users(self):
                 if total_queued >= max_per_run:
                     logger.info(f'Reached max per run ({max_per_run}), stopping.')
                     break
-                delete_user.apply_async(
+                taskutils.safe_apply_async(
+                    delete_user,
                     args=(user.pk,),
                     countdown=get_stagger_delay(total_queued),
                     priority=settings.CELERY_PRIORITY_LOW

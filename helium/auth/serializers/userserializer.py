@@ -17,6 +17,7 @@ from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
     is_admin_allowed_email, is_staff_email
 from helium.common import enums
+from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.email_changing = new_email
                 instance.verification_code = generate_verification_code()
 
-                send_verification_email.apply_async(
+                taskutils.safe_apply_async(send_verification_email,
                     args=(instance.email_changing, instance.username, instance.verification_code),
                     kwargs={'clear_suppression': True},
                     priority=settings.CELERY_PRIORITY_HIGH,
@@ -163,7 +164,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance.set_password(password)
         instance.save()
 
-        send_verification_email.apply_async(
+        taskutils.safe_apply_async(send_verification_email,
             args=(instance.email, instance.username, instance.verification_code),
             kwargs={'clear_suppression': True},
             priority=settings.CELERY_PRIORITY_HIGH,

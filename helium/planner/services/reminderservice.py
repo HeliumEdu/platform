@@ -10,7 +10,7 @@ from django.utils import timezone
 from helium.common import enums
 from helium.common.tasks import send_text, send_pushes
 from helium.common.utils.commonutils import format_short_time
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 from helium.planner.models import Reminder
 from helium.planner.serializers.reminderserializer import ReminderExtendedSerializer
 
@@ -241,7 +241,7 @@ def process_email_reminders():
 
                     metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
 
-                    send_email_reminder.apply_async(
+                    taskutils.safe_apply_async(send_email_reminder,
                         args=(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type),
                         countdown=queued_count / rate_per_sec,
                         priority=settings.CELERY_PRIORITY_HIGH,
@@ -296,7 +296,7 @@ def process_text_reminders():
 
                     metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.text'])
 
-                    send_text.apply_async(
+                    taskutils.safe_apply_async(send_text,
                         args=(user.profile.phone, message),
                         priority=settings.CELERY_PRIORITY_HIGH,
                     )
@@ -344,7 +344,7 @@ def process_push_reminders(mark_sent_only=False):
                         serializer = ReminderExtendedSerializer(reminder)
                         reminder_data = serializer.data
 
-                        send_pushes.apply_async(
+                        taskutils.safe_apply_async(send_pushes,
                             args=(push_tokens, user.username, subject, _push_body(reminder), reminder_data),
                             priority=settings.CELERY_PRIORITY_HIGH,
                         )

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib import admin as django_admin
 
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter
+from helium.common.utils import taskutils
 from helium.feed.models import ExternalCalendar
 from helium.feed.tasks import reindex_feeds
 
@@ -13,7 +14,7 @@ from helium.feed.tasks import reindex_feeds
 def force_reindex_calendars(modeladmin, request, queryset):
     queryset.update(etag=None, last_modified_header=None)
     calendar_ids = list(queryset.values_list('id', flat=True))
-    reindex_feeds.apply_async(
+    taskutils.safe_apply_async(reindex_feeds,
         kwargs={'calendar_ids': calendar_ids},
         priority=settings.CELERY_PRIORITY_LOW,
     )
