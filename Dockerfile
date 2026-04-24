@@ -93,6 +93,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/venv/bin:$PATH"
 ENV TZ=UTC
 ENV SSL_CERT_FILE=/venv/lib/python3.12/site-packages/certifi/cacert.pem
+ENV CELERY_CONCURRENCY=2
 
 WORKDIR /app
 
