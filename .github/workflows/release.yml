@@ -295,10 +295,10 @@ jobs:
           fi
 
   build-and-publish:
-    name: Build and Publish Containers
+    name: Build and Publish AMD64 Containers
     needs: [merge-release-branch, bump-version]
     if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       FORCE_COLOR: 1
@@ -315,11 +315,6 @@ jobs:
         with:
           ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
 
-      - name: Set up Python "3.12"
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -330,7 +325,7 @@ jobs:
       - name: Build and smoke test containers
         run: make docker-env build-docker smoke-test-docker
 
-      - name: Build and publish containers
+      - name: Publish containers
         run: make publish
 
       - name: Dump Docker logs on failure
