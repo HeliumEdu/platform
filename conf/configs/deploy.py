@@ -45,7 +45,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 if 'celery' not in sys.argv[0]:
     try:
@@ -198,6 +198,7 @@ CACHES = {
         'LOCATION': config('PLATFORM_REDIS_HOST'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,
         }
     },
 }
@@ -269,5 +270,6 @@ CELERY_BROKER_URL = config('PLATFORM_REDIS_HOST')
 CELERY_TASK_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_TIMEOUT', 60)
 CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = config('PLATFORM_REDIS_TASK_REINDEX_FEEDS_TIMEOUT', 60 * 5)
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BEAT_SCHEDULER = 'redbeat.RedBeatScheduler'
 REDBEAT_REDIS_URL = CELERY_BROKER_URL
