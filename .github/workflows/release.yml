@@ -330,7 +330,7 @@ jobs:
       - name: Build and smoke test containers
         run: make docker-env build-docker smoke-test-docker
 
-      - name: Build and publish containers
+      - name: Publish containers
         run: make publish
 
       - name: Dump Docker logs on failure
