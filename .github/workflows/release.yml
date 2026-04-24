@@ -327,6 +327,9 @@ jobs:
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
 
+      - name: Build and smoke test containers
+        run: make docker-env build-docker smoke-test-docker
+
       - name: Build and publish containers
         run: make publish
 
