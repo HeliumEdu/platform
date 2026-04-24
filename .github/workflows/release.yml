@@ -327,7 +327,48 @@ jobs:
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
 
+      - name: Build and smoke test containers
+        run: make docker-env build-docker smoke-test-docker
+
       - name: Build and publish containers
+        run: make publish
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+
+  build-and-publish-arm64:
+    name: Build and Publish ARM64 Containers
+    needs: [merge-release-branch, bump-version]
+    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
+    runs-on: ubuntu-24.04-arm
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      PLATFORM: arm64
+      TAG_VERSION: ${{ needs['bump-version'].outputs.version }}
+      ENVIRONMENT: prod
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to AWS ECR Public
+        run: |
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
+
+      - name: Build and smoke test containers
+        run: make docker-env build-docker smoke-test-docker
+
+      - name: Publish containers
         run: make publish
 
       - name: Dump Docker logs on failure
@@ -336,8 +377,8 @@ jobs:
 
   create-release-tag:
     name: Create Release Tag
-    needs: [merge-release-branch, bump-version, build-and-publish]
-    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped')"
+    needs: [merge-release-branch, bump-version, build-and-publish, build-and-publish-arm64]
+    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped') && (needs['build-and-publish-arm64'].result == 'success' || needs['build-and-publish-arm64'].result == 'skipped')"
     runs-on: ubuntu-latest
 
     steps:
