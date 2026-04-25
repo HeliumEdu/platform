@@ -72,6 +72,9 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: helium-platform-release
+
 jobs:
   create-release-branch:
     name: Create Release Branch
