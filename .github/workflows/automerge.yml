@@ -7,6 +7,9 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: helium-platform-automerge-${{ github.event.pull_request.number }}
+
 jobs:
   automerge:
     name: Auto-Merge Dependabot PRs
