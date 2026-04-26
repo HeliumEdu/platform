@@ -24,7 +24,7 @@ class TestCaseAnalyticsService(TestCase):
 
         # WHEN
         analyticsservice.send_event(user, 'helium_onboarding_complete',
-                                    params={'onboarding_duration_seconds': 42})
+                                    user_properties={'onboarding_duration_seconds': 42})
 
         # THEN
         mock_urlopen.assert_called_once()
@@ -35,7 +35,9 @@ class TestCaseAnalyticsService(TestCase):
         self.assertEqual(payload['client_id'], f'server-{user.pk}')
         self.assertEqual(payload['user_id'], str(user.pk))
         self.assertEqual(payload['events'][0]['name'], 'helium_onboarding_complete')
-        self.assertEqual(payload['events'][0]['params'], {'onboarding_duration_seconds': 42})
+        self.assertEqual(payload['events'][0]['params'], {})
+        self.assertEqual(payload['user_properties'],
+                         {'onboarding_duration_seconds': {'value': 42}})
         mock_increment.assert_called_once_with('action.analytics.sent')
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
