@@ -404,8 +404,10 @@ def delete_example_schedule(user_id):
         user.onboarding_completed_at = timezone.now()
         user.save(update_fields=['onboarding_completed_at'])
 
+        # Don't report this metric for users created before this metric was introduced, otherwise the huge values it
+        # could report for them would throw off data integrity
         onboarding_tracking_since = datetime(2026, 4, 21, tzinfo=timezone.utc)
-        if user.created_at >= onboarding_tracking_since:
+        if user.created_at > onboarding_tracking_since:
             duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 
             taskutils.safe_apply_async(send_analytics_event,
