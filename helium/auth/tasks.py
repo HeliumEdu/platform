@@ -67,7 +67,7 @@ def send_verification_email(self, email, username, verification_code, clear_supp
 
 
 @app.task(bind=True)
-def send_analytics_event(self, user_id, name, params=None):
+def send_analytics_event(self, user_id, name, params=None, user_properties=None):
     """
     Asynchronously emit a GA4 event via the Measurement Protocol for the given user. Best-effort:
     swallows failures downstream so analytics delivery never blocks the triggering request.
@@ -84,7 +84,7 @@ def send_analytics_event(self, user_id, name, params=None):
         metricutils.task_stop(metrics, value=0)
         return
 
-    analyticsservice.send_event(user, name, params=params)
+    analyticsservice.send_event(user, name, params=params, user_properties=user_properties)
 
     metricutils.task_stop(metrics)
 

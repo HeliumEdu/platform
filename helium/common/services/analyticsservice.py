@@ -31,7 +31,7 @@ def _should_emit(user):
     return True
 
 
-def send_event(user, name, params=None):
+def send_event(user, name, params=None, user_properties=None):
     """
     Emit a GA4 event via the Measurement Protocol v2 for the given user. Best-effort: logs and
     swallows failures so callers never block on analytics delivery.
@@ -41,6 +41,7 @@ def send_event(user, name, params=None):
                  without a real App Instance ID.
     :param name: The GA4 event name (e.g. `helium_onboarding_complete`).
     :param params: Optional dict of event parameters.
+    :param user_properties: Optional dict of GA4 user properties to set on the user profile.
     """
     if not _should_emit(user):
         return
@@ -53,6 +54,9 @@ def send_event(user, name, params=None):
             'params': params or {},
         }],
     }
+
+    if user_properties:
+        payload['user_properties'] = {k: {'value': v} for k, v in user_properties.items()}
 
     query = urllib.parse.urlencode({
         'measurement_id': settings.GA4_MEASUREMENT_ID,
