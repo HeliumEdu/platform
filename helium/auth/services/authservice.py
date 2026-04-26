@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -404,12 +404,14 @@ def delete_example_schedule(user_id):
         user.onboarding_completed_at = timezone.now()
         user.save(update_fields=['onboarding_completed_at'])
 
-        duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
+        onboarding_tracking_since = datetime(2026, 4, 21, tzinfo=timezone.utc)
+        if user.created_at >= onboarding_tracking_since:
+            duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 
-        taskutils.safe_apply_async(send_analytics_event,
-            args=(user.pk, 'helium_onboarding_complete'),
-            kwargs={'params': {'onboarding_duration_seconds': duration_seconds}},
-            priority=settings.CELERY_PRIORITY_LOW,
-        )
+            taskutils.safe_apply_async(send_analytics_event,
+                args=(user.pk, 'helium_onboarding_complete'),
+                kwargs={'params': {'onboarding_duration_seconds': duration_seconds}},
+                priority=settings.CELERY_PRIORITY_LOW,
+            )
 
     metricutils.task_stop(metrics, user=user)
