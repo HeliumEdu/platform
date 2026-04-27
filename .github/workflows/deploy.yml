@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      version_number: ${{ steps.version.outputs.version_number }}
+      version_number: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Generate GitHub App token
@@ -77,31 +77,11 @@ jobs:
 
       - name: Determine version to deploy
         id: version
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          if [ "${{ inputs.version_type }}" = "latest" ]; then
-            VERSION=$(gh api repos/HeliumEdu/platform/tags --jq '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].name')
-
-            if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-              echo "Error: No version tags found in HeliumEdu/platform"
-              exit 1
-            fi
-
-            echo "Using latest version: ${VERSION}"
-          else
-            VERSION="${{ inputs.specific_version }}"
-
-            if [ -z "$VERSION" ]; then
-              echo "Error: specific_version is required when version_type is 'specific'"
-              exit 1
-            fi
-
-            echo "Using specific version: ${VERSION}"
-          fi
-
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "version_number=${VERSION}" >> $GITHUB_OUTPUT
+        uses: HeliumEdu/.github/actions/determine-version@main
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repo: platform
+          specific-version: ${{ inputs.version_type != 'latest' && inputs.specific_version || '' }}
 
   test-release:
     name: Test Release
