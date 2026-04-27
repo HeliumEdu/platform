@@ -20,7 +20,7 @@ from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
-from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, is_staff_user
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
 from helium.feed.models import ExternalCalendar
@@ -410,8 +410,7 @@ def delete_example_schedule(user_id):
         if user.created_at > onboarding_tracking_since:
             duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 
-            metricutils.gauge('onboarding.duration', duration_seconds,
-                              extra_tags=[f'staff:{str(is_staff_user(user)).lower()}'])
+            metricutils.gauge('onboarding.duration', duration_seconds, user=user)
 
             taskutils.safe_apply_async(send_analytics_event,
                 args=(user.pk, 'helium_onboarding_complete'),
