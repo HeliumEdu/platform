@@ -80,10 +80,8 @@ jobs:
     uses: HeliumEdu/.github/.github/workflows/release-prereq.yml@main
     with:
       bump_type: ${{ inputs.bump_type }}
-      bump_command: |
-        sed -i "s/^__version__ = \".*\"/__version__ = \"${SEED_VERSION}\"/" conf/configs/common.py
-      read_version_command: |
-        grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/'
+      version_format: python
+      version_file: conf/configs/common.py
       repo_slug: HeliumEdu/platform
     secrets:
       bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
