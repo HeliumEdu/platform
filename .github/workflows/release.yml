@@ -67,7 +67,7 @@ on:
     outputs:
       version:
         description: "Released version"
-        value: ${{ jobs.bump-version.outputs.version }}
+        value: ${{ jobs.prereq.outputs.version }}
 
 permissions:
   contents: write
@@ -76,41 +76,22 @@ concurrency:
   group: helium-platform-release
 
 jobs:
-  create-release-branch:
-    name: Create Release Branch
-    runs-on: ubuntu-latest
-    outputs:
-      branch_name: ${{ steps.create_branch.outputs.branch_name }}
-      base_sha: ${{ steps.create_branch.outputs.base_sha }}
-
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ github.sha }}
-
-      - name: Create and push release branch
-        id: create_branch
-        run: |
-          BRANCH_NAME="release/${{ github.run_id }}-${{ github.run_attempt }}"
-          BASE_SHA="$(git rev-parse HEAD)"
-
-          git push origin "HEAD:refs/heads/${BRANCH_NAME}"
-
-          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
-          echo "base_sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+  prereq:
+    uses: HeliumEdu/.github/.github/workflows/release-prereq.yml@main
+    with:
+      bump_type: ${{ inputs.bump_type }}
+      bump_command: |
+        sed -i "s/^__version__ = \".*\"/__version__ = \"${SEED_VERSION}\"/" conf/configs/common.py
+      read_version_command: |
+        grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/'
+      repo_slug: HeliumEdu/platform
+    secrets:
+      bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
+      bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
 
   test:
     name: Test
-    needs: [create-release-branch]
+    needs: [prereq]
     runs-on: ubuntu-latest
 
     env:
@@ -121,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs['create-release-branch'].outputs.base_sha }}
+          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
 
       - name: Set up Python "3.12"
         uses: actions/setup-python@v6
@@ -133,7 +114,7 @@ jobs:
 
   integration-test:
     name: Integration Test
-    needs: [create-release-branch]
+    needs: [prereq]
     if: ${{ inputs.run_integration_tests == true || inputs.run_integration_tests == 'true' }}
     uses: ./.github/workflows/integration.yml
     with:
@@ -141,166 +122,10 @@ jobs:
       caller: release
     secrets: inherit
 
-  bump-version:
-    name: Bump Version
-    needs: [create-release-branch, test, integration-test]
-    if: "!cancelled() && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get_version.outputs.version }}
-      commit_sha: ${{ steps.get_commit.outputs.commit_sha }}
-
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ needs['create-release-branch'].outputs.branch_name }}
-
-      - name: Set up Python "3.12"
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Bump version
-        run: |
-          CURRENT_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
-          echo "Current version: $CURRENT_VERSION"
-
-          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-          MAJOR="${VERSION_PARTS[0]}"
-          MINOR="${VERSION_PARTS[1]}"
-          PATCH="${VERSION_PARTS[2]}"
-
-          case "${{ inputs.bump_type }}" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
-
-          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "New version: $NEW_VERSION"
-
-          sed -i "s/__version__ = \".*\"/__version__ = \"${NEW_VERSION}\"/" conf/configs/common.py
-
-      - name: Get GitHub App bot user ID
-        id: get-bot-user-id
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-
-      - name: Commit version bump
-        run: |
-          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-          git add conf/configs/common.py
-
-          NEW_VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
-          git commit -m "[skip build] Bump version to ${NEW_VERSION}"
-
-          git push origin "HEAD:refs/heads/${{ needs['create-release-branch'].outputs.branch_name }}"
-
-      - name: Get version and commit SHA
-        id: get_version
-        run: |
-          VERSION=$(grep "^__version__ = " conf/configs/common.py | sed 's/__version__ = "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Get commit SHA
-        id: get_commit
-        run: |
-          COMMIT_SHA=$(git rev-parse HEAD)
-          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "Commit SHA: $COMMIT_SHA"
-
-  merge-release-branch:
-    name: Merge Release Branch to Main
-    needs: [create-release-branch, bump-version]
-    if: "!cancelled() && needs['create-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
-    runs-on: ubuntu-latest
-    outputs:
-      merged_commit_sha: ${{ steps.merge.outputs.merged_commit_sha }}
-
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          ref: main
-          fetch-depth: 0
-
-      - name: Get GitHub App bot user ID
-        id: get-bot-user-id
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-
-      - name: Merge release branch
-        id: merge
-        env:
-          RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
-        run: |
-          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-          git fetch origin "$RELEASE_BRANCH" main
-          git checkout -B main origin/main
-          git merge --no-ff -m "[skip build] Merge release branch ${RELEASE_BRANCH} into main" "origin/$RELEASE_BRANCH"
-          git push origin main
-
-          echo "merged_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Cleanup release branch
-        if: success()
-        env:
-          RELEASE_BRANCH: ${{ needs['create-release-branch'].outputs.branch_name }}
-        run: |
-          git push origin --delete "$RELEASE_BRANCH" || true
-
-      - name: Merge main to develop
-        if: success()
-        run: |
-          git fetch origin develop
-          git checkout -B develop origin/develop
-          if git merge --no-ff -m "[skip build] Merge main into develop" origin/main; then
-            git push origin develop
-            echo "Successfully merged main to develop"
-          else
-            echo "::warning::Merge conflict detected when merging main to develop. Manual merge required."
-            git merge --abort
-          fi
-
   build-and-publish:
     name: Build and Publish AMD64 Containers
-    needs: [merge-release-branch, bump-version]
-    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
+    needs: [prereq, test, integration-test]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
     runs-on: ubuntu-24.04
 
     env:
@@ -310,13 +135,13 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PLATFORM: amd64
-      TAG_VERSION: ${{ needs['bump-version'].outputs.version }}
+      TAG_VERSION: ${{ needs.prereq.outputs.version }}
       ENVIRONMENT: prod
 
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
+          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -337,8 +162,8 @@ jobs:
 
   build-and-publish-arm64:
     name: Build and Publish ARM64 Containers
-    needs: [merge-release-branch, bump-version]
-    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success'"
+    needs: [prereq, test, integration-test]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
     runs-on: ubuntu-24.04-arm
 
     env:
@@ -348,13 +173,13 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PLATFORM: arm64
-      TAG_VERSION: ${{ needs['bump-version'].outputs.version }}
+      TAG_VERSION: ${{ needs.prereq.outputs.version }}
       ENVIRONMENT: prod
 
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
+          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -375,8 +200,8 @@ jobs:
 
   create-release-tag:
     name: Create Release Tag
-    needs: [merge-release-branch, bump-version, build-and-publish, build-and-publish-arm64]
-    if: "!cancelled() && needs['merge-release-branch'].result == 'success' && needs['bump-version'].result == 'success' && (needs['build-and-publish'].result == 'success' || needs['build-and-publish'].result == 'skipped') && (needs['build-and-publish-arm64'].result == 'success' || needs['build-and-publish-arm64'].result == 'skipped')"
+    needs: [prereq, build-and-publish, build-and-publish-arm64]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs['build-and-publish'].result == 'success' && needs['build-and-publish-arm64'].result == 'success'"
     runs-on: ubuntu-latest
 
     steps:
@@ -391,11 +216,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
           fetch-depth: 0
-
-      - name: Display release info
-        run: |
-          echo "### Release ${{ needs['bump-version'].outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Get GitHub App bot user ID
         id: get-bot-user-id
@@ -406,16 +228,12 @@ jobs:
 
       - name: Create and push tag
         env:
-          VERSION: ${{ needs['bump-version'].outputs.version }}
-          COMMIT_SHA: ${{ needs['merge-release-branch'].outputs.merged_commit_sha }}
+          VERSION: ${{ needs.prereq.outputs.version }}
+          COMMIT_SHA: ${{ needs.prereq.outputs.squash_commit_sha }}
         run: |
           git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
           git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
 
-          # Fetch latest changes to ensure we have the version bump commit
-          git fetch origin main
-
-          # Create version tag on the specific commit
           if git rev-parse "$VERSION" >/dev/null 2>&1; then
             echo "Tag $VERSION already exists, skipping"
           else
@@ -427,7 +245,7 @@ jobs:
       - name: Create Sentry release
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ needs['bump-version'].outputs.version }}
+          VERSION: ${{ needs.prereq.outputs.version }}
         run: |
           pip install sentry-cli
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases new "$VERSION"
@@ -436,8 +254,8 @@ jobs:
 
   deploy:
     name: Trigger Deploy Workflow
-    needs: [create-release-tag, bump-version]
-    if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs['create-release-tag'].result == 'success' && needs['bump-version'].result == 'success'"
+    needs: [prereq, create-release-tag]
+    if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs.prereq.result == 'success' && needs['create-release-tag'].result == 'success'"
     runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub App token
@@ -451,7 +269,7 @@ jobs:
       - name: Trigger deploy workflow
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          VERSION: ${{ needs['bump-version'].outputs.version }}
+          VERSION: ${{ needs.prereq.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
           RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
         run: |
@@ -464,7 +282,7 @@ jobs:
 
       - name: Deployment trigger summary
         env:
-          VERSION: ${{ needs['bump-version'].outputs.version }}
+          VERSION: ${{ needs.prereq.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
           RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
         run: |
@@ -473,3 +291,11 @@ jobs:
           echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
           echo "- **Run Legacy Cluster Tests**: $RUN_LEGACY_CLUSTER_TESTS" >> $GITHUB_STEP_SUMMARY
+
+  cleanup:
+    needs: [prereq, deploy]
+    if: always() && needs.prereq.result == 'success'
+    uses: HeliumEdu/.github/.github/workflows/release-cleanup.yml@main
+    secrets:
+      bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
+      bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
