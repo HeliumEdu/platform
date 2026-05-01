@@ -2,7 +2,7 @@ name: platform
 
 services:
   db:
-    image: mysql:8.0
+    image: mysql:9.7.0
     environment:
       MYSQL_ROOT_PASSWORD: "password"
       MYSQL_DATABASE: "platform_dev-local"
@@ -19,7 +19,7 @@ services:
     ports:
       - 6379:6379
   storage:
-    image: localstack/localstack:4.13.1
+    image: localstack/localstack:2026.04.0
     environment:
       ENVIRONMENT: "dev-local"
     ports:
