@@ -568,11 +568,13 @@ class TestCaseReminderService(TestCase):
         new_class_start = new_reminder.start_of_range + offset_delta
         self.assertGreater(new_class_start, fired_class_start)
 
-    def test_create_next_repeating_reminder_targets_next_class_not_current(self):
+    @mock.patch('django.utils.timezone.now')
+    def test_create_next_repeating_reminder_targets_next_class_not_current(self, mock_now):
         # GIVEN: a course reminder that fired for Monday's class (10:00 AM UTC, offset 30 min).
         # The fired reminder's start_of_range = 09:30 Monday; class_start = 10:00 Monday.
         # create_next_repeating_reminder must use after_datetime=class_start so it skips Monday
         # and targets Wednesday, regardless of when exactly the function is called.
+        mock_now.return_value = datetime.datetime(2026, 3, 30, 10, 0, 0, tzinfo=pytz.utc)
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'UTC'
         user.settings.save()
