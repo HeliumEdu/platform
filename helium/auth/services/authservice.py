@@ -48,6 +48,7 @@ def forgot_password(request):
 
         # Only reset password for users with usable passwords (not OAuth-only users)
         if user.has_usable_password():
+            # Generate a random password for the user
             password = get_random_string(
                 length=10,
                 allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',

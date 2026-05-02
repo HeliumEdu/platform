@@ -11,8 +11,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from django.db.models import Count, OuterRef, Subquery
-from django.utils.crypto import get_random_string
 from django.db.models.functions import Coalesce
+from django.utils.crypto import get_random_string
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
