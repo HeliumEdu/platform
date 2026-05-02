@@ -6,7 +6,7 @@ from datetime import timedelta
 from celery import states
 from django.utils import timezone
 from django_celery_results.models import TaskResult
-from health_check.backends import BaseHealthCheckBackend
+from health_check.backends import HealthCheck
 from health_check.cache.backends import CacheBackend
 from health_check.contrib.celery.backends import CeleryHealthCheck
 from health_check.contrib.s3boto3_storage.backends import S3Boto3StorageHealthCheck
@@ -34,7 +34,7 @@ class IdentifiedCeleryHealthCheck(CeleryHealthCheck):
         return "TaskProcessing"
 
 
-class IdentifiedCeleryBeatHealthCheck(BaseHealthCheckBackend):
+class IdentifiedCeleryBeatHealthCheck(HealthCheck):
     def check_status(self):
         try:
             time_threshold = timezone.now() - timedelta(minutes=3)

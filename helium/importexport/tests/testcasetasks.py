@@ -70,13 +70,13 @@ class TestCaseImportExportTasks(APITestCase):
         # hw_post_dst is on 2026-02-09 → delta=7 → will land on 2026-03-09 (CDT)
         hw_pre_dst = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 2, 2, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 2, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
         hw_post_dst = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
         # A single example-schedule Event is required by _adjust_schedule_relative_to
@@ -85,8 +85,8 @@ class TestCaseImportExportTasks(APITestCase):
             title='Test Event',
             all_day=False,
             show_end_time=False,
-            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
             priority=50,
             example_schedule=True,
             user=user,
@@ -95,7 +95,7 @@ class TestCaseImportExportTasks(APITestCase):
         # Mock now() to 2026-04-06 12:00 UTC.
         # adjust_month=-1  →  adjusted_month = March 2026
         # March 1, 2026 is a Sunday (weekday=6), so first_monday = March 2, 2026.
-        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=timezone.utc)
+        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=datetime.timezone.utc)
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
@@ -108,21 +108,21 @@ class TestCaseImportExportTasks(APITestCase):
         # 2026-03-02 is pre-DST (CST = UTC-6): 11 AM local = 17:00 UTC
         self.assertEqual(
             hw_pre_dst.start,
-            datetime.datetime(2026, 3, 2, 17, 0, 0, tzinfo=timezone.utc),
+            datetime.datetime(2026, 3, 2, 17, 0, 0, tzinfo=datetime.timezone.utc),
         )
         self.assertEqual(
             hw_pre_dst.end,
-            datetime.datetime(2026, 3, 2, 17, 30, 0, tzinfo=timezone.utc),
+            datetime.datetime(2026, 3, 2, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
         # 2026-03-09 is post-DST (CDT = UTC-5): 11 AM local = 16:00 UTC (NOT 17:00)
         self.assertEqual(
             hw_post_dst.start,
-            datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=timezone.utc),
+            datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc),
         )
         self.assertEqual(
             hw_post_dst.end,
-            datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=timezone.utc),
+            datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
     def test_adjust_schedule_shifts_all_items_to_target_month(self):
@@ -155,32 +155,32 @@ class TestCaseImportExportTasks(APITestCase):
         # Week 1: Feb 2 (delta=0)
         hw_week1 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 2, 2, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 2, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
         # Week 2: Feb 9 (delta=7)
         hw_week2 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
         # Week 3: Feb 16 (delta=14)
         hw_week3 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 2, 16, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 16, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 16, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 16, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
         # Week 5: Mar 2 (delta=28) - already in March but will be shifted
         hw_week5 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 3, 2, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 3, 2, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 3, 2, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 3, 2, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
         # Week 6: Mar 9 (delta=35) - post-DST
         hw_week6 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=timezone.utc),  # Already DST-adjusted (11 AM CDT)
-            end=datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc),  # Already DST-adjusted (11 AM CDT)
+            end=datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
         # Required event for _adjust_schedule_relative_to
@@ -188,8 +188,8 @@ class TestCaseImportExportTasks(APITestCase):
             title='Test Event',
             all_day=False,
             show_end_time=False,
-            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=timezone.utc),
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
             priority=50,
             example_schedule=True,
             user=user,
@@ -197,7 +197,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # Mock now() to 2026-04-06 (April), adjust_month=-1 → target March 2026
         # first_monday = March 2, 2026
-        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=timezone.utc)
+        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=datetime.timezone.utc)
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):

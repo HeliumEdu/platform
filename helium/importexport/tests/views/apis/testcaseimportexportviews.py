@@ -6,8 +6,8 @@ import json
 import logging
 import os
 from unittest import mock
+from zoneinfo import ZoneInfo
 
-import pytz
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -366,7 +366,7 @@ class TestCaseImportExportViews(APITestCase):
                                     content_type='application/json')
 
         # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
-        user_tz = pytz.timezone('America/Chicago')
+        user_tz = ZoneInfo('America/Chicago')
         now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
         adjusted_year = now.year
@@ -441,7 +441,7 @@ class TestCaseImportExportViews(APITestCase):
         response = self.client.post(reverse('importexport_import_exampleschedule'))
 
         # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
-        user_tz = pytz.timezone('America/Los_Angeles')
+        user_tz = ZoneInfo('America/Los_Angeles')
         now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
         adjusted_year = now.year

@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import datetime
 
-import pytz
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
@@ -21,16 +20,16 @@ class TestCaseGradingService(TestCase):
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='0/100')
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='200/100')
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='400/100')
 
         # THEN
@@ -50,16 +49,16 @@ class TestCaseGradingService(TestCase):
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='400/100')
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='200/100')
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='0/100')
 
         # THEN
@@ -492,47 +491,47 @@ class TestCaseGradingService(TestCase):
         category2_2 = categoryhelper.given_category_exists(course2, title='Test Category 2', weight=70)
         homework1_1_1 = homeworkhelper.given_homework_exists(course1, category=category1_1, completed=True,
                                                              start=datetime.datetime(2017, 4, 8, 20, 0,
-                                                                                     tzinfo=pytz.utc),
-                                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
+                                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                                              current_grade='25/60')
         homework2_1_2 = homeworkhelper.given_homework_exists(course1, category=category1_2, completed=True,
                                                              start=datetime.datetime(2017, 4, 9, 20, 0,
-                                                                                     tzinfo=pytz.utc),
-                                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
+                                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                                              current_grade='75/80')
         homework3_1_3 = homeworkhelper.given_homework_exists(course1, category=category1_3, completed=True,
                                                              start=datetime.datetime(2017, 4, 10, 20, 0,
-                                                                                     tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
                                                              end=datetime.datetime(2017, 4, 10, 20, 30,
-                                                                                   tzinfo=pytz.utc),
+                                                                                   tzinfo=datetime.timezone.utc),
                                                              current_grade='50/120')
         homework4_1_1 = homeworkhelper.given_homework_exists(course1, category=category1_1, completed=True,
                                                              start=datetime.datetime(2017, 4, 11, 20, 0,
-                                                                                     tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
                                                              end=datetime.datetime(2017, 4, 11, 20, 30,
-                                                                                   tzinfo=pytz.utc),
+                                                                                   tzinfo=datetime.timezone.utc),
                                                              current_grade='60/80')
         homework5_1_3 = homeworkhelper.given_homework_exists(course1, category=category1_3, completed=True,
                                                              start=datetime.datetime(2017, 4, 11, 20, 0,
-                                                                                     tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
                                                              end=datetime.datetime(2017, 4, 11, 20, 30,
-                                                                                   tzinfo=pytz.utc),
+                                                                                   tzinfo=datetime.timezone.utc),
                                                              current_grade='110/130')
         homework6_2_1 = homeworkhelper.given_homework_exists(course2, category=category2_1, completed=True,
                                                              start=datetime.datetime(2017, 4, 8, 21, 0,
-                                                                                     tzinfo=pytz.utc),
-                                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
+                                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=datetime.timezone.utc),
                                                              current_grade='25/60')
         homework7_2_2 = homeworkhelper.given_homework_exists(course2, category=category2_2, completed=True,
                                                              start=datetime.datetime(2017, 4, 9, 17, 0,
-                                                                                     tzinfo=pytz.utc),
-                                                             end=datetime.datetime(2017, 4, 9, 17, 30, tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
+                                                             end=datetime.datetime(2017, 4, 9, 17, 30, tzinfo=datetime.timezone.utc),
                                                              current_grade='75/80')
         homework8_2_1 = homeworkhelper.given_homework_exists(course2, category=category2_1, completed=True,
                                                              start=datetime.datetime(2017, 4, 10, 19, 0,
-                                                                                     tzinfo=pytz.utc),
+                                                                                     tzinfo=datetime.timezone.utc),
                                                              end=datetime.datetime(2017, 4, 10, 19, 30,
-                                                                                   tzinfo=pytz.utc),
+                                                                                   tzinfo=datetime.timezone.utc),
                                                              current_grade='50/120')
         course_group.refresh_from_db()
 
@@ -578,29 +577,29 @@ class TestCaseGradingService(TestCase):
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='25/100')
         homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
-                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='75/100')
         homework3 = homeworkhelper.given_homework_exists(course, category=category3, completed=True,
-                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='50/100')
         homework4 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='60/80')
         homework5 = homeworkhelper.given_homework_exists(course, category=category3,
-                                                         start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=datetime.timezone.utc),
                                                          completed=True, current_grade='4/5')
         # Incomplete homework are not graded
         homeworkhelper.given_homework_exists(course, category=category1,
-                                             start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='80/100')
         course.refresh_from_db()
 
@@ -637,16 +636,16 @@ class TestCaseGradingService(TestCase):
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='80/100')
         homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
-                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='90/100')
         homework3 = homeworkhelper.given_homework_exists(course, category=category3, completed=True,
-                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='72/100')
         course.refresh_from_db()
 
@@ -677,29 +676,29 @@ class TestCaseGradingService(TestCase):
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='25/100')
         homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
-                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='75/100')
         homework3 = homeworkhelper.given_homework_exists(course, category=category3, completed=True,
-                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='50/100')
         homework4 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='60/80')
         homework5 = homeworkhelper.given_homework_exists(course, category=category3,
-                                                         start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=datetime.timezone.utc),
                                                          completed=True, current_grade='4/5')
         # Incomplete homework are not graded
         homeworkhelper.given_homework_exists(course, category=category1,
-                                             start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 21, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 21, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='80/100')
         course.refresh_from_db()
 
@@ -735,12 +734,12 @@ class TestCaseGradingService(TestCase):
         category1 = categoryhelper.given_category_exists(course, weight=30)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='80/100')
         homework2 = homeworkhelper.given_homework_exists(course, category=category2, completed=True,
-                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                                         start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                                         end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                                          current_grade='90/100')
         course.refresh_from_db()
 
@@ -768,24 +767,24 @@ class TestCaseGradingService(TestCase):
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='25/60')
         homeworkhelper.given_homework_exists(course, category=category2, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='75/80')
         homeworkhelper.given_homework_exists(course, category=category3, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='50/120')
         homeworkhelper.given_homework_exists(course, category=category1, completed=True,
-                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='60/80')
         homeworkhelper.given_homework_exists(course, category=category3, completed=True,
-                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='110/130')
         course_group.refresh_from_db()
         course.refresh_from_db()
@@ -839,36 +838,36 @@ class TestCaseGradingService(TestCase):
         category2_1 = categoryhelper.given_category_exists(course2, weight=30)
         category2_2 = categoryhelper.given_category_exists(course2, title='Test Category 2', weight=70)
         homeworkhelper.given_homework_exists(course1, category=category1_1, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='25/60')
         homeworkhelper.given_homework_exists(course1, category=category1_2, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='75/80')
         homeworkhelper.given_homework_exists(course1, category=category1_3, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='50/120')
         homeworkhelper.given_homework_exists(course1, category=category1_1, completed=True,
-                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='60/80')
         homeworkhelper.given_homework_exists(course1, category=category1_3, completed=True,
-                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='110/130')
         homeworkhelper.given_homework_exists(course2, category=category2_1, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='25/60')
         homeworkhelper.given_homework_exists(course2, category=category2_2, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='75/80')
         homeworkhelper.given_homework_exists(course2, category=category2_1, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='50/120')
         course_group.refresh_from_db()
         course1.refresh_from_db()
@@ -912,24 +911,24 @@ class TestCaseGradingService(TestCase):
         category2 = categoryhelper.given_category_exists(course1, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course2, title='Test Category 3', weight=20)
         homeworkhelper.given_homework_exists(course1, category=category1, completed=True,
-                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 8, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='25/100')
         homeworkhelper.given_homework_exists(course1, category=category2, completed=True,
-                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 9, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 9, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='75/100')
         homeworkhelper.given_homework_exists(course2, category=category3, completed=True,
-                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 10, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 10, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='50/100')
         homeworkhelper.given_homework_exists(course1, category=category1, completed=True,
-                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 11, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 11, 20, 30, tzinfo=datetime.timezone.utc),
                                              current_grade='60/80')
         homeworkhelper.given_homework_exists(course2, category=category3,
-                                             start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=pytz.utc),
-                                             end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=pytz.utc),
+                                             start=datetime.datetime(2017, 4, 12, 20, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 4, 12, 20, 30, tzinfo=datetime.timezone.utc),
                                              completed=True, current_grade='4/5')
         course_group.refresh_from_db()
         # Course 1: ((25 * 30) + (75 * 50) + ((60/80) * 30)) / 110 = 61.36

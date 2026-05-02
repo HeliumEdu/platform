@@ -4,8 +4,8 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
+from zoneinfo import ZoneInfo
 
-import pytz
 from dateutil import parser
 from django.conf import settings
 from django.core.cache import cache
@@ -175,7 +175,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
     exceptions = _parse_exceptions(course)
     course_user = course.get_user()
-    user_tz = pytz.timezone(course_user.settings.time_zone)
+    user_tz = ZoneInfo(course_user.settings.time_zone)
     comments = _get_comments(course)
 
     schedule_list = list(course_schedules.all())
@@ -193,10 +193,10 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                 end_time = _get_end_time_for_weekday(course_schedule,
                                                      enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()])
 
-                start = user_tz.localize(
-                    datetime.datetime.combine(day, start_time)).astimezone(pytz.utc)
-                end = user_tz.localize(
-                    datetime.datetime.combine(day, end_time)).astimezone(pytz.utc)
+                start = datetime.datetime.combine(day, start_time).replace(
+                    tzinfo=user_tz).astimezone(datetime.timezone.utc)
+                end = datetime.datetime.combine(day, end_time).replace(
+                    tzinfo=user_tz).astimezone(datetime.timezone.utc)
 
                 unique_str = str(course_user.pk) + str(
                     course_schedule.pk) + start.isoformat() + end.isoformat()

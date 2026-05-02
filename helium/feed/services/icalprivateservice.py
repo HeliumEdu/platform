@@ -3,9 +3,9 @@ __license__ = "MIT"
 
 import datetime
 import logging
+from zoneinfo import ZoneInfo
 
 import icalendar
-import pytz
 from django.conf import settings
 from django.db.models import Max, Prefetch
 from django.http import HttpResponse
@@ -184,7 +184,7 @@ def events_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's events.
     """
-    timezone.activate(pytz.timezone(user.settings.time_zone))
+    timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
         calendar = _create_calendar(user)
@@ -217,7 +217,7 @@ def homework_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's homework.
     """
-    timezone.activate(pytz.timezone(user.settings.time_zone))
+    timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
         calendar = _create_calendar(user)
@@ -260,7 +260,7 @@ def courseschedules_to_private_ical_feed(user):
     for course in Course.objects.for_user(user.pk).select_related('course_group', 'course_group__user', 'course_group__user__settings').prefetch_related('schedules'):
         events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
 
-    timezone.activate(pytz.timezone(user.settings.time_zone))
+    timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
         for event in events:

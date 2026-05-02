@@ -132,8 +132,8 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Homework.objects.count(), 1)
         homework = Homework.objects.get(pk=response.data['id'])
-        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
+        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -166,8 +166,8 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(Homework.objects.count(), 1)
         homework = Homework.objects.get(pk=response.data['id'])
 
-        start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
+        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
         self.assertEqual(homework.start.isoformat(), start.isoformat())
         self.assertEqual(homework.end.isoformat(), end.isoformat())
 
@@ -270,8 +270,8 @@ class TestCaseHomeworkViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homework.refresh_from_db()
-        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
+        self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -297,8 +297,8 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         homework.refresh_from_db()
 
-        start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
+        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
         self.assertEqual(homework.start.isoformat(), start.isoformat())
         self.assertEqual(homework.end.isoformat(), end.isoformat())
 
@@ -522,24 +522,24 @@ class TestCaseHomeworkViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course,
                                              start=datetime.datetime(2017, 5, 8, 16, 0, 0,
-                                                                     tzinfo=timezone.utc),
+                                                                     tzinfo=datetime.timezone.utc),
                                              end=datetime.datetime(2017, 5, 8, 16, 59, 0,
-                                                                   tzinfo=timezone.utc))
+                                                                   tzinfo=datetime.timezone.utc))
         homework2 = homeworkhelper.given_homework_exists(course,
                                                          start=datetime.datetime(2017, 5, 8, 17, 0, 0,
-                                                                                 tzinfo=timezone.utc),
+                                                                                 tzinfo=datetime.timezone.utc),
                                                          end=datetime.datetime(2017, 5, 8, 18, 0, 0,
-                                                                               tzinfo=timezone.utc))
+                                                                               tzinfo=datetime.timezone.utc))
         homework4 = homeworkhelper.given_homework_exists(course,
                                                          start=datetime.datetime(2017, 5, 8, 19, 30, 0,
-                                                                                 tzinfo=timezone.utc),
+                                                                                 tzinfo=datetime.timezone.utc),
                                                          end=datetime.datetime(2017, 5, 8, 20, 0, 0,
-                                                                               tzinfo=timezone.utc))
+                                                                               tzinfo=datetime.timezone.utc))
         homeworkhelper.given_homework_exists(course,
                                              start=datetime.datetime(2017, 5, 8, 20, 1, 0,
-                                                                     tzinfo=timezone.utc),
+                                                                     tzinfo=datetime.timezone.utc),
                                              end=datetime.datetime(2017, 5, 8, 21, 0, 0,
-                                                                   tzinfo=timezone.utc))
+                                                                   tzinfo=datetime.timezone.utc))
 
         response = self.client.get(
             reverse(
@@ -554,9 +554,9 @@ class TestCaseHomeworkViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course,
                                              start=datetime.datetime(2025, 10, 31, 0, 0, 0,
-                                                                     tzinfo=timezone.utc),
+                                                                     tzinfo=datetime.timezone.utc),
                                              end=datetime.datetime(2025, 11, 3, 0, 0, 0,
-                                                                   tzinfo=timezone.utc))
+                                                                   tzinfo=datetime.timezone.utc))
 
         response = self.client.get(
             reverse(
@@ -752,22 +752,22 @@ class TestCaseHomeworkViews(APITestCase):
         homework_before_from = homeworkhelper.given_homework_exists(
             course,
             title='before_from',
-            start=datetime.datetime(2026, 2, 2, 5, 59, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 5, 59, 30, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 5, 59, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 5, 59, 30, tzinfo=datetime.timezone.utc))
 
         # Item exactly AT from boundary: Feb 2 06:00 UTC = Feb 2 00:00 Chicago
         homework_at_from = homeworkhelper.given_homework_exists(
             course,
             title='at_from',
-            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # Item 1 minute AFTER from boundary: Feb 2 06:01 UTC = Feb 2 00:01 Chicago
         homework_after_from = homeworkhelper.given_homework_exists(
             course,
             title='after_from',
-            start=datetime.datetime(2026, 2, 2, 6, 1, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 6, 1, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN - query with date-only params (wide to window to focus on from boundary)
         response = self.client.get(
@@ -800,22 +800,22 @@ class TestCaseHomeworkViews(APITestCase):
         homework_before_to = homeworkhelper.given_homework_exists(
             course,
             title='before_to',
-            start=datetime.datetime(2026, 2, 3, 5, 59, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 3, 5, 59, 30, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 3, 5, 59, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 5, 59, 30, tzinfo=datetime.timezone.utc))
 
         # Item exactly AT to boundary: Feb 3 06:00 UTC = Feb 3 00:00 Chicago
         homework_at_to = homeworkhelper.given_homework_exists(
             course,
             title='at_to',
-            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # Item 1 minute AFTER to boundary: Feb 3 06:01 UTC = Feb 3 00:01 Chicago
         homework_after_to = homeworkhelper.given_homework_exists(
             course,
             title='after_to',
-            start=datetime.datetime(2026, 2, 3, 6, 1, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 3, 6, 1, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN - query with date-only params (wide from window to focus on to boundary)
         response = self.client.get(
@@ -848,32 +848,32 @@ class TestCaseHomeworkViews(APITestCase):
         # BEFORE from: Feb 2 05:00 UTC = Feb 1 11pm Chicago
         homeworkhelper.given_homework_exists(
             course, title='1_before_from',
-            start=datetime.datetime(2026, 2, 2, 5, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 5, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 5, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 5, 30, 0, tzinfo=datetime.timezone.utc))
 
         # AT from: Feb 2 06:00 UTC = Feb 2 midnight Chicago
         homeworkhelper.given_homework_exists(
             course, title='2_at_from',
-            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 6, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # MIDDLE: Feb 2 18:00 UTC = Feb 2 noon Chicago
         homeworkhelper.given_homework_exists(
             course, title='3_middle',
-            start=datetime.datetime(2026, 2, 2, 18, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 2, 19, 0, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 2, 18, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 2, 19, 0, 0, tzinfo=datetime.timezone.utc))
 
         # AT to: Feb 3 06:00 UTC = Feb 3 midnight Chicago
         homeworkhelper.given_homework_exists(
             course, title='4_at_to',
-            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 3, 6, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
         # AFTER to: Feb 3 07:00 UTC = Feb 3 1am Chicago
         homeworkhelper.given_homework_exists(
             course, title='5_after_to',
-            start=datetime.datetime(2026, 2, 3, 7, 0, 0, tzinfo=timezone.utc),
-            end=datetime.datetime(2026, 2, 3, 7, 30, 0, tzinfo=timezone.utc))
+            start=datetime.datetime(2026, 2, 3, 7, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 3, 7, 30, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
         response = self.client.get(
