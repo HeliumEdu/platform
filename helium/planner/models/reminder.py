@@ -141,7 +141,7 @@ class Reminder(BaseModel):
             return None
 
         user_tz = pytz.timezone(course.get_user().settings.time_zone)
-        now = datetime.datetime.now(user_tz)
+        now = timezone.now().astimezone(user_tz)
         today = now.date()
 
         if after_datetime is not None:
