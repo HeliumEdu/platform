@@ -15,7 +15,7 @@ services:
         timeout: 3s
         retries: 20
   cache:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:8.1
     ports:
       - 6379:6379
   storage:
