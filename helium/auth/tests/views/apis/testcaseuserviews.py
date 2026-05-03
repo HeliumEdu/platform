@@ -565,9 +565,9 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['has_oauth_providers'])
 
-    @mock.patch('helium.auth.services.authservice.metricutils.gauge')
+    @mock.patch('helium.auth.services.authservice.metricutils.timing')
     @mock.patch('helium.auth.services.authservice.send_analytics_event.apply_async')
-    def test_delete_example_schedule(self, mock_send_analytics, mock_gauge):
+    def test_delete_example_schedule(self, mock_send_analytics, mock_timing):
         # GIVEN
         from helium.planner.models import Homework, CourseGroup
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -592,13 +592,13 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(mock_send_analytics.call_args[1]['args'], (user.pk, 'helium_onboarding_complete'))
         self.assertIn('onboarding_duration_seconds',
                        mock_send_analytics.call_args[1]['kwargs']['user_properties'])
-        mock_gauge.assert_called_once()
-        self.assertEqual(mock_gauge.call_args[0][0], 'onboarding.duration')
-        self.assertIsInstance(mock_gauge.call_args[0][1], int)
+        mock_timing.assert_called_once()
+        self.assertEqual(mock_timing.call_args[0][0], 'onboarding.duration')
+        self.assertIsInstance(mock_timing.call_args[0][1], int)
 
-    @mock.patch('helium.auth.services.authservice.metricutils.gauge')
+    @mock.patch('helium.auth.services.authservice.metricutils.timing')
     @mock.patch('helium.auth.services.authservice.send_analytics_event.apply_async')
-    def test_delete_example_schedule_repeat_does_not_refire_analytics(self, mock_send_analytics, mock_gauge):
+    def test_delete_example_schedule_repeat_does_not_refire_analytics(self, mock_send_analytics, mock_timing):
         # GIVEN
         from helium.planner.models import CourseGroup
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -612,7 +612,7 @@ class TestCaseUserViews(APITestCase):
         original_completed_at = user.onboarding_completed_at
         self.assertIsNotNone(original_completed_at)
         self.assertEqual(mock_send_analytics.call_count, 1)
-        self.assertEqual(mock_gauge.call_count, 1)
+        self.assertEqual(mock_timing.call_count, 1)
 
         # AND: user re-imports the example schedule and clears it again
         course_group_2 = coursegrouphelper.given_course_group_exists(user)
@@ -627,4 +627,4 @@ class TestCaseUserViews(APITestCase):
         user.refresh_from_db()
         self.assertEqual(user.onboarding_completed_at, original_completed_at)
         self.assertEqual(mock_send_analytics.call_count, 1)
-        self.assertEqual(mock_gauge.call_count, 1)
+        self.assertEqual(mock_timing.call_count, 1)
