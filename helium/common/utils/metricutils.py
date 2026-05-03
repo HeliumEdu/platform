@@ -72,9 +72,14 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def timing(metric, value, extra_tags=None):
+def timing(metric, value, user=None, extra_tags=None):
     try:
         tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+
+        if user:
+            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
+            if user.is_authenticated:
+                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
 
         metric_id = f"platform.{metric}"
         statsd.timing(metric_id, value=value, tags=tags)

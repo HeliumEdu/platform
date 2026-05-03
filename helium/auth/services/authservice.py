@@ -410,7 +410,7 @@ def delete_example_schedule(user_id):
         if user.created_at > onboarding_tracking_since:
             duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 
-            metricutils.gauge('onboarding.duration', duration_seconds, user=user)
+            metricutils.timing('onboarding.duration', duration_seconds, user=user)
 
             taskutils.safe_apply_async(send_analytics_event,
                 args=(user.pk, 'helium_onboarding_complete'),
