@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,6 +10,7 @@ from django.contrib.auth.models import update_last_login
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
@@ -48,7 +49,10 @@ def forgot_password(request):
         # Only reset password for users with usable passwords (not OAuth-only users)
         if user.has_usable_password():
             # Generate a random password for the user
-            password = UserModel.objects.make_random_password()
+            password = get_random_string(
+                length=10,
+                allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',
+            )
             user.set_password(password)
             user.save()
 
@@ -406,7 +410,7 @@ def delete_example_schedule(user_id):
 
         # Don't report this metric for users created before this metric was introduced, otherwise the huge values it
         # could report for them would throw off data integrity
-        onboarding_tracking_since = datetime(2026, 4, 21, tzinfo=timezone.utc)
+        onboarding_tracking_since = datetime(2026, 4, 21, tzinfo=dt_timezone.utc)
         if user.created_at > onboarding_tracking_since:
             duration_seconds = int((user.onboarding_completed_at - user.created_at).total_seconds())
 

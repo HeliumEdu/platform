@@ -3,8 +3,8 @@ __license__ = "MIT"
 
 import datetime
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
@@ -140,7 +140,7 @@ class Reminder(BaseModel):
         if not course_schedules:
             return None
 
-        user_tz = pytz.timezone(course.get_user().settings.time_zone)
+        user_tz = ZoneInfo(course.get_user().settings.time_zone)
         now = timezone.now().astimezone(user_tz)
         today = now.date()
 
@@ -171,17 +171,17 @@ class Reminder(BaseModel):
             )
             if active_schedule:
                 start_time = getattr(active_schedule, f'{day_names[weekday]}_start_time')
-                local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
+                local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
                 if use_window_check:
                     offset_delta = datetime.timedelta(
                         **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
                     reminder_time = local_start - offset_delta
                     if local_start > now and reminder_time > now:
-                        return local_start.astimezone(pytz.utc)
+                        return local_start.astimezone(datetime.timezone.utc)
                 else:
                     if local_start > cutoff:
-                        return local_start.astimezone(pytz.utc)
+                        return local_start.astimezone(datetime.timezone.utc)
 
             day += datetime.timedelta(days=1)
 

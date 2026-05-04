@@ -5,9 +5,9 @@ import datetime
 import json
 import logging
 from urllib.request import urlopen, Request, URLError
+from zoneinfo import ZoneInfo
 
 import icalendar
-import pytz
 from dateutil import parser
 from django.conf import settings
 from django.core import validators
@@ -87,11 +87,11 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
     events_filtered = []
 
     user = external_calendar.user
-    time_zone = pytz.timezone(user.settings.time_zone)
+    time_zone = ZoneInfo(user.settings.time_zone)
 
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
-            time_zone = pytz.timezone(component.get("TZID"))
+            time_zone = ZoneInfo(component.get("TZID"))
         elif component.name == "VEVENT":
             if "RRULE" in component:
                 continue
@@ -112,7 +112,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 dt_start = timezone.make_aware(dt_start, time_zone)
             else:
                 dt_start = dt_start.astimezone(time_zone)
-            dt_start = dt_start.astimezone(pytz.utc)
+            dt_start = dt_start.astimezone(datetime.timezone.utc)
 
             if all_day:
                 dt_end = datetime.datetime.combine(dt_end, datetime.time.min)
@@ -120,7 +120,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 dt_end = timezone.make_aware(dt_end, time_zone)
             else:
                 dt_end = dt_end.astimezone(time_zone)
-            dt_end = dt_end.astimezone(pytz.utc)
+            dt_end = dt_end.astimezone(datetime.timezone.utc)
 
             # An iCal VEVENT without a SUMMARY is malformed, so skip
             summary = component.get("SUMMARY")

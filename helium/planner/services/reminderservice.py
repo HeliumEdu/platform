@@ -2,8 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.conf import settings
 from django.utils import timezone
 
@@ -212,10 +212,10 @@ def process_email_reminders():
                      .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
                                      'course', 'course__course_group')
                      .prefetch_related('course__schedules')
-                     .iterator()):
+                     .iterator(chunk_size=2000)):
         user = reminder.get_user()
 
-        timezone.activate(pytz.timezone(user.settings.time_zone))
+        timezone.activate(ZoneInfo(user.settings.time_zone))
 
         try:
             if user.email and user.is_active:
@@ -282,7 +282,7 @@ def process_text_reminders():
                      .iterator()):
         user = reminder.get_user()
 
-        timezone.activate(pytz.timezone(user.settings.time_zone))
+        timezone.activate(ZoneInfo(user.settings.time_zone))
 
         try:
             if user.profile.phone and user.profile.phone_verified:
@@ -321,10 +321,10 @@ def process_push_reminders(mark_sent_only=False):
                      .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
                                      'course', 'course__course_group')
                      .prefetch_related('course__schedules', 'user__push_tokens')
-                     .iterator()):
+                     .iterator(chunk_size=2000)):
         user = reminder.get_user()
 
-        timezone.activate(pytz.timezone(user.settings.time_zone))
+        timezone.activate(ZoneInfo(user.settings.time_zone))
 
         try:
             if not mark_sent_only:

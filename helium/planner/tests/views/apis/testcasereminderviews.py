@@ -5,8 +5,8 @@ import datetime
 import json
 from datetime import timedelta
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -287,7 +287,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range,
-                         datetime.datetime(2017, 5, 8, 11, 30, 0, tzinfo=timezone.utc))
+                         datetime.datetime(2017, 5, 8, 11, 30, 0, tzinfo=datetime.timezone.utc))
         self.assertTrue(reminder.sent)
 
     def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
@@ -333,7 +333,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range,
-                         datetime.datetime(2017, 5, 8, 15, 30, 0, tzinfo=timezone.utc))
+                         datetime.datetime(2017, 5, 8, 15, 30, 0, tzinfo=datetime.timezone.utc))
         self.assertTrue(reminder.sent)
 
     def test_delete_reminder_by_id(self):
@@ -568,9 +568,9 @@ class TestCaseReminderViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         homework1 = homeworkhelper.given_homework_exists(course,
                                                          start=datetime.datetime(2017, 5, 8, 16, 0, 0,
-                                                                                 tzinfo=timezone.utc),
+                                                                                 tzinfo=datetime.timezone.utc),
                                                          end=datetime.datetime(2017, 5, 8, 17, 0, 0,
-                                                                               tzinfo=timezone.utc))
+                                                                               tzinfo=datetime.timezone.utc))
         homework2 = homeworkhelper.given_homework_exists(course,
                                                          start=timezone.now() + timedelta(days=1),
                                                          end=timezone.now() + timedelta(days=1, minutes=30))
@@ -756,7 +756,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertFalse(reminder.dismissed)
         self.assertIsNotNone(reminder.start_of_range)
         # start_of_range must equal next_class_start - offset (30 min)
-        user_tz = pytz.timezone(user.settings.time_zone)
+        user_tz = ZoneInfo(user.settings.time_zone)
         next_class_start_utc = reminder.start_of_range + timedelta(minutes=30)
         next_class_start_local = next_class_start_utc.astimezone(user_tz)
         self.assertEqual(next_class_start_local.time().replace(second=0, microsecond=0), datetime.time(10, 0, 0))
@@ -831,7 +831,7 @@ class TestCaseReminderViews(APITestCase):
 
         # Find the next Monday from today (including today if it's Monday)
         # Use the user's timezone to match the implementation in Reminder._get_next_course_occurrence_start
-        user_tz = pytz.timezone(user.settings.time_zone)
+        user_tz = ZoneInfo(user.settings.time_zone)
         today = datetime.datetime.now(user_tz).date()
         days_until_monday = (7 - today.weekday()) % 7
         next_monday = today + timedelta(days=days_until_monday)
@@ -872,9 +872,9 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         # The reminder should skip the first Monday (exception) and target the following Monday.
         # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
-        expected_class_start = user_tz.localize(
-            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
-        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        expected_class_start = datetime.datetime.combine(
+            following_monday, datetime.time(10, 0, 0)).replace(tzinfo=user_tz)
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(datetime.timezone.utc)
         self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_course_reminder_skips_course_exception(self):
@@ -885,7 +885,7 @@ class TestCaseReminderViews(APITestCase):
 
         # Find the next Monday from today (including today if it's Monday)
         # Use the user's timezone to match the implementation in Reminder._get_next_course_occurrence_start
-        user_tz = pytz.timezone(user.settings.time_zone)
+        user_tz = ZoneInfo(user.settings.time_zone)
         today = datetime.datetime.now(user_tz).date()
         days_until_monday = (7 - today.weekday()) % 7
         next_monday = today + timedelta(days=days_until_monday)
@@ -925,9 +925,9 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         # The reminder should skip the first Monday (exception) and target the following Monday.
         # start_of_range = class_start (10:00 local) - offset (30 min), stored in UTC.
-        expected_class_start = user_tz.localize(
-            datetime.datetime.combine(following_monday, datetime.time(10, 0, 0)))
-        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(pytz.utc)
+        expected_class_start = datetime.datetime.combine(
+            following_monday, datetime.time(10, 0, 0)).replace(tzinfo=user_tz)
+        expected_start_of_range = (expected_class_start - timedelta(minutes=30)).astimezone(datetime.timezone.utc)
         self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_filter_id_cannot_access_other_users_data(self):

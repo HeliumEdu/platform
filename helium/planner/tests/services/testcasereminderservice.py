@@ -3,8 +3,8 @@ __license__ = "MIT"
 
 import datetime
 from unittest import mock
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
@@ -31,10 +31,10 @@ class TestCaseReminderService(TestCase):
                                                 end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1),
                                                 end=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1, hours=1))
         reminder1 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event1)
         reminder2 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, homework=homework)
@@ -74,10 +74,10 @@ class TestCaseReminderService(TestCase):
                                                 end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1),
                                                 end=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1, hours=1))
         reminder1 = reminderhelper.given_reminder_exists(user, event=event1)
         reminder2 = reminderhelper.given_reminder_exists(user, homework=homework)
@@ -137,10 +137,10 @@ class TestCaseReminderService(TestCase):
                                                 end=timezone.now() + datetime.timedelta(minutes=10))
         event2 = eventhelper.given_event_exists(user,
                                                 start=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1),
                                                 end=datetime.datetime.now().replace(
-                                                    tzinfo=pytz.timezone(user.settings.time_zone)) + datetime.timedelta(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
                                                     days=1, hours=1))
         reminder1 = reminderhelper.given_reminder_exists(user, event=event1, type=enums.PUSH)
         reminder2 = reminderhelper.given_reminder_exists(user, homework=homework, type=enums.PUSH)
@@ -574,7 +574,7 @@ class TestCaseReminderService(TestCase):
         # The fired reminder's start_of_range = 09:30 Monday; class_start = 10:00 Monday.
         # create_next_repeating_reminder must use after_datetime=class_start so it skips Monday
         # and targets Wednesday, regardless of when exactly the function is called.
-        mock_now.return_value = datetime.datetime(2026, 3, 30, 10, 0, 0, tzinfo=pytz.utc)
+        mock_now.return_value = datetime.datetime(2026, 3, 30, 10, 0, 0, tzinfo=datetime.timezone.utc)
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'UTC'
         user.settings.save()
@@ -590,7 +590,7 @@ class TestCaseReminderService(TestCase):
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
         # Monday 2026-03-30 at 09:30 UTC: start_of_range of the fired reminder (class was at 10:00)
-        monday_start_of_range = datetime.datetime(2026, 3, 30, 9, 30, 0, tzinfo=pytz.utc)
+        monday_start_of_range = datetime.datetime(2026, 3, 30, 9, 30, 0, tzinfo=datetime.timezone.utc)
         reminder = Reminder(
             title='Test', message='Test',
             start_of_range=monday_start_of_range,
@@ -606,7 +606,7 @@ class TestCaseReminderService(TestCase):
 
         # THEN: next reminder targets Wednesday 2026-04-01 (class at 10:00, start_of_range = 09:30)
         self.assertIsNotNone(new_reminder)
-        expected_start_of_range = datetime.datetime(2026, 4, 1, 9, 30, 0, tzinfo=pytz.utc)
+        expected_start_of_range = datetime.datetime(2026, 4, 1, 9, 30, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
 
     def test_create_next_repeating_reminder_no_future_occurrence(self):
@@ -627,7 +627,7 @@ class TestCaseReminderService(TestCase):
         reminder = Reminder(
             title='Test',
             message='Test',
-            start_of_range=datetime.datetime(2020, 5, 4, 9, 30, tzinfo=pytz.utc),
+            start_of_range=datetime.datetime(2020, 5, 4, 9, 30, tzinfo=datetime.timezone.utc),
             offset=30,
             offset_type=enums.MINUTES,
             type=enums.PUSH,

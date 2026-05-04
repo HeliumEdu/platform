@@ -2,9 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-import pytz
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -206,7 +205,7 @@ def purge_refresh_tokens(self):
     metrics = metricutils.task_start("token.refresh.purge", priority="low", published_at_ms=published_at_ms)
 
     _, num_deleted = OutstandingToken.objects.filter(
-        expires_at__lte=datetime.now().replace(tzinfo=pytz.utc)).delete()
+        expires_at__lte=datetime.now().replace(tzinfo=timezone.utc)).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
 
@@ -216,7 +215,7 @@ def purge_push_tokens(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("push.token.purge", priority="low", published_at_ms=published_at_ms)
 
-    cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.PUSH_TOKEN_TTL_DAYS)
+    cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=settings.PUSH_TOKEN_TTL_DAYS)
     _, num_deleted = UserPushToken.objects.filter(updated_at__lt=cutoff).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
@@ -237,7 +236,7 @@ def sweep_dangling_users(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.dangling.purge", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=pytz.utc)
+    now = datetime.now().replace(tzinfo=timezone.utc)
 
     num_purged = 0
     for user in UserModel.objects.filter(
@@ -306,7 +305,7 @@ def emit_nightly_metrics(self):
     # Active users by window
     try:
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
-            cutoff = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=days)
+            cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=days)
             base_qs = UserModel.objects.filter(
                 is_active=True,
                 last_activity__gte=cutoff
@@ -322,7 +321,7 @@ def emit_nightly_metrics(self):
 
     # Data richness and feature adoption metrics, emitted per active-user window
     try:
-        now_utc = datetime.now().replace(tzinfo=pytz.utc)
+        now_utc = datetime.now().replace(tzinfo=timezone.utc)
 
         for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
             cutoff = now_utc - timedelta(days=days)
@@ -519,9 +518,9 @@ def emit_nightly_metrics(self):
 
     # Engagement quality metrics (staff-separated, computed over 30d active users)
     try:
-        cutoff_30d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
-        cutoff_14d = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=14)
-        today = datetime.now().replace(tzinfo=pytz.utc).date()
+        cutoff_30d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=30)
+        cutoff_14d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=14)
+        today = datetime.now().replace(tzinfo=timezone.utc).date()
 
         for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
             active_qs = UserModel.objects.filter(
@@ -578,7 +577,7 @@ def rollup_client_activity(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.client-activity.rollup", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=pytz.utc)
+    now = datetime.now().replace(tzinfo=timezone.utc)
     today = now.date()
 
     try:
@@ -634,7 +633,7 @@ def evaluate_review_prompts(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=pytz.utc)
+    now = datetime.now().replace(tzinfo=timezone.utc)
 
     try:
         candidates = UserSettings.objects.select_related('user').filter(
@@ -731,7 +730,7 @@ def send_dormant_user_warning_email(self, user_id):
         )
 
         user.deletion_warning_count = warning_number
-        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=pytz.utc)
+        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=timezone.utc)
         user.save(update_fields=['deletion_warning_count', 'deletion_warning_sent_at'])
 
         logger.info(f'Sent dormant warning email #{warning_number} to user {user_id}')
@@ -756,7 +755,7 @@ def process_dormant_users(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.dormant.process", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=pytz.utc)
+    now = datetime.now().replace(tzinfo=timezone.utc)
     dormancy_cutoff = now - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365)
     warning_days = settings.DORMANT_USER_WARNING_DAYS
     max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN

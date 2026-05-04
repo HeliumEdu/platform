@@ -12,6 +12,7 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core import exceptions
 from django.db.models import Count, OuterRef, Subquery
 from django.db.models.functions import Coalesce
+from django.utils.crypto import get_random_string
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -198,7 +199,10 @@ def send_password_reset(modeladmin, request, queryset):
         if not user.has_usable_password():
             skipped += 1
             continue
-        password = UserModel.objects.make_random_password()
+        password = get_random_string(
+            length=10,
+            allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',
+        )
         user.set_password(password)
         user.save()
         taskutils.safe_apply_async(
