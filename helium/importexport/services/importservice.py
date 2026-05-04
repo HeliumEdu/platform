@@ -19,7 +19,7 @@ from rest_framework.request import Request
 
 from helium.common import enums
 from helium.common.utils import metricutils
-from helium.common.utils.dateutils import local_midnight_as_utc
+from helium.common.utils.commonutils import local_midnight_as_utc
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Note, Reminder, \
     MaterialGroup, Material
