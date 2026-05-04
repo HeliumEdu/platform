@@ -19,6 +19,7 @@ from rest_framework.request import Request
 
 from helium.common import enums
 from helium.common.utils import metricutils
+from helium.common.utils.dateutils import local_midnight_as_utc
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Note, Reminder, \
     MaterialGroup, Material
@@ -669,16 +670,13 @@ def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=Fa
     :return: New aware datetime in UTC with same local time on target date
     """
     if all_day:
-        naive_target = datetime.datetime(
-            target_date.year, target_date.month, target_date.day,
-            0, 0, 0, 0
-        )
-    else:
-        local_dt = original_dt.astimezone(user_tz)
-        naive_target = datetime.datetime(
-            target_date.year, target_date.month, target_date.day,
-            local_dt.hour, local_dt.minute, 0, 0
-        )
+        return local_midnight_as_utc(target_date, user_tz)
+
+    local_dt = original_dt.astimezone(user_tz)
+    naive_target = datetime.datetime(
+        target_date.year, target_date.month, target_date.day,
+        local_dt.hour, local_dt.minute, 0, 0
+    )
 
     aware_target = naive_target.replace(tzinfo=user_tz)
     return aware_target.astimezone(datetime.timezone.utc)
