@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import csv
+import datetime
 import io
 import logging
 import random
@@ -221,6 +222,19 @@ def split_csv(s, delimiter=',', quotechar="'"):
 
 def random_color():
     return random.choice(enums.PREFERRED_COLORS)
+
+
+def local_midnight_as_utc(date, tz):
+    """
+    Return the UTC datetime that represents midnight on the given date in the given timezone.
+
+    :param date: A `date` (or `datetime`, of which only the date portion is used).
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`) representing the local timezone.
+    :return: An aware UTC `datetime` at midnight `tz` on `date`.
+    """
+    naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
+    aware = naive.replace(tzinfo=tz)
+    return aware.astimezone(datetime.timezone.utc)
 
 
 def format_short_time(dt):
