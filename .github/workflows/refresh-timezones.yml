@@ -1,0 +1,109 @@
+name: "Refresh Timezones"
+
+run-name: "Refresh Timezones"
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: helium-refresh-timezones
+
+jobs:
+  refresh:
+    name: Refresh
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
+          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+          skip-token-revoke: true
+          owner: HeliumEdu
+          repositories: |
+            platform
+            frontend
+
+      - name: Get GitHub App bot user ID
+        id: get-bot-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout platform
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          path: platform
+          ref: develop
+
+      - name: Checkout frontend
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: HeliumEdu/frontend
+          path: frontend
+          ref: develop
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: platform/requirements.txt
+
+      - name: Refresh timezone files and migration
+        run: |
+          cd platform
+          make refresh-timezones
+
+      - name: Configure git identity
+        env:
+          BOT_NAME: "${{ steps.app-token.outputs.app-slug }}[bot]"
+          BOT_USER_ID: ${{ steps.get-bot-user-id.outputs.user-id }}
+        run: |
+          git config --global user.name "$BOT_NAME"
+          git config --global user.email "${BOT_USER_ID}+${BOT_NAME}@users.noreply.github.com"
+
+      - name: Commit and push platform
+        run: |
+          cd platform
+          git add helium/common/timezones.py helium/auth/migrations/
+          UNEXPECTED=$(git status --porcelain | awk '{print $2}' | grep -Ev '^helium/common/timezones\.py$|^helium/auth/migrations/' || true)
+          if [ -n "$UNEXPECTED" ]; then
+            echo "Unexpected file changes detected:"
+            echo "$UNEXPECTED"
+            exit 1
+          fi
+          if git diff --cached --quiet; then
+            echo "Platform timezones already up to date."
+          else
+            git commit -m "chore: refresh IANA timezone list"
+            git push origin develop
+          fi
+
+      - name: Commit and push frontend
+        run: |
+          cd frontend
+          git add lib/utils/time_zone_constants.dart
+          UNEXPECTED=$(git status --porcelain | awk '{print $2}' | grep -Ev '^lib/utils/time_zone_constants\.dart$' || true)
+          if [ -n "$UNEXPECTED" ]; then
+            echo "Unexpected file changes detected:"
+            echo "$UNEXPECTED"
+            exit 1
+          fi
+          if git diff --cached --quiet; then
+            echo "Frontend timezones already up to date."
+          else
+            git commit -m "chore: refresh IANA timezone list"
+            git push origin develop
+          fi

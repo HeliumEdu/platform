@@ -122,15 +122,20 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 dt_end = dt_end.astimezone(time_zone)
             dt_end = dt_end.astimezone(datetime.timezone.utc)
 
+            # An iCal VEVENT without a SUMMARY is malformed, so skip
+            summary = component.get("SUMMARY")
+            if not summary:
+                continue
+
             event = Event(id=len(events),
-                          title=component.get("SUMMARY"),
+                          title=summary,
                           all_day=all_day,
                           show_end_time=show_end_time,
                           start=dt_start,
                           end=dt_end,
                           url=component.get("URL"),
                           owner_id=external_calendar.id,
-                          comments=component.get("DESCRIPTION"),
+                          comments=component.get("DESCRIPTION") or "",
                           user=user,
                           calendar_item_type=enums.EXTERNAL)
             event.color = external_calendar.color
