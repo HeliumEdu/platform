@@ -4,7 +4,6 @@ __license__ = "MIT"
 import datetime
 from unittest.mock import patch
 
-import pytz
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
@@ -31,7 +30,7 @@ class TestCaseAdjustScheduleRelativeTo(TestCase):
     @patch('django.utils.timezone.now')
     def test_adjust_schedule_uses_user_timezone_when_behind_utc_at_month_boundary(self, mock_now):
         # GIVEN: UTC has crossed into April 1, but America/New_York (EDT, UTC-4) is still March 31
-        mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=pytz.UTC)
+        mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=datetime.timezone.utc)
         user = self._create_user_with_timezone('America/New_York')
 
         # WHEN
@@ -47,7 +46,7 @@ class TestCaseAdjustScheduleRelativeTo(TestCase):
     @patch('django.utils.timezone.now')
     def test_adjust_schedule_uses_utc_month_when_user_timezone_is_utc(self, mock_now):
         # GIVEN: UTC has crossed into April 1; UTC user is also in April
-        mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=pytz.UTC)
+        mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=datetime.timezone.utc)
         user = self._create_user_with_timezone('UTC')
 
         # WHEN
@@ -63,7 +62,7 @@ class TestCaseAdjustScheduleRelativeTo(TestCase):
     @patch('django.utils.timezone.now')
     def test_adjust_schedule_day_before_utc_month_boundary(self, mock_now):
         # GIVEN: UTC is still March 31; both UTC and America/New_York agree on March
-        mock_now.return_value = datetime.datetime(2026, 3, 31, 23, 30, 0, tzinfo=pytz.UTC)
+        mock_now.return_value = datetime.datetime(2026, 3, 31, 23, 30, 0, tzinfo=datetime.timezone.utc)
         user = self._create_user_with_timezone('America/New_York')
 
         # WHEN

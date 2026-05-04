@@ -5,7 +5,6 @@ import datetime
 import json
 from urllib.parse import quote
 
-import pytz
 from dateutil import parser
 from django.urls import reverse
 from django.utils import timezone
@@ -103,8 +102,8 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 1)
         event = Event.objects.get(pk=response.data['id'])
-        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
+        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
     def test_create_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -131,8 +130,8 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(Event.objects.count(), 1)
         event = Event.objects.get(pk=response.data['id'])
 
-        start = timezone.make_aware(parser.parse(data['start']), timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), timezone.utc)
+        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
         self.assertEqual(event.start.isoformat(), start.isoformat())
         self.assertEqual(event.end.isoformat(), end.isoformat())
 
@@ -214,8 +213,8 @@ class TestCaseEventViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         event.refresh_from_db()
-        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(timezone.utc).isoformat())
-        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(timezone.utc).isoformat())
+        self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
+        self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
     def test_patch_assumes_naive_datetime_to_utc(self):
         # GIVEN
@@ -238,8 +237,8 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         event.refresh_from_db()
 
-        start = timezone.make_aware(parser.parse(data['start']), pytz.utc)
-        end = timezone.make_aware(parser.parse(data['end']), pytz.utc)
+        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
+        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
         self.assertEqual(event.start.isoformat(), start.isoformat())
         self.assertEqual(event.end.isoformat(), end.isoformat())
 
@@ -334,17 +333,17 @@ class TestCaseEventViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 16, 59, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=datetime.timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 16, 59, 0, tzinfo=datetime.timezone.utc))
         event2 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=timezone.utc))
+                                                start=datetime.datetime(2017, 5, 8, 17, 0, 0, tzinfo=datetime.timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=datetime.timezone.utc))
         event4 = eventhelper.given_event_exists(user,
-                                                start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=timezone.utc),
-                                                end=datetime.datetime(2017, 5, 8, 20, 0, 0, tzinfo=timezone.utc))
+                                                start=datetime.datetime(2017, 5, 8, 19, 30, 0, tzinfo=datetime.timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 20, 0, 0, tzinfo=datetime.timezone.utc))
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2017, 5, 8, 20, 1, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2017, 5, 8, 20, 1, 0, tzinfo=datetime.timezone.utc),
+                                       end=datetime.datetime(2017, 5, 8, 21, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
         response = self.client.get(
@@ -359,8 +358,8 @@ class TestCaseEventViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user,
-                                       start=datetime.datetime(2025, 10, 31, 0, 0, 0, tzinfo=timezone.utc),
-                                       end=datetime.datetime(2025, 11, 2, 0, 0, 0, tzinfo=timezone.utc))
+                                       start=datetime.datetime(2025, 10, 31, 0, 0, 0, tzinfo=datetime.timezone.utc),
+                                       end=datetime.datetime(2025, 11, 2, 0, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
         response = self.client.get(

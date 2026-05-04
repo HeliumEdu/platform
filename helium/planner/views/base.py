@@ -2,8 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from datetime import timezone
+from zoneinfo import ZoneInfo
 
-import pytz
 from dateutil import parser
 from django.db.models import Q
 from rest_framework import status
@@ -24,8 +24,7 @@ def _parse_date_param_to_utc(date_str, user_tz_name):
     dt = parser.parse(date_str)
     if dt.tzinfo is None:
         # Naive datetime - interpret in user's timezone
-        user_tz = pytz.timezone(user_tz_name)
-        dt = user_tz.localize(dt)
+        dt = dt.replace(tzinfo=ZoneInfo(user_tz_name))
     return dt.astimezone(timezone.utc)
 
 

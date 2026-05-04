@@ -2,8 +2,8 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -149,7 +149,7 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
                      .for_calendar_item(calendar_item_id, calendar_item_type)
                      .select_related('homework', 'event', 'course', 'course__course_group')
                      .prefetch_related('course__schedules')
-                     .iterator()):
+                     .iterator(chunk_size=2000)):
         logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
         # Forcing a reminder to save will recalculate its start_of_range, if necessary
@@ -243,7 +243,7 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
         metricutils.task_stop(metrics, value=0)
         return
 
-    timezone.activate(pytz.timezone(reminder.user.settings.time_zone))
+    timezone.activate(ZoneInfo(reminder.user.settings.time_zone))
 
     try:
         if calendar_item_type == enums.COURSE:
