@@ -1,9 +1,8 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 
-import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.template.loader import get_template
@@ -29,13 +28,13 @@ class TestCaseTasks(APITestCase):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         token1 = OutstandingToken.objects.get(token=user1.refresh)
-        token1.expires_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(seconds=1)
+        token1.expires_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(seconds=1)
         token1.save()
         RefreshToken(token1.token).blacklist()
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
                                                                     email='test2@email.com')
         token2 = OutstandingToken.objects.get(token=user2.refresh)
-        token2.expires_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(seconds=1)
+        token2.expires_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(seconds=1)
         token2.save()
         RefreshToken(token2.token).blacklist()
         user3 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user3',
@@ -54,19 +53,19 @@ class TestCaseTasks(APITestCase):
     def test_sweep_dangling_users(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
-        user1.created_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
+        user1.created_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
                                                                                minutes=1)
         user1.save()
         user2 = userhelper.given_an_inactive_user_exists(username='user2', email='test2@email.com')
-        user2.created_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(
+        user2.created_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(
             days=settings.UNVERIFIED_USER_TTL_DAYS) + timedelta(minutes=1)
         user2.save()
         user3 = userhelper.given_an_inactive_user_exists(username='user3', email='test3@email.com')
-        user3.created_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
+        user3.created_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
                                                                                minutes=1)
         user3.save()
         user4 = userhelper.given_an_inactive_user_exists(username='user4', email='test4@email.com')
-        user4.created_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
+        user4.created_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS,
                                                                                minutes=1)
         user4.save()
         self.assertEqual(get_user_model().objects.count(), 4)
@@ -268,7 +267,7 @@ class TestCaseTasks(APITestCase):
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 1)
+        dormant_date = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 1)
         user.last_activity = dormant_date
         user.deletion_warning_count = 0
         user.save()
@@ -287,10 +286,10 @@ class TestCaseTasks(APITestCase):
     def test_process_dormant_users_deletes_after_all_warnings(self, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        dormant_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 31)
+        dormant_date = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 31)
         user.last_activity = dormant_date
         user.deletion_warning_count = 4
-        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=2)
+        user.deletion_warning_sent_at = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=2)
         user.save()
         self.assertEqual(get_user_model().objects.count(), 1)
 
@@ -307,7 +306,7 @@ class TestCaseTasks(APITestCase):
     def test_process_dormant_users_ignores_active_users(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        recent_date = datetime.now().replace(tzinfo=pytz.utc) - timedelta(days=30)
+        recent_date = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=30)
         user.last_activity = recent_date
         user.save()
 

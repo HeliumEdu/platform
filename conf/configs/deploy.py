@@ -225,7 +225,11 @@ if SERVE_LOCAL:
 
     STATIC_URL = '/static/'
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-    STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
+
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'pipeline.storage.PipelineStorage'},
+    }
 
     # Media
 
@@ -246,9 +250,13 @@ else:
     S3_ENDPOINT_URL = strip_scheme(AWS_S3_ENDPOINT_URL or 's3.amazonaws.com')
     AWS_S3_REGION_NAME = common.AWS_REGION
 
+    STORAGES = {
+        'default': {'BACKEND': 'conf.storages.S3MediaPipelineStorage'},
+        'staticfiles': {'BACKEND': 'conf.storages.S3StaticPipelineStorage'},
+    }
+
     # Static
 
-    STATICFILES_STORAGE = 'conf.storages.S3StaticPipelineStorage'
     AWS_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.platform.static'
     AWS_S3_CUSTOM_DOMAIN = f'{S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}'
     if 'local' in ENVIRONMENT:
@@ -259,7 +267,6 @@ else:
 
     # Media
 
-    DEFAULT_FILE_STORAGE = 'conf.storages.S3MediaPipelineStorage'
     AWS_MEDIA_STORAGE_BUCKET_NAME = f'heliumedu.{ENVIRONMENT}.media'
     AWS_S3_MEDIA_DOMAIN = None
     MEDIA_URL = None

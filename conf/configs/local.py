@@ -140,7 +140,11 @@ else:
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_STORAGE = 'pipeline.storage.NonPackagingPipelineStorage'
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'pipeline.storage.NonPackagingPipelineStorage'},
+}
 
 # Media
 

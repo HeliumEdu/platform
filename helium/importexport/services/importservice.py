@@ -7,8 +7,8 @@ import logging
 import os
 from contextlib import contextmanager
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save
@@ -366,8 +366,8 @@ def _suppress_post_save_signals():
     sender_ids = {id(s) for s in _SUPPRESSED_SENDERS}
     original_receivers = post_save.receivers
     post_save.receivers = [
-        (key, ref) for key, ref in original_receivers
-        if not (isinstance(key, tuple) and len(key) >= 2 and key[1] in sender_ids)
+        item for item in original_receivers
+        if not (isinstance(item[0], tuple) and len(item[0]) >= 2 and item[0][1] in sender_ids)
     ]
     post_save.sender_receivers_cache.clear()
     try:
@@ -657,7 +657,6 @@ def import_user(request, data, example_schedule=False):
 def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=False):
     """
     Shift a datetime to a new target date while preserving the local wall-clock time.
-    Uses pytz to handle DST transitions automatically.
 
     For all-day events, wall-clock time is meaningless (the fixture's stored hour is an
     artifact of whichever timezone authored it), so midnight in the user's timezone is
@@ -665,7 +664,7 @@ def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=Fa
 
     :param original_dt: The original aware datetime (in UTC)
     :param target_date: The target date to shift to
-    :param user_tz: The user's pytz timezone
+    :param user_tz: The user's ZoneInfo timezone
     :param all_day: If True, use midnight instead of preserving wall-clock time
     :return: New aware datetime in UTC with same local time on target date
     """
@@ -681,8 +680,8 @@ def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=Fa
             local_dt.hour, local_dt.minute, 0, 0
         )
 
-    aware_target = user_tz.localize(naive_target)
-    return aware_target.astimezone(pytz.UTC)
+    aware_target = naive_target.replace(tzinfo=user_tz)
+    return aware_target.astimezone(datetime.timezone.utc)
 
 
 def _get_most_recent_course_occurrence_start(reminder):
@@ -695,7 +694,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     if not course_schedules:
         return None
 
-    user_tz = pytz.timezone(course.get_user().settings.time_zone)
+    user_tz = ZoneInfo(course.get_user().settings.time_zone)
     now = datetime.datetime.now(user_tz)
     today = now.date()
 
@@ -716,10 +715,10 @@ def _get_most_recent_course_occurrence_start(reminder):
         )
         if active_schedule:
             start_time = getattr(active_schedule, f'{day_names[weekday]}_start_time')
-            local_start = user_tz.localize(datetime.datetime.combine(day, start_time))
+            local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
             if local_start <= now:
-                return local_start.astimezone(pytz.utc)
+                return local_start.astimezone(datetime.timezone.utc)
 
         day -= datetime.timedelta(days=1)
 
@@ -727,7 +726,7 @@ def _get_most_recent_course_occurrence_start(reminder):
 
 
 def _adjust_schedule_relative_to(user, adjust_month):
-    user_tz = pytz.timezone(user.settings.time_zone)
+    user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
     now = timezone.now().astimezone(user_tz)
@@ -829,7 +828,7 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
                 .select_related('user', 'user__settings', 'course', 'course__course_group')
                 .prefetch_related('course__schedules')
-                .iterator()):
+                .iterator(chunk_size=2000)):
             past_start = _get_most_recent_course_occurrence_start(reminder)
             if past_start:
                 offset_delta = datetime.timedelta(

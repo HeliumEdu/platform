@@ -2,10 +2,9 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dateutil import parser
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated

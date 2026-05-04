@@ -81,8 +81,8 @@ class TestCasePlannerTasks(TestCase):
         original_start_of_range = reminder.start_of_range
 
         # Update event start time
-        event.start = datetime.datetime(2017, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-        event.end = datetime.datetime(2017, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
+        event.start = datetime.datetime(2017, 6, 15, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        event.end = datetime.datetime(2017, 6, 15, 14, 0, 0, tzinfo=datetime.timezone.utc)
         event.save()
 
         # WHEN
@@ -103,8 +103,8 @@ class TestCasePlannerTasks(TestCase):
         original_start_of_range = reminder.start_of_range
 
         # Update homework start time
-        homework.start = datetime.datetime(2017, 6, 20, 10, 0, 0, tzinfo=timezone.utc)
-        homework.end = datetime.datetime(2017, 6, 20, 12, 0, 0, tzinfo=timezone.utc)
+        homework.start = datetime.datetime(2017, 6, 20, 10, 0, 0, tzinfo=datetime.timezone.utc)
+        homework.end = datetime.datetime(2017, 6, 20, 12, 0, 0, tzinfo=datetime.timezone.utc)
         homework.save()
 
         # WHEN
