@@ -1,5 +1,13 @@
 {
-  "external_calendars": [],
+  "external_calendars": [
+    {
+        "id": 1,
+        "title": "U.S. Holidays",
+        "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",
+        "color": "#4285F4",
+        "shown_on_calendar": true
+    }
+  ],
   "course_groups": [
     {
       "id": 207,

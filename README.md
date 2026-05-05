@@ -17,7 +17,7 @@ Released container images are published to [Helium's AWS ECR](https://gallery.ec
 - Docker
 - Python (>= 3.12)
 - MySQL (>= 8)
-- Redis (>= 5)
+- Redis (>= 7)
 
 ## Getting Started
 
