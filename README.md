@@ -1,6 +1,5 @@
 <p align="center"><img src="https://www.heliumedu.com/assets/img/logo_full_blue.png" /></p>
 
-![Python Versions](https://img.shields.io/badge/python-%203.12%20-blue)
 [![Coverage](https://img.shields.io/codecov/c/github/HeliumEdu/platform)](https://codecov.io/gh/HeliumEdu/platform)
 [![Build](https://img.shields.io/github/actions/workflow/status/HeliumEdu/platform/build.yml)](https://github.com/HeliumEdu/platform/actions/workflows/build.yml)
 [![Code Quality](https://app.codacy.com/project/badge/Grade/0cb1b256044e43739735987214f3a796)](https://app.codacy.com/gh/HeliumEdu/platform/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
@@ -18,7 +17,7 @@ Released container images are published to [Helium's AWS ECR](https://gallery.ec
 - Docker
 - Python (>= 3.12)
 - MySQL (>= 8)
-- Redis (>= 5)
+- Redis (>= 7)
 
 ## Getting Started
 

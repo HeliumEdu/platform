@@ -21,6 +21,7 @@ from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import local_midnight_as_utc
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
+from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Note, Reminder, \
     MaterialGroup, Material
 from helium.planner.serializers.categoryserializer import CategorySerializer
@@ -491,6 +492,17 @@ def _bulk_import_example_schedule(data, user):
     if m2m_rows:
         MaterialCourseThrough.objects.bulk_create(m2m_rows)
 
+    # --- ExternalCalendar ---
+    for ec in data.get('external_calendars', []):
+        ExternalCalendar.objects.create(
+            title=ec['title'],
+            url=ec['url'],
+            color=ec.get('color', '#000000'),
+            shown_on_calendar=ec.get('shown_on_calendar', True),
+            example_schedule=True,
+            user=user,
+        )
+
     # --- Event ---
     for e in data.get('events', []):
         instance = Event.objects.create(
@@ -595,7 +607,8 @@ def _bulk_import_example_schedule(data, user):
         f"Bulk imported example schedule: {len(course_group_remap)} course groups, "
         f"{len(course_remap)} courses, {len(data.get('course_schedules', []))} schedules, "
         f"{len(category_remap)} categories, {len(material_group_remap)} material groups, "
-        f"{len(material_remap)} materials, {len(event_remap)} events, "
+        f"{len(material_remap)} materials, {len(data.get('external_calendars', []))} external calendars, "
+        f"{len(event_remap)} events, "
         f"{len(homework_remap)} homework, {len(data.get('reminders', []))} reminders, "
         f"{len(data.get('notes', []))} notes"
     )
