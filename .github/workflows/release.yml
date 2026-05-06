@@ -293,6 +293,7 @@ jobs:
   cleanup:
     needs: [prereq, deploy]
     if: always() && needs.prereq.result == 'success'
+    continue-on-error: true
     uses: HeliumEdu/.github/.github/workflows/release-cleanup.yml@main
     secrets:
       bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
