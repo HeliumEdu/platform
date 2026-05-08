@@ -16,7 +16,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
@@ -79,7 +78,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             trim_whitespace=False,
         )
 
-    def validate(self, attrs, update_last_login_field=True):
+    def validate(self, attrs):
         legacy_username = attrs.pop('username', None)
         email = attrs.pop('email', None)
         password = attrs.pop('password', None)
@@ -116,8 +115,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
 
-            if update_last_login_field:
-                update_last_login(None, user)
+            update_last_login(None, user)
 
             user.last_activity = timezone.now()
             user.deletion_warning_count = 0
@@ -137,39 +135,6 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             logger.debug(f"User {user.pk} has been logged in")
 
             metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
-
-        return attrs
-
-
-class LegacyAccessToken(AccessToken):
-    """Access token with legacy (longer) lifetime for legacy frontend."""
-    lifetime = timedelta(minutes=settings.LEGACY_ACCESS_TOKEN_TTL_MINUTES)
-
-
-class LegacyRefreshToken(RefreshToken):
-    """Refresh token with legacy (longer) lifetime for legacy frontend."""
-    lifetime = timedelta(days=settings.LEGACY_REFRESH_TOKEN_TTL_DAYS)
-    access_token_class = LegacyAccessToken
-
-
-class LegacyTokenObtainSerializer(TokenObtainSerializer):
-    """
-    Token obtain serializer for legacy frontend that doesn't properly support token refresh.
-    Uses longer token lifetimes configured via LEGACY_*_TTL settings.
-
-    Deprecated: Remove when frontend-legacy is shut down.
-    """
-
-    @classmethod
-    def get_token(cls, user):
-        return LegacyRefreshToken.for_user(user)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs, update_last_login_field=False)
-
-        if user := getattr(self, '_authenticated_user', None):
-            user.last_login_legacy = timezone.now()
-            user.save(update_fields=['last_login_legacy'])
 
         return attrs
 
