@@ -189,8 +189,7 @@ class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given event instance, including its reminders. The cloned event lands at the same
-        start/end as the source with an incremented title; ``comments`` is reset.
+        Clone the given event instance, including its reminders.
         """
         source = self.get_object()
 

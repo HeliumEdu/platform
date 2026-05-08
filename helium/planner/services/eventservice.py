@@ -11,18 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def clone_event(source):
-    """
-    Create a clone of an Event, including its reminders.
-
-    The clone inherits scheduling and configuration fields (title with an incremented suffix, dates,
-    priority, url) from the source. Per-instance content is reset: ``comments`` is cleared. The
-    ``owner_id`` and ``example_schedule`` fields are intentionally not copied — clones are
-    user-initiated and never represent an externally-owned or example-schedule item. Notes and
-    attachments are not copied — they are instance-specific content.
-
-    Reminders attached to the source are cloned via ``clone_reminders`` so the new event starts
-    with the same reminder configuration, anchored to its (initially identical) start time.
-    """
+    """Clone an Event with its reminders; ``comments`` is reset and ``owner_id`` / ``example_schedule`` are not copied."""
     clone = Event.objects.create(
         title=next_clone_title(source.title),
         all_day=source.all_day,

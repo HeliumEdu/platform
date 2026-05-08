@@ -145,13 +145,11 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(clone.category_id, source.category_id)
         self.assertEqual(list(clone.materials.values_list('pk', flat=True)), [material.pk])
 
-        # Per-instance content is reset
         self.assertEqual(clone.comments, '')
         self.assertEqual(clone.current_grade, '-1/100')
         self.assertFalse(clone.completed)
         self.assertIsNone(clone.completed_at)
 
-        # Reminders are cloned and re-anchored; sent flag resets
         cloned_reminders = list(clone.reminders.order_by('title'))
         self.assertEqual(len(cloned_reminders), 2)
 
@@ -165,7 +163,6 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertFalse(one_hour.sent)
         self.assertEqual(one_hour.start_of_range, clone.start - datetime.timedelta(hours=1))
 
-        # Source is untouched
         source.refresh_from_db()
         self.assertEqual(source.title, 'Quiz')
         self.assertEqual(source.reminders.count(), 2)
@@ -201,7 +198,7 @@ class TestCaseHomeworkViews(APITestCase):
         attacker_course_group = coursegrouphelper.given_course_group_exists(attacker)
         attacker_course = coursehelper.given_course_exists(attacker_course_group)
 
-        # WHEN — attacker references a homework owned by `owner` via their own course_group/course path
+        # WHEN
         response = self.client.post(reverse('planner_coursegroups_courses_homework_clone',
                                             kwargs={'course_group': attacker_course_group.pk,
                                                     'course': attacker_course.pk, 'pk': owner_source.pk}),

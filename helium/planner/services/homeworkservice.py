@@ -11,17 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def clone_homework(source):
-    """
-    Create a clone of a Homework, including its reminders.
-
-    The clone inherits scheduling and configuration fields (title with an incremented suffix, dates,
-    priority, url, category, materials) from the source. Per-instance content is reset: ``comments``
-    is cleared, ``current_grade`` resets to ``-1/100``, and ``completed`` resets to ``False``. Notes
-    and attachments are not copied — they are instance-specific content.
-
-    Reminders attached to the source are cloned via ``clone_reminders`` so the new homework starts
-    with the same reminder configuration, anchored to its (initially identical) start time.
-    """
+    """Clone a Homework with its reminders and materials; ``comments``, ``current_grade``, and ``completed`` are reset."""
     clone = Homework.objects.create(
         title=next_clone_title(source.title),
         all_day=source.all_day,

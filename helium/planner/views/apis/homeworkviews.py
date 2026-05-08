@@ -242,9 +242,7 @@ class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given homework instance, including its reminders. The cloned homework lands in the
-        same course at the same start/end as the source with an incremented title; per-instance
-        content (comments, grade, completion) is reset.
+        Clone the given homework instance, including its reminders.
         """
         source = self.get_object()
 
