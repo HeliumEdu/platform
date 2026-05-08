@@ -194,7 +194,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_schedule.refresh_from_db()
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
-    def test_delete_course_schedule_by_id(self):
+    def test_delete_course_schedule_by_id_not_allowed(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -207,8 +207,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                                                       'pk': course_schedule.pk}))
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Deleting a course schedule is not allowed', response.data['detail'])
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(CourseSchedule.objects.filter(pk=course_schedule.pk).exists())
         self.assertEqual(CourseSchedule.objects.count(), 1)
 
