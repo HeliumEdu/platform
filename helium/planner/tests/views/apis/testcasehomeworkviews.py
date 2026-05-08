@@ -12,9 +12,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Homework
+from helium.common import enums
+from helium.planner.models import Homework, Reminder
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, categoryhelper, \
-    materialgrouphelper, materialhelper
+    materialgrouphelper, materialhelper, reminderhelper
 
 
 class TestCaseHomeworkViews(APITestCase):
@@ -34,7 +35,9 @@ class TestCaseHomeworkViews(APITestCase):
             self.client.put(reverse('planner_coursegroups_courses_homework_detail',
                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'})),
             self.client.delete(reverse('planner_coursegroups_courses_homework_detail',
-                                       kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'}))
+                                       kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'})),
+            self.client.post(reverse('planner_coursegroups_courses_homework_clone',
+                                     kwargs={'course_group': '9999', 'course': '9999', 'pk': '9999'}))
         ]
 
         # THEN
@@ -103,6 +106,108 @@ class TestCaseHomeworkViews(APITestCase):
         homework = Homework.objects.get(pk=response.data['id'])
         homeworkhelper.verify_homework_matches_data(self, homework, data)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
+
+    def test_clone_homework_copies_fields_materials_and_reminders(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        source = homeworkhelper.given_homework_exists(course, title='Quiz', category=category,
+                                                     materials=[material], current_grade='25/30',
+                                                     completed=True, comments='Studied chapter 4')
+        reminderhelper.given_reminder_exists(user, title='15 min before', offset=15,
+                                             offset_type=enums.MINUTES, type=enums.POPUP, homework=source)
+        reminderhelper.given_reminder_exists(user, title='1 hour before', offset=1,
+                                             offset_type=enums.HOURS, type=enums.EMAIL, sent=True,
+                                             homework=source)
+
+        # WHEN
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_clone',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                    'pk': source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Homework.objects.count(), 2)
+        self.assertEqual(Reminder.objects.count(), 4)
+
+        clone = Homework.objects.get(pk=response.data['id'])
+        self.assertNotEqual(clone.pk, source.pk)
+        self.assertEqual(clone.title, 'Quiz 1')
+        self.assertEqual(clone.start, source.start)
+        self.assertEqual(clone.end, source.end)
+        self.assertEqual(clone.priority, source.priority)
+        self.assertEqual(clone.course_id, source.course_id)
+        self.assertEqual(clone.category_id, source.category_id)
+        self.assertEqual(list(clone.materials.values_list('pk', flat=True)), [material.pk])
+
+        self.assertEqual(clone.comments, '')
+        self.assertEqual(clone.current_grade, '-1/100')
+        self.assertFalse(clone.completed)
+        self.assertIsNone(clone.completed_at)
+
+        cloned_reminders = list(clone.reminders.order_by('title'))
+        self.assertEqual(len(cloned_reminders), 2)
+
+        fifteen = next(r for r in cloned_reminders if r.title == '15 min before')
+        self.assertFalse(fifteen.sent)
+        self.assertFalse(fifteen.dismissed)
+        self.assertEqual(fifteen.user_id, user.pk)
+        self.assertEqual(fifteen.start_of_range, clone.start - datetime.timedelta(minutes=15))
+
+        one_hour = next(r for r in cloned_reminders if r.title == '1 hour before')
+        self.assertFalse(one_hour.sent)
+        self.assertEqual(one_hour.start_of_range, clone.start - datetime.timedelta(hours=1))
+
+        source.refresh_from_db()
+        self.assertEqual(source.title, 'Quiz')
+        self.assertEqual(source.reminders.count(), 2)
+        self.assertEqual(len(response.data['reminders']), 2)
+
+    def test_clone_homework_increments_existing_trailing_number(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        source = homeworkhelper.given_homework_exists(course, title='Quiz 9')
+
+        # WHEN
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_clone',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk,
+                                                    'pk': source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['title'], 'Quiz 10')
+
+    def test_clone_homework_other_user_returns_404(self):
+        # GIVEN
+        owner = userhelper.given_a_user_exists()
+        owner_course_group = coursegrouphelper.given_course_group_exists(owner)
+        owner_course = coursehelper.given_course_exists(owner_course_group)
+        owner_source = homeworkhelper.given_homework_exists(owner_course)
+        reminderhelper.given_reminder_exists(owner, homework=owner_source)
+
+        attacker = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                       email='test2@email.com')
+        attacker_course_group = coursegrouphelper.given_course_group_exists(attacker)
+        attacker_course = coursehelper.given_course_exists(attacker_course_group)
+
+        # WHEN
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_clone',
+                                            kwargs={'course_group': attacker_course_group.pk,
+                                                    'course': attacker_course.pk, 'pk': owner_source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Homework.objects.count(), 1)
+        self.assertEqual(Reminder.objects.count(), 1)
 
     def test_create_converts_to_utc(self):
         # GIVEN

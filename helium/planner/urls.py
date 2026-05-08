@@ -15,10 +15,11 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailView, CourseGroupCoursesApiListView, \
     UserCoursesApiListView
-from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView, EventsApiDeleteResourceView
+from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView, EventsApiDeleteResourceView, \
+    EventsApiCloneView
 from helium.planner.views.apis.graderesourceviews import GradesApiResourceView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
-    CourseGroupCourseHomeworkApiDetailView
+    CourseGroupCourseHomeworkApiDetailView, CourseGroupCourseHomeworkApiCloneView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
 from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
@@ -92,6 +93,7 @@ urlpatterns = [
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),
+    path('planner/events/<int:pk>/clone/', EventsApiCloneView.as_view(), name='planner_events_clone'),
     path('planner/events/delete/all/', EventsApiDeleteResourceView.as_view({'delete': 'delete_all'}),
          name='planner_events_resource_delete'),
 
@@ -104,6 +106,10 @@ urlpatterns = [
         'planner/coursegroups/<int:course_group>/courses/<int:course>/homework/<int:pk>/',
         CourseGroupCourseHomeworkApiDetailView.as_view(),
         name='planner_coursegroups_courses_homework_detail'),
+    path(
+        'planner/coursegroups/<int:course_group>/courses/<int:course>/homework/<int:pk>/clone/',
+        CourseGroupCourseHomeworkApiCloneView.as_view(),
+        name='planner_coursegroups_courses_homework_clone'),
 
     # Reminder
     path('planner/reminders/', RemindersApiListView.as_view(), name='planner_reminders_list'),

@@ -19,6 +19,7 @@ from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
+from helium.planner.services.eventservice import clone_event
 from helium.planner.views.base import HeliumCalendarItemAPIView
 
 logger = logging.getLogger(__name__)
@@ -165,6 +166,36 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         logger.info(f"Event {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response
+
+
+@extend_schema(
+    tags=['planner.event']
+)
+class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
+    serializer_class = EventExtendedSerializer
+    permission_classes = (IsAuthenticated, IsOwner,)
+
+    def get_queryset(self):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+            return self.request.user.events.all()
+        else:
+            return Event.objects.none()
+
+    @extend_schema(
+        request=None,
+        responses={
+            201: EventExtendedSerializer
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Clone the given event instance, including its reminders.
+        """
+        source = self.get_object()
+
+        clone = clone_event(source)
+
+        return Response(EventExtendedSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(
