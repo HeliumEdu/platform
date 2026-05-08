@@ -19,6 +19,7 @@ from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
+from helium.planner.services.homeworkservice import clone_homework
 from helium.planner.views.base import HeliumCalendarItemAPIView
 
 logger = logging.getLogger(__name__)
@@ -217,3 +218,36 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         logger.info(f"Homework {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response
+
+
+@extend_schema(
+    tags=['planner.homework']
+)
+class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
+    serializer_class = HomeworkExtendedSerializer
+    permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
+
+    def get_queryset(self):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+            user = self.request.user
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
+        else:
+            return Homework.objects.none()
+
+    @extend_schema(
+        request=None,
+        responses={
+            201: HomeworkExtendedSerializer
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Clone the given homework instance, including its reminders. The cloned homework lands in the
+        same course at the same start/end as the source with an incremented title; per-instance
+        content (comments, grade, completion) is reset.
+        """
+        source = self.get_object()
+
+        clone = clone_homework(source)
+
+        return Response(HomeworkExtendedSerializer(clone).data, status=status.HTTP_201_CREATED)

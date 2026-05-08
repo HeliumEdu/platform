@@ -134,6 +134,43 @@ def heal_orphaned_repeating_reminders(user_id=None):
             logger.error("An error occurred healing orphaned repeating reminder.", exc_info=True)
 
 
+def clone_reminders(source, target):
+    """
+    Copy reminders from one calendar item (Homework or Event) to another.
+
+    Cloned reminders inherit ``title``, ``message``, ``offset``, ``offset_type``, and ``type`` from the
+    source. They are created fresh (``sent=False``, ``dismissed=False``); ``start_of_range`` is recomputed
+    by ``Reminder.save()`` from the target's start time and the cloned offset, so reminders correctly
+    re-anchor to the new item's date.
+
+    Only Homework and Event are supported — Courses (which carry series-bound, uniqueness-constrained
+    reminders) cannot themselves be cloned, and a ``ValueError`` is raised if either ``source`` or
+    ``target`` is a Course or otherwise lacks a ``reminders`` relation usable here.
+    """
+    from helium.planner.models import Event, Homework
+
+    if not isinstance(source, (Homework, Event)):
+        raise ValueError(
+            f'clone_reminders source must be a Homework or Event, got {type(source).__name__}')
+    if not isinstance(target, (Homework, Event)):
+        raise ValueError(
+            f'clone_reminders target must be a Homework or Event, got {type(target).__name__}')
+
+    parent_field = 'homework' if isinstance(target, Homework) else 'event'
+    user = target.get_user()
+
+    for reminder in source.reminders.all():
+        Reminder.objects.create(
+            title=reminder.title,
+            message=reminder.message,
+            offset=reminder.offset,
+            offset_type=reminder.offset_type,
+            type=reminder.type,
+            user=user,
+            **{parent_field: target},
+        )
+
+
 def create_next_repeating_reminder(reminder):
     """
     For a repeating reminder (course), create the next occurrence.
