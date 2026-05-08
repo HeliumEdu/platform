@@ -12,8 +12,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Event
-from helium.planner.tests.helpers import eventhelper
+from helium.common import enums
+from helium.planner.models import Event, Reminder
+from helium.planner.tests.helpers import eventhelper, reminderhelper
 
 
 class TestCaseEventViews(APITestCase):
@@ -27,7 +28,8 @@ class TestCaseEventViews(APITestCase):
             self.client.post(reverse('planner_events_list')),
             self.client.get(reverse('planner_events_detail', kwargs={'pk': '9999'})),
             self.client.put(reverse('planner_events_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('planner_events_detail', kwargs={'pk': '9999'}))
+            self.client.delete(reverse('planner_events_detail', kwargs={'pk': '9999'})),
+            self.client.post(reverse('planner_events_clone', kwargs={'pk': '9999'}))
         ]
 
         # THEN
@@ -77,6 +79,55 @@ class TestCaseEventViews(APITestCase):
         event = Event.objects.get(pk=response.data['id'])
         eventhelper.verify_event_matches_data(self, event, data)
         eventhelper.verify_event_matches_data(self, event, response.data)
+
+    def test_clone_event_copies_fields_and_reminders(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        source = eventhelper.given_event_exists(user, title='Lunch with Pat',
+                                                comments='Brought up the syllabus')
+        reminderhelper.given_reminder_exists(user, title='30 min before', offset=30,
+                                             offset_type=enums.MINUTES, type=enums.POPUP, event=source)
+
+        # WHEN
+        response = self.client.post(reverse('planner_events_clone', kwargs={'pk': source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertEqual(Reminder.objects.count(), 2)
+
+        clone = Event.objects.get(pk=response.data['id'])
+        self.assertEqual(clone.title, 'Lunch with Pat 1')
+        self.assertEqual(clone.start, source.start)
+        self.assertEqual(clone.end, source.end)
+        self.assertEqual(clone.user_id, user.pk)
+        self.assertEqual(clone.comments, '')
+
+        cloned_reminder = clone.reminders.get()
+        self.assertEqual(cloned_reminder.offset, 30)
+        self.assertFalse(cloned_reminder.sent)
+        self.assertFalse(cloned_reminder.dismissed)
+        self.assertEqual(cloned_reminder.user_id, user.pk)
+        self.assertEqual(cloned_reminder.start_of_range, clone.start - datetime.timedelta(minutes=30))
+
+    def test_clone_event_other_user_returns_404(self):
+        # GIVEN
+        owner = userhelper.given_a_user_exists()
+        owner_source = eventhelper.given_event_exists(owner)
+        reminderhelper.given_reminder_exists(owner, event=owner_source)
+
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                            email='test2@email.com')
+
+        # WHEN
+        response = self.client.post(reverse('planner_events_clone', kwargs={'pk': owner_source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(Reminder.objects.count(), 1)
 
     def test_create_converts_to_utc(self):
         # GIVEN

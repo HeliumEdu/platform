@@ -643,3 +643,16 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertIsNone(result)
         self.assertEqual(Reminder.objects.count(), 1)
+
+    def test_clone_reminders_rejects_course_source(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN / THEN
+        with self.assertRaises(ValueError):
+            reminderservice.clone_reminders(course, homework)
+        with self.assertRaises(ValueError):
+            reminderservice.clone_reminders(homework, course)

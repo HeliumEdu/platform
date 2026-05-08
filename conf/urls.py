@@ -14,6 +14,9 @@ import helium.feed.urls
 import helium.importexport.urls
 import helium.planner.urls
 
+handler404 = "helium.common.handlers.views.handler_404"
+handler500 = "helium.common.handlers.views.handler_500"
+
 urlpatterns = [
     # Include app-specific URL files
     re_path('^', include(helium.common.urls)),
