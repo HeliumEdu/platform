@@ -27,11 +27,6 @@ on:
         options:
           - dev
           - prod
-      run_legacy_cluster_tests:
-        description: 'Run cluster tests for frontend-legacy before deploying'
-        required: true
-        type: boolean
-        default: true
   workflow_call:
     inputs:
       bump_type:
@@ -49,11 +44,6 @@ on:
         required: false
         type: string
         default: prod
-      run_legacy_cluster_tests:
-        description: "Run cluster tests for frontend-legacy before deploying"
-        required: false
-        type: boolean
-        default: true
     outputs:
       version:
         description: "Released version"
@@ -249,26 +239,22 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           VERSION: ${{ needs.prereq.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
-          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
         run: |
           gh workflow run deploy.yml \
             --repo ${{ github.repository }} \
             -f version_type=specific \
             -f specific_version="$VERSION" \
-            -f environment="$ENVIRONMENT" \
-            -f run_legacy_cluster_tests="$RUN_LEGACY_CLUSTER_TESTS"
+            -f environment="$ENVIRONMENT"
 
       - name: Deployment trigger summary
         env:
           VERSION: ${{ needs.prereq.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
-          RUN_LEGACY_CLUSTER_TESTS: ${{ inputs.run_legacy_cluster_tests }}
         run: |
           echo "### Deploy Workflow Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run Legacy Cluster Tests**: $RUN_LEGACY_CLUSTER_TESTS" >> $GITHUB_STEP_SUMMARY
 
   cleanup:
     needs: [prereq, deploy]

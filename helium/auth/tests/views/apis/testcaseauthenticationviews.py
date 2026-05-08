@@ -9,7 +9,6 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
 
@@ -94,7 +93,6 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(user.username, 'my_test_user')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
 
-        self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())
 
     def test_registration_success_without_username(self):

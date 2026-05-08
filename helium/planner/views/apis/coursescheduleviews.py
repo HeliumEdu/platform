@@ -4,11 +4,8 @@ __license__ = "MIT"
 import logging
 
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
-    CreateModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
@@ -101,8 +98,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
 @extend_schema(
     tags=['planner.courseschedule']
 )
-class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
-                                                    DestroyModelMixin):
+class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
@@ -130,13 +126,3 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
-
-    @extend_schema(deprecated=True, exclude=True)
-    def delete(self, request, *args, **kwargs):
-        """
-        Delete the given course schedule instance.
-        """
-        return Response(
-            {'detail': 'Deleting a course schedule is not allowed. Each course must have exactly one schedule.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
