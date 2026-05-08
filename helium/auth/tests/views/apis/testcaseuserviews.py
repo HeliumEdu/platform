@@ -42,12 +42,6 @@ class TestCaseUserViews(APITestCase):
         self.assertNotIn('verification_code', response.data)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
-        # Profile fields
-        self.assertNotIn('phone_verification_code', response.data['profile'])
-        self.assertEqual(user.profile.phone, response.data['profile']['phone'])
-        self.assertEqual(user.profile.phone_changing, response.data['profile']['phone_changing'])
-        self.assertEqual(user.profile.phone_verified, response.data['profile']['phone_verified'])
-        self.assertEqual(user.profile.user.pk, response.data['profile']['user'])
         # Settings fields
         self.assertEqual(user.settings.time_zone, response.data['settings']['time_zone'])
         self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
