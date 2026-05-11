@@ -4,8 +4,7 @@ __license__ = "MIT"
 import logging
 
 from drf_spectacular.utils import extend_schema
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin, \
-    DestroyModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.auth.filters import UserPushTokenFilter
@@ -67,7 +66,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
 @extend_schema(
     tags=['auth.pushtoken']
 )
-class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class UserPushTokenApiDetailView(HeliumAPIView, UpdateModelMixin, DestroyModelMixin):
     serializer_class = UserPushTokenSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
@@ -77,15 +76,6 @@ class UserPushTokenApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelM
             return user.push_tokens.all()
         else:
             return UserPushToken.objects.none()
-
-    @extend_schema(deprecated=True, exclude=True)
-    def get(self, request, *args, **kwargs):
-        """
-        Return the given push token instance.
-        """
-        response = self.retrieve(request, *args, **kwargs)
-
-        return response
 
     @extend_schema(
         tags=['auth.pushtoken']

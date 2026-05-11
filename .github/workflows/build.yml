@@ -153,8 +153,7 @@ jobs:
           gh workflow run deploy.yml \
             --ref develop \
             -f version_type=latest \
-            -f environment=dev \
-            -f run_legacy_cluster_tests=true
+            -f environment=dev
 
           echo "Triggered deploy workflow for dev environment with latest containers"
           echo "View workflow runs: https://github.com/${{ github.repository }}/actions/workflows/deploy.yml"

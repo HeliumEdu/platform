@@ -8,7 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from helium.common import enums
-from helium.common.tasks import send_text, send_pushes
+from helium.common.tasks import send_pushes
 from helium.common.utils.commonutils import format_short_time
 from helium.common.utils import metricutils, taskutils
 from helium.planner.models import Reminder
@@ -294,47 +294,6 @@ def process_email_reminders():
                         f'course={reminder.course_id}, user={reminder.user_id}')
             except Exception:
                 logger.error("An error occurred creating next repeating email reminder.", exc_info=True)
-
-        timezone.deactivate()
-
-
-def process_text_reminders():
-    for reminder in (Reminder.objects
-                     .with_type(enums.TEXT)
-                     .unsent()
-                     .for_today()
-                     .filter(course__isnull=True)
-                     .select_related('user', 'user__settings', 'user__profile', 'homework', 'homework__course', 'event')
-                     .iterator()):
-        user = reminder.get_user()
-
-        timezone.activate(ZoneInfo(user.settings.time_zone))
-
-        try:
-            if user.profile.phone and user.profile.phone_verified:
-                subject = get_subject(reminder)
-                message = f'({subject}) {_push_body(reminder)}'
-
-                if not subject:
-                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
-                else:
-                    logger.info(f'Sending text reminder {reminder.pk} for user {user.pk}')
-
-                    metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.text'])
-
-                    taskutils.safe_apply_async(send_text,
-                        args=(user.profile.phone, message),
-                        priority=settings.CELERY_PRIORITY_HIGH,
-                    )
-            else:
-                logger.warning(
-                    f'Reminder {reminder.pk} was not processed, as the phone and carrier are no longer set for user {user.pk}')
-
-            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
-                continue
-            reminder.sent = True
-        except Exception:
-            logger.error("An error occurred processing text reminder.", exc_info=True)
 
         timezone.deactivate()
 
