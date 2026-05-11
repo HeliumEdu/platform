@@ -20,7 +20,11 @@ logger = logging.getLogger(__name__)
     }
 )
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
-    pass
+    def post(self, request, *args, **kwargs):
+        """
+        Authenticate the user with email and password and return an access/refresh token pair.
+        """
+        return super().post(request, *args, **kwargs)
 
 
 @extend_schema(deprecated=True, exclude=True)
@@ -39,11 +43,19 @@ class LegacyTokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     }
 )
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
-    pass
+    def post(self, request, *args, **kwargs):
+        """
+        Exchange a valid refresh token for a new access token (and rotate the refresh token).
+        """
+        return super().post(request, *args, **kwargs)
 
 
 @extend_schema(
     tags=['auth.token']
 )
 class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
-    pass
+    def post(self, request, *args, **kwargs):
+        """
+        Takes a token and blacklists it.
+        """
+        return super().post(request, *args, **kwargs)

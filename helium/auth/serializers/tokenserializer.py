@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
 from django.db import IntegrityError
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
@@ -42,8 +43,8 @@ def _record_client_activity(user, request):
         UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(), client=client)
 
 
+@extend_schema_serializer(component_name='TokenResponse')
 class TokenResponseFieldsMixin(serializers.Serializer):
-    """Mixin providing access and refresh token fields for response serializers."""
     access = serializers.CharField(read_only=True, required=False,
                                    help_text='JWT access token for authentication.')
     refresh = serializers.CharField(read_only=True, required=False,
@@ -212,7 +213,10 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
 
 
 class OAuthLoginSerializer(serializers.Serializer):
-    """Serializer for OAuth Sign-In via Firebase ID token."""
+    """
+    OAuth Sign-In request body. Accepts a Firebase ID token obtained on the client from
+    a Google or Apple Sign-In flow.
+    """
     id_token = serializers.CharField(
         help_text='Firebase ID token obtained from OAuth Sign-In on the client.',
         write_only=True
