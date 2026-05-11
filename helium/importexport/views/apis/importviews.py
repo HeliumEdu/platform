@@ -13,7 +13,7 @@ from rest_framework.viewsets import ViewSet
 
 from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView
-from helium.importexport.serializers.importerializer import ImportSerializer
+from helium.importexport.serializers.importerializer import ImportCreateSerializer, ImportSerializer
 from helium.importexport.services import importservice
 from helium.planner.services import reminderservice
 
@@ -24,6 +24,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     serializer_class = ImportSerializer
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(request=ImportCreateSerializer, responses={200: ImportSerializer})
     def import_data(self, request, *args, **kwargs):
         """
         Import the resources for the authenticated user from the uploaded files. Multiple files can be imported at

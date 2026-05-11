@@ -40,7 +40,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # User fields
         self.assertNotIn('verification_code', response.data)
-        self.assertEqual(user.username, response.data['username'])
+        self.assertNotIn('username', response.data)
         self.assertEqual(user.email, response.data['email'])
         # Profile fields
         self.assertNotIn('phone_verification_code', response.data['profile'])
@@ -72,34 +72,11 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
         self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
-    def test_username_changes(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        self.assertEqual(user.email, 'user@test.com')
-        self.assertIsNone(user.email_changing)
-
-        # WHEN
-        data = {
-            'username': 'new_username'
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], data['username'])
-        self.assertEqual(response.data['email'], user.email)
-        user.refresh_from_db()
-        self.assertEqual(user.username, response.data['username'])
-        self.assertEqual(user.email, response.data['email'])
-        self.assertIsNone(user.email_changing)
-
     def test_email_changing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
-        self.assertEqual(user.username, 'test_user')
 
         # WHEN
         data = {
@@ -111,13 +88,11 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], user.username)
         self.assertEqual(response.data['email'], user.email)
         self.assertEqual(response.data['email_changing'], 'new@email.com')
         user.refresh_from_db()
         self.assertEqual(user.email, response.data['email'])
         self.assertEqual(user.email_changing, response.data['email_changing'])
-        self.assertEqual(user.username, response.data['username'])
 
     def test_email_change_fails_without_password(self):
         # GIVEN
@@ -269,38 +244,6 @@ class TestCaseUserViews(APITestCase):
         # WHEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('password', response.data)
-
-    def test_username_already_exists(self):
-        # GIVEN
-        user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
-                                                                    email='test2@email.com')
-
-        # WHEN
-        data = {
-            # Trying to change username to match user1's email
-            'username': user1.username
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('username', response.data)
-
-    def test_reserved_username_not_in_helium_domain(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        data = {
-            'username': 'heliumedu-cluster-hello'
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_email_already_exists(self):
         # GIVEN

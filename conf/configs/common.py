@@ -291,7 +291,7 @@ SPECTACULAR_SETTINGS = {
         "rotate the access token before it expires.\n\n"
         "## Vocabulary (wire format vs. user-facing terms)\n\n"
         f"The wire format keeps some legacy names that differ from what users see in the "
-        f"{PROJECT_NAME} UI. Each wire name (used in API paths and JSON keys) below "
+        f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
         f"corresponds to the term displayed in the app.\n\n"
         "| Wire (API) | User-facing | Notes |\n"
         "| --- | --- | --- |\n"
@@ -301,7 +301,7 @@ SPECTACULAR_SETTINGS = {
         "| `material` | **resource** | A reference item (syllabus, textbook, link). `materials` is the legacy wire name. |\n"
         "| `material_group` | **resource group** | A container for resources. |\n\n"
         "Integrations that surface these to end users should use the user-facing terms "
-        f"to match the {PROJECT_NAME} UI."
+        f"to match the {PROJECT_NAME} App."
     ),
     'CONTACT': {
         'name': f'{PROJECT_NAME} Support',

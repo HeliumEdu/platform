@@ -1,6 +1,9 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+from datetime import datetime
+from typing import Optional
+
 from django.conf import settings
 from django.db import models
 
@@ -84,7 +87,7 @@ class Note(BaseModel):
         return None
 
     @property
-    def linked_entity_type(self):
+    def linked_entity_type(self) -> str:
         if self._get_cached_m2m('homework'):
             return 'homework'
         if self._get_cached_m2m('events'):
@@ -94,12 +97,12 @@ class Note(BaseModel):
         return ''
 
     @property
-    def linked_entity_title(self):
+    def linked_entity_title(self) -> str:
         entity = self.linked_entity
         return entity.title if entity else ''
 
     @property
-    def course_color(self):
+    def course_color(self) -> Optional[str]:
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -108,7 +111,7 @@ class Note(BaseModel):
         return None
 
     @property
-    def category_color(self):
+    def category_color(self) -> Optional[str]:
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -117,14 +120,14 @@ class Note(BaseModel):
         return None
 
     @property
-    def linked_entity_due(self):
+    def linked_entity_due(self) -> Optional[datetime]:
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].start
         return None
 
     @property
-    def linked_entity_completed(self):
+    def linked_entity_completed(self) -> Optional[bool]:
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].completed

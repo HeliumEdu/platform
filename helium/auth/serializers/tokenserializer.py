@@ -51,6 +51,7 @@ class TokenResponseFieldsMixin(serializers.Serializer):
                                     help_text='JWT refresh token for obtaining new access tokens.')
 
 
+@extend_schema_serializer(component_name='Login')
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
     username = serializers.CharField(help_text="The user's email address.",
                                      label="Email",
