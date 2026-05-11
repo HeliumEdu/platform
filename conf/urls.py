@@ -14,6 +14,8 @@ import helium.feed.urls
 import helium.importexport.urls
 import helium.planner.urls
 
+handler400 = "helium.common.handlers.views.handler_400"
+handler403 = "helium.common.handlers.views.handler_403"
 handler404 = "helium.common.handlers.views.handler_404"
 handler500 = "helium.common.handlers.views.handler_500"
 
