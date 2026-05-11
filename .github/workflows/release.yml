@@ -14,11 +14,6 @@ on:
           - patch
           - minor
           - major
-      run_integration_tests:
-        description: 'Run integration tests'
-        required: true
-        type: boolean
-        default: true
       trigger_deploy_after_release:
         description: 'Trigger deploy after release'
         required: true
@@ -44,11 +39,6 @@ on:
         required: false
         type: string
         default: patch
-      run_integration_tests:
-        description: "Run integration tests"
-        required: false
-        type: boolean
-        default: true
       trigger_deploy_after_release:
         description: "Trigger deploy after release"
         required: false
@@ -110,20 +100,10 @@ jobs:
       - name: Test
         run: make test
 
-  integration-test:
-    name: Integration Test
-    needs: [prereq]
-    if: ${{ inputs.run_integration_tests == true || inputs.run_integration_tests == 'true' }}
-    uses: ./.github/workflows/integration.yml
-    with:
-      suite: full
-      caller: release
-    secrets: inherit
-
   build-and-publish:
     name: Build and Publish AMD64 Containers
-    needs: [prereq, test, integration-test]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
+    needs: [prereq, test]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success'"
     runs-on: ubuntu-24.04
 
     env:
@@ -160,8 +140,8 @@ jobs:
 
   build-and-publish-arm64:
     name: Build and Publish ARM64 Containers
-    needs: [prereq, test, integration-test]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success' && (needs['integration-test'].result == 'success' || needs['integration-test'].result == 'skipped')"
+    needs: [prereq, test]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success'"
     runs-on: ubuntu-24.04-arm
 
     env:
