@@ -16,9 +16,7 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(
-    tags=['auth.pushtoken']
-)
+@extend_schema(exclude=True)
 class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = UserPushTokenSerializer
     permission_classes = (IsAuthenticated,)
@@ -47,11 +45,6 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         )
         serializer.instance = obj
 
-    @extend_schema(
-        responses={
-            201: UserPushTokenSerializer
-        }
-    )
     def post(self, request, *args, **kwargs):
         """
         Create or update the push token for the authenticated user's device.
@@ -63,9 +56,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         return response
 
 
-@extend_schema(
-    tags=['auth.pushtoken']
-)
+@extend_schema(exclude=True)
 class UserPushTokenApiDetailView(HeliumAPIView, UpdateModelMixin, DestroyModelMixin):
     serializer_class = UserPushTokenSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
@@ -77,9 +68,6 @@ class UserPushTokenApiDetailView(HeliumAPIView, UpdateModelMixin, DestroyModelMi
         else:
             return UserPushToken.objects.none()
 
-    @extend_schema(
-        tags=['auth.pushtoken']
-    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given push token instance.

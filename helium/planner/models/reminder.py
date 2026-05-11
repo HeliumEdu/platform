@@ -23,16 +23,20 @@ class Reminder(BaseModel):
     message = models.TextField(
         help_text='A string that will be used as the reminder message (may contain HTML formatting).')
 
-    start_of_range = models.DateTimeField(null=True, blank=True)
+    start_of_range = models.DateTimeField(
+        help_text='Datetime the reminder fires. Server-computed from the parent (`event`, `homework`, or `course`) '
+                  'start time minus `offset × offset_type` whenever the parent or offset changes; do not send on create.',
+        null=True, blank=True)
 
-    offset = models.PositiveIntegerField(help_text='The number of units (in `offset_type`) from the offset.',
+    offset = models.PositiveIntegerField(help_text='How far before the parent start time to fire, measured in '
+                                                   '`offset_type` units. Capped at 100.',
                                          default=30, validators=[MaxValueValidator(100)])
 
     offset_type = models.PositiveIntegerField(help_text='A valid reminder offset type choice.',
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)
 
     type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
-                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP)
+                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.PUSH)
 
     sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False)
 

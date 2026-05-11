@@ -11,11 +11,7 @@ logger = logging.getLogger(__name__)
 class InfoSerializer(serializers.Serializer):
     name = serializers.CharField(help_text='The name of the API service.')
 
-    tagline = serializers.CharField(help_text='Tagline for the service.')
-
     version = serializers.CharField(help_text='The deployed API version.')
-
-    support_email = serializers.EmailField(help_text='Email address for support inquiries.')
 
     max_upload_size = serializers.IntegerField(
         help_text='Maximum size, in bytes, for any single file upload (attachments and imports).'

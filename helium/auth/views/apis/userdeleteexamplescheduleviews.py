@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,7 @@ class UserDeleteExampleScheduleView(HeliumAPIView):
     def get_object(self):
         return self.request.user
 
+    @extend_schema(exclude=True)
     def delete(self, request, *args, **kwargs):
         """
         Delete any items marked as part of the example schedule for the user instance.

@@ -23,8 +23,8 @@ urlpatterns = [
 
     # URLs for auto-generated resources
     path('admin/', admin_site.urls, name='admin'),
-    path('schema/', admin_site.admin_view(SpectacularAPIView.as_view()), name='schema'),
-    path('docs/', admin_site.admin_view(SpectacularSwaggerView.as_view(url_name='schema')), name='docs'),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
 
     ##############################
     # Unauthenticated URLs

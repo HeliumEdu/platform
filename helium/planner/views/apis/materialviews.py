@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -38,6 +38,17 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
         else:
             return Material.objects.none()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='courses',
+                type=int,
+                many=True,
+                description='Restrict the result to materials linked to any of the given class IDs. Repeat '
+                            'the parameter to pass multiple IDs: `?courses=1&courses=2`.',
+            ),
+        ],
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all material instances for the authenticated user.
@@ -90,7 +101,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Material {response.data['id']} created in MaterialGroup {request.data['material_group']} for user {request.user.pk}")
+            f"Material {response.data['id']} created in MaterialGroup {kwargs['material_group']} for user {request.user.pk}")
 
         return response
 
@@ -122,8 +133,6 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         """
         Update the given material instance.
         """
-        if 'material_group' in request.data:
-            permissions.check_material_group_permission(request.user.pk, request.data['material_group'])
         courses = request.data.get('courses', [])
         if courses:
             for course_id in courses:

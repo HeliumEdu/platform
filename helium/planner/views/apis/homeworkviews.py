@@ -2,10 +2,9 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime
 
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -20,7 +19,7 @@ from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
 from helium.planner.services.homeworkservice import clone_homework
-from helium.planner.views.base import HeliumCalendarItemAPIView
+from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +42,7 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
         else:
             return Homework.objects.none()
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(name='from', type=datetime),
-            OpenApiParameter(name='to', type=datetime),
-        ]
-    )
+    @extend_schema(parameters=CALENDAR_DATE_RANGE_PARAMETERS)
     def get(self, request, *args, **kwargs):
         """
         Return a list of all homework instances for the authenticated user. For convenience, homework instances on a
@@ -80,12 +74,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             return HomeworkExtendedSerializer
         return self.serializer_class
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(name='from', type=datetime),
-            OpenApiParameter(name='to', type=datetime),
-        ]
-    )
+    @extend_schema(parameters=CALENDAR_DATE_RANGE_PARAMETERS)
     def get(self, request, *args, **kwargs):
         """
         Return a list of all homework instances for the given course. For convenience, homework instances on a GET are
@@ -159,6 +148,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return response
 
+    @extend_schema(responses={200: HomeworkExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given homework instance.
@@ -179,9 +169,9 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         logger.info(f"Homework {kwargs['pk']} updated for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
+    @extend_schema(responses={200: HomeworkExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given homework instance.
@@ -203,7 +193,6 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         logger.info(f"Homework {kwargs['pk']} patched for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
