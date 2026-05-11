@@ -67,7 +67,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
 
         The `title` attribute is set dynamically by the `filename` field passed for each file to be uploaded.
 
-        The maximum file size for each upload is 10M.
+        Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
         At least one of `course`, `event`, or `homework` must be given.
         """

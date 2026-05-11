@@ -26,6 +26,7 @@ class InfoSerializer(serializers.Serializer):
                   'Clients should refresh before this expires.'
     )
 
+
     refresh_token_lifetime_days = serializers.IntegerField(
         help_text='Lifetime, in days, of a `refresh` token issued by `/auth/token/`. '
                   'Once expired, the user must log in again.'

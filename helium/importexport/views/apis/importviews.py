@@ -32,7 +32,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         Import the resources for the authenticated user from the uploaded files. Multiple files can be imported at
         once passed in the `file[]` field.
 
-        The maximum file size for each upload is 10M.
+        Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
         Each model will be imported in a schema matching that of the documented APIs.
         """
