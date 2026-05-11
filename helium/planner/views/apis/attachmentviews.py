@@ -69,7 +69,8 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
 
         Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
-        At least one of `course`, `event`, or `homework` must be given.
+        Exactly one of `course`, `event`, or `homework` must be given — the attachment is associated
+        with that single owning entity.
         """
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])

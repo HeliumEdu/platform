@@ -174,11 +174,21 @@ class AttachmentFilter(django_filters.FilterSet):
 
 
 class NoteFilter(django_filters.FilterSet):
-    linked_entity_type = django_filters.CharFilter(method='filter_linked_type')
-    has_link = django_filters.BooleanFilter(method='filter_has_link')
-    homework = django_filters.NumberFilter(field_name='homework__id')
-    event = django_filters.NumberFilter(field_name='events__id')
-    resource = django_filters.NumberFilter(field_name='resources__id')
+    linked_entity_type = django_filters.CharFilter(
+        method='filter_linked_type',
+        help_text='Filter by what kind of entity the note is linked to. '
+                  'One of `homework`, `event`, `resource`, or `standalone` (no link).',
+    )
+    has_link = django_filters.BooleanFilter(
+        method='filter_has_link',
+        help_text='`true` returns only notes linked to an entity; `false` returns only standalone notes.',
+    )
+    homework = django_filters.NumberFilter(field_name='homework__id',
+                                           help_text='Filter to the note linked to this homework ID.')
+    event = django_filters.NumberFilter(field_name='events__id',
+                                        help_text='Filter to the note linked to this event ID.')
+    resource = django_filters.NumberFilter(field_name='resources__id',
+                                           help_text='Filter to the note linked to this resource ID.')
 
     class Meta:
         model = Note

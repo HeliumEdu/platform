@@ -5,7 +5,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
@@ -101,14 +101,17 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
             OpenApiParameter('username', description="The user's email address.")
         ],
         responses={
-            202: None,
-            429: None
+            202: OpenApiResponse(description='Verification email queued. Returned whether or not the submitted '
+                                              'address is registered, so callers cannot use this endpoint to '
+                                              'probe account existence.'),
+            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
+                                              '60 seconds; retry after the window.'),
         }
     )
     def resend_verification(self, request, *args, **kwargs):
         """
-        Resend the verification email for an inactive user account.
-        Rate limited to once per 60 seconds per user.
+        Resend the verification email for an inactive user account, or for an active user who has requested an
+        email change.
         """
         response = authservice.resend_verification_email(request)
 

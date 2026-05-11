@@ -21,7 +21,8 @@ class Note(BaseModel):
     )
 
     content = models.JSONField(
-        help_text='Rich text content in Quill Delta format.',
+        help_text='Rich-text JSON (Quill Delta compatible). Setting this to empty on a note that has a '
+                  'linked entity deletes the note and returns 204.',
         blank=True,
         null=True
     )
@@ -41,21 +42,22 @@ class Note(BaseModel):
         'Homework',
         related_name='notes_set',
         blank=True,
-        help_text='Linked homework assignments.'
+        help_text='Linked homework. A note may be linked to one homework, one event, or one resource — '
+                  'never more than one type, and never more than one entity within a type.'
     )
 
     events = models.ManyToManyField(
         'Event',
         related_name='notes_set',
         blank=True,
-        help_text='Linked events.'
+        help_text='Linked event. Mutually exclusive with `homework` and `resources` (see `homework` help).'
     )
 
     resources = models.ManyToManyField(
         'Material',
         related_name='notes_set',
         blank=True,
-        help_text='Linked resources (Material model).'
+        help_text='Linked resource. Mutually exclusive with `homework` and `events` (see `homework` help).'
     )
 
     objects = NoteManager()

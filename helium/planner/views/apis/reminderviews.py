@@ -79,7 +79,12 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new reminder instance for the authenticated user.
+        Create a reminder for the authenticated user.
+
+        Exactly one of `event`, `homework`, or `course` must be given — that's the parent the reminder
+        fires against. `course`-typed reminders are repeating: only one active reminder is kept per
+        (`course`, `type`, `offset`, `offset_type`) combination, and the next occurrence is rolled
+        forward by the server as each one fires.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -141,9 +146,9 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
-    def put(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         """
-        Update the given reminder instance.
+        Update the given reminder. Fields not supplied are left unchanged.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -152,16 +157,6 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         elif 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
 
-        response = self.partial_update(request, *args, **kwargs)
-
-        logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
-
-        return response
-
-    def patch(self, request, *args, **kwargs):
-        """
-        Update only the given attributes of the given reminder instance.
-        """
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
@@ -192,7 +187,12 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
     )
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given reminder instance.
+        Delete the given reminder.
+
+        For `course`-typed reminders, this also deletes every active reminder in the same series
+        (matched on `course`, `type`, `offset`, `offset_type`) plus any past sent-but-undismissed
+        reminders for that `course` / `type` — so the series is fully torn down, not just the
+        single targeted row.
         """
         response = self.destroy(request, *args, **kwargs)
 

@@ -96,6 +96,10 @@ class UserDeleteResourceView(HeliumAPIView):
 
         OAuth-only users (no usable password) may submit an empty body; the access token already
         proves authentication.
+
+        The response is immediate. Outstanding refresh tokens are blacklisted before returning, but the
+        actual data deletion runs in the background — accounts and their data may persist for a short
+        window after the response.
         """
         user = self.get_object()
 

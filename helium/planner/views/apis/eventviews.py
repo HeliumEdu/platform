@@ -2,11 +2,10 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime
 
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -20,7 +19,7 @@ from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.services.eventservice import clone_event
-from helium.planner.views.base import HeliumCalendarItemAPIView
+from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +52,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         return self.serializer_class
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(name='from', type=datetime),
-            OpenApiParameter(name='to', type=datetime),
-        ],
+        parameters=CALENDAR_DATE_RANGE_PARAMETERS,
         tags=['planner.event', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
