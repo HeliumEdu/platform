@@ -192,12 +192,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text=get_user_model()._meta.get_field('username').help_text
-    )
-
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 
     password = serializers.CharField(help_text=get_user_model()._meta.get_field('password').help_text)

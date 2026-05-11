@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 class UserReviewPromptAckView(HeliumAPIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(exclude=True)
     def post(self, request, *args, **kwargs):
         """
         Acknowledge that the review prompt has been shown to the authenticated user. Clears the

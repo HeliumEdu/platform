@@ -4,6 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -93,6 +94,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         return Response(serializer.data)
 
+    @extend_schema(exclude=True)
     def import_exampleschedule(self, request, *args, **kwargs):
         importservice.import_example_schedule(request.user)
 

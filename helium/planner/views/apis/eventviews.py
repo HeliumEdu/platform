@@ -214,7 +214,10 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
 
     def delete_all(self, request, *args, **kwargs):
         """
-        Delete all Helium Event instances for the authenticated user.
+        Permanently delete **every** Event instance owned by the authenticated user, along with any
+        notes attached to those events. This operation is irreversible and cannot be filtered or
+        scoped — it affects the entire user's event history. Course-derived schedules and homework
+        are not touched.
         """
         queryset = self.filter_queryset(self.get_queryset())
 

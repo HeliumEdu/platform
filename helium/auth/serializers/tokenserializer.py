@@ -51,8 +51,8 @@ class TokenResponseFieldsMixin(serializers.Serializer):
 
 
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
-    username = serializers.CharField(help_text="The username for the user.",
-                                     label="Username",
+    username = serializers.CharField(help_text="The user's email address.",
+                                     label="Email",
                                      write_only=True)
 
     password = serializers.CharField(help_text="The password for the user.",

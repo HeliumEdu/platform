@@ -69,7 +69,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter('username', description='The username for the user.'),
+            OpenApiParameter('username', description="The user's email address."),
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
         ],
         responses={
@@ -78,7 +78,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
     )
     def verify_email(self, request, *args, **kwargs):
         """
-        Verify an email address for the user instance associated with the username and verification code.
+        Verify an email address for the user instance associated with the email and verification code.
 
         Returns access and refresh tokens for immediate authentication.
         """
@@ -95,7 +95,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter('username', description='The username for the user.')
+            OpenApiParameter('username', description="The user's email address.")
         ],
         responses={
             202: None,
