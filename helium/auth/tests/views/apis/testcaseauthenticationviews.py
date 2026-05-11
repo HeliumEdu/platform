@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
 
@@ -74,6 +75,7 @@ class TestCaseAuthenticationViews(TestCase):
         # WHEN
         data = {
             'email': 'test@test.com',
+            'username': 'my_test_user',
             'password': 'test_pass_1!',
             'time_zone': 'America/Chicago'}
         response1 = self.client.post(reverse('auth_user_resource_register'),
@@ -84,13 +86,15 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response1.data['settings']['time_zone'], 'America/Chicago')
         response2 = self.client.post(reverse('auth_token_obtain'),
-                                     json.dumps({'username': 'test@test.com', 'password': 'test_pass_1!'}),
+                                     json.dumps({'username': 'my_test_user', 'password': 'test_pass_1!'}),
                                      content_type='application/json')
         self.assertContains(response2, 'account is not active', status_code=status.HTTP_403_FORBIDDEN)
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
+        self.assertEqual(user.username, 'my_test_user')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
 
+        self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())
 
     def test_registration_success_without_username(self):
@@ -124,6 +128,37 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(get_user_model().objects.filter(username='my_test_user').exists())
         self.assertIn('email', response.data)
+
+    def test_registration_succeeds_reserved_usernames_in_helium_domain(self):
+        # WHEN
+        response1 = self.client.post(reverse('auth_user_resource_register'),
+                                     json.dumps({'email': 'heliumedu-cluster+1@heliumedu.dev',
+                                                 'username': 'heliumedu-cluster-1',
+                                                 'password': 'test_pass_1!',
+                                                 'time_zone': 'America/Chicago'}),
+                                     content_type='application/json')
+        response2 = self.client.post(reverse('auth_user_resource_register'),
+                                     json.dumps({'email': 'heliumedu-cluster+2@heliumedu.com',
+                                                 'username': 'heliumedu-cluster-2',
+                                                 'password': 'test_pass_1!',
+                                                 'time_zone': 'America/Chicago'}),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
+
+    def test_registration_fails_reserved_username_not_in_helium_domain(self):
+        # WHEN
+        response = self.client.post(reverse('auth_user_resource_register'),
+                                    json.dumps({'email': 'test@otherdomain.com',
+                                                'username': 'heliumedu-cluster-1',
+                                                'password': 'test_pass_1!',
+                                                'time_zone': 'America/Chicago'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_registration_fails_when_email_pending_deletion(self):
         """A user whose cascade-delete is still in flight keeps their email reserved so the

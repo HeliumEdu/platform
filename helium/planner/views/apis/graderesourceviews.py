@@ -24,8 +24,7 @@ class GradesApiResourceView(HeliumAPIView):
         The result is a list of course groups. Each course group contains a nested list of courses. Each course
         contains a nested list of categories.
 
-        Each entity contains at least three fields: `id`, `overall_grade`, and `grade_points`. An `overall_grade`
-        of `-1` is the sentinel for "no graded homework yet" — not a real percentage.
+        Each entity contains at least three fields: `id`, `overall_grade`, and `grade_points`.
 
         `grade_points` represents a list of grades accumulating over time. This is a list made up of individual grade
         points, each a tuple containing values of the format [time, grade_at_time, homework_id, homework_title,

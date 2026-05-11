@@ -56,16 +56,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 
 class AttachmentCreateSerializer(serializers.Serializer):
-    """
-    Multipart request body for uploading one or more attachments. Files are sent under the
-    repeated `file[]` field. Exactly one of `course`, `event`, or `homework` must be supplied
-    to associate the uploaded files with their owning entity.
-    """
-    file = serializers.ListField(
-        child=FileField(),
-        required=True,
-        help_text='One or more files, sent as the multipart `file[]` field.'
-    )
-    course = IntegerField(required=False, help_text=Attachment._meta.get_field('course').help_text)
-    event = IntegerField(required=False, help_text=Attachment._meta.get_field('event').help_text)
-    homework = IntegerField(required=False, help_text=Attachment._meta.get_field('homework').help_text)
+    file = FileField(required=True, read_only=False, help_text='A multipart list of files to upload.')
+    course = IntegerField(help_text=Attachment._meta.get_field('course').help_text)
+    event = IntegerField(help_text=Attachment._meta.get_field('event').help_text)
+    homework = IntegerField(help_text=Attachment._meta.get_field('homework').help_text)

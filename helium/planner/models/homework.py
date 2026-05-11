@@ -12,24 +12,19 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 
 class Homework(BaseCalendar):
-    current_grade = models.CharField(help_text='Fraction of points earned in `"numerator/denominator"` form '
-                                               '(e.g. `"25/30"`). Use `"-1/100"` to indicate ungraded.',
+    current_grade = models.CharField(help_text='The current grade in fraction form (ex. 25/30).',
                                      max_length=255, validators=[validate_fraction])
 
-    completed = models.BooleanField(help_text='Whether the homework has been completed. Flipping this to `true` '
-                                              'sets `completed_at` to the current time automatically.',
+    completed = models.BooleanField(help_text='Whether the homework has been completed.',
                                     default=False)
 
     completed_at = models.DateTimeField(
-        help_text='When the homework was first marked as completed. Set automatically the first time `completed` '
-                  'flips to `true`; not user-supplied.',
+        help_text='When the homework was first marked as completed. Set automatically.',
         null=True,
         blank=True,
     )
 
-    category = models.ForeignKey('Category', help_text='The category to associate this homework with. If omitted '
-                                                       'or null, the homework is placed in the course\'s '
-                                                       '`Uncategorized` category (auto-created on first use).',
+    category = models.ForeignKey('Category', help_text='The category with which to associate.',
                                  related_name='homework', blank=True, null=True, default=None,
                                  on_delete=models.SET_NULL)
 

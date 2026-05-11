@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.5"
+__version__ = "2.2.6"
 
 import os
 import socket
@@ -16,6 +16,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
+from conf.utils import strip_www
 from helium.common import enums
 
 # ############################
@@ -34,15 +35,24 @@ PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:8080' if 'local' in ENVIRONMENT else f'https://app.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
+PROJECT_APP_LEGACY_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
 
 # Version information
 
 PROJECT_VERSION = __version__
 
+FRONTEND_LEGACY_VERSION = config('PLATFORM_FRONTEND_LEGACY_VERSION', "latest")
+
 # AWS S3
 
 AWS_S3_ACCESS_KEY_ID = config('PLATFORM_AWS_S3_ACCESS_KEY_ID')
 AWS_S3_SECRET_ACCESS_KEY = config('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
+
+# Twilio
+
+TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
 
 # Google Analytics
 
@@ -231,11 +241,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'helium.common.throttles.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
         'user': '120/min',
+        'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
         'delete_inactive': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
@@ -244,6 +255,10 @@ REST_FRAMEWORK = {
 
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
+
+# TTL values for the legacy frontend that doesn't reliably support token refresh
+LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
+LEGACY_REFRESH_TOKEN_TTL_DAYS = int(config('PLATFORM_LEGACY_REFRESH_TOKEN_TTL_DAYS', '30'))
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
@@ -258,85 +273,12 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
-
 SPECTACULAR_SETTINGS = {
-    'TITLE': f"{PROJECT_NAME} API Documentation",
+    'TITLE': "Helium API Documentation",
     'VERSION': PROJECT_VERSION,
-    'DESCRIPTION': (
-        f"{PROJECT_NAME} is a smart, color-coded student planner that tracks classes, "
-        "assignments, grades, and notes — built for the way you actually study. "
-        "The API exposes the full set of resources behind the app: class groups "
-        "(terms), classes, recurring class schedules, weighted grading categories, "
-        "assignments, events, reminders, notes, file attachments, resources, external "
-        "calendar feeds (Google Calendar, iCloud, etc.), private iCal subscription "
-        "feeds, and full account import/export.\n\n"
-        "## Authentication\n\n"
-        "POST email and password to `/auth/token/` to obtain an `access` and "
-        "`refresh` token. Send subsequent requests with the "
-        "`Authorization: Bearer <access>` header. Use `/auth/token/refresh/` to "
-        "rotate the access token before it expires.\n\n"
-        "## Vocabulary (wire format vs. user-facing terms)\n\n"
-        f"The wire format keeps some legacy names that differ from what users see in the "
-        f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
-        f"corresponds to the term displayed in the app.\n\n"
-        "| Wire (API) | User-facing | Notes |\n"
-        "| --- | --- | --- |\n"
-        "| `course_group` | **class group** (semester / quarter / term) | Container for the classes a user is taking in a given period. |\n"
-        "| `course` | **class** | A single class within a class group. The API uses `course` to avoid the reserved word `class`. |\n"
-        "| `homework` | **assignment** | A graded item for a class. The API uses `homework` to avoid the reserved word `assignment`. |\n"
-        "| `material` | **resource** | A reference item (syllabus, textbook, link). `materials` is the legacy wire name. |\n"
-        "| `material_group` | **resource group** | A container for resources. |\n\n"
-        "Integrations that surface these to end users should use the user-facing terms "
-        f"to match the {PROJECT_NAME} App.\n\n"
-        "## Importing a schedule from a syllabus\n\n"
-        "When ingesting a syllabus (or any external schedule), most resources are owned by a parent — "
-        "POST them in this order so each create succeeds:\n\n"
-        "1. `POST /planner/coursegroups/` — the term (semester / quarter).\n"
-        "2. `POST /planner/coursegroups/{course_group}/courses/` — each class within the term.\n"
-        "3. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/courseschedules/` — "
-        "recurring weekly meeting times for the class (at most one schedule per class).\n"
-        "4. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/categories/` — graded "
-        "categories such as Homework, Exams. Sum of `weight` across a class's categories must stay ≤ 100. "
-        "An `Uncategorized` category is auto-created on demand if you create homework without one.\n"
-        "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual assignments. "
-        "Set `current_grade` to `\"-1/100\"` for ungraded items.\n"
-        "6. (Optional) `POST /planner/events/` — non-class calendar items (study sessions, office hours). "
-        "Events have no class dependency.\n"
-        "7. (Optional) `POST /planner/reminders/` — push/email reminders attached to exactly one parent "
-        "(`event`, `homework`, or `course`).\n"
-        "8. (Optional) `POST /planner/notes/`, `POST /planner/attachments/` — rich-text notes and file "
-        "uploads linked to a single parent entity each."
-    ),
-    'CONTACT': {
-        'name': f'{PROJECT_NAME} Support',
-        'url': SUPPORT_URL,
-    },
-    'LICENSE': {
-        'name': 'MIT',
-        'url': 'https://opensource.org/licenses/MIT',
-    },
-    'SERVERS': [
-        {
-            'url': PROJECT_API_HOST,
-            'description': f'{PROJECT_NAME} API' + (f' ({ENVIRONMENT})' if 'prod' not in ENVIRONMENT else ''),
-        },
-    ],
     'SERVE_INCLUDE_SCHEMA': False,
-    'SORT_OPERATIONS': True,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
-    'POSTPROCESSING_HOOKS': [
-        'drf_spectacular.hooks.postprocess_schema_enums',
-    ],
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
-    'SWAGGER_UI_SETTINGS': {
-        'persistAuthorization': True,
-        'displayRequestDuration': True,
-        'filter': True,
-        'deepLinking': True,
-        'docExpansion': 'list',
-    },
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
@@ -380,6 +322,7 @@ BLOCKED_ATTACHMENT_MIME_TYPES = {
 # Email settings
 
 DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
+DISABLE_TEXTS = config('PROJECT_DISABLE_TEXTS', 'False') == 'True'
 DISABLE_PUSH = config('PROJECT_DISABLE_PUSH', 'False') == 'True'
 
 REMINDER_SEND_WINDOW_MINUTES = int(config('PROJECT_REMINDER_SEND_WINDOW_MINUTES', '15'))
@@ -438,10 +381,14 @@ PROJECT_CI_APP_HOST = config('PROJECT_CI_APP_HOST', None)
 CSRF_TRUSTED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_APP_LEGACY_HOST,
+    strip_www(PROJECT_APP_LEGACY_HOST),
 ]
 CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_APP_LEGACY_HOST,
+    strip_www(PROJECT_APP_LEGACY_HOST),
 ]
 
 if PROJECT_CI_APP_HOST:
@@ -463,10 +410,16 @@ if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
     ]
     CORS_ALLOWED_ORIGINS += [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
     ]
 
 if 'local' in ENVIRONMENT:

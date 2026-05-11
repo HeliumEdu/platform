@@ -13,7 +13,7 @@ from helium.planner.managers.categorymanager import CategoryManager
 
 
 class Category(BaseModel):
-    title = models.CharField(help_text='A display name. Must be unique within the parent course.',
+    title = models.CharField(help_text='A display name.',
                              max_length=255)
 
     weight = models.DecimalField(

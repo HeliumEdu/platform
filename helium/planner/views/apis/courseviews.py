@@ -126,6 +126,9 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         """
         Update the given course instance.
         """
+        if 'course_group' in request.data:
+            permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
+
         response = self.update(request, *args, **kwargs)
 
         logger.info(f"Course {kwargs['pk']} updated for user {request.user.pk}")
@@ -136,6 +139,9 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         """
         Partially update the given course instance.
         """
+        if 'course_group' in request.data:
+            permissions.check_course_group_permission(request.user.pk, request.data['course_group'])
+
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info(f"Course {kwargs['pk']} partially updated for user {request.user.pk}")

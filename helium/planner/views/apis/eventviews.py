@@ -2,10 +2,11 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import datetime
 
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -19,7 +20,7 @@ from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.services.eventservice import clone_event
-from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS
+from helium.planner.views.base import HeliumCalendarItemAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,10 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         return self.serializer_class
 
     @extend_schema(
-        parameters=CALENDAR_DATE_RANGE_PARAMETERS,
+        parameters=[
+            OpenApiParameter(name='from', type=datetime),
+            OpenApiParameter(name='to', type=datetime),
+        ],
         tags=['planner.event', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
@@ -122,7 +126,6 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return response
 
-    @extend_schema(responses={200: EventExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given Helium Event instance.
@@ -134,9 +137,9 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         logger.info(f"Event {kwargs['pk']} updated for user {request.user.pk}")
 
+        # Return extended serializer with note field
         return Response(EventExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(responses={200: EventExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Helium Event instance.
@@ -148,6 +151,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         logger.info(f"Event {kwargs['pk']} patched for user {request.user.pk}")
 
+        # Return extended serializer with note field
         return Response(EventExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
@@ -210,10 +214,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
 
     def delete_all(self, request, *args, **kwargs):
         """
-        Permanently delete **every** Event instance owned by the authenticated user, along with any
-        notes attached to those events. This operation is irreversible and cannot be filtered or
-        scoped — it affects the entire user's event history. Course-derived schedules and homework
-        are not touched.
+        Delete all Helium Event instances for the authenticated user.
         """
         queryset = self.filter_queryset(self.get_queryset())
 

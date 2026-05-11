@@ -8,18 +8,6 @@ from rest_framework import serializers
 logger = logging.getLogger(__name__)
 
 
-class ImportCreateSerializer(serializers.Serializer):
-    """
-    Multipart request body for importing one or more previously-exported JSON files. Files are
-    sent under the repeated `file[]` field.
-    """
-    file = serializers.ListField(
-        child=serializers.FileField(),
-        required=True,
-        help_text='One or more exported JSON files, sent as the multipart `file[]` field.'
-    )
-
-
 class ImportSerializer(serializers.Serializer):
     external_calendars = serializers.IntegerField()
 

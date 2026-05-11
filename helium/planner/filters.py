@@ -30,19 +30,9 @@ class EventFilter(django_filters.FilterSet):
 class HomeworkFilter(django_filters.FilterSet):
     course__id = CharInFilter(field_name='course__id')
     category__id = CharInFilter(field_name='category__id')
-    category__title__in = django_filters.CharFilter(
-        method='filter_category_titles',
-        help_text='Restrict to homework whose category title matches any value in the given comma-separated list.',
-    )
-    shown_on_calendar = django_filters.BooleanFilter(
-        method='filter_shown_on_calendar',
-        help_text="Restrict to homework whose parent class group is visible on the user's calendar.",
-    )
-    overdue = django_filters.BooleanFilter(
-        method='filter_overdue',
-        help_text='`true` returns incomplete homework whose `start` is in the past. `false` returns homework '
-                  'that is either completed or has a `start` in the future.',
-    )
+    category__title__in = django_filters.CharFilter(method='filter_category_titles')
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
+    overdue = django_filters.BooleanFilter(method='filter_overdue')
 
     class Meta:
         model = Homework
@@ -87,10 +77,7 @@ class CourseGroupFilter(django_filters.FilterSet):
 
 
 class CourseFilter(django_filters.FilterSet):
-    shown_on_calendar = django_filters.BooleanFilter(
-        method='filter_shown_on_calendar',
-        help_text="Restrict to classes whose parent class group is visible on the user's calendar.",
-    )
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
 
     class Meta:
         model = Course
@@ -107,10 +94,7 @@ class CourseFilter(django_filters.FilterSet):
 
 
 class CategoryFilter(django_filters.FilterSet):
-    shown_on_calendar = django_filters.BooleanFilter(
-        method='filter_shown_on_calendar',
-        help_text="Restrict to categories whose parent class group is visible on the user's calendar.",
-    )
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
 
     class Meta:
         model = Category
@@ -154,10 +138,7 @@ class MaterialGroupFilter(django_filters.FilterSet):
 
 
 class MaterialFilter(django_filters.FilterSet):
-    shown_on_calendar = django_filters.BooleanFilter(
-        method='filter_shown_on_calendar',
-        help_text="Restrict to resources whose parent resource group is visible on the user's calendar.",
-    )
+    shown_on_calendar = django_filters.BooleanFilter(method='filter_shown_on_calendar')
 
     class Meta:
         model = Material
@@ -193,21 +174,11 @@ class AttachmentFilter(django_filters.FilterSet):
 
 
 class NoteFilter(django_filters.FilterSet):
-    linked_entity_type = django_filters.CharFilter(
-        method='filter_linked_type',
-        help_text='Filter by what kind of entity the note is linked to. '
-                  'One of `homework`, `event`, `resource`, or `standalone` (no link).',
-    )
-    has_link = django_filters.BooleanFilter(
-        method='filter_has_link',
-        help_text='`true` returns only notes linked to an entity; `false` returns only standalone notes.',
-    )
-    homework = django_filters.NumberFilter(field_name='homework__id',
-                                           help_text='Filter to the note linked to this homework ID.')
-    event = django_filters.NumberFilter(field_name='events__id',
-                                        help_text='Filter to the note linked to this event ID.')
-    resource = django_filters.NumberFilter(field_name='resources__id',
-                                           help_text='Filter to the note linked to this resource ID.')
+    linked_entity_type = django_filters.CharFilter(method='filter_linked_type')
+    has_link = django_filters.BooleanFilter(method='filter_has_link')
+    homework = django_filters.NumberFilter(field_name='homework__id')
+    event = django_filters.NumberFilter(field_name='events__id')
+    resource = django_filters.NumberFilter(field_name='resources__id')
 
     class Meta:
         model = Note

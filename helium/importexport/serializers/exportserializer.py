@@ -21,28 +21,29 @@ logger = logging.getLogger(__name__)
 
 
 class NoteExportSerializer(NoteSerializer):
-    """Note representation used in export bundles."""
+    """Note serializer for export that includes all link fields."""
 
     class Meta(NoteSerializer.Meta):
+        # homework, events, resources are already in NoteSerializer.Meta.fields
         pass
 
 
 class HomeworkExportSerializer(HomeworkSerializer):
-    """Homework representation used in export bundles."""
+    """Homework serializer for export that excludes legacy `comments` field."""
 
     class Meta(HomeworkSerializer.Meta):
         fields = tuple(f for f in HomeworkSerializer.Meta.fields if f != 'comments')
 
 
 class EventExportSerializer(EventSerializer):
-    """Event representation used in export bundles."""
+    """Event serializer for export that excludes legacy `comments` field."""
 
     class Meta(EventSerializer.Meta):
         fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
 
 
 class MaterialExportSerializer(MaterialSerializer):
-    """Material representation used in export bundles."""
+    """Material serializer for export that excludes legacy `details` field."""
 
     class Meta(MaterialSerializer.Meta):
         fields = tuple(f for f in MaterialSerializer.Meta.fields if f != 'details')

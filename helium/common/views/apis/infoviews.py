@@ -19,13 +19,13 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
 
     def info(self, request, *args, **kwargs):
         """
-        Return version and configuration information about the API. Useful to clients (including LLMs)
-        for discovering runtime limits—upload size, token lifetimes, accepted file types,
-        supported OAuth providers—without hardcoding them.
+        Return version and configuration information about the app.
         """
         serializer = InfoSerializer({
             'name': settings.PROJECT_NAME,
+            'tagline': settings.PROJECT_TAGLINE,
             'version': settings.PROJECT_VERSION,
+            'support_email': settings.EMAIL_ADDRESS,
             'max_upload_size': settings.MAX_UPLOAD_SIZE,
             'access_token_lifetime_minutes': settings.ACCESS_TOKEN_TTL_MINUTES,
             'refresh_token_lifetime_days': settings.REFRESH_TOKEN_TTL_DAYS,

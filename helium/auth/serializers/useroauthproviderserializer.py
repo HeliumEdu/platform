@@ -8,7 +8,7 @@ from helium.auth.models import UserOAuthProvider
 
 class UserOAuthProviderSerializer(serializers.ModelSerializer):
     """
-    An OAuth provider (Google, Apple, etc.) linked to a user account.
+    Serializer for OAuth providers linked to a user account.
     """
     provider_display = serializers.CharField(source='get_provider_display', read_only=True)
 

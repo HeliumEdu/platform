@@ -85,21 +85,9 @@ class UserDeleteResourceView(HeliumAPIView):
 
     def delete(self, request, *args, **kwargs):
         """
-        Permanently delete the authenticated user's account and all associated data (courses,
-        homework, events, attachments, reminders, notes, schedules, external calendars). This
-        operation is irreversible.
-
-        For users with a usable password, the request body must include the user's current
-        password to confirm the action:
-
-            {"password": "<current-password>"}
-
-        OAuth-only users (no usable password) may submit an empty body; the access token already
-        proves authentication.
-
-        The response is immediate. Outstanding refresh tokens are blacklisted before returning, but the
-        actual data deletion runs in the background — accounts and their data may persist for a short
-        window after the response.
+        Delete the given user instance. For users with passwords, the request body should include the
+        authenticated user's `password` for the request to succeed. For OAuth users without passwords,
+        deletion is allowed as they are already authenticated.
         """
         user = self.get_object()
 

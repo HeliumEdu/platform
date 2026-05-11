@@ -55,8 +55,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             return Reminder.objects.none()
 
     @extend_schema(
-        tags=['planner.reminder', 'calendar.user'],
-        responses={200: ReminderExtendedSerializer(many=True)},
+        tags=['planner.reminder', 'calendar.user']
     )
     def get(self, request, *args, **kwargs):
         """
@@ -79,12 +78,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a reminder for the authenticated user.
-
-        Exactly one of `event`, `homework`, or `course` must be given — that's the parent the reminder
-        fires against. `course`-typed reminders are repeating: only one active reminder is kept per
-        (`course`, `type`, `offset`, `offset_type`) combination, and the next occurrence is rolled
-        forward by the server as each one fires.
+        Create a new reminder instance for the authenticated user.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -134,7 +128,6 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         else:
             return Reminder.objects.none()
 
-    @extend_schema(responses={200: ReminderExtendedSerializer})
     def get(self, request, *args, **kwargs):
         """
         Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of
@@ -146,9 +139,9 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
-    def patch(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         """
-        Update the given reminder. Fields not supplied are left unchanged.
+        Update the given reminder instance.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -157,6 +150,16 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         elif 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
 
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
+
+        return response
+
+    def patch(self, request, *args, **kwargs):
+        """
+        Update only the given attributes of the given reminder instance.
+        """
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
@@ -187,12 +190,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
     )
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given reminder.
-
-        For `course`-typed reminders, this also deletes every active reminder in the same series
-        (matched on `course`, `type`, `offset`, `offset_type`) plus any past sent-but-undismissed
-        reminders for that `course` / `type` — so the series is fully torn down, not just the
-        single targeted row.
+        Delete the given reminder instance.
         """
         response = self.destroy(request, *args, **kwargs)
 

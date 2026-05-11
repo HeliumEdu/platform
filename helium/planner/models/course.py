@@ -41,8 +41,8 @@ class Course(BaseModel):
     teacher_email = models.EmailField(help_text='A valid email address.',
                                       default=None, blank=True, null=True)
 
-    start_date = models.DateField(help_text='ISO-8601 date. Must be on-or-before `end_date`.')
-    end_date = models.DateField(help_text='ISO-8601 date. Must be on-or-after `start_date`.')
+    start_date = models.DateField(help_text='An ISO-8601 date.')
+    end_date = models.DateField(help_text='An ISO-8601 date.')
 
     course_group = models.ForeignKey('CourseGroup', help_text='The course group with which to associate.',
                                      related_name='courses', on_delete=models.CASCADE)

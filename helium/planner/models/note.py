@@ -1,9 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from datetime import datetime
-from typing import Optional
-
 from django.conf import settings
 from django.db import models
 
@@ -21,8 +18,7 @@ class Note(BaseModel):
     )
 
     content = models.JSONField(
-        help_text='Rich-text JSON (Quill Delta compatible). Setting this to empty on a note that has a '
-                  'linked entity deletes the note and returns 204.',
+        help_text='Rich text content in Quill Delta format.',
         blank=True,
         null=True
     )
@@ -42,22 +38,21 @@ class Note(BaseModel):
         'Homework',
         related_name='notes_set',
         blank=True,
-        help_text='Linked homework. A note may be linked to one homework, one event, or one resource — '
-                  'never more than one type, and never more than one entity within a type.'
+        help_text='Linked homework assignments.'
     )
 
     events = models.ManyToManyField(
         'Event',
         related_name='notes_set',
         blank=True,
-        help_text='Linked event. Mutually exclusive with `homework` and `resources` (see `homework` help).'
+        help_text='Linked events.'
     )
 
     resources = models.ManyToManyField(
         'Material',
         related_name='notes_set',
         blank=True,
-        help_text='Linked resource. Mutually exclusive with `homework` and `events` (see `homework` help).'
+        help_text='Linked resources (Material model).'
     )
 
     objects = NoteManager()
@@ -89,7 +84,7 @@ class Note(BaseModel):
         return None
 
     @property
-    def linked_entity_type(self) -> str:
+    def linked_entity_type(self):
         if self._get_cached_m2m('homework'):
             return 'homework'
         if self._get_cached_m2m('events'):
@@ -99,12 +94,12 @@ class Note(BaseModel):
         return ''
 
     @property
-    def linked_entity_title(self) -> str:
+    def linked_entity_title(self):
         entity = self.linked_entity
         return entity.title if entity else ''
 
     @property
-    def course_color(self) -> Optional[str]:
+    def course_color(self):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -113,7 +108,7 @@ class Note(BaseModel):
         return None
 
     @property
-    def category_color(self) -> Optional[str]:
+    def category_color(self):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             hw = hw_list[0]
@@ -122,14 +117,14 @@ class Note(BaseModel):
         return None
 
     @property
-    def linked_entity_due(self) -> Optional[datetime]:
+    def linked_entity_due(self):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].start
         return None
 
     @property
-    def linked_entity_completed(self) -> Optional[bool]:
+    def linked_entity_completed(self):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].completed

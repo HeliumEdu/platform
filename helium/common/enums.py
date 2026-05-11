@@ -35,16 +35,15 @@ DAY_OF_WEEK_CHOICES = (
     (SATURDAY, 'Saturday')
 )
 
+POPUP = 0
 EMAIL = 1
+TEXT = 2
 PUSH = 3
-# Deprecated reminder types. Kept as aliases for PUSH so historical references and existing
-# imports continue to work, while the API surface (REMINDER_TYPE_CHOICES) only exposes EMAIL
-# and PUSH going forward.
-POPUP = PUSH
-TEXT = PUSH
 REMINDER_TYPE_CHOICES = (
+    (POPUP, 'Popup'),
     (EMAIL, 'Email'),
-    (PUSH, 'Push'),
+    (TEXT, 'Text'),
+    (PUSH, 'Push')
 )
 
 MINUTES = 0

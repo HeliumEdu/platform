@@ -4,17 +4,15 @@ __license__ = "MIT"
 import json
 import logging
 
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView
-from helium.importexport.serializers.importerializer import ImportCreateSerializer, ImportSerializer
+from helium.importexport.serializers.importerializer import ImportSerializer
 from helium.importexport.services import importservice
 from helium.planner.services import reminderservice
 
@@ -24,15 +22,13 @@ logger = logging.getLogger(__name__)
 class ImportResourceView(ViewSet, HeliumAPIView):
     serializer_class = ImportSerializer
     permission_classes = (IsAuthenticated,)
-    parser_classes = (MultiPartParser,)
 
-    @extend_schema(request=ImportCreateSerializer, responses={200: ImportSerializer})
     def import_data(self, request, *args, **kwargs):
         """
         Import the resources for the authenticated user from the uploaded files. Multiple files can be imported at
         once passed in the `file[]` field.
 
-        Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
+        The maximum file size for each upload is 10M.
 
         Each model will be imported in a schema matching that of the documented APIs.
         """
@@ -97,7 +93,6 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         return Response(serializer.data)
 
-    @extend_schema(exclude=True)
     def import_exampleschedule(self, request, *args, **kwargs):
         importservice.import_example_schedule(request.user)
 

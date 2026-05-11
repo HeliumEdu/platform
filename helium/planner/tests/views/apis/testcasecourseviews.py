@@ -198,23 +198,21 @@ class TestCaseCourseViews(APITestCase):
         course = coursehelper.given_course_exists(course_group1)
 
         # WHEN
-        post_response = self.client.post(
-            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group2.pk}),
-            json.dumps({}),
-            content_type='application/json')
-        patch_response = self.client.patch(
-            reverse('planner_coursegroups_courses_detail',
-                    kwargs={'course_group': course_group1.pk, 'pk': course.pk}),
-            json.dumps({'course_group': course_group2.pk}),
-            content_type='application/json')
+        responses = [
+            self.client.post(
+                reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group2.pk}),
+                json.dumps({}),
+                content_type='application/json'),
+            self.client.put(
+                reverse('planner_coursegroups_courses_detail',
+                        kwargs={'course_group': course_group1.pk, 'pk': course.pk}),
+                json.dumps({'course_group': course_group2.pk}),
+                content_type='application/json')
+        ]
 
         # THEN
-        # POST under a foreign course_group is blocked by route-level ownership.
-        self.assertEqual(post_response.status_code, status.HTTP_404_NOT_FOUND)
-        # PATCHing course_group is silently ignored (read-only field); the course stays put.
-        self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
-        course.refresh_from_db()
-        self.assertEqual(course.course_group_id, course_group1.pk)
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_no_access_object_owned_by_another_user(self):
         # GIVEN

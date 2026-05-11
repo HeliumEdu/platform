@@ -7,6 +7,7 @@ from django.contrib.auth.models import BaseUserManager
 from django.db import models
 from django.db.models import Q, Count
 
+from helium.auth.models.userprofile import UserProfile
 from helium.auth.models.usersettings import UserSettings
 
 logger = logging.getLogger(__name__)
@@ -37,10 +38,11 @@ class UserManager(BaseUserManager):
     @staticmethod
     def create_references(user):
         """
-        Create necessary one-to-one references to settings models for a user.
+        Create necessary one-to-one references to profile and settings models for a user.
 
         :param user: the user to create the dependencies for
         """
+        UserProfile.objects.create(user=user)
         UserSettings.objects.create(user=user)
 
     def create_user(self, username, email, password=None):  # pragma: no cover

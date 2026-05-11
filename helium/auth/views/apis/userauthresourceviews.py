@@ -5,7 +5,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
@@ -28,7 +28,6 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
     @extend_schema(
-        operation_id='register',
         request=UserCreateSerializer,
         responses={
             201: UserSerializer
@@ -69,9 +68,8 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
     serializer_class = TokenResponseFieldsMixin
 
     @extend_schema(
-        operation_id='verify_email',
         parameters=[
-            OpenApiParameter('username', description="The user's email address."),
+            OpenApiParameter('username', description='The username for the user.'),
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
         ],
         responses={
@@ -80,7 +78,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
     )
     def verify_email(self, request, *args, **kwargs):
         """
-        Verify an email address for the user instance associated with the email and verification code.
+        Verify an email address for the user instance associated with the username and verification code.
 
         Returns access and refresh tokens for immediate authentication.
         """
@@ -96,22 +94,18 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
     @extend_schema(
-        operation_id='resend_verification_email',
         parameters=[
-            OpenApiParameter('username', description="The user's email address.")
+            OpenApiParameter('username', description='The username for the user.')
         ],
         responses={
-            202: OpenApiResponse(description='Verification email queued. Returned whether or not the submitted '
-                                              'address is registered, so callers cannot use this endpoint to '
-                                              'probe account existence.'),
-            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
-                                              '60 seconds; retry after the window.'),
+            202: None,
+            429: None
         }
     )
     def resend_verification(self, request, *args, **kwargs):
         """
-        Resend the verification email for an inactive user account, or for an active user who has requested an
-        email change.
+        Resend the verification email for an inactive user account.
+        Rate limited to once per 60 seconds per user.
         """
         response = authservice.resend_verification_email(request)
 
@@ -122,14 +116,14 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
     @extend_schema(
-        operation_id='forgot_password',
         request=UserForgotSerializer,
-        responses={202: None}
+        responses={
+            202: UserSerializer
+        }
     )
     def forgot_password(self, request, *args, **kwargs):
         """
-        Reset the password for the user instance associated with the given email. Always responds
-        with 202 (no body) regardless of whether the email is registered.
+        Reset the password for the user instance associated with the given email.
         """
         response = authservice.forgot_password(request)
 

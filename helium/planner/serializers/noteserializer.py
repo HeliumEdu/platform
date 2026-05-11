@@ -104,7 +104,7 @@ class NoteExtendedSerializer(NoteSerializer):
 
 
 class NoteListSerializer(NoteExtendedSerializer):
-    """Compact note representation used in list responses; the full `content` field is omitted to keep payloads small."""
+    """Serializer for list endpoints - excludes content to reduce payload size."""
 
     class Meta(NoteExtendedSerializer.Meta):
         fields = tuple(f for f in NoteExtendedSerializer.Meta.fields if f != 'content')

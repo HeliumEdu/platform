@@ -2,17 +2,11 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.contrib.rest_framework_simplejwt import SimpleJWTScheme
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication as BaseJWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.utils import get_md5_hash_password
-
-
-class JWTAuthenticationScheme(SimpleJWTScheme):
-    """Tell drf-spectacular that our subclass uses the same JWT security scheme as the simplejwt base."""
-    target_class = 'helium.auth.backends.JWTAuthentication'
 
 
 class JWTAuthentication(BaseJWTAuthentication):

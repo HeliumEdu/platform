@@ -7,7 +7,6 @@ import urllib.request
 
 from django.conf import settings
 from django.core.cache import cache
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -18,7 +17,6 @@ from helium.common.services.sesreputationservice import verify_sns_message
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(exclude=True)
 class WebhookSESView(APIView):
     """
     Receives SES bounce and complaint event notifications from AWS SNS.

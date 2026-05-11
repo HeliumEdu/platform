@@ -22,27 +22,18 @@ logger = logging.getLogger(__name__)
 )
 class PrivateEventsICALResourceView(HeliumAPIView):
     @extend_schema(
-        operation_id='feed_private_events_ical',
         responses={
-            (200, 'text/calendar'): OpenApiResponse(
-                response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s events.'
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing events'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all event instances for the given private slug.
-        Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCalendar text, not JSON.
-
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
-
-        A `Content-Disposition: attachment; filename=Helium_<user>_events.ics` header is set so that
-        browser-initiated requests download the feed as a file.
+        Return a list of all event instances for the private slug (defined in a user's settings) formatted for an ICAL stream. The response will
+        contain a `Content-Disposition` of `attachment; filename=Helium_<username>_events.ics`, so if the request is
+        initiated from an HTML form, the response will be a downloadable file in a browser.
         """
         UserModel = get_user_model()
 
@@ -75,27 +66,18 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 )
 class PrivateHomeworkICALResourceView(HeliumAPIView):
     @extend_schema(
-        operation_id='feed_private_homework_ical',
         responses={
-            (200, 'text/calendar'): OpenApiResponse(
-                response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s homework.'
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing homework'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all homework instances for the given private slug.
-        Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCalendar text, not JSON.
-
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
-
-        A `Content-Disposition: attachment; filename=Helium_<user>_homework.ics` header is set so that
-        browser-initiated requests download the feed as a file.
+        Return a list of all homework instances for the private slug (defined in a user's settings) for an ICAL stream.
+        The response will contain a `Content-Disposition` of `attachment; filename=Helium_<username>_homework.ics`,
+        so if the request is initiated from an HTML form, the response will be a downloadable file in a browser.
         """
         UserModel = get_user_model()
 
@@ -128,27 +110,19 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 )
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
     @extend_schema(
-        operation_id='feed_private_courseschedules_ical',
         responses={
-            (200, 'text/calendar'): OpenApiResponse(
-                response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s course schedules.'
+            200: OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description='iCalendar file containing course schedules'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all course schedule instances for the given
-        private slug. Intended for subscription in calendar applications (Google Calendar, Apple
-        Calendar, etc.) — the response is plain iCalendar text, not JSON.
-
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
-
-        A `Content-Disposition: attachment; filename=Helium_<user>_coursescheduleevents.ics` header is
-        set so that browser-initiated requests download the feed as a file.
+        Return a list of all course schedule instances for the private slug (defined in a user's settings) for an ICAL
+        stream. The response will contain a `Content-Disposition` of
+        `attachment; filename=Helium_<username>_coursescheduleevents.ics`, so if the request is initiated from an HTML
+        form, the response will be a downloadable file in a browser.
         """
         UserModel = get_user_model()
 

@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters
 from rest_framework import status
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
@@ -47,20 +47,10 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
             return NoteListSerializer
         return self.serializer_class
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='include_content',
-                type=bool,
-                description='By default the `content` field is omitted from list responses to keep them light. '
-                            'Pass `true` to include the full Quill Delta JSON of each note.',
-            ),
-        ],
-    )
     def get(self, request, *args, **kwargs):
         """
-        Return all notes for the authenticated user. By default the `content` field is omitted from each note —
-        pass `include_content=true` to receive the full Quill Delta JSON.
+        Return a list of all Note instances for the authenticated user.
+        Excludes content field by default to reduce payload size.
         """
         return self.list(request, *args, **kwargs)
 
@@ -71,11 +61,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a note for the authenticated user. `content` is rich-text JSON (Quill Delta compatible).
-
-        Linking is optional but constrained: a note may be linked to a single entity — pass a one-item list under
-        `homework`, `events`, or `resources` — or omit them all to create a standalone note. The three link fields
-        are mutually exclusive, and each target entity may have at most one linked note.
+        Create a new Note instance for the authenticated user.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -112,23 +98,18 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         """
         return self.retrieve(request, *args, **kwargs)
 
-    @extend_schema(responses={
-        200: NoteExtendedSerializer,
-        204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
-                                          'content cleared and is therefore deleted (see endpoint description).'),
-    })
     def put(self, request, *args, **kwargs):
         """
-        Update the given note. `content` is rich-text JSON (Quill Delta compatible).
+        Update the given Note instance.
 
-        Linking rules from create still apply on update (at most one linked entity, mutually exclusive).
-        If a linked note has its `content` cleared (empty Delta), the note is deleted and no body is returned
-        — see the alternate response for this case.
+        If content is cleared and Note has linked entities, the Note is deleted
+        and 204 No Content is returned.
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # Check if Note should be deleted due to empty content with linked entities
         if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
             instance.delete()
             logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")
@@ -138,19 +119,18 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
-    @extend_schema(responses={
-        200: NoteExtendedSerializer,
-        204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
-                                          'content cleared and is therefore deleted (see endpoint description).'),
-    })
     def patch(self, request, *args, **kwargs):
         """
-        Partially update the given note. Same linking rules and content-cleared deletion behavior as `PUT`.
+        Update only the given attributes of the given Note instance.
+
+        If content is cleared and Note has linked entities, the Note is deleted
+        and 204 No Content is returned.
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
+        # Check if Note should be deleted due to empty content with linked entities
         if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
             instance.delete()
             logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")
