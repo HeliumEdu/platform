@@ -273,6 +273,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
+
 SPECTACULAR_SETTINGS = {
     'TITLE': f"{PROJECT_NAME} API Documentation",
     'VERSION': PROJECT_VERSION,
@@ -321,6 +322,9 @@ SPECTACULAR_SETTINGS = {
     'SORT_OPERATIONS': True,
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+    ],
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': '/favicon.ico',
     'SWAGGER_UI_SETTINGS': {

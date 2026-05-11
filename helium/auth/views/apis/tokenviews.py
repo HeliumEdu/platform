@@ -13,13 +13,12 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(
-    tags=['auth.token'],
-    responses={
-        200: TokenObtainSerializer
-    }
-)
+@extend_schema(tags=['auth.token'])
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
+    @extend_schema(
+        operation_id='login',
+        responses={200: TokenObtainSerializer},
+    )
     def post(self, request, *args, **kwargs):
         """
         Authenticate the user with email and password and return an access/refresh token pair.
@@ -36,13 +35,12 @@ class LegacyTokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     serializer_class = LegacyTokenObtainSerializer
 
 
-@extend_schema(
-    tags=['auth.token'],
-    responses={
-        200: TokenRefreshSerializer
-    }
-)
+@extend_schema(tags=['auth.token'])
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
+    @extend_schema(
+        operation_id='token_refresh',
+        responses={200: TokenRefreshSerializer},
+    )
     def post(self, request, *args, **kwargs):
         """
         Exchange a valid refresh token for a new access token (and rotate the refresh token).
@@ -50,10 +48,9 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
         return super().post(request, *args, **kwargs)
 
 
-@extend_schema(
-    tags=['auth.token']
-)
+@extend_schema(tags=['auth.token'])
 class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
+    @extend_schema(operation_id='logout')
     def post(self, request, *args, **kwargs):
         """
         Takes a token and blacklists it.

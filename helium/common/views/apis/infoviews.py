@@ -19,7 +19,7 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
 
     def info(self, request, *args, **kwargs):
         """
-        Return version and configuration information about the app.
+        Return version and configuration information about the API.
         """
         serializer = InfoSerializer({
             'name': settings.PROJECT_NAME,

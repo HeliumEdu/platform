@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 )
 class PrivateEventsICALResourceView(HeliumAPIView):
     @extend_schema(
+        operation_id='feed_private_events_ical',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
@@ -74,6 +75,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 )
 class PrivateHomeworkICALResourceView(HeliumAPIView):
     @extend_schema(
+        operation_id='feed_private_homework_ical',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
@@ -126,6 +128,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 )
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
     @extend_schema(
+        operation_id='feed_private_courseschedules_ical',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,

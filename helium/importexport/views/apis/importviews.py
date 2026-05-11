@@ -7,6 +7,7 @@ import logging
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 class ImportResourceView(ViewSet, HeliumAPIView):
     serializer_class = ImportSerializer
     permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
 
     @extend_schema(request=ImportCreateSerializer, responses={200: ImportSerializer})
     def import_data(self, request, *args, **kwargs):

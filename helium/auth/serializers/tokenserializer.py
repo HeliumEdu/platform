@@ -53,15 +53,22 @@ class TokenResponseFieldsMixin(serializers.Serializer):
 
 @extend_schema_serializer(component_name='Login')
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
-    username = serializers.CharField(help_text="The user's email address.",
-                                     label="Email",
-                                     write_only=True)
-
-    password = serializers.CharField(help_text="The password for the user.",
-                                     label="Password",
-                                     write_only=True,
-                                     style={'input_type': 'password'},
-                                     trim_whitespace=False)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # simplejwt's parent __init__ assigns bare CharField/PasswordField over our class-level
+        # declarations, stripping help_text/label/style — re-apply them here.
+        self.fields[self.username_field] = serializers.CharField(
+            help_text="The user's email address.",
+            label='Email',
+            write_only=True,
+        )
+        self.fields['password'] = serializers.CharField(
+            help_text='The password for the user.',
+            label='Password',
+            write_only=True,
+            style={'input_type': 'password'},
+            trim_whitespace=False,
+        )
 
     def validate(self, attrs, update_last_login_field=True):
         username = attrs.pop('username').strip()

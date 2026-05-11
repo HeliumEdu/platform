@@ -3,10 +3,11 @@ __license__ = "MIT"
 
 import logging
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, ListModelMixin
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = AttachmentSerializer
     permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
     filterset_class = AttachmentFilter
 
     def get_queryset(self):
@@ -51,7 +53,11 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         request=AttachmentCreateSerializer,
         responses={
             201: AttachmentSerializer(many=True)
-        }
+        },
+        parameters=[
+            OpenApiParameter(name=field, exclude=True)
+            for field in ('id', 'course', 'event', 'homework', 'updated_at__gte')
+        ],
     )
     def post(self, request, *args, **kwargs):
         """

@@ -28,6 +28,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
     @extend_schema(
+        operation_id='register',
         request=UserCreateSerializer,
         responses={
             201: UserSerializer
@@ -68,6 +69,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
     serializer_class = TokenResponseFieldsMixin
 
     @extend_schema(
+        operation_id='verify_email',
         parameters=[
             OpenApiParameter('username', description="The user's email address."),
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
@@ -94,6 +96,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
     @extend_schema(
+        operation_id='resend_verification_email',
         parameters=[
             OpenApiParameter('username', description="The user's email address.")
         ],
@@ -116,6 +119,7 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
     @extend_schema(
+        operation_id='forgot_password',
         request=UserForgotSerializer,
         responses={202: None}
     )
