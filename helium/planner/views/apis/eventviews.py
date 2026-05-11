@@ -126,6 +126,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return response
 
+    @extend_schema(responses={200: EventExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given Helium Event instance.
@@ -137,9 +138,9 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         logger.info(f"Event {kwargs['pk']} updated for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(EventExtendedSerializer(serializer.instance).data)
 
+    @extend_schema(responses={200: EventExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Helium Event instance.
@@ -151,7 +152,6 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         logger.info(f"Event {kwargs['pk']} patched for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(EventExtendedSerializer(serializer.instance).data)
 
     @extend_schema(

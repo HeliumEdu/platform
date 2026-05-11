@@ -117,13 +117,12 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
 
     @extend_schema(
         request=UserForgotSerializer,
-        responses={
-            202: UserSerializer
-        }
+        responses={202: None}
     )
     def forgot_password(self, request, *args, **kwargs):
         """
-        Reset the password for the user instance associated with the given email.
+        Reset the password for the user instance associated with the given email. Always responds
+        with 202 (no body) regardless of whether the email is registered.
         """
         response = authservice.forgot_password(request)
 

@@ -98,6 +98,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         """
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(responses={200: NoteExtendedSerializer, 204: None})
     def put(self, request, *args, **kwargs):
         """
         Update the given Note instance.
@@ -109,7 +110,6 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Check if Note should be deleted due to empty content with linked entities
         if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
             instance.delete()
             logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")
@@ -119,6 +119,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
+    @extend_schema(responses={200: NoteExtendedSerializer, 204: None})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Note instance.
@@ -130,7 +131,6 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Check if Note should be deleted due to empty content with linked entities
         if serializer.should_delete_on_empty_content(instance, serializer.validated_data):
             instance.delete()
             logger.info(f"Note {kwargs['pk']} deleted (content cleared) for user {request.user.pk}")

@@ -159,6 +159,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return response
 
+    @extend_schema(responses={200: HomeworkExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given homework instance.
@@ -179,9 +180,9 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         logger.info(f"Homework {kwargs['pk']} updated for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
+    @extend_schema(responses={200: HomeworkExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given homework instance.
@@ -203,7 +204,6 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         logger.info(f"Homework {kwargs['pk']} patched for user {request.user.pk}")
 
-        # Return extended serializer with note field
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
     @extend_schema(

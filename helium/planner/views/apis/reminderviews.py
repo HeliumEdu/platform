@@ -55,7 +55,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             return Reminder.objects.none()
 
     @extend_schema(
-        tags=['planner.reminder', 'calendar.user']
+        tags=['planner.reminder', 'calendar.user'],
+        responses={200: ReminderExtendedSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
         """
@@ -128,6 +129,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         else:
             return Reminder.objects.none()
 
+    @extend_schema(responses={200: ReminderExtendedSerializer})
     def get(self, request, *args, **kwargs):
         """
         Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of
