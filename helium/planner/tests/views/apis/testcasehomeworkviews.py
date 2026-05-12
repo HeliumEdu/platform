@@ -214,6 +214,7 @@ class TestCaseHomeworkViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
 
         # WHEN
         data = {
@@ -226,6 +227,7 @@ class TestCaseHomeworkViews(APITestCase):
             'comments': '',
             'current_grade': '-1/100',
             'completed': False,
+            'category': category.pk,
             'course': course.pk
         }
         response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
@@ -240,13 +242,14 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
         self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
-    def test_create_assumes_naive_datetime_to_utc(self):
+    def test_create_rejects_naive_datetime(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
         user.settings.save()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
 
         # WHEN
         data = {
@@ -259,6 +262,7 @@ class TestCaseHomeworkViews(APITestCase):
             'comments': '',
             'current_grade': '-1/100',
             'completed': False,
+            'category': category.pk,
             'course': course.pk
         }
         response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
@@ -267,14 +271,10 @@ class TestCaseHomeworkViews(APITestCase):
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Homework.objects.count(), 1)
-        homework = Homework.objects.get(pk=response.data['id'])
-
-        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
-        self.assertEqual(homework.start.isoformat(), start.isoformat())
-        self.assertEqual(homework.end.isoformat(), end.isoformat())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Homework.objects.count(), 0)
+        self.assertIn('start', response.data)
+        self.assertIn('timezone', str(response.data['start']))
 
     def test_get_homework_by_id(self):
         # GIVEN
@@ -378,7 +378,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(homework.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
         self.assertEqual(homework.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
-    def test_patch_assumes_naive_datetime_to_utc(self):
+    def test_patch_rejects_naive_datetime(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
@@ -386,6 +386,7 @@ class TestCaseHomeworkViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
+        original_start = homework.start
 
         # WHEN
         data = {
@@ -399,13 +400,10 @@ class TestCaseHomeworkViews(APITestCase):
                                      content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start', response.data)
         homework.refresh_from_db()
-
-        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
-        self.assertEqual(homework.start.isoformat(), start.isoformat())
-        self.assertEqual(homework.end.isoformat(), end.isoformat())
+        self.assertEqual(homework.start, original_start)
 
     def test_delete_homework_by_id(self):
         # GIVEN
