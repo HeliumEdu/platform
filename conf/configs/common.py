@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.9"
+__version__ = "2.2.10"
 
 import os
 import socket
@@ -273,12 +273,85 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
+
 SPECTACULAR_SETTINGS = {
-    'TITLE': "Helium API Documentation",
+    'TITLE': f"{PROJECT_NAME} API Documentation",
     'VERSION': PROJECT_VERSION,
+    'DESCRIPTION': (
+        f"{PROJECT_NAME} is a smart, color-coded student planner that tracks classes, "
+        "assignments, grades, and notes — built for the way you actually study. "
+        "The API exposes the full set of resources behind the app: class groups "
+        "(terms), classes, recurring class schedules, weighted grading categories, "
+        "assignments, events, reminders, notes, file attachments, resources, external "
+        "calendar feeds (Google Calendar, iCloud, etc.), private iCal subscription "
+        "feeds, and full account import/export.\n\n"
+        "## Authentication\n\n"
+        "POST email and password to `/auth/token/` to obtain an `access` and "
+        "`refresh` token. Send subsequent requests with the "
+        "`Authorization: Bearer <access>` header. Use `/auth/token/refresh/` to "
+        "rotate the access token before it expires.\n\n"
+        "## Vocabulary (wire format vs. user-facing terms)\n\n"
+        f"The wire format keeps some legacy names that differ from what users see in the "
+        f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
+        f"corresponds to the term displayed in the app.\n\n"
+        "| Wire (API) | User-facing | Notes |\n"
+        "| --- | --- | --- |\n"
+        "| `course_group` | **class group** (semester / quarter / term) | Container for the classes a user is taking in a given period. |\n"
+        "| `course` | **class** | A single class within a class group. The API uses `course` to avoid the reserved word `class`. |\n"
+        "| `homework` | **assignment** | A graded item for a class. The API uses `homework` to avoid the reserved word `assignment`. |\n"
+        "| `material` | **resource** | A reference item (syllabus, textbook, link). `materials` is the legacy wire name. |\n"
+        "| `material_group` | **resource group** | A container for resources. |\n\n"
+        "Integrations that surface these to end users should use the user-facing terms "
+        f"to match the {PROJECT_NAME} App.\n\n"
+        "## Importing a schedule from a syllabus\n\n"
+        "When ingesting a syllabus (or any external schedule), most resources are owned by a parent — "
+        "POST them in this order so each create succeeds:\n\n"
+        "1. `POST /planner/coursegroups/` — the term (semester / quarter).\n"
+        "2. `POST /planner/coursegroups/{course_group}/courses/` — each class within the term.\n"
+        "3. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/courseschedules/` — "
+        "recurring weekly meeting times for the class (at most one schedule per class).\n"
+        "4. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/categories/` — graded "
+        "categories such as Homework, Exams. Sum of `weight` across a class's categories must stay ≤ 100. "
+        "An `Uncategorized` category is auto-created on demand if you create homework without one.\n"
+        "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual assignments. "
+        "Set `current_grade` to `\"-1/100\"` for ungraded items.\n"
+        "6. (Optional) `POST /planner/events/` — non-class calendar items (study sessions, office hours). "
+        "Events have no class dependency.\n"
+        "7. (Optional) `POST /planner/reminders/` — push/email reminders attached to exactly one parent "
+        "(`event`, `homework`, or `course`).\n"
+        "8. (Optional) `POST /planner/notes/`, `POST /planner/attachments/` — rich-text notes and file "
+        "uploads linked to a single parent entity each."
+    ),
+    'CONTACT': {
+        'name': f'{PROJECT_NAME} Support',
+        'url': SUPPORT_URL,
+    },
+    'LICENSE': {
+        'name': 'MIT',
+        'url': 'https://opensource.org/licenses/MIT',
+    },
+    'SERVERS': [
+        {
+            'url': PROJECT_API_HOST,
+            'description': f'{PROJECT_NAME} API' + (f' ({ENVIRONMENT})' if 'prod' not in ENVIRONMENT else ''),
+        },
+    ],
     'SERVE_INCLUDE_SCHEMA': False,
+    'SORT_OPERATIONS': True,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+    ],
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': '/favicon.ico',
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,
+        'displayRequestDuration': True,
+        'filter': True,
+        'deepLinking': True,
+        'docExpansion': 'list',
+    },
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,

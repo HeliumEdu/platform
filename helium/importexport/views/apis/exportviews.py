@@ -26,9 +26,9 @@ class ExportResourceView(ViewSet, HeliumAPIView):
 
     def export_data(self, request, *args, **kwargs):
         """
-        Return an export of all non-sensitive data for the user. The response will contain a `Content-Disposition` of
-        `attachment; filename=Helium_<username>.json`, so if the request is initiated from an HTML form, the response
-        will be a downloadable file in a browser.
+        Return an export of all non-sensitive data for the user. The response sets `Content-Disposition` to
+        `attachment; filename=Helium_<email-local-part>_<YYYY-MM-DD>.json` (the local-part is the segment of
+        the user's email before `@`), so a browser will save it as a dated download.
 
         The exported data for each model type will match that of the documented APIs.
         """

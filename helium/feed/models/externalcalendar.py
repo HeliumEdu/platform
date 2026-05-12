@@ -14,7 +14,9 @@ class ExternalCalendar(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 
-    url = models.URLField(help_text='A public-facing URL to a valid ICAL feed.',
+    url = models.URLField(help_text='A public-facing URL to a valid iCal feed. On create and on URL change, '
+                                    'the server fetches the URL and validates the response is a parseable iCal '
+                                    'feed; unreachable or invalid feeds are rejected at write time.',
                           max_length=3000)
 
     color = models.CharField(

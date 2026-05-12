@@ -138,7 +138,10 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
     )
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given category instance.
+        Delete the given category. The course's `Uncategorized` category cannot itself be deleted.
+
+        Any homework previously linked to this category is reassigned to the course's `Uncategorized` category,
+        which is created on the fly if it doesn't already exist.
         """
         category = self.get_object()
 

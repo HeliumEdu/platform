@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import ValidationError, NotFound
@@ -15,7 +14,8 @@ from helium.feed.services import icalexternalcalendarservice
 from helium.planner.models import Event
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
 from helium.planner.serializers.eventserializer import EventSerializer
-from helium.planner.views.base import HeliumCalendarItemAPIView, _parse_date_param_to_utc
+from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, \
+    _parse_date_param_to_utc
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +34,20 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name='from', type=datetime),
-            OpenApiParameter(name='to', type=datetime),
+            *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),
         ]
     )
     def get(self, request, *args, **kwargs):
         """
-        Return all external calendar's that should be shown on the calendar for the authenticated user as a list of ExternalCalendar Event instances.
+        Return all external calendar events the user has shown on their calendar, flattened across every
+        subscribed external calendar.
 
-        The IDs given for each ExternalCalendar Event are sequential, unique only amongst the results of this
-        particular query, and not guaranteed to be consistent across calls.
+        The `id` on each event is sequential within this response only — not stable across requests, and not
+        an `Event` primary key. Do not persist these IDs client-side.
+
+        Side effect: if a subscribed external calendar fails to fetch or parse periodically, it is auto-disabled
+        (`shown_on_calendar` flipped to `false`). PATCH it back to `true` once the upstream feed is fixed.
         """
         return super().get(request, *args, **kwargs)
 
@@ -100,17 +103,20 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     @extend_schema(
         operation_id='feed_externalcalendar_events_list',
         parameters=[
-            OpenApiParameter(name='from', type=datetime),
-            OpenApiParameter(name='to', type=datetime),
+            *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),
         ]
     )
     def get(self, request, *args, **kwargs):
         """
-        Return an external calendar's ICAL feed items as a list of ExternalCalendar Event instances.
+        Return the events from a single subscribed external calendar's iCal feed.
 
-        The IDs given for each ExternalCalendar Event are sequential, unique only amongst the results of this
-        particular query, and not guaranteed to be consistent across calls.
+        The `id` on each event is sequential within this response only — not stable across requests, and not
+        an `Event` primary key. Do not persist these IDs client-side.
+
+        If the upstream iCal fetch fails or the feed cannot be parsed, the request fails AND, as a side
+        effect, the external calendar is auto-disabled (`shown_on_calendar` flipped to `false`). PATCH it
+        back to `true` once the upstream feed is fixed.
         """
         return super().get(request, *args, **kwargs)
 

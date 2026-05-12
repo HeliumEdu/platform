@@ -15,9 +15,9 @@ class CourseGroup(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255)
 
-    start_date = models.DateField(help_text='An ISO-8601 date.')
+    start_date = models.DateField(help_text='ISO-8601 date. Must be on-or-before `end_date`.')
 
-    end_date = models.DateField(help_text='An ISO-8601 date.')
+    end_date = models.DateField(help_text='ISO-8601 date. Must be on-or-after `start_date`.')
 
     shown_on_calendar = models.BooleanField(help_text='Whether items should be shown on the calendar.',
                                             default=True)
