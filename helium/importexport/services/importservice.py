@@ -18,7 +18,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from helium.common import enums
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
 from helium.common.utils.commonutils import local_midnight_as_utc
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
@@ -36,7 +36,7 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.services import coursescheduleservice
 from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
-from helium.planner.tasks import adjust_reminder_times
+from helium.planner.tasks import adjust_reminder_times, recalculate_category_grades_for_course
 from helium.planner.utils.quillutils import html_to_quill
 from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
@@ -623,43 +623,48 @@ def import_user(request, data, example_schedule=False):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     """
-    external_calendars = data.get('external_calendars', [])
-    external_calendar_count = _import_external_calendars(external_calendars, request.user,
-                                                         example_schedule) if external_calendars else 0
+    with _suppress_post_save_signals():
+        external_calendars = data.get('external_calendars', [])
+        external_calendar_count = _import_external_calendars(external_calendars, request.user,
+                                                             example_schedule) if external_calendars else 0
 
-    course_groups = data.get('course_groups', [])
-    course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
+        course_groups = data.get('course_groups', [])
+        course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
 
-    courses = data.get('courses', [])
-    course_remap = _import_courses(courses, course_group_remap) if courses else {}
+        courses = data.get('courses', [])
+        course_remap = _import_courses(courses, course_group_remap) if courses else {}
 
-    course_schedules = data.get('course_schedules', [])
-    course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
+        course_schedules = data.get('course_schedules', [])
+        course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
 
-    categories = data.get('categories', [])
-    category_remap = _import_categories(categories, request, course_remap) if categories else {}
+        categories = data.get('categories', [])
+        category_remap = _import_categories(categories, request, course_remap) if categories else {}
 
-    material_groups = data.get('material_groups', [])
-    material_group_remap = _import_material_groups(material_groups, request.user,
-                                                   example_schedule) if material_groups else {}
+        material_groups = data.get('material_groups', [])
+        material_group_remap = _import_material_groups(material_groups, request.user,
+                                                       example_schedule) if material_groups else {}
 
-    materials = data.get('materials', [])
-    material_remap = _import_materials(materials, material_group_remap, course_remap, request.user,
-                                       example_schedule) if materials else {}
+        materials = data.get('materials', [])
+        material_remap = _import_materials(materials, material_group_remap, course_remap, request.user,
+                                           example_schedule) if materials else {}
 
-    events = data.get('events', [])
-    event_remap = _import_events(events, request.user, example_schedule) if events else {}
+        events = data.get('events', [])
+        event_remap = _import_events(events, request.user, example_schedule) if events else {}
 
-    homework = data.get('homework', [])
-    homework_remap = _import_homework(homework, course_remap, category_remap, material_remap, request.user,
-                                      example_schedule) if homework else {}
+        homework = data.get('homework', [])
+        homework_remap = _import_homework(homework, course_remap, category_remap, material_remap, request.user,
+                                          example_schedule) if homework else {}
 
-    reminders = data.get('reminders', [])
-    reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
+        reminders = data.get('reminders', [])
+        reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
 
-    notes = data.get('notes', [])
-    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,
-                                example_schedule) if notes else 0
+        notes = data.get('notes', [])
+        notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,
+                                    example_schedule) if notes else 0
+
+    for course_id in set(course_remap.values()):
+        taskutils.safe_apply_async(recalculate_category_grades_for_course,
+            args=(course_id,), priority=settings.CELERY_PRIORITY_LOW)
 
     metricutils.increment("user.import.schedule")
 

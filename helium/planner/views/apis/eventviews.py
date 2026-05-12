@@ -5,7 +5,7 @@ import logging
 
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -71,7 +71,28 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     @extend_schema(
         responses={
             201: EventExtendedSerializer
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'office_hours',
+                summary='Weekly office-hours event (one occurrence)',
+                description=(
+                    'A single Event occurrence. For recurring events, enumerate one row per '
+                    'occurrence, use the bulk-import path, or clone-and-PATCH a canonical row.'
+                ),
+                value={
+                    'title': 'Office Hours — Prof. Smith',
+                    'all_day': False,
+                    'show_end_time': True,
+                    'start': '2026-09-23T15:00:00-07:00',
+                    'end': '2026-09-23T16:30:00-07:00',
+                    'priority': 30,
+                    'url': 'https://example.edu/zoom/abc123',
+                    'comments': 'Drop-in Q&A in Bagley 412 or on Zoom.',
+                },
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, *args, **kwargs):
         """
