@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.8"
+__version__ = "2.2.10"
 
 import os
 import socket
@@ -16,6 +16,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
+from conf.utils import strip_www
 from helium.common import enums
 
 # ############################
@@ -34,15 +35,24 @@ PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:8080' if 'local' in ENVIRONMENT else f'https://app.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
+PROJECT_APP_LEGACY_HOST = config('PROJECT_APP_HOST', 'http://localhost:3000' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com')
 
 # Version information
 
 PROJECT_VERSION = __version__
 
+FRONTEND_LEGACY_VERSION = config('PLATFORM_FRONTEND_LEGACY_VERSION', "latest")
+
 # AWS S3
 
 AWS_S3_ACCESS_KEY_ID = config('PLATFORM_AWS_S3_ACCESS_KEY_ID')
 AWS_S3_SECRET_ACCESS_KEY = config('PLATFORM_AWS_S3_SECRET_ACCESS_KEY')
+
+# Twilio
+
+TWILIO_ACCOUNT_SID = config('PLATFORM_TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('PLATFORM_TWILIO_AUTH_TOKEN')
+TWILIO_SMS_FROM = config('PLATFORM_TWILIO_SMS_FROM')
 
 # Google Analytics
 
@@ -231,11 +241,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'helium.common.throttles.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
         'user': '120/min',
+        'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
         'delete_inactive': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
@@ -244,6 +255,10 @@ REST_FRAMEWORK = {
 
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
+
+# TTL values for the legacy frontend that doesn't reliably support token refresh
+LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
+LEGACY_REFRESH_TOKEN_TTL_DAYS = int(config('PLATFORM_LEGACY_REFRESH_TOKEN_TTL_DAYS', '30'))
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
@@ -380,6 +395,7 @@ BLOCKED_ATTACHMENT_MIME_TYPES = {
 # Email settings
 
 DISABLE_EMAILS = config('PROJECT_DISABLE_EMAILS', 'False') == 'True'
+DISABLE_TEXTS = config('PROJECT_DISABLE_TEXTS', 'False') == 'True'
 DISABLE_PUSH = config('PROJECT_DISABLE_PUSH', 'False') == 'True'
 
 REMINDER_SEND_WINDOW_MINUTES = int(config('PROJECT_REMINDER_SEND_WINDOW_MINUTES', '15'))
@@ -438,10 +454,14 @@ PROJECT_CI_APP_HOST = config('PROJECT_CI_APP_HOST', None)
 CSRF_TRUSTED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_APP_LEGACY_HOST,
+    strip_www(PROJECT_APP_LEGACY_HOST),
 ]
 CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_APP_LEGACY_HOST,
+    strip_www(PROJECT_APP_LEGACY_HOST),
 ]
 
 if PROJECT_CI_APP_HOST:
@@ -463,10 +483,16 @@ if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
     ]
     CORS_ALLOWED_ORIGINS += [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
+        # Legacy frontend
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
     ]
 
 if 'local' in ENVIRONMENT:

@@ -67,6 +67,19 @@ class TestCasePushTokenViews(APITestCase):
         push_token = UserPushToken.objects.get(pk=response.data['id'])
         userhelper.verify_push_token_matches(self, push_token, response.data)
 
+    def test_get_push_token_by_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        push_token = userhelper.given_user_push_token_exists(user)
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_pushtoken_detail',
+                                           kwargs={'pk': push_token.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        userhelper.verify_push_token_matches(self, push_token, response.data)
+
     def test_delete_push_token_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

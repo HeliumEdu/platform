@@ -55,6 +55,61 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(reminder2.sent)
         self.assertFalse(reminder3.sent)
 
+    @mock.patch('helium.common.tasks.send_sms')
+    def test_process_text_reminders(self, mock_send_sms):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.profile.phone = '5555555'
+        user.profile.phone_verified = True
+        user.profile.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group,
+                                                  start_date=datetime.date.today() - datetime.timedelta(days=7),
+                                                  end_date=datetime.date.today() + datetime.timedelta(days=30))
+        homework = homeworkhelper.given_homework_exists(course,
+                                                        start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+                                                        end=timezone.now() + datetime.timedelta(minutes=10))
+        event1 = eventhelper.given_event_exists(user,
+                                                start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+                                                end=timezone.now() + datetime.timedelta(minutes=10))
+        event2 = eventhelper.given_event_exists(user,
+                                                start=datetime.datetime.now().replace(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
+                                                    days=1),
+                                                end=datetime.datetime.now().replace(
+                                                    tzinfo=ZoneInfo(user.settings.time_zone)) + datetime.timedelta(
+                                                    days=1, hours=1))
+        reminder1 = reminderhelper.given_reminder_exists(user, event=event1)
+        reminder2 = reminderhelper.given_reminder_exists(user, homework=homework)
+        # Course text reminder in the send window — must be excluded (text is legacy; courses are email+push only)
+        course_text_reminder = Reminder(
+            title='Course reminder', message='Class soon',
+            start_of_range=timezone.now() - datetime.timedelta(minutes=1),
+            offset=15, offset_type=enums.MINUTES,
+            type=enums.TEXT, sent=False, dismissed=False,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([course_text_reminder])
+        course_text_reminder = Reminder.objects.get(course=course, sent=False)
+        # This reminder is ignored, as we're not yet in its send window
+        reminder3 = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event2)
+        # Sent reminders are ignored
+        reminderhelper.given_reminder_exists(user, sent=True, event=event1)
+
+        # WHEN
+        reminderservice.process_text_reminders()
+
+        # THEN — only homework and event reminders are texted; course text reminder is excluded
+        self.assertEqual(mock_send_sms.call_count, 2)
+        reminder1.refresh_from_db()
+        reminder2.refresh_from_db()
+        reminder3.refresh_from_db()
+        course_text_reminder.refresh_from_db()
+        self.assertTrue(reminder1.sent)
+        self.assertTrue(reminder2.sent)
+        self.assertFalse(reminder3.sent)
+        self.assertFalse(course_text_reminder.sent)
+
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders(self, mock_send_notifications):
         # GIVEN
@@ -133,6 +188,46 @@ class TestCaseReminderService(TestCase):
         # THEN
         # Inactive user should not receive email but reminder should be marked sent
         mock_send_multipart_email.assert_not_called()
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+
+    @mock.patch('helium.common.tasks.send_sms')
+    def test_process_text_reminders_no_phone(self, mock_send_sms):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        # User has no phone set (default)
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
+
+        # WHEN
+        reminderservice.process_text_reminders()
+
+        # THEN
+        # No SMS sent when user has no phone
+        mock_send_sms.assert_not_called()
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+
+    @mock.patch('helium.common.tasks.send_sms')
+    def test_process_text_reminders_phone_not_verified(self, mock_send_sms):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.profile.phone = '5555555'
+        user.profile.phone_verified = False  # Phone not verified
+        user.profile.save()
+        event = eventhelper.given_event_exists(user,
+                                               start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+                                               end=timezone.now() + datetime.timedelta(minutes=10))
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event)
+
+        # WHEN
+        reminderservice.process_text_reminders()
+
+        # THEN
+        # No SMS sent when phone not verified
+        mock_send_sms.assert_not_called()
         reminder.refresh_from_db()
         self.assertTrue(reminder.sent)
 

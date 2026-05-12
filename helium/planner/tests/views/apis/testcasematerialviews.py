@@ -115,6 +115,7 @@ class TestCaseMaterialViews(APITestCase):
         course1 = coursehelper.given_course_exists(course_group)
         course2 = coursehelper.given_course_exists(course_group)
         material_group1 = materialgrouphelper.given_material_group_exists(user)
+        material_group2 = materialgrouphelper.given_material_group_exists(user)
         material = materialhelper.given_material_exists(material_group1, courses=[course1])
         self.assertEqual(material.title, '📘 Test Material')
 
@@ -126,6 +127,7 @@ class TestCaseMaterialViews(APITestCase):
             'website': 'http://www.some-material.com',
             'price': '500.27',
             'details': 'N/A',
+            'material_group': material_group2.pk,
             'courses': [course2.pk]
         }
         response = self.client.put(
@@ -196,7 +198,7 @@ class TestCaseMaterialViews(APITestCase):
         material = materialhelper.given_material_exists(material_group1, courses=[course1])
 
         # WHEN
-        forbidden_responses = [
+        responses = [
             self.client.post(
                 reverse('planner_materialgroups_materials_list', kwargs={'material_group': material_group1.pk}),
                 json.dumps({'courses': [course2.pk]}),
@@ -208,31 +210,18 @@ class TestCaseMaterialViews(APITestCase):
             self.client.put(
                 reverse('planner_materialgroups_materials_detail',
                         kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
+                json.dumps({'material_group': material_group2.pk}),
+                content_type='application/json'),
+            self.client.put(
+                reverse('planner_materialgroups_materials_detail',
+                        kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
                 json.dumps({'courses': [course2.pk]}),
                 content_type='application/json')
         ]
-        # Sending material_group in a write is silently ignored (read-only field); the material stays put.
-        move_attempt = self.client.put(
-            reverse('planner_materialgroups_materials_detail',
-                    kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
-            json.dumps({
-                'title': material.title,
-                'status': material.status,
-                'condition': material.condition,
-                'website': material.website,
-                'price': material.price,
-                'details': material.details,
-                'courses': [course1.pk],
-                'material_group': material_group2.pk,
-            }),
-            content_type='application/json')
 
         # THEN
-        for response in forbidden_responses:
+        for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(move_attempt.status_code, status.HTTP_200_OK)
-        material.refresh_from_db()
-        self.assertEqual(material.material_group_id, material_group1.pk)
 
     def test_no_access_object_owned_by_another_user(self):
         # GIVEN
