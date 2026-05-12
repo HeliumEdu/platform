@@ -36,7 +36,7 @@ class Reminder(BaseModel):
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)
 
     type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
-                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.POPUP)
+                                       choices=enums.REMINDER_TYPE_CHOICES, default=enums.PUSH)
 
     sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False)
 
