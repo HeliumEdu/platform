@@ -3,8 +3,10 @@ __license__ = "MIT"
 
 import logging
 
+from django.db import models as django_models
 from rest_framework import serializers
 
+from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
@@ -14,8 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
+    serializer_field_mapping = {
+        **serializers.ModelSerializer.serializer_field_mapping,
+        django_models.DateTimeField: TzAwareDateTimeField,
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.fields['category'].required = True
+        self.fields['category'].allow_null = False
 
         if self.context.get('request', None):
             self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)

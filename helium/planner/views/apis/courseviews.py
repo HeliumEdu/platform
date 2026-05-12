@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.db.models import Count, Q, Exists, OuterRef
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -82,7 +82,47 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
     @extend_schema(
         responses={
             201: CourseSerializer
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'in_person_course',
+                summary='In-person class meeting in a physical room',
+                description='A standard in-person class with a room and weekly meeting times.',
+                value={
+                    'title': 'BIO 151',
+                    'room': 'Bagley Hall 131',
+                    'credits': '4.00',
+                    'color': '#4986e7',
+                    'website': 'https://canvas.example.edu/bio-151',
+                    'is_online': False,
+                    'teacher_name': 'Dr. Jane Smith',
+                    'teacher_email': 'jsmith@example.edu',
+                    'start_date': '2026-09-02',
+                    'end_date': '2026-12-13',
+                    'exceptions': '',
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'online_course',
+                summary='Online class',
+                description='An online class with no physical room. Set `is_online` to `true`; `room` may be left blank.',
+                value={
+                    'title': 'PSYC 3301',
+                    'room': '',
+                    'credits': '3.00',
+                    'color': '#16a765',
+                    'website': 'https://lms.example.edu/psyc-3301',
+                    'is_online': True,
+                    'teacher_name': 'Prof. Alex Chen',
+                    'teacher_email': 'achen@example.edu',
+                    'start_date': '2026-08-26',
+                    'end_date': '2026-12-12',
+                    'exceptions': '20261125,20261126,20261127',
+                },
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, *args, **kwargs):
         """

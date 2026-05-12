@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.db.models import Count, Q
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
     CreateModelMixin
@@ -81,7 +81,23 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
     @extend_schema(
         responses={
             201: CategorySerializer
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'weighted_category',
+                summary='Weighted grading category (e.g. "Exams — 40%")',
+                description=(
+                    'A graded category contributing 40% of the final grade. Weights across all '
+                    'categories on a single course must sum to ≤ 100.'
+                ),
+                value={
+                    'title': 'Exams',
+                    'weight': '40.00',
+                    'color': '#cd74e6',
+                },
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, *args, **kwargs):
         """
