@@ -87,7 +87,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Platform timezones already up to date."
           else
-            git commit -m "chore: refresh IANA timezone list"
+            git commit -m "Refresh IANA timezone list"
             git push origin develop
           fi
 
@@ -104,6 +104,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Frontend timezones already up to date."
           else
-            git commit -m "chore: refresh IANA timezone list"
+            git commit -m "Refresh IANA timezone list"
             git push origin develop
           fi
