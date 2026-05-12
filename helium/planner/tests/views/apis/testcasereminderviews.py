@@ -998,7 +998,7 @@ class TestCaseReminderViews(APITestCase):
             self.client.post(reverse('planner_reminders_list'),
                              json.dumps({'course': course2.pk}),
                              content_type='application/json'),
-            self.client.put(
+            self.client.patch(
                 reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                 json.dumps({'course': course2.pk}),
                 content_type='application/json'),

@@ -20,6 +20,7 @@ class OAuthLoginView(ViewSet, HeliumAPIView):
     serializer_class = OAuthLoginSerializer
 
     @extend_schema(
+        operation_id='oauth_login',
         request=OAuthLoginSerializer,
         responses={
             200: TokenResponseFieldsMixin
