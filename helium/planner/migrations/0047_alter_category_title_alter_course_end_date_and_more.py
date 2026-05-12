@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('planner', '0045_alter_course_options_alter_coursegroup_options_and_more'),
+        ('planner', '0046_alter_reminder_type'),
     ]
 
     operations = [

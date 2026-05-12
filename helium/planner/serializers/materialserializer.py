@@ -21,3 +21,4 @@ class MaterialSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group',
             'courses',)
+        read_only_fields = ('material_group',)
