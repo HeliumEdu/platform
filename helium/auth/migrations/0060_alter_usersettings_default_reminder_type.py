@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('helium_auth', '0060_remove_userprofile_and_last_login_legacy'),
+        ('helium_auth', '0059_alter_usersettings_time_zone'),
     ]
 
     operations = [
