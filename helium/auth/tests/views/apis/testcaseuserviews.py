@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from helium.auth.models import UserSettings, UserProfile
+from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
@@ -42,12 +42,6 @@ class TestCaseUserViews(APITestCase):
         self.assertNotIn('verification_code', response.data)
         self.assertEqual(user.username, response.data['username'])
         self.assertEqual(user.email, response.data['email'])
-        # Profile fields
-        self.assertNotIn('phone_verification_code', response.data['profile'])
-        self.assertEqual(user.profile.phone, response.data['profile']['phone'])
-        self.assertEqual(user.profile.phone_changing, response.data['profile']['phone_changing'])
-        self.assertEqual(user.profile.phone_verified, response.data['profile']['phone_verified'])
-        self.assertEqual(user.profile.user.pk, response.data['profile']['user'])
         # Settings fields
         self.assertEqual(user.settings.time_zone, response.data['settings']['time_zone'])
         self.assertEqual(user.settings.default_view, response.data['settings']['default_view'])
@@ -72,34 +66,11 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.settings.private_slug, response.data['settings']['private_slug'])
         self.assertEqual(user.settings.user.pk, response.data['settings']['user'])
 
-    def test_username_changes(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        self.assertEqual(user.email, 'user@test.com')
-        self.assertIsNone(user.email_changing)
-
-        # WHEN
-        data = {
-            'username': 'new_username'
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], data['username'])
-        self.assertEqual(response.data['email'], user.email)
-        user.refresh_from_db()
-        self.assertEqual(user.username, response.data['username'])
-        self.assertEqual(user.email, response.data['email'])
-        self.assertIsNone(user.email_changing)
-
     def test_email_changing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(user.email, 'user@test.com')
         self.assertIsNone(user.email_changing)
-        self.assertEqual(user.username, 'test_user')
 
         # WHEN
         data = {
@@ -111,13 +82,11 @@ class TestCaseUserViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], user.username)
         self.assertEqual(response.data['email'], user.email)
         self.assertEqual(response.data['email_changing'], 'new@email.com')
         user.refresh_from_db()
         self.assertEqual(user.email, response.data['email'])
         self.assertEqual(user.email_changing, response.data['email_changing'])
-        self.assertEqual(user.username, response.data['username'])
 
     def test_email_change_fails_without_password(self):
         # GIVEN
@@ -270,38 +239,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('password', response.data)
 
-    def test_username_already_exists(self):
-        # GIVEN
-        user1 = userhelper.given_a_user_exists()
-        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
-                                                                    email='test2@email.com')
-
-        # WHEN
-        data = {
-            # Trying to change username to match user1's email
-            'username': user1.username
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('username', response.data)
-
-    def test_reserved_username_not_in_helium_domain(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        data = {
-            'username': 'heliumedu-cluster-hello'
-        }
-        response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertContains(response, 'username is not available', status_code=status.HTTP_400_BAD_REQUEST)
-
     def test_email_already_exists(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
@@ -335,7 +272,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_fails_bad_request(self):
         # GIVEN
@@ -352,7 +288,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_oauth_user_without_password(self):
         """Test that OAuth users (without usable password) can delete their account without providing a password."""
@@ -371,7 +306,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_user_inactive(self):
         # GIVEN
@@ -389,7 +323,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertFalse(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_user_inactive_fails_bad_request(self):
         # GIVEN
@@ -407,7 +340,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_delete_user_inactive_with_active_user(self):
         # GIVEN
@@ -425,7 +357,6 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
-        self.assertTrue(UserProfile.objects.filter(user_id=user.pk).exists())
 
     def test_oauth_user_can_add_password(self):
         """Test that OAuth users can add a password without providing old_password."""

@@ -4,11 +4,8 @@ __license__ = "MIT"
 import logging
 
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, \
-    CreateModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
@@ -82,7 +79,13 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new course schedule instance for the given course.
+        Create the course schedule for the given course. A course has at most one schedule — repeated calls
+        on a course that already has one are rejected.
+
+        `days_of_week` is a string of seven `0`/`1` characters starting Sunday (e.g. `0101010` for Mon/Wed/Fri).
+        Each day has its own `<day>_start_time` / `<day>_end_time` pair; for each day the start must be
+        on-or-before the end. Days flagged `0` in `days_of_week` are not meetings, but the time fields are still
+        accepted and stored (typically left at the defaults).
         """
         response = self.create(request, *args, **kwargs)
 
@@ -95,8 +98,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
 @extend_schema(
     tags=['planner.courseschedule']
 )
-class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
-                                                    DestroyModelMixin):
+class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
@@ -124,13 +126,3 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
-
-    @extend_schema(deprecated=True, exclude=True)
-    def delete(self, request, *args, **kwargs):
-        """
-        Delete the given course schedule instance.
-        """
-        return Response(
-            {'detail': 'Deleting a course schedule is not allowed. Each course must have exactly one schedule.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )

@@ -11,11 +11,10 @@ from rest_framework import serializers
 
 from helium.auth.models import UserSettings
 from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
-from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
-    is_admin_allowed_email, is_staff_email
+    is_admin_allowed_email
 from helium.common import enums
 from helium.common.utils import taskutils
 
@@ -29,8 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(help_text='A password to set for the user.',
                                      required=False, write_only=True)
-
-    profile = UserProfileSerializer(required=False, read_only=True)
 
     settings = UserSettingsSerializer(required=False, read_only=True)
 
@@ -47,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
-                  'profile', 'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
+                  'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
             'username': {'required': False, 'allow_blank': True},
@@ -61,12 +58,6 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.oauth_providers.exists()
 
     def validate(self, attrs):
-        email = attrs.get('email', self.instance.email if self.instance else None)
-        username = attrs.get('username', self.instance.username if self.instance else None)
-
-        if username and username.startswith("heliumedu-cluster") and not is_staff_email(email):
-            raise serializers.ValidationError("Sorry, this username is not available.")
-
         # If setting a password and user has a usable password, require old_password for security
         if 'password' in attrs and self.instance:
             if self.instance.has_usable_password() and 'old_password' not in attrs:
@@ -192,12 +183,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text=get_user_model()._meta.get_field('username').help_text
-    )
-
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 
     password = serializers.CharField(help_text=get_user_model()._meta.get_field('password').help_text)

@@ -19,7 +19,7 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
 
     def info(self, request, *args, **kwargs):
         """
-        Return version and configuration information about the app.
+        Return runtime configuration: version, upload limits, token lifetimes, accepted file types, supported OAuth providers.
         """
         serializer = InfoSerializer({
             'name': settings.PROJECT_NAME,

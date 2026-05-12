@@ -11,11 +11,11 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
 from django.db import IntegrityError
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
@@ -42,26 +42,34 @@ def _record_client_activity(user, request):
         UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(), client=client)
 
 
+@extend_schema_serializer(component_name='TokenResponse')
 class TokenResponseFieldsMixin(serializers.Serializer):
-    """Mixin providing access and refresh token fields for response serializers."""
     access = serializers.CharField(read_only=True, required=False,
                                    help_text='JWT access token for authentication.')
     refresh = serializers.CharField(read_only=True, required=False,
                                     help_text='JWT refresh token for obtaining new access tokens.')
 
 
+@extend_schema_serializer(component_name='Login')
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
-    username = serializers.CharField(help_text="The username for the user.",
-                                     label="Username",
-                                     write_only=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # simplejwt's parent __init__ assigns bare CharField/PasswordField over our class-level
+        # declarations, stripping help_text/label/style — re-apply them here.
+        self.fields[self.username_field] = serializers.CharField(
+            help_text="The user's email address.",
+            label='Email',
+            write_only=True,
+        )
+        self.fields['password'] = serializers.CharField(
+            help_text='The password for the user.',
+            label='Password',
+            write_only=True,
+            style={'input_type': 'password'},
+            trim_whitespace=False,
+        )
 
-    password = serializers.CharField(help_text="The password for the user.",
-                                     label="Password",
-                                     write_only=True,
-                                     style={'input_type': 'password'},
-                                     trim_whitespace=False)
-
-    def validate(self, attrs, update_last_login_field=True):
+    def validate(self, attrs):
         username = attrs.pop('username').strip()
         password = attrs.pop('password')
 
@@ -91,8 +99,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
 
-            if update_last_login_field:
-                update_last_login(None, user)
+            update_last_login(None, user)
 
             user.last_activity = timezone.now()
             user.deletion_warning_count = 0
@@ -112,39 +119,6 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             logger.debug(f"User {user.pk} has been logged in")
 
             metricutils.increment('action.user.login', request=self.context.get('request'), user=user)
-
-        return attrs
-
-
-class LegacyAccessToken(AccessToken):
-    """Access token with legacy (longer) lifetime for legacy frontend."""
-    lifetime = timedelta(minutes=settings.LEGACY_ACCESS_TOKEN_TTL_MINUTES)
-
-
-class LegacyRefreshToken(RefreshToken):
-    """Refresh token with legacy (longer) lifetime for legacy frontend."""
-    lifetime = timedelta(days=settings.LEGACY_REFRESH_TOKEN_TTL_DAYS)
-    access_token_class = LegacyAccessToken
-
-
-class LegacyTokenObtainSerializer(TokenObtainSerializer):
-    """
-    Token obtain serializer for legacy frontend that doesn't properly support token refresh.
-    Uses longer token lifetimes configured via LEGACY_*_TTL settings.
-
-    Deprecated: Remove when frontend-legacy is shut down.
-    """
-
-    @classmethod
-    def get_token(cls, user):
-        return LegacyRefreshToken.for_user(user)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs, update_last_login_field=False)
-
-        if user := getattr(self, '_authenticated_user', None):
-            user.last_login_legacy = timezone.now()
-            user.save(update_fields=['last_login_legacy'])
 
         return attrs
 
@@ -212,7 +186,10 @@ class TokenBlacklistSerializer(jwt_serializers.TokenBlacklistSerializer):
 
 
 class OAuthLoginSerializer(serializers.Serializer):
-    """Serializer for OAuth Sign-In via Firebase ID token."""
+    """
+    OAuth Sign-In request body. Accepts a Firebase ID token obtained on the client from
+    a Google or Apple Sign-In flow.
+    """
     id_token = serializers.CharField(
         help_text='Firebase ID token obtained from OAuth Sign-In on the client.',
         write_only=True

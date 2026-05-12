@@ -1,16 +1,32 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-from datetime import timezone
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from dateutil import parser
 from django.db.models import Q
+from drf_spectacular.utils import OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
 
 from helium.common.views.base import HeliumAPIView
+
+
+CALENDAR_DATE_RANGE_PARAMETERS = [
+    OpenApiParameter(
+        name='from',
+        type=datetime,
+        description="Lower bound (inclusive) of the date range filter. Must be provided together with `to`. "
+                    "Date-only strings (e.g. `2026-02-02`) are interpreted as midnight in the user's timezone.",
+    ),
+    OpenApiParameter(
+        name='to',
+        type=datetime,
+        description="Upper bound (inclusive) of the date range filter. Must be provided together with `from`.",
+    ),
+]
 
 
 def _parse_date_param_to_utc(date_str, user_tz_name):

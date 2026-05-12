@@ -7,27 +7,11 @@ from django.conf import settings
 
 from conf.celery import app
 from helium.auth.models import UserPushToken
-from helium.common.services.phoneservice import send_sms
 from helium.common.services.pushservice import send_notifications
 from helium.common.services.sesreputationservice import process_ses_notification
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
-
-
-@app.task(bind=True)
-def send_text(self, phone, message):
-    published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("text.sent", priority="high", published_at_ms=published_at_ms)
-
-    if settings.DISABLE_TEXTS:
-        logger.warning(
-            f'Texts disabled. Text with message "{message}" to {phone} not sent.')
-        metricutils.task_stop(metrics, value=0)
-        return
-
-    send_sms(phone, message)
-    metricutils.task_stop(metrics)
 
 
 @app.task(bind=True)
