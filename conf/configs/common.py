@@ -376,10 +376,12 @@ SPECTACULAR_SETTINGS = {
         "`\"Essay 1 — Final\"`). Helium has no parent/child or group concept for assignments.\n"
         "- **Biweekly meetings.** Helium has no biweekly recurrence — use `Course.exceptions` "
         "(`YYYYMMDD` CSV) to skip every alternate week from a normal weekly schedule.\n"
-        "- **Idempotency.** Helium does not enforce uniqueness on `(user, title)` for CourseGroups or "
-        "Courses. Re-running an import without checking will silently duplicate them. GET "
-        "`/planner/coursegroups/` (and the nested course list) before each POST and reuse the existing "
-        "id if it matches."
+        "- **Idempotency.** Helium does not enforce uniqueness on title for CourseGroups or "
+        "Courses — duplicates are valid (a student may legitimately have `\"BIO 151 — Lecture\"` "
+        "and `\"BIO 151 — Lab\"`). Always reference an existing entity by its `id`, never by its "
+        "title alone. Before a re-import, GET `/planner/coursegroups/` (and the nested Course "
+        "list) and reuse the existing `id` for any entity you intend to keep; titles are display "
+        "names, not identifiers."
     ),
     'CONTACT': {
         'name': f'{PROJECT_NAME} Support',
