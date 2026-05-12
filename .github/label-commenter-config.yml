@@ -1,5 +1,5 @@
 labels:
-  - name: invalid-forum
+  - name: invalid-support
     labeled:
       issue:
         body: This is a bug tracker and not a support forum. If you need assistance with Helium, open a ticket on the [Support Portal](https://support.heliumedu.com).
