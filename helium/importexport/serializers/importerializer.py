@@ -31,9 +31,9 @@ class ImportSerializer(serializers.Serializer):
 
     categories = serializers.IntegerField()
 
-    material_groups = serializers.IntegerField()
+    resource_groups = serializers.IntegerField()
 
-    materials = serializers.IntegerField()
+    resources = serializers.IntegerField()
 
     events = serializers.IntegerField()
 
