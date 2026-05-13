@@ -125,8 +125,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                         {'id': 203, 'title': 'Lab Reports', 'weight': '100.00',
                          'color': '#16a765', 'course': 11},
                     ],
-                    'material_groups': [],
-                    'materials': [],
+                    'resource_groups': [],
+                    'resources': [],
                     'events': [],
                     'homework': [
                         {
@@ -200,8 +200,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         courses_count = 0
         course_schedules_count = 0
         categories_count = 0
-        material_groups_count = 0
-        materials_count = 0
+        resource_groups_count = 0
+        resources_count = 0
         events_count = 0
         homework_count = 0
         reminders_count = 0
@@ -218,7 +218,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                     })
 
                 (external_calendar_count_file, course_groups_count_file, courses_count_file,
-                 course_schedules_count_file, categories_count_file, material_groups_count_file, materials_count_file,
+                 course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
                  events_count_file, homework_count_file, reminders_count_file,
                  notes_count_file) = importservice.import_user(request, data)
 
@@ -229,8 +229,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 courses_count += courses_count_file
                 course_schedules_count += course_schedules_count_file
                 categories_count += categories_count_file
-                material_groups_count += material_groups_count_file
-                materials_count += materials_count_file
+                resource_groups_count += resource_groups_count_file
+                resources_count += resources_count_file
                 events_count += events_count_file
                 homework_count += homework_count_file
                 reminders_count += reminders_count_file
@@ -246,8 +246,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             'courses': courses_count,
             'course_schedules': course_schedules_count,
             'categories': categories_count,
-            'material_groups': material_groups_count,
-            'materials': materials_count,
+            'resource_groups': resource_groups_count,
+            'resources': resources_count,
             'events': events_count,
             'homework': homework_count,
             'reminders': reminders_count,

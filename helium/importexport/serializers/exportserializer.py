@@ -59,9 +59,9 @@ class ExportSerializer(serializers.Serializer):
 
     categories = CategorySerializer(many=True)
 
-    material_groups = MaterialGroupSerializer(many=True)
+    resource_groups = MaterialGroupSerializer(many=True)
 
-    materials = MaterialExportSerializer(many=True)
+    resources = MaterialExportSerializer(many=True)
 
     events = EventExportSerializer(many=True)
 

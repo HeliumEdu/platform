@@ -30,7 +30,7 @@
         </p>{% endif %}{% endif %}
         {% if reminder.homework or reminder.event %}
         {% if calendar_item.materials and calendar_item.materials.count > 0 %}
-        <h4>Materials</h4>
+        <h4>Resources</h4>
         <ul>
             {% for material in calendar_item.materials.all %}
             <li>

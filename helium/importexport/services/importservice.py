@@ -119,15 +119,19 @@ def _resolve_parent(remap, raw_id, section, parent_key):
     return resolved
 
 
-def _build_legacy_note_payload(content, *, homework_id=None, event_id=None, material_id=None):
-    """Build the input dict for a legacy-content Note linked to exactly one entity."""
+def _build_legacy_note_payload(content, *, homework_id=None, event_id=None, resource_id=None, material_id=None):
+    """
+    Build the input dict for a legacy-content Note linked to exactly one entity. `resource_id` is
+    the authoritative kwarg; `material_id` is a fallback alias for legacy callers.
+    """
     payload = {'title': '', 'content': content}
     if homework_id is not None:
         payload['homework'] = [homework_id]
     if event_id is not None:
         payload['events'] = [event_id]
-    if material_id is not None:
-        payload['resources'] = [material_id]
+    resource_pk = resource_id if resource_id is not None else material_id
+    if resource_pk is not None:
+        payload['resources'] = [resource_pk]
     return payload
 
 
@@ -270,7 +274,7 @@ def _import_material_groups(material_groups, user, example_schedule):
                 }
             })
 
-    logger.info(f"Imported {len(material_groups)} material groups.")
+    logger.info(f"Imported {len(material_groups)} resource groups.")
 
     return material_group_remap
 
@@ -279,9 +283,16 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
     material_remap = {}
 
     for material in materials:
+        if 'resource_group' in material:
+            raw_group = material.get('resource_group')
+            parent_key = 'resource_group'
+        else:
+            raw_group = material.get('material_group')
+            parent_key = 'material_group'
         material_group_id = _resolve_parent(
-            material_group_remap, material.get('material_group'), 'materials', 'material_group')
+            material_group_remap, raw_group, 'materials', parent_key)
         material['material_group'] = material_group_id
+        material.pop('resource_group', None)
 
         courses = material.get('courses') or []
         if not isinstance(courses, list):
@@ -299,7 +310,7 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
 
             if legacy_notes_content:
                 _create_note_from_payload(
-                    _build_legacy_note_payload(legacy_notes_content, material_id=instance.pk),
+                    _build_legacy_note_payload(legacy_notes_content, resource_id=instance.pk),
                     user, example_schedule, 'materials')
         else:
             raise ValidationError({
@@ -308,7 +319,7 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
                 }
             })
 
-    logger.info(f"Imported {len(materials)} materials.")
+    logger.info(f"Imported {len(materials)} resources.")
 
     return material_remap
 
@@ -352,11 +363,16 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
         else:
             h['category'] = None
 
-        materials = h.get('materials') or []
+        if 'resources' in h and 'materials' in h:
+            raise ValidationError(
+                {'homework': "Provide either 'resources' or 'materials' on a homework row, not both."})
+        field_key = 'resources' if 'resources' in h else 'materials'
+        materials = h.pop('resources', None) if 'resources' in h else h.get('materials')
+        materials = materials or []
         if not isinstance(materials, list):
-            raise ValidationError({'homework': "Field `materials` must be a list."})
+            raise ValidationError({'homework': f"Field `{field_key}` must be a list."})
         for i, material in enumerate(materials):
-            materials[i] = _resolve_parent(material_remap, material, 'homework', 'materials')
+            materials[i] = _resolve_parent(material_remap, material, 'homework', field_key)
         h['materials'] = materials
 
         legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
@@ -556,7 +572,7 @@ def _bulk_import_example_schedule(data, user):
         category_remap[cat['id']] = instance.pk
 
     # --- MaterialGroup ---
-    for mg in data.get('material_groups', []):
+    for mg in _resolve_top_level_resource_groups(data):
         instance = MaterialGroup.objects.create(
             title=mg['title'],
             shown_on_calendar=mg.get('shown_on_calendar', True),
@@ -568,14 +584,15 @@ def _bulk_import_example_schedule(data, user):
     # --- Material (with M2M courses + legacy details→notes) ---
     MaterialCourseThrough = Material.courses.through
     m2m_rows = []
-    for m in data.get('materials', []):
+    for m in _resolve_top_level_resources(data):
+        raw_group = m['resource_group'] if 'resource_group' in m else m['material_group']
         instance = Material.objects.create(
             title=m['title'],
             status=m.get('status', enums.OWNED),
             condition=m.get('condition', enums.BRAND_NEW),
             website=m.get('website') or None,
             price=m.get('price', ''),
-            material_group_id=material_group_remap[m['material_group']],
+            material_group_id=material_group_remap[raw_group],
         )
         material_remap[m['id']] = instance.pk
         for course_id in [course_remap[c] for c in m.get('courses', [])]:
@@ -584,7 +601,7 @@ def _bulk_import_example_schedule(data, user):
         legacy_content = _extract_legacy_notes(m, legacy_field='details')
         if legacy_content:
             _create_note_from_payload(
-                _build_legacy_note_payload(legacy_content, material_id=instance.pk),
+                _build_legacy_note_payload(legacy_content, resource_id=instance.pk),
                 user, example_schedule=True, section='materials')
 
     if m2m_rows:
@@ -637,7 +654,8 @@ def _bulk_import_example_schedule(data, user):
         )
         instance.save()
         homework_remap[h['id']] = instance.pk
-        hw_material_m2m.append((instance.pk, [material_remap[m] for m in h.get('materials', [])]))
+        hw_resources_field = h['resources'] if 'resources' in h else h.get('materials', [])
+        hw_material_m2m.append((instance.pk, [material_remap[m] for m in hw_resources_field]))
         hw_legacy_notes.append((instance, legacy_notes_content))
 
     HomeworkMaterialThrough = Homework.materials.through
@@ -680,8 +698,8 @@ def _bulk_import_example_schedule(data, user):
     logger.info(
         f"Bulk imported example schedule: {len(course_group_remap)} course groups, "
         f"{len(course_remap)} courses, {len(data.get('course_schedules', []))} schedules, "
-        f"{len(category_remap)} categories, {len(material_group_remap)} material groups, "
-        f"{len(material_remap)} materials, {len(data.get('external_calendars', []))} external calendars, "
+        f"{len(category_remap)} categories, {len(material_group_remap)} resource groups, "
+        f"{len(material_remap)} resources, {len(data.get('external_calendars', []))} external calendars, "
         f"{len(event_remap)} events, "
         f"{len(homework_remap)} homework, {len(data.get('reminders', []))} reminders, "
         f"{len(data.get('notes', []))} notes"
@@ -705,6 +723,23 @@ def _resolve_top_level_resources(data):
     return []
 
 
+def _resolve_top_level_resource_groups(data):
+    """
+    Read the top-level resource_groups list. `resource_groups` is the authoritative key;
+    `material_groups` is a permanent key-based alias. Both present is invalid.
+    """
+    has_resource_groups = 'resource_groups' in data
+    has_material_groups = 'material_groups' in data
+
+    if has_resource_groups and has_material_groups:
+        raise ValidationError("Provide either 'resource_groups' or 'material_groups', not both.")
+    if has_resource_groups:
+        return data.get('resource_groups', []) or []
+    if has_material_groups:
+        return data.get('material_groups', []) or []
+    return []
+
+
 @transaction.atomic
 def import_user(request, data, example_schedule=False):
     """
@@ -719,6 +754,9 @@ def import_user(request, data, example_schedule=False):
 
     materials = _resolve_top_level_resources(data)
     data['materials'] = materials
+
+    material_groups = _resolve_top_level_resource_groups(data)
+    data['material_groups'] = material_groups
 
     _validate_section_ids(data)
 
