@@ -4,6 +4,7 @@ __license__ = "MIT"
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from helium.common.utils.validators import validate_quill_delta
 from helium.planner.models import Note
 
 
@@ -24,6 +25,10 @@ class NoteSerializer(serializers.ModelSerializer):
                     {'resources': ["Provide either 'resources' or 'materials', not both."]})
             data = {k: v for k, v in data.items() if k != 'materials'} | {'resources': data['materials']}
         return super().to_internal_value(data)
+
+    def validate_content(self, value):
+        validate_quill_delta(value)
+        return value
 
     def validate(self, attrs):
         """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""

@@ -4,7 +4,7 @@ __license__ = "MIT"
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from helium.common.utils.validators import validate_fraction
+from helium.common.utils.validators import validate_fraction, validate_quill_delta
 
 
 class TestCaseValidateFraction(TestCase):
@@ -36,3 +36,36 @@ class TestCaseValidateFraction(TestCase):
     def test_non_numeric_rejected(self):
         with self.assertRaises(ValidationError):
             validate_fraction('abc/def')
+
+
+class TestCaseValidateQuillDelta(TestCase):
+    def test_none_passes(self):
+        validate_quill_delta(None)
+
+    def test_empty_ops_passes(self):
+        validate_quill_delta({'ops': []})
+
+    def test_canonical_empty_doc_passes(self):
+        validate_quill_delta({'ops': [{'insert': '\n'}]})
+
+    def test_simple_doc_passes(self):
+        validate_quill_delta({'ops': [{'insert': 'hello world\n'}]})
+
+    def test_bare_string_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_quill_delta('this is just a string')
+
+    def test_bare_int_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_quill_delta(12345)
+
+    def test_empty_dict_passes(self):
+        validate_quill_delta({})
+
+    def test_missing_ops_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_quill_delta({'title': 'no ops here'})
+
+    def test_non_list_ops_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_quill_delta({'ops': 'not-a-list'})

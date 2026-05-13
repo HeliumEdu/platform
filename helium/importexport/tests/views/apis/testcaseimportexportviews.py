@@ -54,7 +54,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response1.data)
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response1.data)
         # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
         # up and the remapping is properly tested
         with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
@@ -69,7 +69,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'material_groups': 1, 'materials': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response2.data)
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response2.data)
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()

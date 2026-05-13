@@ -159,7 +159,7 @@ def _create_homework_description(homework):
     description = f"Class Info: {class_info}\n"
 
     if len(materials) > 0:
-        description += f"Materials: {','.join(materials)}\n"
+        description += f"Resources: {','.join(materials)}\n"
 
     if homework.url:
         description += f"URL: {homework.url}\n"
