@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.17"
+__version__ = "2.2.18"
 
 import os
 import socket
@@ -307,8 +307,9 @@ SPECTACULAR_SETTINGS = {
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
-        "### Bulk import via `/importexport/import/` (preferred for fresh terms)\n\n"
-        "Use the bulk-import path for non-trivial imports rather than N individual POSTs. "
+        "### Bulk import via `/importexport/import/`\n\n"
+        "The bulk-import path lets you import many resources in one atomic call rather than N "
+        "individual POSTs — more efficient for large batches, equivalent results otherwise. "
         "Produce a single JSON file matching the `Export` component schema (the same shape returned by "
         "`GET /importexport/export/`) and upload it as a multipart form field named `file[]` to "
         "`POST /importexport/import/`. The benefits:\n\n"
@@ -325,8 +326,7 @@ SPECTACULAR_SETTINGS = {
         "`sat_end_time`). Omitted day-times default to `12:00:00`, which may collide with real "
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
         "### Incremental edits via REST\n\n"
-        "POST in this order so each create succeeds when editing an existing term (or when a "
-        "single-call bulk import is impractical):\n\n"
+        "POST in this order so each create succeeds:\n\n"
         "1. `POST /planner/coursegroups/` — the term (semester / quarter).\n"
         "2. `POST /planner/coursegroups/{course_group}/courses/` — each class within the term. "
         "Use `\"0.00\"` for `credits` when the syllabus is silent, rather than guessing. "
@@ -343,7 +343,7 @@ SPECTACULAR_SETTINGS = {
         "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual assignments. "
         "Set `current_grade` to `\"-1/100\"` for ungraded items.\n"
         "6. (Optional) `POST /planner/events/` — non-class calendar items (study sessions, office hours). "
-        "Events have no class dependency.\n"
+        "Events have no Course dependency.\n"
         "7. (Optional) `POST /planner/reminders/` — push/email reminders attached to exactly one parent "
         "(`event`, `homework`, or `course`).\n"
         "8. (Optional) `POST /planner/notes/`, `POST /planner/attachments/` — rich-text notes and file "
@@ -364,7 +364,7 @@ SPECTACULAR_SETTINGS = {
         "- **No recurrence on Homework or Events.** A weekly problem set across a 15-week term must be "
         "15 separate Homework rows; a weekly office-hour Event likewise. Three ways to handle this:\n"
         "  1. Enumerate the rows up front and POST each one.\n"
-        "  2. Use the bulk-import path (preferred for fresh-term imports) — one JSON file, one call.\n"
+        "  2. Use the bulk-import path — one JSON file, one call (more efficient for large batches).\n"
         "  3. Create a canonical row and use the clone endpoints "
         "(`POST /planner/coursegroups/{cg}/courses/{c}/homework/{id}/clone/` or "
         "`POST /planner/events/{id}/clone/`, both with no body) to duplicate it for incremental "

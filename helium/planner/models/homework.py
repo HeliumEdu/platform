@@ -15,16 +15,18 @@ class Homework(BaseCalendar):
     current_grade = models.CharField(
         help_text=(
             'Fraction of points earned, `"numerator/denominator"` (e.g. `"25/30"`). '
-            '`"-1/100"` marks the assignment ungraded. Pairs with `completed=true` to count '
-            'toward grade calc.'
+            '`"-1/100"` marks the assignment ungraded; on an ungraded row, the denominator '
+            'is the expected point value when graded — within-category weighting is handled '
+            'by `Category.weight`, not by per-assignment denominators. Pairs with '
+            '`completed=true` to count toward grade calc.'
         ),
         max_length=255, validators=[validate_fraction])
 
     completed = models.BooleanField(
         help_text=(
-            'Whether the assignment has been completed. Once `completed=true` and '
+            'Whether the homework has been completed. Once `completed=true` and '
             '`current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the '
-            'assignment counts toward grade calc. For missed work: `completed=true`, '
+            'homework counts toward grade calc. For missed work: `completed=true`, '
             '`current_grade="0/<possible>"`. See '
             'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
         ),
