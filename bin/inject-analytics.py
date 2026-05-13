@@ -4,10 +4,10 @@
 Inject (or strip) the Google Analytics gtag.js snippet into a pre-built static
 HTML file at build time.
 
-Mirrors the frontend's ``ifdef SENTRY_DIST`` pattern: when the
-``GA_MEASUREMENT_ID`` env var is set, the snippet is baked into the artifact;
-when unset (local dev, Docker, integration builds), the marker is stripped and
-no metrics fire from the artifact at runtime.
+Mirrors the frontend's Sentry pattern: the public measurement ID is hardcoded
+in source (analogous to ``SENTRY_DSN`` in ``lib/core/sentry_service.dart``),
+and a presence-style env var (``ANALYTICS_ENABLED``, analogous to
+``ifdef SENTRY_DIST``) gates whether the snippet is included in the artifact.
 """
 
 __copyright__ = "Copyright (c) 2025 Helium Edu"
@@ -17,16 +17,17 @@ import os
 import sys
 
 MARKER = "<!-- ANALYTICS -->"
+GA_MEASUREMENT_ID = "G-6XR4WF9NY4"
 
 
-def build_snippet(ga_id: str) -> str:
+def build_snippet() -> str:
     return (
-        f'<script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>\n'
+        f'<script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>\n'
         f'  <script>\n'
         f'    window.dataLayer = window.dataLayer || [];\n'
         f'    function gtag(){{dataLayer.push(arguments);}}\n'
         f"    gtag('js', new Date());\n"
-        f"    gtag('config', '{ga_id}');\n"
+        f"    gtag('config', '{GA_MEASUREMENT_ID}');\n"
         f'  </script>'
     )
 
@@ -37,8 +38,8 @@ def main() -> int:
         return 1
 
     target = sys.argv[1]
-    ga_id = os.environ.get("GA_MEASUREMENT_ID", "").strip()
-    replacement = build_snippet(ga_id) if ga_id else ""
+    enabled = os.environ.get("ANALYTICS_ENABLED", "").strip()
+    replacement = build_snippet() if enabled else ""
 
     with open(target, "r") as f:
         content = f.read()

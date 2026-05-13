@@ -105,6 +105,7 @@ jobs:
       PLATFORM: amd64
       TAG_VERSION: ${{ needs.prereq.outputs.version }}
       ENVIRONMENT: prod
+      ANALYTICS_ENABLED: 1
 
     steps:
       - uses: actions/checkout@v6
@@ -143,6 +144,7 @@ jobs:
       PLATFORM: arm64
       TAG_VERSION: ${{ needs.prereq.outputs.version }}
       ENVIRONMENT: prod
+      ANALYTICS_ENABLED: 1
 
     steps:
       - uses: actions/checkout@v6
