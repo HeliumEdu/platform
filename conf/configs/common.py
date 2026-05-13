@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.13"
+__version__ = "2.2.14"
 
 import os
 import socket
@@ -402,15 +402,7 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
     ],
-    'SWAGGER_UI_DIST': 'SIDECAR',
-    'SWAGGER_UI_FAVICON_HREF': '/favicon.ico',
-    'SWAGGER_UI_SETTINGS': {
-        'persistAuthorization': True,
-        'displayRequestDuration': True,
-        'filter': True,
-        'deepLinking': True,
-        'docExpansion': 'list',
-    },
+    'REDOC_DIST': 'SIDECAR',
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
