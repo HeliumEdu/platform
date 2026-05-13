@@ -25,7 +25,7 @@ class Material(BaseModel):
                              max_length=255, blank=True)
 
     details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                               blank=True)
+                               blank=True, default='')
 
     material_group = models.ForeignKey('MaterialGroup', help_text='The material group with which to associate.',
                                        related_name='materials', on_delete=models.CASCADE)

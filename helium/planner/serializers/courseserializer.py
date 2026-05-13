@@ -23,6 +23,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
+    teacher_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True, default='')
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
@@ -72,6 +73,9 @@ class CourseSerializer(serializers.ModelSerializer):
         # Use annotated value if available, otherwise default to False
         # (avoids N+1 queries against planner_category table)
         return getattr(obj, 'annotated_has_weighted_grading', False)
+
+    def validate_teacher_email(self, value):
+        return value or ''
 
     def validate(self, attrs):
         start_date = attrs.get('start_date', None)
