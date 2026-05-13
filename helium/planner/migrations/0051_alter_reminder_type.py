@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('planner', '0047_alter_category_weight_alter_course_credits_and_more'),
+        ('planner', '0050_alter_course_credits_and_more'),
     ]
 
     operations = [
