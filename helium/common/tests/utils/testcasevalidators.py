@@ -59,9 +59,8 @@ class TestCaseValidateQuillDelta(TestCase):
         with self.assertRaises(ValidationError):
             validate_quill_delta(12345)
 
-    def test_empty_dict_rejected(self):
-        with self.assertRaises(ValidationError):
-            validate_quill_delta({})
+    def test_empty_dict_passes(self):
+        validate_quill_delta({})
 
     def test_missing_ops_rejected(self):
         with self.assertRaises(ValidationError):

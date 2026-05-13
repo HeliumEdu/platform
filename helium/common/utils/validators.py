@@ -42,11 +42,12 @@ def validate_hex_color(value):
 
 def validate_quill_delta(value):
     """
-    Outer-shape check for Quill Delta JSON content: ``None`` or a dict with an
-    ``ops`` list. Per-op shape and attribute correctness are left to the client
-    renderer (`flutter_quill`'s ``Document.fromJson``).
+    Outer-shape check for Quill Delta JSON content: ``None``, ``{}`` (the
+    wire-level clear-content signal), or a dict with an ``ops`` list. Per-op
+    shape and attribute correctness are left to the client renderer
+    (`flutter_quill`'s ``Document.fromJson``).
     """
-    if value is None:
+    if value is None or value == {}:
         return
     if not isinstance(value, dict):
         raise ValidationError('Quill content must be an object.')
