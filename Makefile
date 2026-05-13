@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-migrations migrate-dev refresh-timezones test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -6,6 +6,8 @@ PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
 PLATFORM ?= arm64
 ENVIRONMENT ?= prod
+
+GA_MEASUREMENT_ID ?=
 
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
 
@@ -44,10 +46,21 @@ nopyc:
 clean: nopyc
 	rm -rf build $(PLATFORM_VENV)
 
-build-dev: install-dev
+build-dev: install-dev build-docs
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		ENVIRONMENT=local python manage.py collectstatic --noinput; \
+	)
+
+build-docs: install-dev
+	@( \
+		source $(PLATFORM_VENV)/bin/activate; \
+		mkdir -p build; \
+		ENVIRONMENT=local python manage.py spectacular --file build/openapi.yaml; \
+		npx -y @redocly/cli@2.30.x build-docs build/openapi.yaml \
+			--output helium/common/templates/redoc-static.html \
+			--template helium/common/templates/redoc-static.hbs; \
+		GA_MEASUREMENT_ID="$(GA_MEASUREMENT_ID)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
 	)
 
 build-migrations: install-dev
@@ -69,7 +82,7 @@ migrate-dev: install-dev
 		ENVIRONMENT=local python manage.py migrate; \
 	)
 
-test: install-dev
+test: install-dev build-docs
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
@@ -107,7 +120,7 @@ test-with-frontend: run-docker start-frontend
 	@echo ""
 	@echo "Run your tests, then use 'make stop-docker stop-frontend' to clean up"
 
-build-docker:
+build-docker: build-docs
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_api -t helium/platform-api:$(PLATFORM)-latest -t helium/platform-api:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
