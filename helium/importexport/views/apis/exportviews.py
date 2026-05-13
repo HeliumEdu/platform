@@ -6,6 +6,7 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
@@ -24,6 +25,7 @@ class ExportResourceView(ViewSet, HeliumAPIView):
     serializer_class = ExportSerializer
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(summary='Export all User data as JSON')
     def export_data(self, request, *args, **kwargs):
         """
         Return an export of all non-sensitive data for the authenticated account. The response sets

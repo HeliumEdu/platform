@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.category', 'calendar.user']
+    tags=['planner.category']
 )
 class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CategorySerializer
@@ -39,6 +39,7 @@ class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
         else:
             return Category.objects.none()
 
+    @extend_schema(summary='List all Categories for the User')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all category instances for the authenticated user.
@@ -67,6 +68,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
         else:
             return Category.objects.none()
 
+    @extend_schema(summary='List Categories for a Course')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all category instances for the given course.
@@ -79,6 +81,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
         serializer.save(course_id=self.kwargs['course'])
 
     @extend_schema(
+        summary='Create a Category for a Course',
         responses={
             201: CategorySerializer
         },
@@ -131,6 +134,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         else:
             return Category.objects.none()
 
+    @extend_schema(summary='Retrieve a Category')
     def get(self, request, *args, **kwargs):
         """
         Return the given category instance.
@@ -139,6 +143,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
         return response
 
+    @extend_schema(summary='Update a Category')
     def put(self, request, *args, **kwargs):
         """
         Update the given category instance.
@@ -150,6 +155,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
         return response
 
     @extend_schema(
+        summary='Delete a Category',
         tags=['planner.category']
     )
     def delete(self, request, *args, **kwargs):

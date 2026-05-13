@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['feed.externalcalendar.event', 'calendar.user']
+    tags=['feed.externalcalendar']
 )
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
@@ -33,6 +33,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         return Event.objects.none()
 
     @extend_schema(
+        summary='List Events from all ExternalCalendars',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),
@@ -89,7 +90,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
 
 @extend_schema(
-    tags=['feed.externalcalendar.event']
+    tags=['feed.externalcalendar']
 )
 class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer
@@ -102,6 +103,7 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
     @extend_schema(
         operation_id='feed_externalcalendar_events_list',
+        summary='List Events from an ExternalCalendar',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),

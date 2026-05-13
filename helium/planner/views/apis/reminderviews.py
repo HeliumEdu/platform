@@ -55,7 +55,8 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             return Reminder.objects.none()
 
     @extend_schema(
-        tags=['planner.reminder', 'calendar.user'],
+        summary='List Reminders for the User',
+        tags=['planner.reminder'],
         responses={200: ReminderExtendedSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
@@ -73,6 +74,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         serializer.save(user=self.request.user)
 
     @extend_schema(
+        summary='Create a Reminder',
         responses={
             201: ReminderSerializer
         }
@@ -134,7 +136,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         else:
             return Reminder.objects.none()
 
-    @extend_schema(responses={200: ReminderExtendedSerializer})
+    @extend_schema(summary='Retrieve a Reminder', responses={200: ReminderExtendedSerializer})
     def get(self, request, *args, **kwargs):
         """
         Return the given reminder instance. For convenience, reminder instances on a GET are serialized to a depth of
@@ -146,6 +148,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
+    @extend_schema(summary='Update a Reminder')
     def put(self, request, *args, **kwargs):
         """
         Update the given reminder instance.
@@ -163,6 +166,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
+    @extend_schema(summary='Partially update a Reminder')
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given reminder instance.
@@ -193,6 +197,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
             instance.delete()
 
     @extend_schema(
+        summary='Delete a Reminder',
         tags=['planner.reminder']
     )
     def delete(self, request, *args, **kwargs):
