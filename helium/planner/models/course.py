@@ -16,7 +16,7 @@ class Course(BaseModel):
                              max_length=255)
 
     room = models.CharField(help_text='An arbitrary string.',
-                            max_length=255, blank=True)
+                            max_length=255, blank=True, default='')
 
     credits = models.DecimalField(
         help_text='A decimal corresponding to credit hours; `"0.00"` is fine when unknown or N/A.',
@@ -37,10 +37,10 @@ class Course(BaseModel):
     trend = models.FloatField(default=None, blank=True, null=True)
 
     teacher_name = models.CharField(help_text='A display name for the teacher.',
-                                    max_length=255, blank=True)
+                                    max_length=255, blank=True, default='')
 
     teacher_email = models.EmailField(help_text='A valid email address.',
-                                      default=None, blank=True, null=True)
+                                      max_length=254, blank=True, default='')
 
     start_date = models.DateField(help_text='ISO-8601 date. Must be on-or-before `end_date`.')
     end_date = models.DateField(help_text='ISO-8601 date. Must be on-or-after `start_date`.')

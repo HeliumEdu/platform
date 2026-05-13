@@ -528,7 +528,7 @@ def _bulk_import_example_schedule(data, user):
             current_grade=Decimal(c.get('current_grade', '-1')),
             trend=c.get('trend'),
             teacher_name=c.get('teacher_name', ''),
-            teacher_email=c.get('teacher_email') or None,
+            teacher_email=c.get('teacher_email') or '',
             start_date=c['start_date'],
             end_date=c['end_date'],
             course_group_id=course_group_remap[c['course_group']],
