@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -30,6 +31,7 @@ class UserSettingsApiDetailView(HeliumAPIView):
     def get_object(self):
         return self.request.user
 
+    @extend_schema(summary="Update the authenticated User's settings")
     def put(self, request, *args, **kwargs):
         """
         Update the authenticated user's settings. This endpoint only updates the fields given (i.e. no need to PATCH

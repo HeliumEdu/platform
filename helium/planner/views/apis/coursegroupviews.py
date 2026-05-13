@@ -38,6 +38,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
             return CourseGroup.objects.none()
 
     @extend_schema(
+        summary='List CourseGroups for the User',
         tags=['planner.coursegroup']
     )
     def get(self, request, *args, **kwargs):
@@ -52,6 +53,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         serializer.save(user=self.request.user)
 
     @extend_schema(
+        summary='Create a CourseGroup',
         responses={
             201: CourseGroupSerializer
         }
@@ -84,6 +86,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
         else:
             return CourseGroup.objects.none()
 
+    @extend_schema(summary='Retrieve a CourseGroup')
     def get(self, request, *args, **kwargs):
         """
         Return the given course group instance.
@@ -92,6 +95,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
 
         return response
 
+    @extend_schema(summary='Update a CourseGroup')
     def put(self, request, *args, **kwargs):
         """
         Update the given course group instance.
@@ -102,6 +106,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
 
         return response
 
+    @extend_schema(summary='Partially update a CourseGroup')
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given course group instance.
@@ -113,6 +118,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
         return response
 
     @extend_schema(
+        summary='Delete a CourseGroup',
         tags=['planner.coursegroup']
     )
     def delete(self, request, *args, **kwargs):

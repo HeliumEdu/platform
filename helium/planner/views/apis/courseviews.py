@@ -40,6 +40,7 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
         else:
             return Course.objects.none()
 
+    @extend_schema(summary='List all Courses for the User')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course instances for the authenticated user, including course schedule details.
@@ -68,6 +69,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         else:
             return Course.objects.none()
 
+    @extend_schema(summary='List Courses in a CourseGroup')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course instances, including course schedule details, for the given course group.
@@ -80,6 +82,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         serializer.save(course_group_id=self.kwargs['course_group'])
 
     @extend_schema(
+        summary='Create a Course in a CourseGroup',
         responses={
             201: CourseSerializer
         },
@@ -154,6 +157,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         else:
             return Course.objects.none()
 
+    @extend_schema(summary='Retrieve a Course')
     def get(self, request, *args, **kwargs):
         """
         Return the given course instance, including course schedule details.
@@ -162,6 +166,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
+    @extend_schema(summary='Update a Course')
     def put(self, request, *args, **kwargs):
         """
         Update the given course instance.
@@ -172,6 +177,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
+    @extend_schema(summary='Partially update a Course')
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given course instance.
@@ -183,6 +189,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         return response
 
     @extend_schema(
+        summary='Delete a Course',
         tags=['planner.course']
     )
     def delete(self, request, *args, **kwargs):

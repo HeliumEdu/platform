@@ -38,6 +38,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
             return Attachment.objects.none()
 
     @extend_schema(
+        summary='List all Attachments for the User',
         tags=['planner.attachment']
     )
     def get(self, request, *args, **kwargs):
@@ -50,6 +51,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         return response
 
     @extend_schema(
+        summary='Upload Attachments',
         request=AttachmentCreateSerializer,
         responses={
             201: AttachmentSerializer(many=True)
@@ -120,6 +122,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
             return Attachment.objects.none()
 
     @extend_schema(
+        summary='Retrieve an Attachment',
         tags=['planner.attachment']
     )
     def get(self, request, *args, **kwargs):
@@ -132,6 +135,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
         return response
 
     @extend_schema(
+        summary='Delete an Attachment',
         tags=['planner.attachment']
     )
     def delete(self, request, *args, **kwargs):

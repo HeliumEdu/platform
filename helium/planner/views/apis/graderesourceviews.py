@@ -21,6 +21,7 @@ class GradesApiResourceView(HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = GradeSerializer
 
+    @extend_schema(summary="Retrieve the User's grade summary")
     def get(self, request, *args, **kwargs):
         """
         Return the grades for the authenticated user.

@@ -39,6 +39,7 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
             return Material.objects.none()
 
     @extend_schema(
+        summary='List all Materials for the User',
         parameters=[
             OpenApiParameter(
                 name='courses',
@@ -73,6 +74,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         else:
             return Material.objects.none()
 
+    @extend_schema(summary='List Materials in a MaterialGroup')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all material instances for the given material group.
@@ -85,6 +87,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         serializer.save(material_group_id=self.kwargs['material_group'])
 
     @extend_schema(
+        summary='Create a Material in a MaterialGroup',
         responses={
             201: MaterialSerializer
         }
@@ -121,6 +124,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         else:
             return Material.objects.none()
 
+    @extend_schema(summary='Retrieve a Material')
     def get(self, request, *args, **kwargs):
         """
         Return the given material instance.
@@ -129,6 +133,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
 
         return response
 
+    @extend_schema(summary='Update a Material')
     def put(self, request, *args, **kwargs):
         """
         Update the given material instance.
@@ -147,6 +152,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         return response
 
     @extend_schema(
+        summary='Delete a Material',
         tags=['planner.material']
     )
     def delete(self, request, *args, **kwargs):

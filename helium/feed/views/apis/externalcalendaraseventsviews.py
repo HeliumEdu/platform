@@ -33,6 +33,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         return Event.objects.none()
 
     @extend_schema(
+        summary='List Events from all ExternalCalendars',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),
@@ -102,6 +103,7 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
     @extend_schema(
         operation_id='feed_externalcalendar_events_list',
+        summary='List Events from an ExternalCalendar',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
             OpenApiParameter(name='search', description='A search term.', type=str),

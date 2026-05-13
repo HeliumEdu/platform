@@ -42,7 +42,10 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
         else:
             return Homework.objects.none()
 
-    @extend_schema(parameters=CALENDAR_DATE_RANGE_PARAMETERS)
+    @extend_schema(
+        summary='List all Homework for the User',
+        parameters=CALENDAR_DATE_RANGE_PARAMETERS,
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all homework instances for the authenticated user. For convenience, homework instances on a
@@ -74,7 +77,10 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             return HomeworkExtendedSerializer
         return self.serializer_class
 
-    @extend_schema(parameters=CALENDAR_DATE_RANGE_PARAMETERS)
+    @extend_schema(
+        summary='List Homework for a Course',
+        parameters=CALENDAR_DATE_RANGE_PARAMETERS,
+    )
     def get(self, request, *args, **kwargs):
         """
         Return a list of all homework instances for the given course. For convenience, homework instances on a GET are
@@ -89,6 +95,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         serializer.save(course_id=self.kwargs['course'])
 
     @extend_schema(
+        summary='Create Homework for a Course',
         responses={
             201: HomeworkExtendedSerializer
         },
@@ -186,6 +193,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
             return HomeworkExtendedSerializer
         return self.serializer_class
 
+    @extend_schema(summary='Retrieve a Homework')
     def get(self, request, *args, **kwargs):
         """
         Return the given homework instance. For convenience, homework instances on a GET are serialized with
@@ -195,7 +203,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return response
 
-    @extend_schema(responses={200: HomeworkExtendedSerializer})
+    @extend_schema(summary='Update a Homework', responses={200: HomeworkExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given homework instance.
@@ -218,7 +226,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(responses={200: HomeworkExtendedSerializer})
+    @extend_schema(summary='Partially update a Homework', responses={200: HomeworkExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given homework instance.
@@ -243,6 +251,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
+        summary='Delete a Homework',
         tags=['planner.homework']
     )
     def delete(self, request, *args, **kwargs):
@@ -271,6 +280,7 @@ class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
             return Homework.objects.none()
 
     @extend_schema(
+        summary='Clone a Homework',
         request=None,
         responses={
             201: HomeworkExtendedSerializer
