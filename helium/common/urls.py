@@ -4,11 +4,12 @@ __license__ = "MIT"
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import re_path, path, include
 from django.views.generic import RedirectView
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
+from drf_spectacular.views import SpectacularAPIView
 from two_factor.urls import urlpatterns as tf_urlpatterns
 
 from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
+from helium.common.views.apis.staticviews import RedocStaticView, RobotsView, SitemapView
 from helium.common.views.apis.webhooksesview import WebhookSESView
 
 urlpatterns = [
@@ -24,7 +25,9 @@ urlpatterns = [
     # URLs for auto-generated resources
     path('admin/', admin_site.urls, name='admin'),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('docs/', SpectacularRedocView.as_view(url_name='schema', template_name='helium_redoc.html'), name='docs'),
+    path('docs/', RedocStaticView.as_view(), name='docs'),
+    path('robots.txt', RobotsView.as_view(), name='robots'),
+    path('sitemap.xml', SitemapView.as_view(), name='sitemap'),
 
     ##############################
     # Unauthenticated URLs

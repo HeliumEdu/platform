@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.14"
+__version__ = "2.2.15"
 
 import os
 import socket
@@ -106,7 +106,6 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
-    'drf_spectacular_sidecar',
     'django_filters',
     'django_celery_results',
     'corsheaders',
@@ -402,7 +401,6 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
     ],
-    'REDOC_DIST': 'SIDECAR',
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
