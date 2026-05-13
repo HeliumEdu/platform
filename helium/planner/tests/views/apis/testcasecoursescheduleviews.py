@@ -360,6 +360,75 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("The 'start_time' of 'wed' must be before 'end_time'", str(response.data))
 
+    def test_create_course_schedule_without_days_of_week_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN — days_of_week omitted; per-day times encode the schedule
+        data = {
+            'tue_start_time': '10:20:00',
+            'tue_end_time': '11:40:00',
+            'fri_start_time': '10:20:00',
+            'fri_end_time': '11:40:00',
+            'sun_start_time': '00:00:00',
+            'sun_end_time': '00:00:00',
+            'mon_start_time': '00:00:00',
+            'mon_end_time': '00:00:00',
+            'wed_start_time': '00:00:00',
+            'wed_end_time': '00:00:00',
+            'thu_start_time': '00:00:00',
+            'thu_end_time': '00:00:00',
+            'sat_start_time': '00:00:00',
+            'sat_end_time': '00:00:00',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('days_of_week', response.data)
+        self.assertEqual(CourseSchedule.objects.count(), 0)
+
+    def test_create_course_schedule_with_active_day_but_zero_times_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN — days_of_week marks tue active, but tue times are 00:00:00
+        data = {
+            'days_of_week': '0010000',
+            'sun_start_time': '00:00:00',
+            'sun_end_time': '00:00:00',
+            'mon_start_time': '00:00:00',
+            'mon_end_time': '00:00:00',
+            'tue_start_time': '00:00:00',
+            'tue_end_time': '00:00:00',
+            'wed_start_time': '00:00:00',
+            'wed_end_time': '00:00:00',
+            'thu_start_time': '00:00:00',
+            'thu_end_time': '00:00:00',
+            'fri_start_time': '00:00:00',
+            'fri_end_time': '00:00:00',
+            'sat_start_time': '00:00:00',
+            'sat_end_time': '00:00:00',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("'tue' is marked active", str(response.data))
+        self.assertEqual(CourseSchedule.objects.count(), 0)
+
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
