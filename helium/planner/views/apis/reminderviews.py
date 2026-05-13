@@ -55,7 +55,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             return Reminder.objects.none()
 
     @extend_schema(
-        tags=['planner.reminder', 'calendar.user'],
+        tags=['planner.reminder'],
         responses={200: ReminderExtendedSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):

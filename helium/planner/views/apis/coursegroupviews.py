@@ -38,7 +38,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
             return CourseGroup.objects.none()
 
     @extend_schema(
-        tags=['planner.coursegroup', 'calendar.user']
+        tags=['planner.coursegroup']
     )
     def get(self, request, *args, **kwargs):
         """

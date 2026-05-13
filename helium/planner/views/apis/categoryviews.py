@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.category', 'calendar.user']
+    tags=['planner.category']
 )
 class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CategorySerializer

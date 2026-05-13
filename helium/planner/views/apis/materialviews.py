@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.material', 'calendar.user']
+    tags=['planner.material']
 )
 class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = MaterialSerializer

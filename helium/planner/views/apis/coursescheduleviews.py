@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.courseschedule', 'calendar.user']
+    tags=['planner.courseschedule']
 )
 class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CourseScheduleSerializer

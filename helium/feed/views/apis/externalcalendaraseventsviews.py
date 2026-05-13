@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['feed.externalcalendar.event', 'calendar.user']
+    tags=['feed.externalcalendar.event']
 )
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = EventSerializer

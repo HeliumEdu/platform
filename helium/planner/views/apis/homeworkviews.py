@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.homework', 'calendar.user']
+    tags=['planner.homework']
 )
 class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     serializer_class = HomeworkExtendedSerializer

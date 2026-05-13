@@ -48,7 +48,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         return self.request.user
 
     @extend_schema(
-        tags=['auth', 'calendar.user']
+        tags=['auth']
     )
     def get(self, request, *args, **kwargs):
         """

@@ -53,7 +53,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
 
     @extend_schema(
         parameters=CALENDAR_DATE_RANGE_PARAMETERS,
-        tags=['planner.event', 'calendar.user']
+        tags=['planner.event']
     )
     def get(self, request, *args, **kwargs):
         """

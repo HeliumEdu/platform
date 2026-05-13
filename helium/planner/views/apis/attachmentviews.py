@@ -38,7 +38,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
             return Attachment.objects.none()
 
     @extend_schema(
-        tags=['planner.attachment', 'calendar.user']
+        tags=['planner.attachment']
     )
     def get(self, request, *args, **kwargs):
         """
