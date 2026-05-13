@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.courseschedule', 'calendar.user']
+    tags=['planner.courseschedule']
 )
 class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = CourseScheduleSerializer
@@ -32,6 +32,7 @@ class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
         else:
             return CourseSchedule.objects.none()
 
+    @extend_schema(summary='List all CourseSchedules for the User')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course schedule instances for the authenticated user.
@@ -61,6 +62,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         context['request'] = self.request
         return context
 
+    @extend_schema(summary='List CourseSchedules for a Course')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course schedule instances for the given course.
@@ -73,6 +75,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         serializer.save(course_id=self.kwargs['course'])
 
     @extend_schema(
+        summary='Create a CourseSchedule for a Course',
         responses={
             201: CourseScheduleSerializer
         },
@@ -164,6 +167,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         else:
             return CourseSchedule.objects.none()
 
+    @extend_schema(summary='Retrieve a CourseSchedule')
     def get(self, request, *args, **kwargs):
         """
         Return the given course schedule instance.
@@ -172,6 +176,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
 
         return response
 
+    @extend_schema(summary='Update a CourseSchedule')
     def put(self, request, *args, **kwargs):
         """
         Update the given course schedule instance.

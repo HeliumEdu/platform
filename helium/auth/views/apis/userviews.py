@@ -48,7 +48,8 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         return self.request.user
 
     @extend_schema(
-        tags=['auth', 'calendar.user']
+        summary='Retrieve the authenticated User',
+        tags=['auth']
     )
     def get(self, request, *args, **kwargs):
         """
@@ -60,6 +61,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
 
         return Response(serializer.data)
 
+    @extend_schema(summary='Update the authenticated User')
     def put(self, request, *args, **kwargs):
         """
         Update the authenticated user instance. This endpoint only updates the fields given (i.e. no need to PATCH
@@ -83,6 +85,7 @@ class UserDeleteResourceView(HeliumAPIView):
     def get_object(self):
         return self.request.user
 
+    @extend_schema(summary='Delete the authenticated User account')
     def delete(self, request, *args, **kwargs):
         """
         Permanently delete the authenticated user's account and all associated data (courses,

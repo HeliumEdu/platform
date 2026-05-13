@@ -52,8 +52,9 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         return self.serializer_class
 
     @extend_schema(
+        summary='List Events for the User',
         parameters=CALENDAR_DATE_RANGE_PARAMETERS,
-        tags=['planner.event', 'calendar.user']
+        tags=['planner.event']
     )
     def get(self, request, *args, **kwargs):
         """
@@ -69,6 +70,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         serializer.save(user=self.request.user)
 
     @extend_schema(
+        summary='Create an Event',
         responses={
             201: EventExtendedSerializer
         },
@@ -134,6 +136,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
             return EventExtendedSerializer
         return self.serializer_class
 
+    @extend_schema(summary='Retrieve an Event')
     def get(self, request, *args, **kwargs):
         """
         Return the given Helium Event instance. For convenience, Helium Event instances on a GET are serialized with
@@ -143,7 +146,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return response
 
-    @extend_schema(responses={200: EventExtendedSerializer})
+    @extend_schema(summary='Update an Event', responses={200: EventExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given Helium Event instance.
@@ -157,7 +160,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return Response(EventExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(responses={200: EventExtendedSerializer})
+    @extend_schema(summary='Partially update an Event', responses={200: EventExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Helium Event instance.
@@ -172,6 +175,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
         return Response(EventExtendedSerializer(serializer.instance).data)
 
     @extend_schema(
+        summary='Delete an Event',
         tags=['planner.event']
     )
     def delete(self, request, *args, **kwargs):
@@ -199,6 +203,7 @@ class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
             return Event.objects.none()
 
     @extend_schema(
+        summary='Clone an Event',
         request=None,
         responses={
             201: EventExtendedSerializer
@@ -229,6 +234,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
         else:
             return Event.objects.none()
 
+    @extend_schema(summary='Delete all Events for the User')
     def delete_all(self, request, *args, **kwargs):
         """
         Permanently delete **every** Event instance owned by the authenticated user, along with any

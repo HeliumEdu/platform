@@ -25,7 +25,7 @@ class Reminder(BaseModel):
 
     start_of_range = models.DateTimeField(
         help_text='Datetime the reminder fires. Server-computed from the parent (`event`, `homework`, or `course`) '
-                  'start time minus `offset × offset_type` whenever the parent or offset changes; do not send on create.',
+                  'start time minus `offset * offset_type` whenever the parent or offset changes; do not send on create.',
         null=True, blank=True)
 
     offset = models.PositiveIntegerField(help_text='How far before the parent start time to fire, measured in '
