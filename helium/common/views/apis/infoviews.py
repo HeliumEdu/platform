@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 class InfoResourceView(GenericViewSet, HeliumAPIView):
     serializer_class = InfoSerializer
 
+    @extend_schema(summary='Retrieve API runtime info and limits')
     def info(self, request, *args, **kwargs):
         """
         Return runtime configuration: version, upload limits, token lifetimes, accepted file types, supported OAuth providers.

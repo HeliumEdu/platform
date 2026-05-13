@@ -48,6 +48,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         return self.serializer_class
 
     @extend_schema(
+        summary='List Notes for the User',
         parameters=[
             OpenApiParameter(
                 name='include_content',
@@ -65,6 +66,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         return self.list(request, *args, **kwargs)
 
     @extend_schema(
+        summary='Create a Note',
         responses={
             201: NoteExtendedSerializer
         }
@@ -106,13 +108,14 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
             return NoteExtendedSerializer
         return self.serializer_class
 
+    @extend_schema(summary='Retrieve a Note')
     def get(self, request, *args, **kwargs):
         """
         Return the given Note instance.
         """
         return self.retrieve(request, *args, **kwargs)
 
-    @extend_schema(responses={
+    @extend_schema(summary='Update a Note', responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
                                           'content cleared and is therefore deleted (see endpoint description).'),
@@ -138,7 +141,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
-    @extend_schema(responses={
+    @extend_schema(summary='Partially update a Note', responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
                                           'content cleared and is therefore deleted (see endpoint description).'),
@@ -160,6 +163,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} patched for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
+    @extend_schema(summary='Delete a Note')
     def delete(self, request, *args, **kwargs):
         """
         Delete the given Note instance.

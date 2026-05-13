@@ -32,6 +32,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
         else:
             return ExternalCalendar.objects.none()
 
+    @extend_schema(summary='List ExternalCalendars for the User')
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -39,6 +40,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
         serializer.save(user=self.request.user)
 
     @extend_schema(
+        summary='Register an ExternalCalendar',
         responses={
             201: ExternalCalendarSerializer
         }
@@ -69,9 +71,11 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         else:
             return ExternalCalendar.objects.none()
 
+    @extend_schema(summary='Retrieve an ExternalCalendar')
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(summary='Update an ExternalCalendar')
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
 
@@ -80,6 +84,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
         return response
 
+    @extend_schema(summary='Partially update an ExternalCalendar')
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given external calendar instance.
@@ -92,6 +97,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         return response
 
     @extend_schema(
+        summary='Delete an ExternalCalendar',
         tags=['feed.externalcalendar']
     )
     def delete(self, request, *args, **kwargs):

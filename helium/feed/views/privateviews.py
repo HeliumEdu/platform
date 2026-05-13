@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateEventsICALResourceView(HeliumAPIView):
     @extend_schema(
         operation_id='feed_private_events_ical',
+        summary='Download the private Events iCal feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
@@ -71,11 +72,12 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateHomeworkICALResourceView(HeliumAPIView):
     @extend_schema(
         operation_id='feed_private_homework_ical',
+        summary='Download the private Homework iCal feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
@@ -124,11 +126,12 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
     @extend_schema(
         operation_id='feed_private_courseschedules_ical',
+        summary='Download the private CourseSchedule iCal feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,

@@ -27,6 +27,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     parser_classes = (MultiPartParser,)
 
     @extend_schema(
+        summary='Bulk import User data from JSON',
         request=ImportCreateSerializer,
         responses={200: ImportSerializer},
         examples=[

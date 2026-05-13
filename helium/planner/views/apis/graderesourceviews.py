@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -13,10 +14,14 @@ from helium.planner.services import gradingservice
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=['planner.grades']
+)
 class GradesApiResourceView(HeliumAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = GradeSerializer
 
+    @extend_schema(summary="Retrieve the User's grade summary")
     def get(self, request, *args, **kwargs):
         """
         Return the grades for the authenticated user.

@@ -28,6 +28,7 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
         return user.external_calendars.all()
 
     @extend_schema(
+        summary='Enable private iCal feeds',
         request=None
     )
     def enable(self, request, *args, **kwargs):
@@ -57,6 +58,7 @@ class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
     serializer_class = PrivateFeedSerializer
 
     @extend_schema(
+        summary='Disable private iCal feeds',
         request=None,
         responses={status.HTTP_204_NO_CONTENT: None}
     )
