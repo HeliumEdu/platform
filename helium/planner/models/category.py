@@ -17,8 +17,12 @@ class Category(BaseModel):
                              max_length=255)
 
     weight = models.DecimalField(
-        help_text='A decimal weight for this category\'s homework (note that all weights associated with a single '
-                  'course cannot exceed a value of 100).',
+        help_text=(
+            'Decimal in `[0, 100]`. Sum across a class\'s categories must be ≤ 100. '
+            'A weight of `0` keeps the category organizational only; grade calc skips it. '
+            'See `Course.has_weighted_grading` and '
+            'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
+        ),
         max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     color = models.CharField(

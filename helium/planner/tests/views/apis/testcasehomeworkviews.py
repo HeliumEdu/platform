@@ -107,6 +107,34 @@ class TestCaseHomeworkViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework, data)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
+    def test_create_homework_without_category_lands_in_uncategorized(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'all_day': True,
+            'show_end_time': False,
+            'start': '2014-05-08T12:00:00Z',
+            'end': '2014-05-08T14:00:00Z',
+            'current_grade': '-1/100',
+            'completed': False,
+            'course': course.pk,
+        }
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        homework = Homework.objects.get(pk=response.data['id'])
+        self.assertEqual(homework.category.title, 'Uncategorized')
+        self.assertEqual(homework.category.course_id, course.pk)
+
     def test_clone_homework_copies_fields_materials_and_reminders(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

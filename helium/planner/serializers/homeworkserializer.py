@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.db import models as django_models
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common.serializers.fields import TzAwareDateTimeField
@@ -15,6 +16,7 @@ from helium.planner.tasks import recalculate_category_grade
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
@@ -23,9 +25,6 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.fields['category'].required = True
-        self.fields['category'].allow_null = False
 
         if self.context.get('request', None):
             self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)
@@ -68,6 +67,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         return instance
 
 
+@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
     reminders = ReminderSerializer(many=True)

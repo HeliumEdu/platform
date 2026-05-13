@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.db import models as django_models
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common.serializers.fields import TzAwareDateTimeField
@@ -15,6 +16,7 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_serializer(exclude_fields=('comments',))
 class EventSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
@@ -48,6 +50,7 @@ class EventSerializer(serializers.ModelSerializer):
         return attrs
 
 
+@extend_schema_serializer(exclude_fields=('comments',))
 class EventExtendedSerializer(EventSerializer):
     attachments = AttachmentSerializer(many=True)
 
