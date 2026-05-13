@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
@@ -75,7 +75,62 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     @extend_schema(
         responses={
             201: CourseScheduleSerializer
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'mwf_lecture',
+                summary='MWF lecture, 10:00-10:50 AM',
+                description=(
+                    '`days_of_week` is a 7-character `0`/`1` string starting Sunday. `0101010` flags '
+                    'Monday, Wednesday, and Friday as meetings; the matching `<day>_start_time` and '
+                    '`<day>_end_time` carry the actual times. Off-day fields are left at `00:00:00`.'
+                ),
+                value={
+                    'days_of_week': '0101010',
+                    'sun_start_time': '00:00:00',
+                    'sun_end_time': '00:00:00',
+                    'mon_start_time': '10:00:00',
+                    'mon_end_time': '10:50:00',
+                    'tue_start_time': '00:00:00',
+                    'tue_end_time': '00:00:00',
+                    'wed_start_time': '10:00:00',
+                    'wed_end_time': '10:50:00',
+                    'thu_start_time': '00:00:00',
+                    'thu_end_time': '00:00:00',
+                    'fri_start_time': '10:00:00',
+                    'fri_end_time': '10:50:00',
+                    'sat_start_time': '00:00:00',
+                    'sat_end_time': '00:00:00',
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'tr_lab',
+                summary='Tu/Th lab, 1:30-3:20 PM',
+                description=(
+                    'A Tuesday/Thursday lab schedule. `days_of_week` is `0010100`. Tue/Thu times are '
+                    'populated, all other days remain at `00:00:00`.'
+                ),
+                value={
+                    'days_of_week': '0010100',
+                    'sun_start_time': '00:00:00',
+                    'sun_end_time': '00:00:00',
+                    'mon_start_time': '00:00:00',
+                    'mon_end_time': '00:00:00',
+                    'tue_start_time': '13:30:00',
+                    'tue_end_time': '15:20:00',
+                    'wed_start_time': '00:00:00',
+                    'wed_end_time': '00:00:00',
+                    'thu_start_time': '13:30:00',
+                    'thu_end_time': '15:20:00',
+                    'fri_start_time': '00:00:00',
+                    'fri_end_time': '00:00:00',
+                    'sat_start_time': '00:00:00',
+                    'sat_end_time': '00:00:00',
+                },
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, *args, **kwargs):
         """

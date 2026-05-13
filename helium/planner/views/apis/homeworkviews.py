@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import filters, status
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
@@ -91,7 +91,54 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     @extend_schema(
         responses={
             201: HomeworkExtendedSerializer
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'new_ungraded_assignment',
+                summary='Ungraded assignment due later this term',
+                description=(
+                    'An ungraded assignment. `current_grade` uses the sentinel `-1/100`; the '
+                    'gradebook ignores rows with that value.'
+                ),
+                value={
+                    'title': 'Problem Set 3',
+                    'all_day': False,
+                    'show_end_time': False,
+                    'start': '2026-09-21T23:59:00-07:00',
+                    'end': '2026-09-21T23:59:00-07:00',
+                    'priority': 50,
+                    'comments': '',
+                    'current_grade': '-1/100',
+                    'completed': False,
+                    'category': 4242,
+                    'materials': [],
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'completed_graded_assignment',
+                summary='Completed assignment with a recorded grade',
+                description=(
+                    'A completed, graded assignment. `current_grade` uses the `n/d` form (87 out '
+                    'of 100) and `completed` is `true`. The `category` must reference a graded '
+                    'category on the same course.'
+                ),
+                value={
+                    'title': 'Midterm Exam',
+                    'all_day': False,
+                    'show_end_time': True,
+                    'start': '2026-10-14T10:00:00-07:00',
+                    'end': '2026-10-14T11:30:00-07:00',
+                    'priority': 80,
+                    'comments': 'Closed book, calculators allowed.',
+                    'current_grade': '87/100',
+                    'completed': True,
+                    'category': 4243,
+                    'materials': [],
+                },
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, *args, **kwargs):
         """

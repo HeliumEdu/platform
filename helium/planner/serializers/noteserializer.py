@@ -1,14 +1,11 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import logging
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from helium.common.utils.validators import validate_quill_delta
 from helium.planner.models import Note
-
-logger = logging.getLogger(__name__)
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -16,6 +13,22 @@ class NoteSerializer(serializers.ModelSerializer):
         model = Note
         fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'created_at', 'updated_at')
         read_only_fields = ('created_at', 'updated_at')
+
+    def to_internal_value(self, data):
+        """
+        Accept `materials` as a permanent key-based alias for `resources` on input only. If both
+        are present in the same payload the input is invalid. Output always emits `resources`.
+        """
+        if isinstance(data, dict) and 'materials' in data:
+            if 'resources' in data:
+                raise ValidationError(
+                    {'resources': ["Provide either 'resources' or 'materials', not both."]})
+            data = {k: v for k, v in data.items() if k != 'materials'} | {'resources': data['materials']}
+        return super().to_internal_value(data)
+
+    def validate_content(self, value):
+        validate_quill_delta(value)
+        return value
 
     def validate(self, attrs):
         """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""

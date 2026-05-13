@@ -156,9 +156,9 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
         self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
-    def test_create_assumes_naive_datetime_to_utc(self):
+    def test_create_rejects_naive_datetime(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         data = {
@@ -169,22 +169,16 @@ class TestCaseEventViews(APITestCase):
             'end': '2014-05-08 14:00:00',
             'priority': 75,
             'comments': 'some comment',
-            # Read-only fields, unused in the POST but used in the validation of this dict afterward
-            'user': user.pk
         }
         response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data),
                                     content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Event.objects.count(), 1)
-        event = Event.objects.get(pk=response.data['id'])
-
-        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
-        self.assertEqual(event.start.isoformat(), start.isoformat())
-        self.assertEqual(event.end.isoformat(), end.isoformat())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertIn('start', response.data)
+        self.assertIn('timezone', str(response.data['start']))
 
     def test_get_event_by_id(self):
         # GIVEN
@@ -267,12 +261,13 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(event.start.isoformat(), parser.parse(data['start']).astimezone(datetime.timezone.utc).isoformat())
         self.assertEqual(event.end.isoformat(), parser.parse(data['end']).astimezone(datetime.timezone.utc).isoformat())
 
-    def test_patch_assumes_naive_datetime_to_utc(self):
+    def test_patch_rejects_naive_datetime(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/New_York'
         user.settings.save()
         event = eventhelper.given_event_exists(user)
+        original_start = event.start
 
         # WHEN
         data = {
@@ -285,13 +280,10 @@ class TestCaseEventViews(APITestCase):
                                      content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start', response.data)
         event.refresh_from_db()
-
-        start = timezone.make_aware(parser.parse(data['start']), datetime.timezone.utc)
-        end = timezone.make_aware(parser.parse(data['end']), datetime.timezone.utc)
-        self.assertEqual(event.start.isoformat(), start.isoformat())
-        self.assertEqual(event.end.isoformat(), end.isoformat())
+        self.assertEqual(event.start, original_start)
 
     def test_delete_event_by_id(self):
         # GIVEN

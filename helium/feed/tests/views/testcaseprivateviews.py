@@ -156,7 +156,7 @@ class TestCasePrivateViews(CacheTestCase):
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertIn(f'Materials: {material.title}', description)
+        self.assertIn(f'Resources: {material.title}', description)
         self.assertIn('URL: https://example.com/assignment', description)
 
     def test_courseschedules_feed(self):

@@ -52,7 +52,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     )
     def get(self, request, *args, **kwargs):
         """
-        Return the authenticated user instance, including profile and settings details.
+        Return the authenticated user instance, including settings details.
         """
         user = self.get_object()
 

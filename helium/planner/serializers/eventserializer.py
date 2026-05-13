@@ -3,8 +3,10 @@ __license__ = "MIT"
 
 import logging
 
+from django.db import models as django_models
 from rest_framework import serializers
 
+from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.common.utils.validators import validate_hex_color
 from helium.planner.models import Event
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
@@ -14,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class EventSerializer(serializers.ModelSerializer):
+    serializer_field_mapping = {
+        **serializers.ModelSerializer.serializer_field_mapping,
+        django_models.DateTimeField: TzAwareDateTimeField,
+    }
+
     color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
     location = serializers.CharField(read_only=True, required=False, allow_null=True)
 
