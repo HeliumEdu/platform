@@ -16,7 +16,8 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     """
     A group of classes within a given timeframe (typically a semester or
     quarter). `overall_grade` is a flat average of member classes. See
-    https://heliumedu.freshdesk.com/support/solutions/articles/159000427002
+    https://heliumedu.freshdesk.com/support/solutions/articles/159000427002.
+    For full-term imports, see also "Bulk import" in the API description.
     """
 
     num_homework = serializers.SerializerMethodField()

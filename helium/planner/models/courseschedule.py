@@ -13,7 +13,9 @@ from helium.planner.managers.courseschedulemanager import CourseScheduleManager
 
 class CourseSchedule(BaseModel):
     days_of_week = models.CharField(help_text='Seven booleans (0 or 1) indicating which days of the week the course is '
-                                              'on (week starts on Sunday).',
+                                              'on (week starts on Sunday). Authoritative — a `0` short-circuits event '
+                                              'generation regardless of the per-day time fields. See "Common pitfalls" '
+                                              'in the API description for the `00:00:00` off-day convention.',
                                     max_length=7, default='0000000', validators=[
             validators.RegexValidator(r'^[0-1]+$',
                                       'Seven booleans (0 or 1) indicating which days of the week the course is on '

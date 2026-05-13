@@ -15,8 +15,10 @@ class Homework(BaseCalendar):
     current_grade = models.CharField(
         help_text=(
             'Fraction of points earned, `"numerator/denominator"` (e.g. `"25/30"`). '
-            '`"-1/100"` marks the assignment ungraded. Pairs with `completed=true` to count '
-            'toward grade calc.'
+            '`"-1/100"` marks the assignment ungraded; on an ungraded row, the denominator '
+            'is the expected point value when graded — within-category weighting is handled '
+            'by `Category.weight`, not by per-assignment denominators. Pairs with '
+            '`completed=true` to count toward grade calc.'
         ),
         max_length=255, validators=[validate_fraction])
 
