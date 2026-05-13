@@ -40,6 +40,20 @@ def validate_hex_color(value):
         raise ValidationError('The value must be a valid hex color code.')
 
 
+def validate_quill_delta(value):
+    """
+    Outer-shape check for Quill Delta JSON content: ``None`` or a dict with an
+    ``ops`` list. Per-op shape and attribute correctness are left to the client
+    renderer (`flutter_quill`'s ``Document.fromJson``).
+    """
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise ValidationError('Quill content must be an object.')
+    if not isinstance(value.get('ops'), list):
+        raise ValidationError('Quill content must have an `ops` list.')
+
+
 def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range_label='date range'):
     """
     Validate that ``value`` is a CSV of YYYYMMDD-formatted dates.  Optionally checks each date falls within
