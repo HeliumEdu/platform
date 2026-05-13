@@ -120,7 +120,7 @@ test-with-frontend: run-docker start-frontend
 	@echo ""
 	@echo "Run your tests, then use 'make stop-docker stop-frontend' to clean up"
 
-build-docker: build-docs
+build-docker: docker-env build-docs
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_resource -t helium/platform-resource:$(PLATFORM)-latest -t helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
 
 	docker buildx build --build-arg ENVIRONMENT=$(ENVIRONMENT) --target platform_api -t helium/platform-api:$(PLATFORM)-latest -t helium/platform-api:$(PLATFORM)-$(TAG_VERSION) --platform=linux/$(PLATFORM) --load .
