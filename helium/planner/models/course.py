@@ -19,7 +19,7 @@ class Course(BaseModel):
                             max_length=255, blank=True, default='')
 
     credits = models.DecimalField(
-        help_text='A decimal corresponding to credit hours; `"0.00"` is fine when unknown or N/A.',
+        help_text='A decimal corresponding to credit hours. If unknown or the syllabus doesn\'t specify, use `"0.00"`.',
         max_digits=4, decimal_places=2)
 
     color = models.CharField(
