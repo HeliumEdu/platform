@@ -7,6 +7,8 @@ TAG_VERSION ?= latest
 PLATFORM ?= arm64
 ENVIRONMENT ?= prod
 
+GA_MEASUREMENT_ID ?=
+
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
 
 all: build-docker run-docker
@@ -55,9 +57,10 @@ build-docs: install-dev
 		source $(PLATFORM_VENV)/bin/activate; \
 		mkdir -p build; \
 		ENVIRONMENT=local python manage.py spectacular --file build/openapi.yaml; \
-		npx -y @redocly/cli@1.x build-docs build/openapi.yaml \
+		npx -y @redocly/cli@1.34.x build-docs build/openapi.yaml \
 			--output helium/common/templates/redoc-static.html \
 			--template helium/common/templates/redoc-static.hbs; \
+		GA_MEASUREMENT_ID="$(GA_MEASUREMENT_ID)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
 	)
 
 build-migrations: install-dev
