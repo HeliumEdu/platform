@@ -30,7 +30,8 @@ class Material(BaseModel):
     material_group = models.ForeignKey('MaterialGroup', help_text='The material group with which to associate.',
                                        related_name='materials', on_delete=models.CASCADE)
 
-    courses = models.ManyToManyField('Course', help_text='A list of courses with which to associate.',
+    courses = models.ManyToManyField('Course',
+                                     help_text='Classes that share this resource. May be empty.',
                                      related_name='materials', blank=True, default=None)
 
     objects = MaterialManager()

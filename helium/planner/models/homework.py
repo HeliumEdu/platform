@@ -12,13 +12,23 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 
 class Homework(BaseCalendar):
-    current_grade = models.CharField(help_text='Fraction of points earned in `"numerator/denominator"` form '
-                                               '(e.g. `"25/30"`). Use `"-1/100"` to indicate ungraded.',
-                                     max_length=255, validators=[validate_fraction])
+    current_grade = models.CharField(
+        help_text=(
+            'Fraction of points earned, `"numerator/denominator"` (e.g. `"25/30"`). '
+            '`"-1/100"` marks the assignment ungraded. Pairs with `completed=true` to count '
+            'toward grade calc.'
+        ),
+        max_length=255, validators=[validate_fraction])
 
-    completed = models.BooleanField(help_text='Whether the homework has been completed. Flipping this to `true` '
-                                              'sets `completed_at` to the current time automatically.',
-                                    default=False)
+    completed = models.BooleanField(
+        help_text=(
+            'Whether the assignment has been completed. Once `completed=true` and '
+            '`current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the '
+            'assignment counts toward grade calc. For missed work: `completed=true`, '
+            '`current_grade="0/<possible>"`. See '
+            'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
+        ),
+        default=False)
 
     completed_at = models.DateTimeField(
         help_text='When the homework was first marked as completed. Set automatically the first time `completed` '

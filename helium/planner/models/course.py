@@ -18,8 +18,9 @@ class Course(BaseModel):
     room = models.CharField(help_text='An arbitrary string.',
                             max_length=255, blank=True)
 
-    credits = models.DecimalField(help_text='A decimal corresponding to credit hours.',
-                                  max_digits=4, decimal_places=2)
+    credits = models.DecimalField(
+        help_text='A decimal corresponding to credit hours; `"0.00"` is fine when unknown or N/A.',
+        max_digits=4, decimal_places=2)
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',

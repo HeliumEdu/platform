@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from helium.common.utils.validators import validate_and_normalize_date_csv
@@ -14,6 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """
+    A single class within a class group. One Course has at most one
+    CourseSchedule, which supports per-day start/end times. Multiple
+    Courses are best reserved for sections with distinct rooms/TAs/grading.
+    See "Common pitfalls" in the API introduction.
+    """
+
     schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
@@ -53,6 +61,13 @@ class CourseSerializer(serializers.ModelSerializer):
         # (avoids N+1 queries; newly created courses have no homework anyway)
         return getattr(obj, 'annotated_num_homework_graded', 0)
 
+    @extend_schema_field(serializers.BooleanField(
+        help_text=(
+            '`true` = weighted grading (any category has `weight > 0`); '
+            '`false` = points-based grading (a simple `earned/possible` average across '
+            'all assignments). Both are valid grading modes. See '
+            'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
+        )))
     def get_has_weighted_grading(self, obj) -> bool:
         # Use annotated value if available, otherwise default to False
         # (avoids N+1 queries against planner_category table)

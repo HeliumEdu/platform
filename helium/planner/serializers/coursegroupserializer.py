@@ -13,6 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class CourseGroupSerializer(serializers.ModelSerializer):
+    """
+    A group of classes within a given timeframe (typically a semester or
+    quarter). `overall_grade` is a flat average of member classes. See
+    https://heliumedu.freshdesk.com/support/solutions/articles/159000427002
+    """
+
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
