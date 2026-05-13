@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateEventsICALResourceView(HeliumAPIView):
     @extend_schema(
@@ -71,7 +71,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateHomeworkICALResourceView(HeliumAPIView):
     @extend_schema(
@@ -124,7 +124,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 
 
 @extend_schema(
-    tags=['feed.private.event']
+    tags=['feed.private']
 )
 class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
     @extend_schema(
