@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
 import logging
 
 from rest_framework import serializers
@@ -9,6 +10,9 @@ from rest_framework.exceptions import ValidationError
 from helium.planner.models import CourseSchedule
 
 logger = logging.getLogger(__name__)
+
+_DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
+_MIDNIGHT = datetime.time(0, 0, 0)
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):
@@ -28,6 +32,9 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course')
         read_only_fields = ('course',)
+        extra_kwargs = {
+            'days_of_week': {'required': True},
+        }
 
     def validate(self, attrs):
         if not self.instance:
@@ -37,9 +44,11 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 raise ValidationError(
                     f'Course {course_id} already has a CourseSchedule and there cannot be more than one.')
 
-        # Validate that start_time is before or equal to end_time for each day
-        days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-        for day in days:
+        days_of_week = attrs.get('days_of_week')
+        if days_of_week is None and self.instance:
+            days_of_week = self.instance.days_of_week
+
+        for i, day in enumerate(_DAYS):
             start_key = f'{day}_start_time'
             end_key = f'{day}_end_time'
 
@@ -53,5 +62,12 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
             if start_time and end_time and start_time > end_time:
                 raise ValidationError(f"The 'start_time' of '{day}' must be before 'end_time'")
+
+            if days_of_week and days_of_week[i] == '1' and (start_time == _MIDNIGHT or end_time == _MIDNIGHT):
+                raise ValidationError(
+                    f"'{day}' is marked active in 'days_of_week' but '{day}_start_time' / '{day}_end_time' "
+                    f"are `00:00:00`. Set non-zero meeting times for active days, or mark the day inactive "
+                    f"in 'days_of_week'."
+                )
 
         return attrs
