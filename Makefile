@@ -82,7 +82,7 @@ migrate-dev: install-dev
 		ENVIRONMENT=local python manage.py migrate; \
 	)
 
-test: install-dev
+test: install-dev build-docs
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
