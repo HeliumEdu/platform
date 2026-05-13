@@ -23,13 +23,16 @@ def validate_fraction(value):
     try:
         n = decimal.Decimal(split[0].strip())
         d = decimal.Decimal(split[1].strip())
-
-        if n > sys.maxsize or d > sys.maxsize:
-            raise ValidationError(f'Values must be less than or equal to {sys.maxsize}.')
-
-        return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
     except (ValueError, decimal.InvalidOperation):
         raise ValidationError('The fraction must contain valid integers.')
+
+    if n > sys.maxsize or d > sys.maxsize:
+        raise ValidationError(f'Values must be less than or equal to {sys.maxsize}.')
+
+    if d <= 0:
+        raise ValidationError('The denominator must be greater than zero.')
+
+    return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
 
 
 def validate_hex_color(value):

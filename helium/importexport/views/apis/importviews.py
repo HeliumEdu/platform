@@ -33,17 +33,18 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             OpenApiExample(
                 'bulk_syllabus_import',
                 media_type='multipart/form-data',
-                summary='Export-shaped JSON for a single-term import',
+                summary='Export-shaped JSON for a single-term import (one file per request)',
                 description=(
-                    'The body of one entry in the `file[]` multipart field. Matches the `Export` '
-                    'component schema (the shape returned by `GET /importexport/export/`) — same '
-                    'top-level keys, same per-row fields. Relationships are expressed as integer '
-                    '`id` values that resolve within the file: a CourseGroup `id` is referenced by '
-                    "each Course's `course_group`; a Course `id` is referenced by its "
-                    'CourseSchedule, Categories, and Homework rows; a Category `id` is referenced '
-                    'by each Homework. `id` values only need to be unique and stable within the '
-                    'file; the importer assigns fresh database `id` values on insert. All '
-                    'datetimes are tz-aware ISO-8601.'
+                    'The body of the `file[]` multipart field. Exactly one file must be uploaded '
+                    'per request; submitting zero or more than one file returns `400`. Matches the '
+                    '`Export` component schema (the shape returned by `GET /importexport/export/`) '
+                    '— same top-level keys, same per-row fields. Relationships are expressed as '
+                    'integer `id` values that resolve within the file: a CourseGroup `id` is '
+                    "referenced by each Course's `course_group`; a Course `id` is referenced by "
+                    'its CourseSchedule, Categories, and Homework rows; a Category `id` is '
+                    'referenced by each Homework. `id` values only need to be unique and stable '
+                    'within the file; the importer assigns fresh database `id` values on insert. '
+                    'All datetimes are tz-aware ISO-8601.'
                 ),
                 value={
                     'external_calendars': [],
@@ -180,13 +181,20 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     )
     def import_data(self, request, *args, **kwargs):
         """
-        Import the resources for the authenticated user from the uploaded files. Multiple files can be imported at
-        once passed in the `file[]` field.
+        Import the resources for the authenticated user from the uploaded file. Exactly one file must be uploaded per
+        request in the `file[]` field; submitting zero or more than one file returns `400`.
 
-        Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
+        The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
         Each model will be imported in a schema matching that of the documented APIs.
         """
+        uploads = request.data.getlist('file[]')
+        if len(uploads) != 1:
+            logger.warning(f'Rejected import request from user {request.user.pk} with {len(uploads)} files.')
+            raise ValidationError({
+                'details': 'Upload exactly one file per request.'
+            })
+
         external_calendar_count = 0
         course_groups_count = 0
         courses_count = 0
@@ -199,7 +207,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         reminders_count = 0
         notes_count = 0
 
-        for upload in request.data.getlist('file[]'):
+        for upload in uploads:
             try:
                 json_str = uploadfileservice.read(upload).decode('utf-8')
                 data = json.loads(json_str)

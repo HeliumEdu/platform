@@ -72,6 +72,9 @@ def get_grade_points_for(query_set, has_weighted_grading):
         earned, possible = item['grade'].split('/')
         earned = float(earned)
         possible = float(possible)
+        if possible <= 0:
+            logger.warning(f'Skipping Homework {item["id"]} with non-positive denominator in current_grade')
+            continue
         grade = (earned / possible) * 100
         # Formula for weighted grading: ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... )
         if has_weighted_grading:
@@ -272,6 +275,9 @@ def recalculate_course_grade(course_id):
         earned, possible = grade.split('/')
         earned = float(earned)
         possible = float(possible)
+        if possible <= 0:
+            logger.warning(f'Skipping Homework in category {category_id} with non-positive denominator in current_grade')
+            continue
 
         total_earned += earned
         total_possible += possible
@@ -300,10 +306,15 @@ def recalculate_category_grade(category_id):
     total_earned = 0
     total_possible = 0
     grades = []
-    for grade in Homework.objects.for_category(category_id).graded().values_list('current_grade', flat=True):
+    for pk, grade in Homework.objects.for_category(category_id).graded().values_list('pk', 'current_grade'):
         earned, possible = grade.split('/')
-        total_earned += float(earned)
-        total_possible += float(possible)
+        earned = float(earned)
+        possible = float(possible)
+        if possible <= 0:
+            logger.warning(f'Skipping Homework {pk} with non-positive denominator in current_grade')
+            continue
+        total_earned += earned
+        total_possible += possible
         grades.append(total_earned / total_possible)
     average_grade = (total_earned / total_possible) * 100 if total_possible > 0 else -1
     trend = commonutils.calculate_trend(range(len(grades)), grades)
