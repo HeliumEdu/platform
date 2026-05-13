@@ -7,7 +7,7 @@ TAG_VERSION ?= latest
 PLATFORM ?= arm64
 ENVIRONMENT ?= prod
 
-GA_MEASUREMENT_ID ?=
+ANALYTICS_ENABLED ?=
 
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
 
@@ -60,7 +60,7 @@ build-docs: install-dev
 		npx -y @redocly/cli@2.30.x build-docs build/openapi.yaml \
 			--output helium/common/templates/redoc-static.html \
 			--template helium/common/templates/redoc-static.hbs; \
-		GA_MEASUREMENT_ID="$(GA_MEASUREMENT_ID)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
+		ANALYTICS_ENABLED="$(ANALYTICS_ENABLED)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
 	)
 
 build-migrations: install-dev
