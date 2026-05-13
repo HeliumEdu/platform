@@ -18,14 +18,23 @@ class BaseCalendar(BaseModel):
     show_end_time = models.BooleanField(help_text='Whether the end time should be shown on the calendar.',
                                         default=False)
 
-    start = models.DateTimeField(help_text='ISO-8601 datetime. Must be on-or-before `end`.',
-                                 db_index=True)
+    start = models.DateTimeField(
+        help_text=(
+            'ISO-8601 datetime with offset. Server normalizes to UTC and handles DST. '
+            'Must be on-or-before `end`.'
+        ),
+        db_index=True)
 
-    end = models.DateTimeField(help_text='ISO-8601 datetime. Must be on-or-after `start`.',
-                               db_index=True)
+    end = models.DateTimeField(
+        help_text='ISO-8601 datetime with offset. Must be on-or-after `start`.',
+        db_index=True)
 
-    priority = models.PositiveIntegerField(help_text='A priority integer between 0 and 100.',
-                                           default=50, validators=[MaxValueValidator(100)])
+    priority = models.PositiveIntegerField(
+        help_text=(
+            'Integer in `[0, 100]`, default `50`; should be stored in increments of 10. '
+            'Suggested: `50` routine, `80` exam, `90` final.'
+        ),
+        default=50, validators=[MaxValueValidator(100)])
 
     url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
                           blank=True, null=True)

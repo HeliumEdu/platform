@@ -12,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):
+    """
+    A class's recurring weekly schedule. Meeting occurrences are computed
+    client-side — walk dates between `Course.start_date` and
+    `Course.end_date`, keep ones where `days_of_week` is `1` for that
+    weekday, drop ones listed in `Course.exceptions` /
+    `CourseGroup.exceptions`. Day-of-week times are interpreted in
+    `settings.time_zone` (see `/auth/user/`).
+    """
+
     class Meta:
         model = CourseSchedule
         fields = (
