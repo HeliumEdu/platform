@@ -195,6 +195,38 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], note2.pk)
 
+    def test_create_note_with_materials_alias(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        data = {
+            'title': 'Aliased',
+            'content': {'ops': [{'insert': 'x\n'}]},
+            'materials': [material.pk],
+        }
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        note = Note.objects.get(pk=response.data['id'])
+        self.assertIn(material.pk, list(note.resources.values_list('pk', flat=True)))
+
+    def test_create_note_with_both_resources_and_materials_rejected(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+        data = {
+            'title': 'Both',
+            'content': {'ops': [{'insert': 'x\n'}]},
+            'resources': [material.pk],
+            'materials': [material.pk],
+        }
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
+
 
 class TestCaseNoteExtendedFields(APITestCase):
     def test_update_standalone_note(self):

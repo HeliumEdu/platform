@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import datetime
 import json
-import logging
 import os
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -22,8 +21,6 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
     Homework, Reminder, Note
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
-
-logger = logging.getLogger(__name__)
 
 
 class TestCaseImportExportViews(APITestCase):
@@ -269,6 +266,48 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Homework.objects.count(), 0)
         self.assertEqual(Reminder.objects.count(), 0)
 
+    def test_import_multiple_files_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        sample_path = os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))
+
+        # WHEN
+        with open(sample_path) as fp1, open(sample_path) as fp2:
+            data = {
+                'file[]': [fp1, fp2]
+            }
+            response = self.client.post(
+                reverse('importexport_import'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['details'], 'Upload exactly one file per request.')
+        self.assertEqual(ExternalCalendar.objects.count(), 0)
+        self.assertEqual(CourseGroup.objects.count(), 0)
+        self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(CourseSchedule.objects.count(), 0)
+        self.assertEqual(Category.objects.count(), 0)
+        self.assertEqual(MaterialGroup.objects.count(), 0)
+        self.assertEqual(Material.objects.count(), 0)
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Homework.objects.count(), 0)
+        self.assertEqual(Reminder.objects.count(), 0)
+
+    def test_import_no_files_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(
+            reverse('importexport_import'),
+            {},
+            format='multipart')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['details'], 'Upload exactly one file per request.')
+
     def test_import_invalid_relationships(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -284,10 +323,8 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('course', response.data['homework'][1])
-        self.assertIn('may not be null', response.data['homework'][1]['course'][0])
-        self.assertIn('materials', response.data['homework'][1])
-        self.assertIn('object does not exist', response.data['homework'][1]['materials'][0])
+        self.assertIn('homework', response.data)
+        self.assertIn('Unresolved `course`', str(response.data['homework']))
         self.assertEqual(ExternalCalendar.objects.count(), 0)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
@@ -1116,3 +1153,274 @@ class TestCaseImportExportViews(APITestCase):
         self.assertFalse(standalone_note.homework.exists())
         self.assertFalse(standalone_note.events.exists())
         self.assertFalse(standalone_note.resources.exists())
+
+    def _minimal_import_payload(self):
+        return {
+            'course_groups': [{
+                'id': 1, 'title': 'G', 'start_date': '2024-01-01', 'end_date': '2024-05-01',
+                'shown_on_calendar': True, 'overall_grade': '-1', 'user': 1,
+            }],
+            'courses': [{
+                'id': 1, 'title': 'C', 'room': '', 'credits': '3.00', 'color': '#4986e7',
+                'website': '', 'is_online': False, 'current_grade': '-1', 'teacher_name': '',
+                'teacher_email': '', 'start_date': '2024-01-01', 'end_date': '2024-05-01',
+                'course_group': 1,
+            }],
+            'categories': [{
+                'id': 1, 'title': 'Default', 'weight': '0.00', 'average_grade': '-1',
+                'grade_by_weight': '0', 'color': '#4986e7', 'course': 1,
+            }],
+            'material_groups': [{
+                'id': 1, 'title': 'MG', 'shown_on_calendar': True, 'user': 1,
+            }],
+            'materials': [{
+                'id': 1, 'title': 'M', 'status': 0, 'condition': 0, 'website': '',
+                'price': '', 'material_group': 1, 'courses': [],
+            }],
+            'events': [],
+            'homework': [],
+            'reminders': [],
+            'notes': [],
+            'course_schedules': [],
+        }
+
+    def _post_import(self, payload):
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(payload, f)
+            f.flush()
+            with open(f.name, 'rb') as fp:
+                return self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+    def test_import_note_invalid_payload_rejects_whole_import(self):
+        # GIVEN: a note linked to both a homework AND an event (mutually exclusive)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['events'] = [{
+            'id': 10, 'title': 'E', 'all_day': False, 'show_end_time': False,
+            'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T11:00:00Z', 'priority': 50,
+        }]
+        payload['homework'] = [{
+            'id': 20, 'title': 'H', 'all_day': False, 'show_end_time': False,
+            'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T12:00:00Z', 'priority': 50,
+            'current_grade': '-1/100', 'completed': False, 'category': 1, 'materials': [],
+            'course': 1,
+        }]
+        payload['notes'] = [{
+            'id': 1, 'title': 'Bad', 'content': {'ops': [{'insert': 'x\n'}]},
+            'homework': [20], 'events': [10], 'resources': [],
+        }]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN: 400 and nothing landed (atomic rollback)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CourseGroup.objects.count(), 0)
+        self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(Homework.objects.count(), 0)
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_import_unresolved_course_group_returns_400_not_500(self):
+        # GIVEN: a course referencing a course_group id that doesn't appear in the file
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['course_group'] = 999  # not in the file
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses', response.data)
+        self.assertIn('Unresolved `course_group`', str(response.data['courses']))
+        self.assertEqual(Course.objects.count(), 0)
+
+    def test_import_unresolved_course_on_category_returns_400_not_500(self):
+        # GIVEN: a category referencing a course id that doesn't appear in the file
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['categories'][0]['course'] = 999
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('categories', response.data)
+        self.assertIn('Unresolved `course`', str(response.data['categories']))
+
+    def test_import_unresolved_course_on_schedule_returns_400_not_500(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_schedules'] = [{
+            'id': 1, 'days_of_week': '0101010',
+            'sun_start_time': '00:00:00', 'sun_end_time': '00:00:00',
+            'mon_start_time': '10:00:00', 'mon_end_time': '10:50:00',
+            'tue_start_time': '00:00:00', 'tue_end_time': '00:00:00',
+            'wed_start_time': '10:00:00', 'wed_end_time': '10:50:00',
+            'thu_start_time': '00:00:00', 'thu_end_time': '00:00:00',
+            'fri_start_time': '10:00:00', 'fri_end_time': '10:50:00',
+            'sat_start_time': '00:00:00', 'sat_end_time': '00:00:00',
+            'course': 999,
+        }]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('course_schedules', response.data)
+        self.assertIn('Unresolved `course`', str(response.data['course_schedules']))
+
+    def test_import_duplicate_id_within_section_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'].append({**payload['courses'][0], 'title': 'C2'})
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses', response.data)
+        self.assertIn('Duplicate id', str(response.data['courses']))
+
+    def test_import_non_integer_id_rejected(self):
+        # GIVEN: an id that is neither an int nor a coercible string-int
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['id'] = {'oops': 'not-an-id'}
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses', response.data)
+        self.assertIn('not a valid id', str(response.data['courses']))
+
+    def test_import_string_int_id_coerced(self):
+        # GIVEN: ids supplied as strings should be coerced
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_groups'][0]['id'] = '1'
+        payload['courses'][0]['id'] = '1'
+        payload['courses'][0]['course_group'] = '1'
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Course.objects.count(), 1)
+
+    def test_import_missing_id_in_section_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        del payload['courses'][0]['id']
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses', response.data)
+        self.assertIn('missing required key `id`', str(response.data['courses']))
+
+    def test_import_both_resources_and_materials_top_level_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['resources'] = list(payload['materials'])
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
+        self.assertEqual(Material.objects.count(), 0)
+
+    def test_import_top_level_resources_alias_succeeds(self):
+        # GIVEN: top-level `resources` instead of `materials`
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['resources'] = payload.pop('materials')
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Material.objects.count(), 1)
+
+    def test_import_top_level_materials_alias_succeeds(self):
+        # GIVEN: top-level `materials` alias (export shape)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Material.objects.count(), 1)
+
+    def test_import_note_both_resources_and_materials_rejected(self):
+        # GIVEN: a Note with both `resources` and `materials` keys
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['notes'] = [{
+            'id': 1, 'title': 'Bad', 'content': {'ops': [{'insert': 'x\n'}]},
+            'resources': [1], 'materials': [1],
+        }]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_import_note_materials_alias_succeeds(self):
+        # GIVEN: a Note using `materials` alias
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['notes'] = [{
+            'id': 1, 'title': 'Alias', 'content': {'ops': [{'insert': 'x\n'}]},
+            'materials': [1],
+        }]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note = Note.objects.get(title='Alias')
+        self.assertEqual(note.resources.count(), 1)
+
+    def test_import_homework_unresolved_material_returns_400(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['homework'] = [{
+            'id': 10, 'title': 'H', 'all_day': False, 'show_end_time': False,
+            'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T12:00:00Z', 'priority': 50,
+            'current_grade': '-1/100', 'completed': False, 'category': 1,
+            'materials': [9999],  # not in payload
+            'course': 1,
+        }]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('homework', response.data)
+        self.assertIn('Unresolved `materials`', str(response.data['homework']))

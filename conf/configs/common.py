@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.11"
+__version__ = "2.2.12"
 
 import os
 import socket
@@ -302,8 +302,8 @@ SPECTACULAR_SETTINGS = {
         "| `course_group` | **class group** (semester / quarter / term) | Container for the classes a user is taking in a given period. |\n"
         "| `course` | **class** | A single class within a class group. The API uses `course` to avoid the reserved word `class`. |\n"
         "| `homework` | **assignment** | A graded item for a class. The API uses `homework` to avoid the reserved word `assignment`. |\n"
-        "| `material` | **resource** | A reference item (syllabus, textbook, link). `materials` is the legacy wire name. |\n"
-        "| `material_group` | **resource group** | A container for resources. |\n\n"
+        "| `material` | **resource** | A reference item (syllabus, textbook, link). The user-facing term is `resource`; `material` is the internal model name preserved in API paths (`/planner/materials/`) and as the stable bulk-import key (`materials`). |\n"
+        "| `material_group` | **resource group** | A container for resources. Same naming convention as `material` — `material_group` on the wire, `resource group` in the app. |\n\n"
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
@@ -341,6 +341,9 @@ SPECTACULAR_SETTINGS = {
         "`reminders`, `notes`, `materials`, `material_groups`, `external_calendars`) and per-row "
         "fields are exactly what the importer accepts. See the `bulk_syllabus_import` example on "
         "the `/importexport/import/` operation for a trimmed payload.\n\n"
+        "Each `CourseSchedule` has 14 day-time fields (`sun_start_time`, `sun_end_time`, … "
+        "`sat_end_time`). Omitted day-times default to `12:00:00`, which may collide with real "
+        "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
         "### Computing class meeting dates\n\n"
         "There is no endpoint that returns enumerated class meeting occurrences — the client computes "
         "them itself from the CourseSchedule definition. To list every meeting of a class:\n\n"

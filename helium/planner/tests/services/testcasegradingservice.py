@@ -6,6 +6,7 @@ import datetime
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.planner.models import Homework
 from helium.planner.services import gradingservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
@@ -941,3 +942,28 @@ class TestCaseGradingService(TestCase):
         # THEN
         course_group.refresh_from_db()
         self.assertEqual(float(course_group.overall_grade), 61.3636)
+
+    def test_poisoned_zero_denominator_skipped(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        homeworkhelper.given_homework_exists(course, category=category, completed=True, current_grade='80/100')
+        poisoned = homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                                       current_grade='50/100')
+        # Bypass validators to simulate legacy poisoned data
+        Homework.objects.filter(pk=poisoned.pk).update(current_grade='5/0')
+
+        # WHEN
+        gradingservice.recalculate_category_grade(category.pk)
+        gradingservice.recalculate_course_grade(course.pk)
+        gradingservice.recalculate_course_group_grade(course_group.pk)
+
+        # THEN
+        course_group.refresh_from_db()
+        course.refresh_from_db()
+        category.refresh_from_db()
+        self.assertEqual(float(category.average_grade), 80)
+        self.assertEqual(float(course.current_grade), 80)
+        self.assertEqual(float(course_group.overall_grade), 80)
