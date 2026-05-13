@@ -343,7 +343,7 @@ SPECTACULAR_SETTINGS = {
         "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual assignments. "
         "Set `current_grade` to `\"-1/100\"` for ungraded items.\n"
         "6. (Optional) `POST /planner/events/` — non-class calendar items (study sessions, office hours). "
-        "Events have no class dependency.\n"
+        "Events have no Course dependency.\n"
         "7. (Optional) `POST /planner/reminders/` — push/email reminders attached to exactly one parent "
         "(`event`, `homework`, or `course`).\n"
         "8. (Optional) `POST /planner/notes/`, `POST /planner/attachments/` — rich-text notes and file "

@@ -24,9 +24,9 @@ class Homework(BaseCalendar):
 
     completed = models.BooleanField(
         help_text=(
-            'Whether the assignment has been completed. Once `completed=true` and '
+            'Whether the homework has been completed. Once `completed=true` and '
             '`current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the '
-            'assignment counts toward grade calc. For missed work: `completed=true`, '
+            'homework counts toward grade calc. For missed work: `completed=true`, '
             '`current_grade="0/<possible>"`. See '
             'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
         ),
