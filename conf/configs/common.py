@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.15"
+__version__ = "2.2.16"
 
 import os
 import socket
@@ -287,11 +287,9 @@ SPECTACULAR_SETTINGS = {
         "## Authentication\n\n"
         "POST `{\"username\": \"<your email>\", \"password\": \"<your password>\"}` to "
         "`/auth/token/` to obtain `access` and `refresh` tokens. Send subsequent requests with "
-        "the `Authorization: Bearer <access>` header. Use `/auth/token/refresh/` to rotate the "
-        "access token before it expires.\n\n"
-        "Access tokens are short-lived and refresh tokens last several days. The exact values "
-        "are published at runtime by `GET /info/` as `access_token_lifetime_minutes` and "
-        "`refresh_token_lifetime_days`. See `/auth/token/refresh/` for the full refresh lifecycle.\n\n"
+        "the `Authorization: Bearer <access>` header. Rotate the access token via "
+        "`/auth/token/refresh/` before it expires; exact lifetimes are published at runtime by "
+        "`GET /info/` as `access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n\n"
         "## Vocabulary (wire format vs. user-facing terms)\n\n"
         f"The wire format keeps some legacy names that differ from what users see in the "
         f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
@@ -343,17 +341,6 @@ SPECTACULAR_SETTINGS = {
         "Each `CourseSchedule` has 14 day-time fields (`sun_start_time`, `sun_end_time`, … "
         "`sat_end_time`). Omitted day-times default to `12:00:00`, which may collide with real "
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
-        "### Computing class meeting dates\n\n"
-        "There is no endpoint that returns enumerated class meeting occurrences — the client computes "
-        "them itself from the CourseSchedule definition. To list every meeting of a class:\n\n"
-        "1. Walk dates from `course.start_date` to `course.end_date`.\n"
-        "2. For each date, look up the weekday position in `course_schedule.days_of_week` "
-        "(a 7-character `0`/`1` string starting Sunday); skip the date if that position is `0`.\n"
-        "3. Skip the date if it appears in `course.exceptions` or the parent `course_group.exceptions` "
-        "(both CSVs of `YYYYMMDD` strings, e.g. `\"20260309,20260310\"` for spring break).\n"
-        "4. The meeting's start/end times are `<day>_start_time` / `<day>_end_time` on the schedule "
-        "(`mon_start_time`, `tue_end_time`, etc.), interpreted in the user's `settings.time_zone`.\n\n"
-        "This is what the Flutter client does.\n\n"
         "### Common pitfalls\n\n"
         "A few shapes that return 2xx but produce semantically wrong data:\n\n"
         "- **One CourseSchedule per Course.** A schedule supports a different start and end time on "
@@ -404,7 +391,26 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
-    }
+    },
+    'TAGS': [
+        {
+            'name': 'planner.homework',
+            'description': (
+                'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
+                'a category; `current_grade` rolls up into class and class-group grades. '
+                'Ungraded calendar items live under `Event`. See '
+                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648 for more info on grading.'
+            ),
+        },
+        {
+            'name': 'planner.event',
+            'description': (
+                'Ungraded calendar items not tied to a class. Anything graded '
+                '(assignments, quizzes, exams) lives under `Homework`. See '
+                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418669'
+            ),
+        },
+    ],
 }
 
 # Internationalization
