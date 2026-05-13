@@ -40,7 +40,7 @@ class BaseCalendar(BaseModel):
                           blank=True, null=True)
 
     comments = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                                blank=True)
+                                blank=True, default='')
 
     class Meta:
         abstract = True

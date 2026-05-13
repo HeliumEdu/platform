@@ -18,8 +18,11 @@ class Category(BaseModel):
 
     weight = models.DecimalField(
         help_text=(
-            'Decimal in `[0, 100]`. Sum across a class\'s categories must be ≤ 100. '
-            'A weight of `0` keeps the category organizational only; grade calc skips it. '
+            'Decimal in `[0, 100]`. Sum across a class\'s categories must be <= 100. '
+            'A weight of `0` is organizational only when at least one category in the class has '
+            '`weight > 0` (weighted mode); when no category has a non-zero weight, the class is '
+            'points-based and every assignment contributes via its `current_grade` fraction '
+            'regardless of category weight. '
             'See `Course.has_weighted_grading` and '
             'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
         ),
