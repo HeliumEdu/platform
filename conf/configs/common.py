@@ -402,7 +402,6 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
     ],
-    'REDOC_DIST': 'SIDECAR',
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
