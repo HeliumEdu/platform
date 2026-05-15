@@ -337,6 +337,11 @@ def oauth_login(request):
             )
             logger.info(f'Linked {provider_name} OAuth provider to new user {user.id}')
 
+            taskutils.safe_apply_async(send_registration_email,
+                args=(user.email,),
+                priority=settings.CELERY_PRIORITY_HIGH,
+            )
+
         update_last_login(None, user)
         if not is_new_user:
             user.last_activity = timezone.now()
