@@ -262,8 +262,8 @@ def sweep_dangling_users(self):
         ]
         body = (
             f'{len(stuck_users)} user account(s) have been stuck in pending-delete state, meaning '
-            f'the cascade-delete task failed, and at least some data still exists for this user.'
-            f'Login and manually delete these users to complete the process, or investigate if the'
+            f'the cascade-delete task failed, and at least some data still exists for this user. '
+            f'Log in and manually delete these users to complete the process, or investigate if the '
             f'manual delete also fails.\n'
             + '\n'.join(lines)
         )

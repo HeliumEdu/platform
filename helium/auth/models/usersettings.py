@@ -20,7 +20,7 @@ class UserSettings(BaseModel):
     default_view = models.PositiveIntegerField(help_text='A valid default calendar view choice.',
                                                choices=enums.VIEW_CHOICES, default=enums.MONTH)
 
-    week_starts_on = models.PositiveIntegerField(help_text='A valid day on which the week should start choice.',
+    week_starts_on = models.PositiveIntegerField(help_text='A valid choice for the day on which the week starts.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
