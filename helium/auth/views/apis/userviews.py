@@ -159,7 +159,7 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         user = self.get_object()
 
         if user.is_active:
-            raise ValidationError({'non_field_errors': ['This endpoint can only be used to cleanup user accounts that '
+            raise ValidationError({'non_field_errors': ['This endpoint can only be used to clean up user accounts that '
                                                   'were never activated.']})
 
         if not user.check_password(request.data['password']):

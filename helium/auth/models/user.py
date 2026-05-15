@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, BaseModel):
-    username = models.CharField(help_text='A unique name used to login to the system.',
+    username = models.CharField(help_text='A unique name used to log in to the system.',
                                 max_length=255, unique=True,
                                 validators=[validators.RegexValidator(r'^[\w.+-]+$',
                                                                       'Enter a valid username, which means less than '
