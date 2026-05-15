@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 class ImportCreateSerializer(serializers.Serializer):
     """
-    Multipart request body for importing one or more previously-exported JSON files. Files are
-    sent under the repeated `file[]` field.
+    Multipart request body for importing a previously-exported JSON file. Exactly one file must
+    be uploaded per request, sent under the `file[]` field.
     """
     file = serializers.ListField(
         child=serializers.FileField(),
         required=True,
-        help_text='One or more exported JSON files, sent as the multipart `file[]` field.'
+        help_text='A previously-exported JSON file, sent as the multipart `file[]` field. Exactly one file per request.'
     )
 
 

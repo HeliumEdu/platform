@@ -4,7 +4,7 @@ Hey!
 
 You're almost there. Your verification code is: {{ verification_code|unlocalize }}.
 
-Paste the link below in to your browser to verify this email address with Helium.
+Paste the link below into your browser to verify this email address with Helium.
 
 {{ verify_url }}?email={{ email|urlencode }}&code={{ verification_code|unlocalize }}
 
