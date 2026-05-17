@@ -162,7 +162,9 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[3]['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=WE')
         self.assertIsNone(response.data[3]['exception_dates'])
         # Recurring series: daily, timed. The standalone RECURRENCE-ID override below at [5]
-        # is a one-off whose time differs from the daily 8am-9am CT pattern.
+        # replaces the Aug 29 occurrence — its RECURRENCE-ID value (the *original*
+        # occurrence time, 8am CT = 13:00 UTC) is folded into exception_dates so SfCalendar
+        # skips the slot and only the override renders.
         self.assertEqual(response.data[4]['title'], 'Daily Timed Event')
         self.assertEqual(response.data[4]['all_day'], False)
         self.assertEqual(response.data[4]['show_end_time'], True)
@@ -173,10 +175,9 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[4]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[4]['color'], external_calendar.color)
         self.assertEqual(response.data[4]['recurrence_rule'], 'FREQ=DAILY')
-        self.assertIsNone(response.data[4]['exception_dates'])
-        # "Removed" member of the recurring group (different time than the series), promoted to
-        # its own standalone event apart from the recurrence. RECURRENCE-ID override handling
-        # for true single-occurrence edits is future work.
+        self.assertEqual(response.data[4]['exception_dates'], ['2025-08-29T13:00:00+00:00'])
+        # The standalone override at the moved time (7am CT = 12:00 UTC) for the Aug 29
+        # occurrence of the series at [4].
         self.assertEqual(response.data[5]['title'], 'Daily Timed Event')
         self.assertEqual(response.data[5]['all_day'], False)
         self.assertEqual(response.data[5]['show_end_time'], True)

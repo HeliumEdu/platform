@@ -106,12 +106,49 @@ def _extract_exception_dates(component):
     return iso_dates or None
 
 
+def _collect_recurrence_id_overrides(calendar, default_time_zone):
+    """Map UID -> list of UTC ISO-8601 strings naming the *original* occurrence datetimes
+    that any RECURRENCE-ID overrides replace.
+
+    In iCal, a moved/edited single occurrence of a recurring series is expressed as a
+    separate VEVENT sharing the parent series' UID and carrying a ``RECURRENCE-ID``
+    property whose value is the original occurrence's start. To avoid rendering both the
+    original occurrence and the override, we feed these datetimes into the parent
+    series' ``exception_dates`` so SfCalendar skips the replaced slot.
+    """
+    overrides_by_uid = {}
+    time_zone = default_time_zone
+    for component in calendar.walk():
+        if component.name == "VTIMEZONE":
+            time_zone = ZoneInfo(component.get("TZID"))
+            continue
+        if component.name != "VEVENT":
+            continue
+        recurrence_id = component.get("RECURRENCE-ID")
+        uid = component.get("UID")
+        if recurrence_id is None or uid is None:
+            continue
+        dt = recurrence_id.dt
+        if isinstance(dt, datetime.datetime):
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, time_zone)
+            dt = dt.astimezone(datetime.timezone.utc)
+        else:
+            dt = timezone.make_aware(
+                datetime.datetime.combine(dt, datetime.time.min), time_zone,
+            ).astimezone(datetime.timezone.utc)
+        overrides_by_uid.setdefault(str(uid), []).append(dt.isoformat())
+    return overrides_by_uid
+
+
 def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None, search=None):
     events = []
     events_filtered = []
 
     user = external_calendar.user
     time_zone = ZoneInfo(user.settings.time_zone)
+
+    recurrence_id_overrides = _collect_recurrence_id_overrides(calendar, time_zone)
 
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
@@ -120,6 +157,16 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             rrule_component = component.get("RRULE")
             recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
             exception_dates = _extract_exception_dates(component)
+
+            if recurrence_rule:
+                uid = component.get("UID")
+                override_dates = recurrence_id_overrides.get(str(uid), []) if uid else []
+                if override_dates:
+                    merged = list(exception_dates or [])
+                    for iso in override_dates:
+                        if iso not in merged:
+                            merged.append(iso)
+                    exception_dates = merged
 
             dt_start = component.get("DTSTART").dt
             if component.get("DTEND") is not None:
