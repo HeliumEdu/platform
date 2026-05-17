@@ -75,7 +75,6 @@ class TestCaseAuthenticationViews(TestCase):
         # WHEN
         data = {
             'email': 'test@test.com',
-            'username': 'my_test_user',
             'password': 'test_pass_1!',
             'time_zone': 'America/Chicago'}
         response1 = self.client.post(reverse('auth_user_resource_register'),
@@ -86,12 +85,12 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response1.data['settings']['time_zone'], 'America/Chicago')
         response2 = self.client.post(reverse('auth_token_obtain'),
-                                     json.dumps({'username': 'my_test_user', 'password': 'test_pass_1!'}),
+                                     json.dumps({'email': 'test@test.com', 'password': 'test_pass_1!'}),
                                      content_type='application/json')
         self.assertContains(response2, 'account is not active', status_code=status.HTTP_403_FORBIDDEN)
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
-        self.assertEqual(user.username, 'my_test_user')
+        self.assertEqual(user.username, 'test')
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
 
         self.assertTrue(UserProfile.objects.filter(user__email='test@test.com').exists())
@@ -252,7 +251,7 @@ class TestCaseAuthenticationViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         user = get_user_model().objects.get(email=user.email)
-        self.assertIn("'username' and 'code' must be given", response.data[0])
+        self.assertIn("'email' and 'code' must be given", response.data[0])
         self.assertFalse(user.is_active)
 
     def test_verification_not_found(self):

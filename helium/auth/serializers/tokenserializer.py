@@ -51,16 +51,25 @@ class TokenResponseFieldsMixin(serializers.Serializer):
                                     help_text='JWT refresh token for obtaining new access tokens.')
 
 
-@extend_schema_serializer(component_name='Login')
+@extend_schema_serializer(component_name='Login', exclude_fields=('username',))
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # simplejwt's parent __init__ assigns bare CharField/PasswordField over our class-level
         # declarations, stripping help_text/label/style — re-apply them here.
+        # `username` is kept as an undocumented back-compat alias for `email`. Older installed
+        # mobile clients may continue to send it indefinitely; both keys are accepted in validate().
         self.fields[self.username_field] = serializers.CharField(
+            write_only=True,
+            required=False,
+            allow_blank=True,
+        )
+        self.fields['email'] = serializers.CharField(
             help_text="The user's email address.",
             label='Email',
             write_only=True,
+            required=False,
+            allow_blank=True,
         )
         self.fields['password'] = serializers.CharField(
             help_text='The password for the user.',
@@ -71,12 +80,19 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
         )
 
     def validate(self, attrs, update_last_login_field=True):
-        username = attrs.pop('username').strip()
-        password = attrs.pop('password')
+        legacy_username = attrs.pop('username', None)
+        email = attrs.pop('email', None)
+        password = attrs.pop('password', None)
 
-        if username and password:
+        identifier = (email or legacy_username or '').strip()
+
+        if legacy_username and not email:
+            metricutils.increment('api.deprecated_param.username',
+                                  request=self.context.get('request'))
+
+        if identifier and password:
             user = authenticate(request=self.context.get('request'),
-                                username=username, password=password)
+                                username=identifier, password=password)
 
             if not user:
                 raise AuthenticationFailed('Oops! We don\'t recognize that account. Check to make sure you '
@@ -88,7 +104,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
                         'detail': 'Sorry, your account is not active. Check your inbox to see if you received a '
                                   'verification email after registering with us.',
                         'code': 'account_inactive',
-                        'username': username,
+                        'email': identifier,
                     }
                 )
 

@@ -40,7 +40,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # User fields
         self.assertNotIn('verification_code', response.data)
-        self.assertEqual(user.username, response.data['username'])
+        self.assertNotIn('username', response.data)
         self.assertEqual(user.email, response.data['email'])
         # Profile fields
         self.assertNotIn('phone_verification_code', response.data['profile'])
