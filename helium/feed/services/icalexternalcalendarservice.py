@@ -1,6 +1,24 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+"""
+iCal external-calendar import service. Parses subscribed `.ics` feeds and
+converts each VEVENT into a Helium ``Event`` (in-memory, cached, never
+persisted to the DB).
+
+Supported recurrence semantics: ``RRULE``, ``EXDATE``, and ``RECURRENCE-ID``
+overrides (the override's original-occurrence datetime is folded into the
+parent series' ``exception_dates`` so SfCalendar skips it). ``STATUS:CANCELLED``
+events are dropped — for a CANCELLED override, the parent series gets the
+exception while the override itself is not emitted.
+
+Known limitations (very rare in real-world Google / Apple / Outlook exports):
+  * ``RDATE`` — extra one-off occurrences attached to a series are not read.
+  * Multiple ``RRULE`` properties on a single VEVENT — only the first is read
+    (``component.get("RRULE")`` returns one); RFC 5545 allows multiples.
+  * ``EXRULE`` — deprecated rule-based exceptions are not supported.
+"""
+
 import datetime
 import json
 import logging
