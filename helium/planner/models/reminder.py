@@ -13,6 +13,10 @@ from django.utils import timezone
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.common.utils.course_exception_helpers import (
+    merge_exceptions,
+    parse_csv_exceptions,
+)
 from helium.planner.managers.remindermanager import ReminderManager
 
 
@@ -97,32 +101,14 @@ class Reminder(BaseModel):
 
     def _parse_exceptions(self):
         """
-        Parse exception dates from course and course group.
-        Returns a set of dates when the course does not meet.
+        Return the set of dates on which ``self.course`` does not meet — the merge of
+        course-level (professor cancellations) and course-group-level (holidays,
+        breaks) exceptions.
         """
-        exceptions = set()
-
-        # Group-level exceptions (holidays, breaks)
-        if self.course.course_group.exceptions:
-            for date_str in self.course.course_group.exceptions.split(','):
-                date_str = date_str.strip()
-                if date_str:
-                    try:
-                        exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
-                    except ValueError:
-                        pass  # Skip invalid date formats
-
-        # Course-level exceptions (professor cancellations)
-        if self.course.exceptions:
-            for date_str in self.course.exceptions.split(','):
-                date_str = date_str.strip()
-                if date_str:
-                    try:
-                        exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
-                    except ValueError:
-                        pass  # Skip invalid date formats
-
-        return exceptions
+        return set(merge_exceptions(
+            parse_csv_exceptions(self.course.exceptions),
+            parse_csv_exceptions(self.course.course_group.exceptions),
+        ))
 
     def _get_next_course_occurrence_start(self, after_datetime=None):
         """

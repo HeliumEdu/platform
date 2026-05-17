@@ -1,6 +1,24 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+"""
+iCal external-calendar import service. Parses subscribed `.ics` feeds and
+converts each VEVENT into a Helium ``Event`` (in-memory, cached, never
+persisted to the DB).
+
+Supported recurrence semantics: ``RRULE``, ``EXDATE``, ``RDATE`` (each extra
+date is emitted as its own standalone Event mirroring the parent's duration),
+and ``RECURRENCE-ID`` overrides (the override's original-occurrence datetime is
+folded into the parent series' ``exception_dates`` so SfCalendar skips it).
+``STATUS:CANCELLED`` events are dropped — for a CANCELLED override, the parent
+series gets the exception while the override itself is not emitted.
+
+Known limitations (very rare in real-world Google / Apple / Outlook exports):
+  * Multiple ``RRULE`` properties on a single VEVENT — only the first is read
+    (``component.get("RRULE")`` returns one); RFC 5545 allows multiples.
+  * ``EXRULE`` — deprecated rule-based exceptions are not supported.
+"""
+
 import datetime
 import json
 import logging
@@ -106,6 +124,33 @@ def _extract_exception_dates(component):
                 dt = dt.astimezone(datetime.timezone.utc)
             iso_dates.append(dt.isoformat())
     return iso_dates or None
+
+
+def _extract_extra_dates(component, default_time_zone):
+    """Return UTC datetimes for any RDATE entries on the VEVENT.
+
+    iCal RDATE attaches extra one-off occurrences to a series — each one becomes
+    a standalone Event mirroring the parent's duration. Like EXDATE, RDATE may
+    appear once with multiple values or as multiple RDATE lines.
+    """
+    rdate_field = component.get("RDATE")
+    if not rdate_field:
+        return []
+    entries = rdate_field if isinstance(rdate_field, list) else [rdate_field]
+    extras = []
+    for entry in entries:
+        for vdt in getattr(entry, 'dts', []):
+            dt = vdt.dt
+            if isinstance(dt, datetime.datetime):
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, default_time_zone)
+                dt = dt.astimezone(datetime.timezone.utc)
+            else:
+                dt = timezone.make_aware(
+                    datetime.datetime.combine(dt, datetime.time.min), default_time_zone,
+                ).astimezone(datetime.timezone.utc)
+            extras.append(dt)
+    return extras
 
 
 def _collect_recurrence_id_overrides(calendar, default_time_zone):
@@ -229,6 +274,29 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
             if _apply_event_filters(event, _from, to, search):
                 events_filtered.append(event)
+
+            # RDATE: emit one standalone Event per extra occurrence, mirroring the
+            # parent's duration. Each becomes a one-off (no RRULE) — SfCalendar
+            # only expands a single RRULE per event, so extras must be modeled
+            # as independent events.
+            duration = dt_end - dt_start
+            for extra_start in _extract_extra_dates(component, time_zone):
+                extra_event = Event(id=len(events),
+                                    title=summary,
+                                    all_day=all_day,
+                                    show_end_time=show_end_time,
+                                    start=extra_start,
+                                    end=extra_start + duration,
+                                    url=component.get("URL"),
+                                    owner_id=external_calendar.id,
+                                    comments=component.get("DESCRIPTION") or "",
+                                    user=user,
+                                    calendar_item_type=enums.EXTERNAL)
+                extra_event.color = external_calendar.color
+                extra_event.location = component.get("LOCATION")
+                events.append(extra_event)
+                if _apply_event_filters(extra_event, _from, to, search):
+                    events_filtered.append(extra_event)
 
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
