@@ -321,6 +321,123 @@ class TestCaseEventViews(APITestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_create_recurring_event_persists_rrule_and_exdates(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Weekly study group',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=WEEKLY;BYDAY=MO',
+            'exception_dates': ['2025-10-13T18:00:00Z'],
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO')
+        self.assertEqual(response.data['exception_dates'], ['2025-10-13T18:00:00Z'])
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertEqual(event.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO')
+        self.assertEqual(event.exception_dates, ['2025-10-13T18:00:00Z'])
+        self.assertEqual(event.user_id, user.pk)
+
+        # AND the GET round-trips both fields
+        get_response = self.client.get(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}))
+        self.assertEqual(get_response.data['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO')
+        self.assertEqual(get_response.data['exception_dates'], ['2025-10-13T18:00:00Z'])
+
+    def test_create_event_without_recurrence_defaults_to_null(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'One-off meeting',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(response.data['recurrence_rule'])
+        self.assertIsNone(response.data['exception_dates'])
+
+    def test_create_event_rejects_malformed_recurrence_rule(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Bad RRULE',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=NOPE;BANANA',
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('recurrence_rule', response.data)
+
+    def test_create_event_rejects_non_list_exception_dates(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Bad exdates',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=DAILY',
+            'exception_dates': 'not-a-list',
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exception_dates', response.data)
+
+    def test_patch_event_clears_recurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        event.recurrence_rule = 'FREQ=WEEKLY;BYDAY=MO'
+        event.exception_dates = ['2025-10-13T18:00:00Z']
+        event.save(update_fields=['recurrence_rule', 'exception_dates'])
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps({'recurrence_rule': None, 'exception_dates': None}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertIsNone(event.recurrence_rule)
+        self.assertIsNone(event.exception_dates)
+
     def test_create_bad_data(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

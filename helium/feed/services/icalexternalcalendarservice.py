@@ -66,7 +66,9 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
                           user_id=event_data['user'],
                           calendar_item_type=event_data['calendar_item_type'],
                           url=event_data['url'],
-                          comments=event_data['comments'])
+                          comments=event_data['comments'],
+                          recurrence_rule=event_data.get('recurrence_rule'),
+                          exception_dates=event_data.get('exception_dates'))
             event.color = external_calendar.color
             event.location = event_data.get('location')
 
@@ -82,6 +84,28 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
     return events, not invalid_data
 
 
+def _extract_exception_dates(component):
+    """Return a list of ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
+
+    iCal EXDATE can appear once with multiple values or as multiple EXDATE lines, so
+    `component.get('EXDATE')` may return a single vDDDLists or a list of them.
+    """
+    exdate_field = component.get("EXDATE")
+    if not exdate_field:
+        return None
+    exdate_entries = exdate_field if isinstance(exdate_field, list) else [exdate_field]
+    iso_dates = []
+    for entry in exdate_entries:
+        for vdt in getattr(entry, 'dts', []):
+            dt = vdt.dt
+            if isinstance(dt, datetime.datetime):
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, datetime.timezone.utc)
+                dt = dt.astimezone(datetime.timezone.utc)
+            iso_dates.append(dt.isoformat())
+    return iso_dates or None
+
+
 def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None, search=None):
     events = []
     events_filtered = []
@@ -93,8 +117,9 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
         if component.name == "VTIMEZONE":
             time_zone = ZoneInfo(component.get("TZID"))
         elif component.name == "VEVENT":
-            if "RRULE" in component:
-                continue
+            rrule_component = component.get("RRULE")
+            recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
+            exception_dates = _extract_exception_dates(component)
 
             dt_start = component.get("DTSTART").dt
             if component.get("DTEND") is not None:
@@ -137,7 +162,9 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           owner_id=external_calendar.id,
                           comments=component.get("DESCRIPTION") or "",
                           user=user,
-                          calendar_item_type=enums.EXTERNAL)
+                          calendar_item_type=enums.EXTERNAL,
+                          recurrence_rule=recurrence_rule,
+                          exception_dates=exception_dates)
             event.color = external_calendar.color
             event.location = component.get("LOCATION")
 

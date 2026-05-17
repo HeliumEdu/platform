@@ -6,9 +6,15 @@ import decimal
 import re
 import sys
 
+from dateutil import parser as dateutil_parser
+from dateutil.rrule import rrulestr
 from django.core.exceptions import ValidationError
 
 from helium.common.utils import commonutils
+
+# Reference dtstart used solely to satisfy rrulestr() during validation. The actual
+# series anchor at runtime is the parent Event's `start`, not this constant.
+_RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 
 
 def validate_fraction(value):
@@ -53,6 +59,39 @@ def validate_quill_delta(value):
         raise ValidationError('Quill content must be an object.')
     if not isinstance(value.get('ops'), list):
         raise ValidationError('Quill content must have an `ops` list.')
+
+
+def validate_recurrence_rule(value):
+    """
+    Validate that ``value`` is a parseable RFC 5545 RRULE string (e.g. ``FREQ=WEEKLY;BYDAY=MO``).
+
+    Accepts both bare rule bodies and the ``RRULE:`` prefixed form. A reference dtstart is
+    supplied to ``rrulestr`` only to satisfy parsing — the real series anchor is the parent
+    Event's ``start``.
+    """
+    if value is None or value == '':
+        return
+    try:
+        rrulestr(value, dtstart=_RRULE_VALIDATION_DTSTART)
+    except (ValueError, TypeError) as ex:
+        raise ValidationError(f'Invalid RRULE: {ex}')
+
+
+def validate_exception_dates(value):
+    """
+    Validate that ``value`` is ``None`` or a list of ISO-8601 date/datetime strings.
+    """
+    if value is None:
+        return
+    if not isinstance(value, list):
+        raise ValidationError('`exception_dates` must be a list of ISO-8601 strings.')
+    for entry in value:
+        if not isinstance(entry, str):
+            raise ValidationError('Each exception date must be an ISO-8601 string.')
+        try:
+            dateutil_parser.parse(entry)
+        except (ValueError, TypeError):
+            raise ValidationError(f'Invalid ISO-8601 date: {entry}')
 
 
 def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range_label='date range'):
