@@ -406,4 +406,4 @@ class TestCaseLegacyTokenViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], user.get_username())
+        self.assertEqual(response.data['email'], user.email)
