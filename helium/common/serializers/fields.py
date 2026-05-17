@@ -6,6 +6,49 @@ import datetime
 from rest_framework import serializers
 
 
+class ExceptionDatesField(serializers.ListField):
+    """
+    Serializer field for the planner ``Event.exception_dates`` JSONField column.
+    Wraps a :class:`TzAwareDateTimeField` so per-item parsing, validation, and
+    output formatting all flow through the same DRF DateTimeField machinery as
+    every other datetime in the API — meaning the wire form is uniformly
+    ``Z``-suffixed ISO-8601 UTC regardless of whether the column was populated
+    by user POST, iCal import, or anything else.
+
+    Without this, JSON-stored strings would pass through DRF as-is and the wire
+    format would drift away from the rest of the API's datetime convention.
+    """
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('child', TzAwareDateTimeField(default_timezone=datetime.timezone.utc))
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        # DRF's ListField parses each entry to a datetime via the child field.
+        # Convert back to ISO strings here so the JSONField column stores plain
+        # JSON (Python's default encoder can't serialize datetimes) — using
+        # DateTimeField's own ``to_representation`` so the Z-suffix normalization
+        # happens at the same place for both write and read paths.
+        datetimes = super().to_internal_value(data)
+        if datetimes is None:
+            return None
+        return [self.child.to_representation(dt) for dt in datetimes]
+
+    def to_representation(self, data):
+        if data is None:
+            return data
+        # Stored values are already Z-suffixed ISO strings (written by
+        # ``to_internal_value`` for user input, or by the iCal import service
+        # which writes any ISO form). Parse and re-emit through DateTimeField
+        # so legacy ``+00:00``-form values still come out as ``Z`` on the wire.
+        normalized = []
+        for value in data:
+            if isinstance(value, str):
+                value = datetime.datetime.fromisoformat(value)
+            normalized.append(self.child.to_representation(value))
+        return normalized
+
+
 class TzAwareDateTimeField(serializers.DateTimeField):
     """
     A :class:`~rest_framework.serializers.DateTimeField` that rejects naive

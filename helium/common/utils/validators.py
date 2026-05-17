@@ -6,7 +6,6 @@ import decimal
 import re
 import sys
 
-from dateutil import parser as dateutil_parser
 from dateutil.rrule import rrulestr
 from django.core.exceptions import ValidationError
 
@@ -75,23 +74,6 @@ def validate_recurrence_rule(value):
         rrulestr(value, dtstart=_RRULE_VALIDATION_DTSTART)
     except (ValueError, TypeError) as ex:
         raise ValidationError(f'Invalid RRULE: {ex}')
-
-
-def validate_exception_dates(value):
-    """
-    Validate that ``value`` is ``None`` or a list of ISO-8601 date/datetime strings.
-    """
-    if value is None:
-        return
-    if not isinstance(value, list):
-        raise ValidationError('`exception_dates` must be a list of ISO-8601 strings.')
-    for entry in value:
-        if not isinstance(entry, str):
-            raise ValidationError('Each exception date must be an ISO-8601 string.')
-        try:
-            dateutil_parser.parse(entry)
-        except (ValueError, TypeError):
-            raise ValidationError(f'Invalid ISO-8601 date: {entry}')
 
 
 def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range_label='date range'):

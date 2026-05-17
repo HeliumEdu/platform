@@ -7,9 +7,8 @@ from django.db import models as django_models
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
-from helium.common.serializers.fields import TzAwareDateTimeField
+from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.utils.validators import (
-    validate_exception_dates,
     validate_hex_color,
     validate_recurrence_rule,
 )
@@ -29,6 +28,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
     location = serializers.CharField(read_only=True, required=False, allow_null=True)
+    exception_dates = ExceptionDatesField(required=False, allow_null=True)
 
     class Meta:
         model = Event
@@ -42,7 +42,6 @@ class EventSerializer(serializers.ModelSerializer):
         read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)
         extra_kwargs = {
             'recurrence_rule': {'validators': [validate_recurrence_rule]},
-            'exception_dates': {'validators': [validate_exception_dates]},
         }
 
     def validate(self, attrs):

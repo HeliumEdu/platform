@@ -116,7 +116,12 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 8 VEVENTs in the fixture, 6 surfaced. Skipped: the standalone CANCELLED
+        # event and the CANCELLED RECURRENCE-ID override (the latter is folded into
+        # the parent series' exception_dates instead).
         self.assertEqual(len(response.data), 6)
+        titles = [e['title'] for e in response.data]
+        self.assertNotIn('Canceled Standalone Event', titles)
         self.assertEqual(response.data[0]['title'], 'Some Timed Event at 9am CT Inside DST')
         self.assertEqual(response.data[0]['all_day'], False)
         self.assertEqual(response.data[0]['show_end_time'], True)
@@ -175,7 +180,13 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[4]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[4]['color'], external_calendar.color)
         self.assertEqual(response.data[4]['recurrence_rule'], 'FREQ=DAILY')
-        self.assertEqual(response.data[4]['exception_dates'], ['2025-08-29T13:00:00+00:00'])
+        # Two exception dates: Aug 29 (replaced by the standalone override at [5]) and
+        # Aug 30 (a CANCELLED RECURRENCE-ID override — folded in by the prepass, not
+        # emitted as its own event).
+        self.assertEqual(
+            response.data[4]['exception_dates'],
+            ['2025-08-29T13:00:00Z', '2025-08-30T13:00:00Z'],
+        )
         # The standalone override at the moved time (7am CT = 12:00 UTC) for the Aug 29
         # occurrence of the series at [4].
         self.assertEqual(response.data[5]['title'], 'Daily Timed Event')

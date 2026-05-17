@@ -88,13 +88,15 @@ def _extract_exception_dates(component):
     """Return a list of ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
 
     iCal EXDATE can appear once with multiple values or as multiple EXDATE lines, so
-    `component.get('EXDATE')` may return a single vDDDLists or a list of them.
+    `component.get('EXDATE')` may return a single vDDDLists or a list of them. Output
+    format is left to ``EventSerializer.exception_dates`` (``ExceptionDatesField``),
+    which normalizes every datetime in the field to ``Z``-suffixed UTC on the wire.
     """
     exdate_field = component.get("EXDATE")
     if not exdate_field:
         return None
-    exdate_entries = exdate_field if isinstance(exdate_field, list) else [exdate_field]
     iso_dates = []
+    exdate_entries = exdate_field if isinstance(exdate_field, list) else [exdate_field]
     for entry in exdate_entries:
         for vdt in getattr(entry, 'dts', []):
             dt = vdt.dt
@@ -154,6 +156,14 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
         if component.name == "VTIMEZONE":
             time_zone = ZoneInfo(component.get("TZID"))
         elif component.name == "VEVENT":
+            # Real-world feeds (Google Calendar, etc.) often leave deleted/canceled
+            # events in the feed marked CANCELLED rather than removing them; render
+            # nothing for them. Note: a CANCELLED RECURRENCE-ID override of a series
+            # has already had its date folded into the series' exception_dates by the
+            # prepass, so skipping it here is also the right call.
+            if str(component.get("STATUS") or "").upper() == "CANCELLED":
+                continue
+
             rrule_component = component.get("RRULE")
             recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
             exception_dates = _extract_exception_dates(component)
