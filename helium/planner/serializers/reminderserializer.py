@@ -26,10 +26,9 @@ class ReminderSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
             'homework', 'event', 'course', 'user',)
-        read_only_fields = ('user',)
-        extra_kwargs = {
-            'start_of_range': {'required': False, 'allow_null': True},
-        }
+        # `start_of_range` is derived state — the model's `save()` always recomputes it from
+        # parent + offset, so accepting it on the write API would be misleading.
+        read_only_fields = ('user', 'start_of_range',)
 
     def validate(self, attrs):
         # Check what's being explicitly set in this request
