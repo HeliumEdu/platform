@@ -33,13 +33,13 @@ class Reminder(BaseModel):
         null=True, blank=True)
 
     offset = models.PositiveIntegerField(help_text='How far before the parent start time to fire, measured in '
-                                                   '`offset_type` units. Capped at 100.',
+                                                   '`offset_type` units.',
                                          default=30, validators=[MaxValueValidator(100)])
 
-    offset_type = models.PositiveIntegerField(help_text='A valid reminder offset type choice.',
+    offset_type = models.PositiveIntegerField(help_text='The unit applied to `offset`.',
                                               choices=enums.REMINDER_OFFSET_TYPE_CHOICES, default=enums.MINUTES)
 
-    type = models.PositiveIntegerField(help_text='A valid reminder type choice.',
+    type = models.PositiveIntegerField(help_text='The notification channel for this reminder.',
                                        choices=enums.REMINDER_TYPE_CHOICES, default=enums.PUSH)
 
     sent = models.BooleanField(help_text='Whether the reminder has been sent.', default=False)

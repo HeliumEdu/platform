@@ -14,13 +14,14 @@ from helium.common.utils.validators import validate_hex_color
 
 
 class UserSettings(BaseModel):
-    time_zone = models.CharField(help_text='A valid time zone choice.',
+    time_zone = models.CharField(help_text='The user\'s IANA time zone, used for rendering and recurring '
+                                           'schedule calculations.',
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
-    default_view = models.PositiveIntegerField(help_text='A valid default calendar view choice.',
+    default_view = models.PositiveIntegerField(help_text='The view shown by default when opening the calendar.',
                                                choices=enums.VIEW_CHOICES, default=enums.MONTH)
 
-    week_starts_on = models.PositiveIntegerField(help_text='A valid choice for the day on which the week starts.',
+    week_starts_on = models.PositiveIntegerField(help_text='The day on which the week starts in calendar views.',
                                                  choices=enums.DAY_OF_WEEK_CHOICES, default=enums.SUNDAY)
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
@@ -63,14 +64,14 @@ class UserSettings(BaseModel):
         default=True)
 
     default_reminder_type = models.PositiveIntegerField(
-        help_text='A valid default type of reminder choice when creating a new reminder.',
+        help_text='The reminder type pre-selected when creating a new reminder.',
         default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
                                                           default=30)
 
     default_reminder_offset_type = models.PositiveIntegerField(
-        help_text='A valid default type of time offset choice when creating a new reminder.',
+        help_text='The unit pre-selected for the reminder offset when creating a new reminder.',
         default=enums.MINUTES,
         choices=enums.REMINDER_OFFSET_TYPE_CHOICES)
 
@@ -83,7 +84,7 @@ class UserSettings(BaseModel):
         default=True)
 
     color_scheme_theme = models.PositiveIntegerField(
-        help_text='A valid color scheme theme.',
+        help_text='The app\'s color scheme theme.',
         default=enums.SYSTEM,
         choices=enums.COLOR_SCHEME_THEME)
 
