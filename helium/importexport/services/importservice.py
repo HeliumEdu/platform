@@ -629,6 +629,8 @@ def _bulk_import_example_schedule(data, user):
             priority=e.get('priority', 50),
             url=e.get('url') or None,
             owner_id=e.get('owner_id') or None,
+            recurrence_rule=e.get('recurrence_rule'),
+            exception_dates=e.get('exception_dates'),
             example_schedule=True,
             user=user,
         )
