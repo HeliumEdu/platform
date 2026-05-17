@@ -394,6 +394,62 @@ class TestCaseImportExportViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
 
+    def test_export_import_preserves_event_recurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        eventhelper.given_event_exists(
+            user,
+            title='♻️ Recurring Event',
+            recurrence_rule='FREQ=WEEKLY;BYDAY=MO,WE,FR',
+            exception_dates=['2017-05-15T12:00:00Z', '2017-05-22T12:00:00Z'],
+        )
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN: export preserves both fields
+        self.assertEqual(len(export_data['events']), 1)
+        self.assertEqual(export_data['events'][0]['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO,WE,FR')
+        self.assertEqual(
+            export_data['events'][0]['exception_dates'],
+            ['2017-05-15T12:00:00Z', '2017-05-22T12:00:00Z'],
+        )
+
+        # WHEN: re-import the same payload as the same user
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_rrule_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN: round-trip preserves both fields on the freshly-imported Event
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        events = Event.objects.filter(user=user).order_by('pk')
+        self.assertEqual(events.count(), 2)
+        imported = events.last()
+        eventhelper.verify_event_matches_data(
+            self,
+            imported,
+            {
+                'title': '♻️ Recurring Event',
+                'all_day': False,
+                'show_end_time': True,
+                'start': '2017-05-08T12:00:00Z',
+                'end': '2017-05-08T14:00:00Z',
+                'priority': 75,
+                'owner_id': '12345',
+                'recurrence_rule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
+                'exception_dates': ['2017-05-15T12:00:00Z', '2017-05-22T12:00:00Z'],
+                'user': user.pk,
+            },
+        )
+
     def test_user_registration_imports_example_schedule(self):
         # WHEN
         response = self.client.post(reverse('auth_user_resource_register'),
