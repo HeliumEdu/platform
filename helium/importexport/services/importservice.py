@@ -511,6 +511,7 @@ def _bulk_import_example_schedule(data, user):
             shown_on_calendar=cg.get('shown_on_calendar', True),
             overall_grade=Decimal(cg.get('overall_grade', '-1')),
             trend=cg.get('trend'),
+            exceptions=cg.get('exceptions', ''),
             example_schedule=True,
             user=user,
         )
@@ -531,6 +532,7 @@ def _bulk_import_example_schedule(data, user):
             teacher_email=c.get('teacher_email') or '',
             start_date=c['start_date'],
             end_date=c['end_date'],
+            exceptions=c.get('exceptions', ''),
             course_group_id=course_group_remap[c['course_group']],
         )
         course_remap[c['id']] = instance.pk
