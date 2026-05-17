@@ -84,11 +84,16 @@ def verify_email(request):
     """
     UserModel = get_user_model()
 
-    if 'username' not in request.GET or 'code' not in request.GET:
-        raise ValidationError("'username' and 'code' must be given as query parameters")
+    # `username` accepted as an undocumented back-compat alias for `email` so that
+    # older installed clients (and any in-flight email links) keep working.
+    identifier = request.GET.get('email') or request.GET.get('username')
+    code = request.GET.get('code')
 
-    identifier = request.GET['username']
-    code = request.GET['code']
+    if not identifier or not code:
+        raise ValidationError("'email' and 'code' must be given as query parameters")
+
+    if 'username' in request.GET and 'email' not in request.GET:
+        metricutils.increment('api.deprecated_param.username', request=request)
 
     try:
         user = UserModel.objects.can_login().get(
@@ -141,10 +146,14 @@ def resend_verification_email(request):
     """
     UserModel = get_user_model()
 
-    if 'username' not in request.GET:
-        raise ValidationError("'username' must be given as a query parameter")
+    # `username` accepted as an undocumented back-compat alias for `email`.
+    identifier = request.GET.get('email') or request.GET.get('username')
+    if not identifier:
+        raise ValidationError("'email' must be given as a query parameter")
 
-    identifier = request.GET['username']
+    if 'username' in request.GET and 'email' not in request.GET:
+        metricutils.increment('api.deprecated_param.username', request=request)
+
     cache_key = f'resend_verification:{identifier.strip().lower()}'
 
     # Check rate limit
