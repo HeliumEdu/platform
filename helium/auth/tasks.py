@@ -38,7 +38,7 @@ def clear_email_suppression(self, email):
 
 
 @app.task(bind=True)
-def send_verification_email(self, email, username, verification_code, clear_suppression=False):
+def send_verification_email(self, email, verification_code, clear_suppression=False):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.verification.sent", priority="high", published_at_ms=published_at_ms)
 

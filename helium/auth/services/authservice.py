@@ -179,7 +179,7 @@ def resend_verification_email(request):
         target_email = user.email_changing if user.email_changing else user.email
 
         taskutils.safe_apply_async(send_verification_email,
-            args=(target_email, user.username, user.verification_code),
+            args=(target_email, user.verification_code),
             critical=True,
             priority=settings.CELERY_PRIORITY_HIGH,
         )
