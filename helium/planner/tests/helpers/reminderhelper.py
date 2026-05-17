@@ -29,10 +29,13 @@ def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to
 def verify_reminder_matches_data(test_case, reminder, data):
     test_case.assertEqual(reminder.title, data['title'])
     test_case.assertEqual(reminder.message, data['message'])
-    if data['start_of_range'] is None:
-        test_case.assertIsNone(reminder.start_of_range)
-    else:
-        test_case.assertEqual(reminder.start_of_range, parser.parse(data['start_of_range']))
+    # `start_of_range` is server-derived (read-only). Only assert it here when the caller
+    # explicitly included it in their reference dict (e.g. a response payload).
+    if 'start_of_range' in data:
+        if data['start_of_range'] is None:
+            test_case.assertIsNone(reminder.start_of_range)
+        else:
+            test_case.assertEqual(reminder.start_of_range, parser.parse(data['start_of_range']))
     test_case.assertEqual(reminder.offset, data['offset'])
     test_case.assertEqual(reminder.offset_type, data['offset_type'])
     test_case.assertEqual(reminder.type, data['type'])
