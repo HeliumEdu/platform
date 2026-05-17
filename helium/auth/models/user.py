@@ -18,7 +18,7 @@ class User(AbstractBaseUser, BaseModel):
     # Deprecated: kept only because Django's AbstractBaseUser requires a USERNAME_FIELD.
     # Auto-generated from email at registration; never surfaced to users in the new
     # frontend (email-only auth). Removal requires a custom user model migration.
-    username = models.CharField(help_text='A unique name used to login to the system.',
+    username = models.CharField(help_text='A unique name used to log in to the system.',
                                 max_length=255, unique=True,
                                 validators=[validators.RegexValidator(r'^[\w.+-]+$',
                                                                       'Enter a valid username, which means less than '

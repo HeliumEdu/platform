@@ -1,8 +1,8 @@
 Hey!
 
-You've been successfully registered for {{ PROJECT_NAME }}! To login and get started, visit the link below.
+You've been successfully registered for {{ PROJECT_NAME }}! To log in and get started, visit the link below.
 
-{{ login_url }}.
+{{ login_url }}
 
 Thanks,
 The Helium Team

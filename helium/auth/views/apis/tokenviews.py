@@ -22,9 +22,8 @@ class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
             OpenApiExample(
                 'login_with_email',
                 summary='Log in with an email address',
-                description="The `username` field holds the user's email address.",
                 value={
-                    'username': 'student@example.com',
+                    'email': 'student@example.com',
                     'password': 'correct horse battery staple',
                 },
                 request_only=True,
@@ -60,7 +59,7 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
             "# 1. Initial login\n"
             "curl -X POST https://api.heliumedu.com/auth/token/ \\\n"
             "  -H 'Content-Type: application/json' \\\n"
-            "  -d '{\"username\": \"student@example.com\", \"password\": \"...\"}'\n"
+            "  -d '{\"email\": \"student@example.com\", \"password\": \"...\"}'\n"
             "# Returns: {\"access\": \"<A1>\", \"refresh\": \"<R1>\"}\n"
             "\n"
             "# 2. Refresh shortly before the access token expires\n"

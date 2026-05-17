@@ -43,11 +43,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
+        fields = ('id', 'email', 'email_changing', 'old_password', 'password',
                   'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
-            'username': {'required': False, 'allow_blank': True},
             'email': {'validators': []},
         }
 
@@ -118,7 +117,7 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.verification_code = generate_verification_code()
 
                 taskutils.safe_apply_async(send_verification_email,
-                    args=(instance.email_changing, instance.username, instance.verification_code),
+                    args=(instance.email_changing, instance.verification_code),
                     kwargs={'clear_suppression': True},
                     critical=True,
                     priority=settings.CELERY_PRIORITY_HIGH,
@@ -142,11 +141,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        username = validated_data.get('username')
-        if not username:
-            validated_data['username'] = generate_unique_username_from_email(
-                validated_data.get('email')
-            )
+        validated_data['username'] = generate_unique_username_from_email(
+            validated_data.get('email')
+        )
         try:
             with transaction.atomic():
                 instance = super().create(validated_data)
@@ -157,7 +154,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         taskutils.safe_apply_async(send_verification_email,
-            args=(instance.email, instance.username, instance.verification_code),
+            args=(instance.email, instance.verification_code),
             kwargs={'clear_suppression': True},
             critical=True,
             priority=settings.CELERY_PRIORITY_HIGH,
@@ -195,7 +192,7 @@ class UserCreateSerializer(serializers.Serializer):
 
 
 class UserVerifySerializer(serializers.Serializer):
-    username = serializers.CharField(help_text='The username for the user.')
+    email = serializers.CharField(help_text='The email for the user.')
 
     code = serializers.CharField(help_text=get_user_model()._meta.get_field('verification_code').help_text)
 

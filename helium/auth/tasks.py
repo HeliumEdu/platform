@@ -38,7 +38,7 @@ def clear_email_suppression(self, email):
 
 
 @app.task(bind=True)
-def send_verification_email(self, email, username, verification_code, clear_suppression=False):
+def send_verification_email(self, email, verification_code, clear_suppression=False):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.verification.sent", priority="high", published_at_ms=published_at_ms)
 
@@ -262,8 +262,8 @@ def sweep_dangling_users(self):
         ]
         body = (
             f'{len(stuck_users)} user account(s) have been stuck in pending-delete state, meaning '
-            f'the cascade-delete task failed, and at least some data still exists for this user.'
-            f'Login and manually delete these users to complete the process, or investigate if the'
+            f'the cascade-delete task failed, and at least some data still exists for this user. '
+            f'Log in and manually delete these users to complete the process, or investigate if the '
             f'manual delete also fails.\n'
             + '\n'.join(lines)
         )
