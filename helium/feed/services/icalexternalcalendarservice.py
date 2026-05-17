@@ -1,6 +1,24 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+"""
+iCal external-calendar import service. Parses subscribed `.ics` feeds and
+converts each VEVENT into a Helium ``Event`` (in-memory, cached, never
+persisted to the DB).
+
+Supported recurrence semantics: ``RRULE``, ``EXDATE``, ``RDATE`` (each extra
+date is emitted as its own standalone Event mirroring the parent's duration),
+and ``RECURRENCE-ID`` overrides (the override's original-occurrence datetime is
+folded into the parent series' ``exception_dates`` so SfCalendar skips it).
+``STATUS:CANCELLED`` events are dropped — for a CANCELLED override, the parent
+series gets the exception while the override itself is not emitted.
+
+Known limitations (very rare in real-world Google / Apple / Outlook exports):
+  * Multiple ``RRULE`` properties on a single VEVENT — only the first is read
+    (``component.get("RRULE")`` returns one); RFC 5545 allows multiples.
+  * ``EXRULE`` — deprecated rule-based exceptions are not supported.
+"""
+
 import datetime
 import json
 import logging
@@ -66,7 +84,9 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
                           user_id=event_data['user'],
                           calendar_item_type=event_data['calendar_item_type'],
                           url=event_data['url'],
-                          comments=event_data['comments'])
+                          comments=event_data['comments'],
+                          recurrence_rule=event_data.get('recurrence_rule'),
+                          exception_dates=event_data.get('exception_dates'))
             event.color = external_calendar.color
             event.location = event_data.get('location')
 
@@ -82,6 +102,92 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
     return events, not invalid_data
 
 
+def _extract_exception_dates(component):
+    """Return a list of ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
+
+    iCal EXDATE can appear once with multiple values or as multiple EXDATE lines, so
+    `component.get('EXDATE')` may return a single vDDDLists or a list of them. Output
+    format is left to ``EventSerializer.exception_dates`` (``ExceptionDatesField``),
+    which normalizes every datetime in the field to ``Z``-suffixed UTC on the wire.
+    """
+    exdate_field = component.get("EXDATE")
+    if not exdate_field:
+        return None
+    iso_dates = []
+    exdate_entries = exdate_field if isinstance(exdate_field, list) else [exdate_field]
+    for entry in exdate_entries:
+        for vdt in getattr(entry, 'dts', []):
+            dt = vdt.dt
+            if isinstance(dt, datetime.datetime):
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, datetime.timezone.utc)
+                dt = dt.astimezone(datetime.timezone.utc)
+            iso_dates.append(dt.isoformat())
+    return iso_dates or None
+
+
+def _extract_extra_dates(component, default_time_zone):
+    """Return UTC datetimes for any RDATE entries on the VEVENT.
+
+    iCal RDATE attaches extra one-off occurrences to a series — each one becomes
+    a standalone Event mirroring the parent's duration. Like EXDATE, RDATE may
+    appear once with multiple values or as multiple RDATE lines.
+    """
+    rdate_field = component.get("RDATE")
+    if not rdate_field:
+        return []
+    entries = rdate_field if isinstance(rdate_field, list) else [rdate_field]
+    extras = []
+    for entry in entries:
+        for vdt in getattr(entry, 'dts', []):
+            dt = vdt.dt
+            if isinstance(dt, datetime.datetime):
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, default_time_zone)
+                dt = dt.astimezone(datetime.timezone.utc)
+            else:
+                dt = timezone.make_aware(
+                    datetime.datetime.combine(dt, datetime.time.min), default_time_zone,
+                ).astimezone(datetime.timezone.utc)
+            extras.append(dt)
+    return extras
+
+
+def _collect_recurrence_id_overrides(calendar, default_time_zone):
+    """Map UID -> list of UTC ISO-8601 strings naming the *original* occurrence datetimes
+    that any RECURRENCE-ID overrides replace.
+
+    In iCal, a moved/edited single occurrence of a recurring series is expressed as a
+    separate VEVENT sharing the parent series' UID and carrying a ``RECURRENCE-ID``
+    property whose value is the original occurrence's start. To avoid rendering both the
+    original occurrence and the override, we feed these datetimes into the parent
+    series' ``exception_dates`` so SfCalendar skips the replaced slot.
+    """
+    overrides_by_uid = {}
+    time_zone = default_time_zone
+    for component in calendar.walk():
+        if component.name == "VTIMEZONE":
+            time_zone = ZoneInfo(component.get("TZID"))
+            continue
+        if component.name != "VEVENT":
+            continue
+        recurrence_id = component.get("RECURRENCE-ID")
+        uid = component.get("UID")
+        if recurrence_id is None or uid is None:
+            continue
+        dt = recurrence_id.dt
+        if isinstance(dt, datetime.datetime):
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, time_zone)
+            dt = dt.astimezone(datetime.timezone.utc)
+        else:
+            dt = timezone.make_aware(
+                datetime.datetime.combine(dt, datetime.time.min), time_zone,
+            ).astimezone(datetime.timezone.utc)
+        overrides_by_uid.setdefault(str(uid), []).append(dt.isoformat())
+    return overrides_by_uid
+
+
 def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None, search=None):
     events = []
     events_filtered = []
@@ -89,12 +195,33 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
     user = external_calendar.user
     time_zone = ZoneInfo(user.settings.time_zone)
 
+    recurrence_id_overrides = _collect_recurrence_id_overrides(calendar, time_zone)
+
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
             time_zone = ZoneInfo(component.get("TZID"))
         elif component.name == "VEVENT":
-            if "RRULE" in component:
+            # Real-world feeds (Google Calendar, etc.) often leave deleted/canceled
+            # events in the feed marked CANCELLED rather than removing them; render
+            # nothing for them. Note: a CANCELLED RECURRENCE-ID override of a series
+            # has already had its date folded into the series' exception_dates by the
+            # prepass, so skipping it here is also the right call.
+            if str(component.get("STATUS") or "").upper() == "CANCELLED":
                 continue
+
+            rrule_component = component.get("RRULE")
+            recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
+            exception_dates = _extract_exception_dates(component)
+
+            if recurrence_rule:
+                uid = component.get("UID")
+                override_dates = recurrence_id_overrides.get(str(uid), []) if uid else []
+                if override_dates:
+                    merged = list(exception_dates or [])
+                    for iso in override_dates:
+                        if iso not in merged:
+                            merged.append(iso)
+                    exception_dates = merged
 
             dt_start = component.get("DTSTART").dt
             if component.get("DTEND") is not None:
@@ -137,7 +264,9 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                           owner_id=external_calendar.id,
                           comments=component.get("DESCRIPTION") or "",
                           user=user,
-                          calendar_item_type=enums.EXTERNAL)
+                          calendar_item_type=enums.EXTERNAL,
+                          recurrence_rule=recurrence_rule,
+                          exception_dates=exception_dates)
             event.color = external_calendar.color
             event.location = component.get("LOCATION")
 
@@ -145,6 +274,29 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
             if _apply_event_filters(event, _from, to, search):
                 events_filtered.append(event)
+
+            # RDATE: emit one standalone Event per extra occurrence, mirroring the
+            # parent's duration. Each becomes a one-off (no RRULE) — SfCalendar
+            # only expands a single RRULE per event, so extras must be modeled
+            # as independent events.
+            duration = dt_end - dt_start
+            for extra_start in _extract_extra_dates(component, time_zone):
+                extra_event = Event(id=len(events),
+                                    title=summary,
+                                    all_day=all_day,
+                                    show_end_time=show_end_time,
+                                    start=extra_start,
+                                    end=extra_start + duration,
+                                    url=component.get("URL"),
+                                    owner_id=external_calendar.id,
+                                    comments=component.get("DESCRIPTION") or "",
+                                    user=user,
+                                    calendar_item_type=enums.EXTERNAL)
+                extra_event.color = external_calendar.color
+                extra_event.location = component.get("LOCATION")
+                events.append(extra_event)
+                if _apply_event_filters(extra_event, _from, to, search):
+                    events_filtered.append(extra_event)
 
     serializer = EventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)

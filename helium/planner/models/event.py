@@ -16,6 +16,19 @@ class Event(BaseCalendar):
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
+    recurrence_rule = models.CharField(
+        help_text=(
+            'iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that turns this event '
+            'into a recurring series anchored on `start`.'
+        ),
+        max_length=500, blank=True, null=True)
+
+    exception_dates = models.JSONField(
+        help_text=(
+            'List of ISO-8601 datetimes to skip when expanding `recurrence_rule` (iCal EXDATE).'
+        ),
+        blank=True, null=True)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='events', on_delete=models.CASCADE)
 
     objects = EventManager()

@@ -88,8 +88,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
             'event': event.pk,
-            # Read-only fields, unused in the POST but used in the validation of this dict afterward
-            'start_of_range': (event.start - timedelta(hours=1)).isoformat(),
             'sent': False,
             'dismissed': False,
             'user': user.pk
@@ -101,9 +99,11 @@ class TestCaseReminderViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Reminder.objects.count(), 1)
-        course = Reminder.objects.get(pk=response.data['id'])
-        reminderhelper.verify_reminder_matches_data(self, course, data)
-        reminderhelper.verify_reminder_matches_data(self, course, response.data)
+        reminder = Reminder.objects.get(pk=response.data['id'])
+        reminderhelper.verify_reminder_matches_data(self, reminder, data)
+        reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
+        # `start_of_range` is server-derived from parent + offset.
+        self.assertEqual(reminder.start_of_range, event.start - timedelta(hours=1))
 
     def test_create_homework_reminder(self):
         # GIVEN
@@ -120,8 +120,6 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
             'homework': homework.pk,
-            # Read-only fields, unused in the POST but used in the validation of this dict afterward
-            'start_of_range': (homework.start - timedelta(hours=1)).isoformat(),
             'sent': False,
             'dismissed': False,
             'user': user.pk
@@ -136,6 +134,8 @@ class TestCaseReminderViews(APITestCase):
         reminder = Reminder.objects.get(pk=response.data['id'])
         reminderhelper.verify_reminder_matches_data(self, reminder, data)
         reminderhelper.verify_reminder_matches_data(self, reminder, response.data)
+        # `start_of_range` is server-derived from parent + offset.
+        self.assertEqual(reminder.start_of_range, homework.start - timedelta(hours=1))
 
     def test_create_orphaned_reminder_fails(self):
         # GIVEN
@@ -145,7 +145,6 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'title': 'some title',
             'message': 'some message',
-            'start_of_range': '2014-05-08T12:00:00Z',
             'offset': 1,
             'offset_type': enums.HOURS,
             'type': enums.POPUP,
@@ -170,7 +169,6 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'title': 'some title',
             'message': 'some message',
-            'start_of_range': '2014-05-08T12:00:00Z',
             'offset': 1,
             'offset_type': enums.HOURS,
             'type': enums.POPUP,

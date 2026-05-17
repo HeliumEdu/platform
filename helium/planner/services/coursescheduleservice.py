@@ -13,6 +13,10 @@ from django.core.cache import cache
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.course_exception_helpers import (
+    merge_exceptions,
+    parse_csv_exceptions,
+)
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
@@ -110,32 +114,14 @@ def _apply_event_filters(event, _from, to, search):
 
 def _parse_exceptions(course):
     """
-    Parse exception dates from course and course group.
-    Returns a set of dates when the course does not meet.
+    Return the set of dates on which ``course`` does not meet — the merge of
+    course-level (professor cancellations) and course-group-level (holidays,
+    breaks) exceptions.
     """
-    exceptions = set()
-
-    # Group-level exceptions (holidays, breaks)
-    if course.course_group.exceptions:
-        for date_str in course.course_group.exceptions.split(','):
-            date_str = date_str.strip()
-            if date_str:
-                try:
-                    exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
-                except ValueError:
-                    pass  # Skip invalid date formats
-
-    # Course-level exceptions (professor cancellations)
-    if course.exceptions:
-        for date_str in course.exceptions.split(','):
-            date_str = date_str.strip()
-            if date_str:
-                try:
-                    exceptions.add(datetime.datetime.strptime(date_str, '%Y%m%d').date())
-                except ValueError:
-                    pass  # Skip invalid date formats
-
-    return exceptions
+    return set(merge_exceptions(
+        parse_csv_exceptions(course.exceptions),
+        parse_csv_exceptions(course.course_group.exceptions),
+    ))
 
 
 def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None, search=None):

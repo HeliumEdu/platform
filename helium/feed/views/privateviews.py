@@ -27,15 +27,15 @@ class PrivateEventsICALResourceView(HeliumAPIView):
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s events.'
+                description='iCal (.ics) feed of the user\'s events.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all event instances for the given private slug.
+        Return an iCal (`text/calendar`) feed of all event instances for the given private slug.
         Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCalendar text, not JSON.
+        the response is plain iCal text, not JSON.
 
         Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
         are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
@@ -81,15 +81,15 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s homework.'
+                description='iCal (.ics) feed of the user\'s homework.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all homework instances for the given private slug.
+        Return an iCal (`text/calendar`) feed of all homework instances for the given private slug.
         Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCalendar text, not JSON.
+        the response is plain iCal text, not JSON.
 
         Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
         are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
@@ -135,15 +135,15 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCalendar (.ics) feed of the user\'s course schedules.'
+                description='iCal (.ics) feed of the user\'s course schedules.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCalendar (`text/calendar`) feed of all course schedule instances for the given
+        Return an iCal (`text/calendar`) feed of all course schedule instances for the given
         private slug. Intended for subscription in calendar applications (Google Calendar, Apple
-        Calendar, etc.) — the response is plain iCalendar text, not JSON.
+        Calendar, etc.) — the response is plain iCal text, not JSON.
 
         Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
         are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
