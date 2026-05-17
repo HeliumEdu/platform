@@ -73,7 +73,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
         operation_id='verify_email',
         summary='Verify a User email',
         parameters=[
-            OpenApiParameter('username', description="The user's email address."),
+            OpenApiParameter('email', description="The user's email address."),
             OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
         ],
         responses={
@@ -101,7 +101,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
         operation_id='resend_verification_email',
         summary='Resend the verification email',
         parameters=[
-            OpenApiParameter('username', description="The user's email address.")
+            OpenApiParameter('email', description="The user's email address.")
         ],
         responses={
             202: OpenApiResponse(description='Verification email queued. Returned whether or not the submitted '

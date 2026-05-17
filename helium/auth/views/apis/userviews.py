@@ -20,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
-from helium.common.utils import taskutils
+from helium.common.utils import metricutils, taskutils
 from helium.common.throttles import DeleteInactiveUserThrottle
 from helium.common.views.base import HeliumAPIView
 
@@ -134,11 +134,11 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
 
     def get_object(self):
         UserModel = get_user_model()
-        identifier = self.request.data['username']
+        # `username` accepted as an undocumented back-compat alias for `email`.
+        identifier = self.request.data.get('email') or self.request.data.get('username')
         try:
-            # Look up by username or email to support both identifiers
             return UserModel.objects.get(
-                Q(username__iexact=identifier) | Q(email__iexact=identifier)
+                Q(email__iexact=identifier) | Q(username__iexact=identifier)
             )
         except UserModel.DoesNotExist:
             raise NotFound('No User matches the given query.')
@@ -147,14 +147,17 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
     @extend_schema(exclude=True)
     def delete(self, request, *args, **kwargs):
         """
-        Delete an inactive user instance. The request body should include the `username` and `password`, and this route
+        Delete an inactive user instance. The request body should include the `email` and `password`, and this route
         can only be used to delete users that never finished setting up their account.
         """
-        if 'username' not in request.data:
-            raise ValidationError({'username': ['This field is required.']})
+        if 'email' not in request.data and 'username' not in request.data:
+            raise ValidationError({'email': ['This field is required.']})
 
         if 'password' not in request.data:
             raise ValidationError({'password': ['This field is required.']})
+
+        if 'username' in request.data and 'email' not in request.data:
+            metricutils.increment('api.deprecated_param.username', request=request)
 
         user = self.get_object()
 
