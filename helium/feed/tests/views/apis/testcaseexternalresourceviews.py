@@ -116,7 +116,13 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
+        # 8 VEVENTs in the fixture, 7 surfaced: 3 originals, 2 recurring series,
+        # 1 RDATE extra (synthetic standalone), 1 standalone RECURRENCE-ID override.
+        # Skipped: the standalone CANCELLED event and the CANCELLED RECURRENCE-ID
+        # override (the latter is folded into the parent series' exception_dates).
+        self.assertEqual(len(response.data), 7)
+        titles = [e['title'] for e in response.data]
+        self.assertNotIn('Canceled Standalone Event', titles)
         self.assertEqual(response.data[0]['title'], 'Some Timed Event at 9am CT Inside DST')
         self.assertEqual(response.data[0]['all_day'], False)
         self.assertEqual(response.data[0]['show_end_time'], True)
@@ -126,6 +132,8 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['user'], user.pk)
         self.assertEqual(response.data[0]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[0]['color'], external_calendar.color)
+        self.assertIsNone(response.data[0]['recurrence_rule'])
+        self.assertIsNone(response.data[0]['exception_dates'])
         self.assertEqual(response.data[1]['title'], 'An All Day Event')
         self.assertEqual(response.data[1]['all_day'], True)
         self.assertEqual(response.data[1]['show_end_time'], False)
@@ -135,6 +143,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[1]['user'], user.pk)
         self.assertEqual(response.data[1]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[1]['color'], external_calendar.color)
+        self.assertIsNone(response.data[1]['recurrence_rule'])
         self.assertEqual(response.data[2]['title'], 'Some Timed Event at 9am CT Outside DST')
         self.assertEqual(response.data[2]['all_day'], False)
         self.assertEqual(response.data[2]['show_end_time'], True)
@@ -144,17 +153,68 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[2]['user'], user.pk)
         self.assertEqual(response.data[2]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[2]['color'], external_calendar.color)
-        # This is a "removed" member of the recurring group (the time is different than the recurring group), which
-        # means it has been turned in to its own custom event, apart from the recurrence
-        self.assertEqual(response.data[3]['title'], 'Daily Timed Event')
-        self.assertEqual(response.data[3]['all_day'], False)
-        self.assertEqual(response.data[3]['show_end_time'], True)
-        self.assertEqual(response.data[3]['start'], '2025-08-29T12:00:00Z')
-        self.assertEqual(response.data[3]['end'], '2025-08-29T13:00:00Z')
+        self.assertIsNone(response.data[2]['recurrence_rule'])
+        # Recurring series: weekly on Wednesdays, all-day. SfCalendar expands occurrences
+        # client-side from the RRULE.
+        self.assertEqual(response.data[3]['title'], 'Weekly All Day Event')
+        self.assertEqual(response.data[3]['all_day'], True)
+        self.assertEqual(response.data[3]['show_end_time'], False)
+        self.assertEqual(response.data[3]['start'], '2025-08-27T05:00:00Z')
+        self.assertEqual(response.data[3]['end'], '2025-08-28T05:00:00Z')
         self.assertEqual(response.data[3]['priority'], 50)
         self.assertEqual(response.data[3]['user'], user.pk)
         self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
         self.assertEqual(response.data[3]['color'], external_calendar.color)
+        self.assertEqual(response.data[3]['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=WE')
+        self.assertIsNone(response.data[3]['exception_dates'])
+        # Recurring series: daily, timed. The standalone RECURRENCE-ID override below at [5]
+        # replaces the Aug 29 occurrence — its RECURRENCE-ID value (the *original*
+        # occurrence time, 8am CT = 13:00 UTC) is folded into exception_dates so SfCalendar
+        # skips the slot and only the override renders.
+        self.assertEqual(response.data[4]['title'], 'Daily Timed Event')
+        self.assertEqual(response.data[4]['all_day'], False)
+        self.assertEqual(response.data[4]['show_end_time'], True)
+        self.assertEqual(response.data[4]['start'], '2025-08-25T13:00:00Z')
+        self.assertEqual(response.data[4]['end'], '2025-08-25T14:00:00Z')
+        self.assertEqual(response.data[4]['priority'], 50)
+        self.assertEqual(response.data[4]['user'], user.pk)
+        self.assertEqual(response.data[4]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[4]['color'], external_calendar.color)
+        self.assertEqual(response.data[4]['recurrence_rule'], 'FREQ=DAILY')
+        # Two exception dates: Aug 29 (replaced by the standalone override at [5]) and
+        # Aug 30 (a CANCELLED RECURRENCE-ID override — folded in by the prepass, not
+        # emitted as its own event).
+        self.assertEqual(
+            response.data[4]['exception_dates'],
+            ['2025-08-29T13:00:00Z', '2025-08-30T13:00:00Z'],
+        )
+        # RDATE extra (Sept 1 2pm CT = 19:00 UTC), emitted as a standalone one-off
+        # mirroring the parent's 1-hour duration. RDATE is the iCal way to attach an
+        # extra single occurrence to a series; SfCalendar only expands one RRULE per
+        # event, so the extra must be modeled as its own event.
+        self.assertEqual(response.data[5]['title'], 'Daily Timed Event')
+        self.assertEqual(response.data[5]['all_day'], False)
+        self.assertEqual(response.data[5]['show_end_time'], True)
+        self.assertEqual(response.data[5]['start'], '2025-09-01T19:00:00Z')
+        self.assertEqual(response.data[5]['end'], '2025-09-01T20:00:00Z')
+        self.assertEqual(response.data[5]['priority'], 50)
+        self.assertEqual(response.data[5]['user'], user.pk)
+        self.assertEqual(response.data[5]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[5]['color'], external_calendar.color)
+        self.assertIsNone(response.data[5]['recurrence_rule'])
+        self.assertIsNone(response.data[5]['exception_dates'])
+        # The standalone override at the moved time (7am CT = 12:00 UTC) for the Aug 29
+        # occurrence of the series at [4].
+        self.assertEqual(response.data[6]['title'], 'Daily Timed Event')
+        self.assertEqual(response.data[6]['all_day'], False)
+        self.assertEqual(response.data[6]['show_end_time'], True)
+        self.assertEqual(response.data[6]['start'], '2025-08-29T12:00:00Z')
+        self.assertEqual(response.data[6]['end'], '2025-08-29T13:00:00Z')
+        self.assertEqual(response.data[6]['priority'], 50)
+        self.assertEqual(response.data[6]['user'], user.pk)
+        self.assertEqual(response.data[6]['calendar_item_type'], enums.EXTERNAL)
+        self.assertEqual(response.data[6]['color'], external_calendar.color)
+        self.assertIsNone(response.data[6]['recurrence_rule'])
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
     def test_get_external_calendar_cached(self, mock_urlopen):
