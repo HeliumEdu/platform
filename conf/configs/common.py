@@ -401,6 +401,7 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
         'helium.common.utils.openapiutils.add_tag_groups',
+        'helium.common.utils.openapiutils.strip_enum_int_bounds',
     ],
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
