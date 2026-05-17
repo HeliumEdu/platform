@@ -12,10 +12,10 @@ class Material(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255)
 
-    status = models.PositiveIntegerField(help_text='A valid material status choice.',
+    status = models.PositiveIntegerField(help_text='The lifecycle status of the resource.',
                                          choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
 
-    condition = models.PositiveIntegerField(help_text='A valid material condition choice.',
+    condition = models.PositiveIntegerField(help_text='The physical condition of the resource.',
                                             choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
 
     website = models.URLField(help_text='A valid URL.',

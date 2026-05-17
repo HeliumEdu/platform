@@ -31,7 +31,7 @@ class BaseCalendar(BaseModel):
 
     priority = models.PositiveIntegerField(
         help_text=(
-            'Integer in `[0, 100]`, default `50`; should be stored in increments of 10. '
+            'Should be stored in increments of 10. '
             'Suggested: `50` routine, `80` exam, `90` final.'
         ),
         default=50, validators=[MaxValueValidator(100)])
