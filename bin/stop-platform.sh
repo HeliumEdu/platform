@@ -13,7 +13,7 @@ set -e
 
 WORK_DIR="${TMPDIR:-/tmp}/helium-platform"
 
-echo "Stopping platform containers..."
+echo "Stopping platform containers ..."
 
 if [ ! -d "$WORK_DIR" ]; then
     echo "Warning: Platform working directory not found at $WORK_DIR"
@@ -24,7 +24,7 @@ fi
 cd "$WORK_DIR"
 
 if [ "$PLATFORM_CLEANUP" = "true" ]; then
-    echo "Stopping and removing containers, networks, and volumes..."
+    echo "Stopping and removing containers, networks, and volumes ..."
     docker compose down -v
     rm -rf "$WORK_DIR"
 else
