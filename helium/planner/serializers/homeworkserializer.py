@@ -23,6 +23,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
         django_models.DateTimeField: TzAwareDateTimeField,
     }
 
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -37,10 +39,10 @@ class HomeworkSerializer(serializers.ModelSerializer):
         model = Homework
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
-            'current_grade', 'completed', 'category', 'materials', 'attachments', 'reminders', 'course',
+            'current_grade', 'completed', 'category', 'materials', 'attachments', 'reminders', 'notes', 'course',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
-        read_only_fields = ('attachments', 'reminders', 'calendar_item_type', 'completed_at',)
+        read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at',)
 
     def validate(self, attrs):
         start = attrs.get('start', None)
