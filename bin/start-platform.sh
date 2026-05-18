@@ -23,14 +23,14 @@ PLATFORM_BRANCH="${PLATFORM_BRANCH:-main}"
 GITHUB_RAW_URL="https://raw.githubusercontent.com/HeliumEdu/platform/${PLATFORM_BRANCH}"
 WORK_DIR="${TMPDIR:-/tmp}/helium-platform"
 
-echo "Starting platform containers..."
+echo "Starting platform containers ..."
 
 # Create working directory
 mkdir -p "$WORK_DIR"
 cd "$WORK_DIR"
 
 # Fetch docker-compose.yml and .env from GitHub
-echo "Fetching configuration from GitHub (branch: $PLATFORM_BRANCH)..."
+echo "Fetching configuration from GitHub (branch: $PLATFORM_BRANCH) ..."
 curl -fsSL "$GITHUB_RAW_URL/docker-compose.yml" -o docker-compose.yml
 curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 
@@ -43,10 +43,10 @@ export PLATFORM
 if [[ -z "${REGISTRY_PREFIX:-}" ]]; then
     LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
     if docker image inspect "$LOCAL_API_IMAGE" &>/dev/null; then
-        echo "Using local images..."
+        echo "Using local images ..."
         export REGISTRY_PREFIX=""
     else
-        echo "Local images not found, will pull from ECR Public..."
+        echo "Local images not found, will pull from ECR Public ..."
         export REGISTRY_PREFIX="public.ecr.aws/heliumedu/"
     fi
 else
@@ -59,10 +59,10 @@ echo "Registry prefix: ${REGISTRY_PREFIX:-<local>}"
 USE_ECR_AUTH=false
 if [[ "$REGISTRY_PREFIX" == *"public.ecr.aws"* ]]; then
     if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
-        echo "Logging in to ECR Public to avoid rate limits..."
+        echo "Logging in to ECR Public to avoid rate limits ..."
         if aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null; then
             USE_ECR_AUTH=true
-            echo "Pulling images from ECR..."
+            echo "Pulling images from ECR ..."
             docker pull "${REGISTRY_PREFIX}helium/platform-resource:${PLATFORM}-latest"
             docker pull "${REGISTRY_PREFIX}helium/platform-api:${PLATFORM}-latest"
             docker pull "${REGISTRY_PREFIX}helium/platform-worker:${PLATFORM}-latest"
@@ -71,7 +71,7 @@ if [[ "$REGISTRY_PREFIX" == *"public.ecr.aws"* ]]; then
 fi
 
 # Start containers
-echo "Starting Docker containers..."
+echo "Starting Docker containers ..."
 if [[ "$USE_ECR_AUTH" == "true" ]]; then
     # Use normal docker-compose (already authenticated)
     docker compose up -d
@@ -82,7 +82,7 @@ else
 fi
 
 # Wait for API to be ready
-echo "Waiting for platform API to be ready..."
+echo "Waiting for platform API to be ready ..."
 for i in $(seq 1 60); do
     if curl -s http://localhost:8000/status/ > /dev/null 2>&1; then
         echo "Platform API is ready!"
