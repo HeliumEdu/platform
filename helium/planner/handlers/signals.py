@@ -31,7 +31,7 @@ def _mark_user_data_deleted(instance):
 @receiver(post_save, sender=Course)
 def save_course(sender, instance, **kwargs):
     coursescheduleservice.clear_cached_course_schedule(instance)
-    taskutils.safe_apply_async(recalculate_course_grade, args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
+    recalculate_course_grade.apply(args=(instance.pk,))
 
     if not Reminder.objects.for_calendar_item(instance.pk, enums.COURSE).exists():
         return
@@ -43,9 +43,7 @@ def save_course(sender, instance, **kwargs):
 @receiver(post_delete, sender=Course)
 def delete_course(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    taskutils.safe_apply_async(recalculate_course_grades_for_course_group,
-        args=(instance.course_group.pk,), priority=settings.CELERY_PRIORITY_LOW
-    )
+    recalculate_course_grades_for_course_group.apply(args=(instance.course_group.pk,))
 
 
 @receiver(post_save, sender=CourseSchedule)
@@ -61,15 +59,13 @@ def save_course_schedule(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Category)
 def save_category(sender, instance, **kwargs):
-    taskutils.safe_apply_async(recalculate_category_grade, args=(instance.pk,), priority=settings.CELERY_PRIORITY_LOW)
+    recalculate_category_grade.apply(args=(instance.pk,))
 
 
 @receiver(post_delete, sender=Category)
 def delete_category(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    taskutils.safe_apply_async(recalculate_category_grades_for_course,
-        args=(instance.course.pk,), priority=settings.CELERY_PRIORITY_LOW
-    )
+    recalculate_category_grades_for_course.apply(args=(instance.course.pk,))
 
 
 @receiver(post_delete, sender=Homework)
@@ -77,9 +73,7 @@ def delete_homework(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
     try:
         if instance.category:
-            taskutils.safe_apply_async(recalculate_category_grade,
-                args=(instance.category.pk,), priority=settings.CELERY_PRIORITY_LOW
-            )
+            recalculate_category_grade.apply(args=(instance.category.pk,))
     except Category.DoesNotExist:
         logger.info(f"Category does not exist for Homework {instance.pk}. Nothing to do.")
 
@@ -96,9 +90,7 @@ def save_event(sender, instance, **kwargs):
 @receiver(post_save, sender=Homework)
 def save_homework(sender, instance, **kwargs):
     if instance.category:
-        taskutils.safe_apply_async(recalculate_category_grade,
-            args=(instance.category.pk,), priority=settings.CELERY_PRIORITY_LOW
-        )
+        recalculate_category_grade.apply(args=(instance.category.pk,))
 
     if not Reminder.objects.for_calendar_item(instance.pk, instance.calendar_item_type).exists():
         return
