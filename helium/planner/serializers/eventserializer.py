@@ -29,17 +29,18 @@ class EventSerializer(serializers.ModelSerializer):
     color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
     location = serializers.CharField(read_only=True, required=False, allow_null=True)
     exception_dates = ExceptionDatesField(required=False, allow_null=True)
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
 
     class Meta:
         model = Event
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments',
             'owner_id',
-            'color', 'location', 'attachments', 'reminders', 'user',
+            'color', 'location', 'attachments', 'reminders', 'notes', 'user',
             'recurrence_rule', 'exception_dates',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
-        read_only_fields = ('attachments', 'reminders', 'user', 'calendar_item_type',)
+        read_only_fields = ('attachments', 'reminders', 'notes', 'user', 'calendar_item_type',)
         extra_kwargs = {
             'recurrence_rule': {'validators': [validate_recurrence_rule]},
         }
