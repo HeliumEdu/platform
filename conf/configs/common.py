@@ -4,8 +4,9 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.30"
+__version__ = "2.2.31"
 
+import json
 import os
 import socket
 from datetime import timedelta
@@ -488,6 +489,20 @@ SES_COMPLAINT_SUPPRESS_THRESHOLD = int(config('PLATFORM_SES_COMPLAINT_SUPPRESS_T
 SES_SNS_TOPIC_ARN = config('PLATFORM_SES_SNS_TOPIC_ARN', '')
 
 SUPPORT_INBOX_EMAIL = config('PLATFORM_SUPPORT_INBOX_EMAIL', 'support@heliumedu.atlassian.net')
+
+# JSM (Jira Service Management) support intake
+
+JSM_API_BASE = config('PLATFORM_JSM_API_BASE', 'https://heliumedu.atlassian.net')
+JSM_SERVICE_ACCOUNT_EMAIL = config('PLATFORM_JSM_SERVICE_ACCOUNT_EMAIL', 'contact@heliumedu.com')
+JSM_API_TOKEN = config('PLATFORM_JSM_API_TOKEN', default=None)
+JSM_SERVICE_DESK_ID = config('PLATFORM_JSM_SERVICE_DESK_ID', '1')
+JSM_REQUEST_TYPE_ID = config('PLATFORM_JSM_REQUEST_TYPE_ID', '1')
+JSM_REQUEST_TYPE_ID_MAP = json.loads(config('PLATFORM_JSM_REQUEST_TYPE_ID_MAP', json.dumps({
+    'Bug Report': '2',
+    'Feature Request': '3',
+    'Account Issue': '1',
+})))
+JSM_CATEGORY_FIELD_ID = config('PLATFORM_JSM_CATEGORY_FIELD_ID', default=None)
 
 # Authentication
 

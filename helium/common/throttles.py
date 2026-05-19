@@ -1,25 +1,41 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import logging
+
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.throttling import UserRateThrottle as DRFUserRateThrottle
+
+from helium.common.utils import metricutils
+
+logger = logging.getLogger(__name__)
 
 
 class DeleteInactiveUserThrottle(AnonRateThrottle):
     """
-    Stricter anonymous throttle for the delete-inactive-user endpoint to limit
-    its use as a password-guessing vector against unverified accounts.
+    Anonymous rate throttle for the delete-inactive-user endpoint.
     """
     scope = 'delete_inactive'
 
 
 class SupportContactThrottle(AnonRateThrottle):
     """
-    Throttle for the public support contact endpoint. Slower than the
-    default anonymous rate so the form can't be abused as a high-volume relay
-    into the JSM email inbox.
+    Rate throttle for the public support contact endpoint.
     """
     scope = 'support_contact'
+
+    def allow_request(self, request, view):
+        """
+        Defer to DRF's rate-limit decision; emit a metric and a log line when the
+        request is not allowed.
+        """
+        allowed = super().allow_request(request, view)
+        if not allowed:
+            metricutils.increment('action.support_contact.throttled')
+            logger.warning(
+                f'support contact submission rejected (ip={self.get_ident(request)})'
+            )
+        return allowed
 
 
 class UserRateThrottle(DRFUserRateThrottle):
