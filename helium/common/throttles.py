@@ -13,6 +13,15 @@ class DeleteInactiveUserThrottle(AnonRateThrottle):
     scope = 'delete_inactive'
 
 
+class SupportContactThrottle(AnonRateThrottle):
+    """
+    Throttle for the public support contact endpoint. Slower than the
+    default anonymous rate so the form can't be abused as a high-volume relay
+    into the JSM email inbox.
+    """
+    scope = 'support_contact'
+
+
 class UserRateThrottle(DRFUserRateThrottle):
     """
     Uses a higher rate limit for requests from the legacy frontend (www.heliumedu.com),
