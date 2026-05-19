@@ -214,7 +214,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else "https://support.heliumedu.com"
+SUPPORT_URL = f"https://www.{ENVIRONMENT_PREFIX}heliumedu.com/support" if 'local' not in ENVIRONMENT else "https://www.heliumedu.com/support"
 STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
 
 # Healthcheck
@@ -414,7 +414,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648 for more info on grading.'
+                'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
             ),
         },
         {
@@ -422,7 +422,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418669'
+                'https://www.heliumedu.com/support/grades-and-progress/how-helium-calculates-your-grades'
             ),
         },
     ],
