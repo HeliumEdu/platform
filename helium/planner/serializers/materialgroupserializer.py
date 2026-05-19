@@ -14,7 +14,7 @@ class MaterialGroupSerializer(serializers.ModelSerializer):
     """
     A bucket of resources, organized free-form (by term, by kind, all in
     one). See
-    https://heliumedu.freshdesk.com/support/solutions/articles/159000427000
+    https://www.heliumedu.com/support/resources/using-resources-to-track-study-materials
     """
 
     class Meta:
