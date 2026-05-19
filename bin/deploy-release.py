@@ -26,12 +26,12 @@ from git import Repo
 
 def verify_containers_exist(version, aws_region="us-east-1"):
     """Verify that all platform containers exist in ECR for the given version."""
-    print(f"Verifying containers exist for version {version}...")
+    print(f"Verifying containers exist for version {version} ...")
 
     containers = ["platform-resource", "platform-api", "platform-worker"]
 
     for container in containers:
-        print(f"  Checking {container}:amd64-{version}...")
+        print(f"  Checking {container}:amd64-{version} ...")
 
         result = subprocess.run(
             [
@@ -56,7 +56,7 @@ def verify_containers_exist(version, aws_region="us-east-1"):
 
 def update_terraform_variables(deploy_repo_path, environment, version):
     """Update the helium_version variable in Terraform."""
-    print(f"Updating Terraform variables for {environment} to version {version}...")
+    print(f"Updating Terraform variables for {environment} to version {version} ...")
 
     variables_file = Path(deploy_repo_path) / "terraform" / "environments" / environment / "variables.tf"
 
@@ -111,13 +111,13 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
             - (True, False) if no changes needed (already up to date)
             - (False, False) if an error occurred
     """
-    print(f"\nCommitting and pushing changes...")
+    print(f"\nCommitting and pushing changes ...")
 
     repo = Repo(deploy_repo_path)
     origin = repo.remote('origin')
 
     print(f"Remote 'origin' URL: {origin.url}")
-    print("Pulling latest changes from origin...")
+    print("Pulling latest changes from origin ...")
 
     # Use subprocess to run git pull directly
     result = subprocess.run(
@@ -128,7 +128,7 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     )
 
     if result.returncode != 0:
-        print(f"Warning: Pull had issues but continuing...")
+        print(f"Warning: Pull had issues but continuing ...")
         print(f"  stdout: {result.stdout}")
         print(f"  stderr: {result.stderr}")
 
@@ -147,7 +147,7 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
     # Push using git command directly for better error handling
     try:
-        print("Pushing to origin...")
+        print("Pushing to origin ...")
 
         # Use subprocess to run git push directly
         result = subprocess.run(
@@ -173,7 +173,7 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
 
 def find_and_apply_terraform_run(environment, version, terraform_token, timeout_minutes=6):
     """Find the Terraform run for this deployment and apply it."""
-    print(f"\nFinding and applying Terraform run...")
+    print(f"\nFinding and applying Terraform run ...")
 
     headers = {
         "Authorization": f"Bearer {terraform_token}",
@@ -191,7 +191,7 @@ def find_and_apply_terraform_run(environment, version, terraform_token, timeout_
     print(f"Workspace ID: {workspace_id}")
 
     # Wait for and find the [platform] run, discard competing runs
-    print(f"Waiting for [platform] Terraform plan for version {version}...")
+    print(f"Waiting for [platform] Terraform plan for version {version} ...")
 
     iterations = (timeout_minutes * 60) // 10
     run_id = None
@@ -245,7 +245,7 @@ def find_and_apply_terraform_run(environment, version, terraform_token, timeout_
         return False
 
     # Apply the plan
-    print(f"Applying Terraform plan {run_id}...")
+    print(f"Applying Terraform plan {run_id} ...")
     apply_resp = requests.post(
         f"https://app.terraform.io/api/v2/runs/{run_id}/actions/apply",
         headers=headers,
@@ -261,16 +261,16 @@ def find_and_apply_terraform_run(environment, version, terraform_token, timeout_
     return True
 
 
-def wait_for_deployment(environment, version, timeout_minutes=10):
+def wait_for_deployment(environment, version, timeout_minutes=20):
     """Wait for the platform API to report the new version."""
-    print(f"\nWaiting for deployment to be live...")
+    print(f"\nWaiting for deployment to be live ...")
 
     if environment == "prod":
         info_uri = "https://api.heliumedu.com/info"
     else:
         info_uri = f"https://api.{environment}.heliumedu.com/info"
 
-    print(f"Checking {info_uri} for version {version}...")
+    print(f"Checking {info_uri} for version {version} ...")
 
     iterations = (timeout_minutes * 60) // 20
 
@@ -307,7 +307,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"Starting deployment of version {args.version} to {args.environment}...")
+    print(f"Starting deployment of version {args.version} to {args.environment} ...")
     print(f"Deploy repo: {args.deploy_repo}")
     print(f"Skip verify: {args.skip_verify}, Skip wait: {args.skip_wait}\n")
 

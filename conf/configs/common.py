@@ -4,8 +4,9 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.25"
+__version__ = "2.2.31"
 
+import json
 import os
 import socket
 from datetime import timedelta
@@ -204,7 +205,7 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 
 HOSTNAME = socket.gethostname()
 
-SUPPORT_URL = f"https://support.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else "https://support.heliumedu.com"
+SUPPORT_URL = f"https://www.{ENVIRONMENT_PREFIX}heliumedu.com/support" if 'local' not in ENVIRONMENT else "https://www.heliumedu.com/support"
 STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
 
 # Healthcheck
@@ -236,6 +237,7 @@ REST_FRAMEWORK = {
         'anon': '10/min',
         'user': '120/min',
         'delete_inactive': '1/min',
+        'support_contact': '5/hour',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -399,7 +401,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648 for more info on grading.'
+                'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
             ),
         },
         {
@@ -407,7 +409,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                'https://heliumedu.freshdesk.com/support/solutions/articles/159000418669'
+                'https://www.heliumedu.com/support/grades-and-progress/how-helium-calculates-your-grades'
             ),
         },
     ],
@@ -470,6 +472,22 @@ SES_COMPLAINT_SUPPRESS_THRESHOLD = int(config('PLATFORM_SES_COMPLAINT_SUPPRESS_T
 
 SES_SNS_TOPIC_ARN = config('PLATFORM_SES_SNS_TOPIC_ARN', '')
 
+SUPPORT_INBOX_EMAIL = config('PLATFORM_SUPPORT_INBOX_EMAIL', 'support@heliumedu.atlassian.net')
+
+# JSM (Jira Service Management) support intake
+
+JSM_API_BASE = config('PLATFORM_JSM_API_BASE', 'https://heliumedu.atlassian.net')
+JSM_SERVICE_ACCOUNT_EMAIL = config('PLATFORM_JSM_SERVICE_ACCOUNT_EMAIL', 'contact@heliumedu.com')
+JSM_API_TOKEN = config('PLATFORM_JSM_API_TOKEN', default=None)
+JSM_SERVICE_DESK_ID = config('PLATFORM_JSM_SERVICE_DESK_ID', '1')
+JSM_REQUEST_TYPE_ID = config('PLATFORM_JSM_REQUEST_TYPE_ID', '1')
+JSM_REQUEST_TYPE_ID_MAP = json.loads(config('PLATFORM_JSM_REQUEST_TYPE_ID_MAP', json.dumps({
+    'Bug Report': '2',
+    'Feature Request': '3',
+    'Account Issue': '1',
+})))
+JSM_CATEGORY_FIELD_ID = config('PLATFORM_JSM_CATEGORY_FIELD_ID', default=None)
+
 # Authentication
 
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
@@ -505,13 +523,20 @@ ALLOWED_HOSTS = [
 ]
 PROJECT_CI_APP_HOST = config('PROJECT_CI_APP_HOST', None)
 
+PROJECT_LANDING_HOST = config(
+    'PROJECT_LANDING_HOST',
+    'http://localhost:4321' if 'local' in ENVIRONMENT else f'https://landing.{ENVIRONMENT_PREFIX}heliumedu.com'
+)
+
 CSRF_TRUSTED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_LANDING_HOST,
 ]
 CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
+    PROJECT_LANDING_HOST,
 ]
 
 if PROJECT_CI_APP_HOST:

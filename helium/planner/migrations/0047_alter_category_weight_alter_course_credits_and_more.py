@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='category',
             name='weight',
-            field=models.DecimalField(decimal_places=2, help_text="Decimal in `[0, 100]`. Sum across a class's categories must be ≤ 100. A weight of `0` keeps the category organizational only; grade calc skips it. See `Course.has_weighted_grading` and https://heliumedu.freshdesk.com/support/solutions/articles/159000418648", max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)]),
+            field=models.DecimalField(decimal_places=2, help_text="Decimal in `[0, 100]`. Sum across a class's categories must be ≤ 100. A weight of `0` keeps the category organizational only; grade calc skips it. See `Course.has_weighted_grading` and https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories", max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)]),
         ),
         migrations.AlterField(
             model_name='course',
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='homework',
             name='completed',
-            field=models.BooleanField(default=False, help_text='Whether the assignment has been completed. Once `completed=true` and `current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the assignment counts toward grade calc. For missed work: `completed=true`, `current_grade="0/<possible>"`. See https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'),
+            field=models.BooleanField(default=False, help_text='Whether the assignment has been completed. Once `completed=true` and `current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the assignment counts toward grade calc. For missed work: `completed=true`, `current_grade="0/<possible>"`. See https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories'),
         ),
         migrations.AlterField(
             model_name='homework',

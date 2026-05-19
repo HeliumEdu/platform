@@ -67,7 +67,7 @@ class CourseSerializer(serializers.ModelSerializer):
             '`true` = weighted grading (any category has `weight > 0`); '
             '`false` = points-based grading (a simple `earned/possible` average across '
             'all assignments). Both are valid grading modes. See '
-            'https://heliumedu.freshdesk.com/support/solutions/articles/159000418648'
+            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories'
         )))
     def get_has_weighted_grading(self, obj) -> bool:
         # Use annotated value if available, otherwise default to False
