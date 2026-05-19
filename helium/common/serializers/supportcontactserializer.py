@@ -15,8 +15,7 @@ SUPPORT_CATEGORIES = ('Bug Report', 'Feature Request', 'Account Issue')
 class SupportContactSerializer(serializers.Serializer):
     """
     Shape of an inbound support contact request: a subject, the submitter's email,
-    a category, a description, and optional file attachments. ``website`` is a
-    hidden trap field that legitimate clients leave empty.
+    a category, a description, and optional file attachments.
     """
     subject = serializers.CharField(max_length=200, trim_whitespace=True)
     email = serializers.EmailField(max_length=254)
@@ -28,15 +27,12 @@ class SupportContactSerializer(serializers.Serializer):
         default=list,
         help_text='Optional file attachments, sent as the multipart `attachment` field.',
     )
-    # Honeypot field — named innocuously so naive scrapers reflexively fill it.
-    # Real users never see it (hidden via CSS) and so leave it blank.
     website = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_attachment(self, attachments: List[UploadedFile]) -> List[UploadedFile]:
         """
-        Reject attachments that exceed the upload size limit or that
-        match the blocked-extension / blocked-MIME-type lists used by the rest of
-        the planner's attachment pipeline.
+        Reject attachments that exceed the upload size limit or whose extension
+        or MIME type is in the configured blocked lists.
 
         :param attachments: Files submitted under the ``attachment`` multipart field.
         :return: The same list, unchanged, once every file has been validated.
