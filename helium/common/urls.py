@@ -10,6 +10,7 @@ from two_factor.urls import urlpatterns as tf_urlpatterns
 from helium.common.admin import admin_site
 from helium.common.views.apis.infoviews import InfoResourceView
 from helium.common.views.apis.staticviews import RedocStaticView, RobotsView, SitemapView
+from helium.common.views.apis.supportcontactview import SupportContactView
 from helium.common.views.apis.webhooksesview import WebhookSESView
 
 urlpatterns = [
@@ -39,4 +40,9 @@ urlpatterns = [
     # Webhook URLs (unauthenticated, SNS-verified)
     ##############################
     path('api/common/webhook/ses/', WebhookSESView.as_view(), name='webhook_ses'),
+
+    ##############################
+    # Public support contact form (unauthenticated, throttled)
+    ##############################
+    path('api/common/support/contact/', SupportContactView.as_view(), name='support_contact'),
 ]
