@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, BaseModel):
+    # Deprecated: kept only because Django's AbstractBaseUser requires a USERNAME_FIELD.
+    # Auto-generated from email at registration; never surfaced to users in the new
+    # frontend (email-only auth). Removal requires a custom user model migration.
     username = models.CharField(help_text='A unique name used to log in to the system.',
                                 max_length=255, unique=True,
                                 validators=[validators.RegexValidator(r'^[\w.+-]+$',
@@ -36,10 +39,6 @@ class User(AbstractBaseUser, BaseModel):
         default=generate_verification_code)
 
     is_superuser = models.BooleanField(default=False)
-
-    # Deprecated: tracks legacy frontend logins, remove when frontend-legacy is shut down
-    last_login_legacy = models.DateTimeField(blank=True, null=True,
-                                             help_text='Last login time via legacy frontend.')
 
     last_activity = models.DateTimeField(auto_now_add=True, db_index=True,
                                          help_text='Last user activity (login or token refresh).')

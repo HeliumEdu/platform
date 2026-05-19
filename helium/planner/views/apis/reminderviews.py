@@ -148,10 +148,10 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
 
         return response
 
-    @extend_schema(summary='Update a Reminder')
-    def put(self, request, *args, **kwargs):
+    @extend_schema(summary='Partially update a Reminder')
+    def patch(self, request, *args, **kwargs):
         """
-        Update the given reminder instance.
+        Update the given reminder. Fields not supplied are left unchanged.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -160,17 +160,6 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         elif 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
 
-        response = self.partial_update(request, *args, **kwargs)
-
-        logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
-
-        return response
-
-    @extend_schema(summary='Partially update a Reminder')
-    def patch(self, request, *args, **kwargs):
-        """
-        Update only the given attributes of the given reminder instance.
-        """
         response = self.partial_update(request, *args, **kwargs)
 
         logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")

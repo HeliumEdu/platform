@@ -104,7 +104,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Material {response.data['id']} created in MaterialGroup {request.data['material_group']} for user {request.user.pk}")
+            f"Material {response.data['id']} created in MaterialGroup {kwargs['material_group']} for user {request.user.pk}")
 
         return response
 
@@ -138,8 +138,6 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         """
         Update the given material instance.
         """
-        if 'material_group' in request.data:
-            permissions.check_material_group_permission(request.user.pk, request.data['material_group'])
         courses = request.data.get('courses', [])
         if courses:
             for course_id in courses:
