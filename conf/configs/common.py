@@ -17,6 +17,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from conf.configcache import config
 from conf.settings import PROJECT_ID
+from conf.utils import strip_www
 from helium.common import enums
 
 # ############################
@@ -525,18 +526,20 @@ PROJECT_CI_APP_HOST = config('PROJECT_CI_APP_HOST', None)
 
 PROJECT_LANDING_HOST = config(
     'PROJECT_LANDING_HOST',
-    'http://localhost:4321' if 'local' in ENVIRONMENT else f'https://landing.{ENVIRONMENT_PREFIX}heliumedu.com'
+    'http://localhost:4321' if 'local' in ENVIRONMENT else f'https://www.{ENVIRONMENT_PREFIX}heliumedu.com'
 )
 
 CSRF_TRUSTED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
     PROJECT_LANDING_HOST,
+    strip_www(PROJECT_LANDING_HOST),
 ]
 CORS_ALLOWED_ORIGINS = [
     PROJECT_APP_HOST,
     PROJECT_API_HOST,
     PROJECT_LANDING_HOST,
+    strip_www(PROJECT_LANDING_HOST),
 ]
 
 if PROJECT_CI_APP_HOST:
