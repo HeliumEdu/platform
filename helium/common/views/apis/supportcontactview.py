@@ -10,13 +10,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from helium.common.serializers.supportcontactserializer import SupportContactSerializer
+from helium.common.services.jsmservice import JsmRequestException, create_jsm_request
 from helium.common.throttles import SupportContactThrottle
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import (
-    EmailSuppressedException,
-    redact_email,
-    send_support_contact_email,
-)
+from helium.common.utils.commonutils import redact_email
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -25,9 +22,8 @@ logger = logging.getLogger(__name__)
 @extend_schema(exclude=True)
 class SupportContactView(HeliumAPIView):
     """
-    Accepts a public support contact form submission and relays it via SES to the
-    JSM email channel, where it lands as a new ticket. Unauthenticated by design;
-    a per-IP throttle and a honeypot field provide light spam control.
+    Accepts a public support contact form submission and creates a JSM service desk
+    request on behalf of the submitter via the authenticated JSM Cloud REST API.
     """
 
     serializer_class = SupportContactSerializer
@@ -35,18 +31,29 @@ class SupportContactView(HeliumAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [SupportContactThrottle]
 
+    def _client_ip(self, request):
+        """
+        Resolve the submitter IP. Returns the first ``X-Forwarded-For`` hop when
+        present, otherwise the direct peer address.
+        """
+        forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+        if forwarded:
+            return forwarded.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR')
+
     def post(self, request, *args, **kwargs):
         """
-        Validate the submission, drop honeypot hits silently, and relay the
-        message to the JSM email channel.
+        Validate the submission and create a JSM service desk request on behalf
+        of the submitter.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # Unused, catches honeypot
         if data.get('website'):
-            logger.info('Support contact submission discarded')
+            logger.warning(
+                f'support contact submission rejected (ip={self._client_ip(request)})'
+            )
             metricutils.increment('action.support_contact.honeypot')
             return Response({'ok': True}, status=status.HTTP_200_OK)
 
@@ -57,14 +64,14 @@ class SupportContactView(HeliumAPIView):
             return Response({'ok': True}, status=status.HTTP_200_OK)
 
         try:
-            send_support_contact_email(
+            create_jsm_request(
                 subject=data['subject'],
                 category=data['category'],
                 email=data['email'],
                 description=data['description'],
                 attachments=data.get('attachment', []),
             )
-        except EmailSuppressedException:
+        except JsmRequestException:
             return Response(
                 {'detail': (
                     'We were unable to deliver your message. '
