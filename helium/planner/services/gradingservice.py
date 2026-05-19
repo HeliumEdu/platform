@@ -1,6 +1,14 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+# Grading math is also implemented in the frontend at
+# projects/frontend/lib/utils/grade_helpers.dart. The frontend operates on
+# category aggregates produced by this service (it does NOT recompute course
+# grades from raw homework — those come from here). The "What Grade Do I Need?"
+# inverse calculation is frontend-only. If you change the weighted-grade math
+# here, audit grade_helpers.dart for consistency. Both sides have their own
+# test suites covering the math at their respective layers.
+
 import logging
 
 from django.db.models import F, Count, Q, Case, When, Exists, OuterRef
