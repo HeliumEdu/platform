@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /docs/
 Allow: /schema/
+Allow: /sitemap.xml
 Disallow: /
 
 Sitemap: {{ scheme }}://{{ host }}/sitemap.xml
