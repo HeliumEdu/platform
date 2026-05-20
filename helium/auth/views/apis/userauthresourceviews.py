@@ -110,7 +110,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
                                               'address is registered, so callers cannot use this endpoint to '
                                               'probe account existence.'),
             429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
-                                              '60 seconds; retry after the window.'),
+                                              '60 seconds.'),
         },
         auth=[],
     )
