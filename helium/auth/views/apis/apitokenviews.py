@@ -60,6 +60,8 @@ class ApiTokenView(HeliumAPIView):
     @extend_schema(
         operation_id='revoke_api_token',
         summary="Revoke the authenticated User's API token",
+        request=None,
+        responses={204: None},
     )
     def delete(self, request, *args, **kwargs):
         """
