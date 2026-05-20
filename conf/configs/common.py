@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.33"
+__version__ = "2.2.34"
 
 import json
 import os
@@ -330,6 +330,7 @@ SPECTACULAR_SETTINGS = {
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
+        "Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule](https://www.heliumedu.com/support/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
