@@ -26,8 +26,7 @@ class UserProfileApiDetailView(HeliumAPIView):
     @extend_schema(deprecated=True, exclude=True)
     def put(self, request, *args, **kwargs):
         """
-        Update the authenticated user's profile. This endpoint only updates the fields given (i.e. no need to PATCH
-        for partials data).
+        Update the authenticated user's profile. Only the fields supplied are updated.
         """
         user = self.get_object()
 
