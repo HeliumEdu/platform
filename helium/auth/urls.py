@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 from django.urls import path
 
+from helium.auth.views.apis.apitokenviews import ApiTokenView
 from helium.auth.views.apis.oauthviews import OAuthLoginView
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView, \
     LegacyTokenObtainPairView
@@ -41,6 +42,8 @@ urlpatterns = [
     ##############################
     # Authenticated URLs
     ##############################
+    path('auth/api-token/', ApiTokenView.as_view(), name='auth_api_token'),
+
     # User
     path('auth/user/', UserApiDetailView.as_view(), name='auth_user_detail'),
     path('auth/user/delete/', UserDeleteResourceView.as_view(), name='auth_user_resource_delete'),

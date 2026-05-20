@@ -40,7 +40,7 @@ def strip_enum_int_bounds(result, generator, request, public):
 TAG_GROUPS = [
     {
         'name': 'Authentication',
-        'tags': ['auth', 'auth.register', 'auth.token'],
+        'tags': ['auth', 'auth.register', 'auth.token.api', 'auth.token.jwt'],
     },
     {
         'name': 'Planner',

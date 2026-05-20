@@ -34,7 +34,8 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         responses={
             201: UserSerializer
 
-        }
+        },
+        auth=[],
     )
     def register(self, request, *args, **kwargs):
         """
@@ -78,7 +79,8 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
         ],
         responses={
             202: TokenResponseFieldsMixin
-        }
+        },
+        auth=[],
     )
     def verify_email(self, request, *args, **kwargs):
         """
@@ -109,7 +111,8 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
                                               'probe account existence.'),
             429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
                                               '60 seconds; retry after the window.'),
-        }
+        },
+        auth=[],
     )
     def resend_verification(self, request, *args, **kwargs):
         """
@@ -128,7 +131,8 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
         operation_id='forgot_password',
         summary='Request a password reset',
         request=UserForgotSerializer,
-        responses={202: None}
+        responses={202: None},
+        auth=[],
     )
     def forgot_password(self, request, *args, **kwargs):
         """

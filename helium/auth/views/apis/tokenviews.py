@@ -13,7 +13,7 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     @extend_schema(
         operation_id='login',
@@ -47,7 +47,7 @@ class LegacyTokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     serializer_class = LegacyTokenObtainSerializer
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
     @extend_schema(
         operation_id='token_refresh',
@@ -89,7 +89,7 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
         return super().post(request, *args, **kwargs)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
     @extend_schema(operation_id='logout', summary='Log out and blacklist a refresh token')
     def post(self, request, *args, **kwargs):
