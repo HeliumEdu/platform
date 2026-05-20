@@ -5,6 +5,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from knox.models import AuthToken
 
 from helium.auth.models.userpushtoken import UserPushToken
 
@@ -45,6 +46,12 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
     user.refresh = response.data['refresh']
 
     return user
+
+
+def given_api_token(user):
+    instance, token = AuthToken.objects.create(user=user)
+
+    return instance, token
 
 
 def given_user_push_token_exists(user, token='token1', device_id='device1'):

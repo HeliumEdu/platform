@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import UserRateThrottle as DRFUserRateThrottle
 
 from helium.common.utils import metricutils
 
@@ -35,3 +36,10 @@ class SupportContactThrottle(AnonRateThrottle):
                 f'support contact submission rejected (ip={self.get_ident(request)})'
             )
         return allowed
+
+
+class UserTokenRateThrottle(DRFUserRateThrottle):
+    """
+    Tight rate throttle for the API token management endpoint; rotations should be rare.
+    """
+    scope = 'user_token'

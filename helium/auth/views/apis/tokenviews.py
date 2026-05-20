@@ -12,7 +12,7 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     @extend_schema(
         operation_id='login',
@@ -37,7 +37,7 @@ class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
     @extend_schema(
         operation_id='token_refresh',
@@ -51,9 +51,8 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
             "replace the access token with the response's `access`, and retry the original "
             "request. The refresh endpoint also rotates the refresh token, so always store the "
             "most recently returned `refresh` value and use it on the next refresh call.\n\n"
-            "For long-running scripts, refresh proactively a minute or two before "
-            "`access_token_lifetime_minutes` elapses to avoid an extra round-trip per "
-            "request.\n\n"
+            "Refresh proactively a minute or two before `access_token_lifetime_minutes` "
+            "elapses to avoid an extra round-trip per request.\n\n"
             "Example refresh cycle (pseudo-curl):\n\n"
             "```\n"
             "# 1. Initial login\n"
@@ -79,11 +78,11 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
         return super().post(request, *args, **kwargs)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
     @extend_schema(operation_id='logout', summary='Log out and blacklist a refresh token')
     def post(self, request, *args, **kwargs):
         """
-        Takes a token and blacklists it.
+        Log out the user and blacklist the given refresh token.
         """
         return super().post(request, *args, **kwargs)

@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.31"
+__version__ = "2.2.34"
 
 import json
 import os
@@ -97,6 +97,7 @@ INSTALLED_APPS = (
     'pipeline',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'knox',
     'drf_spectacular',
     'django_filters',
     'django_celery_results',
@@ -229,6 +230,7 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'helium.common.handlers.exceptions.helium_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'helium.auth.backends.JWTAuthentication',
+        'knox.auth.TokenAuthentication',
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
@@ -237,6 +239,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
         'user': '120/min',
+        'user_token': '5/hour',
         'delete_inactive': '1/min',
         'support_contact': '5/hour',
     },
@@ -260,6 +263,14 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
+# API tokens are distinct from the short-lived JWT access token; managed via knox.
+REST_KNOX = {
+    'TOKEN_TTL': None,
+    'TOKEN_LIMIT_PER_USER': 1,
+    'AUTO_REFRESH': False,
+    'AUTH_HEADER_PREFIX': 'Token',
+}
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': f"{PROJECT_NAME} API Documentation",
@@ -274,11 +285,14 @@ SPECTACULAR_SETTINGS = {
         "calendar feeds (Google Calendar, iCloud, etc.), private iCal subscription "
         "feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
-        "POST `{\"username\": \"<your email>\", \"password\": \"<your password>\"}` to "
-        "`/auth/token/` to obtain `access` and `refresh` tokens. Send subsequent requests with "
-        "the `Authorization: Bearer <access>` header. Rotate the access token via "
-        "`/auth/token/refresh/` before it expires; exact lifetimes are published at runtime by "
-        "`GET /info/` as `access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n\n"
+        "Two flows are supported:\n\n"
+        "- **API token**: POST `/auth/api-token/` with a JWT to generate a long-lived token "
+        "(plaintext, returned once). Use `Authorization: Token <api_token>`; POST again to "
+        "rotate, `DELETE` to revoke.\n"
+        "- **JWT**: POST `{\"email\": \"...\", \"password\": \"...\"}` to `/auth/token/` for an "
+        "`access`/`refresh` pair. Use `Authorization: Bearer <jwt_token>`; rotate via "
+        "`/auth/token/refresh/`. Lifetimes are published by `GET /info/` as "
+        "`access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n\n"
         "## Rate Limits\n\n"
         "Requests are limited per client:\n\n"
         "| Authentication | Limit |\n"
@@ -302,6 +316,7 @@ SPECTACULAR_SETTINGS = {
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
+        "Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule](https://www.heliumedu.com/support/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
@@ -398,6 +413,7 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
         'helium.common.utils.openapiutils.add_tag_groups',
+        'helium.common.utils.openapiutils.order_security',
         'helium.common.utils.openapiutils.strip_enum_int_bounds',
     ],
     'ENUM_NAME_OVERRIDES': {

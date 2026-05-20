@@ -64,8 +64,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     @extend_schema(summary='Update the authenticated User')
     def put(self, request, *args, **kwargs):
         """
-        Update the authenticated user instance. This endpoint only updates the fields given (i.e. no need to PATCH
-        for partials data).
+        Update the authenticated user instance. Only the fields supplied are updated.
         """
         user = self.get_object()
 

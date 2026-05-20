@@ -34,8 +34,7 @@ class UserSettingsApiDetailView(HeliumAPIView):
     @extend_schema(summary="Update the authenticated User's settings")
     def put(self, request, *args, **kwargs):
         """
-        Update the authenticated user's settings. This endpoint only updates the fields given (i.e. no need to PATCH
-        for partials data).
+        Update the authenticated user's settings. Only the fields supplied are updated.
         """
         user = self.get_object()
 
