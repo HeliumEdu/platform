@@ -38,6 +38,13 @@ class SupportContactThrottle(AnonRateThrottle):
         return allowed
 
 
+class UserTokenRateThrottle(DRFUserRateThrottle):
+    """
+    Tight rate throttle for the API token management endpoint; rotations should be rare.
+    """
+    scope = 'user_token'
+
+
 class UserRateThrottle(DRFUserRateThrottle):
     """
     Uses a higher rate limit for requests from the legacy frontend (www.heliumedu.com),

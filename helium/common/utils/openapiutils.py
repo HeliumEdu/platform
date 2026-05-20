@@ -40,7 +40,7 @@ def strip_enum_int_bounds(result, generator, request, public):
 TAG_GROUPS = [
     {
         'name': 'Authentication',
-        'tags': ['auth', 'auth.register', 'auth.token'],
+        'tags': ['auth', 'auth.register', 'auth.token.api', 'auth.token.jwt'],
     },
     {
         'name': 'Planner',
@@ -76,4 +76,15 @@ TAG_GROUPS = [
 
 def add_tag_groups(result, generator, request, public):
     result['x-tagGroups'] = TAG_GROUPS
+    return result
+
+
+def order_security(result, generator, request, public):
+    rank = {'apiToken': 0, 'jwtAuth': 1}
+    for path in result.get('paths', {}).values():
+        if not isinstance(path, dict):
+            continue
+        for op in path.values():
+            if isinstance(op, dict) and 'security' in op:
+                op['security'].sort(key=lambda s: rank.get(next(iter(s), ''), 99))
     return result
