@@ -18,13 +18,13 @@ class HeliumAPIView(GenericAPIView):
         self.__request_metrics = None
 
     def initial(self, request, *args, **kwargs):
+        self.__request_metrics = metricutils.request_start(request)
+
         super().initial(request, *args, **kwargs)
 
         if settings.SENTRY_ENABLED and request.user and request.user.is_authenticated:
             import sentry_sdk
             sentry_sdk.set_user({"id": request.user.id})
-
-        self.__request_metrics = metricutils.request_start(request)
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super().finalize_response(request, response, *args, **kwargs)

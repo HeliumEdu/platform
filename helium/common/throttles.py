@@ -32,7 +32,7 @@ class SupportContactThrottle(AnonRateThrottle):
         allowed = super().allow_request(request, view)
         if not allowed:
             metricutils.increment('action.support_contact.throttled')
-            logger.warning(
+            logger.info(
                 f'support contact submission rejected (ip={self.get_ident(request)})'
             )
         return allowed
