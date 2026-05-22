@@ -51,7 +51,7 @@ class SupportContactView(HeliumAPIView):
         data = serializer.validated_data
 
         if data.get('website'):
-            logger.warning(
+            logger.info(
                 f'support contact submission rejected (ip={self._client_ip(request)})'
             )
             metricutils.increment('action.support_contact.honeypot')

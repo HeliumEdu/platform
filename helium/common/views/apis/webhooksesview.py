@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helium.common.services.sesreputationservice import verify_sns_message
+from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
@@ -42,18 +43,19 @@ class WebhookSESView(APIView):
         try:
             body = json.loads(request.body)
         except (json.JSONDecodeError, UnicodeDecodeError):
-            logger.warning("SNS webhook received non-JSON body")
+            logger.info("SNS webhook received non-JSON body")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
             verify_sns_message(body)
         except Exception:
-            logger.warning("SNS message signature verification failed", exc_info=True)
+            metricutils.increment('webhook.ses.sig_failed')
+            logger.info("SNS message signature verification failed", exc_info=True)
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         expected_topic_arn = getattr(settings, 'SES_SNS_TOPIC_ARN', '')
         if expected_topic_arn and body.get('TopicArn') != expected_topic_arn:
-            logger.warning(
+            logger.info(
                 f"SNS message TopicArn {body.get('TopicArn')!r} does not match expected {expected_topic_arn!r}"
             )
             return Response(status=status.HTTP_403_FORBIDDEN)

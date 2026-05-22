@@ -4,14 +4,30 @@
   <img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/og-default.png" alt="Helium - Student Planner" width="800" />
 </p>
 
+---
+
+[**Helium**](https://www.heliumedu.com) is a free, color-coded online student planner for classes, homework, grades, and notes — the academic calendar built for the way you actually study.
+
+<p align="center">
+  <a href="https://apps.apple.com/us/app/helium-student-planner/id6758323154"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/ios-badge.png" alt="Download on the App Store" height="50" /></a>
+  &nbsp;
+  <a href="https://play.google.com/store/apps/details?id=com.heliumedu.heliumapp"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/play-badge.png" alt="Get it on Google Play" height="50" /></a>
+</p>
+
+<p align="center">
+  <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/public/img/support-patreon.png" alt="Support on Patreon" height="30" /></a>
+</p>
+
+---
+
+# Helium Platform
+
 [![Coverage](https://img.shields.io/codecov/c/github/HeliumEdu/platform)](https://codecov.io/gh/HeliumEdu/platform)
 [![Build](https://img.shields.io/github/actions/workflow/status/HeliumEdu/platform/build.yml)](https://github.com/HeliumEdu/platform/actions/workflows/build.yml)
 [![Code Quality](https://app.codacy.com/project/badge/Grade/0cb1b256044e43739735987214f3a796)](https://app.codacy.com/gh/HeliumEdu/platform/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
 
-# Helium Platform
-
-The backend `platform` for [Helium](https://www.heliumedu.com/), which includes both API and worker functionality. Docs for
+The backend `platform` for Helium - Student Planner, including API and worker functionality. Docs for
 integrating with the API can be found [here](https://api.heliumedu.com/docs/).
 
 Released container images are published to [Helium's AWS ECR](https://gallery.ecr.aws/heliumedu/).
