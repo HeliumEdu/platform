@@ -9,6 +9,7 @@ import urllib.request
 from functools import lru_cache
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
 from helium.common.models import (
     EmailReputationEvent,
@@ -167,9 +168,15 @@ def _record_bounce(
             event_subtype=subtype,
             sns_message_id=sns_message_id,
         )
+    except IntegrityError:
+        logger.debug(
+            f"Duplicate bounce event for {redact_email(email)} "
+            f"(sns_message_id={sns_message_id}); skipping"
+        )
+        return
     except Exception:
         logger.warning(
-            f"Skipping duplicate or failed bounce event for {redact_email(email)} "
+            f"Failed to record bounce event for {redact_email(email)} "
             f"(sns_message_id={sns_message_id})",
             exc_info=True,
         )
@@ -198,9 +205,15 @@ def _record_complaint(
             event_subtype=feedback_type or None,
             sns_message_id=sns_message_id,
         )
+    except IntegrityError:
+        logger.debug(
+            f"Duplicate complaint event for {redact_email(email)} "
+            f"(sns_message_id={sns_message_id}); skipping"
+        )
+        return
     except Exception:
         logger.warning(
-            f"Skipping duplicate or failed complaint event for {redact_email(email)} "
+            f"Failed to record complaint event for {redact_email(email)} "
             f"(sns_message_id={sns_message_id})",
             exc_info=True,
         )
