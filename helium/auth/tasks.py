@@ -18,6 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.utils.userutils import is_staff_user
+from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
@@ -458,8 +459,6 @@ def emit_nightly_metrics(self):
                                               'material_group__user_id', user_ids,
                                               window_staff_tags)
 
-                # --- Feature adoption (% of active users with at least one) ---
-
                 for adoption_metric, adoption_filter in [
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),
@@ -821,31 +820,27 @@ def process_dormant_users(self):
         raise
 
 
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Purge expired refresh tokens and stale push tokens periodically
-    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
-                             purge_refresh_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
-
-    # Purge stale push tokens periodically
-    sender.add_periodic_task(settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
-                             purge_push_tokens.s().set(priority=settings.CELERY_PRIORITY_LOW))
-
-    # Emit queue depth every minute for monitoring
-    sender.add_periodic_task(60, emit_queue_depth.s().set(priority=settings.CELERY_PRIORITY_LOW))
-
-    # Purge dangling users (unverified + stuck pending-delete notifications) nightly
-    sender.add_periodic_task(crontab(hour=2, minute=0),
-                             sweep_dangling_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
-
-    # Nightly metrics, client activity rollup, and review prompt evaluation
-    sender.add_periodic_task(crontab(hour=3, minute=0),
-                             emit_nightly_metrics.s().set(priority=settings.CELERY_PRIORITY_LOW))
-    sender.add_periodic_task(crontab(hour=3, minute=30),
-                             rollup_client_activity.s().set(priority=settings.CELERY_PRIORITY_LOW))
-    sender.add_periodic_task(crontab(hour=4, minute=0),
-                             evaluate_review_prompts.s().set(priority=settings.CELERY_PRIORITY_LOW))
-
-    # Process dormant users periodically
-    sender.add_periodic_task(settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC,
-                             process_dormant_users.s().set(priority=settings.CELERY_PRIORITY_LOW))
+register_periodic(purge_refresh_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Purge expired refresh tokens")
+register_periodic(purge_push_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Purge stale push tokens")
+register_periodic(emit_queue_depth, 60,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  manually_triggerable=False)
+register_periodic(sweep_dangling_users, crontab(hour=2, minute=0),
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  manually_triggerable=False)
+register_periodic(emit_nightly_metrics, crontab(hour=3, minute=0),
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Emit nightly platform/users/adoption/engagement gauges")
+register_periodic(rollup_client_activity, crontab(hour=3, minute=30),
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Roll up daily client activity")
+register_periodic(evaluate_review_prompts, crontab(hour=4, minute=0),
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Evaluate which users should be prompted for app store review")
+register_periodic(process_dormant_users, settings.PROCESS_DORMANT_USERS_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  manually_triggerable=False)
