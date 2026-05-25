@@ -6,6 +6,7 @@ import logging
 from django.conf import settings
 
 from conf.celery import app
+from helium.common.periodic import register_periodic
 from helium.common.utils import metricutils
 from helium.feed.services import icalexternalcalendarservice
 
@@ -22,7 +23,6 @@ def reindex_feeds(self, calendar_ids=None):
     metricutils.task_stop(metrics)
 
 
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Add schedule to reindex external calendars periodically
-    sender.add_periodic_task(settings.REINDEX_FEED_FREQUENCY_SEC, reindex_feeds.s().set(priority=settings.CELERY_PRIORITY_LOW))
+register_periodic(reindex_feeds, settings.REINDEX_FEED_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  manually_triggerable=False)

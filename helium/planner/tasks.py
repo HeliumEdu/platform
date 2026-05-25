@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from conf.celery import app
 from helium.common import enums
+from helium.common.periodic import register_periodic
 from helium.common.utils import commonutils
 from helium.common.utils import metricutils, taskutils
 from helium.planner.models import Course, Category, Event, Homework
@@ -298,15 +299,12 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
     timezone.deactivate()
 
 
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
-    # Process email reminders
-    sender.add_periodic_task(60, email_reminders.s())
-
-    # Process push reminders
-    sender.add_periodic_task(60, push_reminders.s())
-
-    # Process text reminders
-    sender.add_periodic_task(60, text_reminders.s())
-
-    sender.add_periodic_task(settings.REMINDER_WATCHDOG_FREQUENCY_SEC, reminder_watchdog.s().set(priority=settings.CELERY_PRIORITY_LOW))
+register_periodic(email_reminders, 60,
+                  manually_triggerable=False)
+register_periodic(push_reminders, 60,
+                  manually_triggerable=False)
+register_periodic(text_reminders, 60,
+                  manually_triggerable=False)
+register_periodic(reminder_watchdog, settings.REMINDER_WATCHDOG_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Heal orphaned repeating reminders")

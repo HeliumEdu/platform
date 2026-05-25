@@ -1,0 +1,16 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <table>
+            <caption><a href="{% url 'admin:periodic-tasks' %}" class="section">Tools</a></caption>
+            <tr>
+                <th scope="row"><a href="{% url 'admin:periodic-tasks' %}">Periodic tasks</a></th>
+                <td>View Beat schedule and run on demand</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{{ block.super }}
+{% endblock %}
