@@ -104,6 +104,22 @@ def gauge(metric, value, user=None, extra_tags=None):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
+def distribution(metric, value, user=None, extra_tags=None):
+    try:
+        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+
+        if user:
+            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
+            if user.is_authenticated:
+                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
+
+        metric_id = f"platform.{metric}"
+        statsd.distribution(metric_id, value=value, tags=tags)
+        logger.debug(f"Metric: {metric_id} distribution sampled {value}, with tags {tags}")
+    except Exception:
+        logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
 def path_to_metric_id(path):
     """Convert a URL path to a normalized metric ID (e.g., /planner/reminders/ -> planner.reminders)"""
     return re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', path.replace('/', '.'))).strip(".")
