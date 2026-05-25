@@ -64,7 +64,6 @@ class PlatformAdminSite(_AdminBase):
     site_title = site_header
     index_title = settings.PROJECT_NAME
     login_form = AdminLoginForm
-    index_template = 'admin/helium_index.html'
 
     def has_permission(self, request):
         if not super().has_permission(request):
@@ -92,6 +91,26 @@ class PlatformAdminSite(_AdminBase):
                  self.admin_view(self.periodic_tasks_view),
                  name='periodic-tasks'),
         ] + super().get_urls()
+
+    def get_app_list(self, request, app_label=None):
+        app_list = super().get_app_list(request, app_label)
+        if app_label is None:
+            tools_url = reverse('admin:periodic-tasks')
+            app_list.append({
+                'name': 'Tools',
+                'app_label': 'helium_tools',
+                'app_url': tools_url,
+                'has_module_perms': True,
+                'models': [
+                    {
+                        'name': 'Periodic tasks',
+                        'object_name': 'PeriodicTask',
+                        'admin_url': tools_url,
+                        'view_only': True,
+                    },
+                ],
+            })
+        return app_list
 
     def periodic_tasks_view(self, request):
         triggerable = [s for s in PERIODIC_TASKS if s.manually_triggerable]
