@@ -129,7 +129,7 @@ class PlatformAdminSite(_AdminBase):
                             f"(task_id={async_result.id})")
                 messages.success(request,
                                  f"Queued '{spec.task.name}' (task id: {async_result.id}). "
-                                 f"Results will appear in Task results events.")
+                                 f"See in \"Task results events\" for state.")
             return HttpResponseRedirect(reverse('admin:periodic-tasks'))
 
         rows = sorted(
