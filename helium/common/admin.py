@@ -1,20 +1,27 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import logging
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.sites import AdminSite
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
 
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.models import TaskResultProxy
+from helium.common.periodic import PERIODIC_TASKS, format_schedule
+
+logger = logging.getLogger(__name__)
 
 _AdminBase = AdminSiteOTPRequired if settings.ADMIN_ENFORCE_2FA else AdminSite
 
@@ -57,6 +64,7 @@ class PlatformAdminSite(_AdminBase):
     site_title = site_header
     index_title = settings.PROJECT_NAME
     login_form = AdminLoginForm
+    index_template = 'admin/helium_index.html'
 
     def has_permission(self, request):
         if not super().has_permission(request):
@@ -77,6 +85,49 @@ class PlatformAdminSite(_AdminBase):
         if request.user.is_authenticated and not any(devices_for_user(request.user)):
             return redirect(f"{reverse('two_factor:setup')}?next={request.get_full_path()}")
         return AdminTwoFactorLoginView.as_view()(request)
+
+    def get_urls(self):
+        return [
+            path('periodic-tasks/',
+                 self.admin_view(self.periodic_tasks_view),
+                 name='periodic-tasks'),
+        ] + super().get_urls()
+
+    def periodic_tasks_view(self, request):
+        triggerable = [s for s in PERIODIC_TASKS if s.manually_triggerable]
+
+        if request.method == 'POST':
+            task_name = request.POST.get('task', '')
+            spec = next((s for s in triggerable if s.task.name == task_name), None)
+            if spec is None:
+                messages.error(request, f"Unknown or non-triggerable periodic task: {task_name}")
+            else:
+                kwargs = {}
+                if spec.priority is not None:
+                    kwargs['priority'] = spec.priority
+                async_result = spec.task.apply_async(**kwargs)
+                logger.info(f"Periodic task '{spec.task.name}' manually triggered by {request.user.email} "
+                            f"(task_id={async_result.id})")
+                messages.success(request,
+                                 f"Queued '{spec.task.name}' (task id: {async_result.id}). "
+                                 f"Results will appear in Task results events.")
+            return HttpResponseRedirect(reverse('admin:periodic-tasks'))
+
+        rows = sorted(
+            ({'name': spec.task.name,
+              'short_name': spec.task.name.rsplit('.', 1)[-1],
+              'schedule': format_schedule(spec.schedule),
+              'priority': spec.priority,
+              'description': spec.description}
+             for spec in triggerable),
+            key=lambda r: r['name'],
+        )
+        context = {
+            **self.each_context(request),
+            'title': 'Periodic tasks',
+            'tasks': rows,
+        }
+        return TemplateResponse(request, 'admin/periodic_tasks.html', context)
 
 
 def staff_filter(user_field=None):
