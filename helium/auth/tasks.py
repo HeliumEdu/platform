@@ -19,7 +19,7 @@ from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.services import analyticsservice
-from helium.common.utils import commonutils, metricutils, taskutils
+from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Attachment, Category, Course, CourseGroup, Event, Homework, Material, Note, Reminder
@@ -282,11 +282,8 @@ def sweep_dangling_users(self):
 
 @app.task(bind=True)
 def emit_queue_depth(self):
-    """Emit the current Celery queue depth as a metric."""
     try:
-        import redis
-        r = redis.from_url(settings.CELERY_BROKER_URL)
-        queue_depth = r.llen('celery')
+        queue_depth = redisutils.get_redis_client().llen('celery')
         metricutils.gauge('celery.queue.depth', queue_depth)
         logger.debug(f"Emitted queue depth: {queue_depth}")
     except Exception as e:
@@ -300,6 +297,18 @@ def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags)
     )
     for entity_id in all_entity_ids:
         metricutils.distribution(metric, counts.get(entity_id, 0), extra_tags=tags)
+
+
+def _count_distinct_feed_slugs(days, staff_tag, end_date):
+    try:
+        keys = [
+            f'feeds:active_slugs:{staff_tag}:{(end_date - timedelta(days=d)).isoformat()}'
+            for d in range(days)
+        ]
+        return len(redisutils.get_redis_client().sunion(keys))
+    except Exception:
+        logger.warning("Failed to count distinct feed slugs from Redis", exc_info=True)
+        return 0
 
 
 @app.task(bind=True)
@@ -328,10 +337,6 @@ def emit_nightly_metrics(self):
         metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
         raise
 
-    # Data richness and feature adoption metrics, emitted per active-user window.
-    # Per-user data metrics are emitted as DataDog distributions (one sample per active user,
-    # with explicit 0 samples for users without any of the feature) so p50/p95/p99 are queryable
-    # alongside avg. Adoption is emitted as a percentage gauge so a single metric is alertable.
     try:
         now_utc = datetime.now().replace(tzinfo=timezone.utc)
 
@@ -347,8 +352,6 @@ def emit_nightly_metrics(self):
 
                 if total_users == 0:
                     continue
-
-                # --- Data richness ---
 
                 course_qs = Course.objects.filter(
                     course_group__user__in=user_ids,
@@ -489,12 +492,16 @@ def emit_nightly_metrics(self):
                         Q(event__example_schedule=True) |
                         Q(homework__course__course_group__example_schedule=True)
                     ))),
-                    ('feeds', Q(settings__private_slug__isnull=False)),
                 ]:
                     adopters = active_qs.filter(adoption_filter).count()
                     metricutils.gauge(f'users.adoption.{adoption_metric}.pct',
                                       adopters / total_users * 100,
                                       extra_tags=window_staff_tags)
+
+                feed_adopters = _count_distinct_feed_slugs(days, staff_tag, now_utc.date())
+                metricutils.gauge('users.adoption.feeds.pct',
+                                  feed_adopters / total_users * 100,
+                                  extra_tags=window_staff_tags)
 
             logger.debug(f"Emitted data richness and adoption metrics ({window_tag})")
     except Exception as e:
@@ -502,7 +509,6 @@ def emit_nightly_metrics(self):
         metricutils.task_failure("metrics.nightly.richness", exception_type=type(e).__name__)
         raise
 
-    # Engagement quality metrics (staff-separated, computed over 30d active users)
     try:
         cutoff_30d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=30)
         cutoff_14d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=14)
@@ -513,8 +519,12 @@ def emit_nightly_metrics(self):
                 is_active=True,
                 last_activity__gte=cutoff_30d,
             ).filter(qs_filter)
-            user_ids = active_qs.values_list('pk', flat=True)
+            user_ids = list(active_qs.values_list('pk', flat=True))
+            total_users = len(user_ids)
             staff_tags = [f'staff:{staff_tag}']
+
+            if total_users == 0:
+                continue
 
             course_qs = Course.objects.filter(
                 course_group__user__in=user_ids,
@@ -525,26 +535,24 @@ def emit_nightly_metrics(self):
                 course__course_group__example_schedule=False,
             )
 
-            total_users = active_qs.count()
+            _emit_per_entity_distribution('users.engagement.completions_per_user',
+                                          hw_qs.filter(completed=True, completed_at__gte=cutoff_14d),
+                                          'course__course_group__user_id', user_ids, staff_tags)
 
-            metricutils.gauge('users.engagement.avg_completions_per_user',
-                              hw_qs.filter(completed=True,
-                                           completed_at__gte=cutoff_14d).count() / total_users if total_users else 0.0,
-                              extra_tags=staff_tags)
+            _emit_per_entity_distribution('users.engagement.graded_homework_per_user',
+                                          hw_qs.exclude(current_grade=''),
+                                          'course__course_group__user_id', user_ids, staff_tags)
 
-            metricutils.gauge('users.engagement.avg_graded_homework_per_user',
-                              hw_qs.exclude(current_grade='').count() / total_users if total_users else 0.0,
-                              extra_tags=staff_tags)
-
-            metricutils.gauge('users.engagement.has_active_courses',
-                              active_qs.filter(
-                                  Exists(Course.objects.filter(
-                                      course_group__user=OuterRef('pk'),
-                                      course_group__example_schedule=False,
-                                      course_group__start_date__lte=today,
-                                      course_group__end_date__gte=today,
-                                  ))
-                              ).count(),
+            active_course_adopters = active_qs.filter(
+                Exists(Course.objects.filter(
+                    course_group__user=OuterRef('pk'),
+                    course_group__example_schedule=False,
+                    course_group__start_date__lte=today,
+                    course_group__end_date__gte=today,
+                ))
+            ).count()
+            metricutils.gauge('users.engagement.has_active_courses.pct',
+                              active_course_adopters / total_users * 100,
                               extra_tags=staff_tags)
 
         logger.debug("Emitted engagement quality metrics")
