@@ -834,7 +834,7 @@ register_periodic(sweep_dangling_users, crontab(hour=2, minute=0),
                   manually_triggerable=False)
 register_periodic(emit_nightly_metrics, crontab(hour=3, minute=0),
                   priority=settings.CELERY_PRIORITY_LOW,
-                  description="Emit nightly platform/users/adoption/engagement gauges")
+                  description="Emit nightly metrics")
 register_periodic(rollup_client_activity, crontab(hour=3, minute=30),
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Roll up daily client activity")
