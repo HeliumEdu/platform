@@ -102,7 +102,7 @@ def send_registration_email(self, email):
     commonutils.send_multipart_email('email/register',
                                      {
                                          'PROJECT_NAME': settings.PROJECT_NAME,
-                                         'login_url': f"{settings.PROJECT_APP_HOST}/login",
+                                         'login_url': f"{settings.PROJECT_APP_HOST}/signin",
                                      },
                                      'Welcome to Helium', [email],
                                      email_type='registration')
@@ -712,7 +712,7 @@ def send_dormant_user_warning_email(self, user_id):
                 'days_remaining': days_remaining,
                 'dormancy_years': settings.DORMANT_USER_THRESHOLD_YEARS,
                 'is_final_warning': is_final_warning,
-                'login_url': f"{settings.PROJECT_APP_HOST}/login",
+                'login_url': f"{settings.PROJECT_APP_HOST}/signin",
                 'export_url': 'https://www.heliumedu.com/support/import-export-and-backup/using-exports-to-backup-data-move-between-accounts',
                 'delete_account_url': 'https://www.heliumedu.com/support/account/deleting-your-account-and-data',
                 'support_url': settings.SUPPORT_URL,

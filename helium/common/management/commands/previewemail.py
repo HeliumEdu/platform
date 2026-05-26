@@ -38,7 +38,7 @@ class Command(BaseCommand):
         # Add common context variables that templates typically expect
         default_context = {
             'PROJECT_NAME': settings.PROJECT_NAME,
-            'login_url': f"{settings.PROJECT_APP_HOST}/login",
+            'login_url': f"{settings.PROJECT_APP_HOST}/signin",
             'support_url': getattr(settings, 'SUPPORT_URL', 'https://support.example.com'),
             'status_url': getattr(settings, 'STATUS_URL', 'https://status.example.com'),
         }
