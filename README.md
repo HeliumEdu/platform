@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/public/img/support-patreon.png" alt="Support on Patreon" height="30" /></a>
+  <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/public/img/support-patreon.svg" alt="Support on Patreon" height="30" /></a>
 </p>
 
 ---
