@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import datetime, timezone as tz
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,10 +12,27 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import NotFound
 
+from helium.auth.utils.userutils import is_staff_user
+from helium.common.utils import redisutils
 from helium.common.views.base import HeliumAPIView
 from helium.feed.services import icalprivateservice
 
 logger = logging.getLogger(__name__)
+
+_FEED_FETCH_SET_TTL_SECONDS = 86400 * 181
+
+
+def _record_feed_fetch(user, private_slug):
+    try:
+        staff_tag = 'true' if is_staff_user(user) else 'false'
+        today = datetime.now(tz.utc).date().isoformat()
+        key = f'feeds:active_slugs:{staff_tag}:{today}'
+        pipe = redisutils.get_redis_client().pipeline()
+        pipe.sadd(key, private_slug)
+        pipe.expire(key, _FEED_FETCH_SET_TTL_SECONDS)
+        pipe.execute()
+    except Exception:
+        logger.warning("Failed to record feed fetch", exc_info=True)
 
 
 @extend_schema(
@@ -49,6 +67,7 @@ class PrivateEventsICALResourceView(HeliumAPIView):
 
         try:
             user = UserModel.objects.get_by_private_slug(private_slug)
+            _record_feed_fetch(user, private_slug)
 
             last_modified = icalprivateservice.get_events_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)
@@ -103,6 +122,7 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
 
         try:
             user = UserModel.objects.get_by_private_slug(private_slug)
+            _record_feed_fetch(user, private_slug)
 
             last_modified = icalprivateservice.get_homework_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)
@@ -157,6 +177,7 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
 
         try:
             user = UserModel.objects.get_by_private_slug(private_slug)
+            _record_feed_fetch(user, private_slug)
 
             last_modified = icalprivateservice.get_courseschedules_last_modified(user)
             etag = icalprivateservice.generate_etag(user.pk, last_modified)

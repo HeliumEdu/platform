@@ -7,6 +7,7 @@ from django.conf import settings
 
 from conf.celery import app
 from helium.auth.models import UserPushToken
+from helium.common.periodic import PERIODIC_TASKS
 from helium.common.services.pushservice import send_notifications
 from helium.common.services.sesreputationservice import process_ses_notification
 from helium.common.utils import metricutils
@@ -43,3 +44,12 @@ def process_ses_event(self, message_json):
     process_ses_notification(message_json)
 
     metricutils.task_stop(metrics)
+
+
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):  # pragma: no cover
+    for spec in PERIODIC_TASKS:
+        sig = spec.task.s()
+        if spec.priority is not None:
+            sig = sig.set(priority=spec.priority)
+        sender.add_periodic_task(spec.schedule, sig)

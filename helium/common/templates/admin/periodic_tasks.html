@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Periodic tasks
+</div>
+{% endblock %}
+
+{% block content %}
+<p>Use <strong>Run now</strong> to queue a a period task for immediate invocation.</p>
+
+<div class="module">
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Task</th>
+                <th scope="col">Schedule</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Description</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>
+                    <code title="{{ task.name }}">{{ task.short_name }}</code>
+                </td>
+                <td>{{ task.schedule }}</td>
+                <td>{% if task.priority is not None %}{{ task.priority }}{% else %}&mdash;{% endif %}</td>
+                <td>{{ task.description }}</td>
+                <td>
+                    <form method="post" style="margin: 0;"
+                          onsubmit="return confirm('Queue {{ task.name }} now?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="task" value="{{ task.name }}">
+                        <input type="submit" value="Run now" class="default"
+                               style="background: var(--button-bg); font-weight: normal;">
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5"><em>No periodic tasks registered.</em></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
