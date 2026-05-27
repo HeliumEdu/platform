@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('planner', '0052_alter_reminder_start_of_range'),
+        ('planner', '0053_alter_category_weight_alter_event_priority_and_more'),
     ]
 
     operations = [
