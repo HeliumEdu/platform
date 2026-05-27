@@ -247,6 +247,17 @@ jobs:
             "$ENVIRONMENT" \
             --deploy-repo ./deploy
 
+      - name: Tag infra deploy
+        if: inputs.environment == 'prod'
+        env:
+          VERSION: ${{ needs.determine-version.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          TAG="${VERSION}+${BUILD_NUMBER}"
+          cd deploy
+          git tag -a "$TAG" -m "Deploy $TAG"
+          git push origin "$TAG"
+
       - name: Notify Sentry of deploy
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
