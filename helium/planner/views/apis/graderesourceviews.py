@@ -29,12 +29,13 @@ class GradesApiResourceView(HeliumAPIView):
         The result is a list of course groups. Each course group contains a nested list of courses. Each course
         contains a nested list of categories.
 
-        Each entity contains at least three fields: `id`, `overall_grade`, and `grade_points`. An `overall_grade`
+        Each entity contains at least three fields: `id`, `overall_grade`, and `homework_series`. An `overall_grade`
         of `-1` is the sentinel for "no graded homework yet" — not a real percentage.
 
-        `grade_points` represents a list of grades accumulating over time. This is a list made up of individual grade
-        points, each a tuple containing values of the format [time, grade_at_time, homework_id, homework_title,
-        homework_grade, category_id, course_id].
+        `homework_series` is a chronologically sorted list of homework items. Each item is a dict with fields:
+        `id`, `title`, `start`, `category_id`, `course_id`, `points_possible`, `graded`, `homework_grade`,
+        `cumulative_grade`, and `impact_score`. Items with `graded: true` represent completed graded homework;
+        items with `graded: false` represent pending homework with a projected `impact_score`.
         """
         grade_data = gradingservice.get_grade_data(request.user.pk)
 
