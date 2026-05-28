@@ -173,13 +173,13 @@ def get_grade_data(user_id):
                                            'annotated_has_weighted_grading')
                                    .order_by('start_date', 'title'))
         # Batch-fetch all ungraded homework for this group's courses in one query
-        # to avoid an N+1 when computing most_impactful_ungraded per course.
+        # to avoid an N+1 when computing homework_series per course.
         ungraded_by_course = {}
         for hw in (Homework.objects
                    .filter(course__course_group_id=course_group['id'],
                            current_grade='-1/100')
                    .order_by('start')
-                   .values('id', 'title', 'course_id', 'category_id')):
+                   .values('id', 'title', 'start', 'course_id', 'category_id', 'current_grade')):
             ungraded_by_course.setdefault(hw['course_id'], []).append(hw)
 
         course_group_num_homework = 0
@@ -246,7 +246,8 @@ def get_grade_data(user_id):
                 category.pop('average_grade')
                 category['grade_points'] = category_grade_points.get(category['id'], [])
 
-            course['most_impactful_ungraded'] = get_most_impactful_ungraded(
+            course['homework_series'] = _build_homework_series(
+                course['grade_points'],
                 course['has_weighted_grading'],
                 list(course['categories']),
                 ungraded_by_course.get(course['id'], [])
@@ -259,44 +260,94 @@ def get_grade_data(user_id):
     }
 
 
-def get_most_impactful_ungraded(has_weighted_grading, categories, ungraded_assignments):
+def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded):
     """
-    Returns {'id': int, 'title': str} of the ungraded assignment that would move
-    the course grade the most if scored perfectly, or None if none exist.
+    Build the ungraded portion of a course's homework_series.
 
-    ungraded_assignments must be pre-sorted by start date ascending so that the
-    soonest-due assignment in the winning category is returned (most actionable
-    for the student). Makes no DB queries.
+    Each item carries an impact_score representing the grade impact if the assignment
+    is scored 100%. For non-weighted courses impact_score is None (all assignments are
+    equally weighted by points). raw_ungraded must be pre-sorted by start ascending so
+    that within-category ties retain the soonest-due assignment first.
+
+    Makes no DB queries.
+
+    :param has_weighted_grading: Whether the course uses weighted grading.
+    :param categories: List of category dicts with keys id, weight, num_homework,
+        num_homework_graded, overall_grade.
+    :param raw_ungraded: List of homework dicts with keys id, title, start, course_id,
+        category_id, current_grade.
+    :return: List of homework_series item dicts with graded=False.
     """
-    if not ungraded_assignments:
-        return None
+    if not raw_ungraded:
+        return []
 
-    if not has_weighted_grading:
-        hw = ungraded_assignments[0]
-        return {'id': hw['id'], 'title': hw['title']}
+    category_impact = {}
+    if has_weighted_grading:
+        for category in categories:
+            weight = float(category.get('weight') or 0)
+            if weight <= 0:
+                continue
+            if category['num_homework'] - category['num_homework_graded'] <= 0:
+                continue
+            num_graded = category['num_homework_graded']
+            current_grade = max(0.0, float(category['overall_grade']))
+            new_grade = (current_grade * num_graded + 100.0) / (num_graded + 1)
+            category_impact[category['id']] = round((new_grade - current_grade) * weight / 100.0, 4)
 
-    best_category_id = None
-    best_impact = -1
-
-    for category in categories:
-        weight = float(category.get('weight') or 0)
-        if weight <= 0:
+    result = []
+    for hw in raw_ungraded:
+        _, possible = hw['current_grade'].split('/')
+        possible = float(possible)
+        if possible <= 0:
+            logger.warning(f'Skipping ungraded Homework {hw["id"]} with non-positive denominator in current_grade')
             continue
-        if category['num_homework'] - category['num_homework_graded'] <= 0:
-            continue
-        num_graded = category['num_homework_graded']
-        current_grade = max(0.0, float(category['overall_grade']))
-        new_grade = (current_grade * num_graded + 100.0) / (num_graded + 1)
-        impact = (new_grade - current_grade) * weight / 100.0
-        if impact > best_impact:
-            best_impact = impact
-            best_category_id = category['id']
+        result.append({
+            'id': hw['id'],
+            'title': hw['title'],
+            'start': hw['start'],
+            'category_id': hw['category_id'],
+            'course_id': hw['course_id'],
+            'points_possible': possible,
+            'graded': False,
+            'assignment_grade': None,
+            'cumulative_grade': None,
+            'impact_score': category_impact.get(hw['category_id']),
+        })
 
-    for hw in ungraded_assignments:
-        if best_category_id is None or hw['category_id'] == best_category_id:
-            return {'id': hw['id'], 'title': hw['title']}
+    return result
 
-    return None
+
+def _build_homework_series(grade_points, has_weighted_grading, categories, raw_ungraded):
+    """
+    Build the course-level homework_series by combining graded items (derived from the
+    legacy grade_points tuples) with ungraded items, sorted by due date ascending.
+
+    The homework_series is the properly-typed replacement for the legacy grade_points
+    tuple field. See HE-324 to extend this to category and course_group levels.
+
+    :param grade_points: Legacy grade_points tuple list for this course.
+    :param has_weighted_grading: Whether the course uses weighted grading.
+    :param categories: List of category dicts (passed through to ungraded builder).
+    :param raw_ungraded: Pre-sorted list of raw ungraded homework dicts.
+    :return: Sorted list of homework_series item dicts.
+    """
+    graded = [
+        {
+            'id': gp[2],
+            'title': gp[3],
+            'start': gp[0],
+            'category_id': gp[5],
+            'course_id': gp[6],
+            'points_possible': None,
+            'graded': True,
+            'assignment_grade': gp[4],
+            'cumulative_grade': gp[1],
+            'impact_score': None,
+        }
+        for gp in grade_points
+    ]
+    ungraded = _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
+    return sorted(graded + ungraded, key=lambda item: item['start'])
 
 
 def recalculate_course_group_grade(course_group_id):
