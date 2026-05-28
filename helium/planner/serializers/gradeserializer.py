@@ -34,8 +34,14 @@ class GradeHolderSerializer(serializers.Serializer):
     grade_points = serializers.ListField(required=False)
 
 
+class ImpactfulAssignmentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+
+
 class GradeCourseSerializer(GradeHolderSerializer):
     categories = GradeHolderSerializer(many=True)
+    most_impactful_ungraded = ImpactfulAssignmentSerializer(required=False, allow_null=True)
 
 
 class GradeCourseGroupSerializer(GradeHolderSerializer):
