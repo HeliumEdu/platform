@@ -16,8 +16,11 @@ class MaterialSerializer(serializers.ModelSerializer):
             self.fields['material_group'].queryset = MaterialGroup.objects.for_user(self.context['request'].user.pk)
             self.fields['courses'].child_relation.queryset = Course.objects.for_user(self.context['request'].user.pk)
 
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
+
     class Meta:
         model = Material
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group',
-            'courses',)
+            'courses', 'notes',)
+        read_only_fields = ('notes',)
