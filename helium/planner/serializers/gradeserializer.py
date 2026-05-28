@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
@@ -23,13 +24,14 @@ class HomeworkSeriesItemSerializer(serializers.Serializer):
 
     graded = serializers.BooleanField()
 
-    assignment_grade = serializers.FloatField(allow_null=True)
+    homework_grade = serializers.FloatField(allow_null=True)
 
     cumulative_grade = serializers.FloatField(allow_null=True)
 
     impact_score = serializers.FloatField(allow_null=True)
 
 
+@extend_schema_serializer(exclude_fields=['grade_points'])
 class GradeHolderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
 

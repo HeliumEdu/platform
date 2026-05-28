@@ -72,6 +72,50 @@ def get_grade_points_for_course(course_id, has_weighted_grading=None):
     return get_grade_points_for(query_set, has_weighted_grading)
 
 
+def get_homework_series_for_course(course_id, has_weighted_grading=None):
+    if has_weighted_grading is None:
+        has_weighted_grading = Course.objects.has_weighted_grading(course_id)
+    grade_points = get_grade_points_for_course(course_id, has_weighted_grading)
+    categories = list(Category.objects.for_course(course_id)
+                      .annotate(
+                          annotated_num_homework=Count('homework', distinct=True),
+                          annotated_num_homework_graded=Count(
+                              'homework',
+                              filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
+                              distinct=True
+                          )
+                      )
+                      .values('id', 'weight', 'average_grade',
+                              'annotated_num_homework', 'annotated_num_homework_graded'))
+    cat_dicts = []
+    for cat in categories:
+        cat_dicts.append({
+            'id': cat['id'],
+            'weight': cat['weight'],
+            'overall_grade': cat['average_grade'],
+            'num_homework': cat['annotated_num_homework'],
+            'num_homework_graded': cat['annotated_num_homework_graded'],
+        })
+    raw_ungraded = list(Homework.objects
+                        .for_course(course_id)
+                        .filter(current_grade='-1/100')
+                        .order_by('start')
+                        .values('id', 'title', 'start', 'course_id', 'category_id', 'current_grade'))
+    return _build_homework_series(grade_points, has_weighted_grading, cat_dicts, raw_ungraded)
+
+
+def get_homework_series_for_course_group(course_group_id):
+    courses = (Course.objects.for_course_group(course_group_id)
+               .annotate(annotated_has_weighted_grading=Exists(
+                   Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
+               )))
+    course_data = []
+    for course in courses:
+        series = get_homework_series_for_course(course.id, course.annotated_has_weighted_grading)
+        course_data.append({'homework_series': series})
+    return _build_course_group_homework_series(course_data)
+
+
 def get_grade_points_for(query_set, has_weighted_grading):
     total_earned = 0
     total_possible = 0
@@ -253,7 +297,15 @@ def get_grade_data(user_id):
                 ungraded_by_course.get(course['id'], [])
             )
 
+            category_homework_series = {}
+            for item in course['homework_series']:
+                category_homework_series.setdefault(item['category_id'], []).append(item)
+
+            for category in course['categories']:
+                category['homework_series'] = category_homework_series.get(category['id'], [])
+
         course_group['num_homework'] = course_group_num_homework
+        course_group['homework_series'] = _build_course_group_homework_series(course_group['courses'])
 
     return {
         'course_groups': course_groups
@@ -309,7 +361,7 @@ def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
             'course_id': hw['course_id'],
             'points_possible': possible,
             'graded': False,
-            'assignment_grade': None,
+            'homework_grade': None,
             'cumulative_grade': None,
             'impact_score': category_impact.get(hw['category_id']),
         })
@@ -321,9 +373,6 @@ def _build_homework_series(grade_points, has_weighted_grading, categories, raw_u
     """
     Build the course-level homework_series by combining graded items (derived from the
     legacy grade_points tuples) with ungraded items, sorted by due date ascending.
-
-    The homework_series is the properly-typed replacement for the legacy grade_points
-    tuple field. See HE-324 to extend this to category and course_group levels.
 
     :param grade_points: Legacy grade_points tuple list for this course.
     :param has_weighted_grading: Whether the course uses weighted grading.
@@ -340,7 +389,7 @@ def _build_homework_series(grade_points, has_weighted_grading, categories, raw_u
             'course_id': gp[6],
             'points_possible': None,
             'graded': True,
-            'assignment_grade': gp[4],
+            'homework_grade': gp[4],
             'cumulative_grade': gp[1],
             'impact_score': None,
         }
@@ -348,6 +397,52 @@ def _build_homework_series(grade_points, has_weighted_grading, categories, raw_u
     ]
     ungraded = _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
     return sorted(graded + ungraded, key=lambda item: item['start'])
+
+
+def _build_course_group_homework_series(courses):
+    """
+    Build course_group-level homework_series by merging per-course series and averaging
+    cumulative_grade across courses at each graded point. Parallels
+    get_grade_points_for_course_group() logic.
+
+    Ungraded items pass through with cumulative_grade=None and no averaging.
+    """
+    all_graded = []
+    all_ungraded = []
+    for course in courses:
+        for item in course.get('homework_series', []):
+            if item['graded']:
+                all_graded.append(item)
+            else:
+                all_ungraded.append(item)
+
+    all_graded = sorted(all_graded, key=lambda x: x['start'])
+
+    course_grades = {}
+    series = []
+    for item in all_graded:
+        course_id = item['course_id']
+        if course_id not in course_grades:
+            course_grades[course_id] = []
+        course_grades[course_id].append(item['cumulative_grade'])
+
+        total = sum(grades[-1] for grades in course_grades.values())
+        overall_grade = round(total / len(course_grades), 4)
+        series.append({
+            'id': item['id'],
+            'title': item['title'],
+            'start': item['start'],
+            'category_id': item['category_id'],
+            'course_id': item['course_id'],
+            'points_possible': None,
+            'graded': True,
+            'homework_grade': item['homework_grade'],
+            'cumulative_grade': overall_grade,
+            'impact_score': None,
+        })
+
+    all_ungraded = sorted(all_ungraded, key=lambda x: x['start'])
+    return sorted(series + all_ungraded, key=lambda item: item['start'])
 
 
 def recalculate_course_group_grade(course_group_id):
