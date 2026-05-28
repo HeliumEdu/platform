@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.common.utils.validators import validate_quill_delta
-from helium.planner.models import Note
+from helium.planner.models import Event, Homework, Material, Note
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -13,6 +13,17 @@ class NoteSerializer(serializers.ModelSerializer):
         model = Note
         fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'created_at', 'updated_at')
         read_only_fields = ('created_at', 'updated_at')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.context.get('request', None):
+            self.fields['homework'].child_relation.queryset = Homework.objects.for_user(
+                self.context['request'].user.pk)
+            self.fields['events'].child_relation.queryset = Event.objects.for_user(
+                self.context['request'].user.pk)
+            self.fields['resources'].child_relation.queryset = Material.objects.for_user(
+                self.context['request'].user.pk)
 
     def to_internal_value(self, data):
         """
