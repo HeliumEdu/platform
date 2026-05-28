@@ -967,3 +967,117 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(float(category.average_grade), 80)
         self.assertEqual(float(course.current_grade), 80)
         self.assertEqual(float(course_group.overall_grade), 80)
+
+    def test_build_ungraded_series_items_empty(self):
+        # GIVEN / WHEN
+        result = gradingservice._build_ungraded_series_items(
+            has_weighted_grading=True,
+            categories=[],
+            raw_ungraded=[]
+        )
+
+        # THEN
+        self.assertEqual(result, [])
+
+    def test_build_ungraded_series_items_nonweighted_fields_and_order(self):
+        # GIVEN
+        start_a = datetime.datetime(2026, 5, 10, tzinfo=datetime.timezone.utc)
+        start_b = datetime.datetime(2026, 5, 20, tzinfo=datetime.timezone.utc)
+        raw_ungraded = [
+            {'id': 1, 'title': 'Assignment A', 'start': start_a, 'course_id': 1, 'category_id': 10, 'current_grade': '-1/100'},
+            {'id': 2, 'title': 'Assignment B', 'start': start_b, 'course_id': 1, 'category_id': 10, 'current_grade': '-1/100'},
+        ]
+
+        # WHEN
+        result = gradingservice._build_ungraded_series_items(
+            has_weighted_grading=False,
+            categories=[],
+            raw_ungraded=raw_ungraded
+        )
+
+        # THEN — correct shape, start order preserved, no impact_score for non-weighted
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]['id'], 1)
+        self.assertEqual(result[1]['id'], 2)
+        self.assertEqual(result[0]['points_possible'], 100.0)
+        self.assertFalse(result[0]['graded'])
+        self.assertIsNone(result[0]['assignment_grade'])
+        self.assertIsNone(result[0]['cumulative_grade'])
+        self.assertIsNone(result[0]['impact_score'])
+
+    def test_build_ungraded_series_items_weighted_impact_score_set(self):
+        # GIVEN — two categories with different weights; verify impact_score is attached
+        start_early = datetime.datetime(2026, 5, 1, tzinfo=datetime.timezone.utc)
+        start_late = datetime.datetime(2026, 5, 30, tzinfo=datetime.timezone.utc)
+        categories = [
+            {'id': 10, 'weight': 30, 'num_homework': 2, 'num_homework_graded': 1, 'overall_grade': 80.0},
+            {'id': 20, 'weight': 60, 'num_homework': 2, 'num_homework_graded': 1, 'overall_grade': 70.0},
+        ]
+        raw_ungraded = [
+            {'id': 1, 'title': 'Low Impact', 'start': start_early, 'course_id': 1, 'category_id': 10, 'current_grade': '-1/100'},
+            {'id': 2, 'title': 'High Impact', 'start': start_late, 'course_id': 1, 'category_id': 20, 'current_grade': '-1/100'},
+        ]
+
+        # WHEN
+        result = gradingservice._build_ungraded_series_items(
+            has_weighted_grading=True,
+            categories=categories,
+            raw_ungraded=raw_ungraded
+        )
+
+        # THEN — impact_score set per category; cat 20 has higher score than cat 10
+        item_cat10 = next(r for r in result if r['category_id'] == 10)
+        item_cat20 = next(r for r in result if r['category_id'] == 20)
+        self.assertIsNotNone(item_cat10['impact_score'])
+        self.assertIsNotNone(item_cat20['impact_score'])
+        self.assertGreater(item_cat20['impact_score'], item_cat10['impact_score'])
+
+    def test_build_ungraded_series_items_skips_zero_denominator(self):
+        # GIVEN
+        raw_ungraded = [
+            {'id': 1, 'title': 'Poisoned', 'start': datetime.datetime(2026, 5, 1, tzinfo=datetime.timezone.utc),
+             'course_id': 1, 'category_id': 10, 'current_grade': '-1/0'},
+            {'id': 2, 'title': 'Valid', 'start': datetime.datetime(2026, 5, 2, tzinfo=datetime.timezone.utc),
+             'course_id': 1, 'category_id': 10, 'current_grade': '-1/100'},
+        ]
+
+        # WHEN
+        result = gradingservice._build_ungraded_series_items(
+            has_weighted_grading=False,
+            categories=[],
+            raw_ungraded=raw_ungraded
+        )
+
+        # THEN — poisoned entry silently skipped
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['id'], 2)
+
+    def test_build_homework_series_combines_graded_and_ungraded_sorted_by_start(self):
+        # GIVEN — one graded tuple and one ungraded raw item
+        graded_start = datetime.datetime(2026, 4, 1, tzinfo=datetime.timezone.utc)
+        ungraded_start = datetime.datetime(2026, 5, 15, tzinfo=datetime.timezone.utc)
+        grade_points = [
+            [graded_start, 85.0, 10, 'Quiz 1', 85.0, 5, 1],
+        ]
+        raw_ungraded = [
+            {'id': 20, 'title': 'Final Exam', 'start': ungraded_start,
+             'course_id': 1, 'category_id': 5, 'current_grade': '-1/100'},
+        ]
+
+        # WHEN
+        result = gradingservice._build_homework_series(
+            grade_points=grade_points,
+            has_weighted_grading=False,
+            categories=[],
+            raw_ungraded=raw_ungraded
+        )
+
+        # THEN — graded item first, ungraded second; correct shapes
+        self.assertEqual(len(result), 2)
+        self.assertTrue(result[0]['graded'])
+        self.assertEqual(result[0]['id'], 10)
+        self.assertEqual(result[0]['cumulative_grade'], 85.0)
+        self.assertIsNone(result[0]['impact_score'])
+        self.assertFalse(result[1]['graded'])
+        self.assertEqual(result[1]['id'], 20)
+        self.assertIsNone(result[1]['cumulative_grade'])
