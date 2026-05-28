@@ -516,3 +516,109 @@ class TestCaseNoteValidation(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         note.refresh_from_db()
         self.assertEqual(note.title, 'Updated Title')
+
+    def test_filter_shown_on_calendar_true_includes_visible_and_unlinked(self):
+        """shown_on_calendar=true returns notes in visible groups, event-linked, and standalone."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        visible_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=True)
+        hidden_group = coursegrouphelper.given_course_group_exists(user, title='Hidden', shown_on_calendar=False)
+        visible_course = coursehelper.given_course_exists(visible_group)
+        hidden_course = coursehelper.given_course_exists(hidden_group, title='Hidden Course')
+        hw_visible = homeworkhelper.given_homework_exists(visible_course)
+        hw_hidden = homeworkhelper.given_homework_exists(hidden_course, title='Hidden HW')
+
+        note_visible_hw = notehelper.given_note_linked_to_homework(user, hw_visible, title='Visible HW Note')
+        note_hidden_hw = notehelper.given_note_linked_to_homework(user, hw_hidden, title='Hidden HW Note')
+
+        event = eventhelper.given_event_exists(user)
+        note_event = notehelper.given_note_linked_to_event(user, event, title='Event Note')
+
+        note_standalone = notehelper.given_note_exists(user, title='Standalone Note')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {n['id'] for n in response.data}
+        self.assertIn(note_visible_hw.pk, returned_ids)
+        self.assertNotIn(note_hidden_hw.pk, returned_ids)
+        self.assertIn(note_event.pk, returned_ids)
+        self.assertIn(note_standalone.pk, returned_ids)
+
+    def test_filter_shown_on_calendar_false_returns_hidden_group_and_unlinked_notes(self):
+        """shown_on_calendar=false returns notes linked to hidden groups, plus event-linked and standalone."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        visible_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=True)
+        hidden_group = coursegrouphelper.given_course_group_exists(user, title='Hidden', shown_on_calendar=False)
+        visible_course = coursehelper.given_course_exists(visible_group)
+        hidden_course = coursehelper.given_course_exists(hidden_group, title='Hidden Course')
+        hw_visible = homeworkhelper.given_homework_exists(visible_course)
+        hw_hidden = homeworkhelper.given_homework_exists(hidden_course, title='Hidden HW')
+
+        note_visible_hw = notehelper.given_note_linked_to_homework(user, hw_visible, title='Visible HW Note')
+        note_hidden_hw = notehelper.given_note_linked_to_homework(user, hw_hidden, title='Hidden HW Note')
+
+        event = eventhelper.given_event_exists(user)
+        note_event = notehelper.given_note_linked_to_event(user, event, title='Event Note')
+        note_standalone = notehelper.given_note_exists(user, title='Standalone Note')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=false')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {n['id'] for n in response.data}
+        self.assertNotIn(note_visible_hw.pk, returned_ids)
+        self.assertIn(note_hidden_hw.pk, returned_ids)
+        self.assertIn(note_event.pk, returned_ids)
+        self.assertIn(note_standalone.pk, returned_ids)
+
+    def test_filter_shown_on_calendar_with_resource_link(self):
+        """shown_on_calendar filter works for resource-linked notes via material group."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        visible_mat_group = materialgrouphelper.given_material_group_exists(user, shown_on_calendar=True)
+        hidden_mat_group = materialgrouphelper.given_material_group_exists(
+            user, title='Hidden Resources', shown_on_calendar=False
+        )
+        visible_material = materialhelper.given_material_exists(visible_mat_group)
+        hidden_material = materialhelper.given_material_exists(hidden_mat_group, title='Hidden Material')
+
+        note_visible = notehelper.given_note_linked_to_resource(user, visible_material, title='Visible Res Note')
+        note_hidden = notehelper.given_note_linked_to_resource(user, hidden_material, title='Hidden Res Note')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {n['id'] for n in response.data}
+        self.assertIn(note_visible.pk, returned_ids)
+        self.assertNotIn(note_hidden.pk, returned_ids)
+
+    def test_filter_shown_on_calendar_without_param_returns_all(self):
+        """Without the param, all notes are returned regardless of group visibility."""
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        hidden_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=False)
+        hidden_course = coursehelper.given_course_exists(hidden_group, title='Hidden Course')
+        hw_hidden = homeworkhelper.given_homework_exists(hidden_course, title='Hidden HW')
+
+        note_hidden = notehelper.given_note_linked_to_homework(user, hw_hidden, title='Hidden Note')
+        note_standalone = notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {n['id'] for n in response.data}
+        self.assertIn(note_hidden.pk, returned_ids)
+        self.assertIn(note_standalone.pk, returned_ids)
