@@ -172,6 +172,16 @@ def get_grade_data(user_id):
                                            'annotated_num_homework_graded',
                                            'annotated_has_weighted_grading')
                                    .order_by('start_date', 'title'))
+        # Batch-fetch all ungraded homework for this group's courses in one query
+        # to avoid an N+1 when computing most_impactful_ungraded per course.
+        ungraded_by_course = {}
+        for hw in (Homework.objects
+                   .filter(course__course_group_id=course_group['id'],
+                           current_grade='-1/100')
+                   .order_by('start')
+                   .values('id', 'title', 'course_id', 'category_id')):
+            ungraded_by_course.setdefault(hw['course_id'], []).append(hw)
+
         course_group_num_homework = 0
         for course in course_group['courses']:
             course['overall_grade'] = course['current_grade']
@@ -236,11 +246,57 @@ def get_grade_data(user_id):
                 category.pop('average_grade')
                 category['grade_points'] = category_grade_points.get(category['id'], [])
 
+            course['most_impactful_ungraded'] = get_most_impactful_ungraded(
+                course['has_weighted_grading'],
+                list(course['categories']),
+                ungraded_by_course.get(course['id'], [])
+            )
+
         course_group['num_homework'] = course_group_num_homework
 
     return {
         'course_groups': course_groups
     }
+
+
+def get_most_impactful_ungraded(has_weighted_grading, categories, ungraded_assignments):
+    """
+    Returns {'id': int, 'title': str} of the ungraded assignment that would move
+    the course grade the most if scored perfectly, or None if none exist.
+
+    ungraded_assignments must be pre-sorted by start date ascending so that the
+    soonest-due assignment in the winning category is returned (most actionable
+    for the student). Makes no DB queries.
+    """
+    if not ungraded_assignments:
+        return None
+
+    if not has_weighted_grading:
+        hw = ungraded_assignments[0]
+        return {'id': hw['id'], 'title': hw['title']}
+
+    best_category_id = None
+    best_impact = -1
+
+    for category in categories:
+        weight = float(category.get('weight') or 0)
+        if weight <= 0:
+            continue
+        if category['num_homework'] - category['num_homework_graded'] <= 0:
+            continue
+        num_graded = category['num_homework_graded']
+        current_grade = max(0.0, float(category['overall_grade']))
+        new_grade = (current_grade * num_graded + 100.0) / (num_graded + 1)
+        impact = (new_grade - current_grade) * weight / 100.0
+        if impact > best_impact:
+            best_impact = impact
+            best_category_id = category['id']
+
+    for hw in ungraded_assignments:
+        if best_category_id is None or hw['category_id'] == best_category_id:
+            return {'id': hw['id'], 'title': hw['title']}
+
+    return None
 
 
 def recalculate_course_group_grade(course_group_id):
