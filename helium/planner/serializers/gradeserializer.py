@@ -8,6 +8,28 @@ from rest_framework import serializers
 logger = logging.getLogger(__name__)
 
 
+class HomeworkSeriesItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+    title = serializers.CharField()
+
+    start = serializers.DateTimeField()
+
+    category_id = serializers.IntegerField()
+
+    course_id = serializers.IntegerField()
+
+    points_possible = serializers.FloatField(allow_null=True)
+
+    graded = serializers.BooleanField()
+
+    assignment_grade = serializers.FloatField(allow_null=True)
+
+    cumulative_grade = serializers.FloatField(allow_null=True)
+
+    impact_score = serializers.FloatField(allow_null=True)
+
+
 class GradeHolderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
 
@@ -33,15 +55,11 @@ class GradeHolderSerializer(serializers.Serializer):
 
     grade_points = serializers.ListField(required=False)
 
-
-class ImpactfulAssignmentSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField()
+    homework_series = HomeworkSeriesItemSerializer(many=True, required=False)
 
 
 class GradeCourseSerializer(GradeHolderSerializer):
     categories = GradeHolderSerializer(many=True)
-    most_impactful_ungraded = ImpactfulAssignmentSerializer(required=False, allow_null=True)
 
 
 class GradeCourseGroupSerializer(GradeHolderSerializer):
