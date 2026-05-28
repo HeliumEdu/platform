@@ -202,6 +202,11 @@ class NoteFilter(django_filters.FilterSet):
         method='filter_has_link',
         help_text='`true` returns only notes linked to an entity; `false` returns only standalone notes.',
     )
+    shown_on_calendar = django_filters.BooleanFilter(
+        method='filter_shown_on_calendar',
+        help_text="Restrict to notes whose linked entity's parent group is visible on the user's calendar. "
+                  "Notes without a group (event-linked and standalone) are always included.",
+    )
     homework = django_filters.NumberFilter(field_name='homework__id',
                                            help_text='Filter to the note linked to this homework ID.')
     event = django_filters.NumberFilter(field_name='events__id',
@@ -243,3 +248,10 @@ class NoteFilter(django_filters.FilterSet):
             events__isnull=True,
             resources__isnull=True
         )
+
+    def filter_shown_on_calendar(self, queryset, name, value):
+        has_matching_homework = Q(homework__course__course_group__shown_on_calendar=value)
+        has_matching_resource = Q(resources__material_group__shown_on_calendar=value)
+        no_group = Q(homework__isnull=True, resources__isnull=True)
+
+        return queryset.filter(has_matching_homework | has_matching_resource | no_group).distinct()
