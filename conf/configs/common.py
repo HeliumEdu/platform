@@ -410,8 +410,10 @@ SPECTACULAR_SETTINGS = {
     'SORT_OPERATIONS': True,
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
+        'helium.common.utils.openapiutils.add_enum_descriptions',
         'helium.common.utils.openapiutils.add_tag_groups',
         'helium.common.utils.openapiutils.order_security',
         'helium.common.utils.openapiutils.strip_enum_int_bounds',
