@@ -11,52 +11,31 @@ logger = logging.getLogger(__name__)
 
 class HomeworkSeriesItemSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-
     title = serializers.CharField()
-
     start = serializers.DateTimeField()
-
     category_id = serializers.IntegerField()
-
     course_id = serializers.IntegerField()
-
     points_possible = serializers.FloatField(allow_null=True)
-
     graded = serializers.BooleanField()
-
     homework_grade = serializers.FloatField(allow_null=True)
-
     cumulative_grade = serializers.FloatField(allow_null=True)
-
     impact_score = serializers.FloatField(allow_null=True)
 
 
 @extend_schema_serializer(exclude_fields=['grade_points'])
 class GradeHolderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-
     title = serializers.CharField()
-
     overall_grade = serializers.DecimalField(7, 4, coerce_to_string=False)
-
     weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
-
     color = serializers.CharField(required=False)
-
     grade_by_weight = serializers.DecimalField(7, 4, coerce_to_string=False, required=False)
-
     trend = serializers.FloatField()
-
     num_homework = serializers.IntegerField()
-
     num_homework_completed = serializers.IntegerField()
-
     num_homework_graded = serializers.IntegerField()
-
     has_weighted_grading = serializers.BooleanField(required=False)
-
     grade_points = serializers.ListField(required=False)
-
     homework_series = HomeworkSeriesItemSerializer(many=True, required=False)
 
 

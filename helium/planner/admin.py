@@ -648,7 +648,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
 
 
 class NoteAdmin(BaseModelAdmin):
-    list_display = ('get_id', 'title', 'get_content_size', 'updated_at', 'get_user')
+    list_display = ('id', 'title', 'get_content_size', 'updated_at', 'get_user')
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -664,12 +664,6 @@ class NoteAdmin(BaseModelAdmin):
             return readonly_fields + self.readonly_fields + ('linked_entity', 'user')
 
         return readonly_fields + self.readonly_fields
-
-    def get_id(self, obj):
-        return str(obj.pk)
-
-    get_id.short_description = 'ID'
-    get_id.admin_order_field = 'id'
 
     def get_user(self, obj):
         return obj.user.username

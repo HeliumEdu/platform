@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -18,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 def _push_body(reminder):
-    from datetime import timedelta
     if reminder.homework:
         local_time = timezone.localtime(reminder.homework.start)
     elif reminder.event:
@@ -74,10 +74,8 @@ def heal_orphaned_repeating_reminders(user_id=None):
     :param user_id: Optional user ID to scope the operation to a single user. When None (default),
         operates globally across all users.
     """
-    import datetime as dt
-
     now = timezone.now()
-    window_start = now - dt.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
+    window_start = now - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
     base_filter = {'course__isnull': False}
     if user_id is not None:
@@ -184,7 +182,6 @@ def create_next_repeating_reminder(reminder):
         return None
 
     # Compute the start time of the class that just fired so we skip it when searching.
-    from datetime import timedelta
     offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
     fired_class_start = reminder.start_of_range + offset_delta if reminder.start_of_range else None
 
