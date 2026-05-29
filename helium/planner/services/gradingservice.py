@@ -104,18 +104,6 @@ def get_homework_series_for_course(course_id, has_weighted_grading=None):
     return _build_homework_series(grade_points, has_weighted_grading, cat_dicts, raw_ungraded)
 
 
-def get_homework_series_for_course_group(course_group_id):
-    courses = (Course.objects.for_course_group(course_group_id)
-               .annotate(annotated_has_weighted_grading=Exists(
-                   Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
-               )))
-    course_data = []
-    for course in courses:
-        series = get_homework_series_for_course(course.id, course.annotated_has_weighted_grading)
-        course_data.append({'homework_series': series})
-    return _build_course_group_homework_series(course_data)
-
-
 def get_grade_points_for(query_set, has_weighted_grading):
     total_earned = 0
     total_possible = 0
@@ -473,8 +461,6 @@ def recalculate_course_grade(course_id):
     Course.objects.filter(pk=course_id).update(current_grade=current_grade, trend=trend)
 
     # Also recalculate category weight breakdown
-    total_earned = 0
-    total_possible = 0
     category_totals = {}
     for category_id, grade, weight in (Homework.objects
             .for_course(course_id)
@@ -488,9 +474,6 @@ def recalculate_course_grade(course_id):
         if possible <= 0:
             logger.warning(f'Skipping Homework in category {category_id} with non-positive denominator in current_grade')
             continue
-
-        total_earned += earned
-        total_possible += possible
 
         if category_id not in category_totals:
             category_totals[category_id] = {'weight': weight, 'total_earned': 0, 'total_possible': 0}

@@ -180,12 +180,9 @@ class _QuillHTMLParser(HTMLParser):
         self.handle_data(char)
 
     def handle_charref(self, name):
-        # Handle numeric entities like &#160;
+        # Handle numeric entities like &#160; (decimal) and &#x3E; (hex — name keeps the leading 'x')
         from html import unescape
-        if name.startswith('x'):
-            char = unescape(f'&#{name};')
-        else:
-            char = unescape(f'&#{name};')
+        char = unescape(f'&#{name};')
         self.handle_data(char)
 
 
