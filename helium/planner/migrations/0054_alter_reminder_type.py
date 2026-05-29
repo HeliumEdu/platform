@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='reminder',
             name='type',
-            field=models.PositiveIntegerField(choices=[(1, 'Email'), (3, 'Push')], default=3, help_text='A valid reminder type choice.'),
+            field=models.PositiveIntegerField(choices=[(1, 'Email'), (3, 'Push')], default=3, help_text='The notification channel for this reminder.'),
         ),
     ]
