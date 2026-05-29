@@ -9,6 +9,8 @@ from helium.planner.models import Material, MaterialGroup, Course
 
 @extend_schema_serializer(exclude_fields=('details',))
 class MaterialSerializer(serializers.ModelSerializer):
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -20,5 +22,5 @@ class MaterialSerializer(serializers.ModelSerializer):
         model = Material
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group',
-            'courses',)
-        read_only_fields = ('material_group',)
+            'courses', 'notes',)
+        read_only_fields = ('material_group', 'notes',)

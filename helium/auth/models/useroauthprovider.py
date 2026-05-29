@@ -12,10 +12,12 @@ class UserOAuthProvider(models.Model):
     """
     PROVIDER_GOOGLE = 'google'
     PROVIDER_APPLE = 'apple'
+    PROVIDER_MICROSOFT = 'microsoft'
 
     PROVIDER_CHOICES = [
         (PROVIDER_GOOGLE, 'Google'),
         (PROVIDER_APPLE, 'Apple'),
+        (PROVIDER_MICROSOFT, 'Microsoft'),
     ]
 
     user = models.ForeignKey(

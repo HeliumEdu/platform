@@ -7,7 +7,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('helium_auth', '0062_alter_usersettings_default_reminder_type'),
+        ('helium_auth', '0063_alter_usersettings_default_reminder_type'),
     ]
 
     operations = [

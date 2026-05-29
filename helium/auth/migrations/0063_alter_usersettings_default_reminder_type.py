@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('helium_auth', '0061_alter_usersettings_color_scheme_theme_and_more'),
+        ('helium_auth', '0062_alter_useroauthprovider_provider'),
     ]
 
     operations = [
