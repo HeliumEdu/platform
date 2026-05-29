@@ -74,6 +74,21 @@ TAG_GROUPS = [
 ]
 
 
+def add_enum_descriptions(result, generator, request, public):
+    """
+    Inject ``x-enumDescriptions`` into named enum components so Redoc renders human-readable
+    labels alongside each value. Only applies to enums declared in ``ENUM_NAME_OVERRIDES``.
+    """
+    from drf_spectacular.settings import spectacular_settings
+
+    schemas = result.get('components', {}).get('schemas', {})
+    for enum_name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
+        if enum_name not in schemas:
+            continue
+        schemas[enum_name]['x-enumDescriptions'] = {str(value): label for value, label in choices}
+    return result
+
+
 def add_tag_groups(result, generator, request, public):
     result['x-tagGroups'] = TAG_GROUPS
     return result
