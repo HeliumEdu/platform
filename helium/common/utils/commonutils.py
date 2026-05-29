@@ -194,15 +194,12 @@ def calculate_trend(series_range, series_list):
     x = 0
     y = 0
     xx = 0
-    yy = 0
     sx = 0
 
     for range_item, list_item in zip(series_range, series_list):
         x += range_item
         y += list_item
         xx += range_item * range_item
-
-        yy += list_item * list_item
         sx += range_item * list_item
 
     d = xx * range_count - x * x

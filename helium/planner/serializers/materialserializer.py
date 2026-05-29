@@ -9,14 +9,14 @@ from helium.planner.models import Material, MaterialGroup, Course
 
 @extend_schema_serializer(exclude_fields=('details',))
 class MaterialSerializer(serializers.ModelSerializer):
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if self.context.get('request', None):
             self.fields['material_group'].queryset = MaterialGroup.objects.for_user(self.context['request'].user.pk)
             self.fields['courses'].child_relation.queryset = Course.objects.for_user(self.context['request'].user.pk)
-
-    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
 
     class Meta:
         model = Material
