@@ -231,7 +231,9 @@ def oauth_login(request):
         if not email:
             raise AuthenticationFailed(f"Email not provided by {provider_name} account")
 
-        if not email_verified:
+        # Microsoft does not set email_verified for external (non-Microsoft) email
+        # addresses in personal accounts; OAuth authentication is sufficient.
+        if not email_verified and provider != 'microsoft':
             raise AuthenticationFailed(f"Email not verified by {provider_name}")
 
         provider_uid = decoded_token.get('uid')
