@@ -24,7 +24,7 @@ class Category(BaseModel):
             'points-based and every assignment contributes via its `current_grade` fraction '
             'regardless of category weight. '
             'See `Course.has_weighted_grading` and '
-            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories'
+            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories.'
         ),
         max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
 

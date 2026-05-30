@@ -7,7 +7,7 @@ from django.db import models
 
 class UserOAuthProvider(models.Model):
     """
-    Tracks which OAuth providers (Google, Apple, etc.) a user has linked to their account.
+    Tracks which OAuth providers a user has linked to their account.
     Allows users to have multiple authentication methods and switch between providers.
     """
     PROVIDER_GOOGLE = 'google'
@@ -24,28 +24,28 @@ class UserOAuthProvider(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='oauth_providers',
-        help_text='The user this OAuth provider is linked to'
+        help_text='The user this OAuth provider is linked to.'
     )
 
     provider = models.CharField(
         max_length=50,
         choices=PROVIDER_CHOICES,
-        help_text='The OAuth provider (Google, Apple, etc.)'
+        help_text='The OAuth provider.'
     )
 
     provider_user_id = models.CharField(
         max_length=255,
-        help_text='The unique user ID from the OAuth provider (Firebase UID)'
+        help_text='The unique user ID from the OAuth provider.'
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
-        help_text='When this provider was first linked to the account'
+        help_text='When this provider was first linked to the account.'
     )
 
     last_used_at = models.DateTimeField(
         auto_now=True,
-        help_text='When this provider was last used to sign in'
+        help_text='When this provider was last used to sign in.'
     )
 
     class Meta:

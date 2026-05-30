@@ -30,10 +30,7 @@ class BaseCalendar(BaseModel):
         db_index=True)
 
     priority = models.PositiveIntegerField(
-        help_text=(
-            'Should be stored in increments of 10. '
-            'Suggested: `50` routine, `80` exam, `90` final.'
-        ),
+        help_text='Should be stored in increments of 10.',
         default=50, validators=[MaxValueValidator(100)])
 
     url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
