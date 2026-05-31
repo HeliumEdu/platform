@@ -654,6 +654,12 @@ class NoteAdmin(BaseModelAdmin):
     autocomplete_fields = ('user',)
     exclude = ('homework', 'events', 'resources')
 
+    def get_exclude(self, request, obj=None):
+        excluded = super().get_exclude(request, obj) or ()
+        if 'prod' in settings.ENVIRONMENT:
+            return excluded + ('content',)
+        return excluded
+
     def has_add_permission(self, request):
         return False
 

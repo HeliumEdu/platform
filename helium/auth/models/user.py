@@ -56,6 +56,11 @@ class User(AbstractBaseUser, BaseModel):
         blank=True, null=True,
         help_text='Percentage of the last 30 days the user was active on the mobile app. Updated nightly.')
 
+    is_power_user = models.BooleanField(
+        default=False,
+        help_text='True if this user is in the top 5% by composite engagement score (homework, completions, notes) '
+                  'over the last 30 days. Recalculated nightly; cleared when the user drops out of the top 5%.')
+
     onboarding_completed_at = models.DateTimeField(
         blank=True, null=True,
         help_text='When the user first cleared the example schedule (end of onboarding). '

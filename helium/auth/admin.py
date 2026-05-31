@@ -178,8 +178,8 @@ class UserPushTokenInline(django_admin.TabularInline):
     model = UserPushToken
     extra = 0
     can_delete = True
-    fields = ('device_id', 'token', 'created_at', 'updated_at')
-    readonly_fields = ('device_id', 'token', 'created_at', 'updated_at')
+    fields = ('device_id', 'created_at', 'updated_at')
+    readonly_fields = ('device_id', 'created_at', 'updated_at')
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -336,8 +336,9 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars', 'last_login_legacy',
                     'deletion_warning_count', 'deletion_requested_at', 'mobile_app_usage_percent_30d',
-                    'created_at', 'is_active')
-    list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'settings__show_getting_started',
+                    'created_at', 'is_power_user', 'is_active')
+    list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'is_power_user',
+                   'settings__show_getting_started',
                    'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type',
                    'settings__color_scheme_theme', 'settings__calendar_use_category_colors',
@@ -397,7 +398,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:
             base = self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
-                                           'mobile_app_usage_percent_30d', 'deletion_warning_count',
+                                           'mobile_app_usage_percent_30d', 'is_power_user', 'deletion_warning_count',
                                            'deletion_warning_sent_at', 'onboarding_completed_at',
                                            'deletion_requested_at', 'get_2fa_enabled',
                                            'verification_code', 'email_changing',)
