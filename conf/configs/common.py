@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.51"
+__version__ = "2.2.52"
 
 import json
 import os
@@ -291,8 +291,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': PROJECT_VERSION,
     'DESCRIPTION': (
         f"{PROJECT_NAME} is a free, color-coded online student planner for classes, "
-        "homework, grades, and notes — the academic calendar built for the way you "
-        "actually study. "
+        "homework, grades, and notes. "
         "The API exposes the full set of resources behind the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
         "assignments, events, reminders, notes, file attachments, resources, external "
