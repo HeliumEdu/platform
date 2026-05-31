@@ -118,22 +118,33 @@ class PlatformAdminSite(_AdminBase):
 
     def get_app_list(self, request, app_label=None):
         app_list = super().get_app_list(request, app_label)
-        if app_label is None:
+        if app_label is not None:
+            return app_list
+
+        admin_app = next((a for a in app_list if a['app_label'] == 'admin'), None)
+        common_app = next((a for a in app_list if a['app_label'] == 'helium_common'), None)
+        feed_app = next((a for a in app_list if a['app_label'] == 'feed'), None)
+        planner_app = next((a for a in app_list if a['app_label'] == 'planner'), None)
+
+        if admin_app is not None:
+            if common_app is not None:
+                admin_app['models'].extend(common_app['models'])
+                app_list.remove(common_app)
+
             tools_url = reverse('admin:periodic-tasks')
-            app_list.append({
-                'name': 'Tools',
-                'app_label': 'helium_tools',
-                'app_url': tools_url,
-                'has_module_perms': True,
-                'models': [
-                    {
-                        'name': 'Periodic tasks',
-                        'object_name': 'PeriodicTask',
-                        'admin_url': tools_url,
-                        'view_only': True,
-                    },
-                ],
+            admin_app['models'].append({
+                'name': 'Periodic tasks',
+                'object_name': 'PeriodicTask',
+                'admin_url': tools_url,
+                'view_only': True,
             })
+            admin_app['models'].sort(key=lambda m: m['name'])
+
+        if feed_app is not None and planner_app is not None:
+            planner_app['models'].extend(feed_app['models'])
+            planner_app['models'].sort(key=lambda m: m['name'])
+            app_list.remove(feed_app)
+
         return app_list
 
     def periodic_tasks_view(self, request):
