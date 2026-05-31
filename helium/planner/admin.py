@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
-    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter
+    has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, logged_action
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule, Note
 from helium.common.utils import taskutils
@@ -27,6 +27,7 @@ def _linked_notes(obj):
         ((reverse('admin:planner_note_change', args=[n.pk]), n.title or 'Untitled') for n in notes))
 
 
+@logged_action
 @action(description="Recalculate grades for selected items")
 def recalculate_grade(modeladmin, request, queryset):
     model_class = queryset.model
@@ -548,6 +549,7 @@ class ReminderExampleScheduleFilter(SimpleListFilter):
         return queryset
 
 
+@logged_action
 @action(description='Mark selected reminders as unsent')
 def mark_reminders_unsent(modeladmin, request, queryset):
     updated = queryset.update(sent=False, dismissed=False)
