@@ -4,12 +4,13 @@ __license__ = "MIT"
 from django.conf import settings
 from django.contrib import admin as django_admin
 
-from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter
+from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, logged_action
 from helium.common.utils import taskutils
 from helium.feed.models import ExternalCalendar
 from helium.feed.tasks import reindex_feeds
 
 
+@logged_action
 @django_admin.action(description='Force re-index selected calendars')
 def force_reindex_calendars(modeladmin, request, queryset):
     queryset.update(etag=None, last_modified_header=None)

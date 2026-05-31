@@ -2,12 +2,16 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import logging
+from functools import wraps
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin import ModelAdmin, SimpleListFilter
+from django.contrib.admin import ModelAdmin, SimpleListFilter, action
 from django.contrib.admin.forms import AdminAuthenticationForm
+from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth import logout
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -16,12 +20,35 @@ from django.urls import path, reverse
 from django_otp import devices_for_user
 from two_factor.admin import AdminSiteOTPRequired
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
+from two_factor.views import LoginView as TwoFactorLoginView
 
 from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.models import TaskResultProxy
+from helium.common.models import EmailReputationEvent, TaskResultProxy
 from helium.common.periodic import PERIODIC_TASKS, format_schedule
+from helium.common.utils.commonutils import add_to_ses_suppression_list
 
 logger = logging.getLogger(__name__)
+
+
+def logged_action(func):
+    @wraps(func)
+    def _wrapper(modeladmin, request, queryset):
+        objects = list(queryset)
+        result = func(modeladmin, request, queryset)
+        ct = ContentType.objects.get_for_model(queryset.model)
+        for obj in objects:
+            LogEntry.objects.log_action(
+                user_id=request.user.pk,
+                content_type_id=ct.pk,
+                object_id=obj.pk,
+                object_repr=str(obj),
+                action_flag=CHANGE,
+                change_message=getattr(func, 'short_description', func.__name__),
+            )
+        return result
+
+    return _wrapper
+
 
 _AdminBase = AdminSiteOTPRequired if settings.ADMIN_ENFORCE_2FA else AdminSite
 
@@ -42,8 +69,6 @@ class AdminTwoFactorLoginView:
 
     @classmethod
     def as_view(cls, **kwargs):
-        from two_factor.views import LoginView as TwoFactorLoginView
-
         class _View(TwoFactorLoginView):
             form_list = (
                 (TwoFactorLoginView.AUTH_STEP, AdminLoginForm),
@@ -75,7 +100,6 @@ class PlatformAdminSite(_AdminBase):
     def login(self, request, extra_context=None):
         # If authenticated but lacking admin permission, log out to prevent redirect loops
         if request.user.is_authenticated and not self.has_permission(request):
-            from django.contrib.auth import logout
             logout(request)
 
         if not settings.ADMIN_ENFORCE_2FA:
@@ -94,22 +118,33 @@ class PlatformAdminSite(_AdminBase):
 
     def get_app_list(self, request, app_label=None):
         app_list = super().get_app_list(request, app_label)
-        if app_label is None:
+        if app_label is not None:
+            return app_list
+
+        admin_app = next((a for a in app_list if a['app_label'] == 'admin'), None)
+        common_app = next((a for a in app_list if a['app_label'] == 'helium_common'), None)
+        feed_app = next((a for a in app_list if a['app_label'] == 'feed'), None)
+        planner_app = next((a for a in app_list if a['app_label'] == 'planner'), None)
+
+        if admin_app is not None:
+            if common_app is not None:
+                admin_app['models'].extend(common_app['models'])
+                app_list.remove(common_app)
+
             tools_url = reverse('admin:periodic-tasks')
-            app_list.append({
-                'name': 'Tools',
-                'app_label': 'helium_tools',
-                'app_url': tools_url,
-                'has_module_perms': True,
-                'models': [
-                    {
-                        'name': 'Periodic tasks',
-                        'object_name': 'PeriodicTask',
-                        'admin_url': tools_url,
-                        'view_only': True,
-                    },
-                ],
+            admin_app['models'].append({
+                'name': 'Periodic tasks',
+                'object_name': 'PeriodicTask',
+                'admin_url': tools_url,
+                'view_only': True,
             })
+            admin_app['models'].sort(key=lambda m: m['name'])
+
+        if feed_app is not None and planner_app is not None:
+            planner_app['models'].extend(feed_app['models'])
+            planner_app['models'].sort(key=lambda m: m['name'])
+            app_list.remove(feed_app)
+
         return app_list
 
     def periodic_tasks_view(self, request):
@@ -375,13 +410,10 @@ class TaskResultAdmin(ModelAdmin):
         return False
 
 
-admin_site.register(TaskResultProxy, TaskResultAdmin)
-
-
+@logged_action
+@action(description='Add selected to SES suppression list (COMPLAINT)')
 def suppress_selected_email_events(modeladmin, request, queryset):
     """Django Admin action: suppress the distinct email addresses from the selected events."""
-    from helium.common.utils.commonutils import add_to_ses_suppression_list
-
     emails = list(queryset.values_list('email', flat=True).distinct())
     for email in emails:
         add_to_ses_suppression_list(email, reason='COMPLAINT')
@@ -391,9 +423,6 @@ def suppress_selected_email_events(modeladmin, request, queryset):
         f"Suppressed {len(emails)} address(es): {', '.join(emails)}",
         messages.SUCCESS,
     )
-
-
-suppress_selected_email_events.short_description = "Add selected to SES suppression list (COMPLAINT)"
 
 
 class EmailReputationEventAdmin(ModelAdmin):
@@ -414,6 +443,28 @@ class EmailReputationEventAdmin(ModelAdmin):
         return False
 
 
-from helium.common.models import EmailReputationEvent
+class LogEntryAdmin(ModelAdmin):
+    list_display = ('action_time', 'user', 'content_type', 'object_repr', 'get_action_label', 'change_message')
+    list_filter = ('action_flag', 'content_type', 'user')
+    search_fields = ('user__email', 'object_repr', 'change_message')
+    ordering = ('-action_time',)
+    date_hierarchy = 'action_time'
 
+    def get_action_label(self, obj):
+        return obj.get_action_flag_display()
+
+    get_action_label.short_description = 'Action'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+admin_site.register(TaskResultProxy, TaskResultAdmin)
 admin_site.register(EmailReputationEvent, EmailReputationEventAdmin)
+admin_site.register(LogEntry, LogEntryAdmin)
