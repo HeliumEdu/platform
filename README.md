@@ -6,7 +6,7 @@
 
 ---
 
-[**Helium**](https://www.heliumedu.com) is a free, color-coded online student planner for classes, homework, grades, and notes — the academic calendar built for the way you actually study.
+[**Helium**](https://www.heliumedu.com) is a free, color-coded online student planner for classes, homework, grades, and notes.
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/helium-student-planner/id6758323154"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/ios-badge.png" alt="Download on the App Store" height="50" /></a>
