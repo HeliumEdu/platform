@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
-from helium.auth.utils.userutils import is_staff_user
+from helium.auth.utils.userutils import is_staff_user, rollup_power_users
 from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
@@ -558,6 +558,14 @@ def emit_nightly_metrics(self):
     except Exception as e:
         logger.error(f"Failed to emit engagement quality metrics: {e}", exc_info=True)
         metricutils.task_failure("metrics.nightly.engagement", exception_type=type(e).__name__)
+        raise
+
+    try:
+        promoted, cleared = rollup_power_users(UserModel, staff_filter)
+        logger.info(f'Power user rollup: {promoted} tagged, {cleared} cleared')
+    except Exception as e:
+        logger.error(f"Failed to rollup power users: {e}", exc_info=True)
+        metricutils.task_failure("metrics.nightly.power_users", exception_type=type(e).__name__)
         raise
 
     metricutils.task_stop(metrics)
