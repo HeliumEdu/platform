@@ -27,7 +27,6 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
             'name': settings.PROJECT_NAME,
             'tagline': settings.PROJECT_TAGLINE,
             'version': settings.PROJECT_VERSION,
-            'support_email': settings.EMAIL_ADDRESS,
             'max_upload_size': settings.MAX_UPLOAD_SIZE,
             'access_token_lifetime_minutes': settings.ACCESS_TOKEN_TTL_MINUTES,
             'refresh_token_lifetime_days': settings.REFRESH_TOKEN_TTL_DAYS,
