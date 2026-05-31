@@ -544,22 +544,16 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 
 class UserPushTokenAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'device_id', 'token', 'get_last_activity']
+    list_display = ['get_user', 'device_id', 'get_last_activity']
     list_filter = [staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    autocomplete_fields = ('user',)
 
     def has_add_permission(self, request):
         return False
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-
-        if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
-
-        return readonly_fields + self.readonly_fields
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_user(self, obj):
         if obj.get_user():
