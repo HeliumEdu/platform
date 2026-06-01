@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     has_oauth_providers = serializers.SerializerMethodField(
-        help_text='Whether the user has any OAuth providers linked (Google, Apple, etc.).'
+        help_text='Whether the user has any OAuth providers linked (Google, Apple, Microsoft).'
     )
 
     class Meta:

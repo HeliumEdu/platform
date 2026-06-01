@@ -26,7 +26,7 @@ from helium.auth.tasks import send_password_reset_email, send_dormant_user_warni
 from helium.auth.utils.userutils import is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, prompt_for_review_filter, \
-    review_prompts_requested_filter
+    review_prompts_requested_filter, logged_action
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment
@@ -177,19 +177,21 @@ class UserPushTokenInline(django_admin.TabularInline):
     model = UserPushToken
     extra = 0
     can_delete = True
-    fields = ('device_id', 'token', 'created_at', 'updated_at')
-    readonly_fields = ('device_id', 'token', 'created_at', 'updated_at')
+    fields = ('device_id', 'created_at', 'updated_at')
+    readonly_fields = ('device_id', 'created_at', 'updated_at')
 
     def has_add_permission(self, request, obj=None):
         return False
 
 
+@logged_action
 @django_admin.action(description='Mark selected users as email verified')
 def mark_email_verified(modeladmin, request, queryset):
     updated = queryset.filter(is_active=False).update(is_active=True)
     modeladmin.message_user(request, f'{updated} user(s) marked as verified.')
 
 
+@logged_action
 @django_admin.action(description='Send password reset email to selected users')
 def send_password_reset(modeladmin, request, queryset):
     UserModel = get_user_model()
@@ -219,12 +221,14 @@ def send_password_reset(modeladmin, request, queryset):
         )
 
 
+@logged_action
 @django_admin.action(description='Purge push tokens for selected users')
 def purge_push_tokens(modeladmin, request, queryset):
     deleted, _ = UserPushToken.objects.filter(user__in=queryset).delete()
     modeladmin.message_user(request, f'{deleted} push token(s) deleted.')
 
 
+@logged_action
 @django_admin.action(description='Send dormant warning email to selected users')
 def send_dormant_warning(modeladmin, request, queryset):
     queued, skipped = 0, 0
@@ -247,6 +251,7 @@ def send_dormant_warning(modeladmin, request, queryset):
         )
 
 
+@logged_action
 @django_admin.action(description='Recalculate all grades for selected users')
 def recalculate_all_grades(modeladmin, request, queryset):
     count = 0
@@ -260,6 +265,7 @@ def recalculate_all_grades(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Grade recalculation queued for {count} course group(s).')
 
 
+@logged_action
 @django_admin.action(description='Heal orphaned repeating reminders for selected users')
 def heal_orphaned_reminders(modeladmin, request, queryset):
     for user in queryset:
@@ -267,24 +273,28 @@ def heal_orphaned_reminders(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Orphaned reminders healed for {queryset.count()} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Disable feeds for selected users')
 def disable_feeds(modeladmin, request, queryset):
     updated = UserSettings.objects.filter(user__in=queryset, private_slug__isnull=False).update(private_slug=None)
     modeladmin.message_user(request, f'Feeds disabled for {updated} user(s).')
 
 
+@logged_action
 @django_admin.action(description="Reset \"What's New\" for selected users")
 def reset_whats_new(modeladmin, request, queryset):
     updated = UserSettings.objects.filter(user__in=queryset).update(whats_new_version_seen=0)
     modeladmin.message_user(request, f'"What\'s New" reset for {updated} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Trigger review prompt for selected users')
 def force_review_prompt(modeladmin, request, queryset):
     updated = UserSettings.objects.filter(user__in=queryset).update(prompt_for_review=True)
     modeladmin.message_user(request, f'Review prompt triggered for {updated} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Force logout selected users (invalidates next token refresh)')
 def force_logout(modeladmin, request, queryset):
     tokens = OutstandingToken.objects.filter(user__in=queryset)
@@ -293,6 +303,7 @@ def force_logout(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Logged out {queryset.count()} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Trigger review prompt for users of selected activities')
 def force_review_prompt_for_activities(modeladmin, request, queryset):
     user_ids = queryset.values_list('user_id', flat=True).distinct()
@@ -300,6 +311,7 @@ def force_review_prompt_for_activities(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Review prompt triggered for {updated} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Force logout users of selected activities (invalidates next token refresh)')
 def force_logout_for_activities(modeladmin, request, queryset):
     user_ids = list(queryset.values_list('user_id', flat=True).distinct())
@@ -309,6 +321,7 @@ def force_logout_for_activities(modeladmin, request, queryset):
     modeladmin.message_user(request, f'Logged out {len(user_ids)} user(s).')
 
 
+@logged_action
 @django_admin.action(description='Remove selected users from SES suppression list')
 def remove_from_ses_suppression(modeladmin, request, queryset):
     cleared, not_suppressed = [], []
@@ -335,8 +348,9 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
                     'num_attachments', 'num_external_calendars',
                     'deletion_warning_count', 'deletion_requested_at', 'mobile_app_usage_percent_30d',
-                    'created_at', 'is_active')
-    list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'settings__show_getting_started',
+                    'created_at', 'is_power_user', 'is_active')
+    list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'is_power_user',
+                   'settings__show_getting_started',
                    'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type',
                    'settings__color_scheme_theme', 'settings__calendar_use_category_colors',
@@ -396,7 +410,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:
             base = self.readonly_fields + ('created_at', 'last_login', 'last_activity',
-                                           'mobile_app_usage_percent_30d', 'deletion_warning_count',
+                                           'mobile_app_usage_percent_30d', 'is_power_user', 'deletion_warning_count',
                                            'deletion_warning_sent_at', 'onboarding_completed_at',
                                            'deletion_requested_at', 'get_2fa_enabled',
                                            'verification_code', 'email_changing',)
@@ -506,22 +520,16 @@ class UserSettingsAdmin(BaseModelAdmin):
 
 
 class UserPushTokenAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'device_id', 'token', 'get_last_activity']
+    list_display = ['get_user', 'device_id', 'get_last_activity']
     list_filter = [staff_filter('user')]
     search_fields = ('user__id', 'user__email', 'user__username')
     ordering = ('-user__last_activity',)
-    autocomplete_fields = ('user',)
 
     def has_add_permission(self, request):
         return False
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-
-        if obj:
-            return readonly_fields + self.readonly_fields + ('user',)
-
-        return readonly_fields + self.readonly_fields
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_user(self, obj):
         if obj.get_user():
