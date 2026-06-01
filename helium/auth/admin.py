@@ -429,6 +429,14 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
             return False
         return super().has_delete_permission(request, obj)
 
+    def get_deleted_objects(self, objs, request):
+        deleted_objects, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        perms_needed.discard('user settings')
+        perms_needed.discard('user profile')
+        perms_needed.discard('user client activity')
+        perms_needed.discard('log entry')
+        return deleted_objects, model_count, perms_needed, protected
+
     def get_2fa_enabled(self, obj):
         return TOTPDevice.objects.filter(user=obj, confirmed=True).exists()
 
