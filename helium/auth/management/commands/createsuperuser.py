@@ -89,6 +89,9 @@ class Command(BaseCommand):
 
                     try:
                         user = UserModel._default_manager.db_manager(database).create_superuser(**user_data)
+                        user.settings.is_setup_complete = True
+                        user.settings.show_getting_started = False
+                        user.settings.save()
                         if settings.ADMIN_ENFORCE_2FA:
                             self._setup_totp(user)
                         break
@@ -119,7 +122,9 @@ class Command(BaseCommand):
                     user_data[UserModel.USERNAME_FIELD] = generate_unique_username_from_email(email)
 
                 try:
-                    UserModel._default_manager.db_manager(database).create_superuser(**user_data)
+                    user = UserModel._default_manager.db_manager(database).create_superuser(**user_data)
+                    user.settings.is_setup_complete = True
+                    user.settings.save()
                 except IntegrityError:
                     raise CommandError("That email address is already taken.")
 

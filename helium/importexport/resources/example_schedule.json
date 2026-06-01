@@ -1896,225 +1896,58 @@
   "notes": [
     {
       "id": 1,
-      "title": "Ace Your Classes - Welcome to Helium!",
+      "title": "A Study Session Template",
       "content": {
         "ops": [
-          {
-            "insert": "Ace Your Classes - Welcome to Helium!"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "header": 2
-            }
-          },
-          {
-            "insert": "\nHelium is your personal student planner\u2014schedules, assignments, grades, and notes all in one place, so you can focus on "
-          },
-          {
-            "insert": "learning",
-            "attributes": {
-              "italic": true
-            }
-          },
-          {
-            "insert": ".\n\n"
-          },
-          {
-            "insert": "Stay on Top of Your Work"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "header": 2
-            }
-          },
-          {
-            "insert": "\n"
-          },
-          {
-            "insert": "Track grades with weighted categories, trend indicators, and a calculator to see what you need on upcoming assignments"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "Sync external calendars (Google, Apple, etc.) into one view"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "Set reminders so you never miss a deadline again"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "Know when a class's grade is at-risk and might need attention"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "Keep attachments with their assignments\u2014no more digging through folders"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "Organize resources (textbooks, links, supplies) by class so you know what to bring to your next study session"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "bullet"
-            }
-          },
-          {
-            "insert": "\n"
-          },
-          {
-            "insert": "Rich Notes, Everywhere"
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "header": 2
-            }
-          },
-          {
-            "insert": "\n"
-          },
-          {
-            "insert": "Every assignment and event has a built-in note for lecture highlights, study guides, or quick thoughts.\n\n"
-          },
-          {
-            "insert": "Add "
-          },
-          {
-            "insert": "links to external resources",
-            "attributes": {
-              "link": "https://automatetheboringstuff.com/"
-            }
-          },
-          {
-            "insert": ", "
-          },
-          {
-            "insert": "highlight",
-            "attributes": {
-              "color": "#2196f3"
-            }
-          },
-          {
-            "insert": " "
-          },
-          {
-            "insert": "key",
-            "attributes": {
-              "color": "#ab47bc"
-            }
-          },
-          {
-            "insert": " "
-          },
-          {
-            "insert": "concepts",
-            "attributes": {
-              "color": "#26a69a"
-            }
-          },
-          {
-            "insert": ", or save memorable quotes:"
-          },
-          {
-            "insert": "\n\n"
-          },
-          {
-            "insert": "\"The only way to do great work is to love what you do.\"",
-            "attributes": {
-              "italic": true
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "blockquote": true
-            }
-          },
-          {
-            "insert": "\u2014 Steve Jobs",
-            "attributes": {
-              "italic": true
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "blockquote": true
-            }
-          },
-          {
-            "insert": "\nUse checklists to track your progress:\n"
-          },
-          {
-            "insert": "\n"
-          },
-          {
-            "insert": "Review chapter 5",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "Complete practice problems",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "Prepare questions for office hours",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\n",
-            "attributes": {
-              "list": "unchecked"
-            }
-          },
-          {
-            "insert": "\nFeel free to edit or delete this note. Happy studying!\n"
-          }
+          {"insert": "A Study Session Template"},
+          {"insert": "\n", "attributes": {"header": 2}},
+          {"insert": "\n"},
+          {"insert": "Standalone notes aren't linked to any class or assignment \u2014 use them for anything that spans multiple subjects or doesn't belong to one thing in particular.", "attributes": {"italic": true}},
+          {"insert": "\n\n"},
+          {"insert": "Before You Start"},
+          {"insert": "\n", "attributes": {"header": 2}},
+          {"insert": "\n"},
+          {"insert": "Clear your workspace and close unrelated tabs"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Write down what you want to accomplish"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Set a time block"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "\n"},
+          {"insert": "During the Session"},
+          {"insert": "\n", "attributes": {"header": 2}},
+          {"insert": "\nCapture notes, questions, and ideas as you go. Color helps when reviewing later:\n\n"},
+          {"insert": "Concept to remember", "attributes": {"color": "#2196f3", "italic": true}},
+          {"insert": "\n", "attributes": {"list": "bullet"}},
+          {"insert": "Question to follow up on", "attributes": {"color": "#ab47bc", "italic": true}},
+          {"insert": "\n", "attributes": {"list": "bullet"}},
+          {"insert": "Action item", "attributes": {"color": "#26a69a", "italic": true}},
+          {"insert": "\n", "attributes": {"list": "bullet"}},
+          {"insert": "\n"},
+          {"insert": "If something unrelated comes up, write it down here and come back to it later."},
+          {"insert": "\n", "attributes": {"blockquote": true}},
+          {"insert": "\n"},
+          {"insert": "After the Session"},
+          {"insert": "\n", "attributes": {"header": 2}},
+          {"insert": "\n"},
+          {"insert": "Review what you captured"},
+          {"insert": "\n", "attributes": {"list": "ordered"}},
+          {"insert": "Link any notes to the relevant class or assignment"},
+          {"insert": "\n", "attributes": {"list": "ordered"}},
+          {"insert": "Add reminders for anything with a deadline"},
+          {"insert": "\n", "attributes": {"list": "ordered"}},
+          {"insert": "\n"},
+          {"insert": "This Session"},
+          {"insert": "\n", "attributes": {"header": 2}},
+          {"insert": "\n"},
+          {"insert": "Picked a focus"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Set a timer"},
+          {"insert": "\n", "attributes": {"list": "checked"}},
+          {"insert": "Captured key ideas"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}},
+          {"insert": "Reviewed and linked notes"},
+          {"insert": "\n", "attributes": {"list": "unchecked"}}
         ]
       },
       "homework": [],
