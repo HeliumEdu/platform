@@ -871,7 +871,7 @@ class TestCaseImportExportViews(APITestCase):
         )
         self.assertEqual(standalone_notes.count(), 1)
         welcome_note = standalone_notes.first()
-        self.assertEqual(welcome_note.title, 'Ace Your Classes - Welcome to Helium!')
+        self.assertEqual(welcome_note.title, 'A Study Session Template')
         self.assertIn('ops', welcome_note.content)
         self.assertTrue(welcome_note.example_schedule)
         self.assertEqual(welcome_note.user, user)
