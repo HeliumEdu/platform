@@ -54,7 +54,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
                 name='include_content',
                 type=bool,
                 description='By default the `content` field is omitted from list responses to keep them light. '
-                            'Pass `true` to include the full Quill Delta JSON of each note.',
+                            'Pass `true` to include the full [Quill Delta](https://quilljs.com/docs/delta/) JSON of each note.',
             ),
         ],
     )

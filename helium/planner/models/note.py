@@ -21,7 +21,7 @@ class Note(BaseModel):
     )
 
     content = models.JSONField(
-        help_text='Rich-text JSON (Quill Delta format).',
+        help_text='Rich-text JSON ([Quill Delta format](https://quilljs.com/docs/delta/)).',
         blank=True,
         null=True
     )
