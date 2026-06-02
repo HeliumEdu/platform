@@ -329,7 +329,7 @@ SPECTACULAR_SETTINGS = {
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
-        "Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule](https://www.heliumedu.com/support/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
+        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
@@ -442,7 +442,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
+                f'{SUPPORT_URL}/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
             ),
         },
         {
@@ -450,7 +450,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                'https://www.heliumedu.com/support/grades-and-progress/how-helium-calculates-your-grades'
+                f'{SUPPORT_URL}/grades-and-progress/how-helium-calculates-your-grades'
             ),
         },
     ],
