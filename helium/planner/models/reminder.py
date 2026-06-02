@@ -46,13 +46,13 @@ class Reminder(BaseModel):
 
     dismissed = models.BooleanField(help_text='Whether the reminder has been dismissed.', default=False)
 
-    homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
+    homework = models.ForeignKey('Homework', help_text='The homework with which to associate (mutually exclusive with `event` and `course`).',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
-    event = models.ForeignKey('Event', help_text='The event with which to associate.',
+    event = models.ForeignKey('Event', help_text='The event with which to associate  (mutually exclusive with `homework` and `course`).',
                               related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
-    course = models.ForeignKey('Course', help_text='The course with which to associate.',
+    course = models.ForeignKey('Course', help_text='The course with which to associate (mutually exclusive with `homework` and `event`).',
                                related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', on_delete=models.CASCADE)
