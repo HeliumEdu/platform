@@ -10,7 +10,7 @@ from helium.planner.models import Event, Homework, Material, Note
 
 class NoteSerializer(serializers.ModelSerializer):
     """
-    A user-owned note with optional rich-text `content` (Quill Delta JSON). May be optionally
+    A user-owned note with optional rich-text `content` ([Quill Delta](https://quilljs.com/docs/delta/) JSON). May be optionally
     linked to exactly one entity — a single homework assignment, event, or resource.
     """
 
