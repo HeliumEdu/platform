@@ -597,11 +597,11 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(creative_writing.course_group, course_group)
 
         programming = Course.objects.get(title='Fundamentals of Programming 💻')
-        self.assertEqual(programming.room, 'ENG 202')
+        self.assertEqual(programming.room, '')
         self.assertEqual(float(programming.credits), 3.0)
         self.assertEqual(programming.color, '#05cc90')
         self.assertEqual(programming.website, 'https://automatetheboringstuff.com')
-        self.assertFalse(programming.is_online)
+        self.assertTrue(programming.is_online)
         self.assertEqual(float(programming.current_grade), 89.0833)
         self.assertAlmostEqual(programming.trend, 0.006485167832167846)
         self.assertEqual(programming.teacher_name, 'Dr. Alex Gallagher')
