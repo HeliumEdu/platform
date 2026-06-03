@@ -10,7 +10,7 @@ from helium.planner.models.basecalendar import BaseCalendar
 
 
 class Event(BaseCalendar):
-    owner_id = models.CharField(help_text='An arbitrary string identifying the owning resource.',
+    owner_id = models.CharField(help_text='An arbitrary string identifying the owning entity.',
                                 max_length=255, blank=True, null=True)
 
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',

@@ -84,6 +84,9 @@ def add_enum_descriptions(result, generator, request, public):
     2. Any property schema that references the component via ``allOf``/``oneOf``/``anyOf`` —
        required because Redoc does not propagate ``x-enumDescriptions`` from a ``$ref`` target
        into the inline field view inside an operation.
+    3. Any inline ``enum`` array (e.g. filter parameters) where drf-spectacular never emits a
+       ``$ref``. Matched by value set; when multiple components share the same value set the
+       last entry in ``ENUM_NAME_OVERRIDES`` wins.
     """
     from drf_spectacular.settings import spectacular_settings
 
@@ -91,6 +94,11 @@ def add_enum_descriptions(result, generator, request, public):
         name: {str(v): label for v, label in choices}
         for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items()
     }
+
+    # Last-match-wins so dict order in ENUM_NAME_OVERRIDES controls ambiguous ties.
+    values_to_desc = {}
+    for choices in spectacular_settings.ENUM_NAME_OVERRIDES.values():
+        values_to_desc[frozenset(str(v) for v, _ in choices)] = {str(v): label for v, label in choices}
 
     schemas = result.get('components', {}).get('schemas', {})
     for name, desc in name_to_desc.items():
@@ -111,6 +119,10 @@ def add_enum_descriptions(result, generator, request, public):
                             break
                     if 'x-enumDescriptions' in node:
                         break
+                if 'x-enumDescriptions' not in node and 'enum' in node:
+                    key = frozenset(str(v) for v in node['enum'] if v is not None)
+                    if key in values_to_desc:
+                        node['x-enumDescriptions'] = values_to_desc[key]
             for v in node.values():
                 _inject_refs(v)
         elif isinstance(node, list):
