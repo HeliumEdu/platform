@@ -9,6 +9,11 @@ from helium.planner.models import Event, Homework, Material, Note
 
 
 class NoteSerializer(serializers.ModelSerializer):
+    """
+    A user-owned note with optional rich-text `content` ([Quill Delta](https://quilljs.com/docs/delta/) JSON). May be optionally
+    linked to exactly one entity — a single homework assignment, event, or resource.
+    """
+
     class Meta:
         model = Note
         fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'created_at', 'updated_at')
@@ -104,7 +109,7 @@ class NoteSerializer(serializers.ModelSerializer):
         return attrs
 
     def should_delete_on_empty_content(self, instance, validated_data):
-        """Check if Note should be deleted due to empty content with linked entities."""
+        """Return True if `content` was cleared while the note is linked to an entity."""
         if 'content' not in validated_data:
             return False
         content = validated_data.get('content')

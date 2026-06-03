@@ -3,7 +3,8 @@ __license__ = "MIT"
 
 import logging
 
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
+from rest_framework import serializers
 from rest_framework_simplejwt import views
 
 from helium.auth.serializers.tokenserializer import TokenRefreshSerializer, TokenObtainSerializer
@@ -17,6 +18,20 @@ class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
     @extend_schema(
         operation_id='login',
         summary='Log in and obtain a token pair',
+        request=inline_serializer('LoginRequest', fields={
+            'email': serializers.CharField(
+                required=True,
+                help_text="The email address for the user.",
+                label='Email',
+            ),
+            'password': serializers.CharField(
+                required=True,
+                help_text='The password for the user.',
+                label='Password',
+                style={'input_type': 'password'},
+                trim_whitespace=False,
+            ),
+        }),
         responses={200: TokenObtainSerializer},
         examples=[
             OpenApiExample(

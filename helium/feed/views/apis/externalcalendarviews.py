@@ -34,6 +34,9 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
 
     @extend_schema(summary='List ExternalCalendars for the User')
     def get(self, request, *args, **kwargs):
+        """
+        Return all external calendar instances for the authenticated user.
+        """
         return self.list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
@@ -48,6 +51,9 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
     def post(self, request, *args, **kwargs):
         """
         Create a new external calendar instance for the authenticated user.
+
+        The server will fetch `url` and validate the response is a valid iCal feed, and if not a
+        400 is returned.
         """
         response = self.create(request, *args, **kwargs)
 
@@ -73,10 +79,19 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
     @extend_schema(summary='Retrieve an ExternalCalendar')
     def get(self, request, *args, **kwargs):
+        """
+        Return the given external calendar instance.
+        """
         return self.retrieve(request, *args, **kwargs)
 
     @extend_schema(summary='Update an ExternalCalendar')
     def put(self, request, *args, **kwargs):
+        """
+        Update the given external calendar instance.
+
+        The server will fetch `url` and validate the response is a valid iCal feed, and if not a
+        400 is returned.
+        """
         response = self.update(request, *args, **kwargs)
 
         logger.info(
@@ -88,6 +103,9 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given external calendar instance.
+
+        If `url`` is given, the server will fetch it and validate the response is a valid iCal feed, and if not a
+        400 is returned.
         """
         response = self.partial_update(request, *args, **kwargs)
 

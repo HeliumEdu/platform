@@ -196,6 +196,7 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
+@extend_schema_serializer(exclude_fields=('username',))
 class UserCreateSerializer(serializers.Serializer):
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 
