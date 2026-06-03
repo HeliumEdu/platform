@@ -76,16 +76,60 @@ TAG_GROUPS = [
 
 def add_enum_descriptions(result, generator, request, public):
     """
-    Inject ``x-enumDescriptions`` into named enum components so Redoc renders human-readable
-    labels alongside each value. Only applies to enums declared in ``ENUM_NAME_OVERRIDES``.
+    Inject ``x-enumDescriptions`` into every schema location that Redoc renders for each enum
+    declared in ``ENUM_NAME_OVERRIDES``:
+
+    1. The named component itself (``components/schemas/FooEnum``) — picked up when a user
+       browses a component schema directly.
+    2. Any property schema that references the component via ``allOf``/``oneOf``/``anyOf`` —
+       required because Redoc does not propagate ``x-enumDescriptions`` from a ``$ref`` target
+       into the inline field view inside an operation.
+    3. Any inline ``enum`` array (e.g. filter parameters) where drf-spectacular never emits a
+       ``$ref``. Matched by value set; when multiple components share the same value set the
+       last entry in ``ENUM_NAME_OVERRIDES`` wins.
     """
     from drf_spectacular.settings import spectacular_settings
 
+    name_to_desc = {
+        name: {str(v): label for v, label in choices}
+        for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items()
+    }
+
+    # Last-match-wins so dict order in ENUM_NAME_OVERRIDES controls ambiguous ties.
+    values_to_desc = {}
+    for choices in spectacular_settings.ENUM_NAME_OVERRIDES.values():
+        values_to_desc[frozenset(str(v) for v, _ in choices)] = {str(v): label for v, label in choices}
+
     schemas = result.get('components', {}).get('schemas', {})
-    for enum_name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
-        if enum_name not in schemas:
-            continue
-        schemas[enum_name]['x-enumDescriptions'] = {str(value): label for value, label in choices}
+    for name, desc in name_to_desc.items():
+        if name in schemas:
+            schemas[name]['x-enumDescriptions'] = desc
+
+    def _inject_refs(node):
+        if isinstance(node, dict):
+            if 'x-enumDescriptions' not in node:
+                for combinator in ('allOf', 'oneOf', 'anyOf'):
+                    for sub in node.get(combinator) or []:
+                        if not isinstance(sub, dict):
+                            continue
+                        ref = sub.get('$ref', '')
+                        component_name = ref.rsplit('/', 1)[-1] if ref else ''
+                        if component_name in name_to_desc:
+                            node['x-enumDescriptions'] = name_to_desc[component_name]
+                            break
+                    if 'x-enumDescriptions' in node:
+                        break
+                if 'x-enumDescriptions' not in node and 'enum' in node:
+                    key = frozenset(str(v) for v in node['enum'] if v is not None)
+                    if key in values_to_desc:
+                        node['x-enumDescriptions'] = values_to_desc[key]
+            for v in node.values():
+                _inject_refs(v)
+        elif isinstance(node, list):
+            for item in node:
+                _inject_refs(item)
+
+    _inject_refs(result)
     return result
 
 

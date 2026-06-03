@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.55"
+__version__ = "2.2.56"
 
 import json
 import os
@@ -292,11 +292,11 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': (
         f"{PROJECT_NAME} is a free, color-coded online student planner for classes, "
         "homework, grades, and notes. "
-        "The API exposes the full set of resources behind the app: class groups "
+        "The API exposes all entities in the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
-        "assignments, events, reminders, notes, file attachments, resources, external "
-        "calendar feeds (Google Calendar, iCloud, etc.), private iCal subscription "
-        "feeds, and full account import/export.\n\n"
+        "assignments, events, reminders, notes, file attachments, materials, external "
+        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal"
+        "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
         "Two flows are supported:\n\n"
         "- **API token**: POST `/auth/api-token/` with a JWT to generate a long-lived token "
@@ -310,8 +310,8 @@ SPECTACULAR_SETTINGS = {
         "Requests are limited per client:\n\n"
         "| Authentication | Limit |\n"
         "| --- | --- |\n"
-        "| Unauthenticated | 10 requests/minute per IP |\n"
-        "| Authenticated | 120 requests/minute per user |\n\n"
+        f"| Unauthenticated | {REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['anon']} per IP |\n"
+        f"| Authenticated | {REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['user']} per user |\n\n"
         "Exceeding the limit returns `429 Too Many Requests` with a `Retry-After` header "
         "(in seconds). For large batches, prefer the bulk-import endpoint over fanning out "
         "individual `POST`s.\n\n"
@@ -324,17 +324,17 @@ SPECTACULAR_SETTINGS = {
         "| `course_group` | **class group** (semester / quarter / term) | Container for the classes a user is taking in a given period. |\n"
         "| `course` | **class** | A single class within a class group. The API uses `course` to avoid the reserved word `class`. |\n"
         "| `homework` | **assignment** | A graded item for a class. The API uses `homework` to avoid the reserved word `assignment`. |\n"
-        "| `material` | **resource** | A reference item (syllabus, textbook, link). `material` is the internal model name surfaced in API paths (`/planner/materials/`) and as the per-homework relation field (`homework.materials`, a list of resource ids). The top-level bulk-import key is `resources` (matching the user-facing term). |\n"
+        "| `material` | **resource** | A reference item (syllabus, textbook, link). `material` is the internal model name surfaced in API paths (`/planner/materials/`) and as the per-homework relation field (`homework.materials`, a list of resource IDs). The top-level bulk-import key is `resources` (matching the user-facing term). |\n"
         "| `material_group` | **resource group** | A container for resources. `material_group` appears in API paths (`/planner/materialgroups/`). The top-level bulk-import key is `resource_groups`. |\n\n"
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
-        "Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule](https://www.heliumedu.com/support/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
+        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
         "### Bulk import via `/importexport/import/`\n\n"
-        "The bulk-import path lets you import many resources in one atomic call rather than N "
+        "The bulk-import path lets you import many records in one atomic call rather than N "
         "individual POSTs — more efficient for large batches, equivalent results otherwise. "
         "Produce a single JSON file matching the `Export` component schema (the same shape returned by "
         "`GET /importexport/export/`) and upload it as a multipart form field named `file[]` to "
@@ -434,6 +434,11 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
+        'MaterialStatusEnum': enums.MATERIAL_STATUS_CHOICES,
+        'ConditionEnum': enums.CONDITION_CHOICES,
+        'DefaultViewEnum': enums.VIEW_CHOICES,
+        'DayOfWeekEnum': enums.DAY_OF_WEEK_CHOICES,
+        'ColorSchemeThemeEnum': enums.COLOR_SCHEME_THEME,
     },
     'TAGS': [
         {
@@ -442,7 +447,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
+                f'{SUPPORT_URL}/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
             ),
         },
         {
@@ -450,7 +455,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                'https://www.heliumedu.com/support/grades-and-progress/how-helium-calculates-your-grades'
+                f'{SUPPORT_URL}/grades-and-progress/how-helium-calculates-your-grades'
             ),
         },
     ],

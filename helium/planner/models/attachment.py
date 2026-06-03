@@ -24,13 +24,13 @@ class Attachment(BaseModel):
 
     size = models.PositiveIntegerField(default=0)
 
-    course = models.ForeignKey('Course', help_text='The course with which to associate.',
+    course = models.ForeignKey('Course', help_text='The course with which to associate (mutually exclusive with `event` and `homework`).',
                                related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    event = models.ForeignKey('Event', help_text='The event with which to associate.',
+    event = models.ForeignKey('Event', help_text='The event with which to associate (mutually exclusive with `course` and `homework`).',
                               related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    homework = models.ForeignKey('Homework', help_text='The homework with which to associate.',
+    homework = models.ForeignKey('Homework', help_text='The homework with which to associate (mutually exclusive with `course` and `event`).',
                                  related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attachments', on_delete=models.CASCADE)

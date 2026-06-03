@@ -182,7 +182,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     )
     def import_data(self, request, *args, **kwargs):
         """
-        Import the resources for the authenticated account from the uploaded file. Exactly one file must be uploaded per
+        Import the data for the authenticated account from the uploaded file. Exactly one file must be uploaded per
         request in the `file[]` field; submitting zero or more than one file returns `400`.
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.

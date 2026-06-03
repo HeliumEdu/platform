@@ -54,14 +54,13 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
                 name='include_content',
                 type=bool,
                 description='By default the `content` field is omitted from list responses to keep them light. '
-                            'Pass `true` to include the full Quill Delta JSON of each note.',
+                            'Pass `true` to include the full [Quill Delta](https://quilljs.com/docs/delta/) JSON of each note.',
             ),
         ],
     )
     def get(self, request, *args, **kwargs):
         """
-        Return all notes for the authenticated user. By default the `content` field is omitted from each note —
-        pass `include_content=true` to receive the full Quill Delta JSON.
+        Return all notes for the authenticated user.
         """
         return self.list(request, *args, **kwargs)
 
@@ -73,11 +72,10 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a note for the authenticated user. `content` is rich-text JSON (Quill Delta compatible).
+        Create a note for the authenticated user.
 
-        Linking is optional but constrained: a note may be linked to a single entity — pass a one-item list under
-        `homework`, `events`, or `resources` — or omit them all to create a standalone note. The three link fields
-        are mutually exclusive, and each target entity may have at most one linked note.
+        To link a note, pass exactly one of `homework`, `event`, or `resource` (a `Material`); giving more than one type,
+        more than one item of the same type, or an entity that already has a note returns a 400.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -111,7 +109,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     @extend_schema(summary='Retrieve a Note')
     def get(self, request, *args, **kwargs):
         """
-        Return the given Note instance.
+        Return the given note instance.
         """
         return self.retrieve(request, *args, **kwargs)
 
@@ -122,11 +120,10 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     })
     def put(self, request, *args, **kwargs):
         """
-        Update the given note. `content` is rich-text JSON (Quill Delta compatible).
+        Update the given note.
 
-        Linking rules from create still apply on update (at most one linked entity, mutually exclusive).
-        If a linked note has its `content` cleared (empty Delta), the note is deleted and no body is returned
-        — see the alternate response for this case.
+        If `content` is cleared while the note is linked to an entity, the note is deleted and a 204 is
+        returned in place of the updated note.
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
@@ -148,7 +145,10 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     })
     def patch(self, request, *args, **kwargs):
         """
-        Partially update the given note. Same linking rules and content-cleared deletion behavior as `PUT`.
+        Partially update the given note.
+
+        If `content` is given and cleared while the note is linked to an entity, the note is deleted and a
+        204 is returned in place of the updated note.
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
@@ -166,7 +166,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     @extend_schema(summary='Delete a Note')
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given Note instance.
+        Delete the given note instance.
         """
         response = self.destroy(request, *args, **kwargs)
 

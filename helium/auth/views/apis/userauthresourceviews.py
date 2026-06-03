@@ -74,8 +74,8 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
         operation_id='verify_email',
         summary='Verify a User email',
         parameters=[
-            OpenApiParameter('email', description="The user's email address."),
-            OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text)
+            OpenApiParameter('email', description="The user's email address.", required=True),
+            OpenApiParameter('code', description=get_user_model()._meta.get_field('verification_code').help_text, required=True)
         ],
         responses={
             202: TokenResponseFieldsMixin
