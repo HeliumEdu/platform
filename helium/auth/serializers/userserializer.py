@@ -199,6 +199,7 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
+@extend_schema_serializer(exclude_fields=('username',))
 class UserCreateSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=False,
