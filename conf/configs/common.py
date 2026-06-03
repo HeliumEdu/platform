@@ -434,6 +434,11 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
+        'MaterialStatusEnum': enums.MATERIAL_STATUS_CHOICES,
+        'ConditionEnum': enums.CONDITION_CHOICES,
+        'DefaultViewEnum': enums.VIEW_CHOICES,
+        'DayOfWeekEnum': enums.DAY_OF_WEEK_CHOICES,
+        'ColorSchemeThemeEnum': enums.COLOR_SCHEME_THEME,
     },
     'TAGS': [
         {

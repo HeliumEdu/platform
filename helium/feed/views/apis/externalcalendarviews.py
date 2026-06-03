@@ -34,6 +34,9 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
 
     @extend_schema(summary='List ExternalCalendars for the User')
     def get(self, request, *args, **kwargs):
+        """
+        Return all external calendar instances for the authenticated user.
+        """
         return self.list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
@@ -76,6 +79,9 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
     @extend_schema(summary='Retrieve an ExternalCalendar')
     def get(self, request, *args, **kwargs):
+        """
+        Return the given external calendar instance.
+        """
         return self.retrieve(request, *args, **kwargs)
 
     @extend_schema(summary='Update an ExternalCalendar')

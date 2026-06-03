@@ -58,9 +58,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     )
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all Helium Event instances for the authenticated user. For convenience, Helium Events on a GET
-        are serialized with representations of associated attachments and reminders to avoid the need for redundant API
-        calls.
+        Return all Helium Event instances for the authenticated user. `attachments` and `reminders` are nested inline.
         """
         response = super().get(request, *args, **kwargs)
 
@@ -90,7 +88,6 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
                     'end': '2026-09-23T16:30:00-07:00',
                     'priority': 30,
                     'url': 'https://example.edu/zoom/abc123',
-                    'comments': 'Drop-in Q&A in Bagley 412 or on Zoom.',
                 },
                 request_only=True,
             ),
@@ -139,8 +136,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     @extend_schema(summary='Retrieve an Event')
     def get(self, request, *args, **kwargs):
         """
-        Return the given Helium Event instance. For convenience, Helium Event instances on a GET are serialized with
-        representations of associated attachments and reminders to avoid the need for redundant API calls.
+        Return the given Helium Event instance. `attachments` and `reminders` are nested inline.
         """
         response = self.retrieve(request, *args, **kwargs)
 
@@ -237,7 +233,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
     @extend_schema(summary='Delete all Events for the User')
     def delete_all(self, request, *args, **kwargs):
         """
-        Permanently delete **every** Event instance owned by the authenticated user, along with any
+        Permanently delete **every** Helium Event instance owned by the authenticated user, along with any
         notes attached to those events. This operation is irreversible and cannot be filtered or
         scoped — it affects the entire user's event history. Course-derived schedules and homework
         are not touched.
