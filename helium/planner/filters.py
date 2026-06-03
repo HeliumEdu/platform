@@ -156,7 +156,7 @@ class MaterialGroupFilter(django_filters.FilterSet):
 class MaterialFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to resources whose parent resource group is visible on the user's calendar.",
+        help_text="Restrict to materials whose parent material group is visible on the user's calendar.",
     )
 
     class Meta:
@@ -196,7 +196,7 @@ class NoteFilter(django_filters.FilterSet):
     linked_entity_type = django_filters.CharFilter(
         method='filter_linked_type',
         help_text='Filter by what kind of entity the note is linked to. '
-                  'One of `homework`, `event`, `resource`, or `standalone` (no link).',
+                  'One of `homework`, `event`, `resource` (a `Material`), or `standalone` (no link).',
     )
     has_link = django_filters.BooleanFilter(
         method='filter_has_link',
@@ -212,7 +212,7 @@ class NoteFilter(django_filters.FilterSet):
     event = django_filters.NumberFilter(field_name='events__id',
                                         help_text='Filter to the note linked to this event ID.')
     resource = django_filters.NumberFilter(field_name='resources__id',
-                                           help_text='Filter to the note linked to this resource ID.')
+                                           help_text='Filter to the note linked to this resource ID (a `Material`).')
 
     class Meta:
         model = Note

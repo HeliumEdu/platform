@@ -74,7 +74,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         """
         Create a note for the authenticated user.
 
-        To link a note, pass exactly one of `homework`, `event`, or `resource`; giving more than one type,
+        To link a note, pass exactly one of `homework`, `event`, or `resource` (a `Material`); giving more than one type,
         more than one item of the same type, or an entity that already has a note returns a 400.
         """
         serializer = self.get_serializer(data=request.data)

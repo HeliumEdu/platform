@@ -12,10 +12,10 @@ class Material(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255)
 
-    status = models.PositiveIntegerField(help_text='The status of the resource.',
+    status = models.PositiveIntegerField(help_text='The status of the material.',
                                          choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
 
-    condition = models.PositiveIntegerField(help_text='The physical condition of the resource.',
+    condition = models.PositiveIntegerField(help_text='The physical condition of the material.',
                                             choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
 
     website = models.URLField(help_text='A valid URL.',
@@ -31,7 +31,7 @@ class Material(BaseModel):
                                        related_name='materials', on_delete=models.CASCADE)
 
     courses = models.ManyToManyField('Course',
-                                     help_text='Classes that share this resource. May be empty.',
+                                     help_text='Classes that share this material. May be empty.',
                                      related_name='materials', blank=True, default=None)
 
     objects = MaterialManager()
