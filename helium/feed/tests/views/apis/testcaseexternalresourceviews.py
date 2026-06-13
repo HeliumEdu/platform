@@ -47,7 +47,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -102,7 +102,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[3]['user'], user.pk)
         self.assertEqual(response.data[3]['calendar_item_type'], enums.EXTERNAL)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events_with_recurring(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -216,7 +216,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[6]['color'], external_calendar.color)
         self.assertIsNone(response.data[6]['recurrence_rule'])
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_cached(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -248,7 +248,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
             self.assertEqual(response_db.data[0]['calendar_item_type'], response_cached.data[0]['calendar_item_type'])
             self.assertEqual(response_db.data[0]['color'], response_cached.data[0]['color'])
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -264,7 +264,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_multihour(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -280,7 +280,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_invalid_ical(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -297,7 +297,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events_search(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -327,7 +327,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_user_external_calendars_as_events(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -343,7 +343,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(response.data[0]['title'], 'test1')
         self.assertEqual(response.data[0]['calendar_item_type'], enums.EXTERNAL)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_user_external_calendars_as_events_shown_on_calendar_filter(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -359,7 +359,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         # Only events from visible calendar should be present
         self.assertEqual(len(response.data), 4)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_user_external_calendars_as_events_with_date_range(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -374,7 +374,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_user_external_calendars_as_events_with_search(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -389,7 +389,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'test1')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_user_external_calendars_as_events_invalid_ical(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -406,7 +406,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_interprets_in_user_timezone(self, mock_urlopen):
         """
         Date-only query params should be interpreted in the user's timezone.
@@ -433,7 +433,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'test1')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_excludes_events_outside_user_timezone_window(self, mock_urlopen):
         """
         Verify that date-only queries correctly exclude events outside the user's timezone window.
@@ -459,7 +459,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'test1')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_vs_full_timestamp_consistency(self, mock_urlopen):
         """
         Verify that a date-only query for a specific day in user's timezone

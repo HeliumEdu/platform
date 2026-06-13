@@ -66,7 +66,7 @@ class TestCaseFetchIcalConditional(TestCase):
     def setUp(self):
         self.user = userhelper.given_a_user_exists()
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_returns_calendar_on_200(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -85,7 +85,7 @@ class TestCaseFetchIcalConditional(TestCase):
         # Verify it's a valid calendar object
         self.assertEqual(result.name, 'VCALENDAR')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_stores_etag_header(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -103,7 +103,7 @@ class TestCaseFetchIcalConditional(TestCase):
         external_calendar.refresh_from_db()
         self.assertEqual(external_calendar.etag, '"new-etag-value"')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_stores_last_modified_header(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -121,7 +121,7 @@ class TestCaseFetchIcalConditional(TestCase):
         external_calendar.refresh_from_db()
         self.assertEqual(external_calendar.last_modified_header, 'Wed, 01 Jan 2025 12:00:00 GMT')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_sends_if_none_match_header(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -140,7 +140,7 @@ class TestCaseFetchIcalConditional(TestCase):
         request = call_args[0][0]
         self.assertEqual(request.get_header('If-none-match'), '"existing-etag"')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_sends_if_modified_since_header(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -159,7 +159,7 @@ class TestCaseFetchIcalConditional(TestCase):
         request = call_args[0][0]
         self.assertEqual(request.get_header('If-modified-since'), 'Wed, 01 Jan 2025 00:00:00 GMT')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_returns_none_on_304_not_modified(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -173,7 +173,7 @@ class TestCaseFetchIcalConditional(TestCase):
         # THEN
         self.assertIsNone(result)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_fetch_raises_on_invalid_ical(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -195,7 +195,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
     def tearDown(self):
         cache.clear()
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_reindex_fetches_and_parses_stale_feeds(self, mock_urlopen):
         # GIVEN
@@ -217,7 +217,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         self.assertEqual(external_calendar.etag, '"new-etag"')
         mock_urlopen.assert_called_once()
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_reindex_handles_304_not_modified(self, mock_urlopen):
         # GIVEN
@@ -238,7 +238,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         # etag should remain unchanged
         self.assertEqual(external_calendar.etag, '"existing-etag"')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_reindex_increments_consecutive_failures(self, mock_urlopen):
         # GIVEN
@@ -260,7 +260,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         self.assertEqual(external_calendar.consecutive_failures, 1)
         self.assertIsNotNone(external_calendar.last_sync_error)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0, FEED_CONSECUTIVE_FAILURE_THRESHOLD=3)
     def test_reindex_disables_calendar_after_threshold(self, mock_urlopen):
         # GIVEN
@@ -281,7 +281,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         self.assertFalse(external_calendar.shown_on_calendar)
         self.assertEqual(external_calendar.consecutive_failures, 3)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_reindex_clears_cache_on_modified_feed(self, mock_urlopen):
         # GIVEN
@@ -307,7 +307,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         self.assertIsNotNone(cached_data)
         self.assertNotEqual(cached_data, '[]')
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_reindex_preserves_cache_on_304(self, mock_urlopen):
         # GIVEN
@@ -338,7 +338,7 @@ class TestCaseCalendarToEvents(TestCase):
     def tearDown(self):
         cache.clear()
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_calendar_to_events_returns_events(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
@@ -353,7 +353,7 @@ class TestCaseCalendarToEvents(TestCase):
         # THEN
         self.assertGreater(len(events), 0)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_calendar_to_events_uses_cache_when_available(self, mock_urlopen):
         # GIVEN
         external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
