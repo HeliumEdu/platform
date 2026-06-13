@@ -96,7 +96,7 @@ There are also some special environment variables that can be set in development
 
 - `ENVIRONMENT`
   - `dev-local` provisions hosts as `localhost`
-  - `local` provisions hosts as `localhost` for use outside of Docker (ex. when using Django's `runserver` command) 
+  - `local` provisions hosts as `localhost` for use outside of Docker (e.g. when using Django's `runserver` command) 
   - `prod` provisions hosts to be suffixed with `heliumedu.com`
   - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
 - `USE_AWS_SECRETS_MANAGER`
@@ -119,7 +119,7 @@ make test
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
 The `frontend` and `platform` containers can be started alongside each other to almost entirely
 emulate a `prod`-like environment locally. For functionality that still requires Internet-connected external
-services (ex. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
+services (e.g. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
 which is meant to work alongside local Docker development.
 
 ### Documentation

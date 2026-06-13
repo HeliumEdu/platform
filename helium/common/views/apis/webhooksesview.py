@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import json
 import logging
-import urllib.request
 
 from django.conf import settings
 from django.core.cache import cache
@@ -15,6 +14,7 @@ from rest_framework.views import APIView
 
 from helium.common.services.sesreputationservice import verify_sns_message
 from helium.common.utils import metricutils
+from helium.common.utils.httputils import urlopen_secure
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class WebhookSESView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            urllib.request.urlopen(subscribe_url, timeout=10)
+            urlopen_secure(subscribe_url, timeout=10)
             logger.info("SNS subscription confirmed successfully")
         except Exception:
             logger.error("Failed to confirm SNS subscription", exc_info=True)
