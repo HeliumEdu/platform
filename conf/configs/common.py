@@ -481,18 +481,40 @@ FILE_TYPES = ['json']
 MAX_UPLOAD_SIZE = 10485760
 
 BLOCKED_ATTACHMENT_EXTENSIONS = {
-    '.php', '.php3', '.php4', '.php5', '.phtml',
-    '.pyc', '.rb', '.pl',
-    '.sh', '.bash', '.zsh', '.fish',
-    '.ps1', '.psm1', '.psd1',
-    '.bat', '.cmd', '.com',
+    # Browser-executable
+    '.html', '.htm', '.xhtml',
+    '.svg', '.svgz',
+    '.xml', '.xsl', '.xslt',
+    '.js', '.mjs',
+    # Windows-risk
+    '.hta', '.vbs', '.vbe',
+    '.wsf', '.lnk',
+    # Cross-platform installers / executables
     '.exe', '.dll', '.so', '.dylib',
+    '.msi', '.dmg', '.pkg', '.apk',
+    '.jar',
+    # Scripting
+    '.bat', '.cmd', '.com',
+    '.ps1', '.psm1', '.psd1',
+    '.sh', '.bash', '.zsh', '.fish',
+    '.py', '.rb', '.pl',
+    '.php', '.php3', '.php4', '.php5', '.phtml',
 }
 
 BLOCKED_ATTACHMENT_MIME_TYPES = {
-    'application/x-httpd-php', 'application/x-php',
-    'application/x-sh', 'application/x-shellscript',
+    # Browser-executable MIME types
+    'text/html', 'application/xhtml+xml',
+    'image/svg+xml',
+    'text/xml', 'application/xml',
+    'text/javascript', 'application/javascript',
+    # Executable / installer MIME types
     'application/x-msdownload', 'application/x-executable',
+    'application/x-msi', 'application/x-apple-diskimage',
+    'application/vnd.android.package-archive',
+    'application/java-archive',
+    # Script MIME types
+    'application/x-sh', 'application/x-shellscript',
+    'application/x-httpd-php', 'application/x-php',
 }
 
 # Email settings
