@@ -22,7 +22,8 @@ Known limitations (very rare in real-world Google / Apple / Outlook exports):
 import datetime
 import json
 import logging
-from urllib.request import urlopen, Request, URLError
+from urllib.error import URLError
+from urllib.request import Request
 from zoneinfo import ZoneInfo
 
 import icalendar
@@ -37,6 +38,7 @@ from rest_framework import status
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
@@ -342,7 +344,7 @@ def validate_url(url):
     try:
         url_validator(url)
 
-        response = urlopen(url)
+        response = urlopen_secure(url)
 
         if response.getcode() != status.HTTP_200_OK:
             raise HeliumICalError("The URL did not return a valid response.")
@@ -385,7 +387,7 @@ def fetch_ical_conditional(external_calendar):
         if external_calendar.last_modified_header:
             request.add_header('If-Modified-Since', external_calendar.last_modified_header)
 
-        response = urlopen(request)
+        response = urlopen_secure(request)
         response_code = response.getcode()
 
         if response_code == status.HTTP_304_NOT_MODIFIED:
