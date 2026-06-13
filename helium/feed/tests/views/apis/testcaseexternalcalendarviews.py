@@ -163,7 +163,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(external_calendar.user.pk, user2.pk)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_create_invalid_url_returns_400(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -183,7 +183,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('url', response.data)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_update_invalid_url_returns_400(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -202,7 +202,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('url', response.data)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_create_invalid_ical_returns_400(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -222,7 +222,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('url', response.data)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_update_invalid_ical_returns_400(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
