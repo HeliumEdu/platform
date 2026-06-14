@@ -5,11 +5,12 @@ import base64
 import json
 import logging
 import re
-import urllib.request
 from functools import lru_cache
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+
+from helium.common.utils.httputils import urlopen_secure
 
 from helium.common.models import (
     EmailReputationEvent,
@@ -48,7 +49,7 @@ def _fetch_sns_cert(cert_url: str):
     if not _SNS_CERT_URL_PATTERN.match(cert_url):
         raise ValueError(f"Untrusted SNS certificate URL: {cert_url}")
 
-    with urllib.request.urlopen(cert_url, timeout=10) as response:
+    with urlopen_secure(cert_url, timeout=10) as response:
         return load_pem_x509_certificate(response.read())
 
 

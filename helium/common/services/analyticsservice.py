@@ -11,6 +11,7 @@ from django.conf import settings
 
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.utils import metricutils
+from helium.common.utils.httputils import urlopen_secure
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ def send_event(user, name, params=None, user_properties=None):
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=GA4_REQUEST_TIMEOUT_SECONDS) as response:
+        with urlopen_secure(request, timeout=GA4_REQUEST_TIMEOUT_SECONDS) as response:
             # GA4 MP returns 204 on success; anything else is suspicious but non-fatal.
             if response.status != 204:
                 logger.warning(f'GA4 MP returned unexpected status {response.status} for event {name}')

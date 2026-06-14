@@ -11,6 +11,16 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
+class SESWebhookThrottle(AnonRateThrottle):
+    """
+    Rate throttle for the SES/SNS webhook endpoint. SNS delivers serially to a single
+    HTTP subscription (one message, wait for 2xx, next message), so legitimate volume
+    is bounded by email send rate — well under 60/min for this platform. 60/min gives
+    headroom for retry bursts while blocking unauthenticated hammering.
+    """
+    scope = 'ses_webhook'
+
+
 class DeleteInactiveUserThrottle(AnonRateThrottle):
     """
     Anonymous rate throttle for the delete-inactive-user endpoint.
