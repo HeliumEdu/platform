@@ -15,6 +15,7 @@ from helium.auth.serializers.userserializer import UserSerializer, UserCreateSer
     UserForgotConfirmSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
+from helium.common.throttles import ForgotPasswordEmailThrottle, ResendVerificationEmailThrottle
 from helium.common.utils import taskutils
 from helium.common.views.base import HeliumAPIView
 from helium.importexport.tasks import import_example_schedule
@@ -99,6 +100,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
 )
 class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
+    throttle_classes = [ResendVerificationEmailThrottle]
 
     @extend_schema(
         operation_id='resend_verification_email',
@@ -110,8 +112,8 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
             202: OpenApiResponse(description='Verification email queued. Returned whether or not the submitted '
                                               'address is registered, so callers cannot use this endpoint to '
                                               'probe account existence.'),
-            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
-                                              '60 seconds.'),
+            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed '
+                                              'within the cooldown window.'),
         },
         auth=[],
     )
@@ -128,6 +130,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
 @extend_schema(tags=['auth.password-reset'])
 class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
+    throttle_classes = [ForgotPasswordEmailThrottle]
 
     @extend_schema(
         operation_id='forgot_password',
@@ -138,7 +141,7 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
                                              'address is registered, so callers cannot use this endpoint to '
                                              'probe account existence.'),
             429: OpenApiResponse(description='Throttled. Only one reset request per submitted email is '
-                                             'allowed per 60 seconds.'),
+                                             'allowed within the cooldown window.'),
         },
         auth=[],
     )

@@ -11,6 +11,38 @@ from helium.common.utils import metricutils
 logger = logging.getLogger(__name__)
 
 
+class PerEmailThrottle(AnonRateThrottle):
+    """
+    Base throttle that keys on the submitted email address rather than IP. Subclasses
+    must set ``scope`` to a value registered in ``DEFAULT_THROTTLE_RATES``.
+
+    Falls back to no throttling (returns ``None`` cache key) when no email is present,
+    allowing the global ``AnonRateThrottle`` to handle that case.
+    """
+
+    def get_cache_key(self, request, view):
+        email = (
+            request.data.get('email') or request.GET.get('email') or ''
+        ).lower().strip()
+        if not email:
+            return None
+        return self.cache_format % {'scope': self.scope, 'ident': email}
+
+
+class ForgotPasswordEmailThrottle(PerEmailThrottle):
+    """
+    Rate throttle for the forgot-password endpoint, keyed per submitted email.
+    """
+    scope = 'forgot_password_email'
+
+
+class ResendVerificationEmailThrottle(PerEmailThrottle):
+    """
+    Rate throttle for the resend-verification endpoint, keyed per submitted email.
+    """
+    scope = 'resend_verification_email'
+
+
 class SESWebhookThrottle(AnonRateThrottle):
     """
     Rate throttle for the SES/SNS webhook endpoint. SNS delivers serially to a single

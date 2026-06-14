@@ -9,14 +9,13 @@ from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import exceptions as django_exceptions
-from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
+from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -39,8 +38,6 @@ def forgot_password(request):
     and token; no password is changed until the user completes the confirmation step. For security
     purposes, the same 202 response is returned regardless of whether the email is registered.
 
-    Rate-limited to one request per email address per :data:`~django.conf.settings.AUTH_EMAIL_COOLDOWN_SECONDS`.
-
     :param request: the request being processed
     :return: a 202 Response upon success
     """
@@ -50,10 +47,6 @@ def forgot_password(request):
         raise ValidationError("'email' is required")
 
     email = request.data['email']
-    cache_key = f'forgot_password:{email.strip().lower()}'
-
-    if cache.get(cache_key):
-        raise Throttled(detail='Please wait before requesting another password reset email.')
 
     try:
         user = UserModel.objects.can_login().get(email=email)
@@ -77,8 +70,6 @@ def forgot_password(request):
             metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
     except UserModel.DoesNotExist:
         logger.info(f'Password reset requested for unknown account {redact_email(email)}')
-
-    cache.set(cache_key, True, settings.AUTH_EMAIL_COOLDOWN_SECONDS)
 
     return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -194,10 +185,9 @@ def verify_email(request):
 def resend_verification_email(request):
     """
     Resend the verification email for an inactive user account or an active user changing their email.
-    Rate limited to once per :data:`~django.conf.settings.AUTH_EMAIL_COOLDOWN_SECONDS` per user.
 
     :param request: the request being processed
-    :return: a 202 Response upon success, 429 if rate limited
+    :return: a 202 Response upon success
     """
     UserModel = get_user_model()
 
@@ -208,12 +198,6 @@ def resend_verification_email(request):
 
     if 'username' in request.GET and 'email' not in request.GET:
         metricutils.increment('api.deprecated_param.username', request=request)
-
-    cache_key = f'resend_verification:{identifier.strip().lower()}'
-
-    # Check rate limit
-    if cache.get(cache_key):
-        raise Throttled(detail='Please wait before requesting another verification email.')
 
     try:
         user = UserModel.objects.can_login().get(
@@ -242,9 +226,6 @@ def resend_verification_email(request):
         logger.info(f'Resent verification email for user {user.pk} to {redact_email(target_email)}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
-
-        # Set rate limit
-        cache.set(cache_key, True, settings.AUTH_EMAIL_COOLDOWN_SECONDS)
 
         return Response(status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:
