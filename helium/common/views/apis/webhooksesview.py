@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import json
 import logging
-from urllib.error import URLError
 
 from django.conf import settings
 from django.core.cache import cache
@@ -50,9 +49,6 @@ class WebhookSESView(APIView):
 
         try:
             verify_sns_message(body)
-        except URLError:
-            logger.warning("SNS cert fetch failed (transient network error)", exc_info=True)
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception:
             metricutils.increment('webhook.ses.sig_failed')
             logger.info("SNS message signature verification failed", exc_info=True)
