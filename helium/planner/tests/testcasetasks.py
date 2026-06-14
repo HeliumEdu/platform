@@ -10,7 +10,7 @@ from django.utils import timezone
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.tasks import (
-    email_reminders, text_reminders, push_reminders,
+    email_reminders, push_reminders,
     recalculate_course_grades_for_course_group,
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
 )
@@ -27,14 +27,6 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         mock_process_email_reminders.assert_called_once()
-
-    @mock.patch('helium.planner.services.reminderservice.process_text_reminders')
-    def test_text_reminders(self, mock_process_text_reminders):
-        # WHEN
-        text_reminders()
-
-        # THEN
-        mock_process_text_reminders.assert_called_once()
 
     @mock.patch('helium.planner.services.reminderservice.process_push_reminders')
     def test_push_reminders(self, mock_process_push_reminders):
