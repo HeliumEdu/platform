@@ -134,16 +134,17 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
         summary='Request a password reset',
         request=UserForgotSerializer,
         responses={
-            202: None,
-            429: OpenApiResponse(description='Throttled. Only one reset request per email is allowed per '
-                                             '60 seconds.'),
+            202: OpenApiResponse(description='Reset email queued. Returned whether or not the submitted '
+                                             'address is registered, so callers cannot use this endpoint to '
+                                             'probe account existence.'),
+            429: OpenApiResponse(description='Throttled. Only one reset request per submitted email is '
+                                             'allowed per 60 seconds.'),
         },
         auth=[],
     )
     def forgot_password(self, request, *args, **kwargs):
         """
-        Send a password reset link to the given email address. Always responds with 202 (no body)
-        regardless of whether the email is registered.
+        Send a password reset link to the given email address.
         """
         response = authservice.forgot_password(request)
 
