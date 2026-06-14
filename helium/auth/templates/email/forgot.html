@@ -1,18 +1,15 @@
 {% extends "email/base.html" %}
-{% load humanize %}
 
-{% block greeting %}We Reset Your Password!{% endblock %}
+{% block greeting %}Reset Your Password{% endblock %}
 
 {% block content %}
     <tr>
         <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
-            A temporary password has been generated for you, which is <strong>{{ password }}</strong>. We recommend
-            that you
-            log in immediately using this new password and <a href="{{ settings_url }}"
-                                                              target="_blank">click here</a> to change your password.
-            <br/><br/>If you have any more trouble, <a href="{{ support_url }}" target="_blank">contact
-            support</a>
-            and we'll get it straightened out for you.
+            We received a request to reset your Helium password.
+            <a href="{{ reset_url }}" target="_blank">Click here to choose a new password.</a>
+            <br/><br/>If you did not request this, you can safely ignore this email.
+            <br/><br/>If you have any trouble, <a href="{{ support_url }}" target="_blank">contact support</a>
+            and we'll get it sorted out.
         </td>
     </tr>
 {% endblock %}

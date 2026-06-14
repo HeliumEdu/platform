@@ -113,12 +113,12 @@ def send_registration_email(self, email):
 
 
 @app.task(bind=True)
-def send_password_reset_email(self, email, temp_password):
+def send_password_reset_email(self, email, reset_url):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("email.password-reset.sent", priority="high", published_at_ms=published_at_ms)
 
     if settings.DISABLE_EMAILS:
-        logger.warning('Emails disabled. Password reset email not sent.')
+        logger.warning(f'Emails disabled. Reset URL: {reset_url}')
         metricutils.task_stop(metrics, value=0)
         return
 
@@ -126,12 +126,10 @@ def send_password_reset_email(self, email, temp_password):
 
     commonutils.send_multipart_email('email/forgot',
                                      {
-                                         'password': temp_password,
-                                         'settings_url': f"{settings.PROJECT_APP_HOST}/settings",
+                                         'reset_url': reset_url,
                                          'support_url': settings.SUPPORT_URL,
-                                         'status_url': settings.STATUS_URL
                                      },
-                                     'Your Helium Password Has Been Reset', [email],
+                                     'Reset Your Helium Password', [email],
                                      email_type='password_reset')
 
     logger.debug(f"Password reset email sent to {redact_email(email)}")
