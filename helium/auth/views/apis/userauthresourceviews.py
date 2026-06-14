@@ -11,7 +11,8 @@ from rest_framework.viewsets import ViewSet, GenericViewSet
 
 from helium.auth.models import UserSettings
 from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
-from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
+from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer, \
+    UserForgotConfirmSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.utils import taskutils
@@ -124,6 +125,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
         return response
 
 
+@extend_schema(tags=['auth.password-reset'])
 class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
 
@@ -131,14 +133,38 @@ class UserForgotResourceView(ViewSet, HeliumAPIView):
         operation_id='forgot_password',
         summary='Request a password reset',
         request=UserForgotSerializer,
-        responses={202: None},
+        responses={
+            202: None,
+            429: OpenApiResponse(description='Throttled. Only one reset request per email is allowed per '
+                                             '60 seconds.'),
+        },
         auth=[],
     )
     def forgot_password(self, request, *args, **kwargs):
         """
-        Reset the password for the user instance associated with the given email. Always responds
-        with 202 (no body) regardless of whether the email is registered.
+        Send a password reset link to the given email address. Always responds with 202 (no body)
+        regardless of whether the email is registered.
         """
         response = authservice.forgot_password(request)
+
+        return response
+
+
+@extend_schema(tags=['auth.password-reset'])
+class UserForgotConfirmResourceView(ViewSet, HeliumAPIView):
+    serializer_class = UserForgotConfirmSerializer
+
+    @extend_schema(
+        operation_id='confirm_password_reset',
+        summary='Confirm a password reset',
+        request=UserForgotConfirmSerializer,
+        responses={200: None},
+        auth=[],
+    )
+    def confirm_password_reset(self, request, *args, **kwargs):
+        """
+        Confirm a password reset using the ``uid`` and ``token`` from the reset email link, setting a new password.
+        """
+        response = authservice.confirm_password_reset(request)
 
         return response

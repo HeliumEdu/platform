@@ -2,8 +2,10 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import json
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -15,22 +17,81 @@ from helium.auth.tests.helpers import userhelper
 
 
 class TestCaseAuthenticationViews(TestCase):
+    def setUp(self):
+        cache.clear()
+
     def test_password_reset(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
+        new_password = 'NewPass_Helium1!'
 
         # WHEN
         response = self.client.put(reverse('auth_user_resource_forgot'),
                                    json.dumps({'email': user.email}),
                                    content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        temp_pass = response.context['password']
+
+        params = parse_qs(urlparse(response.context['reset_url']).query)
+        uid = params['uid'][0]
+        token = params['token'][0]
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_resource_forgot_confirm'),
+                                   json.dumps({'uid': uid, 'token': token, 'password': new_password}),
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # THEN
         response = self.client.post(reverse('auth_token_obtain'),
-                                    json.dumps({'username': user.get_username(), 'password': temp_pass}),
+                                    json.dumps({'email': user.email, 'password': new_password}),
                                     content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_password_reset_confirm_invalid_token(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # Request reset to obtain a valid uid
+        response = self.client.put(reverse('auth_user_resource_forgot'),
+                                   json.dumps({'email': user.email}),
+                                   content_type='application/json')
+        params = parse_qs(urlparse(response.context['reset_url']).query)
+        uid = params['uid'][0]
+
+        # WHEN - confirm with a bad token
+        response = self.client.put(reverse('auth_user_resource_forgot_confirm'),
+                                   json.dumps({'uid': uid, 'token': 'not-a-valid-token', 'password': 'NewPass_Helium1!'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_password_reset_confirm_invalid_uid(self):
+        # WHEN
+        response = self.client.put(reverse('auth_user_resource_forgot_confirm'),
+                                   json.dumps({'uid': 'not-a-valid-uid', 'token': 'not-a-valid-token', 'password': 'NewPass_Helium1!'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_password_reset_throttled(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # WHEN - first request succeeds
+        response = self.client.put(reverse('auth_user_resource_forgot'),
+                                   json.dumps({'email': user.email}),
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        # WHEN - immediate second request is throttled
+        response = self.client.put(reverse('auth_user_resource_forgot'),
+                                   json.dumps({'email': user.email}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_password_reset_real_fake_user_same_response(self):
         # GIVEN
