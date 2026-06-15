@@ -162,12 +162,14 @@ class UserForgotConfirmResourceView(ViewSet, HeliumAPIView):
         operation_id='confirm_password_reset',
         summary='Confirm a password reset',
         request=UserForgotConfirmSerializer,
-        responses={200: None},
+        responses={200: TokenResponseFieldsMixin},
         auth=[],
     )
     def confirm_password_reset(self, request, *args, **kwargs):
         """
         Confirm a password reset using the ``uid`` and ``token`` from the reset email link, setting a new password.
+
+        Returns access and refresh tokens for immediate authentication.
         """
         response = authservice.confirm_password_reset(request)
 
