@@ -118,7 +118,12 @@ def confirm_password_reset(request):
     logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
     metricutils.increment('action.user.password-reset.confirmed', request=request, user=user)
 
-    return Response(status=status.HTTP_200_OK)
+    token = RefreshToken.for_user(user)
+
+    return Response({
+        'access': str(token.access_token),
+        'refresh': str(token),
+    }, status=status.HTTP_200_OK)
 
 
 def verify_email(request):
