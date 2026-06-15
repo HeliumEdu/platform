@@ -5,15 +5,17 @@ import logging
 from datetime import datetime, timedelta, timezone as dt_timezone
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.models import update_last_login
-from django.core.cache import cache
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import exceptions as django_exceptions
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.crypto import get_random_string
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from firebase_admin import auth as firebase_auth
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound, Throttled, AuthenticationFailed
+from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -32,8 +34,9 @@ logger = logging.getLogger(__name__)
 
 def forgot_password(request):
     """
-    Generate a new password and send an email to the address specified in the request. For security purposes, whether
-    the email exists in the system or not, the same response "success" will be shown the user.
+    Send a password reset link to the address specified in the request. The link contains a signed uid
+    and token; no password is changed until the user completes the confirmation step. For security
+    purposes, the same 202 response is returned regardless of whether the email is registered.
 
     :param request: the request being processed
     :return: a 202 Response upon success
@@ -43,36 +46,84 @@ def forgot_password(request):
     if 'email' not in request.data:
         raise ValidationError("'email' is required")
 
+    email = request.data['email']
+
     try:
-        user = UserModel.objects.can_login().get(email=request.data['email'])
+        user = UserModel.objects.can_login().get(email=email)
 
-        # Only reset password for users with usable passwords (not OAuth-only users)
         if user.has_usable_password():
-            # Generate a random password for the user
-            password = get_random_string(
-                length=10,
-                allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',
-            )
-            user.set_password(password)
-            user.save()
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = PasswordResetTokenGenerator().make_token(user)
+            reset_url = f"{settings.PROJECT_APP_HOST}/forgot/confirm?uid={uid}&token={token}"
 
-            logger.info(f'Reset password for user {user.pk} ({redact_email(user.email)})')
+            logger.info(f'Password reset requested for user {user.pk} ({redact_email(user.email)})')
 
             taskutils.safe_apply_async(send_password_reset_email,
-                args=(user.email, password),
+                args=(user.email, reset_url),
                 critical=True,
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
             metricutils.increment('action.user.password-reset', request=request, user=user)
         else:
-            # OAuth-only user - don't create a password for security reasons
             logger.info(f'Password reset requested for OAuth-only user {user.pk}, ignoring for security')
             metricutils.increment('action.user.password-reset.oauth-blocked', request=request, user=user)
     except UserModel.DoesNotExist:
-        logger.info(f'Password reset requested for unknown account {redact_email(request.data["email"])}')
+        logger.info(f'Password reset requested for unknown account {redact_email(email)}')
 
     return Response(status=status.HTTP_202_ACCEPTED)
+
+
+def confirm_password_reset(request):
+    """
+    Validate the uid and token from the reset email link and set the user's new password.
+
+    The token is stateless (HMAC over user pk, password hash, last login, and timestamp) and is
+    automatically invalidated once the password is changed.
+
+    :param request: the request being processed (must contain ``uid``, ``token``, and ``password``)
+    :return: a 200 Response upon success
+    :raises NotFound: if the uid does not correspond to a valid user
+    :raises ValidationError: if the token is invalid/expired or the password fails Django's validators
+    """
+    UserModel = get_user_model()
+
+    uid = request.data.get('uid')
+    token = request.data.get('token')
+    new_password = request.data.get('password')
+
+    if not uid or not token or not new_password:
+        raise ValidationError("'uid', 'token', and 'password' are required")
+
+    try:
+        user_pk = force_str(urlsafe_base64_decode(uid))
+        user = UserModel.objects.can_login().get(pk=user_pk)
+    except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
+        raise NotFound('No User matches the given query.')
+
+    if not user.has_usable_password():
+        raise ValidationError('Password reset is not available for this account.')
+
+    if not PasswordResetTokenGenerator().check_token(user, token):
+        raise ValidationError('This reset link is invalid or has expired. Please request a new one.')
+
+    try:
+        password_validation.validate_password(password=new_password, user=user)
+    except django_exceptions.ValidationError as e:
+        raise ValidationError({'password': list(e.messages)})
+
+    user.set_password(new_password)
+    user.save()
+
+    logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
+    metricutils.increment('action.user.password-reset.confirmed', request=request, user=user)
+
+    token = RefreshToken.for_user(user)
+
+    return Response({
+        'access': str(token.access_token),
+        'refresh': str(token),
+    }, status=status.HTTP_200_OK)
 
 
 def verify_email(request):
@@ -139,10 +190,9 @@ def verify_email(request):
 def resend_verification_email(request):
     """
     Resend the verification email for an inactive user account or an active user changing their email.
-    Rate limited to once per 60 seconds per user.
 
     :param request: the request being processed
-    :return: a 202 Response upon success, 429 if rate limited
+    :return: a 202 Response upon success
     """
     UserModel = get_user_model()
 
@@ -153,12 +203,6 @@ def resend_verification_email(request):
 
     if 'username' in request.GET and 'email' not in request.GET:
         metricutils.increment('api.deprecated_param.username', request=request)
-
-    cache_key = f'resend_verification:{identifier.strip().lower()}'
-
-    # Check rate limit
-    if cache.get(cache_key):
-        raise Throttled(detail='Please wait before requesting another verification email.')
 
     try:
         user = UserModel.objects.can_login().get(
@@ -187,9 +231,6 @@ def resend_verification_email(request):
         logger.info(f'Resent verification email for user {user.pk} to {redact_email(target_email)}')
 
         metricutils.increment('action.user.verification-resent', request=request, user=user)
-
-        # Set rate limit
-        cache.set(cache_key, True, settings.RESEND_VERIFICATION_COOLDOWN_SECONDS)
 
         return Response(status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:

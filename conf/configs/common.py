@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.60"
+__version__ = "2.2.61"
 
 import json
 import os
@@ -172,8 +172,6 @@ FEED_CONSECUTIVE_FAILURE_THRESHOLD = 10
 # aggregation query load from high-frequency pollers (e.g. iOS Calendar).
 FEED_ICS_MAX_AGE_SECONDS = 60 * 15
 
-RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
-
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
@@ -250,8 +248,11 @@ REST_FRAMEWORK = {
         'user': '120/min',
         'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
         'user_token': '5/hour',
+        'ses_webhook': '60/min',
         'delete_inactive': '1/min',
         'support_contact': '5/hour',
+        'forgot_password_email': '1/min',
+        'resend_verification_email': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helium.common.services.sesreputationservice import verify_sns_message
+from helium.common.throttles import SESWebhookThrottle
 from helium.common.utils import metricutils
 from helium.common.utils.httputils import urlopen_secure
 
@@ -37,7 +38,7 @@ class WebhookSESView(APIView):
 
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = []
+    throttle_classes = [SESWebhookThrottle]
 
     def post(self, request):
         try:

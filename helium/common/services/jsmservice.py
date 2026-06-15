@@ -13,6 +13,7 @@ from django.conf import settings
 
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError, clear_ses_suppression_if_exists, redact_email
+from helium.common.utils.httputils import urlopen_secure
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def _open(request):
     :raises JsmRequestException: On any HTTP error or transport failure.
     """
     try:
-        with urllib.request.urlopen(request, timeout=JSM_REQUEST_TIMEOUT_SECONDS) as response:
+        with urlopen_secure(request, timeout=JSM_REQUEST_TIMEOUT_SECONDS) as response:
             body = response.read()
             if not body:
                 return None
