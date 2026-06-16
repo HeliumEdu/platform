@@ -19,7 +19,7 @@ _DEFAULT_TIMEOUT_SECONDS = 10
 def _check_ssrf(url: Union[str, Request]) -> None:
     """
     Resolve the hostname in ``url`` and raise :class:`URLError` if any resolved
-    address is private, loopback, link-local, reserved, or multicast.
+    address is private, loopback, link-local, reserved, multicast, or unspecified.
 
     :param url: A URL string or :class:`urllib.request.Request`.
     :raises URLError: If the hostname resolves to a blocked address or cannot be resolved.
@@ -33,7 +33,8 @@ def _check_ssrf(url: Union[str, Request]) -> None:
     try:
         for *_, sockaddr in socket.getaddrinfo(hostname, None):
             ip = ipaddress.ip_address(sockaddr[0])
-            if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            if (ip.is_loopback or ip.is_private or ip.is_link_local
+                    or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
                 logger.warning(f"SSRF blocked: {hostname} resolves to non-public IP {ip}")
                 raise URLError(f"Blocked: {hostname} resolves to non-public IP {ip}")
     except URLError:
@@ -55,16 +56,9 @@ _secure_opener = urllib.request.build_opener(_SecureRedirectHandler)
 
 def urlopen_secure(url: Union[str, Request], timeout: int = _DEFAULT_TIMEOUT_SECONDS) -> http.client.HTTPResponse:
     """
-    SSRF-safe drop-in for urllib.request.urlopen.
-
-    Validates the initial URL and re-validates the IP at every redirect hop, so
-    a public-to-private redirect (e.g. attacker.com → 169.254.170.2) cannot
-    bypass the check. Also normalises :class:`http.client.HTTPException`
-    (including ``RemoteDisconnected``) to :class:`URLError` so callers never
-    receive an unhandled 500 from non-HTTP TCP services.
-
-    Accepts the same first argument as ``urllib.request.urlopen``: either a URL
-    string or a :class:`urllib.request.Request`.
+    SSRF-safe drop-in for urllib.request.urlopen. Blocks non-public targets
+    (including across redirects) and normalises :class:`http.client.HTTPException`
+    to :class:`URLError` so non-HTTP TCP services cannot produce an unhandled 500.
 
     :param url: A URL string or :class:`urllib.request.Request`.
     :param timeout: Request timeout in seconds.
