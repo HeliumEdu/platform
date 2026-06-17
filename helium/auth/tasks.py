@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+
 from django.db import IntegrityError
 from django.db.models import Count, Exists, OuterRef, Q
 from firebase_admin import auth as firebase_auth
@@ -150,39 +150,36 @@ def delete_user(self, user_id):
     user = None
     try:
         user = UserModel.objects.get(pk=user_id)
-
-        outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
-        blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
-
-        # Try to delete Firebase Auth user if they signed in with OAuth (Google, Apple, etc.)
-        try:
-            firebase_user = firebase_auth.get_user_by_email(user.email)
-            firebase_auth.delete_user(firebase_user.uid)
-            logger.info(f'Deleted Firebase Auth user for user {user.pk}')
-        except firebase_auth.UserNotFoundError:
-            logger.info(f'No Firebase Auth user found for user {user.pk}')
-        except Exception as e:
-            logger.warning(f'Failed to delete Firebase Auth user for user {user.pk}: {str(e)}')
-            metricutils.increment('external.firebase.failed', extra_tags=['operation:delete_user'])
-
-        Attachment.objects.filter(user=user).delete()
-        Reminder.objects.filter(user=user).delete()
-
-        user.delete()
-
-        for token in outstanding_tokens + blacklisted_tokens:
-            try:
-                token.delete()
-            except IntegrityError:
-                logger.info('Skipping, token is already deleted.')
-
-        value = 1
-    except (UserModel.DoesNotExist, IntegrityError):
+    except UserModel.DoesNotExist:
         logger.info(f'User {user_id} does not exist. Nothing to do.')
+        metricutils.task_stop(metrics, value=0)
+        return
 
-        value = 0
+    outstanding_tokens = list(OutstandingToken.objects.filter(user=user))
+    blacklisted_tokens = list(BlacklistedToken.objects.filter(token__user=user))
 
-    metricutils.task_stop(metrics, user=user, value=value)
+    try:
+        firebase_user = firebase_auth.get_user_by_email(user.email)
+        firebase_auth.delete_user(firebase_user.uid)
+        logger.info(f'Deleted Firebase Auth user for user {user.pk}')
+    except firebase_auth.UserNotFoundError:
+        logger.info(f'No Firebase Auth user found for user {user.pk}')
+    except Exception as e:
+        logger.warning(f'Failed to delete Firebase Auth user for user {user.pk}: {str(e)}')
+        metricutils.increment('external.firebase.failed', extra_tags=['operation:delete_user'])
+
+    Attachment.objects.filter(user=user).delete()
+    Reminder.objects.filter(user=user).delete()
+
+    user.delete()
+
+    for token in outstanding_tokens + blacklisted_tokens:
+        try:
+            token.delete()
+        except IntegrityError:
+            logger.info('Skipping, token is already deleted.')
+
+    metricutils.task_stop(metrics, user=user, value=1)
 
 
 @app.task(bind=True)
@@ -226,7 +223,8 @@ def sweep_dangling_users(self):
 
     1. Never-verified users past `UNVERIFIED_USER_TTL_DAYS` — enqueue `delete_user`.
     2. Stuck pending-delete accounts — the async `delete_user` task raised or was lost but the
-       row is still reserved. Re-queues `delete_user` for each and sends a support digest email.
+       row is still reserved. Re-queues `delete_user` for each; if it fails again, the unhandled
+       exception propagates through CeleryIntegration to Sentry.
     """
     UserModel = get_user_model()
 
@@ -251,30 +249,10 @@ def sweep_dangling_users(self):
         deletion_requested_at__lte=now - timedelta(minutes=10),
     ))
     if stuck_users:
-        logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); re-queuing and notifying support.')
-
+        logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); re-queuing.')
         for user in stuck_users:
             taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
             logger.info(f'Re-queued delete_user for stuck user {user.pk}')
-
-        lines = [
-            f'- user {u.pk} ({redact_email(u.email)}) requested at {u.deletion_requested_at.isoformat()}'
-            for u in stuck_users
-        ]
-        body = (
-            f'{len(stuck_users)} user account(s) were stuck in pending-delete state (cascade-delete task '
-            f'failed or was lost). Deletion has been automatically re-queued for each; if they persist '
-            f'in pending-delete state after the next sweep, investigate manually.\n'
-            + '\n'.join(lines)
-        )
-
-        send_mail(
-            subject=f'[{settings.ENVIRONMENT}] {len(stuck_users)} stuck pending-delete user(s) — re-queued',
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.ADMIN_EMAIL_ADDRESS],
-            fail_silently=False,
-        )
 
     metricutils.gauge('users.pending_delete.stuck', len(stuck_users))
     metricutils.task_stop(metrics, value=num_purged)
