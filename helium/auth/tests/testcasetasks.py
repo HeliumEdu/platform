@@ -79,11 +79,11 @@ class TestCaseTasks(APITestCase):
         self.assertEqual(users[0].pk, user1.pk)
         self.assertEqual(users[1].pk, user2.pk)
 
-    @mock.patch('helium.auth.tasks.send_mail')
-    def test_sweep_dangling_users_emails_admin_about_stuck_pending_delete(self, mock_send_mail):
-        """Users stuck pending-delete beyond the 10-minute grace period get surfaced to support
-        via email so a human can investigate. In-flight deletions (< 10 min old) are left alone
-        so the sweep doesn't race with the running Celery task."""
+    @mock.patch('helium.auth.tasks.taskutils.safe_apply_async')
+    def test_sweep_dangling_users_requeues_stuck_pending_delete(self, mock_safe_apply_async):
+        """Users stuck pending-delete beyond the 10-minute grace period are re-queued for deletion.
+        In-flight deletions (< 10 min old) are left alone so the sweep doesn't race with a running
+        Celery task. Any failure in the re-queued task propagates to Sentry via CeleryIntegration."""
         # GIVEN: one stuck user (past grace period) and one fresh (within grace)
         stuck = userhelper.given_a_user_exists(username='stuck', email='stuck@test.com')
         stuck.deletion_requested_at = timezone.now() - timedelta(minutes=30)
@@ -96,19 +96,17 @@ class TestCaseTasks(APITestCase):
         # WHEN
         sweep_dangling_users()
 
-        # THEN: admin email sent, referencing only the stuck user
-        mock_send_mail.assert_called_once()
-        kwargs = mock_send_mail.call_args.kwargs
-        self.assertEqual(kwargs['recipient_list'], [settings.ADMIN_EMAIL_ADDRESS])
-        self.assertIn(f'user {stuck.pk}', kwargs['message'])
-        self.assertNotIn(f'user {fresh.pk}', kwargs['message'])
+        # THEN: delete_user re-queued for the stuck user only
+        queued_pks = [call.kwargs.get('args', [None])[0] for call in mock_safe_apply_async.call_args_list]
+        self.assertIn(stuck.pk, queued_pks)
+        self.assertNotIn(fresh.pk, queued_pks)
 
-        # AND: neither user was actually deleted — sweep only notifies on stuck rows
+        # AND: users not deleted by sweep itself — deletion runs asynchronously via the queued task
         self.assertTrue(get_user_model().objects.filter(pk=stuck.pk).exists())
         self.assertTrue(get_user_model().objects.filter(pk=fresh.pk).exists())
 
-    @mock.patch('helium.auth.tasks.send_mail')
-    def test_sweep_dangling_users_no_email_when_no_stuck_users(self, mock_send_mail):
+    @mock.patch('helium.auth.tasks.taskutils.safe_apply_async')
+    def test_sweep_dangling_users_does_not_requeue_in_flight_pending_delete(self, mock_safe_apply_async):
         # GIVEN: a user with a recent pending-delete (within grace period)
         user = userhelper.given_a_user_exists()
         user.deletion_requested_at = timezone.now() - timedelta(minutes=2)
@@ -117,8 +115,9 @@ class TestCaseTasks(APITestCase):
         # WHEN
         sweep_dangling_users()
 
-        # THEN
-        mock_send_mail.assert_not_called()
+        # THEN: no re-queue for in-flight deletion
+        queued_pks = [call.kwargs.get('args', [None])[0] for call in mock_safe_apply_async.call_args_list]
+        self.assertNotIn(user.pk, queued_pks)
 
     def test_verification_email_url_encodes_special_characters(self):
         """Test that verification email properly URL-encodes email addresses with special characters like +."""
