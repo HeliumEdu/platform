@@ -226,9 +226,7 @@ def sweep_dangling_users(self):
 
     1. Never-verified users past `UNVERIFIED_USER_TTL_DAYS` — enqueue `delete_user`.
     2. Stuck pending-delete accounts — the async `delete_user` task raised or was lost but the
-       row is still reserved. This is a rare case (usually indicates a real bug), so rather than
-       silently retry, notify support so a human can investigate. The email is a digest so the
-       admin doesn't get spammed if several accounts are stuck simultaneously.
+       row is still reserved. Re-queues `delete_user` for each and sends a support digest email.
     """
     UserModel = get_user_model()
 
@@ -253,22 +251,25 @@ def sweep_dangling_users(self):
         deletion_requested_at__lte=now - timedelta(minutes=10),
     ))
     if stuck_users:
-        logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); notifying support.')
+        logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); re-queuing and notifying support.')
+
+        for user in stuck_users:
+            taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
+            logger.info(f'Re-queued delete_user for stuck user {user.pk}')
 
         lines = [
             f'- user {u.pk} ({redact_email(u.email)}) requested at {u.deletion_requested_at.isoformat()}'
             for u in stuck_users
         ]
         body = (
-            f'{len(stuck_users)} user account(s) have been stuck in pending-delete state, meaning '
-            f'the cascade-delete task failed, and at least some data still exists for this user. '
-            f'Log in and manually delete these users to complete the process, or investigate if the '
-            f'manual delete also fails.\n'
+            f'{len(stuck_users)} user account(s) were stuck in pending-delete state (cascade-delete task '
+            f'failed or was lost). Deletion has been automatically re-queued for each; if they persist '
+            f'in pending-delete state after the next sweep, investigate manually.\n'
             + '\n'.join(lines)
         )
 
         send_mail(
-            subject=f'[{settings.ENVIRONMENT}] {len(stuck_users)} stuck pending-delete user(s)',
+            subject=f'[{settings.ENVIRONMENT}] {len(stuck_users)} stuck pending-delete user(s) — re-queued',
             message=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[settings.ADMIN_EMAIL_ADDRESS],
@@ -837,7 +838,7 @@ register_periodic(emit_queue_depth, 60,
                   manually_triggerable=False)
 register_periodic(sweep_dangling_users, crontab(hour=2, minute=0),
                   priority=settings.CELERY_PRIORITY_LOW,
-                  manually_triggerable=False)
+                  description="Sweep and retry stuck pending-delete users")
 register_periodic(emit_nightly_metrics, crontab(hour=3, minute=0),
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Emit nightly metrics")
