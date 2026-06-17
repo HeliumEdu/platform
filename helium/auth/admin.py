@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+from datetime import timedelta
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin as django_admin
@@ -13,6 +15,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import exceptions
 from django.db.models import Count, OuterRef, Subquery
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -422,10 +425,10 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
-        # Don't let admins manually delete a user that's already mid-cascade; the Celery task
-        # owns the deletion and will complete or be resumed by the nightly sweep.
         if obj is not None and obj.deletion_requested_at is not None:
-            return False
+            # Block deletion while the Celery task may still be in flight; allow it once stuck.
+            if timezone.now() - obj.deletion_requested_at < timedelta(minutes=10):
+                return False
         return super().has_delete_permission(request, obj)
 
     def get_deleted_objects(self, objs, request):
