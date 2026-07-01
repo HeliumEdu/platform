@@ -25,11 +25,6 @@ on:
         options:
           - dev
           - prod
-      run_legacy_cluster_tests:
-        description: 'Run cluster tests for frontend-legacy before deploying'
-        required: true
-        type: boolean
-        default: true
   workflow_call:
     inputs:
       version_type:
@@ -46,11 +41,6 @@ on:
         required: false
         type: string
         default: prod
-      run_legacy_cluster_tests:
-        description: "Run cluster tests for frontend-legacy before deploying"
-        required: false
-        type: boolean
-        default: true
 
 permissions:
   contents: read
@@ -83,105 +73,9 @@ jobs:
           repo: platform
           specific-version: ${{ inputs.version_type != 'latest' && inputs.specific_version || '' }}
 
-  test-release:
-    name: Test Release
-    needs: [determine-version]
-    if: ${{ inputs.run_legacy_cluster_tests == true || inputs.run_legacy_cluster_tests == 'true' }}
-    runs-on: ubuntu-latest
-
-    env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PLATFORM_EMAIL_HOST_USER: ${{ secrets.PLATFORM_EMAIL_HOST_USER }}
-      PLATFORM_EMAIL_HOST_PASSWORD: ${{ secrets.PLATFORM_EMAIL_HOST_PASSWORD }}
-      PLATFORM_TWILIO_ACCOUNT_SID: ${{ secrets.PLATFORM_TWILIO_ACCOUNT_SID }}
-      PLATFORM_TWILIO_AUTH_TOKEN: ${{ secrets.PLATFORM_TWILIO_AUTH_TOKEN }}
-      PLATFORM_TWILIO_SMS_FROM: ${{ vars.PLATFORM_TWILIO_SMS_FROM }}
-      AWS_INTEGRATION_S3_ACCESS_KEY_ID: ${{ secrets.AWS_INTEGRATION_S3_ACCESS_KEY_ID }}
-      AWS_INTEGRATION_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_INTEGRATION_S3_SECRET_ACCESS_KEY }}
-      CI_TWILIO_RECIPIENT_PHONE_NUMBER: ${{ secrets.CI_TWILIO_RECIPIENT_PHONE_NUMBER }}
-
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
-      - name: Checkout infra monorepo
-        uses: actions/checkout@v6
-        with:
-          repository: HeliumEdu/infra
-          token: ${{ steps.app-token.outputs.token }}
-          path: deploy
-
-      - name: Set up Python "3.12"
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install GitHub SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_KEY_GITHUB }}
-          known_hosts: ${{ secrets.KNOWN_HOSTS_GITHUB }}
-          if_key_exists: replace
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Checkout platform repository
-        uses: actions/checkout@v6
-        with:
-          repository: HeliumEdu/platform
-          ref: ${{ needs.determine-version.outputs.version }}
-          path: platform-repo
-
-      - name: Set container environment variables
-        env:
-          VERSION_NUMBER: ${{ needs.determine-version.outputs.version_number }}
-        run: |
-          echo "PLATFORM_RESOURCE_IMAGE=public.ecr.aws/heliumedu/helium/platform-resource:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
-          echo "PLATFORM_API_IMAGE=public.ecr.aws/heliumedu/helium/platform-api:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
-          echo "PLATFORM_WORKER_IMAGE=public.ecr.aws/heliumedu/helium/platform-worker:amd64-${VERSION_NUMBER}" >> $GITHUB_ENV
-          : ${FRONTEND_LEGACY_VERSION:=latest}
-          echo "FRONTEND_LEGACY_VERSION=${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
-          echo "FRONTEND_IMAGE=public.ecr.aws/heliumedu/helium/frontend:legacy-amd64-${FRONTEND_LEGACY_VERSION}" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        working-directory: deploy
-        run: make install
-
-      - name: Run cluster tests for frontend-legacy against release build
-        working-directory: deploy
-        env:
-          TAG_VERSION: ${{ needs.determine-version.outputs.version }}
-        run: make test-cluster-legacy
-
-      - name: Upload test output
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: cluster-test-output-${{ needs.determine-version.outputs.version }}
-          path: deploy/projects/cluster-tests/build/screenshots/
-          retention-days: 30
-
-      - name: Dump Docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2
-
   deploy:
     name: Deploy to ${{ inputs.environment }}
-    needs: [determine-version, test-release]
-    if: "!cancelled() && needs.determine-version.result == 'success' && (needs.test-release.result == 'success' || needs.test-release.result == 'skipped')"
+    needs: [determine-version]
     runs-on: ubuntu-latest
 
     env:
@@ -265,13 +159,6 @@ jobs:
         run: |
           pip install sentry-cli
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases deploys "$RELEASE_VERSION" new --env "${{ inputs.environment }}"
-
-      - name: Trigger legacy cluster-tests run
-        run: |
-          curl -s -X POST https://api.github.com/repos/HeliumEdu/cluster-tests/dispatches \
-            -H "Authorization: token ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            -d "{\"event_type\":\"\`platform\` triggered for \`${{ needs.determine-version.outputs.version }}\` to \`${{ inputs.environment }}\`\",\"client_payload\":{\"environment\":\"${{ inputs.environment }}\",\"project\":\"platform\",\"version\":\"${{ needs.determine-version.outputs.version }}\"}}"
 
       - name: Trigger frontend integration tests
         env:

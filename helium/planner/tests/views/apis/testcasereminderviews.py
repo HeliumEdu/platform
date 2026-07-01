@@ -29,7 +29,7 @@ class TestCaseReminderViews(APITestCase):
             self.client.get(reverse('planner_reminders_list')),
             self.client.post(reverse('planner_reminders_list')),
             self.client.get(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'}))
         ]
 
@@ -212,10 +212,10 @@ class TestCaseReminderViews(APITestCase):
             'offset_type': enums.HOURS,
             'type': enums.POPUP
         }
-        response = self.client.put(reverse('planner_reminders_detail',
-                                           kwargs={'pk': reminder.pk}),
-                                   json.dumps(data),
-                                   content_type='application/json')
+        response = self.client.patch(reverse('planner_reminders_detail',
+                                             kwargs={'pk': reminder.pk}),
+                                     json.dumps(data),
+                                     content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -440,12 +440,12 @@ class TestCaseReminderViews(APITestCase):
             self.client.post(reverse('planner_reminders_list'),
                              json.dumps({'homework': homework2.pk}),
                              content_type='application/json'),
-            self.client.put(
+            self.client.patch(
                 reverse('planner_reminders_detail',
                         kwargs={'pk': reminder.pk}),
                 json.dumps({'event': event2.pk}),
                 content_type='application/json'),
-            self.client.put(
+            self.client.patch(
                 reverse('planner_reminders_detail',
                         kwargs={'pk': reminder.pk}),
                 json.dumps({'homework': homework2.pk}),
@@ -472,7 +472,7 @@ class TestCaseReminderViews(APITestCase):
             self.client.get(reverse('planner_reminders_list') + f'?event={event.pk}'),
             self.client.get(reverse('planner_reminders_list') + f'?homework={homework.pk}'),
             self.client.get(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
-            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
+            self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk})),
             self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': event_reminder.pk}))
         ]
 
@@ -496,8 +496,8 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'start_of_range': '2014-05-08T12:00:00Z'
         }
-        response = self.client.put(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
-                                   json.dumps(data), content_type='application/json')
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -531,8 +531,8 @@ class TestCaseReminderViews(APITestCase):
         data = {
             'offset': 'asdf'
         }
-        response = self.client.put(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
-                                   json.dumps(data), content_type='application/json')
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     json.dumps(data), content_type='application/json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -547,7 +547,7 @@ class TestCaseReminderViews(APITestCase):
         # WHEN
         responses = [
             self.client.get(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.put(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'}))
         ]
 
