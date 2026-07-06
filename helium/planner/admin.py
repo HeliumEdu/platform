@@ -203,7 +203,7 @@ class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
                    has_course_schedule_filter('schedules'), has_weighted_grading_filter('categories__weight'),
                    has_credits_filter('credits'), HasReminderFilter, HasAttachmentFilter,
                    staff_filter('course_group__user'))
-    search_fields = ('id', 'title', 'teacher_email', 'course_group__user__username', 'course_group__user__email')
+    search_fields = ('id', 'title', 'teacher_email', 'course_group__id', 'course_group__user__username', 'course_group__user__email')
     autocomplete_fields = ('course_group',)
     actions = [recalculate_grade]
     object_actions = [
@@ -272,7 +272,7 @@ class CourseScheduleAdmin(BaseModelAdmin):
     list_display = ('days_of_week', 'get_course', 'get_course_group', 'updated_at', 'get_user')
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
                    HasCourseScheduleFilter, staff_filter('course__course_group__user'))
-    search_fields = ('id', 'course__course_group__user__username', 'course__course_group__user__email')
+    search_fields = ('id', 'course__id', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -309,7 +309,7 @@ class CategoryAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('title', 'get_course_group', 'get_course', 'weight', 'num_homework', 'updated_at', 'get_user',)
     list_filter = ('course__course_group__shown_on_calendar', 'course__course_group__example_schedule',
                    has_weighted_grading_filter('weight'), staff_filter('course__course_group__user'))
-    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
+    search_fields = ('id', 'title', 'course__id', 'course__course_group__user__username', 'course__course_group__user__email')
     autocomplete_fields = ('course',)
     actions = [recalculate_grade]
     object_actions = [
@@ -393,7 +393,7 @@ class HomeworkAdmin(BaseModelAdmin):
                    'course__course_group__example_schedule',
                    has_weighted_grading_filter('course__categories__weight'), HasReminderFilter, HasAttachmentFilter,
                    staff_filter('course__course_group__user'))
-    search_fields = ('id', 'title', 'course__course_group__user__username', 'course__course_group__user__email')
+    search_fields = ('id', 'title', 'course__id', 'course__course_group__user__username', 'course__course_group__user__email')
     ordering = ('-start',)
     autocomplete_fields = ('category', 'course')
     exclude = ('comments', 'materials',)
@@ -483,7 +483,7 @@ class MaterialAdmin(BaseModelAdmin):
     list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
     list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule',
                    staff_filter('material_group__user'))
-    search_fields = ('id', 'title', 'material_group__user__username', 'material_group__user__email')
+    search_fields = ('id', 'title', 'material_group__id', 'material_group__user__username', 'material_group__user__email')
     autocomplete_fields = ('material_group',)
     exclude = ('details', 'courses',)
 
