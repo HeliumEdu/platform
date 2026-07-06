@@ -217,6 +217,29 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertIsNone(response.data[6]['recurrence_rule'])
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
+    def test_get_external_calendar_infers_byday_and_drops_unsupported_rrule(self, mock_urlopen):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(
+            os.path.join('resources', 'sample_with_rrule_inference.ics'), mock_urlopen)
+
+        # WHEN
+        response = self.client.get(
+            reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk}))
+
+        # THEN — fixture has 2 VEVENTs
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        # FREQ=WEEKLY without BYDAY: DTSTART 2026-06-01 09:00 CDT (Monday) = 14:00 UTC; BYDAY=MO inferred
+        weekly = next(e for e in response.data if e['title'] == 'Weekly Monday Event')
+        self.assertEqual(weekly['start'], '2026-06-01T14:00:00Z')
+        self.assertEqual(weekly['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO')
+        # FREQ=HOURLY: unsupported RRULE stripped; event still surfaced as one-off
+        hourly = next(e for e in response.data if e['title'] == 'Hourly Event Dropped')
+        self.assertIsNone(hourly['recurrence_rule'])
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_cached(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
