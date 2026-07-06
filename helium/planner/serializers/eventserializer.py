@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.utils.validators import (
+    infer_byday_for_weekly_rrule,
     validate_hex_color,
     validate_recurrence_rule,
 )
@@ -55,6 +56,9 @@ class EventSerializer(serializers.ModelSerializer):
 
         if start and end and start > end:
             raise serializers.ValidationError("The 'start' must be before the 'end'")
+
+        if 'recurrence_rule' in attrs and attrs['recurrence_rule'] and start:
+            attrs['recurrence_rule'] = infer_byday_for_weekly_rrule(attrs['recurrence_rule'], start)
 
         return attrs
 
