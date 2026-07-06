@@ -38,6 +38,7 @@ from rest_framework import status
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.validators import infer_byday_for_weekly_rrule, validate_recurrence_rule
 from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
@@ -226,6 +227,15 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                     exception_dates = merged
 
             dt_start = component.get("DTSTART").dt
+
+            if recurrence_rule:
+                recurrence_rule = infer_byday_for_weekly_rrule(recurrence_rule, dt_start)
+                try:
+                    validate_recurrence_rule(recurrence_rule)
+                except Exception:
+                    logger.warning('Dropping invalid RRULE from external calendar VEVENT: %s', recurrence_rule)
+                    recurrence_rule = None
+
             if component.get("DTEND") is not None:
                 dt_end = component.get("DTEND").dt
             elif component.get("DURATION") is not None:

@@ -15,6 +15,8 @@ from helium.common.utils import commonutils
 # series anchor at runtime is the parent Event's `start`, not this constant.
 _RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 
+_WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+
 
 def validate_fraction(value):
     """
@@ -58,6 +60,36 @@ def validate_quill_delta(value):
         raise ValidationError('Quill content must be an object.')
     if not isinstance(value.get('ops'), list):
         raise ValidationError('Quill content must have an `ops` list.')
+
+
+def infer_byday_for_weekly_rrule(value, dtstart):
+    """
+    RFC 5545 allows ``FREQ=WEEKLY`` without ``BYDAY``, implying recurrence on
+    the same weekday as ``DTSTART``. SfCalendar requires ``BYDAY`` explicitly.
+    If ``value`` is a weekly RRULE without ``BYDAY``, this function infers it
+    from ``dtstart`` and returns the augmented string. All other RRULEs are
+    returned unchanged.
+    """
+    if not value:
+        return value
+
+    prefix = ''
+    rule_body = value
+    if value.upper().startswith('RRULE:'):
+        prefix = value[:6]
+        rule_body = value[6:]
+
+    parts = {}
+    for part in rule_body.split(';'):
+        if '=' in part:
+            k, v = part.split('=', 1)
+            parts[k.upper()] = v
+
+    if parts.get('FREQ') != 'WEEKLY' or 'BYDAY' in parts:
+        return value
+
+    day_code = _WEEKDAY_TO_ICAL[dtstart.weekday()]
+    return f'{prefix}{rule_body};BYDAY={day_code}'
 
 
 def validate_recurrence_rule(value):
