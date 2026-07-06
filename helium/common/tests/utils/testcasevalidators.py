@@ -1,10 +1,17 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
+import datetime
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from helium.common.utils.validators import validate_fraction, validate_quill_delta
+from helium.common.utils.validators import (
+    infer_byday_for_weekly_rrule,
+    validate_fraction,
+    validate_quill_delta,
+    validate_recurrence_rule,
+)
 
 
 class TestCaseValidateFraction(TestCase):
@@ -69,3 +76,35 @@ class TestCaseValidateQuillDelta(TestCase):
     def test_non_list_ops_rejected(self):
         with self.assertRaises(ValidationError):
             validate_quill_delta({'ops': 'not-a-list'})
+
+
+class TestCaseValidateRecurrenceRule(TestCase):
+    def test_valid_rrule_passes(self):
+        validate_recurrence_rule('FREQ=WEEKLY;BYDAY=MO,WE,FR')
+
+    def test_unsupported_freq_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_recurrence_rule('FREQ=HOURLY;COUNT=5')
+
+    def test_unsupported_part_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_recurrence_rule('FREQ=WEEKLY;BYDAY=MO;WKST=SU')
+
+
+class TestCaseInferBydayForWeeklyRrule(TestCase):
+    def test_weekly_with_byday_returned_unchanged(self):
+        rule = 'FREQ=WEEKLY;BYDAY=WE'
+        self.assertEqual(infer_byday_for_weekly_rrule(rule, datetime.datetime(2025, 9, 1)), rule)
+
+    def test_weekly_without_byday_infers_from_dtstart(self):
+        # 2025-09-01 is a Monday (weekday 0)
+        self.assertEqual(
+            infer_byday_for_weekly_rrule('FREQ=WEEKLY', datetime.datetime(2025, 9, 1)),
+            'FREQ=WEEKLY;BYDAY=MO',
+        )
+
+    def test_rrule_prefix_preserved(self):
+        self.assertEqual(
+            infer_byday_for_weekly_rrule('RRULE:FREQ=WEEKLY', datetime.datetime(2025, 9, 1)),
+            'RRULE:FREQ=WEEKLY;BYDAY=MO',
+        )

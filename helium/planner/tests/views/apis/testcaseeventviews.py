@@ -396,6 +396,43 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('recurrence_rule', response.data)
 
+    def test_create_event_weekly_rrule_without_byday_inferred(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN — 2025-09-01 is a Monday; BYDAY should be inferred as MO
+        data = {
+            'title': 'Weekly study group',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=WEEKLY',
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO')
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertEqual(event.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO')
+
+    def test_create_event_rejects_unsupported_rrule_properties(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        base = {'title': 'Bad', 'all_day': False, 'show_end_time': True,
+                'start': '2025-09-01T18:00:00Z', 'end': '2025-09-01T19:00:00Z', 'priority': 50}
+
+        # WHEN / THEN — unsupported FREQ and unsupported property both 400
+        for rule in ('FREQ=HOURLY;COUNT=5', 'FREQ=WEEKLY;BYDAY=MO;WKST=SU'):
+            response = self.client.post(reverse('planner_events_list'),
+                                        json.dumps({**base, 'recurrence_rule': rule}),
+                                        content_type='application/json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, msg=rule)
+            self.assertIn('recurrence_rule', response.data)
+
     def test_create_event_rejects_non_list_exception_dates(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

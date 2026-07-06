@@ -11,7 +11,7 @@ __license__ = "MIT"
 
 import logging
 
-from django.db.models import F, Count, Q, Case, When, Exists, OuterRef
+from django.db.models import F, Count, Q, Case, When, Exists, OuterRef, FloatField, Value
 
 from helium.common.utils import commonutils
 from helium.planner.models import CourseGroup, Course, Category, Homework
@@ -481,6 +481,7 @@ def recalculate_course_grade(course_id):
         category_totals[category_id]['total_earned'] += earned
         category_totals[category_id]['total_possible'] += possible
 
+    whens = []
     for category_id, totals in category_totals.items():
         if totals['weight']:
             grade_by_weight = (((totals['total_earned'] / totals['total_possible']) * (
@@ -489,8 +490,12 @@ def recalculate_course_grade(course_id):
             logger.debug(f'Course triggered category {category_id} '
                          f'recalculation of grade_by_weight to {grade_by_weight}')
 
-            # Update the values in the datastore, circumventing signals
-            Category.objects.filter(pk=category_id).update(grade_by_weight=grade_by_weight)
+            whens.append(When(pk=category_id, then=Value(grade_by_weight, output_field=FloatField())))
+
+    if whens:
+        Category.objects.filter(
+            pk__in=[cid for cid, t in category_totals.items() if t['weight']]
+        ).update(grade_by_weight=Case(*whens, output_field=FloatField()))
 
     Category.objects.for_course(course_id).filter(weight=0).update(grade_by_weight=0)
 
