@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -472,6 +473,43 @@ class TestCaseImportExportViews(APITestCase):
                 'user': user.pk,
             },
         )
+
+    def test_export_import_preserves_homework_completed_at(self):
+        # GIVEN a completed homework whose completion timestamp is a specific point in the past
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        homework = homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                                        current_grade='90/100')
+        original_completed_at = datetime.datetime(2017, 3, 1, 9, 30, tzinfo=datetime.timezone.utc)
+        Homework.objects.filter(pk=homework.pk).update(completed_at=original_completed_at)
+
+        # WHEN the data is exported
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN the export carries the original completed_at
+        self.assertEqual(len(export_data['homework']), 1)
+        self.assertEqual(parse_datetime(export_data['homework'][0]['completed_at']), original_completed_at)
+
+        # WHEN the same payload is re-imported as the same user
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_completed_at_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN the freshly-imported homework keeps the original completed_at rather than being re-stamped to now
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        homework_qs = Homework.objects.for_user(user.pk).order_by('pk')
+        self.assertEqual(homework_qs.count(), 2)
+        self.assertEqual(homework_qs.last().completed_at, original_completed_at)
 
     def test_user_registration_imports_example_schedule(self):
         # WHEN
