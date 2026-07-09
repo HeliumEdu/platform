@@ -96,7 +96,7 @@ def recalculate_course_grades_for_course_group(self, course_group_id):
 
 
 @app.task(bind=True)
-def recalculate_category_grade(self, category_id, retries=0):
+def recalculate_category_grade(self, category_id, retries=0, recalculate_course=True):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.category", priority="low", published_at_ms=published_at_ms)
 
@@ -105,7 +105,8 @@ def recalculate_category_grade(self, category_id, retries=0):
 
         gradingservice.recalculate_category_grade(category_id)
 
-        recalculate_course_grade(course_id)
+        if recalculate_course:
+            recalculate_course_grade(course_id)
 
         metricutils.task_stop(metrics, value=1)
     except IntegrityError as ex:  # pragma: no cover
@@ -115,6 +116,7 @@ def recalculate_category_grade(self, category_id, retries=0):
 
             taskutils.safe_apply_async(recalculate_category_grade,
                 (category_id, retries + 1),
+                kwargs={'recalculate_course': recalculate_course},
                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
                 priority=settings.CELERY_PRIORITY_LOW,
             )
@@ -132,10 +134,15 @@ def recalculate_category_grades_for_course(self, course_id):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.course-categories", priority="low", published_at_ms=published_at_ms)
 
+    # Each category's grade must still be recalculated individually, but the course-wide grade only
+    # needs to be recalculated once, after all categories are up to date, rather than once per category
     count = 0
     for category_id in Category.objects.for_course(course_id).values_list("id", flat=True):
-        recalculate_category_grade(category_id)
+        recalculate_category_grade(category_id, recalculate_course=False)
         count += 1
+
+    if count:
+        recalculate_course_grade(course_id)
 
     metricutils.task_stop(metrics, value=count)
 
