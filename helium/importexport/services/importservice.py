@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models.signals import post_save
 from django.http import HttpRequest
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -381,6 +382,13 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
         if serializer.is_valid():
             instance = serializer.save(course_id=course_id)
             homework_remap[h['id']] = instance.pk
+
+            # completed_at is read-only (inferred by Homework.save() the first time completed flips true),
+            # so the serializer ignores it. Restore the original value from a user's own export rather
+            # than letting save() re-stamp it to import time. Seed imports keep the fresh stamp.
+            completed_at = parse_datetime(h['completed_at']) if h.get('completed_at') else None
+            if completed_at and not example_schedule:
+                Homework.objects.filter(pk=instance.pk).update(completed_at=completed_at)
 
             if legacy_notes_content:
                 _create_note_from_payload(
