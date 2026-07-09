@@ -354,7 +354,7 @@ class TestCaseImportExportViews(APITestCase):
         course_schedule2 = courseschedulehelper.given_course_schedule_exists(course2)
         courseschedulehelper.given_course_schedule_exists(course3)
         category1 = categoryhelper.given_category_exists(course1, title='Uncategorized')
-        category2 = categoryhelper.given_category_exists(course2)
+        category2 = categoryhelper.given_category_exists(course2, weight=100)
         category3 = categoryhelper.given_category_exists(course3)
         material_group1 = materialgrouphelper.given_material_group_exists(user1)
         material_group2 = materialgrouphelper.given_material_group_exists(user2)
@@ -393,6 +393,29 @@ class TestCaseImportExportViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework1, data['homework'][0])
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
+        # Computed, annotation-backed summary fields are exported but derived read-only, so they are
+        # not covered by the verify_*_matches_data helpers; assert them directly to ensure the export
+        # reports real values rather than silently defaulting to 0/False
+        self.assertEqual(data['courses'][0]['num_homework'], 1)
+        self.assertEqual(data['courses'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['courses'][0]['num_homework_graded'], 1)
+        self.assertFalse(data['courses'][0]['has_weighted_grading'])
+        self.assertEqual(data['courses'][1]['num_homework'], 1)
+        self.assertEqual(data['courses'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['courses'][1]['num_homework_graded'], 0)
+        self.assertTrue(data['courses'][1]['has_weighted_grading'])
+        self.assertEqual(data['course_groups'][0]['num_homework'], 1)
+        self.assertEqual(data['course_groups'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['course_groups'][0]['num_homework_graded'], 1)
+        self.assertEqual(data['course_groups'][1]['num_homework'], 1)
+        self.assertEqual(data['course_groups'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['course_groups'][1]['num_homework_graded'], 0)
+        self.assertEqual(data['categories'][0]['num_homework'], 1)
+        self.assertEqual(data['categories'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['categories'][0]['num_homework_graded'], 1)
+        self.assertEqual(data['categories'][1]['num_homework'], 1)
+        self.assertEqual(data['categories'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['categories'][1]['num_homework_graded'], 0)
 
     def test_export_import_preserves_event_recurrence(self):
         # GIVEN

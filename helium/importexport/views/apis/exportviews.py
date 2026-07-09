@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
@@ -39,10 +40,23 @@ class ExportResourceView(ViewSet, HeliumAPIView):
 
         serializer = ExportSerializer({
             'external_calendars': ExternalCalendar.objects.for_user(user.pk),
-            'course_groups': CourseGroup.objects.for_user(user.pk),
-            'courses': Course.objects.for_user(user.pk),
+            'course_groups': CourseGroup.objects.for_user(user.pk).annotate(
+                annotated_num_homework=Count('courses__homework', distinct=True),
+                annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True),
+            ),
+            'courses': Course.objects.for_user(user.pk).annotate(
+                annotated_num_homework=Count('homework', distinct=True),
+                annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)),
+            ),
             'course_schedules': CourseSchedule.objects.for_user(user.pk),
-            'categories': Category.objects.for_user(user.pk),
+            'categories': Category.objects.for_user(user.pk).annotate(
+                annotated_num_homework=Count('homework'),
+                annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100')),
+            ),
             'resource_groups': MaterialGroup.objects.for_user(user.pk),
             'resources': Material.objects.for_user(user.pk),
             'events': Event.objects.for_user(user.pk),
