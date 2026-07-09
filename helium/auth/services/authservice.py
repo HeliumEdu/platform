@@ -113,6 +113,10 @@ def confirm_password_reset(request):
         raise ValidationError({'password': list(e.messages)})
 
     user.set_password(new_password)
+    # Completing a password reset proves ownership of the account's email address, so it satisfies
+    # the same requirement as clicking the verification link
+    if not user.is_active:
+        user.is_active = True
     user.save()
 
     logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
