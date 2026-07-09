@@ -51,7 +51,7 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
 
 
 @app.task(bind=True)
-def recalculate_course_grade(self, course_id, retries=0):
+def recalculate_course_grade(self, course_id, retries=0, recalculate_group=True):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.course", priority="low", published_at_ms=published_at_ms)
 
@@ -60,7 +60,8 @@ def recalculate_course_grade(self, course_id, retries=0):
 
         gradingservice.recalculate_course_grade(course_id)
 
-        recalculate_course_group_grade(course_group_id)
+        if recalculate_group:
+            recalculate_course_group_grade(course_group_id)
 
         metricutils.task_stop(metrics, value=1)
     except IntegrityError as ex:  # pragma: no cover
@@ -70,6 +71,7 @@ def recalculate_course_grade(self, course_id, retries=0):
 
             taskutils.safe_apply_async(recalculate_course_grade,
                 (course_id, retries + 1),
+                kwargs={'recalculate_group': recalculate_group},
                 countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
                 priority=settings.CELERY_PRIORITY_LOW,
             )
@@ -87,10 +89,15 @@ def recalculate_course_grades_for_course_group(self, course_group_id):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.course-group-all", priority="low", published_at_ms=published_at_ms)
 
+    # Each course's grade must still be recalculated individually, but the course-group-wide grade only
+    # needs to be recalculated once, after all courses are up to date, rather than once per course
     count = 0
     for course_id in Course.objects.for_course_group(course_group_id).values_list("id", flat=True):
-        recalculate_course_grade(course_id)
+        recalculate_course_grade(course_id, recalculate_group=False)
         count += 1
+
+    if count:
+        recalculate_course_group_grade(course_group_id)
 
     metricutils.task_stop(metrics, value=count)
 
