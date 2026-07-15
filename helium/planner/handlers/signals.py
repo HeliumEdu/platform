@@ -43,7 +43,7 @@ def save_course(sender, instance, **kwargs):
 @receiver(post_delete, sender=Course)
 def delete_course(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    recalculate_course_grades_for_course_group.apply(args=(instance.course_group.pk,))
+    recalculate_course_grades_for_course_group.apply(args=(instance.course_group_id,))
 
 
 @receiver(post_save, sender=CourseSchedule)
@@ -65,7 +65,7 @@ def save_category(sender, instance, **kwargs):
 @receiver(post_delete, sender=Category)
 def delete_category(sender, instance, **kwargs):
     _mark_user_data_deleted(instance)
-    recalculate_category_grades_for_course.apply(args=(instance.course.pk,))
+    recalculate_category_grades_for_course.apply(args=(instance.course_id,))
 
 
 @receiver(post_delete, sender=Homework)
