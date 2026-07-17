@@ -15,6 +15,11 @@ class InfoSerializer(serializers.Serializer):
 
     version = serializers.CharField(help_text='The deployed API version.')
 
+    minimum_supported_version = serializers.CharField(
+        help_text='Oldest client version the API still supports. Clients older '
+                  'than this should require the user to update before continuing.'
+    )
+
     max_upload_size = serializers.IntegerField(
         help_text='Maximum size, in bytes, for any single file upload (attachments and imports).'
     )

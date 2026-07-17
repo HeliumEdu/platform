@@ -262,6 +262,11 @@ REST_FRAMEWORK = {
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
 
+# Oldest client version the API still supports. Clients older than this should
+# force the user to update. Defaults permissively, config-driven, update in
+# Terraform code (never here) when it needs to be changed.
+MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
+
 # TTL values for the legacy frontend that doesn't reliably support token refresh
 LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
 LEGACY_REFRESH_TOKEN_TTL_DAYS = int(config('PLATFORM_LEGACY_REFRESH_TOKEN_TTL_DAYS', '30'))
