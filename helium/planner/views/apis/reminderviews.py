@@ -3,12 +3,15 @@ __license__ = "MIT"
 
 import logging
 
+from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
+from helium.common.tasks import send_dismiss_pushes
+from helium.common.utils import taskutils
 from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import ReminderFilter
@@ -174,6 +177,25 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         logger.info(f"Reminder {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
+
+    def perform_update(self, serializer):
+        was_dismissed = Reminder.objects.values_list('dismissed', flat=True).get(
+            pk=serializer.instance.pk
+        )
+        reminder = serializer.save()
+
+        # On the false->true dismiss transition, clear the reminder's already-
+        # delivered push from all of the user's devices.
+        if reminder.dismissed and not was_dismissed:
+            push_tokens = list(
+                {t.device_id: t.token for t in reminder.user.push_tokens.all()}.values()
+            )
+            if push_tokens:
+                taskutils.safe_apply_async(
+                    send_dismiss_pushes,
+                    args=(push_tokens, reminder.pk),
+                    priority=settings.CELERY_PRIORITY_HIGH,
+                )
 
     def perform_destroy(self, instance):
         if instance.course_id:
