@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.71"
+__version__ = "2.2.72"
 
 import json
 import os
@@ -261,6 +261,11 @@ REST_FRAMEWORK = {
 
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
+
+# Oldest client version the API still supports. Clients older than this should
+# force the user to update. Defaults permissively, config-driven, update in
+# Terraform code (never here) when it needs to be changed.
+MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
 # TTL values for the legacy frontend that doesn't reliably support token refresh
 LEGACY_ACCESS_TOKEN_TTL_MINUTES = 60 * 24 * 7
