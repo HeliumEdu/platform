@@ -256,6 +256,7 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'helium.common.pagination.DefaultPageNumberPagination',
 }
 
 ACCESS_TOKEN_TTL_MINUTES = 5
@@ -316,6 +317,12 @@ SPECTACULAR_SETTINGS = {
         "Exceeding the limit returns `429 Too Many Requests` with a `Retry-After` header "
         "(in seconds). For large batches, prefer the bulk-import endpoint over fanning out "
         "individual `POST`s.\n\n"
+        "## Pagination\n\n"
+        "List endpoints return a **bare JSON array** by default. To **opt-in** to "
+        "pagination, pass a `page` or `page_size` query param and the response "
+        "switches to the envelope `{\"count\", \"next\", \"previous\", \"results\"}`.\n\n"
+        "- `page`: 1-based page number.\n"
+        "- `page_size`: items per page (max 100).\n\n"
         "## Vocabulary (wire format vs. user-facing terms)\n\n"
         f"The wire format keeps some legacy names that differ from what users see in the "
         f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "

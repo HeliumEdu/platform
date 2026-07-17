@@ -74,6 +74,37 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(len(response1.data), 6)
         self.assertEqual(len(response2.data), 2)
         self.assertEqual(len(response3.data), 2)
+        # Without paging params the response is a bare list, not a paginated
+        # envelope.
+        self.assertIsInstance(response1.data, list)
+        self.assertNotIn('count', response1.data)
+        self.assertNotIn('results', response1.data)
+
+    def test_get_reminders_count_via_pagination(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        other = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        event = eventhelper.given_event_exists(user)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(other, event=eventhelper.given_event_exists(other))
+
+        # WHEN
+        bare_response = self.client.get(reverse('planner_reminders_list'))
+        paged_response = self.client.get(reverse('planner_reminders_list') + '?page_size=1')
+
+        # THEN
+        # Without paging params the response is a bare list scoped to the user.
+        self.assertEqual(bare_response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(bare_response.data, list)
+        self.assertEqual(len(bare_response.data), 3)
+
+        # Opting in returns the envelope; `count` is the user's total (not the
+        # page size), which is what the frontend reads for the bell badge.
+        self.assertEqual(paged_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(paged_response.data['count'], 3)
+        self.assertEqual(len(paged_response.data['results']), 1)
 
     def test_create_event_reminder(self):
         # GIVEN
