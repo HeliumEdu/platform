@@ -17,6 +17,7 @@ class TestCaseInfoViews(APITestCase):
         self.assertEqual(settings.PROJECT_NAME, response.data['name'])
         self.assertEqual(settings.PROJECT_TAGLINE, response.data['tagline'])
         self.assertEqual(settings.PROJECT_VERSION, response.data['version'])
+        self.assertEqual(settings.MINIMUM_SUPPORTED_VERSION, response.data['minimum_supported_version'])
         self.assertEqual(settings.MAX_UPLOAD_SIZE, response.data['max_upload_size'])
         self.assertEqual(settings.ACCESS_TOKEN_TTL_MINUTES, response.data['access_token_lifetime_minutes'])
         self.assertEqual(settings.REFRESH_TOKEN_TTL_DAYS, response.data['refresh_token_lifetime_days'])
