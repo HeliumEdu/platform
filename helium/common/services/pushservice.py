@@ -24,7 +24,6 @@ def send_notifications(push_tokens, subject, message, reminder_data):
     multicast_message = messaging.MulticastMessage(
         data={"json_payload": json.dumps(payload_data)},
         android=messaging.AndroidConfig(
-            collapse_key=tag,
             notification=messaging.AndroidNotification(
                 title=subject,
                 body=message,
