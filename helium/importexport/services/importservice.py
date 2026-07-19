@@ -1017,23 +1017,24 @@ def import_example_schedule(user):
     try:
         data = json.loads(json_str)
 
-        with _suppress_post_save_signals():
-            _bulk_import_example_schedule(data, user)
+        with transaction.atomic():
+            with _suppress_post_save_signals():
+                _bulk_import_example_schedule(data, user)
 
-        _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1)
 
-        for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
-            gradingservice.recalculate_category_grade(category_id)
+            for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
+                gradingservice.recalculate_category_grade(category_id)
 
-        course_group_ids = set()
-        for course in (Course.objects.for_user(user.pk)
-                .filter(course_group__example_schedule=True)
-                .select_related('course_group')):
-            gradingservice.recalculate_course_grade(course.pk)
-            course_group_ids.add(course.course_group_id)
+            course_group_ids = set()
+            for course in (Course.objects.for_user(user.pk)
+                    .filter(course_group__example_schedule=True)
+                    .select_related('course_group')):
+                gradingservice.recalculate_course_grade(course.pk)
+                course_group_ids.add(course.course_group_id)
 
-        for course_group_id in course_group_ids:
-            gradingservice.recalculate_course_group_grade(course_group_id)
+            for course_group_id in course_group_ids:
+                gradingservice.recalculate_course_group_grade(course_group_id)
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'
