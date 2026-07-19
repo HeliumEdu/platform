@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import exceptions as django_exceptions
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
@@ -442,28 +443,29 @@ def delete_example_schedule(user_id):
     except UserModel.DoesNotExist:
         user = None
 
-    (ExternalCalendar.objects
-     .for_user(user_id)
-     .filter(example_schedule=True)
-     .delete())
-    (CourseGroup.objects
-     .for_user(user_id)
-     .filter(example_schedule=True)
-     .delete())
-    (MaterialGroup.objects
-     .for_user(user_id)
-     .filter(example_schedule=True)
-     .delete())
-    (Event.objects
-     .for_user(user_id)
-     .filter(example_schedule=True)
-     .delete())
-    # Only delete standalone notes (no linked entities) - linked notes are already
-    # cascade-deleted when their parent entities are deleted above
-    (Note.objects
-     .for_user(user_id)
-     .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
-     .delete())
+    with transaction.atomic():
+        (ExternalCalendar.objects
+         .for_user(user_id)
+         .filter(example_schedule=True)
+         .delete())
+        (CourseGroup.objects
+         .for_user(user_id)
+         .filter(example_schedule=True)
+         .delete())
+        (MaterialGroup.objects
+         .for_user(user_id)
+         .filter(example_schedule=True)
+         .delete())
+        (Event.objects
+         .for_user(user_id)
+         .filter(example_schedule=True)
+         .delete())
+        # Only delete standalone notes (no linked entities) - linked notes are already
+        # cascade-deleted when their parent entities are deleted above
+        (Note.objects
+         .for_user(user_id)
+         .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
+         .delete())
 
     if user is not None and user.onboarding_completed_at is None:
         user.onboarding_completed_at = timezone.now()
