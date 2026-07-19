@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.72"
+__version__ = "2.2.73"
 
 import json
 import os
@@ -245,7 +245,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
-        'user': '120/min',
+        'user': '130/min',
         'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
         'user_token': '5/hour',
         'ses_webhook': '60/min',
