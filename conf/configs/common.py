@@ -245,7 +245,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
-        'user': '120/min',
+        'user': '130/min',
         'user_legacy': '300/min',  # TODO: Remove once the legacy frontend (www.heliumedu.com) is retired
         'user_token': '5/hour',
         'ses_webhook': '60/min',
