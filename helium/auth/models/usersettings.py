@@ -1,12 +1,11 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-import time
+import uuid
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
-from django.utils.text import slugify
 
 from helium.common import enums
 from helium.common.models import BaseModel
@@ -132,7 +131,7 @@ class UserSettings(BaseModel):
 
     def enable_private_slug(self):
         if not self.private_slug:
-            self.private_slug = slugify(str(self.get_user().pk) + str(time.time()))
+            self.private_slug = uuid.uuid4().hex
             self.save()
 
     def disable_private_slug(self):

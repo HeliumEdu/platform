@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -354,7 +355,7 @@ class TestCaseImportExportViews(APITestCase):
         course_schedule2 = courseschedulehelper.given_course_schedule_exists(course2)
         courseschedulehelper.given_course_schedule_exists(course3)
         category1 = categoryhelper.given_category_exists(course1, title='Uncategorized')
-        category2 = categoryhelper.given_category_exists(course2)
+        category2 = categoryhelper.given_category_exists(course2, weight=100)
         category3 = categoryhelper.given_category_exists(course3)
         material_group1 = materialgrouphelper.given_material_group_exists(user1)
         material_group2 = materialgrouphelper.given_material_group_exists(user2)
@@ -393,6 +394,29 @@ class TestCaseImportExportViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework1, data['homework'][0])
         homeworkhelper.verify_homework_matches_data(self, homework2, data['homework'][1])
         reminderhelper.verify_reminder_matches_data(self, reminder, data['reminders'][0])
+        # Computed, annotation-backed summary fields are exported but derived read-only, so they are
+        # not covered by the verify_*_matches_data helpers; assert them directly to ensure the export
+        # reports real values rather than silently defaulting to 0/False
+        self.assertEqual(data['courses'][0]['num_homework'], 1)
+        self.assertEqual(data['courses'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['courses'][0]['num_homework_graded'], 1)
+        self.assertFalse(data['courses'][0]['has_weighted_grading'])
+        self.assertEqual(data['courses'][1]['num_homework'], 1)
+        self.assertEqual(data['courses'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['courses'][1]['num_homework_graded'], 0)
+        self.assertTrue(data['courses'][1]['has_weighted_grading'])
+        self.assertEqual(data['course_groups'][0]['num_homework'], 1)
+        self.assertEqual(data['course_groups'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['course_groups'][0]['num_homework_graded'], 1)
+        self.assertEqual(data['course_groups'][1]['num_homework'], 1)
+        self.assertEqual(data['course_groups'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['course_groups'][1]['num_homework_graded'], 0)
+        self.assertEqual(data['categories'][0]['num_homework'], 1)
+        self.assertEqual(data['categories'][0]['num_homework_completed'], 1)
+        self.assertEqual(data['categories'][0]['num_homework_graded'], 1)
+        self.assertEqual(data['categories'][1]['num_homework'], 1)
+        self.assertEqual(data['categories'][1]['num_homework_completed'], 0)
+        self.assertEqual(data['categories'][1]['num_homework_graded'], 0)
 
     def test_export_import_preserves_event_recurrence(self):
         # GIVEN
@@ -449,6 +473,43 @@ class TestCaseImportExportViews(APITestCase):
                 'user': user.pk,
             },
         )
+
+    def test_export_import_preserves_homework_completed_at(self):
+        # GIVEN a completed homework whose completion timestamp is a specific point in the past
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        category = categoryhelper.given_category_exists(course)
+        homework = homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                                        current_grade='90/100')
+        original_completed_at = datetime.datetime(2017, 3, 1, 9, 30, tzinfo=datetime.timezone.utc)
+        Homework.objects.filter(pk=homework.pk).update(completed_at=original_completed_at)
+
+        # WHEN the data is exported
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN the export carries the original completed_at
+        self.assertEqual(len(export_data['homework']), 1)
+        self.assertEqual(parse_datetime(export_data['homework'][0]['completed_at']), original_completed_at)
+
+        # WHEN the same payload is re-imported as the same user
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_completed_at_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN the freshly-imported homework keeps the original completed_at rather than being re-stamped to now
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        homework_qs = Homework.objects.for_user(user.pk).order_by('pk')
+        self.assertEqual(homework_qs.count(), 2)
+        self.assertEqual(homework_qs.last().completed_at, original_completed_at)
 
     def test_user_registration_imports_example_schedule(self):
         # WHEN
@@ -597,11 +658,11 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(creative_writing.course_group, course_group)
 
         programming = Course.objects.get(title='Fundamentals of Programming 💻')
-        self.assertEqual(programming.room, 'ENG 202')
+        self.assertEqual(programming.room, '')
         self.assertEqual(float(programming.credits), 3.0)
         self.assertEqual(programming.color, '#05cc90')
         self.assertEqual(programming.website, 'https://automatetheboringstuff.com')
-        self.assertFalse(programming.is_online)
+        self.assertTrue(programming.is_online)
         self.assertEqual(float(programming.current_grade), 89.0833)
         self.assertAlmostEqual(programming.trend, 0.006485167832167846)
         self.assertEqual(programming.teacher_name, 'Dr. Alex Gallagher')

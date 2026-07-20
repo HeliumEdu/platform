@@ -217,3 +217,11 @@ class UserVerifySerializer(serializers.Serializer):
 
 class UserForgotSerializer(serializers.Serializer):
     email = serializers.CharField(help_text='The email for the user.')
+
+
+class UserForgotConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(help_text='The base64-encoded user ID from the reset email link.')
+
+    token = serializers.CharField(help_text='The password reset token from the reset email link.')
+
+    password = serializers.CharField(help_text='The new password to set.')

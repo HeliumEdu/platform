@@ -39,7 +39,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
         model = Homework
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
-            'current_grade', 'completed', 'category', 'materials', 'attachments', 'reminders', 'notes', 'course',
+            'current_grade', 'completed', 'completed_at', 'category', 'materials', 'attachments', 'reminders', 'notes',
+            'course',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at',)

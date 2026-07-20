@@ -14,7 +14,7 @@ from helium.common.services import analyticsservice
 @override_settings(GA4_MEASUREMENT_ID='G-TEST', GA4_API_SECRET='secret')
 class TestCaseAnalyticsService(TestCase):
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_success(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -41,7 +41,7 @@ class TestCaseAnalyticsService(TestCase):
         mock_increment.assert_called_once_with('action.analytics.sent')
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_unexpected_status(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -56,7 +56,7 @@ class TestCaseAnalyticsService(TestCase):
         mock_increment.assert_called_once_with('action.analytics.unexpected_status')
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_network_error_is_swallowed(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -68,7 +68,7 @@ class TestCaseAnalyticsService(TestCase):
         mock_increment.assert_called_once_with('action.analytics.failed')
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_skips_heliumedu_com_user(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists(email='admin@heliumedu.com')
@@ -81,7 +81,7 @@ class TestCaseAnalyticsService(TestCase):
         mock_increment.assert_not_called()
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_skips_heliumedu_dev_user(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists(email='dev@heliumedu.dev')
@@ -94,7 +94,7 @@ class TestCaseAnalyticsService(TestCase):
         mock_increment.assert_not_called()
 
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_skips_superuser(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists(email='outside@example.com')
@@ -110,7 +110,7 @@ class TestCaseAnalyticsService(TestCase):
 
     @override_settings(GA4_MEASUREMENT_ID=None, GA4_API_SECRET=None)
     @mock.patch('helium.common.services.analyticsservice.metricutils.increment')
-    @mock.patch('helium.common.services.analyticsservice.urllib.request.urlopen')
+    @mock.patch('helium.common.services.analyticsservice.urlopen_secure')
     def test_send_event_noop_when_not_configured(self, mock_urlopen, mock_increment):
         # GIVEN
         user = userhelper.given_a_user_exists()

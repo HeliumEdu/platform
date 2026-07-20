@@ -23,3 +23,5 @@ class S3MediaPipelineStorage(PipelineMixin, S3Boto3Storage):
         super().__init__(*args, **kwargs)
         self.bucket_name = settings.AWS_MEDIA_STORAGE_BUCKET_NAME
         self.custom_domain = None
+        # Serve user-uploaded media as a download so it cannot render inline.
+        self.object_parameters = {'ContentDisposition': 'attachment'}

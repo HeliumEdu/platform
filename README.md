@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/helium-logo.png" alt="Helium" width="300" />
+  <img src="https://www.heliumedu.com/img/helium-logo.png" alt="Helium" width="300" />
   <br />
-  <img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/og-default.png" alt="Helium - Student Planner" width="800" />
+  <img src="https://www.heliumedu.com/img/og-default.png" alt="Helium - Student Planner" width="800" />
 </p>
 
 ---
@@ -9,13 +9,13 @@
 [**Helium**](https://www.heliumedu.com) is a free, color-coded online student planner for classes, homework, grades, and notes.
 
 <p align="center">
-  <a href="https://apps.apple.com/us/app/helium-student-planner/id6758323154"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/ios-badge.png" alt="Download on the App Store" height="50" /></a>
+  <a href="https://apps.apple.com/us/app/helium-student-planner/id6758323154"><img src="https://www.heliumedu.com/img/ios-badge.png" alt="Download on the App Store" height="50" /></a>
   &nbsp;
-  <a href="https://play.google.com/store/apps/details?id=com.heliumedu.heliumapp"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/src/assets/img/play-badge.png" alt="Get it on Google Play" height="50" /></a>
+  <a href="https://play.google.com/store/apps/details?id=com.heliumedu.heliumapp"><img src="https://www.heliumedu.com/img/play-badge.png" alt="Get it on Google Play" height="50" /></a>
 </p>
 
 <p align="center">
-  <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://raw.githubusercontent.com/HeliumEdu/www/main/public/img/support-patreon.svg" alt="Support on Patreon" height="30" /></a>
+  <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://www.heliumedu.com/img/support-patreon.png" alt="Support on Patreon" height="30" /></a>
 </p>
 
 ---
@@ -96,7 +96,7 @@ There are also some special environment variables that can be set in development
 
 - `ENVIRONMENT`
   - `dev-local` provisions hosts as `localhost`
-  - `local` provisions hosts as `localhost` for use outside of Docker (ex. when using Django's `runserver` command) 
+  - `local` provisions hosts as `localhost` for use outside of Docker (e.g. when using Django's `runserver` command) 
   - `prod` provisions hosts to be suffixed with `heliumedu.com`
   - Any other env name provisions a prod-like hostname with `<ENVIRONMENT>.` as the prefix
 - `USE_AWS_SECRETS_MANAGER`
@@ -119,7 +119,7 @@ make test
 The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
 The `frontend` and `platform` containers can be started alongside each other to almost entirely
 emulate a `prod`-like environment locally. For functionality that still requires Internet-connected external
-services (ex. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
+services (e.g. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
 which is meant to work alongside local Docker development.
 
 ### Documentation

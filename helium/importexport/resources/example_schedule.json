@@ -73,11 +73,11 @@
     {
       "id": 513,
       "title": "Fundamentals of Programming \ud83d\udcbb",
-      "room": "ENG 202",
+      "room": "",
       "credits": "3.00",
       "color": "#05cc90",
       "website": "https://automatetheboringstuff.com",
-      "is_online": false,
+      "is_online": true,
       "current_grade": "89.0833",
       "trend": 0.006485167832167846,
       "teacher_name": "Dr. Alex Gallagher",
@@ -1061,7 +1061,7 @@
     },
     {
       "id": 7837,
-      "title": "Quiz 48",
+      "title": "Quiz 4",
       "all_day": false,
       "show_end_time": false,
       "start": "2025-10-29T16:00:00Z",

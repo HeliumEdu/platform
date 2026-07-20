@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models.signals import post_save
 from django.http import HttpRequest
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -381,6 +382,13 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
         if serializer.is_valid():
             instance = serializer.save(course_id=course_id)
             homework_remap[h['id']] = instance.pk
+
+            # completed_at is read-only (inferred by Homework.save() the first time completed flips true),
+            # so the serializer ignores it. Restore the original value from a user's own export rather
+            # than letting save() re-stamp it to import time. Seed imports keep the fresh stamp.
+            completed_at = parse_datetime(h['completed_at']) if h.get('completed_at') else None
+            if completed_at and not example_schedule:
+                Homework.objects.filter(pk=instance.pk).update(completed_at=completed_at)
 
             if legacy_notes_content:
                 _create_note_from_payload(
@@ -1014,23 +1022,24 @@ def import_example_schedule(user):
     try:
         data = json.loads(json_str)
 
-        with _suppress_post_save_signals():
-            _bulk_import_example_schedule(data, user)
+        with transaction.atomic():
+            with _suppress_post_save_signals():
+                _bulk_import_example_schedule(data, user)
 
-        _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1)
 
-        for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
-            gradingservice.recalculate_category_grade(category_id)
+            for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
+                gradingservice.recalculate_category_grade(category_id)
 
-        course_group_ids = set()
-        for course in (Course.objects.for_user(user.pk)
-                .filter(course_group__example_schedule=True)
-                .select_related('course_group')):
-            gradingservice.recalculate_course_grade(course.pk)
-            course_group_ids.add(course.course_group_id)
+            course_group_ids = set()
+            for course in (Course.objects.for_user(user.pk)
+                    .filter(course_group__example_schedule=True)
+                    .select_related('course_group')):
+                gradingservice.recalculate_course_grade(course.pk)
+                course_group_ids.add(course.course_group_id)
 
-        for course_group_id in course_group_ids:
-            gradingservice.recalculate_course_group_grade(course_group_id)
+            for course_group_id in course_group_ids:
+                gradingservice.recalculate_course_group_grade(course_group_id)
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'

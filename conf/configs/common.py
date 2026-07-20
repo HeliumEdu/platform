@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.55"
+__version__ = "2.2.74"
 
 import json
 import os
@@ -163,8 +163,6 @@ FEED_CONSECUTIVE_FAILURE_THRESHOLD = 10
 # aggregation query load from high-frequency pollers (e.g. iOS Calendar).
 FEED_ICS_MAX_AGE_SECONDS = 60 * 15
 
-RESEND_VERIFICATION_COOLDOWN_SECONDS = 60
-
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
@@ -238,17 +236,26 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
-        'user': '120/min',
+        'user': '130/min',
         'user_token': '5/hour',
+        'ses_webhook': '60/min',
         'delete_inactive': '1/min',
         'support_contact': '5/hour',
+        'forgot_password_email': '1/min',
+        'resend_verification_email': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'helium.common.pagination.DefaultPageNumberPagination',
 }
 
 ACCESS_TOKEN_TTL_MINUTES = 5
 REFRESH_TOKEN_TTL_DAYS = 14
+
+# Oldest client version the API still supports. Clients older than this should
+# force the user to update. Defaults permissively, config-driven, update in
+# Terraform code (never here) when it needs to be changed.
+MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
@@ -301,6 +308,12 @@ SPECTACULAR_SETTINGS = {
         "Exceeding the limit returns `429 Too Many Requests` with a `Retry-After` header "
         "(in seconds). For large batches, prefer the bulk-import endpoint over fanning out "
         "individual `POST`s.\n\n"
+        "## Pagination\n\n"
+        "List endpoints return a **bare JSON array** by default. To **opt-in** to "
+        "pagination, pass a `page` or `page_size` query param and the response "
+        "switches to the envelope `{\"count\", \"next\", \"previous\", \"results\"}`.\n\n"
+        "- `page`: 1-based page number.\n"
+        "- `page_size`: items per page (max 100).\n\n"
         "## Vocabulary (wire format vs. user-facing terms)\n\n"
         f"The wire format keeps some legacy names that differ from what users see in the "
         f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
@@ -467,18 +480,40 @@ FILE_TYPES = ['json']
 MAX_UPLOAD_SIZE = 10485760
 
 BLOCKED_ATTACHMENT_EXTENSIONS = {
-    '.php', '.php3', '.php4', '.php5', '.phtml',
-    '.pyc', '.rb', '.pl',
-    '.sh', '.bash', '.zsh', '.fish',
-    '.ps1', '.psm1', '.psd1',
-    '.bat', '.cmd', '.com',
+    # Browser-executable
+    '.html', '.htm', '.xhtml',
+    '.svg', '.svgz',
+    '.xml', '.xsl', '.xslt',
+    '.js', '.mjs',
+    # Windows-risk
+    '.hta', '.vbs', '.vbe',
+    '.wsf', '.lnk',
+    # Cross-platform installers / executables
     '.exe', '.dll', '.so', '.dylib',
+    '.msi', '.dmg', '.pkg', '.apk',
+    '.jar',
+    # Scripting
+    '.bat', '.cmd', '.com',
+    '.ps1', '.psm1', '.psd1',
+    '.sh', '.bash', '.zsh', '.fish',
+    '.py', '.rb', '.pl',
+    '.php', '.php3', '.php4', '.php5', '.phtml',
 }
 
 BLOCKED_ATTACHMENT_MIME_TYPES = {
-    'application/x-httpd-php', 'application/x-php',
-    'application/x-sh', 'application/x-shellscript',
+    # Browser-executable MIME types
+    'text/html', 'application/xhtml+xml',
+    'image/svg+xml',
+    'text/xml', 'application/xml',
+    'text/javascript', 'application/javascript',
+    # Executable / installer MIME types
     'application/x-msdownload', 'application/x-executable',
+    'application/x-msi', 'application/x-apple-diskimage',
+    'application/vnd.android.package-archive',
+    'application/java-archive',
+    # Script MIME types
+    'application/x-sh', 'application/x-shellscript',
+    'application/x-httpd-php', 'application/x-php',
 }
 
 # Email settings

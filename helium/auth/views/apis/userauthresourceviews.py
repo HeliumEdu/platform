@@ -11,9 +11,11 @@ from rest_framework.viewsets import ViewSet, GenericViewSet
 
 from helium.auth.models import UserSettings
 from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
-from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer
+from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer, \
+    UserForgotConfirmSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
+from helium.common.throttles import ForgotPasswordEmailThrottle, ResendVerificationEmailThrottle
 from helium.common.utils import taskutils
 from helium.common.views.base import HeliumAPIView
 from helium.importexport.tasks import import_example_schedule
@@ -98,6 +100,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
 )
 class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
+    throttle_classes = [ResendVerificationEmailThrottle]
 
     @extend_schema(
         operation_id='resend_verification_email',
@@ -109,8 +112,8 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
             202: OpenApiResponse(description='Verification email queued. Returned whether or not the submitted '
                                               'address is registered, so callers cannot use this endpoint to '
                                               'probe account existence.'),
-            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed per '
-                                              '60 seconds.'),
+            429: OpenApiResponse(description='Throttled. Only one resend per submitted email is allowed '
+                                              'within the cooldown window.'),
         },
         auth=[],
     )
@@ -124,21 +127,50 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
         return response
 
 
+@extend_schema(tags=['auth.password-reset'])
 class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
+    throttle_classes = [ForgotPasswordEmailThrottle]
 
     @extend_schema(
         operation_id='forgot_password',
         summary='Request a password reset',
         request=UserForgotSerializer,
-        responses={202: None},
+        responses={
+            202: OpenApiResponse(description='Reset email queued. Returned whether or not the submitted '
+                                             'address is registered, so callers cannot use this endpoint to '
+                                             'probe account existence.'),
+            429: OpenApiResponse(description='Throttled. Only one reset request per submitted email is '
+                                             'allowed within the cooldown window.'),
+        },
         auth=[],
     )
     def forgot_password(self, request, *args, **kwargs):
         """
-        Reset the password for the user instance associated with the given email. Always responds
-        with 202 (no body) regardless of whether the email is registered.
+        Send a password reset link to the given email address.
         """
         response = authservice.forgot_password(request)
+
+        return response
+
+
+@extend_schema(tags=['auth.password-reset'])
+class UserForgotConfirmResourceView(ViewSet, HeliumAPIView):
+    serializer_class = UserForgotConfirmSerializer
+
+    @extend_schema(
+        operation_id='confirm_password_reset',
+        summary='Confirm a password reset',
+        request=UserForgotConfirmSerializer,
+        responses={200: TokenResponseFieldsMixin},
+        auth=[],
+    )
+    def confirm_password_reset(self, request, *args, **kwargs):
+        """
+        Confirm a password reset using the ``uid`` and ``token`` from the reset email link, setting a new password.
+
+        Returns access and refresh tokens for immediate authentication.
+        """
+        response = authservice.confirm_password_reset(request)
 
         return response

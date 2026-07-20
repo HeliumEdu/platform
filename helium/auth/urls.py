@@ -7,7 +7,7 @@ from helium.auth.views.apis.apitokenviews import ApiTokenView
 from helium.auth.views.apis.oauthviews import OAuthLoginView
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
-    UserForgotResourceView, UserResendVerificationResourceView
+    UserForgotResourceView, UserForgotConfirmResourceView, UserResendVerificationResourceView
 from helium.auth.views.apis.userdeleteexamplescheduleviews import UserDeleteExampleScheduleView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.userreviewpromptviews import UserReviewPromptAckView
@@ -26,6 +26,8 @@ urlpatterns = [
          name='auth_user_resource_resend_verification'),
     path('auth/user/forgot/', UserForgotResourceView.as_view({'put': 'forgot_password'}),
          name='auth_user_resource_forgot'),
+    path('auth/user/forgot/confirm/', UserForgotConfirmResourceView.as_view({'put': 'confirm_password_reset'}),
+         name='auth_user_resource_forgot_confirm'),
 
     ##############################
     # Authentication URLs

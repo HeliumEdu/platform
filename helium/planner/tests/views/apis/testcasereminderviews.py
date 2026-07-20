@@ -4,6 +4,7 @@ __license__ = "MIT"
 import datetime
 import json
 from datetime import timedelta
+from unittest import mock
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -74,6 +75,37 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(len(response1.data), 6)
         self.assertEqual(len(response2.data), 2)
         self.assertEqual(len(response3.data), 2)
+        # Without paging params the response is a bare list, not a paginated
+        # envelope.
+        self.assertIsInstance(response1.data, list)
+        self.assertNotIn('count', response1.data)
+        self.assertNotIn('results', response1.data)
+
+    def test_get_reminders_count_via_pagination(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        other = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        event = eventhelper.given_event_exists(user)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(user, event=event)
+        reminderhelper.given_reminder_exists(other, event=eventhelper.given_event_exists(other))
+
+        # WHEN
+        bare_response = self.client.get(reverse('planner_reminders_list'))
+        paged_response = self.client.get(reverse('planner_reminders_list') + '?page_size=1')
+
+        # THEN
+        # Without paging params the response is a bare list scoped to the user.
+        self.assertEqual(bare_response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(bare_response.data, list)
+        self.assertEqual(len(bare_response.data), 3)
+
+        # Opting in returns the envelope; `count` is the user's total (not the
+        # page size), which is what the frontend reads for the bell badge.
+        self.assertEqual(paged_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(paged_response.data['count'], 3)
+        self.assertEqual(len(paged_response.data['results']), 1)
 
     def test_create_event_reminder(self):
         # GIVEN
@@ -287,6 +319,44 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(reminder.start_of_range,
                          datetime.datetime(2017, 5, 8, 11, 30, 0, tzinfo=datetime.timezone.utc))
         self.assertTrue(reminder.sent)
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_dismiss_reminder_fans_out_to_all_tokens(self, mock_send_dismiss):
+        # GIVEN a sent (dismissable) reminder and the user has two devices
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True)
+        userhelper.given_user_push_token_exists(user, token='tok_phone', device_id='phone')
+        userhelper.given_user_push_token_exists(user, token='tok_tablet', device_id='tablet')
+
+        # WHEN the reminder is dismissed
+        response = self.client.patch(
+            reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+            json.dumps({'dismissed': True}), content_type='application/json')
+
+        # THEN the dismiss push fans out to all of the user's device tokens
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send_dismiss.apply_async.assert_called_once()
+        sent_tokens, sent_reminder_id = mock_send_dismiss.apply_async.call_args.kwargs['args']
+        self.assertCountEqual(sent_tokens, ['tok_phone', 'tok_tablet'])
+        self.assertEqual(sent_reminder_id, reminder.pk)
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_non_dismiss_update_does_not_fan_out(self, mock_send_dismiss):
+        # GIVEN a sent reminder
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True)
+        userhelper.given_user_push_token_exists(user)
+
+        # WHEN a non-dismiss field is updated
+        response = self.client.patch(
+            reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+            json.dumps({'offset': 45}), content_type='application/json')
+
+        # THEN no dismiss push is sent
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send_dismiss.apply_async.assert_not_called()
 
     def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
         # GIVEN a sent reminder whose homework is in the near future; reducing the offset moves

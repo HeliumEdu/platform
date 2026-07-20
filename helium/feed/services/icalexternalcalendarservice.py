@@ -22,7 +22,8 @@ Known limitations (very rare in real-world Google / Apple / Outlook exports):
 import datetime
 import json
 import logging
-from urllib.request import urlopen, Request, URLError
+from urllib.error import URLError
+from urllib.request import Request
 from zoneinfo import ZoneInfo
 
 import icalendar
@@ -37,6 +38,8 @@ from rest_framework import status
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.validators import infer_byday_for_weekly_rrule, validate_recurrence_rule
+from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
@@ -224,6 +227,15 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                     exception_dates = merged
 
             dt_start = component.get("DTSTART").dt
+
+            if recurrence_rule:
+                recurrence_rule = infer_byday_for_weekly_rrule(recurrence_rule, dt_start)
+                try:
+                    validate_recurrence_rule(recurrence_rule)
+                except Exception:
+                    logger.warning('Dropping invalid RRULE from external calendar VEVENT: %s', recurrence_rule)
+                    recurrence_rule = None
+
             if component.get("DTEND") is not None:
                 dt_end = component.get("DTEND").dt
             elif component.get("DURATION") is not None:
@@ -303,8 +315,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
 
-        external_calendar.last_index = timezone.now()
-        external_calendar.save(update_fields=['last_index'])
+        ExternalCalendar.objects.filter(pk=external_calendar.pk).update(last_index=timezone.now())
     else:
         logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
             max_cache_size=len(events_json.encode('utf-8')),
@@ -318,14 +329,13 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 def invalidate_calendar_cache(external_calendar):
     cache.delete(_get_cache_prefix(external_calendar))
 
-    external_calendar.etag = None
-    external_calendar.last_modified_header = None
-    external_calendar.last_index = None
-    external_calendar.last_sync_error = None
-    external_calendar.consecutive_failures = 0
-    external_calendar.save(update_fields=[
-        'etag', 'last_modified_header', 'last_index', 'last_sync_error', 'consecutive_failures',
-    ])
+    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(
+        etag=None,
+        last_modified_header=None,
+        last_index=None,
+        last_sync_error=None,
+        consecutive_failures=0,
+    )
 
     logger.info(f"Cache invalidated for External Calendar {external_calendar.pk}")
 
@@ -342,7 +352,7 @@ def validate_url(url):
     try:
         url_validator(url)
 
-        response = urlopen(url)
+        response = urlopen_secure(url)
 
         if response.getcode() != status.HTTP_200_OK:
             raise HeliumICalError("The URL did not return a valid response.")
@@ -385,7 +395,7 @@ def fetch_ical_conditional(external_calendar):
         if external_calendar.last_modified_header:
             request.add_header('If-Modified-Since', external_calendar.last_modified_header)
 
-        response = urlopen(request)
+        response = urlopen_secure(request)
         response_code = response.getcode()
 
         if response_code == status.HTTP_304_NOT_MODIFIED:
