@@ -189,20 +189,6 @@ def email_reminders(self):
 
 
 @app.task(bind=True)
-def text_reminders(self):
-    published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("reminder.text.process", priority="high", published_at_ms=published_at_ms)
-
-    if settings.DISABLE_TEXTS:
-        logger.warning('Texts disabled. Text reminders not being sent.')
-        metricutils.task_stop(metrics, value=0)
-        return
-
-    reminderservice.process_text_reminders()
-    metricutils.task_stop(metrics)
-
-
-@app.task(bind=True)
 def push_reminders(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("reminder.push.process", priority="high", published_at_ms=published_at_ms)
@@ -316,8 +302,6 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
 register_periodic(email_reminders, 60,
                   manually_triggerable=False)
 register_periodic(push_reminders, 60,
-                  manually_triggerable=False)
-register_periodic(text_reminders, 60,
                   manually_triggerable=False)
 register_periodic(reminder_watchdog, settings.REMINDER_WATCHDOG_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
