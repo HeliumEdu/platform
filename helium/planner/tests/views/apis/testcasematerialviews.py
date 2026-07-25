@@ -126,7 +126,8 @@ class TestCaseMaterialViews(APITestCase):
             'website': 'http://www.some-material.com',
             'price': '500.27',
             'details': 'N/A',
-            'courses': [course2.pk]
+            'courses': [course2.pk],
+            'material_group': material_group1.pk
         }
         response = self.client.put(
             reverse('planner_materialgroups_materials_detail',
@@ -167,6 +168,37 @@ class TestCaseMaterialViews(APITestCase):
         self.assertEqual(response.data['courses'], data['courses'])
         material.refresh_from_db()
         materialhelper.verify_material_matches_data(self, material, response.data)
+
+    def test_update_material_group(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group1 = materialgrouphelper.given_material_group_exists(user)
+        material_group2 = materialgrouphelper.given_material_group_exists(user, title='📚 Another Material Group')
+        material = materialhelper.given_material_exists(material_group1)
+        self.assertEqual(material.material_group_id, material_group1.pk)
+
+        # WHEN
+        data = {
+            'title': material.title,
+            'status': material.status,
+            'condition': material.condition,
+            'website': material.website,
+            'price': material.price,
+            'details': material.details,
+            'courses': [],
+            'material_group': material_group2.pk,
+        }
+        response = self.client.put(
+            reverse('planner_materialgroups_materials_detail',
+                    kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        material.refresh_from_db()
+        materialhelper.verify_material_matches_data(self, material, response.data)
+        self.assertEqual(material.material_group_id, material_group2.pk)
 
     def test_delete_material_by_id(self):
         # GIVEN
@@ -211,7 +243,8 @@ class TestCaseMaterialViews(APITestCase):
                 json.dumps({'courses': [course2.pk]}),
                 content_type='application/json')
         ]
-        # Sending material_group in a write is silently ignored (read-only field); the material stays put.
+        # Attempting to move a Material into a MaterialGroup owned by another user fails validation,
+        # since the field's queryset is scoped to the current user's MaterialGroups.
         move_attempt = self.client.put(
             reverse('planner_materialgroups_materials_detail',
                     kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
@@ -230,7 +263,7 @@ class TestCaseMaterialViews(APITestCase):
         # THEN
         for response in forbidden_responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(move_attempt.status_code, status.HTTP_200_OK)
+        self.assertEqual(move_attempt.status_code, status.HTTP_400_BAD_REQUEST)
         material.refresh_from_db()
         self.assertEqual(material.material_group_id, material_group1.pk)
 
