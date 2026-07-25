@@ -63,7 +63,7 @@ class Course(BaseModel):
         super().clean()
         if self.exceptions:
             self.exceptions = validate_and_normalize_date_csv(
-                self.exceptions, self.start_date, self.end_date, range_label='course date range')
+                self.exceptions, self.start_date, self.end_date, range_label='class date range')
 
     def __str__(self):  # pragma: no cover
         return str(f'{self.title} ({self.get_user().get_username()})')

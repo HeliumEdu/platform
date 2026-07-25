@@ -208,7 +208,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Deleting a course schedule is not allowed', response.data['detail'])
+        self.assertIn('Deleting a class schedule is not allowed', response.data['detail'])
         self.assertTrue(CourseSchedule.objects.filter(pk=course_schedule.pk).exists())
         self.assertEqual(CourseSchedule.objects.count(), 1)
 

@@ -55,7 +55,7 @@ class CategorySerializer(serializers.ModelSerializer):
         course_id = self.context['request'].parser_context['kwargs']['course']
 
         if Category.objects.for_course(course_id).exclude(pk=pk).filter(title=title):
-            raise serializers.ValidationError(f"This course already has a category named \"{title}\".")
+            raise serializers.ValidationError(f"This class already has a category named \"{title}\".")
 
         return title
 
@@ -63,7 +63,7 @@ class CategorySerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({'title': f'This course already has a category named "{validated_data.get("title")}".'})
+            raise serializers.ValidationError({'title': f'This class already has a category named "{validated_data.get("title")}".'})
 
     def validate_weight(self, weight):
         """
@@ -81,6 +81,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
         if weight_total + weight > 100:
             raise serializers.ValidationError(
-                "The cumulative weights of all categories associated with a course cannot exceed 100%.")
+                "The cumulative weights of all categories associated with a class cannot exceed 100%.")
 
         return weight

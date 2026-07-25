@@ -95,7 +95,7 @@ class CourseSerializer(serializers.ModelSerializer):
             if exceptions:
                 try:
                     attrs['exceptions'] = validate_and_normalize_date_csv(
-                        exceptions, start_date, end_date, range_label='course date range')
+                        exceptions, start_date, end_date, range_label='class date range')
                 except DjangoValidationError as e:
                     raise serializers.ValidationError({'exceptions': e.message})
 
