@@ -59,7 +59,7 @@ class Category(BaseModel):
             sibling_total = qs.aggregate(Sum('weight'))['weight__sum'] or 0
             if sibling_total + self.weight > 100:
                 raise ValidationError({
-                    'weight': 'The cumulative weights of all categories associated with a course cannot exceed 100%.'
+                    'weight': 'The cumulative weights of all categories associated with a class cannot exceed 100%.'
                 })
 
     def __str__(self):  # pragma: no cover

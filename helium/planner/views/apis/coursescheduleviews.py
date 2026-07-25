@@ -197,6 +197,6 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         Delete the given course schedule instance.
         """
         return Response(
-            {'detail': 'Deleting a course schedule is not allowed. Each course must have exactly one schedule.'},
+            {'detail': 'Deleting a class schedule is not allowed. Each class must have exactly one schedule.'},
             status=status.HTTP_400_BAD_REQUEST
         )
