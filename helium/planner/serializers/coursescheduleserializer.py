@@ -42,7 +42,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
             if CourseSchedule.objects.for_course(course_id).exists():
                 raise ValidationError(
-                    f'Course {course_id} already has a CourseSchedule and there cannot be more than one.')
+                    f'Class {course_id} already has a schedule and there cannot be more than one.')
 
         days_of_week = attrs.get('days_of_week')
         if days_of_week is None and self.instance:
