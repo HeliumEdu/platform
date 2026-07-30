@@ -233,7 +233,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                 try:
                     validate_recurrence_rule(recurrence_rule)
                 except Exception:
-                    logger.warning('Dropping invalid RRULE from external calendar VEVENT: %s', recurrence_rule)
+                    logger.info('Dropping unsupported RRULE from external calendar VEVENT: %s', recurrence_rule)
                     recurrence_rule = None
 
             if component.get("DTEND") is not None:
