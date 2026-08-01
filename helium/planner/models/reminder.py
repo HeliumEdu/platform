@@ -202,10 +202,6 @@ class Reminder(BaseModel):
         REMINDER_SEND_WINDOW_MINUTES in the past are left as-is — the window acts as the
         natural guard against re-fires for trivial date nudges.
 
-        Already-dismissed reminders are never re-armed this way — the user's dismissal is
-        treated as final for that reminder, regardless of later date shifts. This also keeps
-        sent=False from ever being paired with dismissed=True, which the database forbids.
-
         Course reminders retain the sent=False gate because their recalculation logic is
         being refactored separately.
 
@@ -217,7 +213,7 @@ class Reminder(BaseModel):
             calendar_item = self.homework or self.event
             offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
             new_start_of_range = calendar_item.start - offset_delta
-            if self.pk and self.sent and not self.dismissed and new_start_of_range != self.start_of_range:
+            if self.pk and self.sent and new_start_of_range != self.start_of_range:
                 if Reminder.should_reset_sent(new_start_of_range):
                     self.sent = False
             self.start_of_range = new_start_of_range
