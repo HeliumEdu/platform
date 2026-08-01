@@ -979,6 +979,75 @@ class TestCaseImportExportViews(APITestCase):
         user.settings.refresh_from_db()
         self.assertTrue(user.settings.show_getting_started)
 
+    def test_reimport_exampleschedule_after_dismiss_all_does_not_touch_prior_import(self):
+        """Re-importing must not touch a prior import's data or reset a dismissed reminder's `sent`."""
+        # GIVEN a user has already imported the example schedule once
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        first_response = self.client.post(reverse('importexport_import_exampleschedule'))
+        self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        first_course_group = CourseGroup.objects.get()
+        first_homework_ids = set(Homework.objects.values_list('pk', flat=True))
+        first_event_ids = set(Event.objects.values_list('pk', flat=True))
+        first_reminder_ids = set(Reminder.objects.values_list('pk', flat=True))
+
+        # GIVEN the user dismisses all of their sent reminders from the first import, via the same
+        # dismiss-all-reminders endpoint the app uses for notifications
+        dismiss_response = self.client.patch(reverse('planner_reminders_dismiss_all') + '?sent=true')
+        self.assertEqual(dismiss_response.status_code, status.HTTP_204_NO_CONTENT)
+        dismissed_reminders = Reminder.objects.filter(pk__in=first_reminder_ids, sent=True)
+        self.assertTrue(dismissed_reminders.exists())
+        self.assertTrue(all(dismissed_reminders.values_list('dismissed', flat=True)))
+
+        # GIVEN a snapshot of the first import's state immediately before the second import, so
+        # the second import's date adjustments can be proven not to have touched any of it
+        first_course_group_snapshot = (
+            first_course_group.start_date, first_course_group.end_date, first_course_group.updated_at)
+        first_homework_snapshot = {
+            h.pk: (h.start, h.end, h.updated_at) for h in Homework.objects.filter(pk__in=first_homework_ids)
+        }
+        first_event_snapshot = {
+            e.pk: (e.start, e.end, e.updated_at) for e in Event.objects.filter(pk__in=first_event_ids)
+        }
+        first_reminder_snapshot = {
+            r.pk: (r.start_of_range, r.sent, r.dismissed, r.updated_at)
+            for r in Reminder.objects.filter(pk__in=first_reminder_ids)
+        }
+
+        # WHEN the user re-imports the example schedule a second time
+        second_response = self.client.post(reverse('importexport_import_exampleschedule'))
+
+        # THEN no server error occurs
+        self.assertEqual(second_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # THEN a second, independent CourseGroup was created for the new import
+        self.assertEqual(CourseGroup.objects.count(), 2)
+        self.assertTrue(CourseGroup.objects.exclude(pk=first_course_group.pk).exists())
+
+        # THEN the first import's CourseGroup dates/timestamp are untouched
+        first_course_group.refresh_from_db()
+        self.assertEqual(
+            (first_course_group.start_date, first_course_group.end_date, first_course_group.updated_at),
+            first_course_group_snapshot)
+
+        # THEN the first import's Homework rows are untouched
+        for homework in Homework.objects.filter(pk__in=first_homework_ids):
+            self.assertEqual((homework.start, homework.end, homework.updated_at),
+                             first_homework_snapshot[homework.pk])
+
+        # THEN the first import's Event rows are untouched
+        for event in Event.objects.filter(pk__in=first_event_ids):
+            self.assertEqual((event.start, event.end, event.updated_at),
+                             first_event_snapshot[event.pk])
+
+        # THEN the first import's (already-dismissed) Reminder rows are untouched — in particular,
+        # `sent` was never reset to False on a dismissed reminder, which is what tripped the
+        # `reminder_dismissed_requires_sent` constraint in the original incident
+        for reminder in Reminder.objects.filter(pk__in=first_reminder_ids):
+            self.assertEqual(
+                (reminder.start_of_range, reminder.sent, reminder.dismissed, reminder.updated_at),
+                first_reminder_snapshot[reminder.pk])
+
     def test_import_legacy_notes_converted_to_quill(self):
         """Test that importing legacy HTML comments/details converts them to Quill JSON notes."""
         # GIVEN
