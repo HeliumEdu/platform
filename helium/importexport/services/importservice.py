@@ -889,12 +889,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
-# Minimum runway a shifted course needs past "today" for a repeating reminder's next
-# occurrence to always be findable, regardless of what day of the month the import runs.
-_MIN_COURSE_END_BUFFER_DAYS = 30
-
-
-def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
+def _adjust_schedule_relative_to(user, adjust_month):
     user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
@@ -915,29 +910,22 @@ def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
                 days_ahead += 7
             first_monday = adjusted_month + datetime.timedelta(days_ahead)
             first_monday_date = first_monday.date()
-            min_end_date = now.date() + datetime.timedelta(days=_MIN_COURSE_END_BUFFER_DAYS)
 
             logger.info(f'Adjusting schedule relative to new month: {adjusted_month}')
             logger.info(f'Start of week adjusted ahead {days_ahead} days')
             logger.info(f'First Monday set to {first_monday}')
 
-            course_group_queryset = CourseGroup.objects.for_user(user.pk).filter(example_schedule=True)
-            if created_after is not None:
-                course_group_queryset = course_group_queryset.filter(created_at__gte=created_after)
-            for course_group in course_group_queryset.iterator():
+            for course_group in (CourseGroup.objects.for_user(user.pk)
+                    .filter(example_schedule=True).iterator()):
                 delta = (course_group.end_date - course_group.start_date).days
-                shifted_end_date = max(first_monday_date + datetime.timedelta(days=delta), min_end_date)
                 CourseGroup.objects.filter(pk=course_group.pk).update(
                     start_date=first_monday_date,
-                    end_date=shifted_end_date)
-
-            homework_queryset = (Homework.objects.for_user(user.pk)
-                    .filter(course__course_group__example_schedule=True))
-            if created_after is not None:
-                homework_queryset = homework_queryset.filter(created_at__gte=created_after)
+                    end_date=first_monday_date + datetime.timedelta(days=delta))
 
             homework_to_update = []
-            for homework in homework_queryset.select_related('course'):
+            for homework in (Homework.objects.for_user(user.pk)
+                    .filter(course__course_group__example_schedule=True)
+                    .select_related('course')):
                 course = homework.course
                 start_delta = (homework.start.date() - course.start_date).days
                 end_delta = (homework.end.date() - course.start_date).days
@@ -960,11 +948,7 @@ def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
                     if homework.pk in hw_ids_with_reminders:
                         adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
-            event_queryset = Event.objects.for_user(user.pk).filter(example_schedule=True)
-            if created_after is not None:
-                event_queryset = event_queryset.filter(created_at__gte=created_after)
-
-            first_event_start = event_queryset.first().start
+            first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
 
             first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             days_ahead = 0 - first_event_month.weekday()
@@ -974,7 +958,8 @@ def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
             events_delta = (first_monday - first_event_monday).days
 
             events_to_update = []
-            for event in event_queryset:
+            for event in (Event.objects.for_user(user.pk)
+                    .filter(example_schedule=True)):
                 start_delta = (event.start.date() - first_monday.date()).days + events_delta
                 end_delta = (event.end.date() - first_monday.date()).days + events_delta
                 target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
@@ -996,24 +981,17 @@ def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
                     if event.pk in event_ids_with_reminders:
                         adjust_reminder_times(event.pk, event.calendar_item_type)
 
-            course_queryset = Course.objects.for_user(user.pk).filter(course_group__example_schedule=True)
-            if created_after is not None:
-                course_queryset = course_queryset.filter(created_at__gte=created_after)
-            for course in course_queryset.iterator():
+            for course in (Course.objects.for_user(user.pk)
+                    .filter(course_group__example_schedule=True).iterator()):
                 delta = (course.end_date - course.start_date).days
-                shifted_end_date = max(first_monday_date + datetime.timedelta(days=delta), min_end_date)
                 Course.objects.filter(pk=course.pk).update(
                     start_date=first_monday_date,
-                    end_date=shifted_end_date)
+                    end_date=first_monday_date + datetime.timedelta(days=delta))
 
                 coursescheduleservice.clear_cached_course_schedule(course)
 
-            reminder_queryset = (Reminder.objects
-                    .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user))
-            if created_after is not None:
-                reminder_queryset = reminder_queryset.filter(created_at__gte=created_after)
-
-            for reminder in (reminder_queryset
+            for reminder in (Reminder.objects
+                    .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
                     .select_related('user', 'user__settings', 'course', 'course__course_group')
                     .prefetch_related('course__schedules')
                     .iterator(chunk_size=2000)):
@@ -1021,10 +999,8 @@ def _adjust_schedule_relative_to(user, adjust_month, created_after=None):
                 if past_start:
                     offset_delta = datetime.timedelta(
                         **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
-                    new_start_of_range = past_start - offset_delta
-                    Reminder.objects.filter(pk=reminder.pk).update(start_of_range=new_start_of_range)
-                    # Keep the in-memory value in sync with the DB update above.
-                    reminder.start_of_range = new_start_of_range
+                    Reminder.objects.filter(pk=reminder.pk).update(
+                        start_of_range=past_start - offset_delta)
 
                 reminderservice.create_next_repeating_reminder(reminder)
 
@@ -1044,12 +1020,10 @@ def import_example_schedule(user):
         data = json.loads(json_str)
 
         with transaction.atomic():
-            import_started_at = timezone.now()
-
             with _suppress_post_save_signals():
                 _bulk_import_example_schedule(data, user)
 
-            _adjust_schedule_relative_to(user, -1, created_after=import_started_at)
+            _adjust_schedule_relative_to(user, -1)
 
             for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
                 gradingservice.recalculate_category_grade(category_id)
