@@ -263,7 +263,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           RELEASE_VERSION: ${{ needs.determine-version.outputs.version }}
         run: |
-          pip install sentry-cli
+          pip install sentry-cli==3.6.2
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases deploys "$RELEASE_VERSION" new --env "${{ inputs.environment }}"
 
       - name: Trigger legacy cluster-tests run
