@@ -906,109 +906,111 @@ def _adjust_schedule_relative_to(user, adjust_month):
         adjusted_year -= 1
 
     try:
-        adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
-                                     microsecond=0)
-        days_ahead = 0 - adjusted_month.weekday()
-        if days_ahead < 0:
-            days_ahead += 7
-        first_monday = adjusted_month + datetime.timedelta(days_ahead)
-        first_monday_date = first_monday.date()
+        # Savepoint so a failure here can't poison import_example_schedule's outer transaction.
+        with transaction.atomic():
+            adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
+                                         microsecond=0)
+            days_ahead = 0 - adjusted_month.weekday()
+            if days_ahead < 0:
+                days_ahead += 7
+            first_monday = adjusted_month + datetime.timedelta(days_ahead)
+            first_monday_date = first_monday.date()
 
-        logger.info(f'Adjusting schedule relative to new month: {adjusted_month}')
-        logger.info(f'Start of week adjusted ahead {days_ahead} days')
-        logger.info(f'First Monday set to {first_monday}')
+            logger.info(f'Adjusting schedule relative to new month: {adjusted_month}')
+            logger.info(f'Start of week adjusted ahead {days_ahead} days')
+            logger.info(f'First Monday set to {first_monday}')
 
-        for course_group in (CourseGroup.objects.for_user(user.pk)
-                .filter(example_schedule=True).iterator()):
-            delta = (course_group.end_date - course_group.start_date).days
-            CourseGroup.objects.filter(pk=course_group.pk).update(
-                start_date=first_monday_date,
-                end_date=first_monday_date + datetime.timedelta(days=delta))
+            for course_group in (CourseGroup.objects.for_user(user.pk)
+                    .filter(example_schedule=True).iterator()):
+                delta = (course_group.end_date - course_group.start_date).days
+                CourseGroup.objects.filter(pk=course_group.pk).update(
+                    start_date=first_monday_date,
+                    end_date=first_monday_date + datetime.timedelta(days=delta))
 
-        homework_to_update = []
-        for homework in (Homework.objects.for_user(user.pk)
-                .filter(course__course_group__example_schedule=True)
-                .select_related('course')):
-            course = homework.course
-            start_delta = (homework.start.date() - course.start_date).days
-            end_delta = (homework.end.date() - course.start_date).days
-            target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
-            target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
+            homework_to_update = []
+            for homework in (Homework.objects.for_user(user.pk)
+                    .filter(course__course_group__example_schedule=True)
+                    .select_related('course')):
+                course = homework.course
+                start_delta = (homework.start.date() - course.start_date).days
+                end_delta = (homework.end.date() - course.start_date).days
+                target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
+                target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
-                                                             all_day=homework.all_day)
-            homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
-                                                           all_day=homework.all_day)
-            homework_to_update.append(homework)
+                homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
+                                                                 all_day=homework.all_day)
+                homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
+                                                               all_day=homework.all_day)
+                homework_to_update.append(homework)
 
-        if homework_to_update:
-            Homework.objects.bulk_update(homework_to_update, ['start', 'end'])
-            hw_ids_with_reminders = set(
-                Reminder.objects.filter(homework__in=[h.pk for h in homework_to_update])
-                .values_list('homework_id', flat=True).distinct()
-            )
-            for homework in homework_to_update:
-                if homework.pk in hw_ids_with_reminders:
-                    adjust_reminder_times(homework.pk, homework.calendar_item_type)
+            if homework_to_update:
+                Homework.objects.bulk_update(homework_to_update, ['start', 'end'])
+                hw_ids_with_reminders = set(
+                    Reminder.objects.filter(homework__in=[h.pk for h in homework_to_update])
+                    .values_list('homework_id', flat=True).distinct()
+                )
+                for homework in homework_to_update:
+                    if homework.pk in hw_ids_with_reminders:
+                        adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
-        first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
+            first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
 
-        first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        days_ahead = 0 - first_event_month.weekday()
-        if days_ahead < 0:
-            days_ahead += 7
-        first_event_monday = first_event_month + datetime.timedelta(days_ahead)
-        events_delta = (first_monday - first_event_monday).days
+            first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            days_ahead = 0 - first_event_month.weekday()
+            if days_ahead < 0:
+                days_ahead += 7
+            first_event_monday = first_event_month + datetime.timedelta(days_ahead)
+            events_delta = (first_monday - first_event_monday).days
 
-        events_to_update = []
-        for event in (Event.objects.for_user(user.pk)
-                .filter(example_schedule=True)):
-            start_delta = (event.start.date() - first_monday.date()).days + events_delta
-            end_delta = (event.end.date() - first_monday.date()).days + events_delta
-            target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
-            target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
+            events_to_update = []
+            for event in (Event.objects.for_user(user.pk)
+                    .filter(example_schedule=True)):
+                start_delta = (event.start.date() - first_monday.date()).days + events_delta
+                end_delta = (event.end.date() - first_monday.date()).days + events_delta
+                target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
+                target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
-            event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
-                                                          all_day=event.all_day)
-            event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
-                                                        all_day=event.all_day)
-            events_to_update.append(event)
+                event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
+                                                              all_day=event.all_day)
+                event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
+                                                            all_day=event.all_day)
+                events_to_update.append(event)
 
-        if events_to_update:
-            Event.objects.bulk_update(events_to_update, ['start', 'end'])
-            event_ids_with_reminders = set(
-                Reminder.objects.filter(event__in=[e.pk for e in events_to_update])
-                .values_list('event_id', flat=True).distinct()
-            )
-            for event in events_to_update:
-                if event.pk in event_ids_with_reminders:
-                    adjust_reminder_times(event.pk, event.calendar_item_type)
+            if events_to_update:
+                Event.objects.bulk_update(events_to_update, ['start', 'end'])
+                event_ids_with_reminders = set(
+                    Reminder.objects.filter(event__in=[e.pk for e in events_to_update])
+                    .values_list('event_id', flat=True).distinct()
+                )
+                for event in events_to_update:
+                    if event.pk in event_ids_with_reminders:
+                        adjust_reminder_times(event.pk, event.calendar_item_type)
 
-        for course in (Course.objects.for_user(user.pk)
-                .filter(course_group__example_schedule=True).iterator()):
-            delta = (course.end_date - course.start_date).days
-            Course.objects.filter(pk=course.pk).update(
-                start_date=first_monday_date,
-                end_date=first_monday_date + datetime.timedelta(days=delta))
+            for course in (Course.objects.for_user(user.pk)
+                    .filter(course_group__example_schedule=True).iterator()):
+                delta = (course.end_date - course.start_date).days
+                Course.objects.filter(pk=course.pk).update(
+                    start_date=first_monday_date,
+                    end_date=first_monday_date + datetime.timedelta(days=delta))
 
-            coursescheduleservice.clear_cached_course_schedule(course)
+                coursescheduleservice.clear_cached_course_schedule(course)
 
-        for reminder in (Reminder.objects
-                .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
-                .select_related('user', 'user__settings', 'course', 'course__course_group')
-                .prefetch_related('course__schedules')
-                .iterator(chunk_size=2000)):
-            past_start = _get_most_recent_course_occurrence_start(reminder)
-            if past_start:
-                offset_delta = datetime.timedelta(
-                    **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
-                Reminder.objects.filter(pk=reminder.pk).update(
-                    start_of_range=past_start - offset_delta)
+            for reminder in (Reminder.objects
+                    .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
+                    .select_related('user', 'user__settings', 'course', 'course__course_group')
+                    .prefetch_related('course__schedules')
+                    .iterator(chunk_size=2000)):
+                past_start = _get_most_recent_course_occurrence_start(reminder)
+                if past_start:
+                    offset_delta = datetime.timedelta(
+                        **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+                    Reminder.objects.filter(pk=reminder.pk).update(
+                        start_of_range=past_start - offset_delta)
 
-            reminderservice.create_next_repeating_reminder(reminder)
+                reminderservice.create_next_repeating_reminder(reminder)
 
-        logger.info(
-            f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
+            logger.info(
+                f'Dates adjusted on imported example schedule relative to the start of the month for new user {user.pk}')
     except Exception:
         logger.error("An error occurred adjusting example schedule dates.", exc_info=True)
 

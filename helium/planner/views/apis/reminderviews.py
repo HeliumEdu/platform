@@ -8,6 +8,9 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
 from helium.common.tasks import send_dismiss_pushes
@@ -223,3 +226,49 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         logger.info(f"Reminder {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response
+
+
+@extend_schema(
+    tags=['planner.reminder']
+)
+class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
+    serializer_class = ReminderSerializer
+    permission_classes = (IsAuthenticated,)
+    filterset_class = ReminderFilter
+
+    def get_queryset(self):
+        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+            return self.request.user.reminders.filter(dismissed=False)
+        else:
+            return Reminder.objects.none()
+
+    @extend_schema(summary='Dismiss all Reminders for the User')
+    def dismiss_all(self, request, *args, **kwargs):
+        """
+        Dismiss every reminder matching the given filters — the bulk equivalent of `PATCH
+        /planner/reminders/{id}/` with `dismissed: true`, applied to all matches instead of one.
+
+        Accepts the same filters as the reminders list endpoint (`type`, `sent`, `start_of_range__lte`,
+        etc.) to scope which reminders are dismissed; already-dismissed reminders are always excluded.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        reminder_ids = list(queryset.values_list('pk', flat=True))
+
+        if reminder_ids:
+            queryset.update(dismissed=True)
+
+            push_tokens = list(
+                {t.device_id: t.token for t in request.user.push_tokens.all()}.values()
+            )
+            if push_tokens:
+                for reminder_id in reminder_ids:
+                    taskutils.safe_apply_async(
+                        send_dismiss_pushes,
+                        args=(push_tokens, reminder_id),
+                        priority=settings.CELERY_PRIORITY_HIGH,
+                    )
+
+        logger.info(f"{len(reminder_ids)} Reminder(s) dismissed for user {request.user.pk}")
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

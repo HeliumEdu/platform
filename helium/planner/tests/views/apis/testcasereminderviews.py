@@ -31,7 +31,8 @@ class TestCaseReminderViews(APITestCase):
             self.client.post(reverse('planner_reminders_list')),
             self.client.get(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
             self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
-            self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'}))
+            self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': '9999'})),
+            self.client.patch(reverse('planner_reminders_dismiss_all')),
         ]
 
         # THEN
@@ -356,6 +357,60 @@ class TestCaseReminderViews(APITestCase):
 
         # THEN no dismiss push is sent
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send_dismiss.apply_async.assert_not_called()
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_dismiss_all_respects_filters_and_fans_out_to_all_tokens(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        dismissable1 = reminderhelper.given_reminder_exists(user, event=event, sent=True, type=enums.PUSH)
+        dismissable2 = reminderhelper.given_reminder_exists(user, event=event, sent=True, type=enums.PUSH)
+        not_sent = reminderhelper.given_reminder_exists(user, event=event, sent=False, type=enums.PUSH)
+        wrong_type = reminderhelper.given_reminder_exists(user, event=event, sent=True, type=enums.EMAIL)
+        userhelper.given_user_push_token_exists(user, token='tok_phone', device_id='phone')
+        userhelper.given_user_push_token_exists(user, token='tok_tablet', device_id='tablet')
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_reminders_dismiss_all') + f'?sent=true&type={enums.PUSH}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        dismissable1.refresh_from_db()
+        dismissable2.refresh_from_db()
+        not_sent.refresh_from_db()
+        wrong_type.refresh_from_db()
+        self.assertTrue(dismissable1.dismissed)
+        self.assertTrue(dismissable2.dismissed)
+        self.assertFalse(not_sent.dismissed)
+        self.assertFalse(wrong_type.dismissed)
+
+        self.assertEqual(mock_send_dismiss.apply_async.call_count, 2)
+        dismissed_reminder_ids = set()
+        for call in mock_send_dismiss.apply_async.call_args_list:
+            sent_tokens, sent_reminder_id = call.kwargs['args']
+            self.assertCountEqual(sent_tokens, ['tok_phone', 'tok_tablet'])
+            dismissed_reminder_ids.add(sent_reminder_id)
+        self.assertEqual(dismissed_reminder_ids, {dismissable1.pk, dismissable2.pk})
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_dismiss_all_with_no_matches_does_not_fan_out(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        email_reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True,
+                                                               type=enums.EMAIL)
+        userhelper.given_user_push_token_exists(user)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_reminders_dismiss_all') + f'?sent=true&type={enums.PUSH}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        email_reminder.refresh_from_db()
+        self.assertFalse(email_reminder.dismissed)
         mock_send_dismiss.apply_async.assert_not_called()
 
     def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):

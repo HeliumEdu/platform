@@ -229,7 +229,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           VERSION: ${{ needs.prereq.outputs.version }}
         run: |
-          pip install sentry-cli
+          pip install sentry-cli==3.6.2
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases new "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases set-commits --auto "$VERSION"
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
