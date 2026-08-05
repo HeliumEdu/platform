@@ -12,7 +12,6 @@ from rest_framework import serializers
 
 from helium.auth.models import UserSettings
 from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
-from helium.auth.serializers.userprofileserializer import UserProfileSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
@@ -37,8 +36,6 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(help_text='A password to set for the user.',
                                      required=False, write_only=True)
 
-    profile = UserProfileSerializer(required=False, read_only=True)
-
     settings = UserSettingsSerializer(required=False, read_only=True)
 
     oauth_providers = UserOAuthProviderSerializer(many=True, read_only=True)
@@ -54,7 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
-                  'profile', 'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
+                  'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
             'email': {'validators': []},
@@ -201,12 +198,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 @extend_schema_serializer(exclude_fields=('username',))
 class UserCreateSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text=get_user_model()._meta.get_field('username').help_text
-    )
-
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 
     password = serializers.CharField(help_text=get_user_model()._meta.get_field('password').help_text)
