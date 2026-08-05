@@ -22,7 +22,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
-from helium.auth.models import UserProfile
 from helium.auth.models import UserSettings
 from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingTokenProxy
 from helium.auth.models.userclientactivity import UserClientActivity
@@ -348,7 +347,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
 
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_courses', 'num_homework', 'num_events',
-                    'num_attachments', 'num_external_calendars', 'last_login_legacy',
+                    'num_attachments', 'num_external_calendars',
                     'deletion_warning_count', 'deletion_requested_at', 'mobile_app_usage_percent_30d',
                     'created_at', 'is_power_user', 'is_active')
     list_filter = (ActiveStatusFilter, PendingDeletionFilter, 'is_power_user',
@@ -411,7 +410,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            base = self.readonly_fields + ('created_at', 'last_login', 'last_login_legacy', 'last_activity',
+            base = self.readonly_fields + ('created_at', 'last_login', 'last_activity',
                                            'mobile_app_usage_percent_30d', 'is_power_user', 'deletion_warning_count',
                                            'deletion_warning_sent_at', 'onboarding_completed_at',
                                            'deletion_requested_at', 'get_2fa_enabled',
@@ -492,43 +491,6 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
 
     num_external_calendars.short_description = 'Ext Calendars'
     num_external_calendars.admin_order_field = '_num_external_calendars'
-
-
-class UserProfileAdmin(BaseModelAdmin):
-    list_display = ['get_user', 'phone', 'phone_verified', 'get_last_login', 'get_last_activity']
-    list_filter = [staff_filter('user')]
-    search_fields = ('user__id', 'user__email', 'user__username')
-    ordering = ('-user__last_activity',)
-    readonly_fields = ('user', 'phone_changing', 'phone_verification_code', 'phone_verified',)
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def get_user(self, obj):
-        if obj.user:
-            return obj.user.get_username()
-        else:
-            return ''
-
-    def get_last_login(self, obj):
-        if obj.user:
-            return obj.user.last_login
-        else:
-            return ''
-
-    def get_last_activity(self, obj):
-        if obj.user:
-            return obj.user.last_activity
-        else:
-            return ''
-
-    get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
-    get_last_login.short_description = 'Last Login'
-    get_last_login.admin_order_field = 'user__last_login'
 
 
 class UserSettingsAdmin(BaseModelAdmin):
@@ -683,7 +645,6 @@ class UserClientActivityAdmin(django_admin.ModelAdmin):
 
 # Register the models in the Admin
 admin_site.register(get_user_model(), UserAdmin)
-admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(UserSettings, UserSettingsAdmin)
 admin_site.register(UserPushToken, UserPushTokenAdmin)
 admin_site.register(UserOAuthProvider, UserOAuthProviderAdmin)

@@ -399,6 +399,24 @@ class TestCaseCourseViews(APITestCase):
         self.assertIn(course3.pk, returned_ids)
         self.assertNotIn(course1.pk, returned_ids)
 
+    def test_shown_on_calendar_filter(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        visible_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=True)
+        hidden_group = coursegrouphelper.given_course_group_exists(
+            user, title='Hidden', shown_on_calendar=False)
+        visible_course = coursehelper.given_course_exists(visible_group)
+        hidden_course = coursehelper.given_course_exists(hidden_group)
+
+        # WHEN
+        response = self.client.get(reverse('planner_courses_list') + '?shown_on_calendar=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertIn(visible_course.pk, returned_ids)
+        self.assertNotIn(hidden_course.pk, returned_ids)
+
     def test_filter_id_cannot_access_other_users_data(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()

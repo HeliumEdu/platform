@@ -408,6 +408,11 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
 
 def _import_reminders(reminders, user, event_remap, homework_remap, course_remap):
     for reminder in reminders:
+        # Forward-migrate deprecated reminder types (POPUP=0, TEXT=2) to PUSH so legacy exports
+        # keep importing cleanly.
+        if reminder.get('type') in (0, 2):
+            reminder['type'] = enums.PUSH
+
         reminder['homework'] = _resolve_parent(
             homework_remap, reminder.get('homework'), 'reminders', 'homework') \
             if reminder.get('homework') else None
