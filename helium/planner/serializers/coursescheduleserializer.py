@@ -7,12 +7,40 @@ import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from helium.common.utils.versionutils import client_version_gte
 from helium.planner.models import CourseSchedule
 
 logger = logging.getLogger(__name__)
 
 _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 _MIDNIGHT = datetime.time(0, 0, 0)
+
+MULTIPLE_SCHEDULES_MIN_VERSION = '3.8.0'
+
+
+def get_gated_schedules(schedules, request):
+    """
+    Below `MULTIPLE_SCHEDULES_MIN_VERSION`, truncate `schedules` to at most
+    one entry per course (the earliest-created), preserving the single-
+    schedule-per-course contract those clients' UI assumes — `schedules` may
+    span more than one course (e.g. the user-wide list endpoint), so this
+    can't be a flat `[:1]`. `schedules` must already be ordered by `id` by
+    the caller. At or above the gate, `schedules` is returned unmodified.
+
+    `request` is None for non-HTTP serialization (e.g. data export) — there's
+    no client version to gate against there, so nothing is truncated.
+    """
+    if request is None or client_version_gte(request, MULTIPLE_SCHEDULES_MIN_VERSION):
+        return schedules
+
+    seen_course_ids = set()
+    gated_schedules = []
+    for schedule in schedules:
+        if schedule.course_id not in seen_course_ids:
+            seen_course_ids.add(schedule.course_id)
+            gated_schedules.append(schedule)
+
+    return gated_schedules
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):
@@ -23,6 +51,12 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
     weekday, drop ones listed in `Course.exceptions` /
     `CourseGroup.exceptions`. Day-of-week times are interpreted in
     `settings.time_zone` (see `/auth/user/`).
+
+    Clients that send an `X-Client-Version` header of `3.8.0` or higher
+    receive every schedule for the course and may create more than one;
+    clients below that version (or that omit the header) only ever see and
+    may only ever create a single schedule per course, matching the
+    single-schedule contract those clients' UI was built against.
     """
 
     class Meta:
@@ -39,8 +73,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if not self.instance:
             course_id = self.context['view'].kwargs.get('course')
+            request = self.context.get('request')
 
-            if CourseSchedule.objects.for_course(course_id).exists():
+            if not client_version_gte(request, MULTIPLE_SCHEDULES_MIN_VERSION) \
+                    and CourseSchedule.objects.for_course(course_id).exists():
                 raise ValidationError(
                     f'Class {course_id} already has a schedule and there cannot be more than one.')
 

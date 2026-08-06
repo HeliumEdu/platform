@@ -54,7 +54,7 @@ class CourseSchedule(BaseModel):
                                     default=datetime.time(12, 0, 0))
 
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
-                               related_name='schedules', on_delete=models.CASCADE, unique=True)
+                               related_name='schedules', on_delete=models.CASCADE)
 
     objects = CourseScheduleManager()
 

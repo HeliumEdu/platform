@@ -7,6 +7,7 @@ import io
 import logging
 import random
 import smtplib
+import zlib
 from decimal import Decimal
 
 from django.conf import settings
@@ -232,6 +233,27 @@ def local_midnight_as_utc(date, tz):
     naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
     aware = naive.replace(tzinfo=tz)
     return aware.astimezone(datetime.timezone.utc)
+
+
+def deterministic_id(*parts) -> int:
+    """
+    Derive a deterministic, non-negative 32-bit integer id from the given parts.
+
+    Used to give a stable synthetic ``id`` to model instances that are constructed
+    in-memory and never persisted to the database (e.g. events derived from an
+    iCal feed), so the same logical item gets the same id across requests and
+    worker processes. Python's built-in ``hash()`` is salted per-process and is
+    not safe for this purpose.
+
+    The result is masked to fit a signed 32-bit int, matching the range of every
+    real (database-assigned) ``id`` this API otherwise returns, since ``AutoField``
+    is a 32-bit signed column here.
+
+    :param parts: Values to combine into the id; each is stringified and joined.
+    :return: A deterministic integer in [0, 2**31).
+    """
+    unique_str = ":".join(str(part) for part in parts)
+    return zlib.crc32(unique_str.encode()) & 0x7FFFFFFF
 
 
 def format_short_time(dt):

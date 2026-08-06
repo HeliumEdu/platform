@@ -12,7 +12,7 @@ from django.core.cache import cache
 
 from helium.common import enums
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
@@ -169,9 +169,8 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                 end = datetime.datetime.combine(day, end_time).replace(
                     tzinfo=user_tz).astimezone(datetime.timezone.utc)
 
-                unique_str = str(course_user.pk) + str(
-                    course_schedule.pk) + start.isoformat() + end.isoformat()
-                event = Event(id=abs(hash(unique_str)) % (10 ** 8),
+                event = Event(id=deterministic_id(course_user.pk, course_schedule.pk, start.isoformat(),
+                                                  end.isoformat()),
                               title=course.title,
                               all_day=False,
                               show_end_time=True,

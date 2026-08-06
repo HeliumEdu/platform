@@ -10,7 +10,7 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Course
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
 class TestCaseCourseViews(APITestCase):
@@ -116,6 +116,40 @@ class TestCaseCourseViews(APITestCase):
         self.assertEqual(response.data['num_homework'], 3)
         self.assertEqual(response.data['num_homework_completed'], 2)
         self.assertEqual(response.data['num_homework_graded'], 1)
+
+    def test_get_course_by_id_schedules_truncated_to_earliest_below_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        earlier_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        response = self.client.get(reverse('planner_coursegroups_courses_detail',
+                                           kwargs={'course_group': course_group.pk, 'pk': course.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['schedules']), 1)
+        self.assertEqual(response.data['schedules'][0]['id'], earlier_schedule.pk)
+
+    def test_get_course_by_id_schedules_all_returned_at_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        response = self.client.get(reverse('planner_coursegroups_courses_detail',
+                                           kwargs={'course_group': course_group.pk, 'pk': course.pk}),
+                                   HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['schedules']), 2)
 
     def test_update_course_by_id(self):
         # GIVEN
