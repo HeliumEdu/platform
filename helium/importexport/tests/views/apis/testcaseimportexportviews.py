@@ -474,6 +474,41 @@ class TestCaseImportExportViews(APITestCase):
             },
         )
 
+    def test_export_import_preserves_multiple_schedules_per_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010')
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(len(export_data['course_schedules']), 2)
+
+        # WHEN
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_multi_schedule_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(import_response.data['course_schedules'], 2)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported_schedules = CourseSchedule.objects.filter(course=imported_course).order_by('pk')
+        self.assertEqual(len(imported_schedules), 2)
+        self.assertEqual({s.days_of_week for s in imported_schedules}, {'0101010', '0010100'})
+
     def test_export_import_preserves_homework_completed_at(self):
         # GIVEN a completed homework whose completion timestamp is a specific point in the past
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
