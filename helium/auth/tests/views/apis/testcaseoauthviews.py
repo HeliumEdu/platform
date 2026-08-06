@@ -353,7 +353,7 @@ class TestCaseOAuthViews(APITestCase):
         # Verify they cannot login with password
         login_response = self.client.post(
             reverse('auth_token_obtain'),
-            json.dumps({'username': user.username, 'password': 'any-password'}),
+            json.dumps({'email': user.email, 'password': 'any-password'}),
             content_type='application/json'
         )
         self.assertEqual(login_response.status_code, status.HTTP_401_UNAUTHORIZED)
