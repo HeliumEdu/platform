@@ -50,25 +50,17 @@ class TokenResponseFieldsMixin(serializers.Serializer):
                                     help_text='JWT refresh token for obtaining new access tokens.')
 
 
-@extend_schema_serializer(component_name='Login', exclude_fields=('username',))
+@extend_schema_serializer(component_name='Login')
 class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # simplejwt's parent __init__ assigns bare CharField/PasswordField over our class-level
         # declarations, stripping help_text/label/style — re-apply them here.
-        # `username` is kept as an undocumented back-compat alias for `email`. Older installed
-        # mobile clients may continue to send it indefinitely; both keys are accepted in validate().
-        self.fields[self.username_field] = serializers.CharField(
-            write_only=True,
-            required=False,
-            allow_blank=True,
-        )
+        del self.fields[self.username_field]
         self.fields['email'] = serializers.CharField(
             help_text="The user's email address.",
             label='Email',
             write_only=True,
-            required=False,
-            allow_blank=True,
         )
         self.fields['password'] = serializers.CharField(
             help_text='The password for the user.',
@@ -79,15 +71,8 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
         )
 
     def validate(self, attrs):
-        legacy_username = attrs.pop('username', None)
-        email = attrs.pop('email', None)
+        identifier = attrs.pop('email', '').strip()
         password = attrs.pop('password', None)
-
-        identifier = (email or legacy_username or '').strip()
-
-        if legacy_username and not email:
-            metricutils.increment('api.deprecated_param.username',
-                                  request=self.context.get('request'))
 
         if identifier and password:
             user = authenticate(request=self.context.get('request'),

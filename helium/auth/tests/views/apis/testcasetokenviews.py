@@ -23,7 +23,7 @@ class TestCaseTokenViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.get_username(),
+            'email': user.email,
             'password': 'test_pass_1!'
         }
         response1 = self.client.post(reverse('auth_token_obtain'),
@@ -112,7 +112,7 @@ class TestCaseTokenViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.get_username(),
+            'email': user.email,
         }
         response = self.client.post(reverse('auth_token_obtain'),
                                     json.dumps(data),
@@ -129,7 +129,7 @@ class TestCaseTokenViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.email,
+            'email': user.email,
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_obtain'),
@@ -147,7 +147,7 @@ class TestCaseTokenViews(APITestCase):
 
         # WHEN
         data = {
-            'username': f'  {user.email}  ',
+            'email': f'  {user.email}  ',
             'password': 'test_pass_1!'
         }
         response = self.client.post(reverse('auth_token_obtain'),
@@ -241,10 +241,10 @@ class TestCaseTokenViews(APITestCase):
         # WHEN
         responses = [
             self.client.post(reverse('auth_token_obtain'),
-                             json.dumps({'username': 'not-a-user', 'password': 'test_pass_1!'}),
+                             json.dumps({'email': 'not-a-user@test.com', 'password': 'test_pass_1!'}),
                              content_type='application/json'),
             self.client.post(reverse('auth_token_obtain'),
-                             json.dumps({'username': user.get_username(), 'password': 'wrong_pass'}),
+                             json.dumps({'email': user.email, 'password': 'wrong_pass'}),
                              content_type='application/json')
         ]
 

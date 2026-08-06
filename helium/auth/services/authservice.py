@@ -140,20 +140,15 @@ def verify_email(request):
     """
     UserModel = get_user_model()
 
-    # `username` accepted as an undocumented back-compat alias for `email` so that
-    # older installed clients (and any in-flight email links) keep working.
-    identifier = request.GET.get('email') or request.GET.get('username')
+    identifier = request.GET.get('email')
     code = request.GET.get('code')
 
     if not identifier or not code:
         raise ValidationError("'email' and 'code' must be given as query parameters")
 
-    if 'username' in request.GET and 'email' not in request.GET:
-        metricutils.increment('api.deprecated_param.username', request=request)
-
     try:
         user = UserModel.objects.can_login().get(
-            (Q(username__iexact=identifier) | Q(email__iexact=identifier) | Q(email_changing__iexact=identifier)),
+            (Q(email__iexact=identifier) | Q(email_changing__iexact=identifier)),
             verification_code=code,
         )
 
@@ -201,17 +196,13 @@ def resend_verification_email(request):
     """
     UserModel = get_user_model()
 
-    # `username` accepted as an undocumented back-compat alias for `email`.
-    identifier = request.GET.get('email') or request.GET.get('username')
+    identifier = request.GET.get('email')
     if not identifier:
         raise ValidationError("'email' must be given as a query parameter")
 
-    if 'username' in request.GET and 'email' not in request.GET:
-        metricutils.increment('api.deprecated_param.username', request=request)
-
     try:
         user = UserModel.objects.can_login().get(
-            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+            Q(email__iexact=identifier)
         )
 
         # Determine if this is a new registration or email change verification
