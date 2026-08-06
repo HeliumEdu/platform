@@ -17,18 +17,12 @@ from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
     is_admin_allowed_email
 from helium.common import enums
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
 
 
-@extend_schema_serializer(exclude_fields=('username',))
 class UserSerializer(serializers.ModelSerializer):
-    # `username` is kept as an undocumented back-compat alias for `email`. Older clients (legacy
-    # frontend) post a chosen username at registration; we honor it when supplied, otherwise we
-    # auto-generate from the email local-part. Ignored on update so callers cannot rename.
-    username = serializers.CharField(required=False, allow_blank=True, write_only=True)
-
     old_password = serializers.CharField(
         help_text='The current password for the user (required when changing password or email).',
         required=False, write_only=True)
@@ -50,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'email', 'email_changing', 'old_password', 'password',
+        fields = ('id', 'email', 'email_changing', 'old_password', 'password',
                   'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
         extra_kwargs = {
@@ -115,10 +109,6 @@ class UserSerializer(serializers.ModelSerializer):
         return password
 
     def update(self, instance, validated_data):
-        # `username` is a back-compat alias for `email` on registration only — ignore on update
-        # so callers cannot rename their username via this endpoint.
-        validated_data.pop('username', None)
-
         # Manually process fields that require shuffling before relying on the serializer's internals to save the rest
         if 'email' in validated_data:
             new_email = validated_data.pop('email')
@@ -152,15 +142,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        supplied_username = (validated_data.get('username') or '').strip()
-        if supplied_username:
-            validated_data['username'] = supplied_username
-            metricutils.increment('api.deprecated_param.username',
-                                  request=self.context.get('request'))
-        else:
-            validated_data['username'] = generate_unique_username_from_email(
-                validated_data.get('email')
-            )
+        validated_data['username'] = generate_unique_username_from_email(validated_data.get('email'))
         try:
             with transaction.atomic():
                 instance = super().create(validated_data)
@@ -196,7 +178,6 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-@extend_schema_serializer(exclude_fields=('username',))
 class UserCreateSerializer(serializers.Serializer):
     email = serializers.CharField(help_text=get_user_model()._meta.get_field('email').help_text)
 

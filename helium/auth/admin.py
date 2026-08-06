@@ -28,7 +28,7 @@ from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
-from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, prompt_for_review_filter, \
     review_prompts_requested_filter, logged_action
@@ -52,8 +52,6 @@ class AdminUserChangeForm(UserChangeForm):
         for field_name, field_id in (('username', 'ha_un'), ('email', 'ha_em'), ('email_changing', 'ha_emc')):
             if field_name in self.fields:
                 self.fields[field_name].widget.attrs.update({'id': field_id, 'autocomplete': 'new-password'})
-        if self.instance and self.instance.pk and 'username' in self.fields:
-            self.fields['username'].disabled = True
 
     def clean_email(self):
         UserModel = get_user_model()
@@ -70,6 +68,9 @@ class AdminUserChangeForm(UserChangeForm):
 
 
 class AdminUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = ('email',)
+
     def clean_password2(self):
         UserModel = get_user_model()
         password1 = self.cleaned_data.get("password1")
@@ -86,6 +87,8 @@ class AdminUserCreationForm(UserCreationForm):
         return password1
 
     def save(self, commit=True):
+        self.instance.username = generate_unique_username_from_email(self.instance.email)
+
         super().save(commit)
 
         self.instance.is_active = True
@@ -361,11 +364,12 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
                    has_course_schedule_filter('course_groups__courses__schedules'),
                    prompt_for_review_filter('settings__prompt_for_review'),
                    review_prompts_requested_filter('settings__review_prompts_requested'), staff_filter())
-    search_fields = ('id', 'email', 'username', 'email_changing')
+    search_fields = ('id', 'email', 'email_changing')
     ordering = ('-last_activity',)
+    exclude = ('username',)
     add_fieldsets = (
         (None, {
-            'fields': ('username', 'email', 'password1', 'password2',),
+            'fields': ('email', 'password1', 'password2',),
         }),
     )
     fieldsets = None
@@ -500,13 +504,13 @@ class UserSettingsAdmin(BaseModelAdmin):
                    'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme',
                    prompt_for_review_filter('prompt_for_review'),
                    review_prompts_requested_filter('review_prompts_requested'), staff_filter('user')]
-    search_fields = ('user__id', 'user__email', 'user__username')
+    search_fields = ('user__id', 'user__email')
     ordering = ('-user__last_activity',)
     readonly_fields = ('user', 'is_setup_complete', 'next_review_prompt_date', 'review_prompts_requested', 'last_deletion_at',)
 
     def get_user(self, obj):
         if obj.user:
-            return obj.user.get_username()
+            return obj.user.email
         else:
             return ''
 
@@ -523,7 +527,7 @@ class UserSettingsAdmin(BaseModelAdmin):
         return False
 
     get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
+    get_user.admin_order_field = 'user__email'
     get_last_activity.short_description = 'Last Activity'
     get_last_activity.admin_order_field = 'user__last_activity'
 
@@ -531,7 +535,7 @@ class UserSettingsAdmin(BaseModelAdmin):
 class UserPushTokenAdmin(BaseModelAdmin):
     list_display = ['get_user', 'device_id', 'get_last_activity']
     list_filter = [staff_filter('user')]
-    search_fields = ('user__id', 'user__email', 'user__username')
+    search_fields = ('user__id', 'user__email')
     ordering = ('-user__last_activity',)
 
     def has_add_permission(self, request):
@@ -542,12 +546,12 @@ class UserPushTokenAdmin(BaseModelAdmin):
 
     def get_user(self, obj):
         if obj.get_user():
-            return obj.get_user().get_username()
+            return obj.get_user().email
         else:
             return ''
 
     get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
+    get_user.admin_order_field = 'user__email'
 
     def get_last_activity(self, obj):
         if obj.user:
@@ -562,7 +566,7 @@ class UserPushTokenAdmin(BaseModelAdmin):
 class UserOAuthProviderAdmin(BaseModelAdmin):
     list_display = ['get_user', 'provider', 'provider_user_id', 'created_at', 'last_used_at']
     list_filter = ['provider', staff_filter('user')]
-    search_fields = ('user__id', 'user__email', 'user__username', 'provider_user_id')
+    search_fields = ('user__id', 'user__email', 'provider_user_id')
     ordering = ('-last_used_at',)
     readonly_fields = ('user', 'provider', 'provider_user_id', 'created_at', 'last_used_at')
 
@@ -578,12 +582,12 @@ class UserOAuthProviderAdmin(BaseModelAdmin):
 
     def get_user(self, obj):
         if obj.user:
-            return obj.user.get_username()
+            return obj.user.email
         else:
             return ''
 
     get_user.short_description = 'User'
-    get_user.admin_order_field = 'user__username'
+    get_user.admin_order_field = 'user__email'
 
 
 class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
@@ -595,7 +599,7 @@ class HeliumOutstandingTokenAdmin(OutstandingTokenAdmin):
 
 class HeliumBlacklistedTokenAdmin(BlacklistedTokenAdmin):
     list_filter = (staff_filter('token__user'),)
-    search_fields = ('token__jti', 'token__user__id', 'token__user__email', 'token__user__username')
+    search_fields = ('token__jti', 'token__user__id', 'token__user__email')
     ordering = ('-token__user__last_activity',)
 
     def get_readonly_fields(self, request, obj=None):
@@ -622,7 +626,7 @@ class UserClientActivityAdmin(django_admin.ModelAdmin):
                    prompt_for_review_filter('user__settings__prompt_for_review'),
                    review_prompts_requested_filter('user__settings__review_prompts_requested'),
                    staff_filter('user'))
-    search_fields = ('user__id', 'user__email', 'user__username')
+    search_fields = ('user__id', 'user__email')
     ordering = ('-date',)
     readonly_fields = ('user', 'date', 'client')
     actions = [force_review_prompt_for_activities, force_logout_for_activities]
