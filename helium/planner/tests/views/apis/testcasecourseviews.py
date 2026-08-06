@@ -437,7 +437,7 @@ class TestCaseCourseViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN - exception date is one day after course end_date (2017-05-08)
+        # WHEN
         response = self.client.patch(
             reverse('planner_coursegroups_courses_detail',
                     kwargs={'course_group': course_group.pk, 'pk': course.pk}),

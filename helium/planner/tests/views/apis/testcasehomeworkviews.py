@@ -865,13 +865,6 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertNotIn(homework1.pk, returned_ids)
 
     def test_range_query_date_only_from_boundary_edges(self):
-        """
-        Test the 'from' boundary with date-only query params.
-        For a user in America/Chicago (CST, UTC-6):
-        - from=2026-02-02 means Feb 2 00:00 Chicago = Feb 2 06:00 UTC
-
-        Items should be included if start >= from boundary.
-        """
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
@@ -900,11 +893,11 @@ class TestCaseHomeworkViews(APITestCase):
             start=datetime.datetime(2026, 2, 2, 6, 1, 0, tzinfo=datetime.timezone.utc),
             end=datetime.datetime(2026, 2, 2, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
-        # WHEN - query with date-only params (wide to window to focus on from boundary)
+        # WHEN
         response = self.client.get(
             reverse('planner_homework_list') + '?from=2026-02-02&to=2026-02-03')
 
-        # THEN - items at or after from boundary should be included
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         titles = {item['title'] for item in response.data}
@@ -913,13 +906,6 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn('after_from', titles)
 
     def test_range_query_date_only_to_boundary_edges(self):
-        """
-        Test the 'to' boundary with date-only query params.
-        For a user in America/Chicago (CST, UTC-6):
-        - to=2026-02-03 means Feb 3 00:00 Chicago = Feb 3 06:00 UTC
-
-        Items should be included if start <= to boundary.
-        """
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
@@ -948,11 +934,11 @@ class TestCaseHomeworkViews(APITestCase):
             start=datetime.datetime(2026, 2, 3, 6, 1, 0, tzinfo=datetime.timezone.utc),
             end=datetime.datetime(2026, 2, 3, 6, 30, 0, tzinfo=datetime.timezone.utc))
 
-        # WHEN - query with date-only params (wide from window to focus on to boundary)
+        # WHEN
         response = self.client.get(
             reverse('planner_homework_list') + '?from=2026-02-01&to=2026-02-03')
 
-        # THEN - items before or at to boundary should be included
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         titles = {item['title'] for item in response.data}
@@ -961,14 +947,6 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertNotIn('after_to', titles)
 
     def test_range_query_date_only_both_boundaries(self):
-        """
-        Comprehensive test of both from and to boundaries with date-only params.
-        For America/Chicago (CST, UTC-6):
-        - from=2026-02-02 = Feb 2 06:00 UTC
-        - to=2026-02-03 = Feb 3 06:00 UTC
-
-        Tests items at all four edge positions plus one in the middle.
-        """
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
@@ -1010,7 +988,7 @@ class TestCaseHomeworkViews(APITestCase):
         response = self.client.get(
             reverse('planner_homework_list') + '?from=2026-02-02&to=2026-02-03')
 
-        # THEN - should include: at_from, middle, at_to (items 2, 3, 4)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
         titles = {item['title'] for item in response.data}

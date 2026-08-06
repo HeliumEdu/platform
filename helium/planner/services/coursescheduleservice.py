@@ -13,10 +13,7 @@ from django.core.cache import cache
 from helium.common import enums
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import HeliumError
-from helium.common.utils.course_exception_helpers import (
-    merge_exceptions,
-    parse_csv_exceptions,
-)
+from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
@@ -112,18 +109,6 @@ def _apply_event_filters(event, _from, to, search):
     return True
 
 
-def _parse_exceptions(course):
-    """
-    Return the set of dates on which ``course`` does not meet — the merge of
-    course-level (professor cancellations) and course-group-level (holidays,
-    breaks) exceptions.
-    """
-    return set(merge_exceptions(
-        parse_csv_exceptions(course.exceptions),
-        parse_csv_exceptions(course.course_group.exceptions),
-    ))
-
-
 def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None, search=None):
     events = []
     invalid_data = False
@@ -159,7 +144,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     events = []
     events_filtered = []
 
-    exceptions = _parse_exceptions(course)
+    exceptions = get_course_exceptions(course)
     course_user = course.get_user()
     user_tz = ZoneInfo(course_user.settings.time_zone)
     comments = _get_comments(course)
@@ -203,8 +188,6 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
                 if _apply_event_filters(event, _from, to, search):
                     events_filtered.append(event)
-
-                break
 
         day += datetime.timedelta(days=1)
 

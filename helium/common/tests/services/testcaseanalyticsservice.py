@@ -62,7 +62,7 @@ class TestCaseAnalyticsService(TestCase):
         user = userhelper.given_a_user_exists()
         mock_urlopen.side_effect = urllib.error.URLError('timeout')
 
-        # WHEN/THEN: does not raise
+        # WHEN/THEN
         analyticsservice.send_event(user, 'helium_onboarding_complete')
 
         mock_increment.assert_called_once_with('action.analytics.failed')

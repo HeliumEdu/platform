@@ -57,7 +57,7 @@ class TestCaseAuthenticationViews(TestCase):
         params = parse_qs(urlparse(response.context['reset_url']).query)
         uid = params['uid'][0]
 
-        # WHEN - confirm with a bad token
+        # WHEN
         response = self.client.put(reverse('auth_user_resource_forgot_confirm'),
                                    json.dumps({'uid': uid, 'token': 'not-a-valid-token', 'password': 'NewPass_Helium1!'}),
                                    content_type='application/json')
@@ -78,13 +78,13 @@ class TestCaseAuthenticationViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
 
-        # WHEN - first request succeeds
+        # WHEN
         response = self.client.put(reverse('auth_user_resource_forgot'),
                                    json.dumps({'email': user.email}),
                                    content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-        # WHEN - immediate second request is throttled
+        # WHEN
         response = self.client.put(reverse('auth_user_resource_forgot'),
                                    json.dumps({'email': user.email}),
                                    content_type='application/json')
@@ -105,7 +105,6 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_password_reset_oauth_user_blocked(self):
-        """Test that OAuth users (without usable password) don't get passwords created via forgot password."""
         # GIVEN
         user = userhelper.given_a_user_exists()
         # Simulate OAuth user by removing their password
@@ -188,15 +187,12 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertIn('email', response.data)
 
     def test_registration_fails_when_email_pending_deletion(self):
-        """A user whose cascade-delete is still in flight keeps their email reserved so the
-        next signup attempt collides on the unique constraint and surfaces as a clean
-        ValidationError instead of a 500."""
-        # GIVEN: an existing user whose deletion is in flight
+        # GIVEN
         existing = userhelper.given_a_user_exists(email='pending@test.com', username='pending_user')
         existing.deletion_requested_at = timezone.now()
         existing.save(update_fields=['deletion_requested_at'])
 
-        # WHEN: a new registration attempts the same email
+        # WHEN
         response = self.client.post(
             reverse('auth_user_resource_register'),
             json.dumps({
@@ -208,14 +204,13 @@ class TestCaseAuthenticationViews(TestCase):
             content_type='application/json',
         )
 
-        # THEN: expected conflict error, existing user row is untouched
+        # THEN
         self.assertContains(response, 'Registration failed due to a conflict',
                             status_code=status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.filter(email='pending@test.com').count(), 1)
         self.assertFalse(get_user_model().objects.filter(username='new_user').exists())
 
     def test_login_fails_when_user_pending_deletion(self):
-        """Password login for a pending-delete user should behave as 'no such account'."""
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.deletion_requested_at = timezone.now()
@@ -266,7 +261,6 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertIn('refresh', response.data)
 
     def test_verification_success_with_email_changing(self):
-        """Test that verification works when user is changing their email and uses the new email as identifier."""
         # GIVEN
         user = userhelper.given_a_user_exists()
         original_email = user.email
@@ -274,7 +268,7 @@ class TestCaseAuthenticationViews(TestCase):
         user.email_changing = new_email
         user.save()
 
-        # WHEN - verify using the NEW email address (email_changing)
+        # WHEN
         response = self.client.get(
             reverse('auth_user_resource_verify') + f'?email={new_email}&code={user.verification_code}')
 
@@ -322,7 +316,6 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_resend_verification_for_email_change(self):
-        """Test that resend verification sends to email_changing for active users changing email."""
         # GIVEN
         user = userhelper.given_a_user_exists(username='email_changer', email='changer@test.com')
         original_code = user.verification_code
@@ -342,7 +335,6 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.context['email'], 'new_email@example.com')
 
     def test_resend_verification_for_active_user_without_email_change(self):
-        """Test that resend verification returns 202 but does nothing for active users without email_changing."""
         # GIVEN
         user = userhelper.given_a_user_exists(username='active_user', email='active@test.com')
         original_code = str(user.verification_code)

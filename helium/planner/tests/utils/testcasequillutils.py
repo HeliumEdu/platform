@@ -100,7 +100,6 @@ class TestCaseQuillUtils(TestCase):
         self.assertIn('Line2', all_text)
 
     def test_text_before_list_gets_newline(self):
-        """Text before a list should be separated by a newline."""
         result = html_to_quill(
             '<font face="Arial">Intro text:</font>'
             '<div><ul><li><strike>Item 1</strike></li><li>Item 2</li></ul></div>'

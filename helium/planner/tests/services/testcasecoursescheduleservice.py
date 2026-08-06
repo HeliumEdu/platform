@@ -2,10 +2,12 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import datetime
+from unittest import mock
 
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.planner.models import CourseSchedule
 from helium.planner.services import coursescheduleservice
 from helium.planner.services.coursescheduleservice import HeliumCourseScheduleError
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
@@ -99,6 +101,35 @@ class TestCaseCourseScheduleService(TestCase):
         # THEN
         self.assertIsNotNone(day_0)
         self.assertIsNone(day_1)
+
+    def test_course_schedules_to_events_includes_every_schedule_active_same_day(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2026, 3, 25),
+            end_date=datetime.date(2026, 3, 25)
+        )
+        # `CourseSchedule.course` enforces unique=True, so a second schedule can't be persisted
+        # for the same course — build it in memory and pass both via a stub queryset.
+        schedule_a = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+        schedule_b = CourseSchedule(course=course, days_of_week='0001000',
+                                    wed_start_time=datetime.time(14, 0, 0), wed_end_time=datetime.time(14, 50, 0))
+        course_schedules = mock.MagicMock()
+        course_schedules.all.return_value = [schedule_a, schedule_b]
+
+        # WHEN
+        events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
+
+        # THEN
+        self.assertEqual(len(events), 2)
+        self.assertEqual({event.start.time() for event in events},
+                         {datetime.time(9, 0, 0), datetime.time(14, 0, 0)})
 
     def test_get_comments(self):
         # GIVEN
