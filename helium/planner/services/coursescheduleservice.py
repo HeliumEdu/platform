@@ -4,6 +4,7 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
+from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 
 from dateutil import parser
@@ -12,8 +13,9 @@ from django.core.cache import cache
 
 from helium.common import enums
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import HeliumError, deterministic_id
+from helium.common.utils.commonutils import HeliumError, deterministic_id, local_midnight_as_utc
 from helium.common.utils.course_exception_helpers import get_course_exceptions
+from helium.common.utils.validators import WEEKDAY_TO_ICAL
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import EventSerializer
 
@@ -26,6 +28,8 @@ _WEDNESDAY = 3
 _THURSDAY = 4
 _FRIDAY = 5
 _SATURDAY = 6
+
+_HELIUM_TO_PYTHON_WEEKDAY = {helium: python for python, helium in enums.PYTHON_TO_HELIUM_DAY_OF_WEEK.items()}
 
 
 class HeliumCourseScheduleError(HeliumError):
@@ -239,3 +243,87 @@ def course_schedules_to_events(course, course_schedules, _from=None, to=None, se
         events = _create_events_from_course_schedules(course, course_schedules, _from, to, search)
 
     return events
+
+
+def _group_days_by_time_slot(course_schedule):
+    """
+    Group a course schedule's active weekdays by shared (start_time, end_time) —
+    e.g. a schedule with Mon/Wed/Fri at 9am and Thu at 2pm groups into two slots.
+
+    :param course_schedule: The course schedule to group.
+    :return: A dict of (start_time, end_time) -> list of active weekdays (Helium day-of-week indices).
+    """
+    groups = {}
+
+    for weekday in range(7):
+        start_time = _get_start_time_for_weekday(course_schedule, weekday)
+        if start_time is None:
+            continue
+
+        end_time = _get_end_time_for_weekday(course_schedule, weekday)
+        groups.setdefault((start_time, end_time), []).append(weekday)
+
+    return groups
+
+
+def _find_first_occurrence(start_date, weekdays):
+    weekday_set = set(weekdays)
+
+    day = start_date
+    for _ in range(7):
+        if enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()] in weekday_set:
+            return day
+        day += datetime.timedelta(days=1)
+
+    return None
+
+
+@dataclass
+class CourseScheduleRecurrenceGroup:
+    """
+    One recurrence group for a `CourseSchedule` — a unique (days, start_time,
+    end_time) combination among its active days. Deliberately excludes fields
+    the client already has from `Course` (title, color) or doesn't use here
+    (`url`, `comments`, unlike `course_schedules_to_events`'s ICS-feed shape).
+    """
+    start: datetime.datetime
+    end: datetime.datetime
+    recurrence_rule: str
+    exception_dates: list[datetime.datetime]
+
+
+def course_schedule_to_recurrence_groups(course, course_schedule):
+    """
+    For a single course schedule, generate one recurrence group per unique
+    time-slot among its active days — e.g. a schedule with Mon/Wed/Fri at 9am
+    and Thu at 2pm produces two groups, not one.
+
+    :param course: The course with a start/end date range to iterate over.
+    :param course_schedule: The course schedule to generate recurrence groups for.
+    :return: A list of `CourseScheduleRecurrenceGroup`, one per unique time-slot.
+    """
+    groups = []
+
+    exceptions = get_course_exceptions(course)
+    user_tz = ZoneInfo(course.get_user().settings.time_zone)
+    exception_dates = [local_midnight_as_utc(exception, user_tz) for exception in sorted(exceptions)]
+
+    for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
+        first_occurrence = _find_first_occurrence(course.start_date, weekdays)
+        if first_occurrence is None or first_occurrence > course.end_date:
+            continue
+
+        start = datetime.datetime.combine(first_occurrence, start_time).replace(
+            tzinfo=user_tz).astimezone(datetime.timezone.utc)
+        end = datetime.datetime.combine(first_occurrence, end_time).replace(
+            tzinfo=user_tz).astimezone(datetime.timezone.utc)
+        until = datetime.datetime.combine(course.end_date, datetime.time(23, 59, 59), tzinfo=user_tz) \
+            .astimezone(datetime.timezone.utc)
+
+        byday = ','.join(WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
+        recurrence_rule = f'FREQ=WEEKLY;BYDAY={byday};UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}'
+
+        groups.append(CourseScheduleRecurrenceGroup(
+            start=start, end=end, recurrence_rule=recurrence_rule, exception_dates=exception_dates))
+
+    return groups

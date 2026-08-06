@@ -26,7 +26,8 @@ class CourseSerializer(serializers.ModelSerializer):
     and higher receive every schedule for the course; below that (or with
     the header absent/malformed) only the single, earliest-created schedule
     is returned, for compatibility with clients whose UI assumes one
-    schedule per course.
+    schedule per course. Each schedule's `recurrence_groups` carries the
+    pre-computed, renderable form of that schedule (see `CourseScheduleSerializer`).
     """
 
     schedules = serializers.SerializerMethodField()
