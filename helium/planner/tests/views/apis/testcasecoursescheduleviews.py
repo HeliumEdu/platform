@@ -103,6 +103,116 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, data)
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
+    def test_create_second_course_schedule_allowed_for_gated_client(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        data = {
+            'days_of_week': '0010100',
+            'tue_start_time': '13:30:00',
+            'tue_end_time': '15:20:00',
+            'thu_start_time': '13:30:00',
+            'thu_end_time': '15:20:00',
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'mon_start_time': '12:00:00',
+            'mon_end_time': '12:00:00',
+            'wed_start_time': '12:00:00',
+            'wed_end_time': '12:00:00',
+            'fri_start_time': '12:00:00',
+            'fri_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CourseSchedule.objects.for_course(course.pk).count(), 2)
+
+    def test_create_second_course_schedule_still_rejected_below_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        data = {
+            'days_of_week': '0010100',
+            'tue_start_time': '13:30:00',
+            'tue_end_time': '15:20:00',
+            'thu_start_time': '13:30:00',
+            'thu_end_time': '15:20:00',
+            # These fields are set to their defaults
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'mon_start_time': '12:00:00',
+            'mon_end_time': '12:00:00',
+            'wed_start_time': '12:00:00',
+            'wed_end_time': '12:00:00',
+            'fri_start_time': '12:00:00',
+            'fri_end_time': '12:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_X_CLIENT_VERSION='3.7.3')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CourseSchedule.objects.for_course(course.pk).count(), 1)
+
+    def test_get_course_schedules_truncated_to_earliest_below_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        earlier_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], earlier_schedule.pk)
+
+    def test_get_course_schedules_all_returned_at_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
     def test_create_course_schedule_no_many(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -474,6 +584,24 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
                 self.assertIn('matches the given query', response.data['detail'].lower())
+
+    def test_get_user_course_schedules_truncated_per_course_below_gate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group, title='Course 2')
+        course1_earlier_schedule = courseschedulehelper.given_course_schedule_exists(course1)
+        courseschedulehelper.given_course_schedule_exists(course1, days_of_week='0010100')
+        course2_schedule = courseschedulehelper.given_course_schedule_exists(course2, days_of_week='0001000')
+
+        # WHEN
+        response = self.client.get(reverse('planner_courseschedules_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertEqual(returned_ids, {course1_earlier_schedule.pk, course2_schedule.pk})
 
     def test_updated_at_filter(self):
         # GIVEN
