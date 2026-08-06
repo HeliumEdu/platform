@@ -77,7 +77,7 @@ class TestCasePushService(TestCase):
         # WHEN
         pushservice.send_notifications(['token1'], 'Subject', 'Message', {'id': 1})
 
-        # THEN: no top-level notification field (causes web double-notification via FCM auto-display)
+        # THEN
         message = mock_send.call_args[0][0]
         self.assertIsNone(message.notification)
 

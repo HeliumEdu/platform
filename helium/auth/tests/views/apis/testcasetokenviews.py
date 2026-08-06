@@ -62,10 +62,7 @@ class TestCaseTokenViews(APITestCase):
 
     @mock.patch('helium.auth.views.apis.userviews.delete_user.apply_async')
     def test_delete_user_reserves_pending_and_blacklists_tokens(self, mock_apply_async):
-        """Verify the reserve helper sets deletion_requested_at and blacklists the user's
-        outstanding refresh tokens before enqueuing the Celery task — closes the window where
-        an already-issued token could still mint new access tokens against a dying account."""
-        # GIVEN: the Celery task is stubbed so the row + tokens survive to assert on
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(OutstandingToken.objects.filter(user=user).count(), 1)
         self.assertEqual(BlacklistedToken.objects.filter(token__user=user).count(), 0)
@@ -77,7 +74,7 @@ class TestCaseTokenViews(APITestCase):
             content_type='application/json',
         )
 
-        # THEN: field marked, token blacklisted, Celery task enqueued
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user.refresh_from_db()
         self.assertIsNotNone(user.deletion_requested_at)
@@ -86,9 +83,7 @@ class TestCaseTokenViews(APITestCase):
         self.assertEqual(mock_apply_async.call_args.kwargs['args'], (user.pk,))
 
     def test_token_refresh_fails_when_user_pending_deletion(self):
-        """A refresh token issued before the delete request must not mint new access tokens
-        after the user is marked pending-delete."""
-        # GIVEN: an authenticated user with a valid refresh token
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # AND: the user is marked pending-delete directly (simulating the reserve helper
@@ -96,7 +91,7 @@ class TestCaseTokenViews(APITestCase):
         user.deletion_requested_at = timezone.now()
         user.save(update_fields=['deletion_requested_at'])
 
-        # WHEN: the refresh token is presented
+        # WHEN
         response = self.client.post(
             reverse('auth_token_refresh'),
             json.dumps({'refresh': user.refresh}),

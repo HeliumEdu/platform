@@ -400,7 +400,7 @@ class TestCaseEventViews(APITestCase):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
-        # WHEN — 2025-09-01 is a Monday; BYDAY should be inferred as MO
+        # WHEN
         data = {
             'title': 'Weekly study group',
             'all_day': False,
@@ -425,7 +425,7 @@ class TestCaseEventViews(APITestCase):
         base = {'title': 'Bad', 'all_day': False, 'show_end_time': True,
                 'start': '2025-09-01T18:00:00Z', 'end': '2025-09-01T19:00:00Z', 'priority': 50}
 
-        # WHEN / THEN — unsupported FREQ and unsupported property both 400
+        # WHEN / THEN
         for rule in ('FREQ=HOURLY;COUNT=5', 'FREQ=WEEKLY;BYDAY=MO;WKST=SU'):
             response = self.client.post(reverse('planner_events_list'),
                                         json.dumps({**base, 'recurrence_rule': rule}),

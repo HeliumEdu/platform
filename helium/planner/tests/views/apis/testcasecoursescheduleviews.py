@@ -365,7 +365,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN — days_of_week omitted; per-day times encode the schedule
+        # WHEN
         data = {
             'tue_start_time': '10:20:00',
             'tue_end_time': '11:40:00',
@@ -399,7 +399,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN — days_of_week marks tue active, but tue times are 00:00:00
+        # WHEN
         data = {
             'days_of_week': '0010000',
             'sun_start_time': '00:00:00',

@@ -707,7 +707,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(len(response.data), 1)
 
     def test_get_reminders_returns_nested_homework_with_course(self):
-        """Verify that GET /reminders/ returns nested homework and course objects, not just IDs."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -734,7 +733,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(reminder_data['homework']['course']['title'], course.title)
 
     def test_get_reminder_by_id_returns_nested_homework_with_course(self):
-        """Verify that GET /reminders/{id}/ returns nested homework and course objects."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -758,7 +756,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(response.data['homework']['course']['title'], course.title)
 
     def test_get_reminders_returns_nested_homework_with_category(self):
-        """Verify that GET /reminders/ returns nested homework with category object, not just ID."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -785,7 +782,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(reminder_data['homework']['category']['title'], category.title)
 
     def test_get_reminder_by_id_returns_nested_homework_with_category(self):
-        """Verify that GET /reminders/{id}/ returns nested homework with category object."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -885,7 +881,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(next_class_start_local.time().replace(second=0, microsecond=0), datetime.time(10, 0, 0))
 
     def test_create_course_reminder_no_future_occurrence(self):
-        """Course with no future class sessions: reminder is created with start_of_range=None."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -915,7 +910,7 @@ class TestCaseReminderViews(APITestCase):
                                     json.dumps(data),
                                     content_type='application/json')
 
-        # THEN: created successfully but inactive (no qualifying future occurrence)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         reminder = Reminder.objects.get(pk=response.data['id'])
         self.assertIsNone(reminder.start_of_range)
@@ -947,7 +942,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertIn('Only one of', response.data['non_field_errors'][0])
 
     def test_course_reminder_skips_group_exception(self):
-        """Verify that course reminders skip dates in the course group's exceptions."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -1001,7 +995,6 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(reminder.start_of_range, expected_start_of_range)
 
     def test_course_reminder_skips_course_exception(self):
-        """Verify that course reminders skip dates in the course's own exceptions."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -1132,19 +1125,7 @@ class TestCaseReminderViews(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_course_push_reminder_fires_and_creates_next_pending(self):
-        """
-        Validates the full course-reminder cycle as seen by the frontend.
-
-        After process_push_reminders() fires a repeating course reminder:
-        - /notifications screen (GET ?sent=true&dismissed=false&type=3) should show the fired reminder
-        - course_reminders screen (GET ?course=X&sent=false) should show a new pending reminder for
-          the next class occurrence — with no gap between the two states.
-
-        If this test fails on the course_reminders assertion, there is a nominal gap in
-        create_next_repeating_reminder. Run test_course_push_reminder_watchdog_heals_gap to confirm
-        the watchdog heals it, then investigate why create_next_repeating_reminder returned None.
-        """
-        # GIVEN: a user with a course running daily for 30 days and a push reminder in the send window
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -1184,10 +1165,10 @@ class TestCaseReminderViews(APITestCase):
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
         )
 
-        # WHEN: the reminder processing task runs (simulating what happens every 60s in prod)
+        # WHEN
         reminderservice.process_push_reminders()
 
-        # THEN: the fired reminder appears in the /notifications screen query
+        # THEN
         notifications_response = self.client.get(
             reverse('planner_reminders_list'),
             {'sent': 'true', 'dismissed': 'false', 'type': enums.PUSH},
@@ -1210,12 +1191,7 @@ class TestCaseReminderViews(APITestCase):
                          'logs for the warning and verify course end_date / schedule configuration.')
 
     def test_course_push_reminder_watchdog_heals_gap(self):
-        """
-        Validates that heal_orphaned_repeating_reminders() recovers a series where the next pending
-        reminder was not created (e.g. due to a transient error). This is the safety-net path;
-        the nominal path is covered by test_course_push_reminder_fires_and_creates_next_pending.
-        """
-        # GIVEN: a series with only a sent reminder and no pending successor
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -1242,7 +1218,7 @@ class TestCaseReminderViews(APITestCase):
             course=course, user=user,
         )])
 
-        # THEN: course_reminders screen shows nothing (gap state)
+        # THEN
         pre_heal_response = self.client.get(
             reverse('planner_reminders_list'),
             {'course': course.pk, 'sent': 'false'},
@@ -1252,10 +1228,10 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(len(pre_heal_response.data), 0,
                          'No pending reminder should exist before the watchdog runs')
 
-        # WHEN: the watchdog task runs
+        # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: course_reminders screen now shows the next pending reminder
+        # THEN
         post_heal_response = self.client.get(
             reverse('planner_reminders_list'),
             {'course': course.pk, 'sent': 'false'},

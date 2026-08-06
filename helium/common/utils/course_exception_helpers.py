@@ -58,3 +58,20 @@ def merge_exceptions(
         merged.append(dt)
     merged.sort()
     return merged
+
+
+def get_course_exceptions(course) -> set:
+    """
+    Return the set of dates on which ``course`` does not meet — the merge of
+    course-level (professor cancellations) and course-group-level (holidays,
+    breaks) exceptions. Shared by every call site that needs to skip
+    non-meeting days when walking a course's schedule (reminders, the ICS
+    feed, RRULE generation).
+
+    :param course: A ``Course`` instance with ``exceptions`` and
+                   ``course_group.exceptions`` CSV fields.
+    """
+    return set(merge_exceptions(
+        parse_csv_exceptions(course.exceptions),
+        parse_csv_exceptions(course.course_group.exceptions),
+    ))

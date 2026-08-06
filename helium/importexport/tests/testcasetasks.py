@@ -35,15 +35,6 @@ class TestCaseImportExportTasks(APITestCase):
         import_example_schedule(nonexistent_user_id)
 
     def test_adjust_schedule_preserves_local_wall_clock_time_across_dst(self):
-        """
-        _adjust_schedule_relative_to must preserve the user's local wall-clock
-        time when shifting example-schedule dates across a DST boundary.
-
-        Scenario: items stored at 17:00 UTC (= 11 AM CST, UTC-6) are adjusted
-        so that one lands on 2026-03-02 (pre-DST, still CST) and one lands on
-        2026-03-09 (post-DST, CDT = UTC-5). The post-DST item must be stored as
-        16:00 UTC (11 AM CDT) not 17:00 UTC (which would display as 12 PM CDT).
-        """
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'America/Chicago'
@@ -126,11 +117,6 @@ class TestCaseImportExportTasks(APITestCase):
         )
 
     def test_adjust_schedule_shifts_all_items_to_target_month(self):
-        """
-        _adjust_schedule_relative_to must shift ALL homework items to the target
-        month, not just items near the DST boundary. Items at various positions
-        in the schedule (week 1, week 2, etc.) should all be shifted.
-        """
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'America/Chicago'
@@ -203,7 +189,7 @@ class TestCaseImportExportTasks(APITestCase):
         with patch('django.utils.timezone.now', return_value=mock_now):
             _adjust_schedule_relative_to(user, -1)
 
-        # THEN - all items should be shifted to March, preserving local time
+        # THEN
         hw_week1.refresh_from_db()
         hw_week2.refresh_from_db()
         hw_week3.refresh_from_db()

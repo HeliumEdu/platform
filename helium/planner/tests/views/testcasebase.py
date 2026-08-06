@@ -18,10 +18,6 @@ class TestCaseParseDateParamToUtc(TestCase):
     """
 
     def test_date_only_string_chicago_timezone(self):
-        """
-        A date-only string should be interpreted as midnight in the user's timezone.
-        For America/Chicago (CST, UTC-6), midnight Feb 2 = 06:00 UTC on Feb 2.
-        """
         result = _parse_date_param_to_utc("2026-02-02", "America/Chicago")
 
         self.assertEqual(result.year, 2026)
@@ -32,9 +28,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_date_only_string_utc_timezone(self):
-        """
-        For a user in UTC, midnight Feb 2 = 00:00 UTC.
-        """
         result = _parse_date_param_to_utc("2026-02-02", "UTC")
 
         self.assertEqual(result.year, 2026)
@@ -45,9 +38,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_date_only_string_tokyo_timezone(self):
-        """
-        For Asia/Tokyo (JST, UTC+9), midnight Feb 2 JST = 15:00 UTC on Feb 1.
-        """
         result = _parse_date_param_to_utc("2026-02-02", "Asia/Tokyo")
 
         self.assertEqual(result.year, 2026)
@@ -58,10 +48,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_datetime_with_timezone_preserved(self):
-        """
-        If the input already has timezone info (ISO 8601 with Z suffix),
-        it should be converted to UTC without using the user's timezone.
-        """
         result = _parse_date_param_to_utc("2026-02-02T17:00:00Z", "America/Chicago")
 
         self.assertEqual(result.year, 2026)
@@ -72,9 +58,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_datetime_with_offset_converted_to_utc(self):
-        """
-        If the input has an explicit offset, it should be converted to UTC.
-        """
         # 17:00 in UTC-5 = 22:00 UTC
         result = _parse_date_param_to_utc("2026-02-02T17:00:00-05:00", "America/Chicago")
 
@@ -86,10 +69,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_date_only_during_dst(self):
-        """
-        During DST, America/Chicago is CDT (UTC-5).
-        Midnight June 1 CDT = 05:00 UTC.
-        """
         result = _parse_date_param_to_utc("2026-06-01", "America/Chicago")
 
         self.assertEqual(result.year, 2026)
@@ -100,11 +79,6 @@ class TestCaseParseDateParamToUtc(TestCase):
         self.assertEqual(result.tzinfo, timezone.utc)
 
     def test_different_timezones_same_date_different_utc(self):
-        """
-        The same date-only string should produce different UTC times
-        depending on the user's timezone. This is the core fix for the
-        integration test failure.
-        """
         chicago_result = _parse_date_param_to_utc("2026-02-02", "America/Chicago")
         utc_result = _parse_date_param_to_utc("2026-02-02", "UTC")
 
