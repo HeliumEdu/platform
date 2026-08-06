@@ -127,7 +127,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # Verify they can't login with any password
         response = self.client.post(reverse('auth_token_obtain'),
-                                    json.dumps({'username': user.get_username(), 'password': 'any-password'}),
+                                    json.dumps({'email': user.email, 'password': 'any-password'}),
                                     content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -224,7 +224,7 @@ class TestCaseAuthenticationViews(TestCase):
         # WHEN
         response = self.client.post(
             reverse('auth_token_obtain'),
-            json.dumps({'username': user.get_username(), 'password': 'test_pass_1!'}),
+            json.dumps({'email': user.email, 'password': 'test_pass_1!'}),
             content_type='application/json',
         )
 
@@ -238,7 +238,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
+            reverse('auth_user_resource_verify') + f'?email={user.email}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -256,7 +256,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_verify') + f'?username={user.email}&code={user.verification_code}')
+            reverse('auth_user_resource_verify') + f'?email={user.email}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -276,7 +276,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN - verify using the NEW email address (email_changing)
         response = self.client.get(
-            reverse('auth_user_resource_verify') + f'?username={new_email}&code={user.verification_code}')
+            reverse('auth_user_resource_verify') + f'?email={new_email}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -294,7 +294,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_resend_verification') + f'?username={user.email}')
+            reverse('auth_user_resource_resend_verification') + f'?email={user.email}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -316,7 +316,7 @@ class TestCaseAuthenticationViews(TestCase):
     def test_verification_not_found(self):
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_verify') + "?username=not-a-user&code=not-a-real-code")
+            reverse('auth_user_resource_verify') + "?email=not-a-user@test.com&code=not-a-real-code")
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -331,7 +331,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_resend_verification') + f'?username={user.username}')
+            reverse('auth_user_resource_resend_verification') + f'?email={user.email}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -349,7 +349,7 @@ class TestCaseAuthenticationViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse('auth_user_resource_resend_verification') + f'?username={user.username}')
+            reverse('auth_user_resource_resend_verification') + f'?email={user.email}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)

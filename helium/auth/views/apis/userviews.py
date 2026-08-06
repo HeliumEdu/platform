@@ -5,7 +5,6 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -20,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import taskutils
 from helium.common.throttles import DeleteInactiveUserThrottle
 from helium.common.views.base import HeliumAPIView
 
@@ -133,12 +132,9 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
 
     def get_object(self):
         UserModel = get_user_model()
-        # `username` accepted as an undocumented back-compat alias for `email`.
-        identifier = self.request.data.get('email') or self.request.data.get('username')
+        identifier = self.request.data.get('email')
         try:
-            return UserModel.objects.get(
-                Q(email__iexact=identifier) | Q(username__iexact=identifier)
-            )
+            return UserModel.objects.get(email__iexact=identifier)
         except UserModel.DoesNotExist:
             raise NotFound('No User matches the given query.')
 
@@ -149,14 +145,11 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         Delete an inactive user instance. The request body should include the `email` and `password`, and this route
         can only be used to delete users that never finished setting up their account.
         """
-        if 'email' not in request.data and 'username' not in request.data:
+        if 'email' not in request.data:
             raise ValidationError({'email': ['This field is required.']})
 
         if 'password' not in request.data:
             raise ValidationError({'password': ['This field is required.']})
-
-        if 'username' in request.data and 'email' not in request.data:
-            metricutils.increment('api.deprecated_param.username', request=request)
 
         user = self.get_object()
 

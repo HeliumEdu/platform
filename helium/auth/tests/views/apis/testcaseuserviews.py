@@ -135,7 +135,7 @@ class TestCaseUserViews(APITestCase):
         user.save()
 
         response = self.client.get(
-            reverse('auth_user_resource_verify') + f'?username={user.username}&code={user.verification_code}')
+            reverse('auth_user_resource_verify') + f'?email={user.email}&code={user.verification_code}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -313,7 +313,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.username,
+            'email': user.email,
             'password': 'test_pass_1!'
         }
         response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),
@@ -330,7 +330,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.username,
+            'email': user.email,
             'password': 'wrong_pass'
         }
         response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),
@@ -347,7 +347,7 @@ class TestCaseUserViews(APITestCase):
 
         # WHEN
         data = {
-            'username': user.username,
+            'email': user.email,
             'password': 'test_pass_1!'
         }
         response = self.client.delete(reverse('auth_user_resource_delete_inactive'), json.dumps(data),

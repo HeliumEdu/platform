@@ -33,7 +33,7 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
     user = given_a_user_exists(username, email, password)
 
     data = {
-        'username': username,
+        'email': email,
         'password': 'test_pass_1!'
     }
     response = client.post(reverse('auth_token_obtain'),

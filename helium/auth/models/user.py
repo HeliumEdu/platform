@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, BaseModel):
-    # Deprecated: kept only because Django's AbstractBaseUser requires a USERNAME_FIELD.
+    # Internal-only: needed because Django's AbstractBaseUser requires a USERNAME_FIELD.
     # Auto-generated from email at registration; never surfaced to users in the new
     # frontend (email-only auth). Removal requires a custom user model migration.
     username = models.CharField(help_text='A unique name used to login to the system.',
