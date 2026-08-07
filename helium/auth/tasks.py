@@ -442,6 +442,10 @@ def emit_nightly_metrics(self):
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ))),
+                    ('multiple_schedules', Exists(Course.objects.filter(
+                        course_group__user=OuterRef('pk'),
+                        course_group__example_schedule=False,
+                    ).annotate(schedule_count=Count('schedules')).filter(schedule_count__gt=1))),
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
