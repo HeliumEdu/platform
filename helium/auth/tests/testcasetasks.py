@@ -203,6 +203,41 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(adoption_calls)
         self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
 
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_only_multi_schedule_courses_as_multiple_schedules_adoption(self, mock_gauge):
+        # GIVEN a user with a single-schedule course (not a multiple-schedules adopter)
+        single_user = userhelper.given_a_user_exists()
+        single_group = coursegrouphelper.given_course_group_exists(single_user)
+        single_course = coursehelper.given_course_exists(single_group)
+        courseschedulehelper.given_course_schedule_exists(single_course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN - a class-schedule adopter, but not a multiple-schedules adopter
+        multiple_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.multiple_schedules.pct']
+        self.assertTrue(multiple_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in multiple_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_emits_multiple_schedules_adoption(self, mock_gauge):
+        # GIVEN a user with a course that has two schedules
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010')
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        multiple_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.multiple_schedules.pct']
+        self.assertTrue(multiple_calls)
+        self.assertTrue(any(c.args[1] == 100 for c in multiple_calls))
+
     def _setup_review_prompt_candidate(self, username='test_user', email='user@test.com'):
         user = userhelper.given_a_user_exists(username=username, email=email)
         user.settings.next_review_prompt_date = timezone.now() - timedelta(days=1)
