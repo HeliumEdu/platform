@@ -185,6 +185,43 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_only_cycle_schedules_as_rotating_adoption(self, mock_gauge):
+        # GIVEN a user whose only schedule is an ordinary weekly one
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN - counts as a class-schedule adopter but not a rotating-schedule adopter
+        class_calls = [c for c in mock_gauge.call_args_list
+                       if c.args[0] == 'users.adoption.class_schedules.pct']
+        rotating_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.rotating_schedules.pct']
+        self.assertTrue(any(c.args[1] == 100 for c in class_calls))
+        self.assertTrue(rotating_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in rotating_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_emits_rotating_schedules_adoption(self, mock_gauge):
+        # GIVEN a user with a cycle schedule
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        rotating_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.rotating_schedules.pct']
+        self.assertTrue(rotating_calls)
+        self.assertTrue(any(c.args[1] == 100 for c in rotating_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_excludes_example_schedule_from_class_schedules_adoption(self, mock_gauge):
         # GIVEN
         user = userhelper.given_a_user_exists()

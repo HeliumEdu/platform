@@ -370,6 +370,14 @@ def emit_nightly_metrics(self):
                                               ),
                                               'user_id', user_ids, window_staff_tags)
 
+                _emit_per_entity_distribution('users.data.rotating_schedules_per_user',
+                                              CourseSchedule.objects.filter(
+                                                  course__course_group__user__in=user_ids,
+                                                  course__course_group__example_schedule=False,
+                                                  cycle_length__isnull=False,
+                                              ),
+                                              'course__course_group__user_id', user_ids, window_staff_tags)
+
                 note_qs = Note.objects.filter(
                     user__in=user_ids,
                     example_schedule=False,
@@ -441,6 +449,11 @@ def emit_nightly_metrics(self):
                     ('class_schedules', Exists(CourseSchedule.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
+                    ))),
+                    ('rotating_schedules', Exists(CourseSchedule.objects.filter(
+                        course__course_group__user=OuterRef('pk'),
+                        course__course_group__example_schedule=False,
+                        cycle_length__isnull=False,
                     ))),
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),

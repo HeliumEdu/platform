@@ -29,6 +29,14 @@ def given_course_schedule_exists(course, days_of_week='0101010',
     return course_schedule
 
 
+def given_cycle_schedule_exists(course, cycle_length=2, anchor_date=datetime.date(2017, 1, 6), cycle_slots=None):
+    if cycle_slots is None:
+        cycle_slots = [{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}]
+
+    return CourseSchedule.objects.create(course=course, cycle_length=cycle_length, anchor_date=anchor_date,
+                                         cycle_slots=cycle_slots)
+
+
 def verify_course_schedule_matches(test_case, schedule, data):
     test_case.assertEqual(schedule.days_of_week, data['days_of_week'])
     test_case.assertEqual(schedule.sun_start_time, parser.parse(data['sun_start_time']).time())

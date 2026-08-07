@@ -56,10 +56,30 @@ class CourseSchedule(BaseModel):
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
                                related_name='schedules', on_delete=models.CASCADE)
 
+    cycle_length = models.PositiveSmallIntegerField(
+        help_text='For a rotating/A-B/block schedule, the number of school days in one cycle (2 for A/B). '
+                  'Null for an ordinary weekly schedule, in which case `days_of_week` and the per-weekday '
+                  'time fields apply instead.',
+        blank=True, null=True)
+
+    anchor_date = models.DateField(
+        help_text='The calendar date that is cycle "Day 1". Required when `cycle_length` is set, otherwise null.',
+        blank=True, null=True)
+
+    cycle_slots = models.JSONField(
+        help_text='For a cycle schedule, a list of `{"indices": [<1-based cycle-day indices sharing a time>], '
+                  '"start_time": "HH:MM:SS", "end_time": "HH:MM:SS"}` objects — the variable-length analogue of the '
+                  'per-weekday time fields. Null for a weekly schedule.',
+        blank=True, null=True)
+
     objects = CourseScheduleManager()
 
     class Meta:
         verbose_name = 'Class schedule'
+
+    @property
+    def is_cycle(self):
+        return self.cycle_length is not None
 
     def clean(self):
         super().clean()

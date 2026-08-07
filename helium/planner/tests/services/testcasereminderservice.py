@@ -547,6 +547,27 @@ class TestCaseReminderService(TestCase):
         expected_start_of_range = datetime.datetime(2026, 3, 25, 8, 30, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
 
+    @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_resolves_cycle_day(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 3, 8, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        courseschedulehelper.given_cycle_schedule_exists(
+            course, cycle_length=2, anchor_date=datetime.date(2026, 3, 2),
+            cycle_slots=[{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN - "now" is Tue 03-03 (Day 2, no meeting); the next Day 1 meeting is Wed 03-04 at 09:00
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 4, 9, 0, 0, tzinfo=datetime.timezone.utc))
+
     def test_create_next_repeating_reminder_no_future_occurrence(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
