@@ -20,7 +20,7 @@ from helium.auth.tasks import (
     evaluate_review_prompts, delete_user, process_dormant_users, send_dormant_user_warning_email
 )
 from helium.auth.tests.helpers import userhelper
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
 class TestCaseTasks(APITestCase):
@@ -166,6 +166,42 @@ class TestCaseTasks(APITestCase):
         # THEN
         active_user_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.active']
         self.assertEqual(len(active_user_calls), 10)  # 5 time windows × staff/non-staff
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_emits_class_schedules_adoption(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.class_schedules.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_excludes_example_schedule_from_class_schedules_adoption(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course_group.example_schedule = True
+        course_group.save()
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.class_schedules.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
 
     def _setup_review_prompt_candidate(self, username='test_user', email='user@test.com'):
         user = userhelper.given_a_user_exists(username=username, email=email)
