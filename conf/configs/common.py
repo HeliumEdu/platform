@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.82"
+__version__ = "2.2.83"
 
 import json
 import os
@@ -267,7 +267,8 @@ SIMPLE_JWT = {
     'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
     'TOKEN_BLACKLIST_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenBlacklistSerializer',
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True
+    'BLACKLIST_AFTER_ROTATION': True,
+    'CHECK_REVOKE_TOKEN': True,
 }
 
 # API tokens are distinct from the short-lived JWT access token; managed via knox.

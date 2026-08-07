@@ -6,6 +6,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from knox.models import AuthToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models.userpushtoken import UserPushToken
 
@@ -44,6 +45,20 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
 
     user.access = response.data['access']
     user.refresh = response.data['refresh']
+
+    return user
+
+
+def reauthenticate(client, user):
+    """Re-issue a JWT for the user's current password state and set it on the client. Needed after a
+    test mutates the password directly (e.g. set_unusable_password), which rotates the revocation
+    claim and invalidates any previously-issued token once CHECK_REVOKE_TOKEN is enabled."""
+    token = RefreshToken.for_user(user)
+
+    client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(token.access_token))
+
+    user.access = str(token.access_token)
+    user.refresh = str(token)
 
     return user
 
