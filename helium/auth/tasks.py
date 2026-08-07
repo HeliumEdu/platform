@@ -23,7 +23,8 @@ from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
-from helium.planner.models import Attachment, Category, Course, CourseGroup, Event, Homework, Material, Note, Reminder
+from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
+    Material, Note, Reminder
 
 logger = logging.getLogger(__name__)
 
@@ -437,6 +438,10 @@ def emit_nightly_metrics(self):
                                               window_staff_tags)
 
                 for adoption_metric, adoption_filter in [
+                    ('class_schedules', Exists(CourseSchedule.objects.filter(
+                        course__course_group__user=OuterRef('pk'),
+                        course__course_group__example_schedule=False,
+                    ))),
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
