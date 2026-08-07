@@ -239,4 +239,31 @@ class TestCaseCourseScheduleService(TestCase):
         # THEN
         self.assertEqual(len(groups), 1)
         self.assertEqual(groups[0].exception_dates,
-                         [datetime.datetime(2026, 4, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)])
+                         [datetime.datetime(2026, 4, 1, 9, 0, 0, tzinfo=datetime.timezone.utc)])
+
+    def test_course_schedule_to_recurrence_groups_exception_shares_utc_date_with_occurrence_in_positive_offset_tz(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Asia/Kolkata'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course.exceptions = '20260401'
+        course.save()
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        # 09:00 IST (UTC+5:30) is 03:30Z on the same calendar day; anchoring the exception at the
+        # slot start (not midnight, which would land on 2026-03-31 in UTC) keeps its UTC date aligned
+        # with the occurrence it must cancel.
+        self.assertEqual(groups[0].exception_dates,
+                         [datetime.datetime(2026, 4, 1, 3, 30, 0, tzinfo=datetime.timezone.utc)])
+        # Occurrences all share the slot's UTC time-of-day, so an exception at that same time-of-day
+        # lands on the same UTC date as the occurrence it cancels.
+        self.assertEqual(groups[0].exception_dates[0].timetz(), groups[0].start.timetz())
