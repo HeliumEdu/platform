@@ -57,7 +57,12 @@ class CourseSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(CourseScheduleSerializer(many=True))
     def get_schedules(self, obj):
-        schedules = get_gated_schedules(obj.schedules.order_by('id'), self.context.get('request'))
+        schedules = list(get_gated_schedules(obj.schedules.order_by('id'), self.context.get('request')))
+
+        # These schedules belong to `obj`, so hand each its already-loaded parent course rather than
+        # letting `recurrence_groups` re-fetch course/course group/owner settings per schedule.
+        for schedule in schedules:
+            schedule.course = obj
 
         return CourseScheduleSerializer(schedules, many=True, context=self.context).data
 

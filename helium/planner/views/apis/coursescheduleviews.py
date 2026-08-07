@@ -28,7 +28,8 @@ class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return CourseSchedule.objects.for_user(user.pk)
+            return CourseSchedule.objects.for_user(user.pk).select_related(
+                'course__course_group__user__settings')
         else:
             return CourseSchedule.objects.none()
 
@@ -64,7 +65,8 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related(
+                'course__course_group__user__settings')
         else:
             return CourseSchedule.objects.none()
 

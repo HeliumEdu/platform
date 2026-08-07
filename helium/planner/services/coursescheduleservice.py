@@ -13,7 +13,7 @@ from django.core.cache import cache
 
 from helium.common import enums
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import HeliumError, deterministic_id, local_midnight_as_utc
+from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.common.utils.validators import WEEKDAY_TO_ICAL
 from helium.planner.models import Event
@@ -304,9 +304,8 @@ def course_schedule_to_recurrence_groups(course, course_schedule):
     """
     groups = []
 
-    exceptions = get_course_exceptions(course)
+    exceptions = sorted(get_course_exceptions(course))
     user_tz = ZoneInfo(course.get_user().settings.time_zone)
-    exception_dates = [local_midnight_as_utc(exception, user_tz) for exception in sorted(exceptions)]
 
     for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
         first_occurrence = _find_first_occurrence(course.start_date, weekdays)
@@ -319,6 +318,11 @@ def course_schedule_to_recurrence_groups(course, course_schedule):
             tzinfo=user_tz).astimezone(datetime.timezone.utc)
         until = datetime.datetime.combine(course.end_date, datetime.time(23, 59, 59), tzinfo=user_tz) \
             .astimezone(datetime.timezone.utc)
+
+        exception_dates = [
+            datetime.datetime.combine(exception, start_time).replace(tzinfo=user_tz).astimezone(datetime.timezone.utc)
+            for exception in exceptions
+        ]
 
         byday = ','.join(WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
         recurrence_rule = f'FREQ=WEEKLY;BYDAY={byday};UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}'
