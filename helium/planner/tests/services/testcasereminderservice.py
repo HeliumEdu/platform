@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.planner.models import Reminder
+from helium.planner.models import CourseSchedule, Reminder
 from helium.planner.services import reminderservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper, reminderhelper
 
@@ -107,7 +107,7 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.process_push_reminders()
 
-        # THEN — event, homework, and course all pushed
+        # THEN
         self.assertEqual(mock_send_notifications.call_count, 3)
         reminder1.refresh_from_db()
         reminder2.refresh_from_db()
@@ -175,7 +175,7 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(reminder.sent)
 
     def test_heal_orphaned_repeating_reminders_creates_successor(self):
-        # GIVEN: a sent repeating course reminder with no unsent successor (orphaned series)
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -200,12 +200,12 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: next occurrence is created, original remains unchanged
+        # THEN
         self.assertEqual(Reminder.objects.count(), 2)
         self.assertTrue(Reminder.objects.filter(sent=False, course=course).exists())
 
     def test_heal_orphaned_repeating_reminders_skips_healthy_series(self):
-        # GIVEN: a sent repeating reminder that already has an unsent successor (healthy series)
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -238,12 +238,11 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: no new reminders created, healthy series left untouched
+        # THEN
         self.assertEqual(Reminder.objects.count(), 2)
 
     def test_heal_orphaned_repeating_reminders_deletes_stale_and_creates_successor(self):
-        # GIVEN: an unsent reminder whose start_of_range is past the send window (Celery was down
-        # during the class; nothing was ever sent or dismissed).
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -266,13 +265,13 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.heal_orphaned_repeating_reminders()
 
-        # THEN: stale reminder is deleted and a new occurrence is created for the next class.
+        # THEN
         self.assertEqual(Reminder.objects.filter(dismissed=False, sent=False).count(), 1)
         self.assertEqual(Reminder.objects.count(), 1)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_process_email_reminders_course_creates_next(self, mock_send_multipart_email):
-        # GIVEN: a course email reminder in the send window (repeating)
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -300,15 +299,14 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.process_email_reminders()
 
-        # THEN: original is marked sent; a new pending reminder for the next class is created
+        # THEN
         self.assertEqual(Reminder.objects.filter(sent=True).count(), 1)
         self.assertEqual(Reminder.objects.filter(sent=False, course=course).count(), 1)
         self.assertEqual(Reminder.objects.count(), 2)
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_auto_deletes_excess_past(self, mock_send_notifications):
-        # GIVEN: a course push reminder in the send window plus an existing sent+undismissed
-        # past reminder for the same series (the user hasn't dismissed it yet).
+        # GIVEN
         user = userhelper.given_a_user_exists()
         userhelper.given_user_push_token_exists(user)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -344,8 +342,7 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.process_push_reminders()
 
-        # THEN: old past is deleted; pending fires and becomes the new past; next occurrence queued.
-        # Exactly 2 reminders: 1 sent (just fired) + 1 pending (next class).
+        # THEN
         self.assertEqual(Reminder.objects.count(), 2)
         self.assertEqual(Reminder.objects.filter(sent=True, dismissed=False, course=course).count(), 1)
         self.assertEqual(Reminder.objects.filter(sent=False, dismissed=False, course=course).count(), 1)
@@ -354,9 +351,7 @@ class TestCaseReminderService(TestCase):
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_auto_deletes_past_with_different_offset(self, mock_send_notifications):
-        # GIVEN: a course push reminder fires for the same class after the user edited the offset
-        # (e.g. 10 min → 9 min). The previously-sent reminder has offset=10; the re-queued pending
-        # reminder has offset=9. The old reminder must be cleaned up even though the offset differs.
+        # GIVEN
         user = userhelper.given_a_user_exists()
         userhelper.given_user_push_token_exists(user)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -392,8 +387,7 @@ class TestCaseReminderService(TestCase):
         # WHEN
         reminderservice.process_push_reminders()
 
-        # THEN: old past (offset=10) is deleted despite having a different offset; pending (offset=9)
-        # fires and becomes the new past; next occurrence queued. Exactly 2 reminders remain.
+        # THEN
         self.assertEqual(Reminder.objects.count(), 2)
         self.assertEqual(Reminder.objects.filter(sent=True, dismissed=False, course=course).count(), 1)
         self.assertEqual(Reminder.objects.filter(sent=False, dismissed=False, course=course).count(), 1)
@@ -439,7 +433,7 @@ class TestCaseReminderService(TestCase):
         self.assertIsNone(result)
 
     def test_create_next_repeating_reminder_creates_next_occurrence(self):
-        # GIVEN: an existing sent reminder for a MWF course. After it fires we create the next one.
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -457,7 +451,7 @@ class TestCaseReminderService(TestCase):
         # WHEN
         new_reminder = reminderservice.create_next_repeating_reminder(reminder)
 
-        # THEN: a new pending reminder is created with settings copied from the original
+        # THEN
         self.assertIsNotNone(new_reminder)
         self.assertEqual(Reminder.objects.count(), 2)
         self.assertEqual(new_reminder.course, course)
@@ -475,10 +469,7 @@ class TestCaseReminderService(TestCase):
 
     @mock.patch('django.utils.timezone.now')
     def test_create_next_repeating_reminder_targets_next_class_not_current(self, mock_now):
-        # GIVEN: a course reminder that fired for Monday's class (10:00 AM UTC, offset 30 min).
-        # The fired reminder's start_of_range = 09:30 Monday; class_start = 10:00 Monday.
-        # create_next_repeating_reminder must use after_datetime=class_start so it skips Monday
-        # and targets Wednesday, regardless of when exactly the function is called.
+        # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 30, 10, 0, 0, tzinfo=datetime.timezone.utc)
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'UTC'
@@ -509,9 +500,51 @@ class TestCaseReminderService(TestCase):
         # WHEN
         new_reminder = reminderservice.create_next_repeating_reminder(reminder)
 
-        # THEN: next reminder targets Wednesday 2026-04-01 (class at 10:00, start_of_range = 09:30)
+        # THEN
         self.assertIsNotNone(new_reminder)
         expected_start_of_range = datetime.datetime(2026, 4, 1, 9, 30, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_create_next_repeating_reminder_uses_soonest_of_multiple_schedules_same_day(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 4, 8, 8, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2026, 3, 23),
+            end_date=datetime.date(2026, 4, 30)
+        )
+        # `CourseSchedule.course` enforces unique=True, so a second schedule can't be persisted
+        # for the same course — build it in memory and patch the queryset to simulate it.
+        later_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000', wed_start_time=datetime.time(14, 0, 0))
+        earlier_schedule = CourseSchedule(course=course, days_of_week='0001000',
+                                          wed_start_time=datetime.time(9, 0, 0))
+
+        # A reminder that fired just after midnight on Wednesday 2026-03-25, so both the 09:00
+        # and 14:00 occurrences later that same day still qualify as "next".
+        reminder = Reminder(
+            title='Test', message='Test',
+            start_of_range=datetime.datetime(2026, 3, 24, 23, 30, 0, tzinfo=datetime.timezone.utc),
+            offset=30, offset_type=enums.MINUTES,
+            type=enums.PUSH, sent=True, dismissed=False,
+            course=course, user=user,
+        )
+        Reminder.objects.bulk_create([reminder])
+        reminder = Reminder.objects.get(course=course)
+
+        # WHEN
+        with mock.patch.object(type(course.schedules), 'all', return_value=[later_schedule, earlier_schedule]):
+            new_reminder = reminderservice.create_next_repeating_reminder(reminder)
+
+        # THEN
+        self.assertIsNotNone(new_reminder)
+        expected_start_of_range = datetime.datetime(2026, 3, 25, 8, 30, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
 
     def test_create_next_repeating_reminder_no_future_occurrence(self):

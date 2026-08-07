@@ -302,7 +302,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         # WHEN
         icalexternalcalendarservice.reindex_stale_feed_caches()
 
-        # THEN - cache should be refreshed with new data
+        # THEN
         cached_data = cache.get(cache_key)
         self.assertIsNotNone(cached_data)
         self.assertNotEqual(cached_data, '[]')
@@ -325,7 +325,7 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         # WHEN
         icalexternalcalendarservice.reindex_stale_feed_caches()
 
-        # THEN - cache should be preserved (not deleted)
+        # THEN
         cached_data = cache.get(cache_key)
         self.assertEqual(cached_data, '[{"id": 1, "title": "Cached Event"}]')
 

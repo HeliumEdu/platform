@@ -9,20 +9,28 @@ from rest_framework import serializers
 
 from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.models import Course, CourseGroup
-from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer, get_gated_schedules
 
 logger = logging.getLogger(__name__)
 
 
 class CourseSerializer(serializers.ModelSerializer):
     """
-    A single class within a class group. One Course has at most one
-    CourseSchedule, which supports per-day start/end times. See "Common
-    pitfalls" in the API description for when sections of the same class
-    should be modeled as separate Courses.
+    A single class within a class group. A Course may have more than one
+    CourseSchedule (e.g. a lecture plus a lab), each of which supports
+    per-day start/end times. See "Common pitfalls" in the API description
+    for when sections of the same class should be modeled as separate
+    Courses.
+
+    `schedules` reflects the requesting client's `X-Client-Version`: `3.8.0`
+    and higher receive every schedule for the course; below that (or with
+    the header absent/malformed) only the single, earliest-created schedule
+    is returned, for compatibility with clients whose UI assumes one
+    schedule per course. Each schedule's `recurrence_groups` carries the
+    pre-computed, renderable form of that schedule (see `CourseScheduleSerializer`).
     """
 
-    schedules = CourseScheduleSerializer(many=True, required=False, read_only=True)
+    schedules = serializers.SerializerMethodField()
     teacher_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True, default='')
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
@@ -46,6 +54,17 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = (
             'course_group', 'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
+
+    @extend_schema_field(CourseScheduleSerializer(many=True))
+    def get_schedules(self, obj):
+        schedules = list(get_gated_schedules(obj.schedules.order_by('id'), self.context.get('request')))
+
+        # These schedules belong to `obj`, so hand each its already-loaded parent course rather than
+        # letting `recurrence_groups` re-fetch course/course group/owner settings per schedule.
+        for schedule in schedules:
+            schedule.course = obj
+
+        return CourseScheduleSerializer(schedules, many=True, context=self.context).data
 
     def get_num_homework(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0

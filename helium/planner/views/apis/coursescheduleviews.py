@@ -12,7 +12,7 @@ from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import CourseScheduleFilter
 from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
-from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer, get_gated_schedules
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +28,26 @@ class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return CourseSchedule.objects.for_user(user.pk)
+            return CourseSchedule.objects.for_user(user.pk).select_related(
+                'course__course_group__user__settings')
         else:
             return CourseSchedule.objects.none()
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset).order_by('id')
+
+        return get_gated_schedules(queryset, self.request)
 
     @extend_schema(summary='List all CourseSchedules for the User')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course schedule instances for the authenticated user.
+
+        A course may have more than one schedule. Clients sending an
+        `X-Client-Version` header of `3.8.0` or higher receive every
+        schedule for each course; clients below that version (or that omit
+        the header) only ever receive the single, earliest-created schedule
+        per course.
         """
         response = self.list(request, *args, **kwargs)
 
@@ -53,7 +65,8 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course'])
+            return CourseSchedule.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related(
+                'course__course_group__user__settings')
         else:
             return CourseSchedule.objects.none()
 
@@ -62,10 +75,20 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         context['request'] = self.request
         return context
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset).order_by('id')
+
+        return get_gated_schedules(queryset, self.request)
+
     @extend_schema(summary='List CourseSchedules for a Course')
     def get(self, request, *args, **kwargs):
         """
         Return a list of all course schedule instances for the given course.
+
+        Clients sending an `X-Client-Version` header of `3.8.0` or higher
+        receive every schedule for the course; clients below that version
+        (or that omit the header) only ever receive the single, earliest-
+        created schedule.
         """
         response = self.list(request, *args, **kwargs)
 
@@ -137,8 +160,11 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
     )
     def post(self, request, *args, **kwargs):
         """
-        Create the course schedule for the given course. A course has at most one schedule — submitting to a course
-        that already has one returns a 400.
+        Create a course schedule for the given course.
+
+        Clients sending an `X-Client-Version` header of `3.8.0` or higher may create more than one schedule per
+        course (e.g. a lecture plus a lab). Clients below that version (or that omit the header) are held to
+        today's single-schedule contract — submitting to a course that already has a schedule returns a 400.
 
         `days_of_week` is a string of seven `0`/`1` characters starting Sunday (e.g. `0101010` for Mon/Wed/Fri).
         Each day has its own `<day>_start_time` / `<day>_end_time` pair; for each day the start must be

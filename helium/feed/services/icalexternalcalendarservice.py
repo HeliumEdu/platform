@@ -37,7 +37,7 @@ from rest_framework import status
 
 from helium.common import enums
 from helium.common.utils import metricutils
-from helium.common.utils.commonutils import HeliumError
+from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.validators import infer_byday_for_weekly_rrule, validate_recurrence_rule
 from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
@@ -212,12 +212,13 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             if str(component.get("STATUS") or "").upper() == "CANCELLED":
                 continue
 
+            uid = component.get("UID")
+
             rrule_component = component.get("RRULE")
             recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
             exception_dates = _extract_exception_dates(component)
 
             if recurrence_rule:
-                uid = component.get("UID")
                 override_dates = recurrence_id_overrides.get(str(uid), []) if uid else []
                 if override_dates:
                     merged = list(exception_dates or [])
@@ -266,7 +267,11 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             if not summary:
                 continue
 
-            event = Event(id=len(events),
+            # RFC 5545 requires UID, but real-world feeds aren't always compliant, so
+            # fall back to title-based identity for the (rare) VEVENT missing one.
+            identity = str(uid) if uid else summary
+
+            event = Event(id=deterministic_id(external_calendar.pk, identity, dt_start.isoformat()),
                           title=summary,
                           all_day=all_day,
                           show_end_time=show_end_time,
@@ -293,7 +298,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             # as independent events.
             duration = dt_end - dt_start
             for extra_start in _extract_extra_dates(component, time_zone):
-                extra_event = Event(id=len(events),
+                extra_event = Event(id=deterministic_id(external_calendar.pk, identity, extra_start.isoformat()),
                                     title=summary,
                                     all_day=all_day,
                                     show_end_time=show_end_time,

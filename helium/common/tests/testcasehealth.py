@@ -8,7 +8,7 @@ from django.test import TestCase
 from helium.common.health import IdentifiedCeleryBeatHealthCheck
 
 
-class TestCaseHealthEndpoint(TestCase):
+class TestCaseHealth(TestCase):
     def test_status_endpoint_returns_success(self):
         # GIVEN/WHEN
         response = self.client.get('/status/core/')
@@ -16,8 +16,6 @@ class TestCaseHealthEndpoint(TestCase):
         # THEN
         self.assertIn(response.status_code, [200, 500])
 
-
-class TestCaseHealth(TestCase):
     @mock.patch('helium.common.health.TaskResult.objects.filter')
     def test_celery_beat_check_status_healthy(self, mock_filter):
         # GIVEN

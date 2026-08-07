@@ -166,7 +166,7 @@ class TestCaseUserSettingsViews(APITestCase):
                          datetime.date(2026, 5, 8))
 
     def test_timezone_change_rebases_la_to_chicago(self):
-        # GIVEN: mirrored bug case (the screenshot showing Project 2 spanning Fri+Sat)
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Los_Angeles'
         user.settings.save()
@@ -189,7 +189,7 @@ class TestCaseUserSettingsViews(APITestCase):
                          datetime.date(2026, 5, 9))
 
     def test_timezone_change_rebases_multi_day_all_day_event(self):
-        # GIVEN: "Parents Weekend" Oct 31 to Nov 3 in Chicago
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
         user.settings.save()
@@ -213,8 +213,7 @@ class TestCaseUserSettingsViews(APITestCase):
                          datetime.date(2025, 11, 3))
 
     def test_timezone_change_leaves_non_all_day_event_alone(self):
-        # GIVEN: a 1pm meeting in Chicago should remain at the same UTC instant after tz change
-        # (semantically: "same physical moment, displayed in your new local clock")
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
         user.settings.save()
@@ -268,7 +267,7 @@ class TestCaseUserSettingsViews(APITestCase):
             end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
         )
 
-        # WHEN: PUT the same timezone the user already has
+        # WHEN
         response = _put_time_zone(self.client, 'America/Chicago')
 
         # THEN
@@ -278,7 +277,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     @mock.patch('helium.auth.views.apis.usersettingsviews.taskutils.safe_apply_async')
     def test_timezone_change_queues_reminder_recomputation(self, mock_safe_apply_async):
-        # GIVEN: an all-day event with a reminder attached
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
         user.settings.save()

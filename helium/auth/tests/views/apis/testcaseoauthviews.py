@@ -22,7 +22,6 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_google(self, mock_verify_token, mock_import_schedule):
-        """Test that Google OAuth login creates a new user and returns tokens."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-user-123',
@@ -68,7 +67,6 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_apple(self, mock_verify_token, mock_import_schedule):
-        """Test that Apple OAuth login creates a new user and returns tokens."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'apple-user-123',
@@ -101,7 +99,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_existing_user(self, mock_verify_token):
-        """Test that OAuth login logs in an existing user."""
         # GIVEN
         existing_user = userhelper.given_a_user_exists(
             username='existing_user',
@@ -135,9 +132,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_fails_when_user_pending_deletion(self, mock_verify_token):
-        """A pending-delete user is invisible to the UID and email lookups, so OAuth falls
-        through to the create branch and collides on the reserved email — surfacing as a clean
-        ValidationError rather than a 500 from the FK race."""
         # GIVEN
         existing_user = userhelper.given_a_user_exists(
             username='existing_user',
@@ -164,7 +158,7 @@ class TestCaseOAuthViews(APITestCase):
             content_type='application/json',
         )
 
-        # THEN: conflict error surfaced, existing row is untouched, no duplicate created
+        # THEN
         self.assertContains(response, 'Registration failed due to a conflict',
                             status_code=status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.filter(email='existing@gmail.com').count(), 1)
@@ -172,7 +166,6 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_username_collision_handling(self, mock_verify_token, mock_import_schedule):
-        """Test that username collisions are handled correctly."""
         # GIVEN
         userhelper.given_a_user_exists(username='testuser', email='other@example.com')
 
@@ -200,7 +193,6 @@ class TestCaseOAuthViews(APITestCase):
         self.assertTrue(new_user.username.startswith('testuser'))
 
     def test_oauth_login_missing_id_token(self):
-        """Test that missing id_token returns error."""
         # WHEN
         data = {'provider': 'google'}
         response = self.client.post(
@@ -214,7 +206,6 @@ class TestCaseOAuthViews(APITestCase):
         self.assertIn('id_token', str(response.data))
 
     def test_oauth_login_missing_provider(self):
-        """Test that missing provider returns error."""
         # WHEN
         data = {'id_token': 'valid-token'}
         response = self.client.post(
@@ -228,7 +219,6 @@ class TestCaseOAuthViews(APITestCase):
         self.assertIn('provider', str(response.data))
 
     def test_oauth_login_invalid_provider(self):
-        """Test that invalid provider returns error."""
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'facebook'}
         response = self.client.post(
@@ -243,7 +233,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_invalid_token(self, mock_verify_token):
-        """Test that invalid Firebase ID token returns error."""
         # GIVEN
         mock_verify_token.side_effect = firebase_auth.InvalidIdTokenError('Invalid token')
 
@@ -261,7 +250,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_expired_token(self, mock_verify_token):
-        """Test that expired Firebase ID token returns error."""
         # GIVEN
         mock_verify_token.side_effect = firebase_auth.ExpiredIdTokenError(
             'Token expired',
@@ -282,7 +270,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_email_not_verified(self, mock_verify_token):
-        """Test that unverified email returns error."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-user-999',
@@ -307,7 +294,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_no_email_in_token(self, mock_verify_token):
-        """Test that missing email in token returns error."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-user-000',
@@ -329,7 +315,6 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_user_has_no_usable_password(self, mock_verify_token, mock_import_schedule):
-        """Test that users created via OAuth cannot use password login."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-user-pass-test',
@@ -361,7 +346,6 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_multiple_times_same_user(self, mock_verify_token, mock_import_schedule):
-        """Test that logging in multiple times with same account works."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-user-repeat',
@@ -398,7 +382,6 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_updates_provider_last_used(self, mock_verify_token):
-        """Test that subsequent logins update the OAuth provider's last_used_at."""
         # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-uid-456',
@@ -418,7 +401,7 @@ class TestCaseOAuthViews(APITestCase):
         oauth_provider = UserOAuthProvider.objects.get(user=user, provider='google')
         first_last_used = oauth_provider.last_used_at
 
-        # WHEN - login again
+        # WHEN
         response = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
@@ -437,8 +420,7 @@ class TestCaseOAuthViews(APITestCase):
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_user_can_have_multiple_oauth_providers(self, mock_verify_token, mock_import_schedule):
-        """Test that a user can link both Google and Apple OAuth providers."""
-        # GIVEN - user logs in with Google first
+        # GIVEN
         mock_verify_token.return_value = {
             'uid': 'google-uid-multi',
             'email': 'multiauth@gmail.com',
@@ -455,7 +437,7 @@ class TestCaseOAuthViews(APITestCase):
 
         user = get_user_model().objects.get(email='multiauth@gmail.com')
 
-        # WHEN - same user logs in with Apple
+        # WHEN
         mock_verify_token.return_value = {
             'uid': 'apple-uid-multi',
             'email': 'multiauth@gmail.com',
@@ -486,7 +468,6 @@ class TestCaseOAuthViews(APITestCase):
         self.assertEqual(mock_import_schedule.apply_async.call_count, 1)
 
     def test_oauth_login_provider_case_insensitive(self):
-        """Test that provider field is case-insensitive."""
         # WHEN
         data = {'id_token': 'valid-token', 'provider': 'GOOGLE'}
         response = self.client.post(
@@ -495,14 +476,12 @@ class TestCaseOAuthViews(APITestCase):
             content_type='application/json'
         )
 
-        # THEN - Should fail on token validation, not provider validation
-        # This means 'GOOGLE' was accepted as a valid provider
+        # THEN
         self.assertNotIn('provider', str(response.data).lower())
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_activates_inactive_user(self, mock_verify_token):
-        """Test that OAuth login activates an existing inactive user."""
-        # GIVEN - user registered via email but hasn't verified
+        # GIVEN
         inactive_user = userhelper.given_an_inactive_user_exists(
             username='inactive_user',
             email='inactive@gmail.com'
@@ -515,7 +494,7 @@ class TestCaseOAuthViews(APITestCase):
             'email_verified': True
         }
 
-        # WHEN - user logs in via OAuth
+        # WHEN
         data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
         response = self.client.post(
             reverse('auth_token_oauth'),
@@ -523,7 +502,7 @@ class TestCaseOAuthViews(APITestCase):
             content_type='application/json'
         )
 
-        # THEN - login succeeds and user is activated
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
@@ -538,8 +517,7 @@ class TestCaseOAuthViews(APITestCase):
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_conflict_uid_linked_to_different_user(self, mock_verify_token):
-        """Test that OAuth login fails when UID is linked to a different user than email lookup finds."""
-        # GIVEN - user A with Google OAuth linked
+        # GIVEN
         user_a = userhelper.given_a_user_exists(username='user_a', email='user_a@gmail.com')
         UserOAuthProvider.objects.create(
             user=user_a,
@@ -550,8 +528,7 @@ class TestCaseOAuthViews(APITestCase):
         # AND - user B with a different email (no OAuth)
         userhelper.given_a_user_exists(username='user_b', email='user_b@gmail.com')
 
-        # WHEN - Someone tries to login with user A's Google UID but user B's email
-        # (This shouldn't happen normally, but could indicate bad data or attack)
+        # WHEN
         mock_verify_token.return_value = {
             'uid': 'shared-google-uid',  # Linked to user_a
             'email': 'user_b@gmail.com',  # Belongs to user_b
@@ -565,18 +542,13 @@ class TestCaseOAuthViews(APITestCase):
             content_type='application/json'
         )
 
-        # THEN - Should fail with account conflict error
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn('account conflict', response.data['detail'].lower())
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_updates_uid_when_firebase_user_recreated(self, mock_verify_token):
-        """Test that OAuth login updates the provider UID when the Firebase user was recreated.
-
-        This handles the case where a user's Firebase account was deleted and recreated,
-        resulting in a new UID for the same email/provider combination.
-        """
-        # GIVEN - existing user with Google OAuth linked to old UID
+        # GIVEN
         existing_user = userhelper.given_a_user_exists(
             username='recreated_user',
             email='recreated@gmail.com'
@@ -588,7 +560,7 @@ class TestCaseOAuthViews(APITestCase):
         )
         old_last_used = old_oauth.last_used_at
 
-        # WHEN - user logs in with same email but different UID (Firebase user was recreated)
+        # WHEN
         mock_verify_token.return_value = {
             'uid': 'new-firebase-uid-456',  # Different UID
             'email': 'recreated@gmail.com',  # Same email
@@ -602,7 +574,7 @@ class TestCaseOAuthViews(APITestCase):
             content_type='application/json'
         )
 
-        # THEN - login succeeds
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
