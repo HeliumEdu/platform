@@ -81,10 +81,7 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.taskutils.safe_apply_async')
     def test_sweep_dangling_users_requeues_stuck_pending_delete(self, mock_safe_apply_async):
-        """Users stuck pending-delete beyond the 10-minute grace period are re-queued for deletion.
-        In-flight deletions (< 10 min old) are left alone so the sweep doesn't race with a running
-        Celery task. Any failure in the re-queued task propagates to Sentry via CeleryIntegration."""
-        # GIVEN: one stuck user (past grace period) and one fresh (within grace)
+        # GIVEN
         stuck = userhelper.given_a_user_exists(username='stuck', email='stuck@test.com')
         stuck.deletion_requested_at = timezone.now() - timedelta(minutes=30)
         stuck.save(update_fields=['deletion_requested_at'])
@@ -96,7 +93,7 @@ class TestCaseTasks(APITestCase):
         # WHEN
         sweep_dangling_users()
 
-        # THEN: delete_user re-queued for the stuck user only
+        # THEN
         queued_pks = [call.kwargs.get('args', [None])[0] for call in mock_safe_apply_async.call_args_list]
         self.assertIn(stuck.pk, queued_pks)
         self.assertNotIn(fresh.pk, queued_pks)
@@ -107,7 +104,7 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.taskutils.safe_apply_async')
     def test_sweep_dangling_users_does_not_requeue_in_flight_pending_delete(self, mock_safe_apply_async):
-        # GIVEN: a user with a recent pending-delete (within grace period)
+        # GIVEN
         user = userhelper.given_a_user_exists()
         user.deletion_requested_at = timezone.now() - timedelta(minutes=2)
         user.save(update_fields=['deletion_requested_at'])
@@ -115,12 +112,11 @@ class TestCaseTasks(APITestCase):
         # WHEN
         sweep_dangling_users()
 
-        # THEN: no re-queue for in-flight deletion
+        # THEN
         queued_pks = [call.kwargs.get('args', [None])[0] for call in mock_safe_apply_async.call_args_list]
         self.assertNotIn(user.pk, queued_pks)
 
     def test_verification_email_url_encodes_special_characters(self):
-        """Test that verification email properly URL-encodes email addresses with special characters like +."""
         # GIVEN
         email_with_plus = 'contact+test@example.com'
         context = {
@@ -150,13 +146,13 @@ class TestCaseTasks(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         RefreshToken(user.refresh).blacklist()
 
-        # WHEN/THEN - should not raise, just log and continue
+        # WHEN/THEN
         blacklist_refresh_token(user.refresh)
 
     def test_delete_user_not_found(self):
-        # GIVEN - user ID that doesn't exist
+        # GIVEN
 
-        # WHEN/THEN - should not raise, just log and continue
+        # WHEN/THEN
         delete_user(99999)
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
@@ -180,7 +176,7 @@ class TestCaseTasks(APITestCase):
         return user, course
 
     def test_evaluate_review_prompts_flags_user_with_sufficient_total_and_recent_completions(self):
-        # GIVEN: 7 total completed, 4 of them within the last 7 days
+        # GIVEN
         user, course = self._setup_review_prompt_candidate()
         recent_date = timezone.now() - timedelta(days=3)
         old_date = timezone.now() - timedelta(days=30)
@@ -201,7 +197,7 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(user.settings.prompt_for_review)
 
     def test_evaluate_review_prompts_does_not_flag_user_with_insufficient_recent_completions(self):
-        # GIVEN: 7 total completed but only 3 within the last 7 days
+        # GIVEN
         user, course = self._setup_review_prompt_candidate()
         recent_date = timezone.now() - timedelta(days=3)
         old_date = timezone.now() - timedelta(days=30)
@@ -222,7 +218,7 @@ class TestCaseTasks(APITestCase):
         self.assertFalse(user.settings.prompt_for_review)
 
     def test_evaluate_review_prompts_excludes_example_schedule_homework(self):
-        # GIVEN: enough completions to trigger, but all from an example schedule course group
+        # GIVEN
         user, _ = self._setup_review_prompt_candidate()
         example_course_group = coursegrouphelper.given_course_group_exists(user, title='Example')
         example_course_group.example_schedule = True
@@ -237,13 +233,13 @@ class TestCaseTasks(APITestCase):
         # WHEN
         evaluate_review_prompts()
 
-        # THEN: not flagged because all completed homework is from the example schedule
+        # THEN
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
     @override_settings(REVIEW_PROMPT_MAX_REQUESTED=1)
     def test_evaluate_review_prompts_does_not_flag_user_at_max_prompts_shown(self):
-        # GIVEN: eligible by homework count but already at max prompts shown
+        # GIVEN
         user, course = self._setup_review_prompt_candidate()
         user.settings.review_prompts_requested = 1
         user.settings.save(update_fields=['review_prompts_requested'])

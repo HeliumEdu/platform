@@ -1070,7 +1070,7 @@ class TestCaseGradingService(TestCase):
             raw_ungraded=raw_ungraded
         )
 
-        # THEN — correct shape, start order preserved, no impact_score for non-weighted
+        # THEN
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]['id'], 1)
         self.assertEqual(result[1]['id'], 2)
@@ -1081,7 +1081,7 @@ class TestCaseGradingService(TestCase):
         self.assertIsNone(result[0]['impact_score'])
 
     def test_build_ungraded_series_items_weighted_impact_score_set(self):
-        # GIVEN — two categories with different weights; verify impact_score is attached
+        # GIVEN
         start_early = datetime.datetime(2026, 5, 1, tzinfo=datetime.timezone.utc)
         start_late = datetime.datetime(2026, 5, 30, tzinfo=datetime.timezone.utc)
         categories = [
@@ -1100,7 +1100,7 @@ class TestCaseGradingService(TestCase):
             raw_ungraded=raw_ungraded
         )
 
-        # THEN — impact_score set per category; cat 20 has higher score than cat 10
+        # THEN
         item_cat10 = next(r for r in result if r['category_id'] == 10)
         item_cat20 = next(r for r in result if r['category_id'] == 20)
         self.assertIsNotNone(item_cat10['impact_score'])
@@ -1123,12 +1123,12 @@ class TestCaseGradingService(TestCase):
             raw_ungraded=raw_ungraded
         )
 
-        # THEN — poisoned entry silently skipped
+        # THEN
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['id'], 2)
 
     def test_build_homework_series_combines_graded_and_ungraded_sorted_by_start(self):
-        # GIVEN — one graded tuple and one ungraded raw item
+        # GIVEN
         graded_start = datetime.datetime(2026, 4, 1, tzinfo=datetime.timezone.utc)
         ungraded_start = datetime.datetime(2026, 5, 15, tzinfo=datetime.timezone.utc)
         grade_points = [
@@ -1147,7 +1147,7 @@ class TestCaseGradingService(TestCase):
             raw_ungraded=raw_ungraded
         )
 
-        # THEN — graded item first, ungraded second; correct shapes
+        # THEN
         self.assertEqual(len(result), 2)
         self.assertTrue(result[0]['graded'])
         self.assertEqual(result[0]['id'], 10)

@@ -13,8 +13,11 @@ def get_client_version(request):
     """
     Parse the X-Client-Version header into a (major, minor, patch) tuple.
 
-    Returns None if the header is absent or malformed.
+    Returns None if `request` is None or the header is absent or malformed.
     """
+    if request is None:
+        return None
+
     header = request.headers.get("X-Client-Version")
     if not header:
         return None

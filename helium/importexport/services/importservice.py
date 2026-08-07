@@ -21,6 +21,7 @@ from rest_framework.request import Request
 from helium.common import enums
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.commonutils import local_midnight_as_utc
+from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Reminder, \
@@ -867,7 +868,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     now = datetime.datetime.now(user_tz)
     today = now.date()
 
-    exceptions = reminder._parse_exceptions()
+    exceptions = get_course_exceptions(course)
     day = min(today, course.end_date)
     day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
@@ -878,16 +879,19 @@ def _get_most_recent_course_occurrence_start(reminder):
 
         weekday = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()]
 
-        active_schedule = next(
-            (s for s in course_schedules if s.days_of_week[weekday] == "1"),
-            None,
-        )
-        if active_schedule:
+        # Multiple schedules can share a weekday (e.g. lecture + lab) — take the latest.
+        active_schedules = [s for s in course_schedules if s.days_of_week[weekday] == "1"]
+
+        candidates = []
+        for active_schedule in active_schedules:
             start_time = getattr(active_schedule, f'{day_names[weekday]}_start_time')
             local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
             if local_start <= now:
-                return local_start.astimezone(datetime.timezone.utc)
+                candidates.append(local_start)
+
+        if candidates:
+            return max(candidates).astimezone(datetime.timezone.utc)
 
         day -= datetime.timedelta(days=1)
 

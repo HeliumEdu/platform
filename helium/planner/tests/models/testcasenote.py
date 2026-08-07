@@ -56,8 +56,6 @@ class TestCaseNote(TestCase):
         self.assertTrue(Note.objects.exists_for_user(note.pk, user1.pk))
         self.assertFalse(Note.objects.exists_for_user(note.pk, user2.pk))
 
-
-class TestCaseNoteLinks(TestCase):
     def test_note_linked_to_homework(self):
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)

@@ -433,7 +433,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(export_response.status_code, status.HTTP_200_OK)
         export_data = json.loads(export_response.content.decode('utf-8'))
 
-        # THEN: export preserves both fields
+        # THEN
         self.assertEqual(len(export_data['events']), 1)
         self.assertEqual(export_data['events'][0]['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO,WE,FR')
         self.assertEqual(
@@ -441,7 +441,7 @@ class TestCaseImportExportViews(APITestCase):
             ['2017-05-15T12:00:00Z', '2017-05-22T12:00:00Z'],
         )
 
-        # WHEN: re-import the same payload as the same user
+        # WHEN
         upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_rrule_roundtrip.json')
         try:
             with open(upload_path, 'w') as fp:
@@ -452,7 +452,7 @@ class TestCaseImportExportViews(APITestCase):
             if os.path.exists(upload_path):
                 os.remove(upload_path)
 
-        # THEN: round-trip preserves both fields on the freshly-imported Event
+        # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
         events = Event.objects.filter(user=user).order_by('pk')
         self.assertEqual(events.count(), 2)
@@ -473,6 +473,41 @@ class TestCaseImportExportViews(APITestCase):
                 'user': user.pk,
             },
         )
+
+    def test_export_import_preserves_multiple_schedules_per_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010')
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(len(export_data['course_schedules']), 2)
+
+        # WHEN
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_multi_schedule_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(import_response.data['course_schedules'], 2)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported_schedules = CourseSchedule.objects.filter(course=imported_course).order_by('pk')
+        self.assertEqual(len(imported_schedules), 2)
+        self.assertEqual({s.days_of_week for s in imported_schedules}, {'0101010', '0010100'})
 
     def test_export_import_preserves_homework_completed_at(self):
         # GIVEN a completed homework whose completion timestamp is a specific point in the past
@@ -519,7 +554,7 @@ class TestCaseImportExportViews(APITestCase):
                                                 'time_zone': 'America/Chicago'}),
                                     content_type='application/json')
 
-        # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
+        # GIVEN
         user_tz = ZoneInfo('America/Chicago')
         now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
@@ -594,7 +629,7 @@ class TestCaseImportExportViews(APITestCase):
         # WHEN
         response = self.client.post(reverse('importexport_import_exampleschedule'))
 
-        # GIVEN: compute anchor relative to user's local timezone (matches _adjust_schedule_relative_to)
+        # GIVEN
         user_tz = ZoneInfo('America/Los_Angeles')
         now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
@@ -980,7 +1015,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertTrue(user.settings.show_getting_started)
 
     def test_reimport_exampleschedule_after_dismiss_all_does_not_touch_prior_import(self):
-        """Re-importing must not touch a prior import's data or reset a dismissed reminder's `sent`."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         first_response = self.client.post(reverse('importexport_import_exampleschedule'))
@@ -1057,8 +1091,6 @@ class TestCaseImportExportViews(APITestCase):
                 first_reminder_snapshot[reminder.pk])
 
     def test_reimport_exampleschedule_after_dismiss_all_succeeds_and_adds_second_group(self):
-        """Re-importing the example schedule after dismissing all reminders from the first import
-        succeeds with no server error, and results in a second, independent CourseGroup."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         first_response = self.client.post(reverse('importexport_import_exampleschedule'))
@@ -1083,7 +1115,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertTrue(CourseGroup.objects.exclude(pk=first_course_group.pk).exists())
 
     def test_import_legacy_notes_converted_to_quill(self):
-        """Test that importing legacy HTML comments/details converts them to Quill JSON notes."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -1213,7 +1244,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Note.objects.filter(user=user).count(), 3)
 
     def test_import_notes_with_direct_entity_links(self):
-        """Test importing notes with direct M2M links to entities (new format)."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -1413,7 +1443,7 @@ class TestCaseImportExportViews(APITestCase):
                 return self.client.post(reverse('importexport_import'), {'file[]': [fp]})
 
     def test_import_note_invalid_payload_rejects_whole_import(self):
-        # GIVEN: a note linked to both a homework AND an event (mutually exclusive)
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['events'] = [{
@@ -1434,7 +1464,7 @@ class TestCaseImportExportViews(APITestCase):
         # WHEN
         response = self._post_import(payload)
 
-        # THEN: 400 and nothing landed (atomic rollback)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
@@ -1443,7 +1473,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Note.objects.count(), 0)
 
     def test_import_unresolved_course_group_returns_400_not_500(self):
-        # GIVEN: a course referencing a course_group id that doesn't appear in the file
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['courses'][0]['course_group'] = 999  # not in the file
@@ -1458,7 +1488,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 0)
 
     def test_import_unresolved_course_on_category_returns_400_not_500(self):
-        # GIVEN: a category referencing a course id that doesn't appear in the file
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['categories'][0]['course'] = 999
@@ -1510,7 +1540,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIn('Duplicate id', str(response.data['courses']))
 
     def test_import_non_integer_id_rejected(self):
-        # GIVEN: an id that is neither an int nor a coercible string-int
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['courses'][0]['id'] = {'oops': 'not-an-id'}
@@ -1524,7 +1554,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIn('not a valid id', str(response.data['courses']))
 
     def test_import_string_int_id_coerced(self):
-        # GIVEN: ids supplied as strings should be coerced
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['course_groups'][0]['id'] = '1'
@@ -1567,7 +1597,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Material.objects.count(), 0)
 
     def test_import_top_level_resources_alias_succeeds(self):
-        # GIVEN: top-level `resources` instead of `materials`
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['resources'] = payload.pop('materials')
@@ -1580,7 +1610,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Material.objects.count(), 1)
 
     def test_import_top_level_materials_alias_succeeds(self):
-        # GIVEN: top-level `materials` alias (export shape)
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
 
@@ -1592,7 +1622,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Material.objects.count(), 1)
 
     def test_import_note_both_resources_and_materials_rejected(self):
-        # GIVEN: a Note with both `resources` and `materials` keys
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['notes'] = [{
@@ -1609,7 +1639,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Note.objects.count(), 0)
 
     def test_import_note_materials_alias_succeeds(self):
-        # GIVEN: a Note using `materials` alias
+        # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
         payload['notes'] = [{

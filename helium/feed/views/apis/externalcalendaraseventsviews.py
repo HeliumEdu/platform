@@ -44,8 +44,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         Return all external calendar events the user has shown on their calendar, flattened across every
         subscribed external calendar.
 
-        The `id` on each event is sequential within this response only — not stable across requests, and not
-        an `Event` primary key. Do not persist these IDs client-side.
+        The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
+        across requests, but it is not an `Event` primary key.
 
         Side effect: if a subscribed external calendar fails to fetch or parse periodically, it is auto-disabled
         (`shown_on_calendar` flipped to `false`). PATCH it back to `true` once the upstream feed is fixed.
@@ -76,10 +76,6 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
                 external_calendar.save()
                 logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
-        # Re-assign sequential IDs to ensure uniqueness across all calendars.
-        for i, event in enumerate(events):
-            event.id = i
-
         serializer = self.get_serializer(events, many=True)
 
         return Response(serializer.data)
@@ -109,8 +105,8 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         """
         Return the events from a single subscribed external calendar's iCal feed.
 
-        The `id` on each event is sequential within this response only — not stable across requests, and not
-        an `Event` primary key. Do not persist these IDs client-side.
+        The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
+        across requests, but it is not an `Event` primary key.
 
         If the upstream iCal fetch fails or the feed cannot be parsed, the request fails AND, as a side
         effect, the external calendar is auto-disabled (`shown_on_calendar` flipped to `false`). PATCH it

@@ -2,10 +2,12 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import datetime
+from unittest import mock
 
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.planner.models import CourseSchedule
 from helium.planner.services import coursescheduleservice
 from helium.planner.services.coursescheduleservice import HeliumCourseScheduleError
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
@@ -100,6 +102,35 @@ class TestCaseCourseScheduleService(TestCase):
         self.assertIsNotNone(day_0)
         self.assertIsNone(day_1)
 
+    def test_course_schedules_to_events_includes_every_schedule_active_same_day(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date(2026, 3, 25),
+            end_date=datetime.date(2026, 3, 25)
+        )
+        # `CourseSchedule.course` enforces unique=True, so a second schedule can't be persisted
+        # for the same course — build it in memory and pass both via a stub queryset.
+        schedule_a = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+        schedule_b = CourseSchedule(course=course, days_of_week='0001000',
+                                    wed_start_time=datetime.time(14, 0, 0), wed_end_time=datetime.time(14, 50, 0))
+        course_schedules = mock.MagicMock()
+        course_schedules.all.return_value = [schedule_a, schedule_b]
+
+        # WHEN
+        events = coursescheduleservice.course_schedules_to_events(course, course_schedules)
+
+        # THEN
+        self.assertEqual(len(events), 2)
+        self.assertEqual({event.start.time() for event in events},
+                         {datetime.time(9, 0, 0), datetime.time(14, 0, 0)})
+
     def test_get_comments(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -119,3 +150,120 @@ class TestCaseCourseScheduleService(TestCase):
         self.assertEqual(comments1, '<a href="http://mycourse.com">🧪 Test Course</a> in DNC 201')
         self.assertEqual(comments2, '<a href="http://mycourse.com">🧪 Test Course</a>')
         self.assertEqual(comments3, '')
+
+    def test_course_schedule_to_recurrence_groups_single_day(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].start, datetime.datetime(2026, 3, 25, 9, 0, 0, tzinfo=datetime.timezone.utc))
+        self.assertEqual(groups[0].end, datetime.datetime(2026, 3, 25, 9, 50, 0, tzinfo=datetime.timezone.utc))
+        self.assertEqual(groups[0].recurrence_rule, 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20260430T235959Z')
+        self.assertEqual(groups[0].exception_dates, [])
+
+    def test_course_schedule_to_recurrence_groups_multiple_days_same_time(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0101010',
+            mon_start_time=datetime.time(10, 0, 0), mon_end_time=datetime.time(10, 50, 0),
+            wed_start_time=datetime.time(10, 0, 0), wed_end_time=datetime.time(10, 50, 0),
+            fri_start_time=datetime.time(10, 0, 0), fri_end_time=datetime.time(10, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].start, datetime.datetime(2026, 3, 23, 10, 0, 0, tzinfo=datetime.timezone.utc))
+        self.assertEqual(groups[0].recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20260430T235959Z')
+
+    def test_course_schedule_to_recurrence_groups_multiple_days_different_times(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0101010',
+            mon_start_time=datetime.time(9, 0, 0), mon_end_time=datetime.time(9, 50, 0),
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0),
+            fri_start_time=datetime.time(14, 0, 0), fri_end_time=datetime.time(14, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertEqual(len(groups), 2)
+        self.assertEqual({group.recurrence_rule for group in groups}, {
+            'FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20260430T235959Z',
+            'FREQ=WEEKLY;BYDAY=FR;UNTIL=20260430T235959Z',
+        })
+
+    def test_course_schedule_to_recurrence_groups_excludes_course_exception_date(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course.exceptions = '20260401'
+        course.save()
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].exception_dates,
+                         [datetime.datetime(2026, 4, 1, 9, 0, 0, tzinfo=datetime.timezone.utc)])
+
+    def test_course_schedule_to_recurrence_groups_exception_shares_utc_date_with_occurrence_in_positive_offset_tz(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Asia/Kolkata'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
+        course.exceptions = '20260401'
+        course.save()
+        course_schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0001000',
+            wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0))
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        # 09:00 IST (UTC+5:30) is 03:30Z on the same calendar day; anchoring the exception at the
+        # slot start (not midnight, which would land on 2026-03-31 in UTC) keeps its UTC date aligned
+        # with the occurrence it must cancel.
+        self.assertEqual(groups[0].exception_dates,
+                         [datetime.datetime(2026, 4, 1, 3, 30, 0, tzinfo=datetime.timezone.utc)])
+        # Occurrences all share the slot's UTC time-of-day, so an exception at that same time-of-day
+        # lands on the same UTC date as the occurrence it cancels.
+        self.assertEqual(groups[0].exception_dates[0].timetz(), groups[0].start.timetz())

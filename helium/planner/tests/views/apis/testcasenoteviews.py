@@ -227,8 +227,6 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
 
-
-class TestCaseNoteExtendedFields(APITestCase):
     def test_update_standalone_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         note = notehelper.given_note_exists(user)
@@ -317,7 +315,6 @@ class TestCaseNoteExtendedFields(APITestCase):
         self.assertIn('content', response.data)
         self.assertEqual(response.data['content'], content)
 
-class TestCaseNoteEdgeCases(APITestCase):
     def test_delete_entity_deletes_linked_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
@@ -362,8 +359,6 @@ class TestCaseNoteEdgeCases(APITestCase):
         note.refresh_from_db()
         self.assertEqual(note.content, {})
 
-
-class TestCaseNoteValidation(APITestCase):
     def test_note_rejects_multiple_link_types(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
@@ -518,7 +513,6 @@ class TestCaseNoteValidation(APITestCase):
         self.assertEqual(note.title, 'Updated Title')
 
     def test_filter_shown_on_calendar_true_includes_visible_and_unlinked(self):
-        """shown_on_calendar=true returns notes in visible groups, event-linked, and standalone."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -549,7 +543,6 @@ class TestCaseNoteValidation(APITestCase):
         self.assertIn(note_standalone.pk, returned_ids)
 
     def test_filter_shown_on_calendar_false_returns_hidden_group_and_unlinked_notes(self):
-        """shown_on_calendar=false returns notes linked to hidden groups, plus event-linked and standalone."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -579,7 +572,6 @@ class TestCaseNoteValidation(APITestCase):
         self.assertIn(note_standalone.pk, returned_ids)
 
     def test_filter_shown_on_calendar_with_resource_link(self):
-        """shown_on_calendar filter works for resource-linked notes via material group."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -603,7 +595,6 @@ class TestCaseNoteValidation(APITestCase):
         self.assertNotIn(note_hidden.pk, returned_ids)
 
     def test_filter_shown_on_calendar_without_param_returns_all(self):
-        """Without the param, all notes are returned regardless of group visibility."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 

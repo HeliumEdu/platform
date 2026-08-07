@@ -248,8 +248,8 @@ def courseschedules_to_private_ical_feed(user):
     """
     Generate an ICAL feed for all course schedules associated with the given user.
 
-    The IDs given for each event are sequential, unique only amongst the results of this particular query, and not
-    guaranteed to be consistent across calls.
+    The ID given for each event (and thus each VEVENT's UID) is deterministic, derived from the course
+    schedule and occurrence, so it is stable across calls.
 
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's course schedules.

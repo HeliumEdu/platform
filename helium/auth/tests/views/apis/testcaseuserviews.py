@@ -147,7 +147,6 @@ class TestCaseUserViews(APITestCase):
         self.assertIn('refresh', response.data)
 
     def test_email_change_cancelled_by_submitting_current_email(self):
-        """Test that submitting current email while a change is pending cancels the change."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.email_changing = 'new@email.com'
@@ -155,7 +154,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(user.email, 'user@test.com')
         self.assertEqual(user.email_changing, 'new@email.com')
 
-        # WHEN - submit current email to cancel
+        # WHEN
         data = {
             'email': 'user@test.com',
             'old_password': 'test_pass_1!',
@@ -290,7 +289,6 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
 
     def test_delete_oauth_user_without_password(self):
-        """Test that OAuth users (without usable password) can delete their account without providing a password."""
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         # Simulate OAuth user by removing their password
@@ -359,15 +357,14 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(UserSettings.objects.filter(user_id=user.pk).exists())
 
     def test_oauth_user_can_add_password(self):
-        """Test that OAuth users can add a password without providing old_password."""
-        # GIVEN - OAuth user (no usable password)
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.set_unusable_password()
         user.save()
 
         self.assertFalse(user.has_usable_password())
 
-        # WHEN - User adds a password (no old_password required)
+        # WHEN
         data = {'password': 'new_secure_pass_1!'}
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -381,13 +378,12 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(user.check_password('new_secure_pass_1!'))
 
     def test_regular_user_cannot_change_password_without_old_password(self):
-        """Test that regular users still need old_password to change their password."""
-        # GIVEN - Regular user with password
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         self.assertTrue(user.has_usable_password())
 
-        # WHEN - User tries to change password without providing old_password
+        # WHEN
         data = {'password': 'new_password_1!'}
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -402,11 +398,10 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(user.check_password('test_pass_1!'))  # Still the default test password
 
     def test_regular_user_can_change_password_with_old_password(self):
-        """Test that regular users can change password when providing old_password."""
-        # GIVEN - Regular user with password
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
-        # WHEN - User changes password with old_password
+        # WHEN
         data = {
             'old_password': 'test_pass_1!',
             'password': 'new_secure_pass_1!'
@@ -423,8 +418,7 @@ class TestCaseUserViews(APITestCase):
         self.assertFalse(user.check_password('test_pass_1!'))
 
     def test_oauth_user_upgrade_to_password_then_change_requires_old_password(self):
-        """Test that after OAuth user adds password, subsequent changes require old_password."""
-        # GIVEN - OAuth user adds a password
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.set_unusable_password()
         user.save()
@@ -438,12 +432,12 @@ class TestCaseUserViews(APITestCase):
         user.refresh_from_db()
         self.assertTrue(user.has_usable_password())
 
-        # WHEN - User tries to change password again without old_password
+        # WHEN
         data = {'password': 'second_password_1!'}
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
-        # THEN - Should require old_password now
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('old_password', response.data)
 
@@ -452,7 +446,7 @@ class TestCaseUserViews(APITestCase):
         self.assertTrue(user.check_password('first_password_1!'))
         self.assertFalse(user.check_password('second_password_1!'))
 
-        # WHEN - User provides old_password
+        # WHEN
         data = {
             'old_password': 'first_password_1!',
             'password': 'second_password_1!'
@@ -460,13 +454,12 @@ class TestCaseUserViews(APITestCase):
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
 
-        # THEN - Should succeed
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertTrue(user.check_password('second_password_1!'))
 
     def test_has_oauth_providers_false_for_regular_user(self):
-        """Test that has_oauth_providers is False for users without OAuth providers."""
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -478,7 +471,6 @@ class TestCaseUserViews(APITestCase):
         self.assertFalse(response.data['has_oauth_providers'])
 
     def test_has_oauth_providers_true_for_oauth_user(self):
-        """Test that has_oauth_providers is True for users with OAuth providers."""
         from helium.auth.models import UserOAuthProvider
 
         # GIVEN
@@ -541,7 +533,7 @@ class TestCaseUserViews(APITestCase):
         def onboarding_call_count():
             return sum(1 for c in mock_timing.call_args_list if c[0][0] == 'onboarding.duration')
 
-        # WHEN: first clear
+        # WHEN
         self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
         user.refresh_from_db()
         original_completed_at = user.onboarding_completed_at
@@ -557,7 +549,7 @@ class TestCaseUserViews(APITestCase):
 
         response = self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
 
-        # THEN: field is unchanged and no additional event is dispatched
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user.refresh_from_db()
         self.assertEqual(user.onboarding_completed_at, original_completed_at)
