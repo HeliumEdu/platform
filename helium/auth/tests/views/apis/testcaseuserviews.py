@@ -187,6 +187,70 @@ class TestCaseUserViews(APITestCase):
         user.refresh_from_db()
         self.assertTrue(user.check_password('new_pass_1!'))
 
+    def test_password_change_returns_fresh_working_tokens(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'password': 'new_pass_1!'
+        }
+        response = self.client.put(reverse('auth_user_detail'),
+                                   json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + response.data['access'])
+        reauth = self.client.get(reverse('auth_user_detail'))
+        self.assertEqual(reauth.status_code, status.HTTP_200_OK)
+
+    def test_password_change_invalidates_old_access_token(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        old_access = user.access
+
+        # WHEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'password': 'new_pass_1!'
+        }
+        self.client.put(reverse('auth_user_detail'),
+                        json.dumps(data),
+                        content_type='application/json')
+
+        # THEN
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + old_access)
+        response = self.client.get(reverse('auth_user_detail'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_password_change_revokes_other_session_refresh_token(self):
+        # GIVEN a second session's refresh token, obtained before the password change
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        other_session = self.client.post(reverse('auth_token_obtain'),
+                                         json.dumps({'email': 'user@test.com', 'password': 'test_pass_1!'}),
+                                         content_type='application/json')
+        other_refresh = other_session.data['refresh']
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + user.access)
+
+        # WHEN
+        data = {
+            'old_password': 'test_pass_1!',
+            'password': 'new_pass_1!'
+        }
+        self.client.put(reverse('auth_user_detail'),
+                        json.dumps(data),
+                        content_type='application/json')
+
+        # THEN
+        response = self.client.post(reverse('auth_token_refresh'),
+                                    json.dumps({'refresh': other_refresh}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_password_change_fails_old_password(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -294,6 +358,7 @@ class TestCaseUserViews(APITestCase):
         # Simulate OAuth user by removing their password
         user.set_unusable_password()
         user.save()
+        userhelper.reauthenticate(self.client, user)
 
         # WHEN
         data = {}  # No password provided
@@ -361,6 +426,7 @@ class TestCaseUserViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.set_unusable_password()
         user.save()
+        userhelper.reauthenticate(self.client, user)
 
         self.assertFalse(user.has_usable_password())
 
@@ -422,12 +488,15 @@ class TestCaseUserViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.set_unusable_password()
         user.save()
+        userhelper.reauthenticate(self.client, user)
 
         # Add password first
         data = {'password': 'first_password_1!'}
         response = self.client.put(reverse('auth_user_detail'), json.dumps(data),
                                    content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Adding a password rotates the revocation claim; adopt the tokens the response hands back.
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + response.data['access'])
 
         user.refresh_from_db()
         self.assertTrue(user.has_usable_password())
