@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.81"
+__version__ = "2.2.83"
 
 import json
 import os
@@ -257,6 +257,8 @@ REFRESH_TOKEN_TTL_DAYS = 14
 # Terraform code (never here) when it needs to be changed.
 MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
+ADVANCED_SCHEDULES_MIN_VERSION = '3.8.0'
+
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
 
@@ -267,7 +269,8 @@ SIMPLE_JWT = {
     'TOKEN_REFRESH_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenRefreshSerializer',
     'TOKEN_BLACKLIST_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenBlacklistSerializer',
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True
+    'BLACKLIST_AFTER_ROTATION': True,
+    'CHECK_REVOKE_TOKEN': True,
 }
 
 # API tokens are distinct from the short-lived JWT access token; managed via knox.
@@ -552,6 +555,7 @@ JSM_SERVICE_ACCOUNT_EMAIL = config('PLATFORM_JSM_SERVICE_ACCOUNT_EMAIL', 'contac
 JSM_API_TOKEN = config('PLATFORM_JSM_API_TOKEN', default=None)
 JSM_SERVICE_DESK_ID = config('PLATFORM_JSM_SERVICE_DESK_ID', '1')
 JSM_REQUEST_TYPE_ID = config('PLATFORM_JSM_REQUEST_TYPE_ID', '1')
+SUPPORT_CATEGORIES = ('Bug Report', 'Feature Request', 'Account Issue')
 JSM_REQUEST_TYPE_ID_MAP = json.loads(config('PLATFORM_JSM_REQUEST_TYPE_ID_MAP', json.dumps({
     'Bug Report': '2',
     'Feature Request': '3',

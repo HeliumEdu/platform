@@ -26,16 +26,20 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-def _reserve_pending_delete(user):
-    user.deletion_requested_at = timezone.now()
-    user.save(update_fields=['deletion_requested_at'])
-
+def _blacklist_outstanding_tokens(user):
     for outstanding in OutstandingToken.objects.filter(user=user):
         try:
             RefreshToken(outstanding.token).blacklist()
         except TokenError:
             # Already expired or blacklisted — safe to ignore
             pass
+
+
+def _reserve_pending_delete(user):
+    user.deletion_requested_at = timezone.now()
+    user.save(update_fields=['deletion_requested_at'])
+
+    _blacklist_outstanding_tokens(user)
 
 
 class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
@@ -73,7 +77,16 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
 
         logger.info(f'User {user.pk} updated')
 
-        return Response(serializer.data)
+        data = serializer.data
+
+        if request.data.get('password'):
+            _blacklist_outstanding_tokens(user)
+
+            token = RefreshToken.for_user(user)
+            data['access'] = str(token.access_token)
+            data['refresh'] = str(token)
+
+        return Response(data)
 
 
 class UserDeleteResourceView(HeliumAPIView):

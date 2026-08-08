@@ -17,7 +17,7 @@ from helium.common.utils.httputils import urlopen_secure
 
 logger = logging.getLogger(__name__)
 
-JSM_REQUEST_TIMEOUT_SECONDS = 15
+_JSM_REQUEST_TIMEOUT_SECONDS = 15
 
 
 class JsmRequestException(HeliumError):
@@ -58,7 +58,7 @@ def _open(request):
     :raises JsmRequestException: On any HTTP error or transport failure.
     """
     try:
-        with urlopen_secure(request, timeout=JSM_REQUEST_TIMEOUT_SECONDS) as response:
+        with urlopen_secure(request, timeout=_JSM_REQUEST_TIMEOUT_SECONDS) as response:
             body = response.read()
             if not body:
                 return None
