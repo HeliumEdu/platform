@@ -6,6 +6,7 @@ import datetime
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 
 from helium.common.models import BaseModel
 from helium.planner.managers.courseschedulemanager import CourseScheduleManager
@@ -56,10 +57,51 @@ class CourseSchedule(BaseModel):
     course = models.ForeignKey('Course', help_text='The course with which to associate.',
                                related_name='schedules', on_delete=models.CASCADE)
 
+    cycle_length = models.PositiveSmallIntegerField(
+        help_text='The number of school days in one rotation cycle (mutually exclusive with `week_interval`).',
+        blank=True, null=True)
+
+    anchor_date = models.DateField(
+        help_text='ISO-8601 date a rotation is anchored to.',
+        blank=True, null=True)
+
+    cycle_slots = models.JSONField(
+        help_text='A day-based cycle\'s meeting times keyed by cycle-day index, as a list of '
+                  '`{"indices": [...], "start_time": "HH:MM:SS", "end_time": "HH:MM:SS"}`.',
+        blank=True, null=True)
+
+    week_interval = models.PositiveSmallIntegerField(
+        help_text='The number of weeks in one rotation for a week-based schedule '
+                  '(mutually exclusive with `cycle_length`).',
+        blank=True, null=True)
+
+    week_offset = models.PositiveSmallIntegerField(
+        help_text="Which week of the rotation this schedule meets, counted from `anchor_date`'s week.",
+        blank=True, null=True)
+
     objects = CourseScheduleManager()
 
     class Meta:
         verbose_name = 'Class schedule'
+        constraints = [
+            models.CheckConstraint(
+                check=~(Q(cycle_length__isnull=False) & Q(week_interval__isnull=False)),
+                name='courseschedule_single_rotation_type',
+            ),
+        ]
+
+    @property
+    def is_cycle(self):
+        return self.cycle_length is not None
+
+    @property
+    def is_week_based(self):
+        return self.week_interval is not None
+
+    @property
+    def is_rotating(self):
+        """A cycle (day-based) or week-based rotation — i.e. anything a pre-advanced client can't render."""
+        return self.is_cycle or self.is_week_based
 
     def clean(self):
         super().clean()

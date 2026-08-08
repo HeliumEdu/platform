@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -574,8 +575,70 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(len(imported_schedules), 2)
         self.assertEqual({s.days_of_week for s in imported_schedules}, {'0101010', '0010100'})
 
+    def test_export_import_preserves_cycle_schedule(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_cycle_schedule_exists(
+            course, cycle_length=6, anchor_date=datetime.date(2026, 3, 2),
+            cycle_slots=[{'indices': [1, 3], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(len(export_data['course_schedules']), 1)
+        self.assertEqual(export_data['course_schedules'][0]['cycle_length'], 6)
+
+        # WHEN
+        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
+        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported = CourseSchedule.objects.get(course=imported_course)
+        self.assertEqual(imported.cycle_length, 6)
+        self.assertEqual(imported.anchor_date, datetime.date(2026, 3, 2))
+        self.assertEqual(imported.cycle_slots,
+                         [{'indices': [1, 3], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
+
+    def test_export_import_preserves_week_based_schedule(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_week_based_schedule_exists(
+            course, days_of_week='0100000', week_interval=2, week_offset=1, anchor_date=datetime.date(2026, 3, 2))
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(len(export_data['course_schedules']), 1)
+        self.assertEqual(export_data['course_schedules'][0]['week_interval'], 2)
+        self.assertEqual(export_data['course_schedules'][0]['week_offset'], 1)
+
+        # WHEN
+        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
+        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported = CourseSchedule.objects.get(course=imported_course)
+        self.assertTrue(imported.is_week_based)
+        self.assertEqual(imported.week_interval, 2)
+        self.assertEqual(imported.week_offset, 1)
+        self.assertEqual(imported.anchor_date, datetime.date(2026, 3, 2))
+
     def test_export_import_preserves_homework_completed_at(self):
-        # GIVEN a completed homework whose completion timestamp is a specific point in the past
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -585,16 +648,16 @@ class TestCaseImportExportViews(APITestCase):
         original_completed_at = datetime.datetime(2017, 3, 1, 9, 30, tzinfo=datetime.timezone.utc)
         Homework.objects.filter(pk=homework.pk).update(completed_at=original_completed_at)
 
-        # WHEN the data is exported
+        # WHEN
         export_response = self.client.get(reverse('importexport_export'))
         self.assertEqual(export_response.status_code, status.HTTP_200_OK)
         export_data = json.loads(export_response.content.decode('utf-8'))
 
-        # THEN the export carries the original completed_at
+        # THEN
         self.assertEqual(len(export_data['homework']), 1)
         self.assertEqual(parse_datetime(export_data['homework'][0]['completed_at']), original_completed_at)
 
-        # WHEN the same payload is re-imported as the same user
+        # WHEN
         upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_completed_at_roundtrip.json')
         try:
             with open(upload_path, 'w') as fp:
@@ -605,7 +668,7 @@ class TestCaseImportExportViews(APITestCase):
             if os.path.exists(upload_path):
                 os.remove(upload_path)
 
-        # THEN the freshly-imported homework keeps the original completed_at rather than being re-stamped to now
+        # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
         homework_qs = Homework.objects.for_user(user.pk).order_by('pk')
         self.assertEqual(homework_qs.count(), 2)

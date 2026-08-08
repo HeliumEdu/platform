@@ -648,3 +648,121 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+    def test_get_course_schedules_below_gate_drops_cycle_and_keeps_weekly(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            HTTP_X_CLIENT_VERSION='3.7.3')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertIsNone(response.data[0]['cycle_length'])
+
+    def test_get_course_schedules_at_gate_includes_cycle(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_get_course_schedules_below_gate_omits_cycle_only_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            HTTP_X_CLIENT_VERSION='3.7.3')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_create_week_based_schedule(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'week_interval': 2, 'week_offset': 0, 'anchor_date': '2026-03-02',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        schedule = CourseSchedule.objects.get(pk=response.data['id'])
+        self.assertTrue(schedule.is_week_based)
+        self.assertEqual(schedule.week_interval, 2)
+        self.assertEqual(schedule.week_offset, 0)
+        self.assertEqual(schedule.anchor_date.isoformat(), '2026-03-02')
+
+    def test_create_week_based_schedule_requires_offset(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'week_interval': 2, 'anchor_date': '2026-03-02',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_course_schedules_below_gate_drops_week_based_and_keeps_weekly(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_week_based_schedule_exists(course)
+
+        # WHEN
+        response = self.client.get(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            HTTP_X_CLIENT_VERSION='3.7.3')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertIsNone(response.data[0]['week_interval'])

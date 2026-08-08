@@ -29,6 +29,24 @@ def given_course_schedule_exists(course, days_of_week='0101010',
     return course_schedule
 
 
+def given_cycle_schedule_exists(course, cycle_length=2, anchor_date=datetime.date(2017, 1, 6), cycle_slots=None):
+    if cycle_slots is None:
+        cycle_slots = [{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}]
+
+    return CourseSchedule.objects.create(course=course, cycle_length=cycle_length, anchor_date=anchor_date,
+                                         cycle_slots=cycle_slots)
+
+
+def given_week_based_schedule_exists(course, days_of_week='0100000', week_interval=2, week_offset=0,
+                                     anchor_date=datetime.date(2026, 3, 2),
+                                     mon_start_time=datetime.time(9, 0, 0), mon_end_time=datetime.time(9, 50, 0),
+                                     wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0)):
+    return CourseSchedule.objects.create(course=course, days_of_week=days_of_week, week_interval=week_interval,
+                                         week_offset=week_offset, anchor_date=anchor_date,
+                                         mon_start_time=mon_start_time, mon_end_time=mon_end_time,
+                                         wed_start_time=wed_start_time, wed_end_time=wed_end_time)
+
+
 def verify_course_schedule_matches(test_case, schedule, data):
     test_case.assertEqual(schedule.days_of_week, data['days_of_week'])
     test_case.assertEqual(schedule.sun_start_time, parser.parse(data['sun_start_time']).time())

@@ -547,6 +547,69 @@ class TestCaseReminderService(TestCase):
         expected_start_of_range = datetime.datetime(2026, 3, 25, 8, 30, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(new_reminder.start_of_range, expected_start_of_range)
 
+    @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_resolves_cycle_day(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 3, 8, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        courseschedulehelper.given_cycle_schedule_exists(
+            course, cycle_length=2, anchor_date=datetime.date(2026, 3, 2),
+            cycle_slots=[{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 4, 9, 0, 0, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_skips_off_week_for_week_based(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 9, 8, 0, 0, tzinfo=datetime.timezone.utc)  # Mon, Week B
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        courseschedulehelper.given_week_based_schedule_exists(
+            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 16, 9, 0, 0, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_week_based_skips_exception_date(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)  # Mon Week A, 7am
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        course.exceptions = '20260302'
+        course.save()
+        courseschedulehelper.given_week_based_schedule_exists(
+            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 16, 9, 0, 0, tzinfo=datetime.timezone.utc))
+
     def test_create_next_repeating_reminder_no_future_occurrence(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -589,7 +652,7 @@ class TestCaseReminderService(TestCase):
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
 
-        # WHEN / THEN
+        # WHEN/THEN
         with self.assertRaises(ValueError):
             reminderservice.clone_reminders(course, homework)
         with self.assertRaises(ValueError):
