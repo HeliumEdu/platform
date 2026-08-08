@@ -176,10 +176,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     def _apply_template(self, attrs, template):
         fields = enums.SCHEDULE_TEMPLATES[template]['fields']
-        conflicts = [key for key in fields if key in attrs]
+        conflicts = [key for key, value in fields.items() if key in attrs and attrs[key] != value]
         if conflicts:
             names = ', '.join(f"'{key}'" for key in conflicts)
-            raise ValidationError(f"Fields set by 'template' cannot also be provided directly: {names}.")
+            raise ValidationError(f"Fields set by 'template' cannot be given a conflicting value: {names}.")
 
         is_cycle = 'cycle_length' in fields
         is_week = 'week_interval' in fields
