@@ -18,6 +18,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
@@ -666,6 +667,34 @@ class TestCaseImportExportViews(APITestCase):
         imported = CourseSchedule.objects.get(course=imported_course)
         self.assertEqual(imported.start_date, datetime.date(2026, 3, 9))
         self.assertEqual(imported.end_date, datetime.date(2026, 4, 24))
+
+    def test_export_import_preserves_schedule_template(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        schedule = courseschedulehelper.given_cycle_schedule_exists(course)
+        schedule.template = enums.AB_DAY
+        schedule.save()
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(export_data['course_schedules'][0]['template'], enums.AB_DAY)
+
+        # WHEN
+        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
+        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported = CourseSchedule.objects.get(course=imported_course)
+        self.assertEqual(imported.template, enums.AB_DAY)
+        self.assertEqual(imported.cycle_length, 2)
 
     def test_export_import_preserves_homework_completed_at(self):
         # GIVEN

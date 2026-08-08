@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
+from helium.common import enums
 from helium.common.models import BaseModel
 from helium.planner.managers.courseschedulemanager import CourseScheduleManager
 
@@ -86,6 +87,10 @@ class CourseSchedule(BaseModel):
     end_date = models.DateField(
         help_text="ISO-8601 date for schedule end override; when not set, the course's `end_date` is used.",
         blank=True, null=True)
+
+    template = models.PositiveSmallIntegerField(
+        help_text='The template this schedule was created from, if any.',
+        choices=enums.SCHEDULE_TEMPLATE_CHOICES, blank=True, null=True)
 
     objects = CourseScheduleManager()
 

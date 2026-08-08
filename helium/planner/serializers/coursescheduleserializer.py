@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from django.conf import settings
 
+from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.utils.versionutils import client_version_gte
 from helium.planner.models import CourseSchedule
@@ -106,7 +107,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'id', 'days_of_week', 'sun_start_time', 'sun_end_time', 'mon_start_time', 'mon_end_time', 'tue_start_time',
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'cycle_length', 'anchor_date', 'cycle_slots',
-            'week_interval', 'week_offset', 'start_date', 'end_date', 'recurrence_groups')
+            'week_interval', 'week_offset', 'start_date', 'end_date', 'template', 'recurrence_groups')
         read_only_fields = ('course',)
         extra_kwargs = {
             'days_of_week': {'required': True},
@@ -135,6 +136,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                     and CourseSchedule.objects.for_course(course_id).exists():
                 raise ValidationError(
                     f'Class {course_id} already has a schedule and there cannot be more than one.')
+
+        template = self._resolve(attrs, 'template')
+        if template is not None:
+            self._apply_template(attrs, template)
 
         cycle_length = self._resolve(attrs, 'cycle_length')
         week_interval = self._resolve(attrs, 'week_interval')
@@ -168,6 +173,20 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             raise ValidationError("The 'start_date' must be before the 'end_date'")
 
         return attrs
+
+    def _apply_template(self, attrs, template):
+        fields = enums.SCHEDULE_TEMPLATES[template]['fields']
+        is_cycle = 'cycle_length' in fields
+        is_week = 'week_interval' in fields
+        # A template defines the rotation shape outright, so any prior rotation state it doesn't own —
+        # including a different type when switching templates — is cleared before its own is applied.
+        if not is_cycle:
+            attrs['cycle_length'] = attrs['cycle_slots'] = None
+        if not is_week:
+            attrs['week_interval'] = attrs['week_offset'] = None
+        if not (is_cycle or is_week):
+            attrs['anchor_date'] = None
+        attrs.update(fields)
 
     def _validate_week_based(self, week_interval, week_offset, anchor_date, attrs):
         if not 2 <= week_interval <= _MAX_WEEK_INTERVAL:
