@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('planner', '0059_alter_courseschedule_course_drop_unique'),
+        ('planner', '0060_seed_default_categories_for_categoryless_courses'),
     ]
 
     operations = [
