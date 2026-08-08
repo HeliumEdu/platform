@@ -134,3 +134,20 @@ COLOR_SCHEME_THEME = (
     (DARK, 'Dark'),
     (SYSTEM, 'System'),
 )
+
+STANDARD = 0
+CATEGORY_TEMPLATE_CHOICES = (
+    (STANDARD, 'Standard'),
+)
+
+CATEGORY_TEMPLATES = {
+    STANDARD: (
+        {'title': 'Homework 👨🏽‍💻', 'color': '#E21D55'},
+        {'title': 'Final Exam 📈', 'color': '#AF4F23'},
+        {'title': 'Midterm 📈', 'color': '#A17430'},
+        {'title': 'Project 🔨', 'color': '#05CC90'},
+        {'title': 'Quiz 💡', 'color': '#0D0E38'},
+        {'title': 'Reading 📖', 'color': '#3C1534'},
+        {'title': 'Lab 🧪', 'color': '#553555'},
+    ),
+}
