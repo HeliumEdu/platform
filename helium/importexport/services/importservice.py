@@ -45,6 +45,13 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 
 logger = logging.getLogger(__name__)
 
+_SECTIONS_WITH_IDS = (
+    'external_calendars', 'course_groups', 'courses', 'course_schedules', 'categories',
+    'material_groups', 'materials', 'events', 'homework', 'reminders', 'notes',
+)
+
+_SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
+
 
 def _extract_legacy_notes(data, legacy_field='comments'):
     """
@@ -63,12 +70,6 @@ def _extract_legacy_notes(data, legacy_field='comments'):
         return html_to_quill(legacy_content)
 
     return None
-
-
-_SECTIONS_WITH_IDS = (
-    'external_calendars', 'course_groups', 'courses', 'course_schedules', 'categories',
-    'material_groups', 'materials', 'events', 'homework', 'reminders', 'notes',
-)
 
 
 def _coerce_id(value, section, key='id'):
@@ -485,9 +486,6 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
     logger.info(f"Imported {notes_count} notes.")
 
     return notes_count
-
-
-_SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
 
 
 @contextmanager

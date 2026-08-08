@@ -15,8 +15,7 @@ from helium.auth.utils.userutils import is_staff_user
 
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
-DATADOG_METRICS = True
-DATADOG_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
+_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
 
 
 def _normalize_user_agent_tag(user_agent):
@@ -48,7 +47,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
         user = request.user
 
     try:
-        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+        tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
         if user:
             tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
@@ -74,7 +73,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
 
 def timing(metric, value, user=None, extra_tags=None):
     try:
-        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+        tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
         if user:
             tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
@@ -90,7 +89,7 @@ def timing(metric, value, user=None, extra_tags=None):
 
 def gauge(metric, value, user=None, extra_tags=None):
     try:
-        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+        tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
         if user:
             tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
@@ -106,7 +105,7 @@ def gauge(metric, value, user=None, extra_tags=None):
 
 def distribution(metric, value, user=None, extra_tags=None):
     try:
-        tags = DATADOG_BASE_TAGS.copy() + (extra_tags if extra_tags else [])
+        tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
         if user:
             tags.append(f"authenticated:{str(user.is_authenticated).lower()}")

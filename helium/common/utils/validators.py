@@ -16,6 +16,8 @@ from helium.common.utils import commonutils
 _RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 
 WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+_UNSUPPORTED_RRULE_FREQS = frozenset({'HOURLY', 'MINUTELY', 'SECONDLY'})
+_UNSUPPORTED_RRULE_PARTS = frozenset({'BYWEEKNO', 'BYYEARDAY', 'WKST'})
 
 
 def validate_fraction(value):
@@ -90,10 +92,6 @@ def infer_byday_for_weekly_rrule(value, dtstart):
 
     day_code = WEEKDAY_TO_ICAL[dtstart.weekday()]
     return f'{prefix}{rule_body};BYDAY={day_code}'
-
-
-_UNSUPPORTED_RRULE_FREQS = frozenset({'HOURLY', 'MINUTELY', 'SECONDLY'})
-_UNSUPPORTED_RRULE_PARTS = frozenset({'BYWEEKNO', 'BYYEARDAY', 'WKST'})
 
 
 def validate_recurrence_rule(value):

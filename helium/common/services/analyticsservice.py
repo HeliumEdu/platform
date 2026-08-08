@@ -15,8 +15,8 @@ from helium.common.utils.httputils import urlopen_secure
 
 logger = logging.getLogger(__name__)
 
-GA4_COLLECT_URL = 'https://www.google-analytics.com/mp/collect'
-GA4_REQUEST_TIMEOUT_SECONDS = 5
+_GA4_COLLECT_URL = 'https://www.google-analytics.com/mp/collect'
+_GA4_REQUEST_TIMEOUT_SECONDS = 5
 
 
 def _should_emit(user):
@@ -63,7 +63,7 @@ def send_event(user, name, params=None, user_properties=None):
         'measurement_id': settings.GA4_MEASUREMENT_ID,
         'api_secret': settings.GA4_API_SECRET,
     })
-    url = f'{GA4_COLLECT_URL}?{query}'
+    url = f'{_GA4_COLLECT_URL}?{query}'
 
     request = urllib.request.Request(
         url,
@@ -73,7 +73,7 @@ def send_event(user, name, params=None, user_properties=None):
     )
 
     try:
-        with urlopen_secure(request, timeout=GA4_REQUEST_TIMEOUT_SECONDS) as response:
+        with urlopen_secure(request, timeout=_GA4_REQUEST_TIMEOUT_SECONDS) as response:
             # GA4 MP returns 204 on success; anything else is suspicious but non-fatal.
             if response.status != 204:
                 logger.warning(f'GA4 MP returned unexpected status {response.status} for event {name}')
