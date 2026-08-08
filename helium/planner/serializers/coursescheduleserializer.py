@@ -176,16 +176,24 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     def _apply_template(self, attrs, template):
         fields = enums.SCHEDULE_TEMPLATES[template]['fields']
+        conflicts = [key for key in fields if key in attrs]
+        if conflicts:
+            names = ', '.join(f"'{key}'" for key in conflicts)
+            raise ValidationError(f"Fields set by 'template' cannot also be provided directly: {names}.")
+
         is_cycle = 'cycle_length' in fields
         is_week = 'week_interval' in fields
-        # A template defines the rotation shape outright, so any prior rotation state it doesn't own —
-        # including a different type when switching templates — is cleared before its own is applied.
+        # The template owns its rotation shape, so stale state it doesn't own — e.g. the other type when
+        # switching templates on update — is cleared, while a conflicting field the client sent in this
+        # request is left in place for mutual-exclusion validation to reject.
         if not is_cycle:
-            attrs['cycle_length'] = attrs['cycle_slots'] = None
+            attrs.setdefault('cycle_length', None)
+            attrs.setdefault('cycle_slots', None)
         if not is_week:
-            attrs['week_interval'] = attrs['week_offset'] = None
+            attrs.setdefault('week_interval', None)
+            attrs.setdefault('week_offset', None)
         if not (is_cycle or is_week):
-            attrs['anchor_date'] = None
+            attrs.setdefault('anchor_date', None)
         attrs.update(fields)
 
     def _validate_week_based(self, week_interval, week_offset, anchor_date, attrs):

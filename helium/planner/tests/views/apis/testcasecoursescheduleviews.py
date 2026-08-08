@@ -941,6 +941,28 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_schedule_with_template_and_conflicting_field_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0000000',
+            'template': enums.AB_DAY,
+            'cycle_length': 6,
+            'anchor_date': '2026-03-02',
+            'cycle_slots': [{'indices': [1, 2], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_create_schedule_invalid_template_returns_400(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
