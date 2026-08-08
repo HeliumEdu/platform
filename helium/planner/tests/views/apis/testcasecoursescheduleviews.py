@@ -766,3 +766,46 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertIsNone(response.data[0]['week_interval'])
+
+    def test_create_course_schedule_with_date_window(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'start_date': '2026-03-09', 'end_date': '2026-04-24',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        schedule = CourseSchedule.objects.get(pk=response.data['id'])
+        self.assertEqual(schedule.start_date.isoformat(), '2026-03-09')
+        self.assertEqual(schedule.end_date.isoformat(), '2026-04-24')
+
+    def test_create_course_schedule_start_date_after_end_date_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'start_date': '2026-03-20', 'end_date': '2026-03-09',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

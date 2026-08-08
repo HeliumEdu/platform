@@ -645,6 +645,29 @@ class TestCaseReminderService(TestCase):
         self.assertIsNone(result)
         self.assertEqual(Reminder.objects.count(), 1)
 
+    @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_respects_schedule_window(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0100000',
+            mon_start_time=datetime.time(9, 0, 0), mon_end_time=datetime.time(9, 50, 0))
+        schedule.start_date = datetime.date(2026, 3, 9)
+        schedule.save()
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 9, 9, 0, 0, tzinfo=datetime.timezone.utc))
+
     def test_clone_reminders_rejects_course_source(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

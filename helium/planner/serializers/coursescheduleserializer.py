@@ -106,7 +106,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'id', 'days_of_week', 'sun_start_time', 'sun_end_time', 'mon_start_time', 'mon_end_time', 'tue_start_time',
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'cycle_length', 'anchor_date', 'cycle_slots',
-            'week_interval', 'week_offset', 'recurrence_groups')
+            'week_interval', 'week_offset', 'start_date', 'end_date', 'recurrence_groups')
         read_only_fields = ('course',)
         extra_kwargs = {
             'days_of_week': {'required': True},
@@ -161,6 +161,11 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 raise ValidationError("'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a "
                                       "rotating schedule.")
             self._validate_weekly(attrs)
+
+        start_date = self._resolve(attrs, 'start_date')
+        end_date = self._resolve(attrs, 'end_date')
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError("The 'start_date' must be before the 'end_date'")
 
         return attrs
 

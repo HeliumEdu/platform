@@ -79,6 +79,14 @@ class CourseSchedule(BaseModel):
         help_text="Which week of the rotation this schedule meets, counted from `anchor_date`'s week.",
         blank=True, null=True)
 
+    start_date = models.DateField(
+        help_text="ISO-8601 date for schedule start override; when not set, the course's `start_date` is used.",
+        blank=True, null=True)
+
+    end_date = models.DateField(
+        help_text="ISO-8601 date for schedule end override; when not set, the course's `end_date` is used.",
+        blank=True, null=True)
+
     objects = CourseScheduleManager()
 
     class Meta:

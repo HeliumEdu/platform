@@ -161,6 +161,12 @@ def schedule_meeting_times_for_day(course_schedule, day, exceptions):
 
     :param exceptions: Course/course-group exception dates — a cycle needs them to count school days.
     """
+    # A schedule with its own date window only meets within it; its callers already bound the walk by
+    # the course dates, so its own overrides are the only extra constraint here.
+    if (course_schedule.start_date and day < course_schedule.start_date) or \
+            (course_schedule.end_date and day > course_schedule.end_date):
+        return []
+
     if course_schedule.is_cycle:
         index = resolve_cycle_index(course_schedule, day, exceptions)
         if index is None:
@@ -392,26 +398,38 @@ def course_schedule_to_recurrence_groups(course, course_schedule):
     """
     exceptions = get_course_exceptions(course)
     user_tz = ZoneInfo(course.get_user().settings.time_zone)
+    window = schedule_window(course, course_schedule)
 
     if course_schedule.is_cycle:
-        return _cycle_recurrence_groups(course, course_schedule, exceptions, user_tz)
+        return _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window)
 
     if course_schedule.is_week_based:
-        return _week_based_recurrence_groups(course, course_schedule, exceptions, user_tz)
+        return _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window)
 
-    return _weekly_recurrence_groups(course, course_schedule, exceptions, user_tz)
+    return _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window)
 
 
-def _weekly_recurrence_groups(course, course_schedule, exceptions, user_tz):
+def schedule_window(course, course_schedule):
+    """
+    A schedule's effective (start, end): its own date overrides, defaulting to the course's dates and
+    clamped to the course window so a schedule can only narrow — never widen — its active range.
+    """
+    start = max(course_schedule.start_date or course.start_date, course.start_date)
+    end = min(course_schedule.end_date or course.end_date, course.end_date)
+    return start, end
+
+
+def _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window):
     groups = []
 
+    window_start, window_end = window
     sorted_exceptions = sorted(exceptions)
-    until = datetime.datetime.combine(course.end_date, datetime.time(23, 59, 59), tzinfo=user_tz) \
+    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
         .astimezone(datetime.timezone.utc)
 
     for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
-        first_occurrence = _find_first_occurrence(course.start_date, weekdays)
-        if first_occurrence is None or first_occurrence > course.end_date:
+        first_occurrence = _find_first_occurrence(window_start, weekdays)
+        if first_occurrence is None or first_occurrence > window_end:
             continue
 
         start = datetime.datetime.combine(first_occurrence, start_time).replace(
@@ -433,7 +451,7 @@ def _weekly_recurrence_groups(course, course_schedule, exceptions, user_tz):
     return groups
 
 
-def _cycle_recurrence_groups(course, course_schedule, exceptions, user_tz):
+def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
     """
     A cycle schedule can't be a single periodic RRULE (its day-count "skips and shifts"
     around holidays). Since the course window is finite, each `cycle_slots` entry is
@@ -444,21 +462,22 @@ def _cycle_recurrence_groups(course, course_schedule, exceptions, user_tz):
     """
     groups = []
 
-    until = datetime.datetime.combine(course.end_date, datetime.time(23, 59, 59), tzinfo=user_tz) \
+    window_start, window_end = window
+    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
         .astimezone(datetime.timezone.utc)
 
     # Single walk of the term: every school weekday, mapped to its cycle index (holidays absent → None).
     school_days = 0
     index_by_weekday = {}
     all_weekdays = []
-    day = course_schedule.anchor_date or course.start_date
-    while day <= course.end_date:
+    day = course_schedule.anchor_date or window_start
+    while day <= window_end:
         if day.weekday() in _SCHOOL_WEEKDAYS:
-            if day >= course.start_date:
+            if day >= window_start:
                 all_weekdays.append(day)
             if _is_school_day(day, exceptions):
                 school_days += 1
-                if day >= course.start_date:
+                if day >= window_start:
                     index_by_weekday[day] = (school_days - 1) % course_schedule.cycle_length + 1
         day += datetime.timedelta(days=1)
 
@@ -494,11 +513,12 @@ def _cycle_recurrence_groups(course, course_schedule, exceptions, user_tz):
     return groups
 
 
-def _find_first_week_occurrence(course, course_schedule, weekdays):
+def _find_first_week_occurrence(course_schedule, weekdays, window):
     weekday_set = set(weekdays)
+    window_start, window_end = window
 
-    day = course.start_date
-    while day <= course.end_date:
+    day = window_start
+    while day <= window_end:
         if enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[day.weekday()] in weekday_set \
                 and resolve_week_index(course_schedule, day) == course_schedule.week_offset:
             return day
@@ -507,7 +527,7 @@ def _find_first_week_occurrence(course, course_schedule, weekdays):
     return None
 
 
-def _week_based_recurrence_groups(course, course_schedule, exceptions, user_tz):
+def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
     """
     A week-based rotation ("Week A/B") is calendar-week-periodic, so — unlike a day cycle — each
     time-slot is a plain periodic RRULE: `FREQ=WEEKLY;INTERVAL=<week_interval>` anchored to the first
@@ -517,12 +537,13 @@ def _week_based_recurrence_groups(course, course_schedule, exceptions, user_tz):
     """
     groups = []
 
+    window_start, window_end = window
     sorted_exceptions = sorted(exceptions)
-    until = datetime.datetime.combine(course.end_date, datetime.time(23, 59, 59), tzinfo=user_tz) \
+    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
         .astimezone(datetime.timezone.utc)
 
     for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
-        first_occurrence = _find_first_week_occurrence(course, course_schedule, weekdays)
+        first_occurrence = _find_first_week_occurrence(course_schedule, weekdays, window)
         if first_occurrence is None:
             continue
 

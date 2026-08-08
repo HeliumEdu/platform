@@ -374,6 +374,52 @@ class TestCaseCourseScheduleService(TestCase):
         self.assertIn(datetime.datetime(2026, 3, 16, 9, 0, 0, tzinfo=datetime.timezone.utc),
                       groups[0].exception_dates)
 
+    def test_schedule_window_falls_back_to_course_and_clamps(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 1, 5), end_date=datetime.date(2026, 5, 1))
+        schedule = courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN / THEN
+        # No overrides → the course's own dates.
+        self.assertEqual(coursescheduleservice.schedule_window(course, schedule),
+                         (datetime.date(2026, 1, 5), datetime.date(2026, 5, 1)))
+        # A narrower override → used as-is.
+        schedule.start_date = datetime.date(2026, 1, 12)
+        schedule.end_date = datetime.date(2026, 4, 24)
+        self.assertEqual(coursescheduleservice.schedule_window(course, schedule),
+                         (datetime.date(2026, 1, 12), datetime.date(2026, 4, 24)))
+        # A window wider than the course → clamped to the course window.
+        schedule.start_date = datetime.date(2025, 12, 1)
+        schedule.end_date = datetime.date(2026, 6, 1)
+        self.assertEqual(coursescheduleservice.schedule_window(course, schedule),
+                         (datetime.date(2026, 1, 5), datetime.date(2026, 5, 1)))
+
+    def test_course_schedule_to_recurrence_groups_respects_schedule_window(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'UTC'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
+        schedule = courseschedulehelper.given_course_schedule_exists(
+            course, days_of_week='0100000',
+            mon_start_time=datetime.time(9, 0, 0), mon_end_time=datetime.time(9, 50, 0))
+        schedule.start_date = datetime.date(2026, 3, 9)
+        schedule.end_date = datetime.date(2026, 3, 20)
+        schedule.save()
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, schedule)
+
+        # THEN
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].start.date(), datetime.date(2026, 3, 9))
+        self.assertIn('UNTIL=20260320T235959Z', groups[0].recurrence_rule)
+
     def test_course_schedules_to_events_cycle_emits_matching_cycle_days(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
