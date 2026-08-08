@@ -8,6 +8,8 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from django.conf import settings
+
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.utils.versionutils import client_version_gte
 from helium.planner.models import CourseSchedule
@@ -18,12 +20,10 @@ logger = logging.getLogger(__name__)
 _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 _MIDNIGHT = datetime.time(0, 0, 0)
 
-MULTIPLE_SCHEDULES_MIN_VERSION = '3.8.0'
-
 
 def get_gated_schedules(schedules, request):
     """
-    Below `MULTIPLE_SCHEDULES_MIN_VERSION`, truncate `schedules` to at most
+    Below `settings.MULTIPLE_SCHEDULES_MIN_VERSION`, truncate `schedules` to at most
     one entry per course (the earliest-created), preserving the single-
     schedule-per-course contract those clients' UI assumes — `schedules` may
     span more than one course (e.g. the user-wide list endpoint), so this
@@ -33,7 +33,7 @@ def get_gated_schedules(schedules, request):
     `request` is None for non-HTTP serialization (e.g. data export) — there's
     no client version to gate against there, so nothing is truncated.
     """
-    if request is None or client_version_gte(request, MULTIPLE_SCHEDULES_MIN_VERSION):
+    if request is None or client_version_gte(request, settings.MULTIPLE_SCHEDULES_MIN_VERSION):
         return schedules
 
     seen_course_ids = set()
@@ -99,7 +99,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             course_id = self.context['view'].kwargs.get('course')
             request = self.context.get('request')
 
-            if request is not None and not client_version_gte(request, MULTIPLE_SCHEDULES_MIN_VERSION) \
+            if request is not None and not client_version_gte(request, settings.MULTIPLE_SCHEDULES_MIN_VERSION) \
                     and CourseSchedule.objects.for_course(course_id).exists():
                 raise ValidationError(
                     f'Class {course_id} already has a schedule and there cannot be more than one.')
