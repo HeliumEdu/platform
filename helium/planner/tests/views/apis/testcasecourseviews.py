@@ -9,7 +9,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Course
+from helium.common import enums
+from helium.planner.models import Course, Category
+from helium.planner.services import categoryservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
@@ -93,6 +95,97 @@ class TestCaseCourseViews(APITestCase):
         course = Course.objects.get(pk=response.data['id'])
         coursehelper.verify_course_matches_data(self, course, data)
         coursehelper.verify_course_matches_data(self, course, response.data)
+
+    def test_create_course_with_template_seeds_default_categories(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'credits': 3,
+            'color': '#7bd148',
+            'start_date': '2015-03-05',
+            'end_date': '2015-07-09',
+            'template': enums.STANDARD,
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        course = Course.objects.get(pk=response.data['id'])
+        expected = enums.CATEGORY_TEMPLATES[enums.STANDARD]
+        self.assertEqual(Category.objects.filter(course=course).count(), len(expected))
+        self.assertEqual(
+            set(Category.objects.filter(course=course).values_list('title', flat=True)),
+            {definition['title'] for definition in expected})
+        # Write-only: the template is not echoed back in the response.
+        self.assertNotIn('template', response.data)
+
+    def test_create_course_without_template_seeds_no_categories(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'credits': 3,
+            'color': '#7bd148',
+            'start_date': '2015-03-05',
+            'end_date': '2015-07-09',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        course = Course.objects.get(pk=response.data['id'])
+        self.assertEqual(Category.objects.filter(course=course).count(), 0)
+
+    def test_create_course_with_invalid_template_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'credits': 3,
+            'color': '#7bd148',
+            'start_date': '2015-03-05',
+            'end_date': '2015-07-09',
+            'template': 1,
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_list', kwargs={'course_group': course_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('template', response.data)
+        self.assertEqual(Course.objects.count(), 0)
+
+    def test_seed_categories_is_idempotent(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        expected = enums.CATEGORY_TEMPLATES[enums.STANDARD]
+
+        # WHEN
+        categoryservice.seed_categories(course.pk, enums.STANDARD)
+        categoryservice.seed_categories(course.pk, enums.STANDARD)
+
+        # THEN
+        self.assertEqual(Category.objects.filter(course=course).count(), len(expected))
 
     def test_get_course_by_id(self):
         # GIVEN

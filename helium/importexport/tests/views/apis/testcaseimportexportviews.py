@@ -4,6 +4,7 @@ __license__ = "MIT"
 import datetime
 import json
 import os
+import tempfile
 from unittest import mock
 from zoneinfo import ZoneInfo
 
@@ -238,6 +239,70 @@ class TestCaseImportExportViews(APITestCase):
                                                                          'sent': False, 'dismissed': False,
                                                                          'homework': homework[2].pk,
                                                                          'event': None, 'user': user.pk})
+
+    def test_import_blocks_template_and_provisions_uncategorized(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        import_data = {
+            'course_groups': [{
+                'id': 1, 'title': 'Test Group', 'start_date': '2024-01-01', 'end_date': '2024-05-01',
+                'shown_on_calendar': True, 'overall_grade': '-1', 'user': 1,
+            }],
+            'courses': [{
+                'id': 1, 'title': 'Test Course', 'room': '', 'credits': '3.00', 'color': '#4986e7',
+                'website': '', 'is_online': False, 'current_grade': '-1', 'teacher_name': '',
+                'teacher_email': '', 'start_date': '2024-01-01', 'end_date': '2024-05-01', 'course_group': 1,
+                'template': 0,
+            }],
+            'categories': [],
+        }
+
+        # WHEN
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(import_data, f)
+            f.flush()
+            with open(f.name, 'rb') as fp:
+                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course = Course.objects.get(title='Test Course')
+        categories = Category.objects.filter(course=course)
+        self.assertEqual(categories.count(), 1)
+        self.assertEqual(categories.first().title, 'Uncategorized')
+
+    def test_import_course_with_categories_gets_no_uncategorized(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        import_data = {
+            'course_groups': [{
+                'id': 1, 'title': 'Test Group', 'start_date': '2024-01-01', 'end_date': '2024-05-01',
+                'shown_on_calendar': True, 'overall_grade': '-1', 'user': 1,
+            }],
+            'courses': [{
+                'id': 1, 'title': 'Test Course', 'room': '', 'credits': '3.00', 'color': '#4986e7',
+                'website': '', 'is_online': False, 'current_grade': '-1', 'teacher_name': '',
+                'teacher_email': '', 'start_date': '2024-01-01', 'end_date': '2024-05-01', 'course_group': 1,
+            }],
+            'categories': [{
+                'id': 1, 'title': 'Homework', 'weight': '0.00', 'average_grade': '-1',
+                'grade_by_weight': '0', 'color': '#4986e7', 'course': 1,
+            }],
+        }
+
+        # WHEN
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(import_data, f)
+            f.flush()
+            with open(f.name, 'rb') as fp:
+                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course = Course.objects.get(title='Test Course')
+        categories = Category.objects.filter(course=course)
+        self.assertEqual(categories.count(), 1)
+        self.assertEqual(categories.first().title, 'Homework')
 
     def test_import_invalid_json(self):
         # GIVEN

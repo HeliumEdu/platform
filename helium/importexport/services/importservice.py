@@ -45,6 +45,13 @@ from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCours
 
 logger = logging.getLogger(__name__)
 
+_SECTIONS_WITH_IDS = (
+    'external_calendars', 'course_groups', 'courses', 'course_schedules', 'categories',
+    'material_groups', 'materials', 'events', 'homework', 'reminders', 'notes',
+)
+
+_SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
+
 
 def _extract_legacy_notes(data, legacy_field='comments'):
     """
@@ -63,12 +70,6 @@ def _extract_legacy_notes(data, legacy_field='comments'):
         return html_to_quill(legacy_content)
 
     return None
-
-
-_SECTIONS_WITH_IDS = (
-    'external_calendars', 'course_groups', 'courses', 'course_schedules', 'categories',
-    'material_groups', 'materials', 'events', 'homework', 'reminders', 'notes',
-)
 
 
 def _coerce_id(value, section, key='id'):
@@ -190,6 +191,8 @@ def _import_courses(courses, course_group_remap):
     course_remap = {}
 
     for course in courses:
+        course.pop('template', None)
+
         course_group_id = _resolve_parent(
             course_group_remap, course.get('course_group'), 'courses', 'course_group')
         course['course_group'] = course_group_id
@@ -258,6 +261,12 @@ def _import_categories(categories, request, course_remap):
     logger.info(f"Imported {len(categories)} categories.")
 
     return category_remap
+
+
+def _ensure_courses_have_categories(course_remap):
+    for course_id in course_remap.values():
+        if not Category.objects.filter(course_id=course_id).exists():
+            Category.objects.get_uncategorized(course_id)
 
 
 def _import_material_groups(material_groups, user, example_schedule):
@@ -485,9 +494,6 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
     logger.info(f"Imported {notes_count} notes.")
 
     return notes_count
-
-
-_SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
 
 
 @contextmanager
@@ -794,6 +800,8 @@ def import_user(request, data, example_schedule=False):
 
         categories = data.get('categories', [])
         category_remap = _import_categories(categories, request, course_remap) if categories else {}
+
+        _ensure_courses_have_categories(course_remap)
 
         material_groups = data.get('material_groups', [])
         material_group_remap = _import_material_groups(material_groups, request.user,
