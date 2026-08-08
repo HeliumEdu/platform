@@ -4,12 +4,15 @@ __license__ = "MIT"
 import logging
 
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from helium.common import enums
 from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.models import Course, CourseGroup
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer, get_gated_schedules
+from helium.planner.services import categoryservice
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,9 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     schedules = serializers.SerializerMethodField()
+    template = serializers.ChoiceField(
+        choices=enums.CATEGORY_TEMPLATE_CHOICES, required=False, write_only=True,
+        help_text='The set of default categories to provision on the new course.')
     teacher_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True, default='')
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
@@ -47,13 +53,32 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = (
             'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'trend', 'teacher_name',
-            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'course_group',
+            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template', 'course_group',
             # Property fields (which should also be declared as read-only)
             'num_days', 'num_days_completed', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
             'num_homework_graded',)
         read_only_fields = (
             'course_group', 'current_grade', 'trend', 'num_days', 'num_days_completed', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
+
+    def create(self, validated_data):
+        # `None` means the field was omitted; a provided template can be `0` (a falsy enum value), so
+        # test against None rather than truthiness.
+        template = validated_data.pop('template', None)
+
+        with transaction.atomic():
+            course = super().create(validated_data)
+
+            if template is not None:
+                categoryservice.seed_categories(course.id, template)
+
+        return course
+
+    def update(self, instance, validated_data):
+        # Provisioning only applies at create time; a template on update is a no-op.
+        validated_data.pop('template', None)
+
+        return super().update(instance, validated_data)
 
     @extend_schema_field(CourseScheduleSerializer(many=True))
     def get_schedules(self, obj):
