@@ -9,8 +9,6 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
 
-SUPPORT_CATEGORIES = ('Bug Report', 'Feature Request', 'Account Issue')
-
 
 class SupportContactSerializer(serializers.Serializer):
     """
@@ -19,7 +17,7 @@ class SupportContactSerializer(serializers.Serializer):
     """
     subject = serializers.CharField(max_length=200, trim_whitespace=True)
     email = serializers.EmailField(max_length=254)
-    category = serializers.ChoiceField(choices=SUPPORT_CATEGORIES)
+    category = serializers.ChoiceField(choices=settings.SUPPORT_CATEGORIES)
     description = serializers.CharField(max_length=10000, trim_whitespace=True)
     attachment = serializers.ListField(
         child=serializers.FileField(),
