@@ -33,7 +33,7 @@ class ExternalCalendar(BaseModel):
     last_modified_header = models.CharField(help_text='The Last-Modified header from the last successful iCal fetch.',
                                             max_length=255, blank=True, null=True)
 
-    last_sync_error = models.TextField(help_text='Error message from the most recent failed sync attempt, if any.',
+    last_sync_error = models.TextField(help_text='Error message from the most recent failed sync attempt.',
                                        blank=True, null=True)
 
     consecutive_failures = models.PositiveIntegerField(

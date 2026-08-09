@@ -16,6 +16,36 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://api.heliumedu.com/docs/">
   <!-- ANALYTICS -->
+  <!-- Dark mode: ReDoc exposes no theme token for the main content/page background, so those
+       surfaces are darkened here; the tokened parts (sidebar, right panel, code, http verbs, text,
+       links) live in redocly.yaml. Validate locally — some styled-components elements (deep schema
+       tables, response samples) may need additional rules. -->
+  <style>
+    body { background-color: #0f1416; }
+    /* Only the wrapper is painted so the content area stays transparent and ReDoc's own full-height
+       right-column strip (#1b2023) shows through the gaps between sample blocks. */
+    .redoc-wrap { background-color: #0f1416; }
+    .api-content { color: #e2e6e8; }
+    .api-content h1, .api-content h2, .api-content h3,
+    .api-content h4, .api-content h5 { color: #f0f3f4; }
+    /* Left menu: safety-net over the sidebar theme token. */
+    .menu-content { background-color: #0f1416 !important; }
+    /* Markdown tables (the description tables) have no theme token — darken cells and neutralize the
+       default light row striping. */
+    .api-content table th { background-color: #1b2023 !important; color: #f0f3f4; }
+    .api-content table td { background-color: #131a1c !important; color: #e2e6e8; }
+    .api-content table tr { background-color: transparent !important; }
+    .api-content table td, .api-content table th { border-color: rgba(255, 255, 255, 0.12); }
+    /* Right-panel sample tabs (Payload / language / response code): ReDoc derives the selected tab's
+       background from the (now light) text color, washing out the header — force it to the panel grey. */
+    .react-tabs__tab--selected { background: #1b2023 !important; color: #e2e6e8 !important; }
+    .react-tabs__tab { color: #a9b2b6; }
+    /* Endpoint/servers fold-down dropdown: ReDoc hardcodes a light background on a hashed class, so
+       scope to it via the stable `.http-verb` button it immediately follows. */
+    button:has(> .http-verb) + div { background: #1b2023 !important; color: #e2e6e8 !important;
+      border: 1px solid rgba(255, 255, 255, 0.14) !important; border-top: 0 !important; }
+    button:has(> .http-verb) + div div { background-color: transparent !important; color: #e2e6e8 !important; }
+  </style>
 </head>
 <body>
   {{{redocHTML}}}

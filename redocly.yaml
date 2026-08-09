@@ -1,0 +1,66 @@
+# ReDoc build theming (consumed by `@redocly/cli build-docs`; see Makefile `build-docs`).
+# Redocly CLI v2: theming hangs off the top-level `openapi` key (the older `theme.openapi` wrapper
+# is rejected). Dark palette matched to the Flutter app's dark theme (frontend
+# `lib/config/app_theme.dart`): primary `#5aa2c2`, error `#e15c7b`, success `#33fabe`, warning
+# `#fbc313`. Backgrounds approximate the app's Material-3 `ColorScheme.fromSeed` dark surface tones
+# (seed `#418eb9`) — validate/nudge locally. NOTE: ReDoc's theme exposes no token for the MAIN
+# content/page background or Markdown tables, so those are darkened by the CSS block in
+# `helium/common/templates/redoc-static.hbs`.
+openapi:
+  theme:
+    colors:
+      primary:
+        main: '#5aa2c2'
+      text:
+        primary: '#e2e6e8'
+        secondary: '#a9b2b6'
+      border:
+        dark: 'rgba(255, 255, 255, 0.18)'
+        light: 'rgba(255, 255, 255, 0.06)'
+      # Softened for dark mode — the brand's raw dark semantics (e.g. success `#33fabe`, warning
+      # `#fbc313`) are too saturated as solid pills against the dark background, so these are muted
+      # while staying in the same hue family.
+      http:
+        get: '#5aa2c2'
+        post: '#52c2a2'
+        put: '#dab24e'
+        delete: '#e15c7b'
+        options: '#a58cde'
+        patch: '#cf7b46'
+        basic: '#8b949e'
+        link: '#52c2a2'
+      # Response badges: colored text on a uniform dark-grey pill (the derived default washes out).
+      responses:
+        success:
+          color: '#52c2a2'
+          backgroundColor: '#262d31'
+        error:
+          color: '#e15c7b'
+          backgroundColor: '#262d31'
+        redirect:
+          color: '#dab24e'
+          backgroundColor: '#262d31'
+        info:
+          color: '#5aa2c2'
+          backgroundColor: '#262d31'
+    sidebar:
+      backgroundColor: '#0f1416'
+      textColor: '#e2e6e8'
+      activeTextColor: '#5aa2c2'
+    rightPanel:
+      backgroundColor: '#1b2023'
+      textColor: '#e2e6e8'
+    # Match the right-panel grey so the right column reads as a single background (like light mode),
+    # rather than a hard step-down for code samples / the endpoint bar.
+    codeBlock:
+      backgroundColor: '#1b2023'
+    schema:
+      nestedBackground: '#1b2023'
+    typography:
+      fontSize: '14px'
+      fontFamily: 'Roboto, sans-serif'
+      links:
+        color: '#5aa2c2'
+      code:
+        color: '#dab24e'
+        backgroundColor: 'rgba(255, 255, 255, 0.06)'

@@ -58,6 +58,7 @@ build-docs: install-dev
 		mkdir -p build; \
 		ENVIRONMENT=local python manage.py spectacular --file build/openapi.yaml; \
 		npx -y @redocly/cli@2.30.x build-docs build/openapi.yaml \
+			--config redocly.yaml \
 			--output helium/common/templates/redoc-static.html \
 			--template helium/common/templates/redoc-static.hbs; \
 		ANALYTICS_ENABLED="$(ANALYTICS_ENABLED)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
