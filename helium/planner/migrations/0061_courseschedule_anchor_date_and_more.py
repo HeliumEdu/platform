@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='courseschedule',
             name='template',
-            field=models.PositiveSmallIntegerField(blank=True, choices=[(0, 'Weekly'), (1, 'A/B Day'), (2, '6-Day Cycle'), (3, '8-Day Cycle'), (4, 'Week A/B')], help_text='The template this schedule was created from, if any.', null=True),
+            field=models.PositiveSmallIntegerField(blank=True, choices=[(0, 'Weekly'), (1, 'A/B Day'), (2, '6-Day Cycle'), (3, '8-Day Cycle'), (4, 'Week A/B')], help_text='The template this schedule was created from.', null=True),
         ),
         migrations.AddField(
             model_name='courseschedule',

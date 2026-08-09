@@ -147,3 +147,40 @@ def order_security(result, generator, request, public):
             if isinstance(op, dict) and 'security' in op:
                 op['security'].sort(key=lambda s: rank.get(next(iter(s), ''), 99))
     return result
+
+
+def collapse_nullable_enums(result, generator, request, public):
+    """
+    A nullable enum field is emitted as ``oneOf: [{$ref: FooEnum}, {$ref: NullEnum}]``, which Redoc
+    draws as an expandable "one of" that re-lists the enum a second time (once inline via
+    ``x-enumDescriptions``, once in the expansion) and labels the field "integer or null". Collapse
+    exactly that two-branch shape to a single ``allOf: [{$ref: FooEnum}]`` so the enum renders inline
+    once and reads the same as a non-nullable enum field — an optional field already implies the value
+    may be absent. Runs before ``add_enum_descriptions``, which then injects on the ``allOf``.
+    """
+
+    def _is_null_ref(branch):
+        return isinstance(branch, dict) and branch.get('$ref', '').endswith('/NullEnum')
+
+    def _is_enum_ref(branch):
+        ref = branch.get('$ref', '') if isinstance(branch, dict) else ''
+        return ref.endswith('Enum') and not ref.endswith('/NullEnum')
+
+    def _walk(node):
+        if isinstance(node, dict):
+            for combinator in ('oneOf', 'anyOf'):
+                branches = node.get(combinator)
+                if isinstance(branches, list) and len(branches) == 2 \
+                        and any(_is_null_ref(b) for b in branches) and any(_is_enum_ref(b) for b in branches):
+                    enum_ref = next(b for b in branches if _is_enum_ref(b))
+                    del node[combinator]
+                    node['allOf'] = [enum_ref]
+                    node.pop('nullable', None)
+            for value in list(node.values()):
+                _walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
+
+    _walk(result.get('components', {}).get('schemas', {}))
+    return result

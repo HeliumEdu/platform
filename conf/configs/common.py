@@ -321,13 +321,16 @@ SPECTACULAR_SETTINGS = {
         f"The wire format keeps some legacy names that differ from what users see in the "
         f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
         f"corresponds to the term displayed in the app.\n\n"
-        "| Wire (API) | User-facing | Notes |\n"
-        "| --- | --- | --- |\n"
-        "| `course_group` | **class group** (semester / quarter / term) | Container for the classes a user is taking in a given period. |\n"
-        "| `course` | **class** | A single class within a class group. The API uses `course` to avoid the reserved word `class`. |\n"
-        "| `homework` | **assignment** | A graded item for a class. The API uses `homework` to avoid the reserved word `assignment`. |\n"
-        "| `material` | **resource** | A reference item (syllabus, textbook, link). `material` is the internal model name surfaced in API paths (`/planner/materials/`) and as the per-homework relation field (`homework.materials`, a list of resource IDs). The top-level bulk-import key is `resources` (matching the user-facing term). |\n"
-        "| `material_group` | **resource group** | A container for resources. `material_group` appears in API paths (`/planner/materialgroups/`). The top-level bulk-import key is `resource_groups`. |\n\n"
+        '<table>\n'
+        '<thead><tr><th style="white-space: nowrap; width: 1%;">Wire (API)</th><th>User-facing</th><th>Notes</th></tr></thead>\n'
+        '<tbody>\n'
+        '<tr><td style="white-space: nowrap;"><code>course_group</code></td><td><strong>class group</strong> (semester / quarter / term)</td><td>Container for the classes a user is taking in a given period.</td></tr>\n'
+        '<tr><td style="white-space: nowrap;"><code>course</code></td><td><strong>class</strong></td><td>A single class within a class group. The API uses <code>course</code> to avoid the reserved word <code>class</code>.</td></tr>\n'
+        '<tr><td style="white-space: nowrap;"><code>homework</code></td><td><strong>assignment</strong></td><td>A graded item for a class. The API uses <code>homework</code> to avoid the reserved word <code>assignment</code>.</td></tr>\n'
+        '<tr><td style="white-space: nowrap;"><code>material</code></td><td><strong>resource</strong></td><td>A reference item (syllabus, textbook, link). <code>material</code> is the internal model name surfaced in API paths (<code>/planner/materials/</code>) and as the per-homework relation field (<code>homework.materials</code>, a list of resource IDs). The top-level bulk-import key is <code>resources</code> (matching the user-facing term).</td></tr>\n'
+        '<tr><td style="white-space: nowrap;"><code>material_group</code></td><td><strong>resource group</strong></td><td>A container for resources. <code>material_group</code> appears in API paths (<code>/planner/materialgroups/</code>). The top-level bulk-import key is <code>resource_groups</code>.</td></tr>\n'
+        '</tbody>\n'
+        '</table>\n\n'
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
@@ -442,6 +445,7 @@ SPECTACULAR_SETTINGS = {
     'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
+        'helium.common.utils.openapiutils.collapse_nullable_enums',
         'helium.common.utils.openapiutils.add_enum_descriptions',
         'helium.common.utils.openapiutils.add_tag_groups',
         'helium.common.utils.openapiutils.order_security',

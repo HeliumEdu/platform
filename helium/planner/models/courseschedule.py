@@ -89,7 +89,7 @@ class CourseSchedule(BaseModel):
         blank=True, null=True)
 
     template = models.PositiveSmallIntegerField(
-        help_text='The template this schedule was created from, if any.',
+        help_text='The template this schedule was created from.',
         choices=enums.SCHEDULE_TEMPLATE_CHOICES, blank=True, null=True)
 
     objects = CourseScheduleManager()
