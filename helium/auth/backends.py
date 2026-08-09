@@ -68,7 +68,7 @@ class JWTAuthentication(BaseJWTAuthentication):
         if api_settings.CHECK_USER_IS_ACTIVE and not user.is_active:
             raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
 
-        if api_settings.CHECK_REVOKE_TOKEN:
+        if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():
             if validated_token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
                 raise AuthenticationFailed(_("The user's password has been changed."), code="password_changed")
 

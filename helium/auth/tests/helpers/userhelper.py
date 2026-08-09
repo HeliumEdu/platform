@@ -51,8 +51,9 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
 
 def reauthenticate(client, user):
     """Re-issue a JWT for the user's current password state and set it on the client. Needed after a
-    test mutates the password directly (e.g. set_unusable_password), which rotates the revocation
-    claim and invalidates any previously-issued token once CHECK_REVOKE_TOKEN is enabled."""
+    test mutates the password directly (e.g. set_password), which rotates the revocation claim and
+    invalidates any previously-issued token once CHECK_REVOKE_TOKEN is enabled (only enforced for
+    users with a usable password)."""
     token = RefreshToken.for_user(user)
 
     client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(token.access_token))
