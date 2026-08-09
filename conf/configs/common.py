@@ -356,6 +356,14 @@ SPECTACULAR_SETTINGS = {
         "Each `CourseSchedule` has 14 day-time fields (`sun_start_time`, `sun_end_time`, ... "
         "`sat_end_time`). Omitted day-times default to `12:00:00`, which may collide with real "
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
+        "A `CourseSchedule` defaults to weekly (`days_of_week` + per-day times), but can be a day-based "
+        "cycle (A/B day, N-day: `cycle_length` / `anchor_date` / `cycle_slots`) or a week-based rotation "
+        "(Week A/B: `week_interval` / `week_offset`), and a `template` expands a named preset into those "
+        "fields. A Course may have more than one schedule (e.g. lecture plus lab), though all of a "
+        "Course's schedules share its grade and categories — use separate Courses for independently-graded "
+        "parts. See the "
+        "[create-schedule endpoint](#tag/planner.courseschedule/operation/planner_coursegroups_courses_courseschedules_create) "
+        "for the full field set and templates.\n\n"
         "### Incremental edits via REST\n\n"
         "POST in this order so each create succeeds:\n\n"
         "1. `POST /planner/coursegroups/` — the term (semester / quarter).\n"
@@ -364,9 +372,9 @@ SPECTACULAR_SETTINGS = {
         "Capture any university holidays or instruction-pattern overrides in `Course.exceptions` "
         "(`YYYYMMDD` CSV).\n"
         "3. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/courseschedules/` — "
-        "recurring meeting times for the class: weekly, or a day-based / week-based rotation (see "
-        "'Rotating / alternating schedules' below). A class may have more than one schedule, e.g. "
-        "lecture plus lab — see 'Multiple CourseSchedules per Course' below.\n"
+        "recurring meeting times for the class: weekly, a day-based / week-based rotation, or a `template` "
+        "preset (see the schedule overview above). A class may have more than one schedule, e.g. lecture "
+        "plus lab.\n"
         "4. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/categories/` — graded "
         "categories such as Homework, Exams. Sum of `weight` across a class's categories must stay <= 100. "
         "Set `weight=0` on every category for syllabi using total points rather than weighted "
@@ -386,26 +394,10 @@ SPECTACULAR_SETTINGS = {
         "- **Off-day times default to `12:00:00`.** Send `00:00:00` for both `_start_time` and "
         "`_end_time` on every day a class does NOT meet, so the off-day is unambiguous. Omitted "
         "day-times default to `12:00:00`, which collides with real classes meeting at noon.\n"
-        "- **Multiple CourseSchedules per Course, gated by client version.** A schedule supports a "
-        "different start and end time on each day of the week, so a class that meets MWF at 10:00 and "
-        "Thursdays at 14:00 fits cleanly in one schedule. To read or create more than one "
-        "schedule per Course, send an `X-Client-Version` header of `3.8.0` or higher. Below that version "
-        "(or with the header absent or malformed), reads return only the single, earliest-created "
-        "schedule for each Course, and creating a second schedule on a Course returns a 400. All of a "
-        "Course's schedules share its categories and grade, so use separate Courses for parts graded "
-        "independently (e.g. a lab with its own rubric).\n"
-        "- **Rotating / alternating schedules, gated by client version.** A CourseSchedule can rotate instead of "
-        "repeating weekly. For a \"Week A / Week B\" timetable, set `week_interval` and `week_offset`; the schedule "
-        "reuses `days_of_week` and the per-day times but only meets on the matching week. For a day-based rotation "
-        "(A/B day, N-day cycle), set `cycle_length` + `anchor_date` + `cycle_slots` instead of the per-day times. "
-        "`recurrence_groups` on the response is the resolved, render-ready form. Same `3.8.0` gate as multiple "
-        "schedules.\n"
-        "- **Schedule templates.** Set `template` on write to expand a preset into the rotation fields instead of "
-        "setting them by hand; you still supply the meeting times, `anchor_date`, and `days_of_week`. See the "
-        "`template` field on the "
-        "[create-schedule endpoint](#tag/planner.courseschedule/operation/planner_coursegroups_courses_courseschedules_create) "
-        "for the available templates. For a custom schedule, omit `template` and set the rotation "
-        "fields directly; a template that yields a rotating schedule is subject to the same `3.8.0` gate.\n"
+        "- **Advanced schedules are gated by an `X-Client-Version` header.** Multiple schedules per Course "
+        "and rotating (day-cycle / week-based) schedules require `3.8.0` or higher. Below that — or with the "
+        "header absent or malformed — reads silently return only the single earliest-created schedule per "
+        "Course, and creating a second or a rotating schedule returns a 400.\n"
         "- **No recurrence on Homework or Events.** A weekly problem set across a 15-week term must be "
         "15 separate Homework rows; a weekly office-hour Event likewise. Three ways to handle this:\n"
         "  1. Enumerate the rows up front and POST each one.\n"
@@ -469,7 +461,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                f'{SUPPORT_URL}/grades-and-progress/setting-up-weighted-grading-assignment-categories for more info on grading.'
+                f'[this article]({SUPPORT_URL}/grades-and-progress/setting-up-weighted-grading-assignment-categories) for more info on grading.'
             ),
         },
         {
@@ -477,7 +469,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                f'{SUPPORT_URL}/grades-and-progress/how-helium-calculates-your-grades'
+                f'[this article]({SUPPORT_URL}/grades-and-progress/how-helium-calculates-your-grades).'
             ),
         },
     ],
