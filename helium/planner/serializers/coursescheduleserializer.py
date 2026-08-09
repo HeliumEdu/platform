@@ -32,7 +32,7 @@ _MAX_WEEK_INTERVAL = 52
 
 def get_gated_schedules(schedules, request):
     """
-    Below `ADVANCED_SCHEDULES_MIN_VERSION`, reduce `schedules` to what a pre-advanced client
+    Below `ADVANCED_SCHEDULES_MIN_VERSION`, reduce `schedules` to what a older clients
     understands: at most one **weekly** schedule per course. Rotating rows — day cycles *and*
     week-based ("Week A/B") rotations — are dropped entirely: there's nothing meaningful for such a
     client to render, and it wouldn't understand the rotation config (a week-based row would
@@ -53,7 +53,7 @@ def get_gated_schedules(schedules, request):
     seen_course_ids = set()
     gated_schedules = []
     for schedule in schedules:
-        if schedule.is_cycle:
+        if schedule.is_rotating:
             continue
         if schedule.course_id not in seen_course_ids:
             seen_course_ids.add(schedule.course_id)
@@ -91,12 +91,6 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
     merged in, ready to hand to a recurrence-aware calendar widget without
     recomputing anything client-side — so the client renders weekly and cycle
     schedules identically.
-
-    Clients that send an `X-Client-Version` header of `3.8.0` or higher
-    receive every schedule for the course and may create more than one;
-    clients below that version (or that omit the header) only ever see and
-    may only ever create a single (weekly) schedule per course, matching the
-    single-schedule contract those clients' UI was built against.
     """
 
     recurrence_groups = serializers.SerializerMethodField()
@@ -127,16 +121,6 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         return getattr(self.instance, key) if self.instance else None
 
     def validate(self, attrs):
-        request = self.context.get('request')
-
-        if not self.instance:
-            course_id = self.context['view'].kwargs.get('course')
-
-            if request is not None and not client_version_gte(request, settings.ADVANCED_SCHEDULES_MIN_VERSION) \
-                    and CourseSchedule.objects.for_course(course_id).exists():
-                raise ValidationError(
-                    f'Class {course_id} already has a schedule and there cannot be more than one.')
-
         template = self._resolve(attrs, 'template')
         if template is not None:
             self._apply_template(attrs, template)
@@ -147,12 +131,6 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         if cycle_length is not None and week_interval is not None:
             raise ValidationError("A schedule cannot be both a day cycle ('cycle_length') and a week-based "
                                   "rotation ('week_interval').")
-
-        if cycle_length is not None or week_interval is not None:
-            # Same gate as multi-schedule: a real client below it can't manage a rotating schedule, so
-            # don't let it create one. `request is None` (import) and at/above-gate clients unaffected.
-            if request is not None and not client_version_gte(request, settings.ADVANCED_SCHEDULES_MIN_VERSION):
-                raise ValidationError('Rotating schedules require a newer client version.')
 
         if cycle_length is not None:
             self._validate_cycle(cycle_length, self._resolve(attrs, 'anchor_date'),

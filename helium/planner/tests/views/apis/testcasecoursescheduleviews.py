@@ -141,7 +141,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CourseSchedule.objects.for_course(course.pk).count(), 2)
 
-    def test_create_second_course_schedule_still_rejected_below_gate(self):
+    def test_create_second_course_schedule_allowed_below_gate(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -175,8 +175,8 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             HTTP_X_CLIENT_VERSION='3.7.3')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(CourseSchedule.objects.for_course(course.pk).count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CourseSchedule.objects.for_course(course.pk).count(), 2)
 
     def test_get_course_schedules_truncated_to_earliest_below_gate(self):
         # GIVEN
@@ -214,7 +214,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_create_course_schedule_no_many(self):
+    def test_create_second_course_schedule_allowed_without_version_header(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -247,8 +247,8 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             content_type='application/json')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(CourseSchedule.objects.count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CourseSchedule.objects.count(), 2)
 
     def test_get_course_schedule_by_id(self):
         # GIVEN
@@ -920,7 +920,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertIsNone(schedule.template)
         self.assertEqual(schedule.cycle_length, 2)
 
-    def test_create_template_schedule_below_gate_returns_400(self):
+    def test_create_template_schedule_allowed_below_gate(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -939,7 +939,9 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.7.3')
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        course_schedule = CourseSchedule.objects.get(pk=response.data['id'])
+        self.assertTrue(course_schedule.is_rotating)
 
     def test_create_schedule_with_template_and_conflicting_field_returns_400(self):
         # GIVEN
