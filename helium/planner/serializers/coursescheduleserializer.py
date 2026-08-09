@@ -32,7 +32,7 @@ _MAX_WEEK_INTERVAL = 52
 
 def get_gated_schedules(schedules, request):
     """
-    Below `ADVANCED_SCHEDULES_MIN_VERSION`, reduce `schedules` to what a pre-advanced client
+    Below `ADVANCED_SCHEDULES_MIN_VERSION`, reduce `schedules` to what a older clients
     understands: at most one **weekly** schedule per course. Rotating rows — day cycles *and*
     week-based ("Week A/B") rotations — are dropped entirely: there's nothing meaningful for such a
     client to render, and it wouldn't understand the rotation config (a week-based row would
