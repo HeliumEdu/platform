@@ -4,7 +4,8 @@ __license__ = "MIT"
 import logging
 
 from drf_spectacular.utils import extend_schema, OpenApiExample
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin, \
+    DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
@@ -181,7 +182,8 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
 @extend_schema(
     tags=['planner.courseschedule']
 )
-class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin):
+class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                                    DestroyModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
@@ -209,5 +211,17 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
         response = self.update(request, *args, **kwargs)
 
         logger.info(f"CourseSchedule {kwargs['pk']} updated for user {request.user.pk}")
+
+        return response
+
+    @extend_schema(summary='Delete a CourseSchedule')
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete the given course schedule instance. A Course may have any number of schedules,
+        including none.
+        """
+        response = self.destroy(request, *args, **kwargs)
+
+        logger.info(f"CourseSchedule {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response
