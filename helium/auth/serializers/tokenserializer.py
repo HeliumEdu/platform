@@ -146,7 +146,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                 'Sorry, the given token does have permissions for the given account, or the account is inactive.')
 
         if user:
-            if api_settings.CHECK_REVOKE_TOKEN:
+            if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():
                 if refresh.payload.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
                     raise AuthenticationFailed("The user's password has been changed.")
 
