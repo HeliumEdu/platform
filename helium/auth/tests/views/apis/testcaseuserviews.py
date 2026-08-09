@@ -2,13 +2,12 @@ __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
 import json
-from unittest import mock, skipIf
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework_simplejwt.settings import api_settings
 
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
@@ -209,7 +208,6 @@ class TestCaseUserViews(APITestCase):
         reauth = self.client.get(reverse('auth_user_detail'))
         self.assertEqual(reauth.status_code, status.HTTP_200_OK)
 
-    @skipIf(not api_settings.CHECK_REVOKE_TOKEN, "CHECK_REVOKE_TOKEN is disabled")
     def test_password_change_invalidates_old_access_token(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

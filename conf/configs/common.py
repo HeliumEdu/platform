@@ -270,10 +270,7 @@ SIMPLE_JWT = {
     'TOKEN_BLACKLIST_SERIALIZER': 'helium.auth.serializers.tokenserializer.TokenBlacklistSerializer',
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
-    # TODO: temporarily disabled to fully isolate whether this is causing Google to resend
-    # "You shared some Google Account data with Helium" on every logout/login. Revert to True
-    # once confirmed either way.
-    'CHECK_REVOKE_TOKEN': False,
+    'CHECK_REVOKE_TOKEN': True,
 }
 
 # API tokens are distinct from the short-lived JWT access token; managed via knox.
