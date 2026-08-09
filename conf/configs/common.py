@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.85"
+__version__ = "2.2.86"
 
 import json
 import os
@@ -385,13 +385,12 @@ SPECTACULAR_SETTINGS = {
         "day-times default to `12:00:00`, which collides with real classes meeting at noon.\n"
         "- **Multiple CourseSchedules per Course, gated by client version.** A schedule supports a "
         "different start and end time on each day of the week, so a class that meets MWF at 10:00 and "
-        "Thursdays at 14:00 fits cleanly in one schedule. Use separate Courses (e.g. "
-        "`\"BIO 151 — Lecture\"` and `\"BIO 151 — Lab\"`) instead of extra schedules for sections with "
-        "distinct rooms, TAs, or grading rubrics — same-weekday two-block patterns are a common case that "
-        "still falls under this rule. To read or create more than one "
+        "Thursdays at 14:00 fits cleanly in one schedule. To read or create more than one "
         "schedule per Course, send an `X-Client-Version` header of `3.8.0` or higher. Below that version "
         "(or with the header absent or malformed), reads return only the single, earliest-created "
-        "schedule for each Course, and creating a second schedule on a Course returns a 400.\n"
+        "schedule for each Course, and creating a second schedule on a Course returns a 400. All of a "
+        "Course's schedules share its categories and grade, so use separate Courses for parts graded "
+        "independently (e.g. a lab with its own rubric).\n"
         "- **Rotating / alternating schedules, gated by client version.** A CourseSchedule can rotate instead of "
         "repeating weekly. For a \"Week A / Week B\" timetable, set `week_interval` and `week_offset`; the schedule "
         "reuses `days_of_week` and the per-day times but only meets on the matching week. For a day-based rotation "
@@ -399,11 +398,11 @@ SPECTACULAR_SETTINGS = {
         "`recurrence_groups` on the response is the resolved, render-ready form. Same `3.8.0` gate as multiple "
         "schedules.\n"
         "- **Schedule templates.** Set `template` on write to expand a preset into the rotation fields instead of "
-        "setting them by hand; you still supply the meeting times, `anchor_date`, and `days_of_week`. It is stored "
-        "and returned. Templates: `0` Weekly (no rotation), `1` A/B Day (`cycle_length` 2), `2` 6-Day Cycle "
-        "(`cycle_length` 6), `3` 8-Day Cycle (`cycle_length` 8), `4` Week A/B (`week_interval` 2). For a custom "
-        "schedule, omit `template` (or send `null`) and set the rotation fields directly; a template that yields a "
-        "rotating schedule is subject to the same `3.8.0` gate.\n"
+        "setting them by hand; you still supply the meeting times, `anchor_date`, and `days_of_week`. See the "
+        "`template` field on the "
+        "[create-schedule endpoint](#tag/planner.courseschedule/operation/planner_coursegroups_courses_courseschedules_create) "
+        "for the available templates. For a custom schedule, omit `template` and set the rotation "
+        "fields directly; a template that yields a rotating schedule is subject to the same `3.8.0` gate.\n"
         "- **No recurrence on Homework or Events.** A weekly problem set across a 15-week term must be "
         "15 separate Homework rows; a weekly office-hour Event likewise. Three ways to handle this:\n"
         "  1. Enumerate the rows up front and POST each one.\n"
@@ -453,6 +452,8 @@ SPECTACULAR_SETTINGS = {
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
         'MaterialStatusEnum': enums.MATERIAL_STATUS_CHOICES,
         'ConditionEnum': enums.CONDITION_CHOICES,
+        'CourseScheduleTemplateEnum': enums.SCHEDULE_TEMPLATE_CHOICES,
+        'CourseTemplateEnum': enums.CATEGORY_TEMPLATE_CHOICES,
         'DefaultViewEnum': enums.VIEW_CHOICES,
         'DayOfWeekEnum': enums.DAY_OF_WEEK_CHOICES,
         'ColorSchemeThemeEnum': enums.COLOR_SCHEME_THEME,
