@@ -20,13 +20,8 @@ logger = logging.getLogger(__name__)
 
 _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 _MIDNIGHT = datetime.time(0, 0, 0)
-# A cycle's length is its rotation period in school days (2 for A/B; block schedules are typically
-# 4-8). This ceiling only exists to reject garbage input, so it's set generously to a full year —
-# no academic term, and therefore no rotation, is longer — rather than to any real rotation size.
-_MAX_CYCLE_LENGTH = 366
-# A week-based rotation's size in weeks (2 for Week A/B). Like `_MAX_CYCLE_LENGTH`, this ceiling only
-# rejects garbage — a rotation longer than an academic year is nonsensical.
-_MAX_WEEK_INTERVAL = 52
+_MAX_CYCLE_LENGTH = 20
+_MAX_WEEK_INTERVAL = 8
 
 
 
