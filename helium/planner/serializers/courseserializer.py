@@ -25,12 +25,8 @@ class CourseSerializer(serializers.ModelSerializer):
     for when sections of the same class should be modeled as separate
     Courses.
 
-    `schedules` reflects the requesting client's `X-Client-Version`: `3.8.0`
-    and higher receive every schedule for the course; below that (or with
-    the header absent/malformed) only the single, earliest-created schedule
-    is returned, for compatibility with clients whose UI assumes one
-    schedule per course. Each schedule's `recurrence_groups` carries the
-    pre-computed, renderable form of that schedule (see `CourseScheduleSerializer`).
+    Each schedule's `recurrence_groups` carries the pre-computed, renderable
+    form of that schedule (see `CourseScheduleSerializer`).
     """
 
     schedules = serializers.SerializerMethodField()

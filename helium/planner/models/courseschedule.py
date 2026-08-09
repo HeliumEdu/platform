@@ -113,7 +113,7 @@ class CourseSchedule(BaseModel):
 
     @property
     def is_rotating(self):
-        """A cycle (day-based) or week-based rotation — i.e. anything a pre-advanced client can't render."""
+        """A cycle (day-based) or week-based rotation."""
         return self.is_cycle or self.is_week_based
 
     def clean(self):
