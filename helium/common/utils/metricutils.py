@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 from datadog import initialize, statsd
 
 from helium.auth.utils.userutils import is_staff_user
+from helium.common.utils.versionutils import get_client_version
 
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
-_BASE_TAGS = [f"version:{settings.PROJECT_VERSION}", f"env:{settings.ENVIRONMENT}"]
+_BASE_TAGS = [f"env:{settings.ENVIRONMENT}"]
 
 
 def _normalize_user_agent_tag(user_agent):
@@ -40,6 +41,17 @@ def _normalize_user_agent_tag(user_agent):
         return "web_browser"
 
     return "other"
+
+
+def _platform_version_tag():
+    return f"platform_version:{settings.PROJECT_VERSION}"
+
+
+def _client_version_tag(request):
+    version = get_client_version(request)
+    if version is None:
+        return "client_version:none"
+    return f"client_version:{'.'.join(str(part) for part in version)}"
 
 
 def increment(metric, request=None, response=None, user=None, value=1, extra_tags=None):
@@ -142,6 +154,9 @@ def request_stop(metrics, request, response):
 
         increment('request', request=request, response=response, extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
         timing('request.timing', metrics['Request-Metric-Millis'], extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
+
+        increment('platform_version', extra_tags=[_platform_version_tag()])
+        increment('client_version', extra_tags=[_client_version_tag(request)])
 
         for name, value in metrics.items():
             response.headers[name] = value
