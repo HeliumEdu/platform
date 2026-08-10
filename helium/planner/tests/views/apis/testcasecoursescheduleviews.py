@@ -861,6 +861,59 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         schedule = CourseSchedule.objects.get(pk=response.data['id'])
         self.assertIsNone(schedule.template)
 
+    def test_create_empty_schedule_rejected_for_new_client(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a >=3.8.0 client posts a schedule with no meeting days
+        data = {'days_of_week': '0000000'}
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN it is rejected
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_empty_schedule_allowed_for_old_client(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a pre-3.8.0 client posts a schedule with no meeting days
+        data = {'days_of_week': '0000000'}
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.7.3')
+
+        # THEN it is still allowed (backward compatibility for old clients)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_empty_week_based_schedule_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a week-based schedule is posted with no meeting day
+        data = {
+            'days_of_week': '0000000',
+            'is_week_based': True,
+            'week_offset': 0,
+            'anchor_date': '2026-03-02',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN it is rejected (week-based always requires a meeting day, ungated)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_switch_template_clears_opposite_rotation_type(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
