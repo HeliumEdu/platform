@@ -891,8 +891,8 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertFalse(schedule.is_week_based)
         self.assertIsNone(schedule.week_offset)
 
-    def test_convert_template_to_custom_via_null_template(self):
-        # GIVEN
+    def test_edit_to_non_preset_cycle_length_clears_template(self):
+        # GIVEN an A/B Day (2-day) schedule
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -900,11 +900,10 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         schedule.template = enums.AB_DAY
         schedule.save()
 
-        # WHEN
+        # WHEN it is edited to a cycle length that no preset represents
         data = {
             'days_of_week': '0000000',
-            'template': None,
-            'cycle_length': 2,
+            'cycle_length': 5,
             'anchor_date': '2017-01-06',
             'cycle_slots': [{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
         }
@@ -913,11 +912,11 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': schedule.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN
+        # THEN the template self-clears to null while the raw cycle is kept
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         schedule.refresh_from_db()
         self.assertIsNone(schedule.template)
-        self.assertEqual(schedule.cycle_length, 2)
+        self.assertEqual(schedule.cycle_length, 5)
 
     def test_create_template_schedule_allowed_below_gate(self):
         # GIVEN
@@ -942,13 +941,13 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_schedule = CourseSchedule.objects.get(pk=response.data['id'])
         self.assertTrue(course_schedule.is_rotating)
 
-    def test_create_schedule_with_template_and_conflicting_field_returns_400(self):
+    def test_template_and_conflicting_field_self_heals_to_matching_template(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN
+        # WHEN a template is sent alongside a cycle_length that contradicts it
         data = {
             'days_of_week': '0000000',
             'template': enums.AB_DAY,
@@ -961,8 +960,56 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # THEN the raw field wins and template is re-derived to match it
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        schedule = CourseSchedule.objects.get(pk=response.data['id'])
+        self.assertEqual(schedule.cycle_length, 6)
+        self.assertEqual(schedule.template, enums.SIX_DAY_CYCLE)
+
+    def test_raw_cycle_length_infers_matching_template(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a day cycle is created from raw fields with no template
+        data = {
+            'days_of_week': '0000000',
+            'cycle_length': 2,
+            'anchor_date': '2026-03-02',
+            'cycle_slots': [{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN the backend fills in the matching preset template
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['template'], enums.AB_DAY)
+
+    def test_raw_week_based_infers_week_ab_template(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a week-based schedule is created from raw fields with no template
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'is_week_based': True,
+            'week_offset': 0,
+            'anchor_date': '2026-03-02',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN the backend derives the Week A/B template
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['template'], enums.WEEK_AB)
 
     def test_create_schedule_invalid_template_returns_400(self):
         # GIVEN

@@ -291,7 +291,7 @@ SPECTACULAR_SETTINGS = {
         "The API exposes all entities in the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
         "assignments, events, reminders, notes, file attachments, materials, external "
-        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal"
+        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal "
         "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
         "Two flows are supported:\n\n"

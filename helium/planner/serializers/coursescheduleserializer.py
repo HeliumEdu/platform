@@ -22,6 +22,14 @@ _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 _MIDNIGHT = datetime.time(0, 0, 0)
 _MAX_CYCLE_LENGTH = 20
 
+# Cycle length -> the preset template that represents it, so `template` can be derived
+# from a schedule's raw fields (and cleared when they no longer match any preset).
+_CYCLE_LENGTH_TO_TEMPLATE = {
+    spec['fields']['cycle_length']: template_id
+    for template_id, spec in enums.SCHEDULE_TEMPLATES.items()
+    if 'cycle_length' in spec['fields']
+}
+
 
 
 def get_gated_schedules(schedules, request):
@@ -115,9 +123,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         return getattr(self.instance, key) if self.instance else None
 
     def validate(self, attrs):
-        template = self._resolve(attrs, 'template')
-        if template is not None:
-            self._apply_template(attrs, template)
+        # A `template` sent in this request fills the rotation fields it implies, but
+        # only as defaults — the client's own fields win (see `_apply_template_defaults`).
+        if attrs.get('template') is not None:
+            self._apply_template_defaults(attrs, attrs['template'])
 
         cycle_length = self._resolve(attrs, 'cycle_length')
         is_week_based = self._resolve(attrs, 'is_week_based')
@@ -139,6 +148,11 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                                       "rotating schedule.")
             self._validate_weekly(attrs)
 
+        # `template` is canonical: derived from the resulting rotation shape, so raw fields
+        # matching a preset get it filled in and edits that no longer match clear it — the
+        # API self-heals rather than letting `template` drift out of sync with the fields.
+        attrs['template'] = self._canonical_template(cycle_length, is_week_based)
+
         start_date = self._resolve(attrs, 'start_date')
         end_date = self._resolve(attrs, 'end_date')
         if start_date and end_date and start_date > end_date:
@@ -146,18 +160,15 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def _apply_template(self, attrs, template):
+    def _apply_template_defaults(self, attrs, template):
+        # Fill the fields a template implies, but only where the client didn't set them
+        # (client fields win, and `template` is re-derived from the result). Stale state the
+        # template doesn't own — e.g. the other rotation type when switching — is cleared.
         fields = enums.SCHEDULE_TEMPLATES[template]['fields']
-        conflicts = [key for key, value in fields.items() if key in attrs and attrs[key] != value]
-        if conflicts:
-            names = ', '.join(f"'{key}'" for key in conflicts)
-            raise ValidationError(f"Fields set by 'template' cannot be given a conflicting value: {names}.")
-
         is_cycle = 'cycle_length' in fields
         is_week = 'is_week_based' in fields
-        # The template owns its rotation shape, so stale state it doesn't own — e.g. the other type when
-        # switching templates on update — is cleared, while a conflicting field the client sent in this
-        # request is left in place for mutual-exclusion validation to reject.
+        for key, value in fields.items():
+            attrs.setdefault(key, value)
         if not is_cycle:
             attrs.setdefault('cycle_length', None)
             attrs.setdefault('cycle_slots', None)
@@ -166,7 +177,15 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             attrs.setdefault('week_offset', None)
         if not (is_cycle or is_week):
             attrs.setdefault('anchor_date', None)
-        attrs.update(fields)
+
+    def _canonical_template(self, cycle_length, is_week_based):
+        # The preset a shape maps to, or None for a custom cycle length or a plain weekly
+        # schedule. Keeps `template` a pure function of the rotation fields.
+        if is_week_based:
+            return enums.WEEK_AB
+        if cycle_length is not None:
+            return _CYCLE_LENGTH_TO_TEMPLATE.get(cycle_length)
+        return None
 
     def _validate_week_based(self, week_offset, anchor_date, attrs):
         if anchor_date is None:
