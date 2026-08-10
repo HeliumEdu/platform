@@ -104,7 +104,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         """
         Partially update the given external calendar instance.
 
-        If `url`` is given, the server will fetch it and validate the response is a valid iCal feed, and if not a
+        If `url` is given, the server will fetch it and validate the response is a valid iCal feed, and if not a
         400 is returned.
         """
         response = self.partial_update(request, *args, **kwargs)

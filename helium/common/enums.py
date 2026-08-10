@@ -166,6 +166,6 @@ SCHEDULE_TEMPLATES = {
     SEVEN_DAY_CYCLE: {'label': '7-Day Cycle', 'fields': {'cycle_length': 7}},
     EIGHT_DAY_CYCLE: {'label': '8-Day Cycle', 'fields': {'cycle_length': 8}},
     TEN_DAY_CYCLE: {'label': '10-Day Cycle', 'fields': {'cycle_length': 10}},
-    WEEK_AB: {'label': 'Week A/B', 'fields': {'week_interval': 2}},
+    WEEK_AB: {'label': 'Week A/B', 'fields': {'is_week_based': True}},
 }
 SCHEDULE_TEMPLATE_CHOICES = tuple((key, template['label']) for key, template in SCHEDULE_TEMPLATES.items())

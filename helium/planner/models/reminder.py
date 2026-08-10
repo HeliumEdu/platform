@@ -46,7 +46,7 @@ class Reminder(BaseModel):
     homework = models.ForeignKey('Homework', help_text='The homework with which to associate (mutually exclusive with `event` and `course`).',
                                  related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
-    event = models.ForeignKey('Event', help_text='The event with which to associate  (mutually exclusive with `homework` and `course`).',
+    event = models.ForeignKey('Event', help_text='The event with which to associate (mutually exclusive with `homework` and `course`).',
                               related_name='reminders', blank=True, null=True, on_delete=models.CASCADE)
 
     course = models.ForeignKey('Course', help_text='The course with which to associate (mutually exclusive with `homework` and `event`).',

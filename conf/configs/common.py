@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.92"
+__version__ = "2.2.93"
 
 import json
 import os
@@ -291,7 +291,7 @@ SPECTACULAR_SETTINGS = {
         "The API exposes all entities in the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
         "assignments, events, reminders, notes, file attachments, materials, external "
-        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal"
+        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal "
         "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
         "Two flows are supported:\n\n"
@@ -358,7 +358,7 @@ SPECTACULAR_SETTINGS = {
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
         "A `CourseSchedule` defaults to weekly (`days_of_week` + per-day times), but can be a day-based "
         "cycle (A/B day, N-day: `cycle_length` / `anchor_date` / `cycle_slots`) or a week-based rotation "
-        "(Week A/B: `week_interval` / `week_offset`), and a `template` expands a named preset into those "
+        "(Week A/B: `is_week_based` / `week_offset`), and a `template` expands a named preset into those "
         "fields. A Course may have more than one schedule (e.g. lecture plus lab), though all of a "
         "Course's schedules share its grade and categories — use separate Courses for independently-graded "
         "parts. See the "

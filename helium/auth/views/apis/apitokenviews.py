@@ -44,7 +44,7 @@ class ApiTokenView(HeliumAPIView):
     def post(self, request, *args, **kwargs):
         """
         Generate a long-lived API token. The plaintext is returned only once in this response.
-        If the user already has an API token, it is invalidated and a  new
+        If the user already has an API token, it is invalidated and a new
         one is issued.
         """
         AuthToken.objects.filter(user=request.user).delete()
