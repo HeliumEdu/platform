@@ -44,7 +44,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     def get(self, request, *args, **kwargs):
         """
         Return a list of all attachment instances for the authenticated user. To download the attachment, follow the
-        link contained in the `attachment` field of an instance, which will direct you to attached media URL.
+        link contained in the `attachment` field of an instance, which will direct you to the attached media URL.
         """
         response = self.list(request, *args, **kwargs)
 
@@ -128,7 +128,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
     def get(self, request, *args, **kwargs):
         """
         Return the given attachment instance. To download the attachment, follow the link contained in the `attachment`
-        field of an instance, which will direct you to attached media URL.
+        field of an instance, which will direct you to the attached media URL.
         """
         response = self.retrieve(request, *args, **kwargs)
 

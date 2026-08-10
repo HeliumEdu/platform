@@ -358,7 +358,7 @@ SPECTACULAR_SETTINGS = {
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"
         "A `CourseSchedule` defaults to weekly (`days_of_week` + per-day times), but can be a day-based "
         "cycle (A/B day, N-day: `cycle_length` / `anchor_date` / `cycle_slots`) or a week-based rotation "
-        "(Week A/B: `week_interval` / `week_offset`), and a `template` expands a named preset into those "
+        "(Week A/B: `is_week_based` / `week_offset`), and a `template` expands a named preset into those "
         "fields. A Course may have more than one schedule (e.g. lecture plus lab), though all of a "
         "Course's schedules share its grade and categories — use separate Courses for independently-graded "
         "parts. See the "

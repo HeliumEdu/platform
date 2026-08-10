@@ -891,6 +891,32 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertFalse(schedule.is_week_based)
         self.assertIsNone(schedule.week_offset)
 
+    def test_create_week_based_schedule_from_template(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN a Week A/B schedule is created via the WEEK_AB template
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'template': enums.WEEK_AB,
+            'week_offset': 0,
+            'anchor_date': '2026-03-02',
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
+
+        # THEN the template resolves to a week-based schedule (not a nonexistent field)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        schedule = CourseSchedule.objects.get(pk=response.data['id'])
+        self.assertTrue(schedule.is_week_based)
+        self.assertEqual(schedule.week_offset, 0)
+        self.assertEqual(schedule.template, enums.WEEK_AB)
+
     def test_edit_to_non_preset_cycle_length_clears_template(self):
         # GIVEN an A/B Day (2-day) schedule
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
