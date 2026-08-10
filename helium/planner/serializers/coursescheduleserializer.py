@@ -141,12 +141,16 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         elif is_week_based:
             self._validate_week_based(self._resolve(attrs, 'week_offset'),
                                       self._resolve(attrs, 'anchor_date'), attrs)
+            self._require_meeting_day(attrs)
         else:
             if attrs.get('anchor_date') is not None or attrs.get('cycle_slots') is not None \
                     or attrs.get('week_offset') is not None:
                 raise ValidationError("'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a "
                                       "rotating schedule.")
             self._validate_weekly(attrs)
+            request = self.context.get('request')
+            if request is not None and client_version_gte(request, settings.ADVANCED_SCHEDULES_MIN_VERSION):
+                self._require_meeting_day(attrs)
 
         # `template` is canonical: derived from the resulting rotation shape, so raw fields
         # matching a preset get it filled in and edits that no longer match clear it — the
@@ -247,3 +251,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                     f"are `00:00:00`. Set non-zero meeting times for active days, or mark the day inactive "
                     f"in 'days_of_week'."
                 )
+
+    def _require_meeting_day(self, attrs):
+        days_of_week = attrs.get('days_of_week')
+        if days_of_week is None and self.instance:
+            days_of_week = self.instance.days_of_week
+        if not days_of_week or '1' not in days_of_week:
+            raise ValidationError("A schedule must meet on at least one day.")
