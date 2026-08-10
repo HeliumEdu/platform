@@ -613,7 +613,7 @@ class TestCaseImportExportViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         courseschedulehelper.given_week_based_schedule_exists(
-            course, days_of_week='0100000', week_interval=2, week_offset=1, anchor_date=datetime.date(2026, 3, 2))
+            course, days_of_week='0100000', week_offset=1, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN
         export_response = self.client.get(reverse('importexport_export'))
@@ -622,7 +622,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(len(export_data['course_schedules']), 1)
-        self.assertEqual(export_data['course_schedules'][0]['week_interval'], 2)
+        self.assertTrue(export_data['course_schedules'][0]['is_week_based'])
         self.assertEqual(export_data['course_schedules'][0]['week_offset'], 1)
 
         # WHEN
@@ -634,7 +634,6 @@ class TestCaseImportExportViews(APITestCase):
         imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
         imported = CourseSchedule.objects.get(course=imported_course)
         self.assertTrue(imported.is_week_based)
-        self.assertEqual(imported.week_interval, 2)
         self.assertEqual(imported.week_offset, 1)
         self.assertEqual(imported.anchor_date, datetime.date(2026, 3, 2))
 

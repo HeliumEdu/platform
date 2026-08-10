@@ -714,7 +714,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         data = {
             'days_of_week': '0100000',
             'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
-            'week_interval': 2, 'week_offset': 0, 'anchor_date': '2026-03-02',
+            'is_week_based': True, 'week_offset': 0, 'anchor_date': '2026-03-02',
         }
         response = self.client.post(
             reverse('planner_coursegroups_courses_courseschedules_list',
@@ -725,7 +725,6 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         schedule = CourseSchedule.objects.get(pk=response.data['id'])
         self.assertTrue(schedule.is_week_based)
-        self.assertEqual(schedule.week_interval, 2)
         self.assertEqual(schedule.week_offset, 0)
         self.assertEqual(schedule.anchor_date.isoformat(), '2026-03-02')
 
@@ -739,7 +738,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         data = {
             'days_of_week': '0100000',
             'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
-            'week_interval': 2, 'anchor_date': '2026-03-02',
+            'is_week_based': True, 'anchor_date': '2026-03-02',
         }
         response = self.client.post(
             reverse('planner_coursegroups_courses_courseschedules_list',
@@ -766,7 +765,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertIsNone(response.data[0]['week_interval'])
+        self.assertFalse(response.data[0]['is_week_based'])
 
     def test_create_course_schedule_with_date_window(self):
         # GIVEN
@@ -889,7 +888,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         schedule.refresh_from_db()
         self.assertEqual(schedule.template, enums.AB_DAY)
         self.assertEqual(schedule.cycle_length, 2)
-        self.assertIsNone(schedule.week_interval)
+        self.assertFalse(schedule.is_week_based)
         self.assertIsNone(schedule.week_offset)
 
     def test_convert_template_to_custom_via_null_template(self):

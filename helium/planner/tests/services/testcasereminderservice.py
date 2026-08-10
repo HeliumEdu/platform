@@ -579,7 +579,7 @@ class TestCaseReminderService(TestCase):
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
         courseschedulehelper.given_week_based_schedule_exists(
-            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+            course, days_of_week='0100000', week_offset=0, anchor_date=datetime.date(2026, 3, 2))
         reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
 
         # WHEN
@@ -601,7 +601,7 @@ class TestCaseReminderService(TestCase):
         course.exceptions = '20260302'
         course.save()
         courseschedulehelper.given_week_based_schedule_exists(
-            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+            course, days_of_week='0100000', week_offset=0, anchor_date=datetime.date(2026, 3, 2))
         reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
 
         # WHEN
