@@ -365,14 +365,18 @@ def resolve_cycle_index(course_schedule, date, exceptions):
     return (school_days - 1) % course_schedule.cycle_length + 1
 
 
+# Week-based ("Week A/B") rotations always alternate every other week.
+_WEEK_ROTATION_INTERVAL = 2
+
+
 def resolve_week_index(course_schedule, date):
     """
     For a week-based rotation ("Week A/B"), the 0-based week-of-rotation that ``date`` falls in —
-    counted from the Monday of ``anchor_date``'s week, mod ``week_interval``. Weeks are
+    counted from the Monday of ``anchor_date``'s week, mod 2 (weeks alternate A/B). Weeks are
     calendar-aligned, so holidays do NOT shift the count (the opposite of ``resolve_cycle_index``).
     Returns ``None`` for a non-week-based schedule or a missing anchor.
 
-    :param course_schedule: The schedule (its ``week_interval``/``anchor_date`` drive the count).
+    :param course_schedule: The schedule (its ``anchor_date`` drives the count).
     :param date: The calendar date to resolve.
     :return: The 0-based week-of-rotation index, or ``None``.
     """
@@ -382,7 +386,7 @@ def resolve_week_index(course_schedule, date):
     anchor_monday = course_schedule.anchor_date - datetime.timedelta(days=course_schedule.anchor_date.weekday())
     weeks_since = (date - anchor_monday).days // 7
 
-    return weeks_since % course_schedule.week_interval
+    return weeks_since % _WEEK_ROTATION_INTERVAL
 
 
 def course_schedule_to_recurrence_groups(course, course_schedule):
@@ -530,7 +534,7 @@ def _find_first_week_occurrence(course_schedule, weekdays, window):
 def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
     """
     A week-based rotation ("Week A/B") is calendar-week-periodic, so — unlike a day cycle — each
-    time-slot is a plain periodic RRULE: `FREQ=WEEKLY;INTERVAL=<week_interval>` anchored to the first
+    time-slot is a plain periodic RRULE: `FREQ=WEEKLY;INTERVAL=2` anchored to the first
     occurrence in a `week_offset`-matching week (WKST defaults to Monday, matching the anchor-Monday
     week counting). Holidays are ordinary EXDATEs — no shift. Same `CourseScheduleRecurrenceGroup`
     shape as the weekly path, so the client can't tell them apart.
@@ -558,7 +562,7 @@ def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
         ]
 
         byday = ','.join(WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
-        recurrence_rule = (f'FREQ=WEEKLY;INTERVAL={course_schedule.week_interval};BYDAY={byday};'
+        recurrence_rule = (f'FREQ=WEEKLY;INTERVAL={_WEEK_ROTATION_INTERVAL};BYDAY={byday};'
                            f'UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}')
 
         groups.append(CourseScheduleRecurrenceGroup(

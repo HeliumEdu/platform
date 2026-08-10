@@ -37,11 +37,11 @@ def given_cycle_schedule_exists(course, cycle_length=2, anchor_date=datetime.dat
                                          cycle_slots=cycle_slots)
 
 
-def given_week_based_schedule_exists(course, days_of_week='0100000', week_interval=2, week_offset=0,
+def given_week_based_schedule_exists(course, days_of_week='0100000', week_offset=0,
                                      anchor_date=datetime.date(2026, 3, 2),
                                      mon_start_time=datetime.time(9, 0, 0), mon_end_time=datetime.time(9, 50, 0),
                                      wed_start_time=datetime.time(9, 0, 0), wed_end_time=datetime.time(9, 50, 0)):
-    return CourseSchedule.objects.create(course=course, days_of_week=days_of_week, week_interval=week_interval,
+    return CourseSchedule.objects.create(course=course, days_of_week=days_of_week, is_week_based=True,
                                          week_offset=week_offset, anchor_date=anchor_date,
                                          mon_start_time=mon_start_time, mon_end_time=mon_end_time,
                                          wed_start_time=wed_start_time, wed_end_time=wed_end_time)

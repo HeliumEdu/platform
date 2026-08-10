@@ -20,13 +20,7 @@ logger = logging.getLogger(__name__)
 
 _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 _MIDNIGHT = datetime.time(0, 0, 0)
-# A cycle's length is its rotation period in school days (2 for A/B; block schedules are typically
-# 4-8). This ceiling only exists to reject garbage input, so it's set generously to a full year —
-# no academic term, and therefore no rotation, is longer — rather than to any real rotation size.
-_MAX_CYCLE_LENGTH = 366
-# A week-based rotation's size in weeks (2 for Week A/B). Like `_MAX_CYCLE_LENGTH`, this ceiling only
-# rejects garbage — a rotation longer than an academic year is nonsensical.
-_MAX_WEEK_INTERVAL = 52
+_MAX_CYCLE_LENGTH = 20
 
 
 
@@ -79,12 +73,12 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
     """
     A class's schedule. Three shapes:
 
-    - **Weekly** (`cycle_length` and `week_interval` both null): defined by `days_of_week`
+    - **Weekly** (`cycle_length` null and `is_week_based` false): defined by `days_of_week`
       and the per-day `*_start_time` / `*_end_time` fields — the writable, canonical form.
     - **Day cycle** (`cycle_length` set): a day-based rotation defined by `cycle_length` +
       `anchor_date` + `cycle_slots`; the weekly fields are ignored.
-    - **Week-based** (`week_interval` set): a calendar-week rotation that reuses the weekly
-      fields but only meets on the week matching `week_offset`, every `week_interval` weeks.
+    - **Week-based** (`is_week_based` true): a calendar-week rotation that reuses the weekly
+      fields but only meets every other week, on the week matching `week_offset`.
 
     `recurrence_groups` is the derived, read-only rendering of whichever shape
     applies: exceptions from `Course.exceptions` / `CourseGroup.exceptions` already
@@ -101,7 +95,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'id', 'days_of_week', 'sun_start_time', 'sun_end_time', 'mon_start_time', 'mon_end_time', 'tue_start_time',
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'cycle_length', 'anchor_date', 'cycle_slots',
-            'week_interval', 'week_offset', 'start_date', 'end_date', 'template', 'recurrence_groups')
+            'is_week_based', 'week_offset', 'start_date', 'end_date', 'template', 'recurrence_groups')
         read_only_fields = ('course',)
         extra_kwargs = {
             'days_of_week': {'required': True},
@@ -126,17 +120,17 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             self._apply_template(attrs, template)
 
         cycle_length = self._resolve(attrs, 'cycle_length')
-        week_interval = self._resolve(attrs, 'week_interval')
+        is_week_based = self._resolve(attrs, 'is_week_based')
 
-        if cycle_length is not None and week_interval is not None:
+        if cycle_length is not None and is_week_based:
             raise ValidationError("A schedule cannot be both a day cycle ('cycle_length') and a week-based "
-                                  "rotation ('week_interval').")
+                                  "rotation ('is_week_based').")
 
         if cycle_length is not None:
             self._validate_cycle(cycle_length, self._resolve(attrs, 'anchor_date'),
                                  self._resolve(attrs, 'cycle_slots'))
-        elif week_interval is not None:
-            self._validate_week_based(week_interval, self._resolve(attrs, 'week_offset'),
+        elif is_week_based:
+            self._validate_week_based(self._resolve(attrs, 'week_offset'),
                                       self._resolve(attrs, 'anchor_date'), attrs)
         else:
             if attrs.get('anchor_date') is not None or attrs.get('cycle_slots') is not None \
@@ -160,7 +154,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             raise ValidationError(f"Fields set by 'template' cannot be given a conflicting value: {names}.")
 
         is_cycle = 'cycle_length' in fields
-        is_week = 'week_interval' in fields
+        is_week = 'is_week_based' in fields
         # The template owns its rotation shape, so stale state it doesn't own — e.g. the other type when
         # switching templates on update — is cleared, while a conflicting field the client sent in this
         # request is left in place for mutual-exclusion validation to reject.
@@ -168,19 +162,17 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             attrs.setdefault('cycle_length', None)
             attrs.setdefault('cycle_slots', None)
         if not is_week:
-            attrs.setdefault('week_interval', None)
+            attrs.setdefault('is_week_based', False)
             attrs.setdefault('week_offset', None)
         if not (is_cycle or is_week):
             attrs.setdefault('anchor_date', None)
         attrs.update(fields)
 
-    def _validate_week_based(self, week_interval, week_offset, anchor_date, attrs):
-        if not 2 <= week_interval <= _MAX_WEEK_INTERVAL:
-            raise ValidationError(f"'week_interval' must be between 2 and {_MAX_WEEK_INTERVAL}.")
+    def _validate_week_based(self, week_offset, anchor_date, attrs):
         if anchor_date is None:
             raise ValidationError("'anchor_date' is required for a week-based rotation.")
-        if week_offset is None or not 0 <= week_offset < week_interval:
-            raise ValidationError(f"'week_offset' must be an integer in [0, {week_interval - 1}].")
+        if week_offset not in (0, 1):
+            raise ValidationError("'week_offset' must be 0 (Week A) or 1 (Week B).")
 
         self._validate_weekly(attrs)
 

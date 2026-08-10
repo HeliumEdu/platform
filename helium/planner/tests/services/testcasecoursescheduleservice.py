@@ -269,7 +269,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_resolve_week_index_counts_calendar_weeks(self):
         # GIVEN
-        schedule = CourseSchedule(week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))  # Monday
+        schedule = CourseSchedule(is_week_based=True, week_offset=0, anchor_date=datetime.date(2026, 3, 2))  # Monday
 
         # WHEN/THEN
         # shift it, unlike a day cycle.
@@ -329,7 +329,7 @@ class TestCaseCourseScheduleService(TestCase):
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
         course_schedule = courseschedulehelper.given_week_based_schedule_exists(
-            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+            course, days_of_week='0100000', week_offset=0, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN
         groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
@@ -351,7 +351,7 @@ class TestCaseCourseScheduleService(TestCase):
         # WHEN/THEN
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                CourseSchedule.objects.create(course=course, cycle_length=2, week_interval=2)
+                CourseSchedule.objects.create(course=course, cycle_length=2, is_week_based=True)
 
     def test_course_schedule_to_recurrence_groups_week_based_excludes_exception_date(self):
         # GIVEN
@@ -364,7 +364,7 @@ class TestCaseCourseScheduleService(TestCase):
         course.exceptions = '20260316'
         course.save()
         course_schedule = courseschedulehelper.given_week_based_schedule_exists(
-            course, days_of_week='0100000', week_interval=2, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+            course, days_of_week='0100000', week_offset=0, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN
         groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
