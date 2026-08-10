@@ -59,7 +59,7 @@ class CourseSchedule(BaseModel):
                                related_name='schedules', on_delete=models.CASCADE)
 
     cycle_length = models.PositiveSmallIntegerField(
-        help_text='The number of school days in one rotation cycle (mutually exclusive with `week_interval`).',
+        help_text='The number of school days in one rotation cycle (mutually exclusive with `is_week_based`).',
         blank=True, null=True)
 
     anchor_date = models.DateField(
@@ -71,10 +71,10 @@ class CourseSchedule(BaseModel):
                   '`{"indices": [...], "start_time": "HH:MM:SS", "end_time": "HH:MM:SS"}`.',
         blank=True, null=True)
 
-    week_interval = models.PositiveSmallIntegerField(
-        help_text='The number of weeks in one rotation for a week-based schedule '
-                  '(mutually exclusive with `cycle_length`).',
-        blank=True, null=True)
+    is_week_based = models.BooleanField(
+        help_text='Whether this is a week-based ("Week A/B") rotation, meeting every other week on '
+                  'the week matching `week_offset` (mutually exclusive with `cycle_length`).',
+        default=False)
 
     week_offset = models.PositiveSmallIntegerField(
         help_text="Which week of the rotation this schedule meets, counted from `anchor_date`'s week.",
@@ -98,7 +98,7 @@ class CourseSchedule(BaseModel):
         verbose_name = 'Class schedule'
         constraints = [
             models.CheckConstraint(
-                check=~(Q(cycle_length__isnull=False) & Q(week_interval__isnull=False)),
+                check=~(Q(cycle_length__isnull=False) & Q(is_week_based=True)),
                 name='courseschedule_single_rotation_type',
             ),
         ]
@@ -106,10 +106,6 @@ class CourseSchedule(BaseModel):
     @property
     def is_cycle(self):
         return self.cycle_length is not None
-
-    @property
-    def is_week_based(self):
-        return self.week_interval is not None
 
     @property
     def is_rotating(self):
