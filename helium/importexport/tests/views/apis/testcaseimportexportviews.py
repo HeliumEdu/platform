@@ -767,7 +767,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(MaterialGroup.objects.count(), 3)
         self.assertEqual(Material.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
-        self.assertEqual(Reminder.objects.count(), 16)
+        self.assertEqual(Reminder.objects.count(), 9)
         self.assertEqual(Event.objects.count(), 9)
 
         homework1 = Homework.objects.all()[0]
@@ -844,8 +844,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Material.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
         self.assertEqual(Event.objects.count(), 9)
-        # 15 from fixture + 1 created by create_next_repeating_reminder for the course reminder
-        self.assertEqual(Reminder.objects.count(), 16)
+        # 8 from fixture + 1 created by create_next_repeating_reminder for the course reminder
+        self.assertEqual(Reminder.objects.count(), 9)
         # 28 direct notes + 1 legacy homework comment + 1 legacy material details = 30
         self.assertEqual(Note.objects.count(), 30)
 
@@ -1093,13 +1093,13 @@ class TestCaseImportExportViews(APITestCase):
 
         # --- Reminders ---
         all_reminders = Reminder.objects.all()
-        self.assertEqual(all_reminders.count(), 16)
+        self.assertEqual(all_reminders.count(), 9)
 
         hw_reminders = all_reminders.filter(homework__isnull=False)
         event_reminders = all_reminders.filter(event__isnull=False)
         course_reminders = all_reminders.filter(course__isnull=False)
-        self.assertEqual(hw_reminders.count(), 12)
-        self.assertEqual(event_reminders.count(), 2)
+        self.assertEqual(hw_reminders.count(), 6)
+        self.assertEqual(event_reminders.count(), 1)
         self.assertGreaterEqual(course_reminders.count(), 1)
 
         # Verify every reminder belongs to the user and has exactly one parent
@@ -1112,7 +1112,7 @@ class TestCaseImportExportViews(APITestCase):
             ])
             self.assertEqual(parents, 1)
 
-        # Event reminders: both Push (type 3) for the same event
+        # Event reminder: a single Push (type 3)
         for reminder in event_reminders:
             self.assertEqual(reminder.event, study_midterm)
             self.assertEqual(reminder.title, 'Bring notes for group')
