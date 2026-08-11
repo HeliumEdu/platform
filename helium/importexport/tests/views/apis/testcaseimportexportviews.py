@@ -1112,7 +1112,7 @@ class TestCaseImportExportViews(APITestCase):
             ])
             self.assertEqual(parents, 1)
 
-        # Event reminders: two types (0 and 3) for the same event
+        # Event reminders: both Push (type 3) for the same event
         for reminder in event_reminders:
             self.assertEqual(reminder.event, study_midterm)
             self.assertEqual(reminder.title, 'Bring notes for group')
@@ -1122,7 +1122,7 @@ class TestCaseImportExportViews(APITestCase):
             self.assertTrue(reminder.sent)
             self.assertFalse(reminder.dismissed)
         event_reminder_types = set(event_reminders.values_list('type', flat=True))
-        self.assertEqual(event_reminder_types, {0, 3})
+        self.assertEqual(event_reminder_types, {3})
 
         # Course reminder should reference Creative Writing
         course_reminder = course_reminders.filter(sent=True).first()
