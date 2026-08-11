@@ -703,7 +703,7 @@ def _bulk_import_example_schedule(data, user):
             message=r.get('message', ''),
             offset=r.get('offset', 30),
             offset_type=r.get('offset_type', enums.MINUTES),
-            type=r.get('type', enums.POPUP),
+            type=r.get('type', enums.PUSH),
             sent=r.get('sent', False),
             dismissed=r.get('dismissed', False),
             homework_id=homework_remap[r['homework']] if r.get('homework') else None,

@@ -37,11 +37,6 @@ DAY_OF_WEEK_CHOICES = (
 
 EMAIL = 1
 PUSH = 3
-# Deprecated reminder types. Kept as aliases for PUSH so historical references and existing
-# imports continue to work, while the API surface (REMINDER_TYPE_CHOICES) only exposes EMAIL
-# and PUSH going forward.
-POPUP = PUSH
-TEXT = PUSH
 REMINDER_TYPE_CHOICES = (
     (EMAIL, 'Email'),
     (PUSH, 'Push'),

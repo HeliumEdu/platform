@@ -119,7 +119,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
+            'type': enums.PUSH,
             'event': event.pk,
             'sent': False,
             'dismissed': False,
@@ -151,7 +151,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
+            'type': enums.PUSH,
             'homework': homework.pk,
             'sent': False,
             'dismissed': False,
@@ -180,7 +180,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
+            'type': enums.PUSH,
         }
         response = self.client.post(
             reverse('planner_reminders_list'),
@@ -204,7 +204,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
+            'type': enums.PUSH,
             'homework': homework.pk,
             'event': event.pk,
         }
@@ -243,7 +243,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP
+            'type': enums.PUSH
         }
         response = self.client.patch(reverse('planner_reminders_detail',
                                              kwargs={'pk': reminder.pk}),
@@ -929,7 +929,7 @@ class TestCaseReminderViews(APITestCase):
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
-            'type': enums.POPUP,
+            'type': enums.PUSH,
             'homework': homework.pk,
             'course': course.pk,
         }

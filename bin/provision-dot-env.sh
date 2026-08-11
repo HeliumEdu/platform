@@ -6,10 +6,7 @@ DOT_ENV_PATH="$PARENT_PATH/../.env"
 make -C "$PARENT_PATH/.." docker-env
 
 declare -a VARS=("PLATFORM_EMAIL_HOST_USER"
-  "PLATFORM_EMAIL_HOST_PASSWORD"
-  "PLATFORM_TWILIO_ACCOUNT_SID"
-  "PLATFORM_TWILIO_AUTH_TOKEN"
-  "PLATFORM_TWILIO_SMS_FROM")
+  "PLATFORM_EMAIL_HOST_PASSWORD")
 
 echo "Provisioning .env file with variables from environment (if defined): [${VARS[*]}] ..."
 

@@ -147,7 +147,7 @@ class TestCaseHomeworkViews(APITestCase):
                                                      materials=[material], current_grade='25/30',
                                                      completed=True, comments='Studied chapter 4')
         reminderhelper.given_reminder_exists(user, title='15 min before', offset=15,
-                                             offset_type=enums.MINUTES, type=enums.POPUP, homework=source)
+                                             offset_type=enums.MINUTES, type=enums.PUSH, homework=source)
         reminderhelper.given_reminder_exists(user, title='1 hour before', offset=1,
                                              offset_type=enums.HOURS, type=enums.EMAIL, sent=True,
                                              homework=source)

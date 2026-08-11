@@ -100,7 +100,7 @@ class TestCaseReminderService(TestCase):
         Reminder.objects.bulk_create([course_reminder])
         course_reminder = Reminder.objects.get(course=course, sent=False)
         # This reminder is ignored, as we're not yet in its send window
-        reminder3 = reminderhelper.given_reminder_exists(user, type=enums.TEXT, event=event2)
+        reminder3 = reminderhelper.given_reminder_exists(user, type=enums.PUSH, event=event2)
         # Sent reminders are ignored
         reminderhelper.given_reminder_exists(user, sent=True, event=event1)
 
