@@ -86,7 +86,7 @@ class TestCaseEventViews(APITestCase):
         source = eventhelper.given_event_exists(user, title='Lunch with Pat',
                                                 comments='Brought up the syllabus')
         reminderhelper.given_reminder_exists(user, title='30 min before', offset=30,
-                                             offset_type=enums.MINUTES, type=enums.POPUP, event=source)
+                                             offset_type=enums.MINUTES, type=enums.PUSH, event=source)
 
         # WHEN
         response = self.client.post(reverse('planner_events_clone', kwargs={'pk': source.pk}),
