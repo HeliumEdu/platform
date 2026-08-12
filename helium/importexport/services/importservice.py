@@ -417,6 +417,8 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
 
 
 def _import_reminders(reminders, user, event_remap, homework_remap, course_remap):
+    seen = set()
+    created = 0
     for reminder in reminders:
         # Forward-migrate deprecated reminder types (POPUP=0, TEXT=2) to PUSH so legacy exports
         # keep importing cleanly.
@@ -433,10 +435,20 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
             course_remap, reminder.get('course'), 'reminders', 'course') \
             if reminder.get('course') else None
 
+        # Skip exact duplicates: legacy exports paired a Popup and a Push reminder that now
+        # collapse to identical rows. Import only the first.
+        key = (reminder.get('homework'), reminder.get('event'), reminder.get('course'),
+               reminder.get('offset'), reminder.get('offset_type'), reminder.get('type'),
+               reminder.get('title'), reminder.get('message'))
+        if key in seen:
+            continue
+        seen.add(key)
+
         serializer = ReminderSerializer(data=reminder)
 
         if serializer.is_valid():
             serializer.save(user=user)
+            created += 1
         else:
             raise ValidationError({
                 'reminders': {
@@ -444,9 +456,9 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
                 }
             })
 
-    logger.info(f"Imported {len(reminders)} reminders.")
+    logger.info(f"Imported {created} reminders.")
 
-    return len(reminders)
+    return created
 
 
 def _import_notes(notes, user, homework_remap, event_remap, material_remap, example_schedule):
