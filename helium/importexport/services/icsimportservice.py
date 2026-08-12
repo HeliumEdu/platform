@@ -97,9 +97,12 @@ def _create_course_in_group(request, course_group, calendar, default_course_titl
 
 
 def _derive_course_title(calendar, default_course_title):
-    calname = calendar.get('X-WR-CALNAME')
-    if calname:
-        return str(calname)
+    for prop in ('X-WR-CALNAME', 'NAME'):
+        value = calendar.get(prop)
+        if isinstance(value, list):
+            value = value[0] if value else None
+        if value:
+            return str(value)
     return default_course_title or _DEFAULT_COURSE_TITLE
 
 

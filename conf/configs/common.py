@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.99"
+__version__ = "2.2.100"
 
 import json
 import os
@@ -353,6 +353,10 @@ SPECTACULAR_SETTINGS = {
         "`reminders`, `notes`, `resources`, `resource_groups`, `external_calendars`) and per-row "
         "fields are exactly what the importer accepts. See the `bulk_syllabus_import` example on "
         "the `/importexport/import/` operation for a trimmed payload.\n\n"
+        "A separate `POST /importexport/import/ics/` endpoint accepts a raw `.ics` calendar and "
+        "creates ungraded, uncategorized items under a single target — no categories, weights, "
+        "schedules, or credits. It is **not** the syllabus-import path; always produce the JSON "
+        "bulk import above.\n\n"
         "Each `CourseSchedule` has 14 day-time fields (`sun_start_time`, `sun_end_time`, ... "
         "`sat_end_time`). Omitted day-times default to `12:00:00`, which may collide with real "
         "classes. **Send `00:00:00` for off-days** to make the schedule unambiguous.\n\n"

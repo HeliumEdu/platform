@@ -273,9 +273,10 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         standalone Events (`target_type=events`). Exactly one file must be uploaded in the `file[]`
         field; submitting zero or more than one returns `400`.
 
-        A calendar spanning several classes is not auto-split — provide one target and, to separate
-        classes, either split the file (one request per target) or use the JSON import, which is
-        natively multi-course.
+        An `.ics` carries only dates and titles, so imported items are ungraded and uncategorized,
+        and a file spanning several classes is not auto-split. For a full multi-class import with
+        grades, categories, and schedules, use the JSON bulk import (`POST /importexport/import/`);
+        to keep classes separate here, split the file and send one request per target.
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
         """
