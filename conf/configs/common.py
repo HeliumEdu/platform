@@ -486,7 +486,7 @@ NORMALIZED_DATE_TIME_FORMAT = f'{NORMALIZED_DATE_FORMAT} at %I:%M %p'
 
 # File uploads
 
-FILE_TYPES = ['json']
+FILE_TYPES = ['json', 'ics']
 
 MAX_UPLOAD_SIZE = 10485760
 

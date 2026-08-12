@@ -10,6 +10,8 @@ urlpatterns = [
     # Import/Export URLs
     path('importexport/import/', ImportResourceView.as_view({'post': 'import_data'}),
          name='importexport_import'),
+    path('importexport/import/ics/', ImportResourceView.as_view({'post': 'import_ics_data'}),
+         name='importexport_import_ics'),
     path('importexport/export/', ExportResourceView.as_view({'get': 'export_data'}),
          name='importexport_export'),
 

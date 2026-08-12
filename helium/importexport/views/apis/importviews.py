@@ -3,7 +3,9 @@ __license__ = "MIT"
 
 import json
 import logging
+import os
 
+import icalendar
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -14,8 +16,10 @@ from rest_framework.viewsets import ViewSet
 
 from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView
-from helium.importexport.serializers.importerializer import ImportCreateSerializer, ImportSerializer
+from helium.importexport.serializers.importerializer import ImportCreateSerializer, \
+    ICSImportCreateSerializer, ImportSerializer
 from helium.importexport.services import importservice
+from helium.importexport.services import icsimportservice
 from helium.planner.services import reminderservice
 
 logger = logging.getLogger(__name__)
@@ -253,6 +257,63 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             'homework': homework_count,
             'reminders': reminders_count,
             'notes': notes_count,
+        })
+
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary='Import a calendar (.ics) file',
+        request=ICSImportCreateSerializer,
+        responses={200: ImportSerializer},
+    )
+    def import_ics_data(self, request, *args, **kwargs):
+        """
+        Import a single `.ics` file for the authenticated account into one chosen target: an existing
+        class (`target_type=course`), a new class created in a group (`target_type=new_course`), or
+        standalone Events (`target_type=events`). Exactly one file must be uploaded in the `file[]`
+        field; submitting zero or more than one returns `400`.
+
+        A calendar spanning several classes is not auto-split — provide one target and, to separate
+        classes, either split the file (one request per target) or use the JSON import, which is
+        natively multi-course.
+
+        The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
+        """
+        uploads = request.data.getlist('file[]')
+        if len(uploads) != 1:
+            logger.warning(f'Rejected .ics import from user {request.user.pk} with {len(uploads)} files.')
+            raise ValidationError({'details': 'Upload exactly one file per request.'})
+
+        serializer = ICSImportCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        target = serializer.validated_data
+
+        upload = uploads[0]
+        try:
+            calendar = icalendar.Calendar.from_ical(uploadfileservice.read(upload))
+        except ValueError:
+            raise ValidationError({'details': f'Invalid iCalendar in file: {upload}.'})
+
+        courses_count, events_count, homework_count = icsimportservice.import_ics(
+            request, calendar,
+            target_type=target['target_type'],
+            course_id=target.get('course'),
+            course_group_id=target.get('course_group'),
+            default_course_title=os.path.splitext(getattr(upload, 'name', '') or '')[0] or None,
+        )
+
+        serializer = ImportSerializer({
+            'external_calendars': 0,
+            'course_groups': 0,
+            'courses': courses_count,
+            'course_schedules': 0,
+            'categories': 0,
+            'resource_groups': 0,
+            'resources': 0,
+            'events': events_count,
+            'homework': homework_count,
+            'reminders': 0,
+            'notes': 0,
         })
 
         return Response(serializer.data)
