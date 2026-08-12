@@ -1,13 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-"""
-HTML to Quill Delta converter.
-
-Converts legacy HTML content from `comments` (Homework/Event) and `details` (Material)
-fields into Quill Delta JSON format for the `notes` field.
-"""
-
 import re
 from html.parser import HTMLParser
 

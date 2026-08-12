@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.98"
+__version__ = "2.2.99"
 
 import json
 import os
@@ -486,7 +486,7 @@ NORMALIZED_DATE_TIME_FORMAT = f'{NORMALIZED_DATE_FORMAT} at %I:%M %p'
 
 # File uploads
 
-FILE_TYPES = ['json']
+FILE_TYPES = ['json', 'ics']
 
 MAX_UPLOAD_SIZE = 10485760
 

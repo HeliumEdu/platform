@@ -32,7 +32,7 @@ class InfoResourceView(GenericViewSet, HeliumAPIView):
             'access_token_lifetime_minutes': settings.ACCESS_TOKEN_TTL_MINUTES,
             'refresh_token_lifetime_days': settings.REFRESH_TOKEN_TTL_DAYS,
             'oauth_providers': [choice[0] for choice in UserOAuthProvider.PROVIDER_CHOICES],
-            'import_file_types': ['json'],
+            'import_file_types': settings.FILE_TYPES,
         })
 
         return Response(serializer.data)

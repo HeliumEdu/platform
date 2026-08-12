@@ -22,4 +22,4 @@ class TestCaseInfoViews(APITestCase):
         self.assertEqual(settings.ACCESS_TOKEN_TTL_MINUTES, response.data['access_token_lifetime_minutes'])
         self.assertEqual(settings.REFRESH_TOKEN_TTL_DAYS, response.data['refresh_token_lifetime_days'])
         self.assertEqual(['google', 'apple', 'microsoft'], response.data['oauth_providers'])
-        self.assertEqual(['json'], response.data['import_file_types'])
+        self.assertEqual(['json', 'ics'], response.data['import_file_types'])

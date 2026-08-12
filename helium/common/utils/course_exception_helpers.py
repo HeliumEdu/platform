@@ -1,17 +1,6 @@
 __copyright__ = "Copyright (c) 2025 Helium Edu"
 __license__ = "MIT"
 
-"""
-Backend helpers for the YYYYMMDD-CSV exception format used by
-``Course.exceptions`` and ``CourseGroup.exceptions``. Mirrors the frontend
-``CourseExceptionHelpers`` (`lib/utils/course_exception_helpers.dart`) so
-parsing, formatting, and merging behave identically on both sides.
-
-These are the loose "give me dates" / "give me a CSV" primitives. For
-end-to-end validation (range check, normalization, error surfaces) use
-:func:`helium.common.utils.validators.validate_and_normalize_date_csv`.
-"""
-
 import datetime
 from typing import Iterable, List
 
