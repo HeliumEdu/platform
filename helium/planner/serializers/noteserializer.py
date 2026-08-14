@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from helium.common.utils.validators import validate_quill_delta
 from helium.planner.models import Event, Homework, Material, Note
+from helium.planner.utils.quillutils import ensure_quill_delta_terminated
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -44,7 +45,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
     def validate_content(self, value):
         validate_quill_delta(value)
-        return value
+        return ensure_quill_delta_terminated(value)
 
     def validate(self, attrs):
         """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""
