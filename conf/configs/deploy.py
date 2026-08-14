@@ -73,14 +73,17 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 
-def _is_ignorable_statsd_error(event):
+def _is_ignorable_gunicorn_error(event):
     logger_name = event.get('logger', '')
     if logger_name != 'gunicorn.error':
         return False
 
-    # Common gunicorn statsd warning message.
     log_message = event.get('logentry', {}).get('message', '')
+
     if 'Error sending message to statsd' in log_message:
+        return True
+
+    if 'Invalid request from ip=' in log_message:
         return True
 
     # Fallback on exception type/value from the captured event.
@@ -96,7 +99,7 @@ def _is_ignorable_statsd_error(event):
 
 def before_send(event, hint):
     """Filter out errors from health/status endpoints"""
-    if _is_ignorable_statsd_error(event):
+    if _is_ignorable_gunicorn_error(event):
         return None
 
     if 'request' in event and 'url' in event['request']:
