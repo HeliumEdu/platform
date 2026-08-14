@@ -5,6 +5,29 @@ import re
 from html.parser import HTMLParser
 
 
+def is_quill_delta_terminated(ops):
+    """A Quill document delta must end in a newline. True when the last op is a
+    string insert ending in ``\\n``."""
+    if not ops:
+        return False
+    last = ops[-1]
+    insert = last.get('insert') if isinstance(last, dict) else None
+    return isinstance(insert, str) and insert.endswith('\n')
+
+
+def ensure_quill_delta_terminated(content):
+    """Return `content` with its `ops` guaranteed to end in a newline, appending
+    one when the delta ends in text-without-newline or an embed. Content that is
+    not a dict with a non-empty `ops` list is returned unchanged; an empty
+    document is a clear-content signal, not something this repairs."""
+    if not isinstance(content, dict):
+        return content
+    ops = content.get('ops')
+    if not isinstance(ops, list) or not ops or is_quill_delta_terminated(ops):
+        return content
+    return {**content, 'ops': [*ops, {'insert': '\n'}]}
+
+
 def html_to_quill(html):
     """
     Convert HTML string to Quill Delta format.

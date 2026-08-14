@@ -3,7 +3,11 @@ __license__ = "MIT"
 
 from django.test import TestCase
 
-from helium.planner.utils.quillutils import html_to_quill
+from helium.planner.utils.quillutils import (
+    ensure_quill_delta_terminated,
+    html_to_quill,
+    is_quill_delta_terminated,
+)
 
 
 class TestCaseQuillUtils(TestCase):
@@ -118,3 +122,43 @@ class TestCaseQuillUtils(TestCase):
         # Strikethrough should be preserved
         strike_op = next(op for op in ops if 'Item 1' in op.get('insert', ''))
         self.assertTrue(strike_op.get('attributes', {}).get('strike'))
+
+    def test_is_terminated_true_for_newline_ending_text(self):
+        self.assertTrue(is_quill_delta_terminated([{'insert': 'Hello\n'}]))
+
+    def test_is_terminated_false_for_unterminated_text(self):
+        self.assertFalse(is_quill_delta_terminated([{'insert': 'Hello'}]))
+
+    def test_is_terminated_false_for_trailing_embed(self):
+        self.assertFalse(is_quill_delta_terminated([{'insert': {'image': 'x.png'}}]))
+
+    def test_is_terminated_false_for_empty(self):
+        self.assertFalse(is_quill_delta_terminated([]))
+
+    def test_ensure_terminated_appends_newline_to_unterminated_text(self):
+        result = ensure_quill_delta_terminated({'ops': [{'insert': 'Hello'}]})
+
+        self.assertEqual(result['ops'], [{'insert': 'Hello'}, {'insert': '\n'}])
+
+    def test_ensure_terminated_appends_newline_after_trailing_embed(self):
+        result = ensure_quill_delta_terminated({'ops': [{'insert': {'image': 'x.png'}}]})
+
+        self.assertEqual(result['ops'][-1], {'insert': '\n'})
+
+    def test_ensure_terminated_leaves_terminated_content_unchanged(self):
+        content = {'ops': [{'insert': 'Hello\n'}]}
+
+        self.assertIs(ensure_quill_delta_terminated(content), content)
+
+    def test_ensure_terminated_does_not_mutate_input(self):
+        ops = [{'insert': 'Hello'}]
+        content = {'ops': ops}
+
+        ensure_quill_delta_terminated(content)
+
+        self.assertEqual(ops, [{'insert': 'Hello'}])
+
+    def test_ensure_terminated_passes_through_clear_signals(self):
+        self.assertIsNone(ensure_quill_delta_terminated(None))
+        self.assertEqual(ensure_quill_delta_terminated({}), {})
+        self.assertEqual(ensure_quill_delta_terminated({'ops': []}), {'ops': []})
