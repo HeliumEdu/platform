@@ -4,7 +4,7 @@ Settings common to all deployment methods.
 
 __copyright__ = "Copyright (c) 2025, Helium Edu"
 __license__ = "MIT"
-__version__ = "2.2.103"
+__version__ = "2.2.104"
 
 import json
 import os
@@ -111,6 +111,7 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
+    'helium.common.middleware.requestid.RequestIDMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -638,6 +639,8 @@ CORS_ALLOW_HEADERS = default_headers + (
     'x-client-platform',
     'x-request-id',
 )
+
+CORS_EXPOSE_HEADERS = ['x-request-id']
 
 if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [
