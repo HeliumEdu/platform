@@ -151,9 +151,6 @@ LOGGING = {
         },
     },
     'filters': {
-        'ignore_status_check': {
-            '()': 'helium.common.filters.IgnoreStatusCheckFilter',
-        },
         'request_id': {
             '()': 'helium.common.filters.RequestIDFilter',
         }
