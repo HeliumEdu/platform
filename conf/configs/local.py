@@ -61,15 +61,21 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'standard': {
-            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s',
+            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] [req:%(request_id)s] %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
+    },
+    'filters': {
+        'request_id': {
+            '()': 'helium.common.filters.RequestIDFilter',
+        }
     },
     'handlers': {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'standard'
+            'formatter': 'standard',
+            'filters': ['request_id']
         },
     },
     'loggers': {

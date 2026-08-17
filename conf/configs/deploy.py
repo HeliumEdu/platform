@@ -146,13 +146,16 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'standard': {
-            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s',
+            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] [req:%(request_id)s] %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
     'filters': {
         'ignore_status_check': {
             '()': 'helium.common.filters.IgnoreStatusCheckFilter',
+        },
+        'request_id': {
+            '()': 'helium.common.filters.RequestIDFilter',
         }
     },
     'handlers': {
@@ -160,7 +163,8 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
-            'formatter': 'standard'
+            'formatter': 'standard',
+            'filters': ['request_id']
         }
     },
     'loggers': {

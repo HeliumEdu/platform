@@ -111,6 +111,7 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
+    'helium.common.middleware.requestid.RequestIDMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -638,6 +639,8 @@ CORS_ALLOW_HEADERS = default_headers + (
     'x-client-platform',
     'x-request-id',
 )
+
+CORS_EXPOSE_HEADERS = ['x-request-id']
 
 if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [
