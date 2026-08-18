@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2026 Helium Edu"
-__license__ = "MIT"
-
 from django.db import migrations
 
 # Literals, not imported from helium.common.enums: POPUP/TEXT were removed there and no

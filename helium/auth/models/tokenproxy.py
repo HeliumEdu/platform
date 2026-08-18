@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 

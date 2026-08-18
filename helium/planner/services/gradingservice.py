@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 # Grading math is also implemented in the frontend at
 # projects/frontend/lib/utils/grade_helpers.dart. The frontend operates on
 # category aggregates produced by this service (it does NOT recompute course

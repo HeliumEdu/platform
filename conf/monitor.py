@@ -2,9 +2,6 @@
 Detects changes and restarts the WSGI daemon process. Should only be used in development.
 """
 
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import atexit
 import os
 import queue

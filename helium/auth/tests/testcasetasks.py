@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from datetime import datetime, timedelta, timezone as dt_timezone
 
 from django.conf import settings

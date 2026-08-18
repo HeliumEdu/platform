@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models

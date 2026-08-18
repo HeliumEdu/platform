@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from unittest import mock
 
 from django.test import TestCase, RequestFactory

@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import django_filters
 
 from helium.feed.models import ExternalCalendar

@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2026 Helium Edu"
-__license__ = "MIT"
-
 import datetime
 import os
 

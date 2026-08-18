@@ -2,9 +2,6 @@
 Settings specific to running tests, reading values from `.env`.
 """
 
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import logging
 import os
 

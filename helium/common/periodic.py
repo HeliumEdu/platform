@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from dataclasses import dataclass
 from typing import Any, List, Optional
 

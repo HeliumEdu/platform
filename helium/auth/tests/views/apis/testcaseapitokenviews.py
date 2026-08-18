@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from django.urls import reverse
 from knox.models import AuthToken
 from rest_framework import status

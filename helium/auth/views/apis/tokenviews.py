@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import logging
 
 from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample

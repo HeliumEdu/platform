@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 """
 One-time migration to convert ALL legacy notes to the new Note system.
 

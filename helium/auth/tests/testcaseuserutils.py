@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper

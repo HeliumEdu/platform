@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 

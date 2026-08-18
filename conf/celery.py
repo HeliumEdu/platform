@@ -2,9 +2,6 @@
 Initialize Celery with Django configuration.
 """
 
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 import os
 import sys
 import time

@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 # AUTO-GENERATED — DO NOT EDIT.
 # Refreshed periodically from IANA tzdata via:
 #   platform/bin/refresh-timezones.py

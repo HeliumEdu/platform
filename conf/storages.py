@@ -2,9 +2,6 @@
 Storages for funneling Pipelines to storage destinations.
 """
 
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
-
 from django.conf import settings
 
 from pipeline.storage import PipelineMixin
