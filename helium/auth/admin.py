@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from datetime import timedelta
 
 from django import forms

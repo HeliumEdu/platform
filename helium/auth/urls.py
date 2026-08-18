@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from django.urls import path
 
 from helium.auth.views.apis.apitokenviews import ApiTokenView

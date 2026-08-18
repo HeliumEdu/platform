@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 # AUTO-GENERATED — DO NOT EDIT.
 # Refreshed periodically from IANA tzdata via:
 #   platform/bin/refresh-timezones.py

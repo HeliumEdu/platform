@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from django.conf import settings
 from django.db import models
 from django.db.models import Q

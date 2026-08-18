@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import re_path, path, include
 from django.views.generic import RedirectView

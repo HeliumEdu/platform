@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from django.db import migrations
 
 # Historical values from before 0055_alter_reminder_type shrank REMINDER_TYPE_CHOICES.

@@ -2,9 +2,6 @@
 Settings specific to prod-like deployable code, reading values from system environment variables.
 """
 
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 import os
 import sys
 

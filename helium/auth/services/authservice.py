@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 import logging
 from datetime import datetime, timedelta, timezone as dt_timezone
 

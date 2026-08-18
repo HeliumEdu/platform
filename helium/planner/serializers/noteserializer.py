@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 

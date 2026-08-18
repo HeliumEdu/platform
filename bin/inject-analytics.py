@@ -10,9 +10,6 @@ and a presence-style env var (``ANALYTICS_ENABLED``, analogous to
 ``ifdef SENTRY_DIST``) gates whether the snippet is included in the artifact.
 """
 
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 import os
 import sys
 

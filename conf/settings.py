@@ -10,9 +10,6 @@ Note that the system environment variable ENVIRONMENT should be set to a slug th
 All configuration files first read `common.py` before applying deployment-specific configurations.
 """
 
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 import sys
 
 from decouple import config

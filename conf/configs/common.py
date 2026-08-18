@@ -2,8 +2,6 @@
 Settings common to all deployment methods.
 """
 
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
 __version__ = "2.2.105"
 
 import json
@@ -213,7 +211,7 @@ STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not 
 
 HEALTH_CHECK = {
     "SUBSETS": {
-        "core": ["Database", "Cache", "Storage"],
+        "core": ["Database", "Storage"],
         "db": ["Database"],
         "cache": ["Cache"],
         "storage": ["Storage"],
@@ -422,8 +420,8 @@ SPECTACULAR_SETTINGS = {
         'url': SUPPORT_URL,
     },
     'LICENSE': {
-        'name': 'MIT',
-        'url': 'https://opensource.org/licenses/MIT',
+        'name': 'Apache-2.0',
+        'url': 'https://opensource.org/licenses/Apache-2.0',
     },
     'SERVERS': [
         {

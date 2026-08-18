@@ -1,6 +1,3 @@
-__copyright__ = "Copyright (c) Helium Edu"
-__license__ = "Apache-2.0"
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
