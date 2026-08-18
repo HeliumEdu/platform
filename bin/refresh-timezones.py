@@ -79,8 +79,8 @@ def _autogen_banner_dart(pytz_version: str) -> str:
 def _render_platform(zones: list[str], pytz_version: str) -> str:
     groups = _group_by_region(zones)
     lines = [
-        '__copyright__ = "Copyright (c) 2025 Helium Edu"',
-        '__license__ = "MIT"',
+        '__copyright__ = "Copyright (c) Helium Edu"',
+        '__license__ = "Apache-2.0"',
         "",
         _autogen_banner_py(pytz_version).rstrip(),
         "",
@@ -99,7 +99,7 @@ def _render_platform(zones: list[str], pytz_version: str) -> str:
 def _render_frontend(zones: list[str], pytz_version: str) -> str:
     groups = _group_by_region(zones)
     lines = [
-        "// Copyright (c) 2025 Helium Edu",
+        "// Copyright (c) Helium Edu",
         "//",
         "// This source code is licensed under the MIT license found in the",
         "// LICENSE file in the root directory of this source tree.",

@@ -2,8 +2,8 @@
 Settings specific to a development environment using Django's `runserver` command, reading values from `.env`.
 """
 
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
+__copyright__ = "Copyright (c) Helium Edu"
+__license__ = "Apache-2.0"
 
 import os
 import warnings

@@ -1,5 +1,5 @@
-__copyright__ = "Copyright (c) 2025 Helium Edu"
-__license__ = "MIT"
+__copyright__ = "Copyright (c) Helium Edu"
+__license__ = "Apache-2.0"
 
 from django.urls import reverse
 from knox.models import AuthToken
