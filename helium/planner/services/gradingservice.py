@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 
 def get_grade_points_for_course_group(course_group_id):
     course_grade_points = []
-    # Fetch grade points for each course in the group, then sort by date
-    # Annotate has_weighted_grading to avoid N+1 queries
     courses = (Course.objects.for_course_group(course_group_id)
                .annotate(annotated_has_weighted_grading=Exists(
                    Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
                )))
+    has_weighted_by_course = {course.id: course.annotated_has_weighted_grading for course in courses}
+    grade_points_by_course = get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course)
     for course in courses:
-        course_grade_points += get_grade_points_for_course(course.id, course.annotated_has_weighted_grading)
+        course_grade_points += grade_points_by_course.get(course.id, [])
     course_grade_points = sorted(course_grade_points, key=lambda x: x[0])
 
     # Now average the grades of all courses as each grade point to build the group's points
@@ -54,22 +54,35 @@ def get_grade_points_for_course_group(course_group_id):
     return grade_points
 
 
+def _graded_grade_point_values(homework_queryset):
+    return (homework_queryset
+            .graded()
+            .annotate(weight=F('category__weight'),
+                      grade=F('current_grade'))
+            .values('id',
+                    'title',
+                    'category',
+                    'course',
+                    'weight',
+                    'start',
+                    'grade'))
+
+
 def get_grade_points_for_course(course_id, has_weighted_grading=None):
     if has_weighted_grading is None:
         has_weighted_grading = Course.objects.has_weighted_grading(course_id)
-    query_set = (Homework.objects.for_course(course_id)
-                 .graded()
-                 .annotate(weight=F('category__weight'),
-                           grade=F('current_grade'))
-                 .values('id',
-                         'title',
-                         'category',
-                         'course',
-                         'weight',
-                         'start',
-                         'grade'))
+    query_set = _graded_grade_point_values(Homework.objects.for_course(course_id))
 
     return get_grade_points_for(query_set, has_weighted_grading)
+
+
+def get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course):
+    grade_points_by_course = {}
+    for item in _graded_grade_point_values(Homework.objects.for_course_group(course_group_id)):
+        grade_points_by_course.setdefault(item['course'], []).append(item)
+
+    return {course_id: get_grade_points_for(items, has_weighted_by_course.get(course_id, False))
+            for course_id, items in grade_points_by_course.items()}
 
 
 def get_homework_series_for_course(course_id, has_weighted_grading=None):
@@ -214,6 +227,33 @@ def get_grade_data(user_id):
                    .values('id', 'title', 'start', 'course_id', 'category_id', 'current_grade')):
             ungraded_by_course.setdefault(hw['course_id'], []).append(hw)
 
+        # Batch grade points and categories for every course in one query each, rather than per course.
+        has_weighted_by_course = {course['id']: course['annotated_has_weighted_grading']
+                                  for course in course_group['courses']}
+        grade_points_by_course = get_grade_points_by_course_for_group(course_group['id'], has_weighted_by_course)
+
+        categories_by_course = {}
+        for category in (Category.objects.for_user(user_id)
+                         .filter(course__course_group_id=course_group['id'])
+                         .annotate(
+                             annotated_num_homework=Count('homework', distinct=True),
+                             annotated_num_homework_completed=Count(
+                                 'homework',
+                                 filter=Q(homework__completed=True),
+                                 distinct=True
+                             ),
+                             annotated_num_homework_graded=Count(
+                                 'homework',
+                                 filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
+                                 distinct=True
+                             )
+                         )
+                         .values('id', 'title', 'weight', 'color', 'average_grade', 'grade_by_weight', 'trend',
+                                 'course', 'annotated_num_homework', 'annotated_num_homework_completed',
+                                 'annotated_num_homework_graded')
+                         .order_by('title')):
+            categories_by_course.setdefault(category.pop('course'), []).append(category)
+
         course_group_num_homework = 0
         for course in course_group['courses']:
             course['overall_grade'] = course['current_grade']
@@ -228,35 +268,9 @@ def get_grade_data(user_id):
             course.pop('annotated_num_homework_graded')
             course.pop('annotated_has_weighted_grading')
             course.pop('current_grade')
-            course['grade_points'] = get_grade_points_for_course(course['id'], course['has_weighted_grading'])
+            course['grade_points'] = grade_points_by_course.get(course['id'], [])
 
-            # Annotate categories with homework counts to avoid N+1 queries
-            course['categories'] = (Category.objects.for_user(user_id)
-                                    .for_course(course['id'])
-                                    .annotate(
-                                        annotated_num_homework=Count('homework', distinct=True),
-                                        annotated_num_homework_completed=Count(
-                                            'homework',
-                                            filter=Q(homework__completed=True),
-                                            distinct=True
-                                        ),
-                                        annotated_num_homework_graded=Count(
-                                            'homework',
-                                            filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
-                                            distinct=True
-                                        )
-                                    )
-                                    .values('id',
-                                            'title',
-                                            'weight',
-                                            'color',
-                                            'average_grade',
-                                            'grade_by_weight',
-                                            'trend',
-                                            'annotated_num_homework',
-                                            'annotated_num_homework_completed',
-                                            'annotated_num_homework_graded')
-                                    .order_by('title'))
+            course['categories'] = categories_by_course.get(course['id'], [])
 
             category_grade_points = {}
             for grade_point in course['grade_points']:
