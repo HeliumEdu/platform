@@ -133,9 +133,19 @@ def path_to_metric_id(path):
     return re.sub(r'\.{2,}', '.', re.sub('[^a-zA-Z.]+', '', path.replace('/', '.'))).strip(".")
 
 
+def route_to_metric_id(route):
+    """Normalize a resolved route template to a metric ID, dropping dynamic segments so per-request
+    values (e.g. private slugs) never inflate the metric's tag cardinality."""
+    return path_to_metric_id(re.sub(r'<[^>]+>', '', route))
+
+
 def request_start(request):
     try:
-        metric_id = path_to_metric_id(request.path)
+        resolver_match = getattr(request, 'resolver_match', None)
+        if resolver_match is not None and resolver_match.route:
+            metric_id = route_to_metric_id(resolver_match.route)
+        else:
+            metric_id = path_to_metric_id(request.path)
 
         return {
             'Request-Metric-ID': metric_id,
