@@ -211,7 +211,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         for upload in uploads:
             try:
-                json_str = uploadfileservice.read(upload).decode('utf-8')
+                json_str = uploadfileservice.read(upload).decode('utf-8-sig')
                 data = json.loads(json_str)
 
                 if isinstance(data, list):
