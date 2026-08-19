@@ -1,0 +1,13 @@
+name: Re-home Dependabot PRs
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  rehome:
+    if: github.actor == 'dependabot[bot]'
+    uses: HeliumEdu/.github/.github/workflows/dependabot-rehome.yml@main
+    secrets:
+      bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
+      bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
