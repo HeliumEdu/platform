@@ -18,6 +18,7 @@ jobs:
     name: Refresh
 
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Generate GitHub App token

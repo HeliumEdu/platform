@@ -133,6 +133,22 @@ class TestCaseImportICSViews(APITestCase):
         self.assertIsNotNone(event.recurrence_rule)
         self.assertIn('FREQ=WEEKLY', event.recurrence_rule)
 
+    def test_import_ics_with_abbreviation_timezone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self._post_ics('import_abbrev_tz.ics', target_type='events')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, response.data['events'])
+        event = Event.objects.for_user(user.pk).get()
+        self.assertEqual('Timezone Abbrev Event', event.title)
+        # EDT = -0400 per the file's VTIMEZONE, so 09:00 local is 13:00 UTC
+        self.assertEqual(datetime.datetime(2026, 7, 1, 13, 0, tzinfo=datetime.timezone.utc), event.start)
+        self.assertEqual(datetime.datetime(2026, 7, 1, 14, 0, tzinfo=datetime.timezone.utc), event.end)
+
     def test_import_ics_rejects_multiple_files(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

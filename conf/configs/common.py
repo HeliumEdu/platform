@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.2.107"
+__version__ = "2.2.108"
 
 import json
 import os
@@ -165,6 +165,9 @@ FEED_ICS_MAX_AGE_SECONDS = 60 * 15
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
+
+# MySQL: 1213 = deadlock, 1205 = lock wait timeout
+DB_RETRYABLE_ERROR_CODES = (1213, 1205)
 
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7

@@ -1,6 +1,8 @@
 import datetime
 from unittest import mock
 
+from django.conf import settings
+from django.db import OperationalError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -8,6 +10,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.tasks import (
     email_reminders, push_reminders,
+    recalculate_course_grade,
     recalculate_course_grades_for_course_group,
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
 )
@@ -61,6 +64,57 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         self.assertEqual(mock_recalculate_category_grade.call_count, 2)
+
+    @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
+    @mock.patch('helium.planner.tasks.gradingservice.recalculate_course_grade')
+    def test_recalculate_course_grade_retries_on_deadlock(self, mock_recalculate, mock_safe_apply_async):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        mock_recalculate.side_effect = OperationalError(
+            1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+        # WHEN
+        recalculate_course_grade(course.pk)
+
+        # THEN
+        mock_safe_apply_async.assert_called_once()
+
+    @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
+    @mock.patch('helium.planner.tasks.gradingservice.recalculate_course_grade')
+    def test_recalculate_course_grade_reraises_non_retryable_operational_error(self, mock_recalculate,
+                                                                               mock_safe_apply_async):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        mock_recalculate.side_effect = OperationalError(2006, 'MySQL server has gone away')
+
+        # WHEN
+        with self.assertRaises(OperationalError):
+            recalculate_course_grade(course.pk)
+
+        # THEN
+        mock_safe_apply_async.assert_not_called()
+
+    @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
+    @mock.patch('helium.planner.tasks.gradingservice.recalculate_course_grade')
+    def test_recalculate_course_grade_raises_deadlock_after_exhausting_retries(self, mock_recalculate,
+                                                                               mock_safe_apply_async):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        mock_recalculate.side_effect = OperationalError(
+            1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+        # WHEN
+        with self.assertRaises(OperationalError):
+            recalculate_course_grade(course.pk, retries=settings.DB_INTEGRITY_RETRIES)
+
+        # THEN
+        mock_safe_apply_async.assert_not_called()
 
     def test_adjust_reminder_times(self):
         # GIVEN
