@@ -1,12 +1,23 @@
 import datetime
 import logging
-from zoneinfo import ZoneInfo
 
 from django.utils import timezone
 
 from helium.common.utils.validators import infer_byday_for_weekly_rrule, validate_recurrence_rule
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_component_time_zone(component, default_time_zone):
+    """Resolve a VTIMEZONE to a tzinfo from its own offset rules, honoring a non-IANA abbreviation
+    TZID (e.g. ``EDT``). Falls back to ``default_time_zone`` if it can't yield a usable tzinfo.
+    """
+    try:
+        return component.to_tz()
+    except Exception:
+        logger.info('Unresolvable VTIMEZONE TZID %r; falling back to the default time zone.',
+                    str(component.get("TZID")))
+        return default_time_zone
 
 
 def _extract_exception_dates(component):
@@ -70,7 +81,7 @@ def _collect_recurrence_id_overrides(calendar, default_time_zone):
     time_zone = default_time_zone
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
-            time_zone = ZoneInfo(component.get("TZID"))
+            time_zone = _resolve_component_time_zone(component, default_time_zone)
             continue
         if component.name != "VEVENT":
             continue
@@ -107,7 +118,7 @@ def parse_events(calendar, default_time_zone):
 
     for component in calendar.walk():
         if component.name == "VTIMEZONE":
-            time_zone = ZoneInfo(component.get("TZID"))
+            time_zone = _resolve_component_time_zone(component, default_time_zone)
             continue
         if component.name != "VEVENT":
             continue

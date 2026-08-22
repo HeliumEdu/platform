@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
+from django.db import IntegrityError, OperationalError
 from django.utils import timezone
 
 from conf.celery import app
@@ -19,6 +19,24 @@ from helium.planner.services import reminderservice
 logger = logging.getLogger(__name__)
 
 
+def _retry_on_db_error(ex, metrics, metric_name, task, args, retries, kwargs=None):
+    """Reschedule `task` after a transient DB error, or re-raise once retries are exhausted or the
+    error isn't retryable. Contending grade-recalc tasks can deadlock or raise an IntegrityError when
+    they touch the same rows in different orders; both clear on a delayed retry.
+    """
+    non_retryable = (isinstance(ex, OperationalError)
+                     and (not ex.args or ex.args[0] not in settings.DB_RETRYABLE_ERROR_CODES))
+    if non_retryable or retries >= settings.DB_INTEGRITY_RETRIES:
+        metricutils.task_failure(metric_name, type(ex).__name__, priority="low")
+        raise ex
+
+    logger.warning(f"Retryable database error occurred, delaying before retrying `{task.name}` task")
+    taskutils.safe_apply_async(task, args, kwargs=kwargs,
+                               countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
+                               priority=settings.CELERY_PRIORITY_LOW)
+    metricutils.task_stop(metrics, value=0)
+
+
 @app.task(bind=True)
 def recalculate_course_group_grade(self, course_group_id, retries=0):
     published_at_ms = metricutils.get_published_at_ms(self)
@@ -28,20 +46,9 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
         gradingservice.recalculate_course_group_grade(course_group_id)
 
         metricutils.task_stop(metrics, value=1)
-    except IntegrityError as ex:  # pragma: no cover
-        if retries < settings.DB_INTEGRITY_RETRIES:
-            # This error is common when importing schedules, as async tasks may come in different orders
-            logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_group_grade` task")
-
-            taskutils.safe_apply_async(recalculate_course_group_grade,
-                (course_group_id, retries + 1),
-                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
-                priority=settings.CELERY_PRIORITY_LOW,
-            )
-            metricutils.task_stop(metrics, value=0)
-        else:
-            metricutils.task_failure('grade.recalculate.course-group', 'IntegrityError', priority="low")
-            raise ex
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        _retry_on_db_error(ex, metrics, 'grade.recalculate.course-group',
+                           recalculate_course_group_grade, (course_group_id, retries + 1), retries)
     except ObjectDoesNotExist:
         logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
         metricutils.task_stop(metrics, value=0)
@@ -61,21 +68,10 @@ def recalculate_course_grade(self, course_id, retries=0, recalculate_group=True)
             recalculate_course_group_grade(course_group_id)
 
         metricutils.task_stop(metrics, value=1)
-    except IntegrityError as ex:  # pragma: no cover
-        if retries < settings.DB_INTEGRITY_RETRIES:
-            # This error is common when importing schedules, as async tasks may come in different orders
-            logger.warning("Integrity error occurred, delaying before retrying `recalculate_course_grade` task")
-
-            taskutils.safe_apply_async(recalculate_course_grade,
-                (course_id, retries + 1),
-                kwargs={'recalculate_group': recalculate_group},
-                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
-                priority=settings.CELERY_PRIORITY_LOW,
-            )
-            metricutils.task_stop(metrics, value=0)
-        else:
-            metricutils.task_failure('grade.recalculate.course', 'IntegrityError', priority="low")
-            raise ex
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        _retry_on_db_error(ex, metrics, 'grade.recalculate.course',
+                           recalculate_course_grade, (course_id, retries + 1), retries,
+                           kwargs={'recalculate_group': recalculate_group})
     except ObjectDoesNotExist:
         logger.info(f"Course {course_id}, or an associated resource, does not exist. Nothing to do.")
         metricutils.task_stop(metrics, value=0)
@@ -113,21 +109,10 @@ def recalculate_category_grade(self, category_id, retries=0, recalculate_course=
             recalculate_course_grade(course_id)
 
         metricutils.task_stop(metrics, value=1)
-    except IntegrityError as ex:  # pragma: no cover
-        if retries < settings.DB_INTEGRITY_RETRIES:
-            # This error is common when importing schedules, as async tasks may come in different orders
-            logger.warning("Integrity error occurred, delaying before retrying `recalculate_category_grade` task")
-
-            taskutils.safe_apply_async(recalculate_category_grade,
-                (category_id, retries + 1),
-                kwargs={'recalculate_course': recalculate_course},
-                countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
-                priority=settings.CELERY_PRIORITY_LOW,
-            )
-            metricutils.task_stop(metrics, value=0)
-        else:
-            metricutils.task_failure('grade.recalculate.category', 'IntegrityError', priority="low")
-            raise ex
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        _retry_on_db_error(ex, metrics, 'grade.recalculate.category',
+                           recalculate_category_grade, (category_id, retries + 1), retries,
+                           kwargs={'recalculate_course': recalculate_course})
     except ObjectDoesNotExist:
         logger.info(f"Category {category_id}, or an associated resource, does not exist. Nothing to do.")
         metricutils.task_stop(metrics, value=0)

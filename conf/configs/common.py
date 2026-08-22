@@ -166,6 +166,9 @@ DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
 
+# MySQL: 1213 = deadlock, 1205 = lock wait timeout
+DB_RETRYABLE_ERROR_CODES = (1213, 1205)
+
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
 
