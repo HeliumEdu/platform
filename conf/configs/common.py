@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.2.108"
+__version__ = "2.2.109"
 
 import json
 import os
@@ -737,6 +737,18 @@ PIPELINE = {
 # Metrics
 
 DATADOG_STATSD_HOST = config('PROJECT_DATADOG_STATSD_HOST', 'localhost')
+
+CLIENT_PLATFORM_HEADER = 'X-Client-Platform'
+
+CLIENT_PLATFORMS = {'ios', 'android', 'web'}
+
+APP_CLIENT_PLATFORMS = {'ios', 'android'}
+
+UA_CLIENT_OS = {
+    'mobile_browser_ios': 'ios',
+    'mobile_browser_android': 'android',
+    'web_browser': 'desktop',
+}
 
 SENTRY_ENABLED = False
 

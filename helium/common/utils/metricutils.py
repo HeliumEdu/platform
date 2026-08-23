@@ -40,6 +40,34 @@ def _normalize_user_agent_tag(user_agent):
     return "other"
 
 
+def _normalize_client_platform(request):
+    """Read the client's OS from X-Client-Platform, or None if absent or unrecognized."""
+    value = (request.headers.get(settings.CLIENT_PLATFORM_HEADER) or "").strip().lower()
+
+    return value if value in settings.CLIENT_PLATFORMS else None
+
+
+def _client_tags(request):
+    """Resolve the client's form factor (`client`) and operating system (`client_os`)."""
+    normalized_ua = _normalize_user_agent_tag(request.headers.get("User-Agent"))
+    client_platform = _normalize_client_platform(request)
+
+    if client_platform in settings.APP_CLIENT_PLATFORMS:
+        client, client_os = "app", client_platform
+    elif client_platform == "web":
+        client, client_os = "web", settings.UA_CLIENT_OS.get(normalized_ua, "other")
+    elif normalized_ua == "mobile_app_flutter":
+        client, client_os = "app", "other"
+    elif normalized_ua == "bot":
+        client, client_os = "bot", "other"
+    elif normalized_ua in settings.UA_CLIENT_OS:
+        client, client_os = "web", settings.UA_CLIENT_OS[normalized_ua]
+    else:
+        client, client_os = "other", "other"
+
+    return [f"user_agent:{normalized_ua}", f"client:{client}", f"client_os:{client_os}"]
+
+
 def _platform_version_tag():
     return f"platform_version:{settings.PROJECT_VERSION}"
 
@@ -65,10 +93,8 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
 
         if request:
             tags.append(f"method:{request.method}")
-            if request.headers and 'User-Agent' in request.headers:
-                normalized_ua = _normalize_user_agent_tag(request.headers.get('User-Agent'))
-                tags.append(f"user_agent:{normalized_ua}")
-                tags.append(f"client:{'app' if normalized_ua == 'mobile_app_flutter' else 'web'}")
+            if request.headers is not None:
+                tags.extend(_client_tags(request))
         if response:
             tags.append(f"status_code:{response.status_code}")
 
