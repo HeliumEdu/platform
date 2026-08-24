@@ -371,8 +371,7 @@ def emit_nightly_metrics(self):
                                               CourseSchedule.objects.filter(
                                                   course__course_group__user__in=user_ids,
                                                   course__course_group__example_schedule=False,
-                                                  cycle_length__isnull=False,
-                                              ),
+                                              ).rotating(),
                                               'course__course_group__user_id', user_ids, window_staff_tags)
 
                 note_qs = Note.objects.filter(
@@ -442,16 +441,16 @@ def emit_nightly_metrics(self):
                                               'material_group__user_id', user_ids,
                                               window_staff_tags)
 
+                adopter_counts = {}
                 for adoption_metric, adoption_filter in [
                     ('class_schedules', Exists(CourseSchedule.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
-                    ))),
+                    ).meeting())),
                     ('rotating_schedules', Exists(CourseSchedule.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
-                        cycle_length__isnull=False,
-                    ))),
+                    ).rotating())),
                     ('multiple_schedules', Exists(Course.objects.filter(
                         course_group__user=OuterRef('pk'),
                         course_group__example_schedule=False,
@@ -489,9 +488,17 @@ def emit_nightly_metrics(self):
                     ))),
                 ]:
                     adopters = active_qs.filter(adoption_filter).count()
+                    adopter_counts[adoption_metric] = adopters
                     metricutils.gauge(f'users.adoption.{adoption_metric}.pct',
                                       adopters / total_users * 100,
                                       extra_tags=window_staff_tags)
+
+                scheduled_users = adopter_counts['class_schedules']
+                if scheduled_users:
+                    for adoption_metric in ('rotating_schedules', 'multiple_schedules'):
+                        metricutils.gauge(f'users.adoption.{adoption_metric}.of_scheduled.pct',
+                                          adopter_counts[adoption_metric] / scheduled_users * 100,
+                                          extra_tags=window_staff_tags)
 
                 feed_adopters = _count_distinct_feed_slugs(days, staff_tag, now_utc.date())
                 metricutils.gauge('users.adoption.feeds.pct',

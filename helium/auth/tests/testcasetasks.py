@@ -182,7 +182,7 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
-    def test_emit_nightly_metrics_counts_only_cycle_schedules_as_rotating_adoption(self, mock_gauge):
+    def test_emit_nightly_metrics_excludes_weekly_schedules_from_rotating_adoption(self, mock_gauge):
         # GIVEN a user whose only schedule is an ordinary weekly one
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -217,6 +217,97 @@ class TestCaseTasks(APITestCase):
                           if c.args[0] == 'users.adoption.rotating_schedules.pct']
         self.assertTrue(rotating_calls)
         self.assertTrue(any(c.args[1] == 100 for c in rotating_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_week_based_schedules_as_rotating_adoption(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_week_based_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        rotating_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.rotating_schedules.pct']
+        self.assertTrue(rotating_calls)
+        self.assertTrue(any(c.args[1] == 100 for c in rotating_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.distribution')
+    def test_emit_nightly_metrics_counts_week_based_schedules_in_rotating_per_user(self, mock_distribution):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_week_based_schedule_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        per_user_calls = [c for c in mock_distribution.call_args_list
+                          if c.args[0] == 'users.data.rotating_schedules_per_user']
+        self.assertTrue(per_user_calls)
+        self.assertTrue(all(c.args[1] == 1 for c in per_user_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_measures_rotating_adoption_against_scheduled_users(self, mock_gauge):
+        # GIVEN
+        scheduled_user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(scheduled_user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+        userhelper.given_a_user_exists(username='no_schedule', email='no_schedule@test.com')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        of_all_calls = [c for c in mock_gauge.call_args_list
+                        if c.args[0] == 'users.adoption.rotating_schedules.pct']
+        of_scheduled_calls = [c for c in mock_gauge.call_args_list
+                              if c.args[0] == 'users.adoption.rotating_schedules.of_scheduled.pct']
+        self.assertTrue(any(c.args[1] == 50 for c in of_all_calls))
+        self.assertTrue(of_scheduled_calls)
+        self.assertTrue(all(c.args[1] == 100 for c in of_scheduled_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_excludes_schedules_that_meet_no_days_from_class_schedules_adoption(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0000000')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.class_schedules.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_cycle_schedules_with_no_weekdays_as_class_schedules_adoption(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        schedule = courseschedulehelper.given_cycle_schedule_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        self.assertEqual(schedule.days_of_week, '0000000')
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.class_schedules.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_excludes_example_schedule_from_class_schedules_adoption(self, mock_gauge):

@@ -1,5 +1,7 @@
 import logging
 
+from django.db.models import Q
+
 from helium.common.managers.basemanager import BaseQuerySet, BaseManager
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,14 @@ class CourseScheduleQuerySet(BaseQuerySet):
     def for_course(self, course_id):
         return self.filter(course_id=course_id)
 
+    def rotating(self):
+        return self.filter(Q(cycle_length__isnull=False) | Q(is_week_based=True))
+
+    def meeting(self):
+        """A cycle draws its times from `cycle_slots` and ignores `days_of_week`; weekly and
+        week-based rows both fall through to the weekday match."""
+        return self.filter(Q(cycle_length__isnull=False) | ~Q(days_of_week='0000000'))
+
 
 class CourseScheduleManager(BaseManager):
     def get_queryset(self):
@@ -28,3 +38,9 @@ class CourseScheduleManager(BaseManager):
 
     def for_course(self, course_id):
         return self.get_queryset().for_course(course_id)
+
+    def rotating(self):
+        return self.get_queryset().rotating()
+
+    def meeting(self):
+        return self.get_queryset().meeting()
