@@ -50,6 +50,19 @@ _SECTIONS_WITH_IDS = (
 _SUPPRESSED_SENDERS = frozenset({Course, CourseSchedule, Category, Homework, Event})
 
 
+def _row_validation_error(section, row_id, errors):
+    """
+    Flatten a row's serializer errors into messages naming the section and `id` they came from,
+    so a bare field name can't be read as belonging to the wrong entity.
+    """
+    messages = []
+    for field, field_errors in errors.items():
+        for error in (field_errors if isinstance(field_errors, (list, tuple)) else [field_errors]):
+            messages.append(f'{section} id {row_id}, {field}: {error}')
+
+    return ValidationError({section: messages})
+
+
 def _extract_legacy_notes(data, legacy_field='comments'):
     """
     Extract and convert legacy HTML notes field to Quill JSON format.
@@ -135,11 +148,16 @@ def _build_legacy_note_payload(content, *, homework_id=None, event_id=None, reso
     return payload
 
 
-def _create_note_from_payload(payload, user, example_schedule, section):
+def _create_note_from_payload(payload, user, example_schedule, section, row_id):
+    """
+    `section` and `row_id` describe the row the note came from — for a legacy `comments` /
+    `details` note that is the parent Assignment, Event or Resource, which is what the
+    uploader has to go edit.
+    """
     serializer = NoteSerializer(data=payload)
     if serializer.is_valid():
         return serializer.save(user=user, example_schedule=example_schedule)
-    raise ValidationError({section: serializer.errors})
+    raise _row_validation_error(section, row_id, serializer.errors)
 
 
 def _import_external_calendars(external_calendars, user, example_schedule):
@@ -149,11 +167,7 @@ def _import_external_calendars(external_calendars, user, example_schedule):
         if serializer.is_valid():
             serializer.save(user=user, example_schedule=example_schedule)
         else:
-            raise ValidationError({
-                'external_calendars': {
-                    external_calendar['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('external_calendars', external_calendar['id'], serializer.errors)
 
     logger.info(f"Imported {len(external_calendars)} external calendars.")
 
@@ -173,11 +187,7 @@ def _import_course_groups(course_groups, user, example_schedule):
             instance = serializer.save(user=user, example_schedule=example_schedule)
             course_group_remap[course_group['id']] = instance.pk
         else:
-            raise ValidationError({
-                'course_groups': {
-                    course_group['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('course_groups', course_group['id'], serializer.errors)
 
     logger.info(f"Imported {len(course_groups)} course groups.")
 
@@ -200,11 +210,7 @@ def _import_courses(courses, course_group_remap):
             instance = serializer.save(course_group_id=course_group_id)
             course_remap[course['id']] = instance.pk
         else:
-            raise ValidationError({
-                'courses': {
-                    course['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('courses', course['id'], serializer.errors)
 
     logger.info(f"Imported {len(courses)} courses.")
 
@@ -225,11 +231,7 @@ def _import_course_schedules(course_schedules, course_remap):
         if serializer.is_valid():
             serializer.save(course_id=course_id)
         else:
-            raise ValidationError({
-                'course_schedules': {
-                    course_schedule['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('course_schedules', course_schedule['id'], serializer.errors)
 
     logger.info(f"Imported {len(course_schedules)} course schedules.")
 
@@ -249,11 +251,7 @@ def _import_categories(categories, request, course_remap):
             instance = serializer.save(course_id=course_id)
             category_remap[category['id']] = instance.pk
         else:
-            raise ValidationError({
-                'categories': {
-                    category['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('categories', category['id'], serializer.errors)
 
     logger.info(f"Imported {len(categories)} categories.")
 
@@ -276,11 +274,7 @@ def _import_material_groups(material_groups, user, example_schedule):
             instance = serializer.save(user=user, example_schedule=example_schedule)
             material_group_remap[material_group['id']] = instance.pk
         else:
-            raise ValidationError({
-                'material_groups': {
-                    material_group['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('material_groups', material_group['id'], serializer.errors)
 
     logger.info(f"Imported {len(material_groups)} resource groups.")
 
@@ -319,13 +313,9 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
             if legacy_notes_content:
                 _create_note_from_payload(
                     _build_legacy_note_payload(legacy_notes_content, resource_id=instance.pk),
-                    user, example_schedule, 'materials')
+                    user, example_schedule, 'materials', material['id'])
         else:
-            raise ValidationError({
-                'materials': {
-                    material['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('materials', material['id'], serializer.errors)
 
     logger.info(f"Imported {len(materials)} resources.")
 
@@ -346,13 +336,9 @@ def _import_events(events, user, example_schedule):
             if legacy_notes_content:
                 _create_note_from_payload(
                     _build_legacy_note_payload(legacy_notes_content, event_id=instance.pk),
-                    user, example_schedule, 'events')
+                    user, example_schedule, 'events', event['id'])
         else:
-            raise ValidationError({
-                'events': {
-                    event['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('events', event['id'], serializer.errors)
 
     logger.info(f"Imported {len(events)} events.")
 
@@ -400,13 +386,9 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
             if legacy_notes_content:
                 _create_note_from_payload(
                     _build_legacy_note_payload(legacy_notes_content, homework_id=instance.pk),
-                    user, example_schedule, 'homework')
+                    user, example_schedule, 'homework', h['id'])
         else:
-            raise ValidationError({
-                'homework': {
-                    h['id']: serializer.errors
-                }
-            })
+            raise _row_validation_error('homework', h['id'], serializer.errors)
 
     logger.info(f"Imported {len(homework)} homework.")
 
@@ -447,11 +429,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
             serializer.save(user=user)
             created += 1
         else:
-            raise ValidationError({
-                'reminders': {
-                    reminder.get('id'): serializer.errors
-                }
-            })
+            raise _row_validation_error('reminders', reminder.get('id'), serializer.errors)
 
     logger.info(f"Imported {created} reminders.")
 
@@ -497,7 +475,7 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
             ],
         }
 
-        _create_note_from_payload(payload, user, example_schedule, 'notes')
+        _create_note_from_payload(payload, user, example_schedule, 'notes', note_data['id'])
         notes_count += 1
 
     logger.info(f"Imported {notes_count} notes.")
@@ -633,7 +611,7 @@ def _bulk_import_example_schedule(data, user):
         if legacy_content:
             _create_note_from_payload(
                 _build_legacy_note_payload(legacy_content, resource_id=instance.pk),
-                user, example_schedule=True, section='materials')
+                user, example_schedule=True, section='materials', row_id=m['id'])
 
     if m2m_rows:
         MaterialCourseThrough.objects.bulk_create(m2m_rows)
@@ -689,7 +667,7 @@ def _bulk_import_example_schedule(data, user):
         homework_remap[h['id']] = instance.pk
         hw_resources_field = h['resources'] if 'resources' in h else h.get('materials', [])
         hw_material_m2m.append((instance.pk, [material_remap[m] for m in hw_resources_field]))
-        hw_legacy_notes.append((instance, legacy_notes_content))
+        hw_legacy_notes.append((instance, legacy_notes_content, h['id']))
 
     HomeworkMaterialThrough = Homework.materials.through
     hw_m2m_rows = []
@@ -699,11 +677,11 @@ def _bulk_import_example_schedule(data, user):
     if hw_m2m_rows:
         HomeworkMaterialThrough.objects.bulk_create(hw_m2m_rows)
 
-    for instance, legacy_content in hw_legacy_notes:
+    for instance, legacy_content, row_id in hw_legacy_notes:
         if legacy_content:
             _create_note_from_payload(
                 _build_legacy_note_payload(legacy_content, homework_id=instance.pk),
-                user, example_schedule=True, section='homework')
+                user, example_schedule=True, section='homework', row_id=row_id)
 
     # --- Reminder (individual save for start_of_range computation) ---
     for r in data.get('reminders', []):

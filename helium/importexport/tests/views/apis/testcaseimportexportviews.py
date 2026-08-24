@@ -1649,6 +1649,9 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('notes', response.data)
+        self.assertIsInstance(response.data['notes'], list)
+        self.assertIn('notes id 1, ', str(response.data['notes'][0]))
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
         self.assertEqual(Homework.objects.count(), 0)
@@ -1707,6 +1710,26 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('course_schedules', response.data)
         self.assertIn('Unresolved `course`', str(response.data['course_schedules']))
+
+    def test_import_row_field_error_names_section_and_id(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        del payload['courses'][0]['start_date']
+        del payload['courses'][0]['end_date']
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses', response.data)
+        errors = response.data['courses']
+        self.assertIsInstance(errors, list)
+        self.assertIn('courses id 1, start_date: This field is required.', errors)
+        self.assertIn('courses id 1, end_date: This field is required.', errors)
+        self.assertEqual(CourseGroup.objects.count(), 0)
+        self.assertEqual(Course.objects.count(), 0)
 
     def test_import_duplicate_id_within_section_rejected(self):
         # GIVEN
