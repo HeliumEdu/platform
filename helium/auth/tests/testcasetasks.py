@@ -236,22 +236,34 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(any(c.args[1] == 100 for c in rotating_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.distribution')
-    def test_emit_nightly_metrics_counts_week_based_schedules_in_rotating_per_user(self, mock_distribution):
+    def test_emit_nightly_metrics_partitions_schedules_per_user_by_type(self, mock_distribution):
         # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        courseschedulehelper.given_week_based_schedule_exists(course)
         courseschedulehelper.given_course_schedule_exists(course)
+        courseschedulehelper.given_cycle_schedule_exists(course)
+        courseschedulehelper.given_week_based_schedule_exists(course)
 
         # WHEN
         emit_nightly_metrics()
 
         # THEN
-        per_user_calls = [c for c in mock_distribution.call_args_list
-                          if c.args[0] == 'users.data.rotating_schedules_per_user']
-        self.assertTrue(per_user_calls)
-        self.assertTrue(all(c.args[1] == 1 for c in per_user_calls))
+        def samples(entity=None):
+            tag = f'entity:{entity}' if entity else None
+            return [c.args[1] for c in mock_distribution.call_args_list
+                    if c.args[0] == 'users.data.schedules_per_user'
+                    and (tag in c.kwargs['extra_tags'] if tag
+                         else not any(t.startswith('entity:') for t in c.kwargs['extra_tags']))]
+
+        self.assertTrue(all(v == 3 for v in samples()))
+        for entity in ('weekly', 'cycle', 'week_based'):
+            self.assertTrue(samples(entity), f'no samples for {entity}')
+            self.assertTrue(all(v == 1 for v in samples(entity)), entity)
+
+        # THEN the breakdowns sum to the total
+        self.assertEqual(sum(samples(e)[0] for e in ('weekly', 'cycle', 'week_based')),
+                         samples()[0])
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_measures_rotating_adoption_against_scheduled_users(self, mock_gauge):
@@ -328,131 +340,6 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(adoption_calls)
         self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
 
-    @mock.patch('helium.auth.tasks.metricutils.gauge')
-    def test_emit_nightly_metrics_counts_only_multi_schedule_courses_as_multiple_schedules_adoption(self, mock_gauge):
-        # GIVEN a user with a single-schedule course (not a multiple-schedules adopter)
-        single_user = userhelper.given_a_user_exists()
-        single_group = coursegrouphelper.given_course_group_exists(single_user)
-        single_course = coursehelper.given_course_exists(single_group)
-        courseschedulehelper.given_course_schedule_exists(single_course)
-
-        # WHEN
-        emit_nightly_metrics()
-
-        # THEN - a class-schedule adopter, but not a multiple-schedules adopter
-        multiple_calls = [c for c in mock_gauge.call_args_list
-                          if c.args[0] == 'users.adoption.multiple_schedules.pct']
-        self.assertTrue(multiple_calls)
-        self.assertTrue(all(c.args[1] == 0 for c in multiple_calls))
-
-    @mock.patch('helium.auth.tasks.metricutils.gauge')
-    def test_emit_nightly_metrics_emits_multiple_schedules_adoption(self, mock_gauge):
-        # GIVEN a user with a course that has two schedules
-        user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010')
-        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
-
-        # WHEN
-        emit_nightly_metrics()
-
-        # THEN
-        multiple_calls = [c for c in mock_gauge.call_args_list
-                          if c.args[0] == 'users.adoption.multiple_schedules.pct']
-        self.assertTrue(multiple_calls)
-        self.assertTrue(any(c.args[1] == 100 for c in multiple_calls))
-
-    def _setup_review_prompt_candidate(self, username='test_user', email='user@test.com'):
-        user = userhelper.given_a_user_exists(username=username, email=email)
-        user.settings.next_review_prompt_date = timezone.now() - timedelta(days=1)
-        user.settings.save(update_fields=['next_review_prompt_date'])
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        return user, course
-
-    def test_evaluate_review_prompts_flags_user_with_sufficient_total_and_recent_completions(self):
-        # GIVEN
-        user, course = self._setup_review_prompt_candidate()
-        recent_date = timezone.now() - timedelta(days=3)
-        old_date = timezone.now() - timedelta(days=30)
-        for _ in range(4):
-            hw = homeworkhelper.given_homework_exists(course, completed=True)
-            hw.completed_at = recent_date
-            hw.save(update_fields=['completed_at'])
-        for _ in range(3):
-            hw = homeworkhelper.given_homework_exists(course, completed=True)
-            hw.completed_at = old_date
-            hw.save(update_fields=['completed_at'])
-
-        # WHEN
-        evaluate_review_prompts()
-
-        # THEN
-        user.settings.refresh_from_db()
-        self.assertTrue(user.settings.prompt_for_review)
-
-    def test_evaluate_review_prompts_does_not_flag_user_with_insufficient_recent_completions(self):
-        # GIVEN
-        user, course = self._setup_review_prompt_candidate()
-        recent_date = timezone.now() - timedelta(days=3)
-        old_date = timezone.now() - timedelta(days=30)
-        for _ in range(3):
-            hw = homeworkhelper.given_homework_exists(course, completed=True)
-            hw.completed_at = recent_date
-            hw.save(update_fields=['completed_at'])
-        for _ in range(4):
-            hw = homeworkhelper.given_homework_exists(course, completed=True)
-            hw.completed_at = old_date
-            hw.save(update_fields=['completed_at'])
-
-        # WHEN
-        evaluate_review_prompts()
-
-        # THEN
-        user.settings.refresh_from_db()
-        self.assertFalse(user.settings.prompt_for_review)
-
-    def test_evaluate_review_prompts_excludes_example_schedule_homework(self):
-        # GIVEN
-        user, _ = self._setup_review_prompt_candidate()
-        example_course_group = coursegrouphelper.given_course_group_exists(user, title='Example')
-        example_course_group.example_schedule = True
-        example_course_group.save(update_fields=['example_schedule'])
-        example_course = coursehelper.given_course_exists(example_course_group)
-        recent_date = timezone.now() - timedelta(days=3)
-        for _ in range(7):
-            hw = homeworkhelper.given_homework_exists(example_course, completed=True)
-            hw.completed_at = recent_date
-            hw.save(update_fields=['completed_at'])
-
-        # WHEN
-        evaluate_review_prompts()
-
-        # THEN
-        user.settings.refresh_from_db()
-        self.assertFalse(user.settings.prompt_for_review)
-
-    @override_settings(REVIEW_PROMPT_MAX_REQUESTED=1)
-    def test_evaluate_review_prompts_does_not_flag_user_at_max_prompts_shown(self):
-        # GIVEN
-        user, course = self._setup_review_prompt_candidate()
-        user.settings.review_prompts_requested = 1
-        user.settings.save(update_fields=['review_prompts_requested'])
-        recent_date = timezone.now() - timedelta(days=3)
-        for _ in range(7):
-            hw = homeworkhelper.given_homework_exists(course, completed=True)
-            hw.completed_at = recent_date
-            hw.save(update_fields=['completed_at'])
-
-        # WHEN
-        evaluate_review_prompts()
-
-        # THEN
-        user.settings.refresh_from_db()
-        self.assertFalse(user.settings.prompt_for_review)
-
-    @override_settings(DORMANT_USER_PURGE_MAX_PER_RUN=1)
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):

@@ -367,12 +367,22 @@ def emit_nightly_metrics(self):
                                               ),
                                               'user_id', user_ids, window_staff_tags)
 
-                _emit_per_entity_distribution('users.data.rotating_schedules_per_user',
-                                              CourseSchedule.objects.filter(
-                                                  course__course_group__user__in=user_ids,
-                                                  course__course_group__example_schedule=False,
-                                              ).rotating(),
-                                              'course__course_group__user_id', user_ids, window_staff_tags)
+                schedule_qs = CourseSchedule.objects.filter(
+                    course__course_group__user__in=user_ids,
+                    course__course_group__example_schedule=False,
+                ).meeting()
+                _emit_per_entity_distribution('users.data.schedules_per_user',
+                                              schedule_qs, 'course__course_group__user_id', user_ids,
+                                              window_staff_tags)
+                for entity_tag, entity_filter in [
+                    ('weekly', Q(cycle_length__isnull=True, is_week_based=False)),
+                    ('cycle', Q(cycle_length__isnull=False)),
+                    ('week_based', Q(is_week_based=True)),
+                ]:
+                    _emit_per_entity_distribution('users.data.schedules_per_user',
+                                                  schedule_qs.filter(entity_filter),
+                                                  'course__course_group__user_id', user_ids,
+                                                  window_staff_tags + [f'entity:{entity_tag}'])
 
                 note_qs = Note.objects.filter(
                     user__in=user_ids,
@@ -451,10 +461,6 @@ def emit_nightly_metrics(self):
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ).rotating())),
-                    ('multiple_schedules', Exists(Course.objects.filter(
-                        course_group__user=OuterRef('pk'),
-                        course_group__example_schedule=False,
-                    ).annotate(schedule_count=Count('schedules')).filter(schedule_count__gt=1))),
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
@@ -495,10 +501,9 @@ def emit_nightly_metrics(self):
 
                 scheduled_users = adopter_counts['class_schedules']
                 if scheduled_users:
-                    for adoption_metric in ('rotating_schedules', 'multiple_schedules'):
-                        metricutils.gauge(f'users.adoption.{adoption_metric}.of_scheduled.pct',
-                                          adopter_counts[adoption_metric] / scheduled_users * 100,
-                                          extra_tags=window_staff_tags)
+                    metricutils.gauge('users.adoption.rotating_schedules.of_scheduled.pct',
+                                      adopter_counts['rotating_schedules'] / scheduled_users * 100,
+                                      extra_tags=window_staff_tags)
 
                 feed_adopters = _count_distinct_feed_slugs(days, staff_tag, now_utc.date())
                 metricutils.gauge('users.adoption.feeds.pct',
