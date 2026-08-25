@@ -68,6 +68,20 @@ def _client_tags(request):
     return [f"user_agent:{normalized_ua}", f"client:{client}", f"client_os:{client_os}"]
 
 
+def _user_tags(user):
+    """Resolve the requester's identity tags. Anonymous users are tagged `staff:false` so that
+    filter doesn't silently drop unauthenticated traffic."""
+    if not user:
+        return []
+
+    is_staff = user.is_authenticated and is_staff_user(user)
+
+    return [
+        f"authenticated:{str(user.is_authenticated).lower()}",
+        f"staff:{str(is_staff).lower()}",
+    ]
+
+
 def _platform_version_tag():
     return f"platform_version:{settings.PROJECT_VERSION}"
 
@@ -86,10 +100,7 @@ def increment(metric, request=None, response=None, user=None, value=1, extra_tag
     try:
         tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
-        if user:
-            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
-            if user.is_authenticated:
-                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
+        tags.extend(_user_tags(user))
 
         if request:
             tags.append(f"method:{request.method}")
@@ -110,10 +121,7 @@ def timing(metric, value, user=None, extra_tags=None):
     try:
         tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
-        if user:
-            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
-            if user.is_authenticated:
-                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
+        tags.extend(_user_tags(user))
 
         metric_id = f"platform.{metric}"
         statsd.timing(metric_id, value=value, tags=tags)
@@ -126,10 +134,7 @@ def gauge(metric, value, user=None, extra_tags=None):
     try:
         tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
-        if user:
-            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
-            if user.is_authenticated:
-                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
+        tags.extend(_user_tags(user))
 
         metric_id = f"platform.{metric}"
         statsd.gauge(metric_id, value=value, tags=tags)
@@ -142,10 +147,7 @@ def distribution(metric, value, user=None, extra_tags=None):
     try:
         tags = _BASE_TAGS.copy() + (extra_tags if extra_tags else [])
 
-        if user:
-            tags.append(f"authenticated:{str(user.is_authenticated).lower()}")
-            if user.is_authenticated:
-                tags.append(f"staff:{str(is_staff_user(user)).lower()}")
+        tags.extend(_user_tags(user))
 
         metric_id = f"platform.{metric}"
         statsd.distribution(metric_id, value=value, tags=tags)
