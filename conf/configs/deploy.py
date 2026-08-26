@@ -250,6 +250,7 @@ else:
     AWS_S3_ENDPOINT_URL = config('PLATFORM_AWS_S3_ENDPOINT_URL', None)
     S3_ENDPOINT_URL = strip_scheme(AWS_S3_ENDPOINT_URL or 's3.amazonaws.com')
     AWS_S3_REGION_NAME = common.AWS_REGION
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
 
     STORAGES = {
         'default': {'BACKEND': 'conf.storages.S3MediaPipelineStorage'},

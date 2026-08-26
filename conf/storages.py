@@ -22,3 +22,16 @@ class S3MediaPipelineStorage(PipelineMixin, S3Boto3Storage):
         self.custom_domain = None
         # Serve user-uploaded media as a download so it cannot render inline.
         self.object_parameters = {'ContentDisposition': 'attachment'}
+
+    def url(self, name, parameters=None, expire=None, http_method=None):
+        """
+        Sign the URL with a download disposition so every object saves rather than renders,
+        including any stored without one of its own.
+
+        No filename is set: it would be user input, and the key already ends with the
+        original name.
+        """
+        parameters = dict(parameters or {})
+        parameters.setdefault('ResponseContentDisposition', 'attachment')
+        return super().url(name, parameters=parameters, expire=expire,
+                           http_method=http_method)
