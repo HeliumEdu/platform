@@ -169,12 +169,20 @@ class MaterialFilter(django_filters.FilterSet):
 
 
 class CourseScheduleFilter(django_filters.FilterSet):
+    shown_on_calendar = django_filters.BooleanFilter(
+        method='filter_shown_on_calendar',
+        help_text="Restrict to schedules whose parent class group is visible on the user's calendar.",
+    )
+
     class Meta:
         model = CourseSchedule
         fields = {
             'id': ['exact'],
             'updated_at': ['gte'],
         }
+
+    def filter_shown_on_calendar(self, queryset, name, value):
+        return queryset.filter(course__course_group__shown_on_calendar=value)
 
 
 class AttachmentFilter(django_filters.FilterSet):
