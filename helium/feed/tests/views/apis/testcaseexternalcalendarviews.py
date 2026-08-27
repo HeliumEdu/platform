@@ -279,3 +279,24 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertIn(external_calendar2.pk, returned_ids)
         self.assertIn(external_calendar3.pk, returned_ids)
         self.assertNotIn(external_calendar1.pk, returned_ids)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.metricutils.increment')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
+    def test_user_disabling_healthy_calendar_emits_no_metric(self, mock_urlopen, mock_increment):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('feed_externalcalendars_detail', kwargs={'pk': external_calendar.pk}),
+            data={'shown_on_calendar': False})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        external_calendar.refresh_from_db()
+        self.assertFalse(external_calendar.shown_on_calendar)
+        disabled_calls = [c for c in mock_increment.call_args_list
+                          if c.args and c.args[0] == 'feed.ical.disabled']
+        self.assertEqual(len(disabled_calls), 0)

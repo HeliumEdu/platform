@@ -2,6 +2,7 @@ import logging
 import os
 from unittest import mock
 
+from celery.exceptions import SoftTimeLimitExceeded
 from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -325,6 +326,76 @@ class TestCaseReindexStaleFeedCaches(TestCase):
         # THEN
         cached_data = cache.get(cache_key)
         self.assertEqual(cached_data, '[{"id": 1, "title": "Cached Event"}]')
+
+
+class TestCaseReindexSweepResilience(TestCase):
+    def setUp(self):
+        self.user = userhelper.given_a_user_exists()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def given_two_stale_calendars(self):
+        stale = timezone.now() - timezone.timedelta(hours=5)
+        first = externalcalendarhelper.given_external_calendar_exists(self.user, title='A Calendar')
+        second = externalcalendarhelper.given_external_calendar_exists(self.user, title='B Calendar')
+        ExternalCalendar.objects.filter(pk__in=[first.pk, second.pk]).update(last_index=stale)
+
+        return first, second
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.metricutils.increment')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.fetch_ical_conditional')
+    @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
+    def test_unexpected_error_does_not_stop_the_sweep(self, mock_fetch, mock_increment):
+        # GIVEN
+        first, second = self.given_two_stale_calendars()
+        mock_fetch.side_effect = [AttributeError('malformed feed'), None]
+
+        # WHEN
+        icalexternalcalendarservice.reindex_stale_feed_caches()
+
+        # THEN
+        self.assertEqual(mock_fetch.call_count, 2)
+        second.refresh_from_db()
+        self.assertIsNotNone(second.last_index)
+        first.refresh_from_db()
+        self.assertTrue(first.shown_on_calendar)
+        self.assertEqual(first.consecutive_failures, 0)
+        self.assertIn(mock.call('feed.ical.failed', extra_tags=['reason:unexpected']),
+                      mock_increment.call_args_list)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.fetch_ical_conditional')
+    @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
+    def test_soft_time_limit_is_not_swallowed(self, mock_fetch):
+        # GIVEN
+        self.given_two_stale_calendars()
+        mock_fetch.side_effect = SoftTimeLimitExceeded()
+
+        # WHEN
+        with self.assertRaises(SoftTimeLimitExceeded):
+            icalexternalcalendarservice.reindex_stale_feed_caches()
+
+        # THEN
+        self.assertEqual(mock_fetch.call_count, 1)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
+    @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
+    def test_feed_with_a_vevent_missing_dtstart_still_reindexes(self, mock_urlopen):
+        # GIVEN
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
+        ExternalCalendar.objects.filter(pk=external_calendar.pk).update(
+            last_index=timezone.now() - timezone.timedelta(hours=5))
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'no_dtstart.ical'), mock_urlopen)
+
+        # WHEN
+        icalexternalcalendarservice.reindex_stale_feed_caches()
+
+        # THEN
+        external_calendar.refresh_from_db()
+        self.assertTrue(external_calendar.shown_on_calendar)
+        self.assertEqual(external_calendar.consecutive_failures, 0)
+        self.assertIsNone(external_calendar.last_sync_error)
 
 
 class TestCaseCalendarToEvents(TestCase):

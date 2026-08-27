@@ -10,6 +10,7 @@ from dateutil import parser
 from django.conf import settings
 from django.core import validators
 from django.core.cache import cache
+from celery.exceptions import SoftTimeLimitExceeded
 from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.utils import timezone
@@ -30,7 +31,12 @@ url_validator = validators.URLValidator()
 
 
 class HeliumICalError(HeliumError):
-    pass
+    """Raised when an iCal feed cannot be fetched or parsed."""
+
+    def __init__(self, message, reason):
+        super().__init__(message)
+
+        self.reason = reason
 
 
 def _get_cache_prefix(external_calendar):
@@ -52,6 +58,8 @@ def record_feed_failure(external_calendar, error):
         last_sync_error=str(error))
 
     external_calendar.refresh_from_db(fields=['consecutive_failures', 'last_sync_error'])
+
+    metricutils.increment('feed.ical.failed', extra_tags=[f'reason:{error.reason}'])
 
     if (external_calendar.consecutive_failures < settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD
             or not external_calendar.shown_on_calendar):
@@ -237,21 +245,21 @@ def validate_url(url):
         response = urlopen_secure(url)
 
         if response.getcode() != status.HTTP_200_OK:
-            raise HeliumICalError("The URL did not return a valid response.")
+            raise HeliumICalError("The URL did not return a valid response.", 'bad_response')
 
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
         logger.info(f"The URL is invalid: {ex}")
 
-        raise HeliumICalError(ex.message)
+        raise HeliumICalError(ex.message, 'invalid_url')
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
 
-        raise HeliumICalError("The URL is not reachable.")
+        raise HeliumICalError("The URL is not reachable.", 'unreachable')
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
 
-        raise HeliumICalError("The URL did not return a valid iCal feed.")
+        raise HeliumICalError("The URL did not return a valid iCal feed.", 'invalid_feed')
 
 
 def fetch_ical_conditional(external_calendar):
@@ -285,7 +293,7 @@ def fetch_ical_conditional(external_calendar):
             return None
 
         if response_code != status.HTTP_200_OK:
-            raise HeliumICalError("The URL did not return a valid response.")
+            raise HeliumICalError("The URL did not return a valid response.", 'bad_response')
 
         # Store caching headers from the response for next time
         new_etag = response.getheader('ETag')
@@ -307,12 +315,10 @@ def fetch_ical_conditional(external_calendar):
 
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:unreachable'])
-        raise HeliumICalError("The URL is not reachable.")
+        raise HeliumICalError("The URL is not reachable.", 'unreachable')
     except ValueError as ex:
         logger.info(f"The URL did not return a valid ICAL feed: {ex}")
-        metricutils.increment('feed.ical.failed', extra_tags=['reason:invalid_feed'])
-        raise HeliumICalError("The URL did not return a valid iCal feed.")
+        raise HeliumICalError("The URL did not return a valid iCal feed.", 'invalid_feed')
 
 
 def calendar_to_events(external_calendar, _from=None, to=None, search=None):
@@ -378,5 +384,14 @@ def reindex_stale_feed_caches(calendar_ids=None):
 
         except HeliumICalError as e:
             record_feed_failure(external_calendar, e)
+        except SoftTimeLimitExceeded:
+            # The task is out of budget; swallowing this would let the sweep run unbounded,
+            # since no hard time limit backs it up.
+            raise
+        except Exception:
+            logger.error(f"Unexpected error reindexing External Calendar {external_calendar.pk}, "
+                         f"skipping it so the sweep can continue", exc_info=True)
+
+            metricutils.increment('feed.ical.failed', extra_tags=['reason:unexpected'])
 
     logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")

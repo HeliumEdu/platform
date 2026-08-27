@@ -2,6 +2,7 @@ import logging
 import re
 import time
 
+from celery import current_task
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -199,6 +200,18 @@ def request_stop(metrics, request, response):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
+def _stash_metrics_on_request(metrics):
+    """Make a task's metrics reachable from :class:`taskutils.MetricsTask`, which otherwise has no
+    way to know the name the body started under. A no-op outside a task."""
+    try:
+        task = current_task
+
+        if task and getattr(task, 'request', None) is not None:
+            task.request.helium_metrics = metrics
+    except Exception:
+        logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
 def task_start(task_name, priority="low", published_at_ms=None):
     try:
         start_time = int(round(time.time() * 1000))
@@ -214,6 +227,8 @@ def task_start(task_name, priority="low", published_at_ms=None):
             metrics['Task-Metric-Queue'] = published_at_ms
             queue_wait_ms = max(0, start_time - published_at_ms)
             timing('task.queue_time', queue_wait_ms, extra_tags=[f"name:{task_name}", f"priority:{priority}"])
+
+        _stash_metrics_on_request(metrics)
 
         return metrics
     except Exception:
@@ -231,7 +246,7 @@ def task_stop(metrics, value=1, user=None):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def task_failure(task_name, exception_type=None, priority="low"):
+def task_failure(task_name, exception_type=None, priority="low", metrics=None):
     try:
         tags = [f"name:{task_name}", f"priority:{priority}"]
         if exception_type:
@@ -240,6 +255,9 @@ def task_failure(task_name, exception_type=None, priority="low"):
         increment('task.failed', extra_tags=tags)
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
+
+    if metrics:
+        task_stop(metrics, value=0)
 
 
 def get_published_at_ms(celery_task):

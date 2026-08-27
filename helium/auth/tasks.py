@@ -258,12 +258,18 @@ def sweep_dangling_users(self):
 
 @app.task(bind=True)
 def emit_queue_depth(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("metrics.queue-depth", priority="low", published_at_ms=published_at_ms)
+
     try:
         queue_depth = redisutils.get_redis_client().llen('celery')
         metricutils.gauge('celery.queue.depth', queue_depth)
         logger.debug(f"Emitted queue depth: {queue_depth}")
     except Exception as e:
         logger.warning(f"Failed to get queue depth: {e}")
+        raise
+
+    metricutils.task_stop(metrics)
 
 
 def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags):
@@ -310,7 +316,6 @@ def emit_nightly_metrics(self):
             logger.debug(f"Emitted active users ({window_tag})")
     except Exception as e:
         logger.error(f"Failed to emit nightly metrics: {e}", exc_info=True)
-        metricutils.task_failure("metrics.nightly", exception_type=type(e).__name__)
         raise
 
     try:
@@ -513,7 +518,6 @@ def emit_nightly_metrics(self):
             logger.debug(f"Emitted data richness and adoption metrics ({window_tag})")
     except Exception as e:
         logger.error(f"Failed to emit data richness/adoption metrics: {e}", exc_info=True)
-        metricutils.task_failure("metrics.nightly.richness", exception_type=type(e).__name__)
         raise
 
     try:
@@ -565,7 +569,6 @@ def emit_nightly_metrics(self):
         logger.debug("Emitted engagement quality metrics")
     except Exception as e:
         logger.error(f"Failed to emit engagement quality metrics: {e}", exc_info=True)
-        metricutils.task_failure("metrics.nightly.engagement", exception_type=type(e).__name__)
         raise
 
     try:
@@ -573,7 +576,6 @@ def emit_nightly_metrics(self):
         logger.info(f'Power user rollup: {promoted} tagged, {cleared} cleared')
     except Exception as e:
         logger.error(f"Failed to rollup power users: {e}", exc_info=True)
-        metricutils.task_failure("metrics.nightly.power_users", exception_type=type(e).__name__)
         raise
 
     metricutils.task_stop(metrics)
@@ -633,7 +635,6 @@ def rollup_client_activity(self):
 
     except Exception as e:
         logger.error(f'Failed to rollup client activity: {e}', exc_info=True)
-        metricutils.task_failure("user.client-activity.rollup", exception_type=type(e).__name__, priority="low")
         raise
 
 
@@ -676,7 +677,6 @@ def evaluate_review_prompts(self):
 
     except Exception as e:
         logger.error(f'Failed to evaluate review prompts: {e}', exc_info=True)
-        metricutils.task_failure("user.review-prompt.evaluate", exception_type=type(e).__name__, priority="low")
         raise
 
 
@@ -752,7 +752,6 @@ def send_dormant_user_warning_email(self, user_id):
 
     except Exception as e:
         logger.error(f'Failed to send dormant warning email to user {user_id}: {e}', exc_info=True)
-        metricutils.task_failure("email.dormant-warning.sent", exception_type=type(e).__name__, priority="low")
         raise
 
 
@@ -832,7 +831,6 @@ def process_dormant_users(self):
 
     except Exception as e:
         logger.error(f'Failed to process dormant users: {e}', exc_info=True)
-        metricutils.task_failure("user.dormant.process", exception_type=type(e).__name__, priority="low")
         raise
 
 

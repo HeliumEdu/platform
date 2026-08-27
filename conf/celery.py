@@ -3,7 +3,6 @@ Initialize Celery with Django configuration.
 """
 
 import os
-import sys
 import time
 
 from django.conf import settings
@@ -18,7 +17,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 
 _REQUEST_ID_HEADER = 'request_id'
 
-app = Celery('conf')
+app = Celery('conf', task_cls='helium.common.utils.taskutils:MetricsTask')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
@@ -79,18 +78,3 @@ def on_beat_init(sender, **kwargs):
     """Emit nightly metrics on Beat startup for immediate validation."""
     # Use send_task to avoid import issues before Django is fully ready
     app.send_task('helium.auth.tasks.emit_nightly_metrics')
-
-
-if 'celery' in sys.argv[0]:
-    from sentry_sdk.integrations.celery import CeleryIntegration
-    import sentry_sdk
-
-    # Initialize Sentry for Celery workers
-    sentry_sdk.init(
-        dsn=settings.config('PLATFORM_SENTRY_DSN') if hasattr(settings, 'config') else os.environ.get('PLATFORM_SENTRY_DSN'),
-        integrations=[CeleryIntegration()],
-        environment=settings.ENVIRONMENT if hasattr(settings, 'ENVIRONMENT') else os.environ.get('PLATFORM_ENVIRONMENT', 'production'),
-        release=settings.PROJECT_VERSION if hasattr(settings, 'PROJECT_VERSION') else None,
-        send_default_pii=False,
-        traces_sample_rate=0.1,
-    )

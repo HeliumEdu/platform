@@ -2,6 +2,7 @@ from unittest import mock
 
 from django.test import SimpleTestCase
 
+from helium.common.utils import metricutils
 from helium.common.utils.metricutils import _client_tags
 
 DART_APP = 'Dart/3.5 (dart:io)'
@@ -137,3 +138,29 @@ class TestCaseMetricUtils(SimpleTestCase):
         self.assertIn('user_agent:unknown', tags)
         self.assertIn('client:other', tags)
         self.assertIn('client_os:other', tags)
+
+
+class TestCaseTaskFailureMetrics(SimpleTestCase):
+    @mock.patch('helium.common.utils.metricutils.task_stop')
+    @mock.patch('helium.common.utils.metricutils.increment')
+    def test_task_failure_closes_out_timing_when_given_metrics(self, mock_increment, mock_task_stop):
+        # GIVEN
+        metrics = metricutils.task_start('some.task', priority='low')
+
+        # WHEN
+        metricutils.task_failure('some.task', exception_type='ValueError', metrics=metrics)
+
+        # THEN
+        mock_increment.assert_called_once_with(
+            'task.failed', extra_tags=['name:some.task', 'priority:low', 'exception:ValueError'])
+        mock_task_stop.assert_called_once_with(metrics, value=0)
+
+    @mock.patch('helium.common.utils.metricutils.task_stop')
+    @mock.patch('helium.common.utils.metricutils.increment')
+    def test_task_failure_without_metrics_only_counts_the_failure(self, mock_increment, mock_task_stop):
+        # WHEN
+        metricutils.task_failure('some.task', exception_type='ValueError')
+
+        # THEN
+        mock_increment.assert_called_once()
+        mock_task_stop.assert_not_called()

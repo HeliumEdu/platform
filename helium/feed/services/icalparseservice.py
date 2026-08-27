@@ -144,7 +144,12 @@ def parse_events(calendar, default_time_zone):
                         merged.append(iso)
                 exception_dates = merged
 
-        dt_start = component.get("DTSTART").dt
+        dtstart = component.get("DTSTART")
+        if dtstart is None:
+            logger.info('Skipping VEVENT with no DTSTART.')
+            continue
+
+        dt_start = dtstart.dt
 
         if recurrence_rule:
             recurrence_rule = infer_byday_for_weekly_rrule(recurrence_rule, dt_start)

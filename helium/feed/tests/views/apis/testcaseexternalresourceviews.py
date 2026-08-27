@@ -1,6 +1,7 @@
 import os
 from unittest import mock
 
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -487,3 +488,23 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         self.assertEqual(len(response_date_only.data), len(response_utc.data))
         self.assertEqual(len(response_date_only.data), 1)
         self.assertEqual(response_date_only.data[0]['title'], response_utc.data[0]['title'])
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.metricutils.increment')
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
+    @override_settings(FEED_CONSECUTIVE_FAILURE_THRESHOLD=2)
+    def test_auto_disable_emits_metric_once(self, mock_urlopen, mock_increment):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
+        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+
+        # WHEN
+        for _ in range(3):
+            self.client.get(reverse('feed_externalcalendars_events'))
+
+        # THEN
+        external_calendar.refresh_from_db()
+        self.assertFalse(external_calendar.shown_on_calendar)
+        disabled_calls = [c for c in mock_increment.call_args_list
+                          if c.args and c.args[0] == 'feed.ical.disabled']
+        self.assertEqual(len(disabled_calls), 1)
