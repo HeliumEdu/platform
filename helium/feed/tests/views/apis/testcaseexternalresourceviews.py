@@ -313,9 +313,10 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("not a valid ICAL", response.data[0])
+        self.assertIn("not return a valid iCal feed", response.data[0])
         external_calendar.refresh_from_db()
-        self.assertFalse(external_calendar.shown_on_calendar)
+        self.assertTrue(external_calendar.shown_on_calendar)
+        self.assertEqual(external_calendar.consecutive_failures, 1)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events_search(self, mock_urlopen):
@@ -422,9 +423,10 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
-        # Calendar should be disabled
         external_calendar.refresh_from_db()
-        self.assertFalse(external_calendar.shown_on_calendar)
+        self.assertTrue(external_calendar.shown_on_calendar)
+        self.assertEqual(external_calendar.consecutive_failures, 1)
+        self.assertIsNotNone(external_calendar.last_sync_error)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_interprets_in_user_timezone(self, mock_urlopen):

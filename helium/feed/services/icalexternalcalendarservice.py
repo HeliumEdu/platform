@@ -1,7 +1,7 @@
 import datetime
+import http.client
 import json
 import logging
-from urllib.error import URLError
 from urllib.request import Request
 from zoneinfo import ZoneInfo
 
@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core import validators
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import status
 
@@ -34,6 +35,57 @@ class HeliumICalError(HeliumError):
 
 def _get_cache_prefix(external_calendar):
     return f"users:{external_calendar.user_id}:externalcalendars:{external_calendar.pk}:events"
+
+
+def record_feed_failure(external_calendar, error):
+    """
+    Record a failed fetch against the calendar, disabling it only once it has failed enough
+    times in a row to reach the configured threshold, so a transient upstream outage cannot
+    take a user's calendar offline.
+
+    :param external_calendar: The ExternalCalendar model instance that failed to sync.
+    :param error: The error raised by the failed fetch.
+    :return: True if this failure disabled the calendar.
+    """
+    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(
+        consecutive_failures=F('consecutive_failures') + 1,
+        last_sync_error=str(error))
+
+    external_calendar.refresh_from_db(fields=['consecutive_failures', 'last_sync_error'])
+
+    if (external_calendar.consecutive_failures < settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD
+            or not external_calendar.shown_on_calendar):
+        logger.info(f"External Calendar {external_calendar.pk} failure "
+                    f"{external_calendar.consecutive_failures}/{settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD}: {error}")
+
+        return False
+
+    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(shown_on_calendar=False)
+    external_calendar.shown_on_calendar = False
+
+    logger.info(f"Disabling External Calendar {external_calendar.pk} after "
+                f"{external_calendar.consecutive_failures} consecutive failures")
+
+    metricutils.increment('feed.ical.disabled')
+
+    return True
+
+
+def record_feed_success(external_calendar):
+    """
+    Clear any failure state recorded against the calendar by a previous failed fetch.
+
+    :param external_calendar: The ExternalCalendar model instance that synced successfully.
+    """
+    if external_calendar.consecutive_failures == 0 and external_calendar.last_sync_error is None:
+        return
+
+    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(
+        consecutive_failures=0,
+        last_sync_error=None)
+
+    external_calendar.consecutive_failures = 0
+    external_calendar.last_sync_error = None
 
 
 def _apply_event_filters(event, _from, to, search):
@@ -151,6 +203,8 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
         metricutils.increment('task.cache.max-size-exceeded')
 
+    record_feed_success(external_calendar)
+
     return events_filtered
 
 
@@ -190,7 +244,7 @@ def validate_url(url):
         logger.info(f"The URL is invalid: {ex}")
 
         raise HeliumICalError(ex.message)
-    except URLError as ex:
+    except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
 
         raise HeliumICalError("The URL is not reachable.")
@@ -251,7 +305,7 @@ def fetch_ical_conditional(external_calendar):
         metricutils.increment('feed.ical.fetched')
         return icalendar.Calendar.from_ical(response.read())
 
-    except URLError as ex:
+    except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
         metricutils.increment('feed.ical.failed', extra_tags=['reason:unreachable'])
         raise HeliumICalError("The URL is not reachable.")
@@ -312,37 +366,17 @@ def reindex_stale_feed_caches(calendar_ids=None):
             calendar = fetch_ical_conditional(external_calendar)
 
             if calendar is None:
-                # 304 Not Modified - feed hasn't changed, just update last_index to extend cache
+                # A 304 leaves the cache standing, so only its freshness window needs extending
                 external_calendar.last_index = timezone.now()
-                external_calendar.last_sync_error = None
-                external_calendar.consecutive_failures = 0
-                external_calendar.save(update_fields=['last_index', 'last_sync_error', 'consecutive_failures'])
+                external_calendar.save(update_fields=['last_index'])
+                record_feed_success(external_calendar)
                 not_modified.append(external_calendar)
             else:
-                # Feed was modified, clear cache and re-parse
                 cache.delete(_get_cache_prefix(external_calendar))
                 _create_events_from_calendar(external_calendar, calendar)
-                external_calendar.last_sync_error = None
-                external_calendar.consecutive_failures = 0
-                external_calendar.save(update_fields=['last_sync_error', 'consecutive_failures'])
                 reindexed.append(external_calendar)
 
         except HeliumICalError as e:
-            external_calendar.consecutive_failures += 1
-            external_calendar.last_sync_error = str(e)
-            update_fields = ['consecutive_failures', 'last_sync_error']
-
-            if external_calendar.consecutive_failures >= settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD:
-                logger.info(
-                    f"Disabling calendar {external_calendar.pk} after "
-                    f"{external_calendar.consecutive_failures} consecutive failures")
-                external_calendar.shown_on_calendar = False
-                update_fields.append('shown_on_calendar')
-            else:
-                logger.info(
-                    f"Calendar {external_calendar.pk} failure "
-                    f"{external_calendar.consecutive_failures}/{settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD}: {e}")
-
-            external_calendar.save(update_fields=update_fields)
+            record_feed_failure(external_calendar, e)
 
     logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")

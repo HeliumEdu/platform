@@ -15,12 +15,20 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'url', 'color', 'shown_on_calendar', 'user',)
         read_only_fields = ('user',)
 
+    def _is_url_changing(self, attrs):
+        return 'url' in attrs and (not self.instance or attrs['url'] != self.instance.url)
+
+    def _is_being_reenabled(self, attrs):
+        return (self.instance
+                and not self.instance.shown_on_calendar
+                and attrs.get('shown_on_calendar') is True)
+
     def validate(self, attrs):
         url = attrs.get('url', None)
         if not url and self.instance:
             url = self.instance.url
 
-        if url and (not self.instance or (self.instance and url != self.instance.url)):
+        if url and (self._is_url_changing(attrs) or self._is_being_reenabled(attrs)):
             try:
                 icalexternalcalendarservice.validate_url(url)
             except HeliumICalError as e:
@@ -29,11 +37,12 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
-        url_changed = 'url' in validated_data and validated_data['url'] != instance.url
+        invalidate_cache = (self._is_url_changing(validated_data)
+                            or self._is_being_reenabled(validated_data))
 
         instance = super().update(instance, validated_data)
 
-        if url_changed:
+        if invalidate_cache:
             icalexternalcalendarservice.invalidate_calendar_cache(instance)
 
         return instance

@@ -44,8 +44,10 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
         across requests, but it is not an `Event` primary key.
 
-        Side effect: if a subscribed external calendar fails to fetch or parse periodically, it is auto-disabled
-        (`shown_on_calendar` flipped to `false`). PATCH it back to `true` once the upstream feed is fixed.
+        Side effect: a subscribed external calendar that fails to fetch or parse repeatedly in a row is
+        auto-disabled (`shown_on_calendar` flipped to `false`), so a transient upstream outage does not take
+        it offline. PATCH it back to `true` once the upstream feed is fixed; the feed is re-validated at that
+        point.
         """
         return super().get(request, *args, **kwargs)
 
@@ -68,10 +70,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         for external_calendar in external_calendars:
             try:
                 events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
-            except HeliumICalError:
-                external_calendar.shown_on_calendar = False
-                external_calendar.save()
-                logger.warning(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
+            except HeliumICalError as e:
+                icalexternalcalendarservice.record_feed_failure(external_calendar, e)
 
         serializer = self.get_serializer(events, many=True)
 
@@ -105,9 +105,10 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
         across requests, but it is not an `Event` primary key.
 
-        If the upstream iCal fetch fails or the feed cannot be parsed, the request fails AND, as a side
-        effect, the external calendar is auto-disabled (`shown_on_calendar` flipped to `false`). PATCH it
-        back to `true` once the upstream feed is fixed.
+        If the upstream iCal fetch fails or the feed cannot be parsed, the request fails. Repeated
+        consecutive failures also auto-disable the external calendar (`shown_on_calendar` flipped to
+        `false`). PATCH it back to `true` once the upstream feed is fixed; the feed is re-validated at that
+        point.
         """
         return super().get(request, *args, **kwargs)
 
@@ -129,13 +130,11 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
         try:
             events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
-        except HeliumICalError:
-            external_calendar.shown_on_calendar = False
-            external_calendar.save()
+        except HeliumICalError as e:
+            if icalexternalcalendarservice.record_feed_failure(external_calendar, e):
+                raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
-            logger.warning(f"An error occurred while trying to fetch external calendar {external_calendar.pk}", exc_info=True)
-
-            raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
+            raise ValidationError(str(e))
 
         serializer = self.get_serializer(events, many=True)
 
