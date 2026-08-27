@@ -41,3 +41,4 @@ class TestCaseTasks(TestCase):
         # THEN
         mock_send_notifications.assert_called_once_with(['token1'], 'Subject', 'Message', reminder_data)
         mock_stop.assert_called_once_with({'start': 'metrics'})
+

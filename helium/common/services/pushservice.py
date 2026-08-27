@@ -18,6 +18,10 @@ _FAILURE_REASONS = (
 
 _PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError)
 
+#: A retired token is expected lifecycle rather than a delivery problem: it is purged automatically
+#: and counted as `action.push.token.purged`, so it neither alerts nor counts as a failure.
+_ROUTINE_REASONS = ('unregistered',)
+
 
 def _failure_reason(exception):
     """Prefer FCM's specific error types, else the Google API error code the SDK attaches
@@ -44,15 +48,19 @@ def _count_failures_by_reason(responses):
     return counts
 
 
-def _record_send_failures(response):
-    """Count each failed send under its cause, so routine token churn stays separable from a
-    delivery problem that needs attention."""
+def _record_send_failures(response, operation):
+    """Count every failed send that carries meaning, leaving out routine token retirement.
+
+    :return: All failures keyed by reason, and the subset worth surfacing.
+    """
     reason_counts = _count_failures_by_reason(response.responses) or {'unknown': response.failure_count}
+    meaningful = {reason: count for reason, count in reason_counts.items() if reason not in _ROUTINE_REASONS}
 
-    for reason, count in reason_counts.items():
-        metricutils.increment('action.push.failed', value=count, extra_tags=[f'reason:{reason}'])
+    for reason, count in meaningful.items():
+        metricutils.increment('action.push.failed', value=count,
+                              extra_tags=[f'reason:{reason}', f'operation:{operation}'])
 
-    return reason_counts
+    return reason_counts, meaningful
 
 
 def _invalid_tokens(push_tokens, responses):
@@ -102,13 +110,15 @@ def send_notifications(push_tokens, subject, message, reminder_data):
             metricutils.increment('action.reminder.sent', value=response.success_count, extra_tags=['channel:push'])
 
         if response.failure_count > 0:
-            reason_counts = _record_send_failures(response)
-            logger.warning(f"Failed to send {response.failure_count} push notifications: {reason_counts}")
+            reason_counts, meaningful = _record_send_failures(response, 'notification')
+            log = logger.warning if meaningful else logger.info
+            log(f"Failed to send {response.failure_count} push notifications: {reason_counts}")
 
         return _invalid_tokens(push_tokens, response.responses)
     except Exception:
         logger.error("Failed to send push notifications", exc_info=True)
-        metricutils.increment('action.push.failed', value=len(push_tokens), extra_tags=['reason:request_failed'])
+        metricutils.increment('action.push.failed', value=len(push_tokens),
+                              extra_tags=['reason:request_failed', 'operation:notification'])
         raise
 
 
@@ -131,9 +141,13 @@ def send_dismiss(push_tokens, reminder_id):
         response = messaging.send_each_for_multicast(multicast_message)
 
         if response.failure_count > 0:
-            logger.warning(f"Failed to send {response.failure_count} dismiss pushes")
+            reason_counts, meaningful = _record_send_failures(response, 'dismiss')
+            log = logger.warning if meaningful else logger.info
+            log(f"Failed to send {response.failure_count} dismiss pushes: {reason_counts}")
 
         return _invalid_tokens(push_tokens, response.responses)
     except Exception:
         logger.error("Failed to send dismiss pushes", exc_info=True)
+        metricutils.increment('action.push.failed', value=len(push_tokens),
+                              extra_tags=['reason:request_failed', 'operation:dismiss'])
         raise

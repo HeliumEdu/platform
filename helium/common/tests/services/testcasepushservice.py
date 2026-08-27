@@ -58,10 +58,11 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(push_tokens, 'Subject', 'Message', reminder_data)
 
         # THEN
-        self.assertEqual(mock_increment.call_count, 3)
+        self.assertEqual(mock_increment.call_count, 2)
         mock_increment.assert_any_call('action.push.sent', value=1)
         mock_increment.assert_any_call('action.reminder.sent', value=1, extra_tags=['channel:push'])
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unregistered'])
+        failed = [c for c in mock_increment.call_args_list if c.args[0] == 'action.push.failed']
+        self.assertEqual(failed, [])
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
@@ -76,9 +77,9 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(push_tokens, 'Subject', 'Message', reminder_data)
 
         # THEN
-        self.assertEqual(mock_increment.call_count, 2)
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unregistered'])
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:third_party_auth'])
+        self.assertEqual(mock_increment.call_count, 1)
+        mock_increment.assert_any_call('action.push.failed', value=1,
+                                       extra_tags=['reason:third_party_auth', 'operation:notification'])
 
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
     def test_send_notifications_uses_platform_specific_notification_fields(self, mock_send):
@@ -121,7 +122,7 @@ class TestCasePushService(TestCase):
             pushservice.send_notifications(push_tokens, 'Subject', 'Message', reminder_data)
 
         mock_increment.assert_called_once_with('action.push.failed', value=2,
-                                               extra_tags=['reason:request_failed'])
+                                               extra_tags=['reason:request_failed', 'operation:notification'])
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
@@ -135,8 +136,10 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(['t1', 't2', 't3'], 'Subject', 'Message', {'id': 1})
 
         # THEN
-        mock_increment.assert_any_call('action.push.failed', value=2, extra_tags=['reason:unregistered'])
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:quota_exceeded'])
+        failed = [c for c in mock_increment.call_args_list if c.args[0] == 'action.push.failed']
+        self.assertEqual(len(failed), 1)
+        mock_increment.assert_any_call('action.push.failed', value=1,
+                                       extra_tags=['reason:quota_exceeded', 'operation:notification'])
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
@@ -163,8 +166,8 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(['t1', 't2'], 'Subject', 'Message', {'id': 1})
 
         # THEN
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unavailable'])
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:invalid_argument'])
+        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unavailable', 'operation:notification'])
+        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:invalid_argument', 'operation:notification'])
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
@@ -176,4 +179,5 @@ class TestCasePushService(TestCase):
         pushservice.send_notifications(['t1'], 'Subject', 'Message', {'id': 1})
 
         # THEN
-        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unknown'])
+        mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unknown', 'operation:notification'])
+
