@@ -181,3 +181,33 @@ class TestCasePushService(TestCase):
         # THEN
         mock_increment.assert_any_call('action.push.failed', value=1, extra_tags=['reason:unknown', 'operation:notification'])
 
+
+class TestCaseTokensFcmRejects(TestCase):
+    @mock.patch('helium.common.services.pushservice.metricutils.increment')
+    @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
+    def test_a_rejected_token_is_purged_and_its_siblings_are_not(self, mock_send, mock_increment):
+        # GIVEN
+        mock_send.return_value = given_send_response(
+            firebase_exceptions.InvalidArgumentError('not a valid FCM registration token'),
+            None)
+
+        # WHEN
+        invalid = pushservice.send_notifications(['bad-token', 'good-token'], 'Subject', 'Message', {'id': 1})
+
+        # THEN
+        self.assertEqual(invalid, ['bad-token'])
+
+    @mock.patch('helium.common.services.pushservice.metricutils.increment')
+    @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
+    def test_dismiss_purges_the_same_tokens(self, mock_send, mock_increment):
+        # GIVEN
+        mock_send.return_value = given_send_response(
+            messaging.UnregisteredError('gone'),
+            None,
+            firebase_exceptions.InvalidArgumentError('not a valid FCM registration token'))
+
+        # WHEN
+        invalid = pushservice.send_dismiss(['t1', 't2', 't3'], 128383)
+
+        # THEN
+        self.assertEqual(invalid, ['t1', 't3'])

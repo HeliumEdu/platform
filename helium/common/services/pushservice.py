@@ -1,6 +1,7 @@
 import logging
 import json
 
+from firebase_admin import exceptions as firebase_exceptions
 from firebase_admin import messaging
 
 from helium.common.utils import metricutils
@@ -16,7 +17,8 @@ _FAILURE_REASONS = (
     (messaging.QuotaExceededError, 'quota_exceeded'),
 )
 
-_PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError)
+_PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError,
+                        firebase_exceptions.InvalidArgumentError)
 
 #: A retired token is expected lifecycle rather than a delivery problem: it is purged automatically
 #: and counted as `action.push.token.purged`, so it neither alerts nor counts as a failure.
@@ -48,6 +50,20 @@ def _count_failures_by_reason(responses):
     return counts
 
 
+def _failure_details(responses):
+    """FCM's own wording for each meaningful failure, which is the only thing that separates a
+    token it rejects from a message it rejects."""
+    details = {}
+
+    for response in responses:
+        if response.success or _failure_reason(response.exception) in _ROUTINE_REASONS:
+            continue
+
+        details.setdefault(_failure_reason(response.exception), str(response.exception))
+
+    return details
+
+
 def _record_send_failures(response, operation):
     """Count every failed send that carries meaning, leaving out routine token retirement.
 
@@ -60,7 +76,7 @@ def _record_send_failures(response, operation):
         metricutils.increment('action.push.failed', value=count,
                               extra_tags=[f'reason:{reason}', f'operation:{operation}'])
 
-    return reason_counts, meaningful
+    return reason_counts, meaningful, _failure_details(response.responses)
 
 
 def _invalid_tokens(push_tokens, responses):
@@ -110,9 +126,10 @@ def send_notifications(push_tokens, subject, message, reminder_data):
             metricutils.increment('action.reminder.sent', value=response.success_count, extra_tags=['channel:push'])
 
         if response.failure_count > 0:
-            reason_counts, meaningful = _record_send_failures(response, 'notification')
+            reason_counts, meaningful, details = _record_send_failures(response, 'notification')
             log = logger.warning if meaningful else logger.info
-            log(f"Failed to send {response.failure_count} push notifications: {reason_counts}")
+            log(f"Failed to send {response.failure_count} push notifications: {reason_counts}"
+                + (f" {details}" if details else ""))
 
         return _invalid_tokens(push_tokens, response.responses)
     except Exception:
@@ -141,9 +158,10 @@ def send_dismiss(push_tokens, reminder_id):
         response = messaging.send_each_for_multicast(multicast_message)
 
         if response.failure_count > 0:
-            reason_counts, meaningful = _record_send_failures(response, 'dismiss')
+            reason_counts, meaningful, details = _record_send_failures(response, 'dismiss')
             log = logger.warning if meaningful else logger.info
-            log(f"Failed to send {response.failure_count} dismiss pushes: {reason_counts}")
+            log(f"Failed to send {response.failure_count} dismiss pushes: {reason_counts}"
+                + (f" {details}" if details else ""))
 
         return _invalid_tokens(push_tokens, response.responses)
     except Exception:

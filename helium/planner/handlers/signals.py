@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 
 from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_delete
@@ -14,6 +15,29 @@ from helium.planner.tasks import recalculate_category_grades_for_course, recalcu
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
 
 logger = logging.getLogger(__name__)
+
+#: Senders whose post_delete receivers only recalculate grades or stamp bookkeeping. Attachment is
+#: absent deliberately: its receiver deletes the stored file and must always run.
+_RECALCULATING_SENDERS = frozenset({Course, Category, Homework, Event, CourseSchedule, CourseGroup})
+
+
+@contextmanager
+def suppress_cascade_recalculation():
+    """Stop a cascading delete from recalculating grades for the rows it is removing."""
+    sender_ids = {id(sender) for sender in _RECALCULATING_SENDERS}
+    original_receivers = post_delete.receivers
+
+    post_delete.receivers = [
+        item for item in original_receivers
+        if not (isinstance(item[0], tuple) and len(item[0]) >= 2 and item[0][1] in sender_ids)
+    ]
+    post_delete.sender_receivers_cache.clear()
+
+    try:
+        yield
+    finally:
+        post_delete.receivers = original_receivers
+        post_delete.sender_receivers_cache.clear()
 
 
 def _mark_user_data_deleted(instance):

@@ -20,6 +20,7 @@ from helium.common.services import analyticsservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
+from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
     Material, Note, Reminder
 
@@ -169,7 +170,8 @@ def delete_user(self, user_id):
     Attachment.objects.filter(user=user).delete()
     Reminder.objects.filter(user=user).delete()
 
-    user.delete()
+    with suppress_cascade_recalculation():
+        user.delete()
 
     for token in outstanding_tokens + blacklisted_tokens:
         try:
