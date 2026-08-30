@@ -199,6 +199,35 @@ class TestCaseTokensFcmRejects(TestCase):
 
     @mock.patch('helium.common.services.pushservice.metricutils.increment')
     @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
+    def test_a_message_fcm_rejects_leaves_every_token_registered(self, mock_send, mock_increment):
+        # GIVEN
+        mock_send.return_value = given_send_response(
+            firebase_exceptions.InvalidArgumentError('Request contains an invalid argument'),
+            firebase_exceptions.InvalidArgumentError('Request contains an invalid argument'))
+
+        # WHEN
+        invalid = pushservice.send_notifications(['t1', 't2'], 'Subject', 'Message', {'id': 1})
+
+        # THEN
+        self.assertEqual(invalid, [])
+        mock_increment.assert_any_call('action.push.failed', value=2,
+                                       extra_tags=['reason:invalid_argument', 'operation:notification'])
+
+    @mock.patch('helium.common.services.pushservice.metricutils.increment')
+    @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
+    def test_a_message_fcm_rejects_leaves_every_token_registered_on_dismiss(self, mock_send, mock_increment):
+        # GIVEN
+        mock_send.return_value = given_send_response(
+            firebase_exceptions.InvalidArgumentError('Request contains an invalid argument'))
+
+        # WHEN
+        invalid = pushservice.send_dismiss(['t1'], 128383)
+
+        # THEN
+        self.assertEqual(invalid, [])
+
+    @mock.patch('helium.common.services.pushservice.metricutils.increment')
+    @mock.patch('helium.common.services.pushservice.messaging.send_each_for_multicast')
     def test_dismiss_purges_the_same_tokens(self, mock_send, mock_increment):
         # GIVEN
         mock_send.return_value = given_send_response(

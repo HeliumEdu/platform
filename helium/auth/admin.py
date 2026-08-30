@@ -24,6 +24,7 @@ from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingToke
 from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
@@ -301,6 +302,7 @@ def force_logout(modeladmin, request, queryset):
     tokens = OutstandingToken.objects.filter(user__in=queryset)
     for token in tokens:
         BlacklistedToken.objects.get_or_create(token=token)
+    revoke_push_tokens(queryset)
     modeladmin.message_user(request, f'Logged out {queryset.count()} user(s).')
 
 
@@ -319,6 +321,7 @@ def force_logout_for_activities(modeladmin, request, queryset):
     tokens = OutstandingToken.objects.filter(user_id__in=user_ids)
     for token in tokens:
         BlacklistedToken.objects.get_or_create(token=token)
+    revoke_push_tokens(user_ids)
     modeladmin.message_user(request, f'Logged out {len(user_ids)} user(s).')
 
 

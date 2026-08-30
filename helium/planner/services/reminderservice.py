@@ -14,6 +14,42 @@ from helium.planner.serializers.reminderserializer import ReminderExtendedSerial
 
 logger = logging.getLogger(__name__)
 
+#: Fields the user sizes. FCM rejects a message over 4096 bytes with the same error it uses for a
+#: dead token, so an assignment's write-up would otherwise retire every device the user owns.
+_UNBOUNDED_TEXT_FIELDS = ('message', 'comments', 'url', 'website')
+
+#: Related collections grow without limit and are never read from a push.
+_UNREAD_COLLECTIONS = ('attachments', 'reminders', 'materials', 'notes', 'schedules')
+
+
+def _bounded_for_push(value):
+    """
+    Empty the user-sized fields and drop the unread collections.
+
+    :param value: a serialized reminder, or any value nested within one.
+    :return: the same structure, bounded.
+    """
+    if isinstance(value, list):
+        return [_bounded_for_push(item) for item in value]
+
+    if not isinstance(value, dict):
+        return value
+
+    bounded = {}
+    for key, nested in value.items():
+        if key in _UNREAD_COLLECTIONS:
+            continue
+        if key in _UNBOUNDED_TEXT_FIELDS:
+            bounded[key] = '' if isinstance(nested, str) else None
+            continue
+        bounded[key] = _bounded_for_push(nested)
+
+    return bounded
+
+
+def _push_payload(reminder):
+    return _bounded_for_push(ReminderExtendedSerializer(reminder).data)
+
 
 def _push_body(reminder):
     if reminder.homework:
@@ -320,14 +356,14 @@ def process_push_reminders(mark_sent_only=False):
                         metricutils.increment('task', value=len(push_tokens), user=reminder.user,
                                               extra_tags=['name:reminder.queue.push'])
 
-                        serializer = ReminderExtendedSerializer(reminder)
-                        reminder_data = serializer.data
-
                         taskutils.safe_apply_async(send_pushes,
-                            args=(push_tokens, user.username, subject, _push_body(reminder), reminder_data),
+                            args=(push_tokens, user.username, subject, _push_body(reminder),
+                                  _push_payload(reminder)),
                             priority=settings.CELERY_PRIORITY_HIGH,
                         )
                     else:
+                        metricutils.increment('action.reminder.undeliverable', user=reminder.user,
+                                              extra_tags=['channel:push'])
                         logger.info(
                             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
             else:

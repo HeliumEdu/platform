@@ -10,6 +10,7 @@ from rest_framework import serializers
 from helium.auth.models import UserSettings
 from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
+from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
     is_admin_allowed_email
@@ -134,6 +135,8 @@ class UserSerializer(serializers.ModelSerializer):
             # For OAuth users without passwords, allow setting password directly to "upgrade" their account
             instance.set_password(password)
             instance.save()
+
+            revoke_push_tokens([instance])
 
         return instance
 

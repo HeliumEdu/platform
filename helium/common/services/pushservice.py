@@ -17,8 +17,11 @@ _FAILURE_REASONS = (
     (messaging.QuotaExceededError, 'quota_exceeded'),
 )
 
-_PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError,
-                        firebase_exceptions.InvalidArgumentError)
+_PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError)
+
+#: A malformed token and a rejected message both come back as HTTP 400, so only FCM's wording
+#: separates them. Retiring on the message-level fault would end push on every device at once.
+_INVALID_TOKEN_MARKERS = ('registration token', 'registration_token')
 
 #: A retired token is expected lifecycle rather than a delivery problem: it is purged automatically
 #: and counted as `action.push.token.purged`, so it neither alerts nor counts as a failure.
@@ -79,9 +82,19 @@ def _record_send_failures(response, operation):
     return reason_counts, meaningful, _failure_details(response.responses)
 
 
+def _is_permanently_invalid(exception):
+    if isinstance(exception, _PERMANENTLY_INVALID):
+        return True
+
+    if isinstance(exception, firebase_exceptions.InvalidArgumentError):
+        return any(marker in str(exception).lower() for marker in _INVALID_TOKEN_MARKERS)
+
+    return False
+
+
 def _invalid_tokens(push_tokens, responses):
     return [push_tokens[i] for i, response in enumerate(responses)
-            if not response.success and isinstance(response.exception, _PERMANENTLY_INVALID)]
+            if not response.success and _is_permanently_invalid(response.exception)]
 
 
 def send_notifications(push_tokens, subject, message, reminder_data):

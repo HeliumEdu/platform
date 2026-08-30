@@ -19,6 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.serializers.userserializer import UserSerializer
+from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
@@ -116,6 +117,8 @@ def confirm_password_reset(request):
     if not user.is_active:
         user.is_active = True
     user.save()
+
+    revoke_push_tokens([user])
 
     logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
     metricutils.increment('action.user.password-reset.confirmed', request=request, user=user)

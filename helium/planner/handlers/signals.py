@@ -2,6 +2,7 @@ import logging
 from contextlib import contextmanager
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
@@ -45,6 +46,8 @@ def _mark_user_data_deleted(instance):
         user = instance.get_user()
         user.settings.last_deletion_at = timezone.now()
         user.settings.save(update_fields=['last_deletion_at'])
+    except ObjectDoesNotExist:
+        pass
     except Exception:
         logger.warning("Failed to update last_deletion_at after delete.", exc_info=True)
 

@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.2.120"
+__version__ = "2.2.121"
 
 import json
 import os
@@ -172,7 +172,8 @@ DB_RETRYABLE_ERROR_CODES = (1213, 1205)
 # Purge users that never finish setting up their account
 UNVERIFIED_USER_TTL_DAYS = 7
 
-# Purge push tokens older than this many days (FCM invalidates tokens after ~60 days of non-use)
+# Purge push tokens the client has not re-registered within this many days. Clients refresh their
+# registration on launch, so this is the window since a device last opened the app.
 PUSH_TOKEN_TTL_DAYS = 90
 
 # Dormant user purge settings

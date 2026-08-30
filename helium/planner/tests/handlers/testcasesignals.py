@@ -1,7 +1,9 @@
+from unittest import mock
+
 from django.test import TestCase
 
 from helium.planner.handlers import signals
-from helium.planner.models import Category, Course
+from helium.planner.models import Category, Course, Homework
 
 
 class TestCaseSignals(TestCase):
@@ -13,6 +15,9 @@ class TestCaseSignals(TestCase):
     object, which previously issued a DB fetch that raised and surfaced as a 500 on
     DELETE /planner/coursegroups/{pk}/. The recalculation task itself already no-ops on a
     missing parent.
+
+    Resolving the row's owner has to tolerate the same thing: the ancestor a child walks to reach
+    its user may already be gone, and the ancestor's own receiver stamps `last_deletion_at`.
     """
 
     def test_delete_category_tolerates_already_deleted_course(self):
@@ -23,6 +28,17 @@ class TestCaseSignals(TestCase):
         signals.delete_category(sender=Category, instance=instance)
 
         # THEN it does not raise (no DB fetch of the deleted Course; task no-ops)
+
+    def test_delete_homework_tolerates_already_deleted_course(self):
+        # GIVEN
+        instance = Homework(pk=-1, course_id=-1)
+
+        # WHEN
+        with mock.patch.object(signals.logger, 'warning') as mock_warning:
+            signals.delete_homework(sender=Homework, instance=instance)
+
+        # THEN
+        mock_warning.assert_not_called()
 
     def test_delete_course_tolerates_already_deleted_course_group(self):
         # GIVEN a Course whose parent CourseGroup row has already been removed mid-cascade
