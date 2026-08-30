@@ -1,3 +1,4 @@
+import contextvars
 import logging
 from contextlib import contextmanager
 
@@ -21,24 +22,31 @@ logger = logging.getLogger(__name__)
 #: absent deliberately: its receiver deletes the stored file and must always run.
 _RECALCULATING_SENDERS = frozenset({Course, Category, Homework, Event, CourseSchedule, CourseGroup})
 
+_suppressed_senders: contextvars.ContextVar[frozenset] = contextvars.ContextVar(
+    'suppressed_senders', default=frozenset())
+
 
 @contextmanager
-def suppress_cascade_recalculation():
-    """Stop a cascading delete from recalculating grades for the rows it is removing."""
-    sender_ids = {id(sender) for sender in _RECALCULATING_SENDERS}
-    original_receivers = post_delete.receivers
+def suppress_cascade_recalculation(*senders):
+    """Stop a cascading delete from recalculating grades for the rows it is removing.
 
-    post_delete.receivers = [
-        item for item in original_receivers
-        if not (isinstance(item[0], tuple) and len(item[0]) >= 2 and item[0][1] in sender_ids)
-    ]
-    post_delete.sender_receivers_cache.clear()
+    Name the senders whose recalculation the delete makes redundant. A sender left out still
+    recalculates, which is what keeps a surviving parent's grade correct: deleting a Course has to
+    leave its CourseGroup right, so `Course` stays out of the list while its descendants go in.
+    Passing nothing suppresses every sender, which only suits a delete that leaves nothing behind.
 
+    Bound to the calling context rather than the receiver registry, so a concurrent request is
+    unaffected.
+    """
+    token = _suppressed_senders.set(frozenset(senders) or _RECALCULATING_SENDERS)
     try:
         yield
     finally:
-        post_delete.receivers = original_receivers
-        post_delete.sender_receivers_cache.clear()
+        _suppressed_senders.reset(token)
+
+
+def _suppressed(sender) -> bool:
+    return sender in _suppressed_senders.get()
 
 
 def _mark_user_data_deleted(instance):
@@ -66,6 +74,9 @@ def save_course(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Course)
 def delete_course(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)
     recalculate_course_grades_for_course_group.apply(args=(instance.course_group_id,))
 
@@ -88,12 +99,18 @@ def save_category(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Category)
 def delete_category(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)
     recalculate_category_grades_for_course.apply(args=(instance.course_id,))
 
 
 @receiver(post_delete, sender=Homework)
 def delete_homework(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)
     try:
         if instance.category:
@@ -180,14 +197,23 @@ def delete_course_children(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Event)
 def delete_event(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)
 
 
 @receiver(post_delete, sender=CourseSchedule)
 def delete_course_schedule(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)
 
 
 @receiver(post_delete, sender=CourseGroup)
 def delete_course_group(sender, instance, **kwargs):
+    if _suppressed(sender):
+        return
+
     _mark_user_data_deleted(instance)

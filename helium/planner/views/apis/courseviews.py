@@ -8,9 +8,10 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
+from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner import permissions
 from helium.planner.filters import CourseFilter
-from helium.planner.models import Course, Category
+from helium.planner.models import Course, Category, CourseSchedule, Homework
 from helium.planner.permissions import IsCourseGroupOwner
 from helium.planner.serializers.courseserializer import CourseSerializer
 
@@ -189,6 +190,10 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
         summary='Delete a Course',
         tags=['planner.course']
     )
+    def perform_destroy(self, instance):
+        with suppress_cascade_recalculation(Category, CourseSchedule, Homework):
+            instance.delete()
+
     def delete(self, request, *args, **kwargs):
         """
         Delete the given course instance.

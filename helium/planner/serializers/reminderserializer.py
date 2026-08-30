@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common import enums
@@ -9,7 +10,17 @@ from helium.planner.models import Reminder, Homework, Event, Course
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_serializer(exclude_fields=('title',))
 class ReminderSerializer(serializers.ModelSerializer):
+    #: Legacy parameter, can be removed once all clients are reporting >= 3.9.0.
+    title = serializers.CharField(source='message', read_only=True)
+
+    def to_internal_value(self, data):
+        """Legacy parameter, permanently accepted as an alias for `message`; `message` wins."""
+        if isinstance(data, dict) and not data.get('message') and data.get('title'):
+            data = {**data, 'message': data['title']}
+        return super().to_internal_value(data)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -105,6 +116,7 @@ class ReminderSerializer(serializers.ModelSerializer):
         return attrs
 
 
+@extend_schema_serializer(exclude_fields=('title',))
 class ReminderExtendedSerializer(ReminderSerializer):
     def to_representation(self, instance):
         # Import serializers here to avoid circular imports

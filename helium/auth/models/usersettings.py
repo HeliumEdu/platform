@@ -64,7 +64,7 @@ class UserSettings(BaseModel):
         default=enums.PUSH, choices=enums.REMINDER_TYPE_CHOICES)
 
     default_reminder_offset = models.PositiveIntegerField(help_text='The default offset when creating a new reminder.',
-                                                          default=30)
+                                                          default=30, validators=[MaxValueValidator(100)])
 
     default_reminder_offset_type = models.PositiveIntegerField(
         help_text='The unit pre-selected for the reminder offset when creating a new reminder.',

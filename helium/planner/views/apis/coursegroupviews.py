@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
+from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner.filters import CourseGroupFilter
 from helium.planner.models import CourseGroup
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
@@ -113,6 +114,10 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
         logger.info(f"CourseGroup {kwargs['pk']} partially updated for user {request.user.pk}")
 
         return response
+
+    def perform_destroy(self, instance):
+        with suppress_cascade_recalculation():
+            instance.delete()
 
     @extend_schema(
         summary='Delete a CourseGroup',

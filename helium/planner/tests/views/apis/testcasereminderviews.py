@@ -232,11 +232,9 @@ class TestCaseReminderViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event)
-        self.assertEqual(reminder.title, '🌴 Test Reminder')
 
         # WHEN
         data = {
-            'title': 'some title',
             'message': 'some message',
             'offset': 1,
             'offset_type': enums.HOURS,
@@ -1208,7 +1206,7 @@ class TestCaseReminderViews(APITestCase):
             sat_start_time=datetime.time(10, 0, 0),
         )
         Reminder.objects.bulk_create([Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=15, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=True, dismissed=False,

@@ -65,7 +65,7 @@ def _row_validation_error(section, row_id, errors):
 
 def _extract_legacy_notes(data, legacy_field='comments'):
     """
-    Extract and convert legacy HTML notes field to Quill JSON format.
+    Legacy parameter, permanently accepted on import; converts legacy HTML to Quill JSON format.
 
     Reads the legacy field from data (preserving it) and returns the converted Quill JSON content.
     Returns None if no legacy content or conversion fails.
@@ -418,7 +418,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
         # collapse to identical rows. Import only the first.
         key = (reminder.get('homework'), reminder.get('event'), reminder.get('course'),
                reminder.get('offset'), reminder.get('offset_type'), reminder.get('type'),
-               reminder.get('title'), reminder.get('message'))
+               reminder.get('message'))
         if key in seen:
             continue
         seen.add(key)
@@ -484,7 +484,12 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
 
 
 @contextmanager
-def _suppress_post_save_signals():
+def suppress_post_save_signals():
+    """Skip the per-row grade and reminder recalculations an import makes redundant.
+
+    Swaps the process-wide receiver list, so every thread sees it. Safe only where the caller owns
+    the process, as a prefork Celery worker does; never use it to serve a request.
+    """
     sender_ids = {id(s) for s in _SUPPRESSED_SENDERS}
     original_receivers = post_save.receivers
     post_save.receivers = [
@@ -686,7 +691,6 @@ def _bulk_import_example_schedule(data, user):
     # --- Reminder (individual save for start_of_range computation) ---
     for r in data.get('reminders', []):
         instance = Reminder(
-            title=r['title'],
             message=r.get('message', ''),
             offset=r.get('offset', 30),
             offset_type=r.get('offset_type', enums.MINUTES),
@@ -771,45 +775,44 @@ def import_user(request, data, example_schedule=False):
 
     _validate_section_ids(data)
 
-    with _suppress_post_save_signals():
-        external_calendars = data.get('external_calendars', [])
-        external_calendar_count = _import_external_calendars(external_calendars, request.user,
-                                                             example_schedule) if external_calendars else 0
+    external_calendars = data.get('external_calendars', [])
+    external_calendar_count = _import_external_calendars(external_calendars, request.user,
+                                                         example_schedule) if external_calendars else 0
 
-        course_groups = data.get('course_groups', [])
-        course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
+    course_groups = data.get('course_groups', [])
+    course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
 
-        courses = data.get('courses', [])
-        course_remap = _import_courses(courses, course_group_remap) if courses else {}
+    courses = data.get('courses', [])
+    course_remap = _import_courses(courses, course_group_remap) if courses else {}
 
-        course_schedules = data.get('course_schedules', [])
-        course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
+    course_schedules = data.get('course_schedules', [])
+    course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
 
-        categories = data.get('categories', [])
-        category_remap = _import_categories(categories, request, course_remap) if categories else {}
+    categories = data.get('categories', [])
+    category_remap = _import_categories(categories, request, course_remap) if categories else {}
 
-        _ensure_courses_have_categories(course_remap)
+    _ensure_courses_have_categories(course_remap)
 
-        material_groups = data.get('material_groups', [])
-        material_group_remap = _import_material_groups(material_groups, request.user,
-                                                       example_schedule) if material_groups else {}
+    material_groups = data.get('material_groups', [])
+    material_group_remap = _import_material_groups(material_groups, request.user,
+                                                   example_schedule) if material_groups else {}
 
-        material_remap = _import_materials(materials, material_group_remap, course_remap, request.user,
-                                           example_schedule) if materials else {}
+    material_remap = _import_materials(materials, material_group_remap, course_remap, request.user,
+                                       example_schedule) if materials else {}
 
-        events = data.get('events', [])
-        event_remap = _import_events(events, request.user, example_schedule) if events else {}
+    events = data.get('events', [])
+    event_remap = _import_events(events, request.user, example_schedule) if events else {}
 
-        homework = data.get('homework', [])
-        homework_remap = _import_homework(homework, course_remap, category_remap, material_remap, request.user,
-                                          example_schedule) if homework else {}
+    homework = data.get('homework', [])
+    homework_remap = _import_homework(homework, course_remap, category_remap, material_remap, request.user,
+                                      example_schedule) if homework else {}
 
-        reminders = data.get('reminders', [])
-        reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
+    reminders = data.get('reminders', [])
+    reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
 
-        notes = data.get('notes', [])
-        notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,
-                                    example_schedule) if notes else 0
+    notes = data.get('notes', [])
+    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, material_remap,
+                                example_schedule) if notes else 0
 
     for course_id in set(course_remap.values()):
         taskutils.safe_apply_async(recalculate_category_grades_for_course,
@@ -1020,8 +1023,7 @@ def import_example_schedule(user):
         data = json.loads(json_str)
 
         with transaction.atomic():
-            with _suppress_post_save_signals():
-                _bulk_import_example_schedule(data, user)
+            _bulk_import_example_schedule(data, user)
 
             _adjust_schedule_relative_to(user, -1)
 

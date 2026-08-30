@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import CategoryFilter
-from helium.planner.models import Category
+from helium.planner.models import Category, Homework
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
 from helium.planner.serializers.categoryserializer import CategorySerializer
 
@@ -179,12 +179,12 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
             if not uncategorized:
                 logger.info(f"Creating 'Uncategorized' to move Homework out of category being deleted for {request.user.pk}")
                 uncategorized = Category.objects.get_uncategorized(category.course_id)
-            for h in homework:
-                h.category = uncategorized
-                h.save()
 
-                logger.info(
-                    f'Homework {h.pk} category set to Uncategorized {uncategorized.pk} for user {request.user.pk}')
+            # One statement, so the move doesn't recalculate the course once per homework
+            Homework.objects.filter(pk__in=[h.pk for h in homework]).update(category=uncategorized)
+
+            logger.info(f'{len(homework)} homework moved to Uncategorized {uncategorized.pk} '
+                        f'for user {request.user.pk}')
 
         response = self.destroy(request, *args, **kwargs)
 

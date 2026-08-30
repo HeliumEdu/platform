@@ -26,7 +26,9 @@ def import_example_schedule(self, user_id, example_schedule=True):
         user = UserModel.objects.get(pk=user_id)
 
         if example_schedule:
-            importservice.import_example_schedule(user)
+            # Lives here, not in the service: a task owns its process, a request does not
+            with importservice.suppress_post_save_signals():
+                importservice.import_example_schedule(user)
 
         user.settings.is_setup_complete = True
         user.settings.save()

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from helium.planner.models import Material, MaterialGroup, Course
 
 
+#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
 @extend_schema_serializer(exclude_fields=('details',))
 class MaterialSerializer(serializers.ModelSerializer):
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)

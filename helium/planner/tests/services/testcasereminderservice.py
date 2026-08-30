@@ -88,7 +88,7 @@ class TestCaseReminderService(TestCase):
         reminder2 = reminderhelper.given_reminder_exists(user, homework=homework, type=enums.PUSH)
         # Course push reminder in the send window — should now be fully pushed (no guard)
         course_reminder = Reminder(
-            title='Course reminder', message='Class soon',
+            message='Class soon',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=False, dismissed=False,
@@ -185,7 +185,7 @@ class TestCaseReminderService(TestCase):
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
         reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
@@ -215,7 +215,7 @@ class TestCaseReminderService(TestCase):
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
         sent_reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
@@ -223,7 +223,7 @@ class TestCaseReminderService(TestCase):
             course=course, user=user,
         )
         unsent_reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() + datetime.timedelta(days=2),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH,
@@ -252,7 +252,7 @@ class TestCaseReminderService(TestCase):
                                                           wed_start_time=datetime.time(10, 0, 0),
                                                           fri_start_time=datetime.time(10, 0, 0))
         stale = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(hours=3),
             offset=30, offset_type=enums.MINUTES, type=enums.PUSH,
             sent=False, dismissed=False, course=course, user=user,
@@ -285,7 +285,7 @@ class TestCaseReminderService(TestCase):
                                                           fri_start_time=datetime.time(10, 0, 0),
                                                           sat_start_time=datetime.time(10, 0, 0))
         fired_reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
             type=enums.EMAIL, sent=False, dismissed=False,
@@ -321,14 +321,14 @@ class TestCaseReminderService(TestCase):
                                                           fri_start_time=datetime.time(10, 0, 0),
                                                           sat_start_time=datetime.time(10, 0, 0))
         old_past = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(days=2),
             offset=15, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )
         pending = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=15, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=False, dismissed=False,
@@ -366,14 +366,14 @@ class TestCaseReminderService(TestCase):
                                                           fri_start_time=datetime.time(10, 0, 0),
                                                           sat_start_time=datetime.time(10, 0, 0))
         old_past = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=2),
             offset=10, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=True, dismissed=False,
             course=course, user=user,
         )
         pending = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=timezone.now() - datetime.timedelta(minutes=1),
             offset=9, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=False, dismissed=False,
@@ -485,7 +485,7 @@ class TestCaseReminderService(TestCase):
         # Monday 2026-03-30 at 09:30 UTC: start_of_range of the fired reminder (class was at 10:00)
         monday_start_of_range = datetime.datetime(2026, 3, 30, 9, 30, 0, tzinfo=datetime.timezone.utc)
         reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=monday_start_of_range,
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=True, dismissed=False,
@@ -526,7 +526,7 @@ class TestCaseReminderService(TestCase):
         # A reminder that fired just after midnight on Wednesday 2026-03-25, so both the 09:00
         # and 14:00 occurrences later that same day still qualify as "next".
         reminder = Reminder(
-            title='Test', message='Test',
+            message='Test',
             start_of_range=datetime.datetime(2026, 3, 24, 23, 30, 0, tzinfo=datetime.timezone.utc),
             offset=30, offset_type=enums.MINUTES,
             type=enums.PUSH, sent=True, dismissed=False,
@@ -623,7 +623,6 @@ class TestCaseReminderService(TestCase):
                                                           fri_start_time=datetime.time(10, 0, 0))
         # Manually build a reminder bypassing save() since the course has no future occurrence
         reminder = Reminder(
-            title='Test',
             message='Test',
             start_of_range=datetime.datetime(2020, 5, 4, 9, 30, tzinfo=datetime.timezone.utc),
             offset=30,

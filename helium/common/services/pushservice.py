@@ -8,7 +8,7 @@ from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
 
-#: FCM's own types say more than the API codes they extend (an UnregisteredError is a NOT_FOUND).
+#: The SDK's own types say more than the API codes they extend (Unregistered is a NOT_FOUND).
 #: The first two mean the token is dead, which is routine churn rather than a delivery problem.
 _FAILURE_REASONS = (
     (messaging.UnregisteredError, 'unregistered'),
@@ -19,8 +19,8 @@ _FAILURE_REASONS = (
 
 _PERMANENTLY_INVALID = (messaging.UnregisteredError, messaging.SenderIdMismatchError)
 
-#: A malformed token and a rejected message both come back as HTTP 400, so only FCM's wording
-#: separates them. Retiring on the message-level fault would end push on every device at once.
+#: A malformed token and a rejected message come back indistinguishable apart from their wording.
+#: Retiring on the message-level fault would end push on every device at once.
 _INVALID_TOKEN_MARKERS = ('registration token', 'registration_token')
 
 #: A retired token is expected lifecycle rather than a delivery problem: it is purged automatically
@@ -29,8 +29,7 @@ _ROUTINE_REASONS = ('unregistered',)
 
 
 def _failure_reason(exception):
-    """Prefer FCM's specific error types, else the Google API error code the SDK attaches
-    (https://cloud.google.com/apis/design/errors#handling_errors)."""
+    """Prefer the SDK's specific error types, else the API error code it attaches."""
     for error_type, reason in _FAILURE_REASONS:
         if isinstance(exception, error_type):
             return reason
@@ -54,8 +53,8 @@ def _count_failures_by_reason(responses):
 
 
 def _failure_details(responses):
-    """FCM's own wording for each meaningful failure, which is the only thing that separates a
-    token it rejects from a message it rejects."""
+    """The service's own wording for each meaningful failure, which is the only thing that
+    separates a token it rejects from a message it rejects."""
     details = {}
 
     for response in responses:

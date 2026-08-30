@@ -38,6 +38,9 @@ def validate_fraction(value):
     if d <= 0:
         raise ValidationError('The denominator must be greater than zero.')
 
+    if abs(n / d * 100) > 999:
+        raise ValidationError('The grade does not appear to be valid.')
+
     return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
 
 

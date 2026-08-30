@@ -13,6 +13,7 @@ from helium.planner.tasks import recalculate_category_grade
 logger = logging.getLogger(__name__)
 
 
+#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
 @extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
@@ -62,11 +63,13 @@ class HomeworkSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if old_category:
-            recalculate_category_grade(old_category.pk)
+            # The save above already recalculated the course; only the old category is stale
+            recalculate_category_grade(old_category.pk, recalculate_course=False)
 
         return instance
 
 
+#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
 @extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)

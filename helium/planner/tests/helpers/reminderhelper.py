@@ -4,11 +4,10 @@ from helium.common import enums
 from helium.planner.models import Reminder
 
 
-def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to do something now.', offset=15,
+def given_reminder_exists(user, message='You need to do something now.', offset=15,
                           offset_type=enums.MINUTES, type=enums.PUSH, sent=False, dismissed=False,
                           start_of_range=None, event=None, homework=None, course=None):
-    reminder = Reminder.objects.create(title=title,
-                                       message=message,
+    reminder = Reminder.objects.create(message=message,
                                        offset=offset,
                                        offset_type=offset_type,
                                        type=type,
@@ -24,7 +23,6 @@ def given_reminder_exists(user, title='🌴 Test Reminder', message='You need to
 
 
 def verify_reminder_matches_data(test_case, reminder, data):
-    test_case.assertEqual(reminder.title, data['title'])
     test_case.assertEqual(reminder.message, data['message'])
     # `start_of_range` is server-derived (read-only). Only assert it here when the caller
     # explicitly included it in their reference dict (e.g. a response payload).

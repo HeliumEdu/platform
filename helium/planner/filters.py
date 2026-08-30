@@ -123,6 +123,9 @@ class CategoryFilter(django_filters.FilterSet):
 
 
 class ReminderFilter(django_filters.FilterSet):
+    #: Legacy parameter, can be removed once all clients are reporting >= 3.9.0.
+    title = django_filters.CharFilter(field_name='message', lookup_expr='exact')
+
     class Meta:
         model = Reminder
         fields = {
@@ -134,7 +137,7 @@ class ReminderFilter(django_filters.FilterSet):
             'sent': ['exact'],
             'dismissed': ['exact'],
             'start_of_range': ['lte'],
-            'title': ['exact'],
+            'message': ['exact'],
             'updated_at': ['gte'],
         }
 

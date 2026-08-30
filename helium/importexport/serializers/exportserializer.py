@@ -28,6 +28,7 @@ class HomeworkExportSerializer(HomeworkSerializer):
     """Homework representation used in export bundles."""
 
     class Meta(HomeworkSerializer.Meta):
+        #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
         fields = tuple(f for f in HomeworkSerializer.Meta.fields if f != 'comments')
 
 
@@ -35,6 +36,7 @@ class EventExportSerializer(EventSerializer):
     """Event representation used in export bundles."""
 
     class Meta(EventSerializer.Meta):
+        #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
         fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
 
 
@@ -42,7 +44,16 @@ class MaterialExportSerializer(MaterialSerializer):
     """Material representation used in export bundles."""
 
     class Meta(MaterialSerializer.Meta):
+        #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
         fields = tuple(f for f in MaterialSerializer.Meta.fields if f != 'details')
+
+
+class ReminderExportSerializer(ReminderSerializer):
+    """Reminder representation used in export bundles."""
+
+    class Meta(ReminderSerializer.Meta):
+        #: Legacy parameter, can be removed once all clients are reporting >= 3.9.0.
+        fields = tuple(f for f in ReminderSerializer.Meta.fields if f != 'title')
 
 
 class ExportSerializer(serializers.Serializer):
@@ -64,6 +75,6 @@ class ExportSerializer(serializers.Serializer):
 
     homework = HomeworkExportSerializer(many=True)
 
-    reminders = ReminderSerializer(many=True)
+    reminders = ReminderExportSerializer(many=True)
 
     notes = NoteExportSerializer(many=True)

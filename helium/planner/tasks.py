@@ -262,7 +262,7 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
 
         commonutils.send_multipart_email('email/reminder',
                                          {
-                                             'PROJECT_NAME': settings.PROJECT_NAME,
+                                             'subject': subject,
                                              'reminder': reminder,
                                              'calendar_item': calendar_item,
                                              'normalized_datetime': normalized_datetime,

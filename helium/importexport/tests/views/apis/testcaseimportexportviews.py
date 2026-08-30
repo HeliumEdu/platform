@@ -1112,7 +1112,7 @@ class TestCaseImportExportViews(APITestCase):
         # Event reminder: a single Push (type 3)
         for reminder in event_reminders:
             self.assertEqual(reminder.event, study_midterm)
-            self.assertEqual(reminder.title, 'Bring notes for group')
+            self.assertEqual(reminder.message, 'Bring notes for group')
             self.assertEqual(reminder.message, 'Bring notes for group')
             self.assertEqual(reminder.offset, 30)
             self.assertEqual(reminder.offset_type, 0)
@@ -1125,7 +1125,7 @@ class TestCaseImportExportViews(APITestCase):
         course_reminder = course_reminders.filter(sent=True).first()
         self.assertIsNotNone(course_reminder)
         self.assertEqual(course_reminder.course, creative_writing)
-        self.assertEqual(course_reminder.title, 'Class starts soon')
+        self.assertEqual(course_reminder.message, 'Class starts soon')
         self.assertEqual(course_reminder.message, 'Class starts soon')
         self.assertEqual(course_reminder.offset, 10)
         self.assertEqual(course_reminder.offset_type, 0)

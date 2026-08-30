@@ -52,7 +52,6 @@ def send_verification_email(self, email, verification_code, clear_suppression=Fa
 
     commonutils.send_multipart_email('email/verification',
                                      {
-                                         'PROJECT_NAME': settings.PROJECT_NAME,
                                          'email': email,
                                          'verification_code': verification_code,
                                          'verify_url': f"{settings.PROJECT_APP_HOST}/verify",
@@ -100,7 +99,6 @@ def send_registration_email(self, email):
 
     commonutils.send_multipart_email('email/register',
                                      {
-                                         'PROJECT_NAME': settings.PROJECT_NAME,
                                          'login_url': f"{settings.PROJECT_APP_HOST}/signin",
                                      },
                                      'Welcome to Helium', [email],

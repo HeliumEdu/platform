@@ -1,5 +1,6 @@
 import datetime
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from helium.common.models import BaseModel
@@ -17,7 +18,8 @@ class Course(BaseModel):
 
     credits = models.DecimalField(
         help_text='A decimal corresponding to credit hours. If unknown or the syllabus doesn\'t specify, use `"0.00"`.',
-        max_digits=4, decimal_places=2)
+        max_digits=4, decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(99)])
 
     color = models.CharField(
         help_text='A valid hex color code choice to determine the color events will be shown on the calendar.',

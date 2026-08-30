@@ -1,6 +1,6 @@
 Hey!
 
-You've been successfully registered for {{ PROJECT_NAME }}! To log in and get started, visit the link below.
+You've been successfully registered for Helium! To log in and get started, visit the link below.
 
 {{ login_url }}
 

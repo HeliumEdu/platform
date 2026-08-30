@@ -143,9 +143,9 @@ class TestCaseHomeworkViews(APITestCase):
         source = homeworkhelper.given_homework_exists(course, title='Quiz', category=category,
                                                      materials=[material], current_grade='25/30',
                                                      completed=True, comments='Studied chapter 4')
-        reminderhelper.given_reminder_exists(user, title='15 min before', offset=15,
+        reminderhelper.given_reminder_exists(user, message='15 min before', offset=15,
                                              offset_type=enums.MINUTES, type=enums.PUSH, homework=source)
-        reminderhelper.given_reminder_exists(user, title='1 hour before', offset=1,
+        reminderhelper.given_reminder_exists(user, message='1 hour before', offset=1,
                                              offset_type=enums.HOURS, type=enums.EMAIL, sent=True,
                                              homework=source)
 
@@ -175,16 +175,16 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertFalse(clone.completed)
         self.assertIsNone(clone.completed_at)
 
-        cloned_reminders = list(clone.reminders.order_by('title'))
+        cloned_reminders = list(clone.reminders.order_by('message'))
         self.assertEqual(len(cloned_reminders), 2)
 
-        fifteen = next(r for r in cloned_reminders if r.title == '15 min before')
+        fifteen = next(r for r in cloned_reminders if r.message == '15 min before')
         self.assertFalse(fifteen.sent)
         self.assertFalse(fifteen.dismissed)
         self.assertEqual(fifteen.user_id, user.pk)
         self.assertEqual(fifteen.start_of_range, clone.start - datetime.timedelta(minutes=15))
 
-        one_hour = next(r for r in cloned_reminders if r.title == '1 hour before')
+        one_hour = next(r for r in cloned_reminders if r.message == '1 hour before')
         self.assertFalse(one_hour.sent)
         self.assertEqual(one_hour.start_of_range, clone.start - datetime.timedelta(hours=1))
 

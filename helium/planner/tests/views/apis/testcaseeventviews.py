@@ -82,7 +82,7 @@ class TestCaseEventViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         source = eventhelper.given_event_exists(user, title='Lunch with Pat',
                                                 comments='Brought up the syllabus')
-        reminderhelper.given_reminder_exists(user, title='30 min before', offset=30,
+        reminderhelper.given_reminder_exists(user, message='30 min before', offset=30,
                                              offset_type=enums.MINUTES, type=enums.PUSH, event=source)
 
         # WHEN

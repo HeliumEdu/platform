@@ -15,11 +15,9 @@ from helium.planner.managers.remindermanager import ReminderManager
 
 
 class Reminder(BaseModel):
-    title = models.CharField(help_text='A display name.',
-                             max_length=255)
-
-    message = models.TextField(
-        help_text='A string that will be used as the reminder message (may contain HTML formatting).')
+    message = models.CharField(
+        help_text='A string that will be used as the reminder message.',
+        max_length=255)
 
     start_of_range = models.DateTimeField(
         help_text='Datetime the reminder fires. Server-derived from the parent '
@@ -54,7 +52,7 @@ class Reminder(BaseModel):
     objects = ReminderManager()
 
     class Meta:
-        ordering = ('start_of_range', 'title')
+        ordering = ('start_of_range', 'message')
         indexes = [
             models.Index(fields=['sent', 'type', 'start_of_range'], name='reminder_celery_task_lookup'),
             models.Index(fields=['user', 'sent', 'dismissed'], name='reminder_api_list_lookup'),
@@ -84,7 +82,7 @@ class Reminder(BaseModel):
         ]
 
     def __str__(self):  # pragma: no cover
-        return f'{self.title} ({self.get_user().get_username()})'
+        return f'{self.message} ({self.get_user().get_username()})'
 
     @property
     def repeating(self) -> bool:

@@ -1681,7 +1681,6 @@
   "reminders": [
     {
       "id": 1318,
-      "title": "90 minutes to complete exam",
       "message": "90 minutes to complete exam",
       "start_of_range": "2025-12-01T18:30:00Z",
       "offset": 30,
@@ -1695,7 +1694,6 @@
     },
     {
       "id": 1319,
-      "title": "90 minutes to complete exam",
       "message": "90 minutes to complete exam",
       "start_of_range": "2025-10-29T18:30:00Z",
       "offset": 30,
@@ -1709,7 +1707,6 @@
     },
     {
       "id": 1320,
-      "title": "Bring notes for group",
       "message": "Bring notes for group",
       "start_of_range": "2025-10-27T17:30:00Z",
       "offset": 30,
@@ -1723,7 +1720,6 @@
     },
     {
       "id": 1321,
-      "title": "Due at midnight",
       "message": "Due at midnight",
       "start_of_range": "2025-11-07T05:30:00Z",
       "offset": 30,
@@ -1737,7 +1733,6 @@
     },
     {
       "id": 1322,
-      "title": "Due at start of class",
       "message": "Due at start of class",
       "start_of_range": "2025-11-26T18:30:00Z",
       "offset": 30,
@@ -1751,7 +1746,6 @@
     },
     {
       "id": 1323,
-      "title": "In ENG 305 instead",
       "message": "90 minutes to complete exam",
       "start_of_range": "2025-12-05T16:30:00Z",
       "offset": 30,
@@ -1765,7 +1759,6 @@
     },
     {
       "id": 1324,
-      "title": "In ENG 305 instead",
       "message": "In ENG 305 instead",
       "start_of_range": "2025-10-27T16:30:00Z",
       "offset": 30,
@@ -1780,7 +1773,6 @@
     },
     {
       "id": 1325,
-      "title": "Class starts soon",
       "message": "Class starts soon",
       "start_of_range": "2025-10-07T10:50:00Z",
       "offset": 10,

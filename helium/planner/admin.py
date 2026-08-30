@@ -554,10 +554,10 @@ def mark_reminders_unsent(modeladmin, request, queryset):
 
 
 class ReminderAdmin(ObjectActionsMixin, BaseModelAdmin):
-    list_display = ('title', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
+    list_display = ('message', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
     list_filter = ('type', 'sent', 'dismissed', planner_entity_type_filter('Reminder Type', 'reminder_type'),
                    ReminderExampleScheduleFilter, staff_filter('user'))
-    search_fields = ('id', 'title', 'user__username', 'user__email')
+    search_fields = ('id', 'message', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
     autocomplete_fields = ('user',)
     exclude = ('course', 'event', 'homework')
