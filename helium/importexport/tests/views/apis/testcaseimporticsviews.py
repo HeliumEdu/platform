@@ -101,6 +101,32 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual(course_group.end_date, course.end_date)
         self.assertEqual(3, len(Homework.objects.for_user(user.pk)))
 
+    def test_import_ics_empty_calendar_as_events_is_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self._post_ics('import_empty.ics', target_type='events')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('details', response.data)
+        self.assertEqual(0, len(Event.objects.all()))
+
+    def test_import_ics_empty_calendar_leaves_no_new_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        response = self._post_ics('import_empty.ics', target_type='new_course', course_group=course_group.pk)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('details', response.data)
+        self.assertEqual(0, len(Course.objects.for_user(user.pk)))
+        self.assertEqual(0, len(Homework.objects.for_user(user.pk)))
+
     def test_import_ics_recurring_expands_into_assignments(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

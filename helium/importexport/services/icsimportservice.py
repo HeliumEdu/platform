@@ -42,7 +42,8 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
         filename) when the calendar carries no ``X-WR-CALNAME``.
     :return: A ``(courses_count, events_count, homework_count)`` tuple (``courses_count`` is 1
         only when ``new_course`` auto-creates one).
-    :raises ValidationError: On an unknown ``target_type`` or a missing/unresolvable target id.
+    :raises ValidationError: On an unknown ``target_type``, a missing/unresolvable target id, or a
+        calendar that yields nothing importable.
     """
     if target_type not in TARGET_TYPE_CHOICES:
         raise ValidationError(
@@ -53,12 +54,22 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
     with transaction.atomic():
         if target_type == TARGET_EVENTS:
             events_count = _import_as_events(request, calendar, time_zone)
+            _require_imported(events_count)
             return 0, events_count, 0
 
         course, course_created = _resolve_target_course(
             request, target_type, course_id, course_group_id, calendar, default_course_title)
         homework_count = _import_as_assignments(request, calendar, course, time_zone)
+        _require_imported(homework_count)
         return (1 if course_created else 0), 0, homework_count
+
+
+def _require_imported(count):
+    """Raise when nothing landed: a `new_course` target has already created its Course, and
+    unwinding the transaction is what keeps an empty one from surviving.
+    """
+    if count == 0:
+        raise ValidationError({'details': 'No events in the calendar file could be imported.'})
 
 
 def _resolve_target_course(request, target_type, course_id, course_group_id, calendar,

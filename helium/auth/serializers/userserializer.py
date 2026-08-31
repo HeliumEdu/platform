@@ -19,6 +19,10 @@ from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
 
+EMAIL_IN_USE_MESSAGE = "Sorry, that email is already in use. Try signing in instead."
+
+REGISTRATION_RETRY_MESSAGE = "Please wait a moment and try again."
+
 
 class UserSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(
@@ -85,9 +89,15 @@ class UserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
 
-        if self.instance and self.instance.email != email and UserModel.objects.email_used(self.instance.pk,
-                                                                                           email):
-            raise serializers.ValidationError("Sorry, that email is already in use.")
+        if not self.instance:
+            # A user pending deletion keeps their email reserved until the cascade finishes, so the
+            # address is taken without an account the registrant could sign in to.
+            if UserModel.objects.can_login().email_used(None, email):
+                raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
+            elif UserModel.objects.email_used(None, email):
+                raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE)
+        elif self.instance.email != email and UserModel.objects.email_used(self.instance.pk, email):
+            raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
 
         return email
 
@@ -147,7 +157,7 @@ class UserSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 instance = super().create(validated_data)
         except IntegrityError:
-            raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
+            raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
 
         instance.set_password(password)
         instance.save()
@@ -169,7 +179,7 @@ class UserSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 instance = super().create(validated_data)
         except IntegrityError:
-            raise serializers.ValidationError('Registration failed due to a conflict. Please try again.')
+            raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE)
 
         # OAuth users bypass local passwords
         instance.set_unusable_password()

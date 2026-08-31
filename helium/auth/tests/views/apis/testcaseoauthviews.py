@@ -154,7 +154,7 @@ class TestCaseOAuthViews(APITestCase):
         )
 
         # THEN
-        self.assertContains(response, 'Registration failed due to a conflict',
+        self.assertContains(response, 'Please wait a moment and try again',
                             status_code=status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.filter(email='existing@gmail.com').count(), 1)
 
