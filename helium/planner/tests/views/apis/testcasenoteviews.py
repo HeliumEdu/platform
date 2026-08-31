@@ -253,12 +253,12 @@ class TestCaseNoteViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course, completed=True)
         note = notehelper.given_note_linked_to_homework(user, homework)
-        # WHEN fetching detail
+        # WHEN
         response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['linked_entity_due'], homework.start)
         self.assertEqual(response.data['linked_entity_completed'], True)
-        # WHEN fetching list
+        # WHEN
         response = self.client.get(reverse('planner_notes_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]['linked_entity_due'], homework.start)

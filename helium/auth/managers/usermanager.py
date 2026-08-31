@@ -1,8 +1,11 @@
+import datetime
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
 from django.db.models import Q, Count
+from django.utils import timezone
 
 from helium.auth.models.usersettings import UserSettings
 
@@ -19,6 +22,32 @@ class UserQuerySet(models.query.QuerySet):
         while their email/username remain reserved against re-registration.
         """
         return self.filter(deletion_requested_at__isnull=True)
+
+    def never_verified(self):
+        cutoff = timezone.now() - datetime.timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS)
+        return self.filter(is_active=False, deletion_requested_at__isnull=True, created_at__lte=cutoff)
+
+    def stuck_pending_delete(self):
+        return self.filter(deletion_requested_at__lte=timezone.now() - datetime.timedelta(minutes=10))
+
+    def dormant(self):
+        cutoff = timezone.now() - datetime.timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365)
+        return self.filter(is_active=True, last_activity__lte=cutoff)
+
+    def needs_dormancy_warning(self):
+        warning_days = settings.DORMANT_USER_WARNING_DAYS
+        intervals = {i + 1: warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)}
+
+        needs_warning = Q(deletion_warning_count=0)
+        for count, interval_days in intervals.items():
+            needs_warning |= Q(deletion_warning_count=count,
+                               deletion_warning_sent_at__lte=timezone.now() - datetime.timedelta(
+                                   days=interval_days))
+
+        return self.dormant().filter(needs_warning)
+
+    def fully_warned(self):
+        return self.dormant().filter(deletion_warning_count__gte=4)
 
     def num_homework(self):
         return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
@@ -104,6 +133,21 @@ class UserManager(BaseUserManager):
 
     def can_login(self):
         return self.get_queryset().can_login()
+
+    def never_verified(self):
+        return self.get_queryset().never_verified()
+
+    def stuck_pending_delete(self):
+        return self.get_queryset().stuck_pending_delete()
+
+    def dormant(self):
+        return self.get_queryset().dormant()
+
+    def needs_dormancy_warning(self):
+        return self.get_queryset().needs_dormancy_warning()
+
+    def fully_warned(self):
+        return self.get_queryset().fully_warned()
 
     def num_homework(self):
         return self.get_queryset().num_homework()

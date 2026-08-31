@@ -10,7 +10,7 @@ from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.planner.models import Event
 from helium.feed.services.icalexternalcalendarservice import HeliumICalError
-from helium.planner.serializers.eventserializer import EventSerializer
+from helium.feed.serializers.feedeventserializer import FeedEventSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, \
     _parse_date_param_to_utc
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
     tags=['feed.externalcalendar']
 )
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
-    serializer_class = EventSerializer
+    serializer_class = FeedEventSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -82,7 +82,7 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     tags=['feed.externalcalendar']
 )
 class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
-    serializer_class = EventSerializer
+    serializer_class = FeedEventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):

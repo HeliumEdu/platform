@@ -9,7 +9,7 @@ from django.utils import timezone
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.tasks import (
-    email_reminders, push_reminders,
+    email_reminders, push_reminders, process_email_reminder, process_push_reminder,
     recalculate_course_grade,
     recalculate_course_grades_for_course_group,
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
@@ -20,21 +20,53 @@ from helium.planner.tests.helpers import (
 
 
 class TestCasePlannerTasks(TestCase):
-    @mock.patch('helium.planner.services.reminderservice.process_email_reminders')
-    def test_email_reminders(self, mock_process_email_reminders):
+    def given_a_due_reminder(self, type):
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(
+            user,
+            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+            end=timezone.now() + datetime.timedelta(minutes=10))
+        return reminderhelper.given_reminder_exists(user, type=type, event=event)
+
+    @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
+    def test_email_reminders_queues_a_task_for_each_due_reminder(self, mock_apply):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.EMAIL)
+
         # WHEN
         email_reminders()
 
         # THEN
-        mock_process_email_reminders.assert_called_once()
+        queued = [c.kwargs['args'][0] for c in mock_apply.call_args_list]
+        self.assertEqual(queued, [reminder.pk])
 
-    @mock.patch('helium.planner.services.reminderservice.process_push_reminders')
-    def test_push_reminders(self, mock_process_push_reminders):
+    @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
+    def test_push_reminders_queues_a_task_for_each_due_reminder(self, mock_apply):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.PUSH)
+
         # WHEN
         push_reminders()
 
         # THEN
-        mock_process_push_reminders.assert_called_once()
+        queued = [c.kwargs['args'][0] for c in mock_apply.call_args_list]
+        self.assertEqual(queued, [reminder.pk])
+
+    @mock.patch('helium.planner.services.reminderservice.process_email_reminder')
+    def test_process_email_reminder_delegates_to_the_service(self, mock_process):
+        # WHEN
+        process_email_reminder(7)
+
+        # THEN
+        mock_process.assert_called_once_with(7)
+
+    @mock.patch('helium.planner.services.reminderservice.process_push_reminder')
+    def test_process_push_reminder_delegates_to_the_service(self, mock_process):
+        # WHEN
+        process_push_reminder(7)
+
+        # THEN
+        mock_process.assert_called_once_with(7)
 
     @mock.patch('helium.planner.tasks.recalculate_course_grade')
     def test_recalculate_course_grades_for_course_group(self, mock_recalculate_course_grade):
@@ -238,7 +270,7 @@ class TestCasePlannerTasks(TestCase):
     def test_send_email_reminder_with_empty_comments(self, mock_send_multipart_email):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(user, comments='   ')  # whitespace-only comments
+        event = eventhelper.given_event_exists(user, comments='   ')
         reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
 
         # WHEN

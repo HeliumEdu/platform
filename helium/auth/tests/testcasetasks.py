@@ -162,7 +162,7 @@ class TestCaseTasks(APITestCase):
 
         # THEN
         active_user_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.active']
-        self.assertEqual(len(active_user_calls), 10)  # 5 time windows × staff/non-staff
+        self.assertEqual(len(active_user_calls), 10)
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_emits_class_schedules_adoption(self, mock_gauge):
@@ -183,7 +183,7 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_excludes_weekly_schedules_from_rotating_adoption(self, mock_gauge):
-        # GIVEN a user whose only schedule is an ordinary weekly one
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -192,7 +192,7 @@ class TestCaseTasks(APITestCase):
         # WHEN
         emit_nightly_metrics()
 
-        # THEN - counts as a class-schedule adopter but not a rotating-schedule adopter
+        # THEN
         class_calls = [c for c in mock_gauge.call_args_list
                        if c.args[0] == 'users.adoption.class_schedules.pct']
         rotating_calls = [c for c in mock_gauge.call_args_list
@@ -203,7 +203,7 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_emits_rotating_schedules_adoption(self, mock_gauge):
-        # GIVEN a user with a cycle schedule
+        # GIVEN
         user = userhelper.given_a_user_exists()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -261,7 +261,7 @@ class TestCaseTasks(APITestCase):
             self.assertTrue(samples(entity), f'no samples for {entity}')
             self.assertTrue(all(v == 1 for v in samples(entity)), entity)
 
-        # THEN the breakdowns sum to the total
+        # THEN
         self.assertEqual(sum(samples(e)[0] for e in ('weekly', 'cycle', 'week_based')),
                          samples()[0])
 
@@ -342,6 +342,24 @@ class TestCaseTasks(APITestCase):
 
     @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
     @mock.patch('helium.auth.tasks.delete_user.apply_async')
+    def test_process_dormant_users_ignores_inactive_users(self, mock_delete, mock_send_warning):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.last_activity = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(
+            days=settings.DORMANT_USER_THRESHOLD_YEARS * 365 + 1)
+        user.is_active = False
+        user.deletion_warning_count = 0
+        user.save()
+
+        # WHEN
+        process_dormant_users()
+
+        # THEN
+        mock_send_warning.assert_not_called()
+        mock_delete.assert_not_called()
+
+    @mock.patch('helium.auth.tasks.send_dormant_user_warning_email.apply_async')
+    @mock.patch('helium.auth.tasks.delete_user.apply_async')
     def test_process_dormant_users_sends_first_warning(self, mock_delete, mock_send_warning):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -395,3 +413,73 @@ class TestCaseTasks(APITestCase):
         mock_send_warning.assert_not_called()
         mock_delete.assert_not_called()
         self.assertEqual(get_user_model().objects.count(), 1)
+
+    def given_a_user_due_for_a_review_prompt(self, completed_count, completed_at):
+        user = userhelper.given_a_user_exists()
+        user.settings.next_review_prompt_date = timezone.now() - timedelta(days=1)
+        user.settings.prompt_for_review = False
+        user.settings.review_prompts_requested = 0
+        user.settings.save()
+
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        for _ in range(completed_count):
+            homework = homeworkhelper.given_homework_exists(course, completed=True)
+            homework.completed_at = completed_at
+            homework.save()
+
+        return user
+
+    def test_evaluate_review_prompts_flags_a_qualifying_user(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt(
+            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, timezone.now() - timedelta(days=1))
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertTrue(user.settings.prompt_for_review)
+
+    def test_evaluate_review_prompts_skips_a_user_whose_prompt_date_has_not_arrived(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt(
+            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, timezone.now() - timedelta(days=1))
+        user.settings.next_review_prompt_date = timezone.now() + timedelta(days=1)
+        user.settings.save()
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)
+
+    @override_settings(REVIEW_PROMPT_MAX_REQUESTED=2, REVIEW_PROMPT_HOMEWORK_THRESHOLD=1,
+                       REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD=1)
+    def test_evaluate_review_prompts_skips_a_user_at_the_request_cap(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt(3, timezone.now() - timedelta(days=1))
+        user.settings.review_prompts_requested = settings.REVIEW_PROMPT_MAX_REQUESTED
+        user.settings.save()
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)
+
+    def test_evaluate_review_prompts_skips_a_user_without_recent_completions(self):
+        # GIVEN
+        stale = timezone.now() - timedelta(days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS + 1)
+        user = self.given_a_user_due_for_a_review_prompt(
+            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, stale)
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)

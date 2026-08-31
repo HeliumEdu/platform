@@ -174,7 +174,7 @@ class TestCaseImportExportViews(APITestCase):
         materialhelper.verify_material_matches_data(self, materials[1],
                                                     {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
-                                                     'details': 'Return by 7/1',  # Legacy field preserved on import
+                                                     'details': 'Return by 7/1',
                                                      'material_group': material_groups[1].pk, 'courses': []})
         # Verify legacy 'details' was converted to Note
         self.assertTrue(materials[1].notes_set.exists())
@@ -1349,7 +1349,7 @@ class TestCaseImportExportViews(APITestCase):
                 'condition': 0,
                 'website': '',
                 'price': '',
-                'details': '<b>ISBN:</b> 978-1234567890',  # Legacy HTML
+                'details': '<b>ISBN:</b> 978-1234567890',
                 'material_group': 1,
                 'courses': []
             }],
@@ -1362,7 +1362,7 @@ class TestCaseImportExportViews(APITestCase):
                 'end': '2024-02-01T11:00:00Z',
                 'priority': 50,
                 'url': None,
-                'comments': '<ul><li>Item 1</li><li>Item 2</li></ul>',  # Legacy HTML list
+                'comments': '<ul><li>Item 1</li><li>Item 2</li></ul>',
                 'user': 1
             }],
             'homework': [{
@@ -1374,7 +1374,7 @@ class TestCaseImportExportViews(APITestCase):
                 'end': '2024-02-01T12:00:00Z',
                 'priority': 50,
                 'url': None,
-                'comments': '<p>Due by <strong>midnight</strong></p>',  # Legacy HTML with formatting
+                'comments': '<p>Due by <strong>midnight</strong></p>',
                 'current_grade': '-1/100',
                 'completed': False,
                 'category': 1,
@@ -1662,7 +1662,7 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
-        payload['courses'][0]['course_group'] = 999  # not in the file
+        payload['courses'][0]['course_group'] = 999
 
         # WHEN
         response = self._post_import(payload)
@@ -1869,7 +1869,7 @@ class TestCaseImportExportViews(APITestCase):
             'id': 10, 'title': 'H', 'all_day': False, 'show_end_time': False,
             'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T12:00:00Z', 'priority': 50,
             'current_grade': '-1/100', 'completed': False, 'category': 1,
-            'materials': [9999],  # not in payload
+            'materials': [9999],
             'course': 1,
         }]
 

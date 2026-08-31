@@ -28,7 +28,7 @@ class TestCaseImportExportTasks(APITestCase):
         # GIVEN
         nonexistent_user_id = 99999
 
-        # WHEN / THEN (should not raise)
+        # WHEN / THEN
         import_example_schedule(nonexistent_user_id)
 
     def test_adjust_schedule_preserves_local_wall_clock_time_across_dst(self):
@@ -162,7 +162,7 @@ class TestCaseImportExportTasks(APITestCase):
         # Week 6: Mar 9 (delta=35) - post-DST
         hw_week6 = homeworkhelper.given_homework_exists(
             course,
-            start=datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc),  # Already DST-adjusted (11 AM CDT)
+            start=datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc),
             end=datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
@@ -195,20 +195,20 @@ class TestCaseImportExportTasks(APITestCase):
 
         # Week 1 (delta=0): Feb 2 → Mar 2 (pre-DST, 11 AM CST = 17:00 UTC)
         self.assertEqual(hw_week1.start.date(), datetime.date(2026, 3, 2))
-        self.assertEqual(hw_week1.start.hour, 17)  # 11 AM CST = 17:00 UTC
+        self.assertEqual(hw_week1.start.hour, 17)
 
         # Week 2 (delta=7): Feb 9 → Mar 9 (post-DST, 11 AM CDT = 16:00 UTC)
         self.assertEqual(hw_week2.start.date(), datetime.date(2026, 3, 9))
-        self.assertEqual(hw_week2.start.hour, 16)  # 11 AM CDT = 16:00 UTC
+        self.assertEqual(hw_week2.start.hour, 16)
 
         # Week 3 (delta=14): Feb 16 → Mar 16 (post-DST, 11 AM CDT = 16:00 UTC)
         self.assertEqual(hw_week3.start.date(), datetime.date(2026, 3, 16))
-        self.assertEqual(hw_week3.start.hour, 16)  # 11 AM CDT = 16:00 UTC
+        self.assertEqual(hw_week3.start.hour, 16)
 
         # Week 5 (delta=28): Mar 2 → Mar 30 (post-DST, 11 AM CDT = 16:00 UTC)
         self.assertEqual(hw_week5.start.date(), datetime.date(2026, 3, 30))
-        self.assertEqual(hw_week5.start.hour, 16)  # 11 AM CDT = 16:00 UTC
+        self.assertEqual(hw_week5.start.hour, 16)
 
         # Week 6 (delta=35): Mar 9 → Apr 6 (post-DST, 11 AM CDT = 16:00 UTC)
         self.assertEqual(hw_week6.start.date(), datetime.date(2026, 4, 6))
-        self.assertEqual(hw_week6.start.hour, 16)  # 11 AM CDT = 16:00 UTC
+        self.assertEqual(hw_week6.start.hour, 16)

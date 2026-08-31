@@ -275,21 +275,19 @@ class TestCaseReminderViews(APITestCase):
         self.assertIsNone(response.data['event'])
 
     def test_update_event_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
-        # GIVEN a sent reminder whose event is in the near future; the current offset places
-        # start_of_range outside the send window, so changing to a smaller offset should move
-        # start_of_range into the future (>= window_start) and reset sent=False.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user, start=timezone.now() + timedelta(minutes=30),
                                                end=timezone.now() + timedelta(minutes=90))
         reminder = reminderhelper.given_reminder_exists(user, event=event, offset=60,
                                                         offset_type=enums.MINUTES, sent=True)
 
-        # WHEN the offset is reduced so start_of_range moves into the future
+        # WHEN
         data = {'offset': 5, 'offset_type': enums.MINUTES}
         response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                      json.dumps(data), content_type='application/json')
 
-        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         event.refresh_from_db()
@@ -297,19 +295,18 @@ class TestCaseReminderViews(APITestCase):
         self.assertFalse(reminder.sent)
 
     def test_update_event_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
-        # GIVEN a sent reminder on a far-past event; any offset still leaves start_of_range
-        # well outside the send window, so sent should remain True.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        event = eventhelper.given_event_exists(user)  # default start=2017-05-08 12:00 UTC
+        event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event, offset=15,
                                                         offset_type=enums.MINUTES, sent=True)
 
-        # WHEN the offset is changed (start_of_range stays deep in the past)
+        # WHEN
         data = {'offset': 30, 'offset_type': enums.MINUTES}
         response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                      json.dumps(data), content_type='application/json')
 
-        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range,
@@ -318,19 +315,19 @@ class TestCaseReminderViews(APITestCase):
 
     @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
     def test_dismiss_reminder_fans_out_to_all_tokens(self, mock_send_dismiss):
-        # GIVEN a sent (dismissable) reminder and the user has two devices
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True)
         userhelper.given_user_push_token_exists(user, token='tok_phone', device_id='phone')
         userhelper.given_user_push_token_exists(user, token='tok_tablet', device_id='tablet')
 
-        # WHEN the reminder is dismissed
+        # WHEN
         response = self.client.patch(
             reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
             json.dumps({'dismissed': True}), content_type='application/json')
 
-        # THEN the dismiss push fans out to all of the user's device tokens
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send_dismiss.apply_async.assert_called_once()
         sent_tokens, sent_reminder_id = mock_send_dismiss.apply_async.call_args.kwargs['args']
@@ -339,18 +336,18 @@ class TestCaseReminderViews(APITestCase):
 
     @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
     def test_non_dismiss_update_does_not_fan_out(self, mock_send_dismiss):
-        # GIVEN a sent reminder
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True)
         userhelper.given_user_push_token_exists(user)
 
-        # WHEN a non-dismiss field is updated
+        # WHEN
         response = self.client.patch(
             reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
             json.dumps({'offset': 45}), content_type='application/json')
 
-        # THEN no dismiss push is sent
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send_dismiss.apply_async.assert_not_called()
 
@@ -409,8 +406,7 @@ class TestCaseReminderViews(APITestCase):
         mock_send_dismiss.apply_async.assert_not_called()
 
     def test_update_homework_reminder_offset_recalculates_start_of_range_and_resets_sent(self):
-        # GIVEN a sent reminder whose homework is in the near future; reducing the offset moves
-        # start_of_range into the future, which should reset sent=False.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -420,12 +416,12 @@ class TestCaseReminderViews(APITestCase):
         reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=60,
                                                         offset_type=enums.MINUTES, sent=True)
 
-        # WHEN the offset is reduced so start_of_range moves into the future
+        # WHEN
         data = {'offset': 5, 'offset_type': enums.MINUTES}
         response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                      json.dumps(data), content_type='application/json')
 
-        # THEN start_of_range is recalculated to the exact expected value and sent is reset
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         homework.refresh_from_db()
@@ -433,21 +429,20 @@ class TestCaseReminderViews(APITestCase):
         self.assertFalse(reminder.sent)
 
     def test_update_homework_reminder_offset_recalculates_start_of_range_without_resetting_sent(self):
-        # GIVEN a sent reminder on far-past homework; changing the offset leaves start_of_range
-        # well outside the send window, so sent should remain True.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        homework = homeworkhelper.given_homework_exists(course)  # default start=2017-05-08 16:00 UTC
+        homework = homeworkhelper.given_homework_exists(course)
         reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=15,
                                                         offset_type=enums.MINUTES, sent=True)
 
-        # WHEN the offset is changed (start_of_range stays deep in the past)
+        # WHEN
         data = {'offset': 30, 'offset_type': enums.MINUTES}
         response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
                                      json.dumps(data), content_type='application/json')
 
-        # THEN start_of_range reflects the new offset exactly and sent is unchanged
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reminder.refresh_from_db()
         self.assertEqual(reminder.start_of_range,
@@ -470,7 +465,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(Reminder.objects.count(), 0)
 
     def test_delete_repeating_course_reminder_cleans_up_series(self):
-        # GIVEN a repeating course reminder series with one unsent (active) and one sent (past) reminder
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -486,11 +481,11 @@ class TestCaseReminderViews(APITestCase):
         other_type_reminder = reminderhelper.given_reminder_exists(user, course=course,
                                                                    sent=False, type=enums.EMAIL)
 
-        # WHEN the unsent reminder is deleted
+        # WHEN
         response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}),
                                       HTTP_X_CLIENT_VERSION='3.5.0')
 
-        # THEN the unsent and its sent series counterpart are both deleted; unrelated reminders are untouched
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reminder.objects.filter(pk=unsent.pk).exists())
         self.assertFalse(Reminder.objects.filter(pk=sent.pk).exists())
@@ -498,8 +493,7 @@ class TestCaseReminderViews(APITestCase):
         self.assertTrue(Reminder.objects.filter(pk=other_type_reminder.pk).exists())
 
     def test_delete_repeating_course_reminder_only_deletes_matching_offset_series(self):
-        # GIVEN two PUSH course reminder series on the same course differing by offset.
-        # Deleting one should not remove the other's unsent (active) reminder.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -510,20 +504,18 @@ class TestCaseReminderViews(APITestCase):
         unsent_10 = reminderhelper.given_reminder_exists(user, course=course, sent=False,
                                                          type=enums.PUSH, offset=10)
 
-        # WHEN the 30-min reminder is deleted
+        # WHEN
         response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}),
                                       HTTP_X_CLIENT_VERSION='3.5.0')
 
-        # THEN the 30-min series is gone; the 10-min unsent reminder is untouched
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reminder.objects.filter(pk=unsent_30.pk).exists())
         self.assertFalse(Reminder.objects.filter(pk=sent_30.pk).exists())
         self.assertTrue(Reminder.objects.filter(pk=unsent_10.pk).exists())
 
     def test_delete_repeating_course_reminder_cleans_up_stale_sent_different_offset(self):
-        # GIVEN an active 9-min series (unsent) and a stale sent+undismissed 10-min reminder left
-        # over from a prior offset edit. Deleting the active reminder should also remove the stale
-        # one so it doesn't linger in notifications.
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -532,11 +524,11 @@ class TestCaseReminderViews(APITestCase):
         stale_sent_10 = reminderhelper.given_reminder_exists(user, course=course, sent=True,
                                                              type=enums.PUSH, offset=10)
 
-        # WHEN the active (9-min) reminder is deleted
+        # WHEN
         response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_9.pk}),
                                       HTTP_X_CLIENT_VERSION='3.5.0')
 
-        # THEN both the 9-min series and the stale sent 10-min reminder are gone
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reminder.objects.filter(pk=unsent_9.pk).exists())
         self.assertFalse(Reminder.objects.filter(pk=stale_sent_10.pk).exists())

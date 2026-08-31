@@ -225,7 +225,7 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_password_change_revokes_other_session_refresh_token(self):
-        # GIVEN a second session's refresh token, obtained before the password change
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         other_session = self.client.post(reverse('auth_token_obtain'),
                                          json.dumps({'email': 'user@test.com', 'password': 'test_pass_1!'}),
@@ -358,7 +358,7 @@ class TestCaseUserViews(APITestCase):
         userhelper.reauthenticate(self.client, user)
 
         # WHEN
-        data = {}  # No password provided
+        data = {}
         response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps(data),
                                       content_type='application/json')
 
@@ -458,7 +458,7 @@ class TestCaseUserViews(APITestCase):
         # Verify password was NOT changed
         user.refresh_from_db()
         self.assertFalse(user.check_password('new_password_1!'))
-        self.assertTrue(user.check_password('test_pass_1!'))  # Still the default test password
+        self.assertTrue(user.check_password('test_pass_1!'))
 
     def test_regular_user_can_change_password_with_old_password(self):
         # GIVEN

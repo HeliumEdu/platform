@@ -158,28 +158,68 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
 @app.task(bind=True)
 def email_reminders(self):
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("reminder.email.process", priority="high", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("reminder.email.process", priority="high",
+                                     published_at_ms=published_at_ms)
 
     if settings.DISABLE_EMAILS:
         logger.warning('Emails disabled. Email reminders not being sent.')
         metricutils.task_stop(metrics, value=0)
         return
 
-    reminderservice.process_email_reminders()
+    rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
+    reminder_ids = list(Reminder.objects.with_type(enums.EMAIL).unsent().for_today()
+                        .values_list('pk', flat=True))
+
+    for index, reminder_id in enumerate(reminder_ids):
+        taskutils.safe_apply_async(process_email_reminder,
+                                   args=(reminder_id,),
+                                   countdown=index / rate_per_sec,
+                                   priority=settings.CELERY_PRIORITY_HIGH)
+
+    metricutils.task_stop(metrics, value=len(reminder_ids))
+
+
+@app.task(bind=True)
+def process_email_reminder(self, reminder_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.email.process.reminder", priority="high",
+                                     published_at_ms=published_at_ms)
+
+    reminderservice.process_email_reminder(reminder_id)
+
     metricutils.task_stop(metrics)
 
 
 @app.task(bind=True)
 def push_reminders(self):
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("reminder.push.process", priority="high", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("reminder.push.process", priority="high",
+                                     published_at_ms=published_at_ms)
 
     if settings.DISABLE_PUSH:
         logger.warning('Push disabled. Push reminders not being sent.')
         metricutils.task_stop(metrics, value=0)
         return
 
-    reminderservice.process_push_reminders()
+    reminder_ids = list(Reminder.objects.with_type(enums.PUSH).unsent().for_today()
+                        .values_list('pk', flat=True))
+
+    for reminder_id in reminder_ids:
+        taskutils.safe_apply_async(process_push_reminder,
+                                   args=(reminder_id,),
+                                   priority=settings.CELERY_PRIORITY_HIGH)
+
+    metricutils.task_stop(metrics, value=len(reminder_ids))
+
+
+@app.task(bind=True)
+def process_push_reminder(self, reminder_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("reminder.push.process.reminder", priority="high",
+                                     published_at_ms=published_at_ms)
+
+    reminderservice.process_push_reminder(reminder_id)
+
     metricutils.task_stop(metrics)
 
 

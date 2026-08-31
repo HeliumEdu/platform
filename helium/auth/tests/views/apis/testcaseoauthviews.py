@@ -14,8 +14,6 @@ from helium.auth.tests.helpers import userhelper
 
 
 class TestCaseOAuthViews(APITestCase):
-    """Tests for the unified OAuth login endpoint."""
-
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_google(self, mock_verify_token, mock_import_schedule):
@@ -527,8 +525,8 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN
         mock_verify_token.return_value = {
-            'uid': 'shared-google-uid',  # Linked to user_a
-            'email': 'user_b@gmail.com',  # Belongs to user_b
+            'uid': 'shared-google-uid',
+            'email': 'user_b@gmail.com',
             'email_verified': True
         }
 
@@ -559,8 +557,8 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN
         mock_verify_token.return_value = {
-            'uid': 'new-firebase-uid-456',  # Different UID
-            'email': 'recreated@gmail.com',  # Same email
+            'uid': 'new-firebase-uid-456',
+            'email': 'recreated@gmail.com',
             'email_verified': True
         }
 

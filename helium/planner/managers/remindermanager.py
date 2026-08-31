@@ -21,6 +21,12 @@ class ReminderQuerySet(models.query.QuerySet):
     def unsent(self):
         return self.filter(sent=False)
 
+    def active(self):
+        return self.filter(sent=False, dismissed=False)
+
+    def repeating(self):
+        return self.filter(course__isnull=False)
+
     def for_today(self):
         now = timezone.now()
         window_start = now - datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
@@ -51,6 +57,12 @@ class ReminderManager(models.Manager):
 
     def unsent(self):
         return self.get_queryset().unsent()
+
+    def active(self):
+        return self.get_queryset().active()
+
+    def repeating(self):
+        return self.get_queryset().repeating()
 
     def for_today(self):
         return self.get_queryset().for_today()

@@ -7,27 +7,14 @@ from helium.planner.models import Category, Course, Homework
 
 
 class TestCaseSignals(TestCase):
-    """Regression coverage for post_delete handlers firing during a cascade delete.
-
-    When a CourseGroup (or Course) is deleted, Django's deletion collector can remove the
-    parent row before the child's post_delete signal fires. The handler must schedule its
-    grade recalculation from the instance's raw FK id rather than dereferencing the related
-    object, which previously issued a DB fetch that raised and surfaced as a 500 on
-    DELETE /planner/coursegroups/{pk}/. The recalculation task itself already no-ops on a
-    missing parent.
-
-    Resolving the row's owner has to tolerate the same thing: the ancestor a child walks to reach
-    its user may already be gone, and the ancestor's own receiver stamps `last_deletion_at`.
-    """
-
     def test_delete_category_tolerates_already_deleted_course(self):
-        # GIVEN a Category whose parent Course row has already been removed mid-cascade
+        # GIVEN
         instance = Category(pk=-1, course_id=-1)
 
-        # WHEN the post_delete handler runs
+        # WHEN
         signals.delete_category(sender=Category, instance=instance)
 
-        # THEN it does not raise (no DB fetch of the deleted Course; task no-ops)
+        # THEN
 
     def test_delete_homework_tolerates_already_deleted_course(self):
         # GIVEN
@@ -41,10 +28,10 @@ class TestCaseSignals(TestCase):
         mock_warning.assert_not_called()
 
     def test_delete_course_tolerates_already_deleted_course_group(self):
-        # GIVEN a Course whose parent CourseGroup row has already been removed mid-cascade
+        # GIVEN
         instance = Course(pk=-1, course_group_id=-1)
 
-        # WHEN the post_delete handler runs
+        # WHEN
         signals.delete_course(sender=Course, instance=instance)
 
-        # THEN it does not raise (no DB fetch of the deleted CourseGroup; task no-ops)
+        # THEN

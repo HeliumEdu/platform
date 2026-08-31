@@ -12,10 +12,11 @@ from helium.feed.tasks import reindex_feeds
 def force_reindex_calendars(modeladmin, request, queryset):
     queryset.update(etag=None, last_modified_header=None)
     calendar_ids = list(queryset.values_list('id', flat=True))
-    taskutils.safe_apply_async(reindex_feeds,
-        kwargs={'calendar_ids': calendar_ids},
-        priority=settings.CELERY_PRIORITY_LOW,
-    )
+    for calendar_id in calendar_ids:
+        taskutils.safe_apply_async(reindex_feeds,
+            kwargs={'calendar_id': calendar_id},
+            priority=settings.CELERY_PRIORITY_LOW,
+        )
     modeladmin.message_user(request, f'Re-index queued for {len(calendar_ids)} calendar(s).')
 
 

@@ -241,10 +241,10 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_resolve_cycle_index_counts_school_days_and_shifts_across_the_weekend(self):
         # GIVEN
-        schedule = CourseSchedule(cycle_length=2, anchor_date=datetime.date(2026, 3, 2))  # Monday
+        schedule = CourseSchedule(cycle_length=2, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN/THEN
-        self.assertEqual(schedule.anchor_date.weekday(), 0)  # sanity: anchor is a Monday
+        self.assertEqual(schedule.anchor_date.weekday(), 0)
         self.assertEqual(coursescheduleservice.resolve_cycle_index(schedule, datetime.date(2026, 3, 2), set()), 1)
         self.assertEqual(coursescheduleservice.resolve_cycle_index(schedule, datetime.date(2026, 3, 3), set()), 2)
         self.assertEqual(coursescheduleservice.resolve_cycle_index(schedule, datetime.date(2026, 3, 6), set()), 1)
@@ -257,7 +257,7 @@ class TestCaseCourseScheduleService(TestCase):
     def test_resolve_cycle_index_holiday_shifts_the_count(self):
         # GIVEN
         schedule = CourseSchedule(cycle_length=2, anchor_date=datetime.date(2026, 3, 2))
-        exceptions = {datetime.date(2026, 3, 3)}  # Tuesday cancelled
+        exceptions = {datetime.date(2026, 3, 3)}
 
         # WHEN/THEN
         # Without the holiday Wed is Day 1; with Tuesday skipped, Wed becomes the 2nd school day → Day 2
@@ -266,16 +266,16 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_resolve_week_index_counts_calendar_weeks(self):
         # GIVEN
-        schedule = CourseSchedule(is_week_based=True, week_offset=0, anchor_date=datetime.date(2026, 3, 2))  # Monday
+        schedule = CourseSchedule(is_week_based=True, week_offset=0, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN/THEN
         # shift it, unlike a day cycle.
-        self.assertEqual(schedule.anchor_date.weekday(), 0)  # sanity: anchor is a Monday
-        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 2)), 0)  # Mon, wk 0
-        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 6)), 0)  # Fri, wk 0
-        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 9)), 1)  # Mon, wk 1
+        self.assertEqual(schedule.anchor_date.weekday(), 0)
+        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 2)), 0)
+        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 6)), 0)
+        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 9)), 1)
         # A full rotation later returns to the anchor week (mod 2).
-        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 16)), 0)  # Mon, wk 2
+        self.assertEqual(coursescheduleservice.resolve_week_index(schedule, datetime.date(2026, 3, 16)), 0)
 
     def test_course_schedule_to_recurrence_groups_cycle(self):
         # GIVEN
@@ -335,7 +335,7 @@ class TestCaseCourseScheduleService(TestCase):
         self.assertEqual(len(groups), 1)
         group = groups[0]
         self.assertEqual(group.recurrence_rule, 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO;UNTIL=20260327T235959Z')
-        self.assertEqual(group.start.date(), datetime.date(2026, 3, 2))  # first Monday, in the anchor (Week A) week
+        self.assertEqual(group.start.date(), datetime.date(2026, 3, 2))
         self.assertEqual(group.start.hour, 9)
         self.assertEqual(group.exception_dates, [])
 

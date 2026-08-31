@@ -1,4 +1,3 @@
-import datetime
 import http.client
 import json
 import logging
@@ -23,7 +22,7 @@ from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
 from helium.feed.services.icalparseservice import parse_events
 from helium.planner.models import Event
-from helium.planner.serializers.eventserializer import EventSerializer
+from helium.feed.serializers.feedeventserializer import FeedEventSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +197,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             if _apply_event_filters(extra_event, _from, to, search):
                 events_filtered.append(extra_event)
 
-    serializer = EventSerializer(events, many=True)
+    serializer = FeedEventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
@@ -361,9 +360,7 @@ def reindex_stale_feed_caches(calendar_ids=None):
                     .filter(pk__in=calendar_ids)
                     .select_related('user', 'user__settings'))
     else:
-        queryset = (ExternalCalendar.objects
-                    .needs_recached(timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS))
-                    .select_related('user', 'user__settings'))
+        queryset = ExternalCalendar.objects.needs_recached().select_related('user', 'user__settings')
 
     for external_calendar in queryset.iterator():
         logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")

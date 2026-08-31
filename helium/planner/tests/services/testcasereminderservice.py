@@ -10,6 +10,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import CourseSchedule, Reminder
 from helium.planner.services import reminderservice
+from helium.planner.tasks import email_reminders
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper, reminderhelper
 
 
@@ -41,7 +42,7 @@ class TestCaseReminderService(TestCase):
         reminderhelper.given_reminder_exists(user, type=enums.EMAIL, sent=True, event=event1)
 
         # WHEN
-        reminderservice.process_email_reminders()
+        email_reminders()
 
         # THEN
         self.assertEqual(mock_send_multipart_email.call_count, 2)
@@ -125,7 +126,7 @@ class TestCaseReminderService(TestCase):
         reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
 
         # WHEN
-        reminderservice.process_email_reminders()
+        email_reminders()
 
         # THEN
         # Inactive user should not receive email but reminder should be marked sent
@@ -294,7 +295,7 @@ class TestCaseReminderService(TestCase):
         Reminder.objects.bulk_create([fired_reminder])
 
         # WHEN
-        reminderservice.process_email_reminders()
+        email_reminders()
 
         # THEN
         self.assertEqual(Reminder.objects.filter(sent=True).count(), 1)
@@ -568,7 +569,7 @@ class TestCaseReminderService(TestCase):
     @mock.patch('django.utils.timezone.now')
     def test_get_next_course_occurrence_start_skips_off_week_for_week_based(self, mock_now):
         # GIVEN
-        mock_now.return_value = datetime.datetime(2026, 3, 9, 8, 0, 0, tzinfo=datetime.timezone.utc)  # Mon, Week B
+        mock_now.return_value = datetime.datetime(2026, 3, 9, 8, 0, 0, tzinfo=datetime.timezone.utc)
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'UTC'
         user.settings.save()
@@ -588,7 +589,7 @@ class TestCaseReminderService(TestCase):
     @mock.patch('django.utils.timezone.now')
     def test_get_next_course_occurrence_start_week_based_skips_exception_date(self, mock_now):
         # GIVEN
-        mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)  # Mon Week A, 7am
+        mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)
         user = userhelper.given_a_user_exists()
         user.settings.time_zone = 'UTC'
         user.settings.save()
@@ -676,3 +677,82 @@ class TestCaseReminderService(TestCase):
             reminderservice.clone_reminders(course, homework)
         with self.assertRaises(ValueError):
             reminderservice.clone_reminders(homework, course)
+
+    def test_heal_orphaned_repeating_reminders_leaves_non_course_reminders_alone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event)
+        Reminder.objects.filter(pk=reminder.pk).update(
+            start_of_range=timezone.now() - datetime.timedelta(
+                minutes=settings.REMINDER_SEND_WINDOW_MINUTES + 60))
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        self.assertTrue(Reminder.objects.filter(pk=reminder.pk).exists())
+
+    def given_a_due_reminder(self, type):
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(
+            user,
+            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+            end=timezone.now() + datetime.timedelta(minutes=10))
+        return reminderhelper.given_reminder_exists(user, type=type, event=event)
+
+    @mock.patch('helium.planner.services.reminderservice.taskutils.safe_apply_async')
+    def test_process_email_reminder_claims_before_a_concurrent_worker_can_send(self, mock_apply):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.EMAIL)
+        concurrent_view = reminderservice._reminder_for_processing(reminder.pk)
+
+        # WHEN
+        reminderservice.process_email_reminder(reminder.pk)
+        with mock.patch.object(reminderservice, '_reminder_for_processing',
+                               return_value=concurrent_view):
+            reminderservice.process_email_reminder(reminder.pk)
+
+        # THEN
+        self.assertEqual(mock_apply.call_count, 1)
+
+    @mock.patch('helium.planner.services.reminderservice.taskutils.safe_apply_async')
+    def test_process_push_reminder_claims_before_a_concurrent_worker_can_send(self, mock_apply):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.PUSH)
+        userhelper.given_user_push_token_exists(reminder.user)
+        concurrent_view = reminderservice._reminder_for_processing(reminder.pk, 'user__push_tokens')
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+        with mock.patch.object(reminderservice, '_reminder_for_processing',
+                               return_value=concurrent_view):
+            reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        self.assertEqual(mock_apply.call_count, 1)
+
+    def test_process_email_reminder_creates_only_one_successor_under_concurrency(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group,
+            start_date=datetime.date.today() - datetime.timedelta(days=7),
+            end_date=datetime.date.today() + datetime.timedelta(days=30))
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='1111111',
+                                                          mon_start_time=datetime.time(10, 0, 0))
+        fired = Reminder(message='Test', start_of_range=timezone.now() - datetime.timedelta(minutes=1),
+                         offset=15, offset_type=enums.MINUTES, type=enums.EMAIL,
+                         sent=False, dismissed=False, course=course, user=user)
+        Reminder.objects.bulk_create([fired])
+        concurrent_view = reminderservice._reminder_for_processing(fired.pk)
+
+        # WHEN
+        reminderservice.process_email_reminder(fired.pk)
+        with mock.patch.object(reminderservice, '_reminder_for_processing',
+                               return_value=concurrent_view):
+            reminderservice.process_email_reminder(fired.pk)
+
+        # THEN
+        self.assertEqual(Reminder.objects.filter(course=course, sent=False, dismissed=False).count(), 1)

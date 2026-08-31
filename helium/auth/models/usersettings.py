@@ -5,6 +5,7 @@ from django.core.validators import MaxValueValidator
 from django.db import models
 
 from helium.common import enums
+from helium.auth.managers.usersettingsmanager import UserSettingsManager
 from helium.common.models import BaseModel
 from helium.common.utils.validators import validate_hex_color
 
@@ -116,6 +117,8 @@ class UserSettings(BaseModel):
         default=0)
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='settings', on_delete=models.CASCADE)
+
+    objects = UserSettingsManager()
 
     class Meta:
         verbose_name_plural = 'User settings'

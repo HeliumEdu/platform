@@ -405,7 +405,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         data = {
             'days_of_week': '0100000',
             'mon_start_time': '15:30:00',
-            'mon_end_time': '14:30:00',  # End before start
+            'mon_end_time': '14:30:00',
             # These fields are set to their defaults
             'sun_start_time': '12:00:00',
             'sun_end_time': '12:00:00',
@@ -442,7 +442,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         data = {
             'days_of_week': '0001000',
             'wed_start_time': '19:30:00',
-            'wed_end_time': '18:30:00',  # End before start
+            'wed_end_time': '18:30:00',
             # These fields are set to their defaults
             'sun_start_time': '12:00:00',
             'sun_end_time': '12:00:00',
@@ -885,14 +885,14 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a >=3.8.0 client posts a schedule with no meeting days
+        # WHEN
         data = {'days_of_week': '0000000'}
         response = self.client.post(
             reverse('planner_coursegroups_courses_courseschedules_list',
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN it is rejected
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_empty_schedule_allowed_for_old_client(self):
@@ -901,14 +901,14 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a pre-3.8.0 client posts a schedule with no meeting days
+        # WHEN
         data = {'days_of_week': '0000000'}
         response = self.client.post(
             reverse('planner_coursegroups_courses_courseschedules_list',
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.7.3')
 
-        # THEN it is still allowed (backward compatibility for old clients)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_empty_week_based_schedule_rejected(self):
@@ -917,7 +917,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a week-based schedule is posted with no meeting day
+        # WHEN
         data = {
             'days_of_week': '0000000',
             'is_week_based': True,
@@ -929,7 +929,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN it is rejected (week-based always requires a meeting day, ungated)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_switch_template_clears_opposite_rotation_type(self):
@@ -968,7 +968,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a Week A/B schedule is created via the WEEK_AB template
+        # WHEN
         data = {
             'days_of_week': '0100000',
             'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
@@ -981,7 +981,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN the template resolves to a week-based schedule (not a nonexistent field)
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         schedule = CourseSchedule.objects.get(pk=response.data['id'])
         self.assertTrue(schedule.is_week_based)
@@ -989,7 +989,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         self.assertEqual(schedule.template, enums.WEEK_AB)
 
     def test_edit_to_non_preset_cycle_length_clears_template(self):
-        # GIVEN an A/B Day (2-day) schedule
+        # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
@@ -997,7 +997,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         schedule.template = enums.AB_DAY
         schedule.save()
 
-        # WHEN it is edited to a cycle length that no preset represents
+        # WHEN
         data = {
             'days_of_week': '0000000',
             'cycle_length': 5,
@@ -1009,7 +1009,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': schedule.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN the template self-clears to null while the raw cycle is kept
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         schedule.refresh_from_db()
         self.assertIsNone(schedule.template)
@@ -1044,7 +1044,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a template is sent alongside a cycle_length that contradicts it
+        # WHEN
         data = {
             'days_of_week': '0000000',
             'template': enums.AB_DAY,
@@ -1057,7 +1057,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN the raw field wins and template is re-derived to match it
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         schedule = CourseSchedule.objects.get(pk=response.data['id'])
         self.assertEqual(schedule.cycle_length, 6)
@@ -1069,7 +1069,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a day cycle is created from raw fields with no template
+        # WHEN
         data = {
             'days_of_week': '0000000',
             'cycle_length': 2,
@@ -1081,7 +1081,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN the backend fills in the matching preset template
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['template'], enums.AB_DAY)
 
@@ -1091,7 +1091,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # WHEN a week-based schedule is created from raw fields with no template
+        # WHEN
         data = {
             'days_of_week': '0100000',
             'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
@@ -1104,7 +1104,7 @@ class TestCaseCourseViews(APITestCase, CacheTestCase):
                     kwargs={'course_group': course_group.pk, 'course': course.pk}),
             json.dumps(data), content_type='application/json', HTTP_X_CLIENT_VERSION='3.8.0')
 
-        # THEN the backend derives the Week A/B template
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['template'], enums.WEEK_AB)
 

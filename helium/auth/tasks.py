@@ -229,13 +229,8 @@ def sweep_dangling_users(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.dangling.purge", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=timezone.utc)
-
     num_purged = 0
-    for user in UserModel.objects.filter(
-            is_active=False,
-            deletion_requested_at__isnull=True,
-            created_at__lte=now - timedelta(days=settings.UNVERIFIED_USER_TTL_DAYS)):
+    for user in UserModel.objects.never_verified():
         logger.info(
             f'Deleting user {user.pk}, never verified or activated after {settings.UNVERIFIED_USER_TTL_DAYS} days.')
 
@@ -243,9 +238,7 @@ def sweep_dangling_users(self):
 
         num_purged += 1
 
-    stuck_users = list(UserModel.objects.filter(
-        deletion_requested_at__lte=now - timedelta(minutes=10),
-    ))
+    stuck_users = list(UserModel.objects.stuck_pending_delete())
     if stuck_users:
         logger.warning(f'Found {len(stuck_users)} stuck pending-delete user(s); re-queuing.')
         for user in stuck_users:
@@ -643,41 +636,53 @@ def evaluate_review_prompts(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=timezone.utc)
-
     try:
-        candidates = UserSettings.objects.select_related('user').filter(
-            user__is_active=True,
-            prompt_for_review=False,
-            next_review_prompt_date__isnull=False,
-            next_review_prompt_date__lte=now,
-            review_prompts_requested__lt=settings.REVIEW_PROMPT_MAX_REQUESTED,
-        )
+        user_settings_ids = list(UserSettings.objects.eligible_for_review_prompt()
+                                 .values_list('pk', flat=True))
 
-        recent_cutoff = now - timedelta(days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
+        for user_settings_id in user_settings_ids:
+            taskutils.safe_apply_async(evaluate_review_prompt,
+                                       args=(user_settings_id,),
+                                       priority=settings.CELERY_PRIORITY_LOW)
 
-        to_update = []
-        for user_settings in candidates:
-            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_requested + 1)
-            base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
-                completed=True,
-                course__course_group__example_schedule=False,
-            )
-            total_completed = base_qs.count()
-            recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
-            if total_completed >= threshold and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD:
-                user_settings.prompt_for_review = True
-                to_update.append(user_settings)
-
-        if to_update:
-            UserSettings.objects.bulk_update(to_update, ['prompt_for_review'])
-
-        metricutils.task_stop(metrics, value=len(to_update))
-        logger.info(f"Review prompt evaluation complete: {len(to_update)} user(s) flagged")
+        metricutils.task_stop(metrics, value=len(user_settings_ids))
+        logger.info(f"Queued {len(user_settings_ids)} user(s) for review prompt evaluation")
 
     except Exception as e:
         logger.error(f'Failed to evaluate review prompts: {e}', exc_info=True)
         raise
+
+
+@app.task(bind=True)
+def evaluate_review_prompt(self, user_settings_id):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.review-prompt.evaluate.user", priority="low",
+                                     published_at_ms=published_at_ms)
+
+    user_settings = UserSettings.objects.select_related('user').filter(pk=user_settings_id).first()
+    if user_settings is None:
+        metricutils.task_stop(metrics, value=0)
+        return
+
+    recent_cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(
+        days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
+
+    threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_requested + 1)
+    base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
+        completed=True,
+        course__course_group__example_schedule=False,
+    )
+    total_completed = base_qs.count()
+    recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
+
+    flagged = (total_completed >= threshold
+               and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD)
+    if flagged:
+        user_settings.prompt_for_review = True
+        user_settings.save(update_fields=['prompt_for_review'])
+        logger.info(f"Review prompt flagged for user {user_settings.user_id}")
+
+    metricutils.task_stop(metrics, value=1 if flagged else 0)
 
 
 @app.task(bind=True)
@@ -763,13 +768,8 @@ def process_dormant_users(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.dormant.process", priority="low", published_at_ms=published_at_ms)
 
-    now = datetime.now().replace(tzinfo=timezone.utc)
-    dormancy_cutoff = now - timedelta(days=settings.DORMANT_USER_THRESHOLD_YEARS * 365)
-    warning_days = settings.DORMANT_USER_WARNING_DAYS
     max_per_run = settings.DORMANT_USER_PURGE_MAX_PER_RUN
     rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
-
-    warning_intervals = {i + 1: warning_days[i] - warning_days[i + 1] for i in range(len(warning_days) - 1)}
 
     num_warnings_sent = 0
     num_deletions_queued = 0
@@ -779,16 +779,7 @@ def process_dormant_users(self):
         return index / rate_per_sec
 
     try:
-        dormancy_filter = Q(is_active=True, last_activity__lte=dormancy_cutoff)
-
-        needs_warning = Q(deletion_warning_count=0)
-        for count, interval_days in warning_intervals.items():
-            needs_warning |= Q(
-                deletion_warning_count=count,
-                deletion_warning_sent_at__lte=now - timedelta(days=interval_days)
-            )
-
-        warning_users = UserModel.objects.filter(dormancy_filter & needs_warning)
+        warning_users = UserModel.objects.needs_dormancy_warning()
         for user in warning_users:
             if total_queued >= max_per_run:
                 logger.info(f'Reached max per run ({max_per_run}), stopping.')
@@ -804,11 +795,7 @@ def process_dormant_users(self):
             logger.info(f'Queued dormant warning #{user.deletion_warning_count + 1} for user {user.pk}')
 
         if total_queued < max_per_run:
-            deletion_users = UserModel.objects.filter(
-                is_active=True,
-                last_activity__lte=dormancy_cutoff,
-                deletion_warning_count__gte=4,
-            )
+            deletion_users = UserModel.objects.fully_warned()
             for user in deletion_users:
                 if total_queued >= max_per_run:
                     logger.info(f'Reached max per run ({max_per_run}), stopping.')

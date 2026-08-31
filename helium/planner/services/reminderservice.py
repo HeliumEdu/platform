@@ -74,13 +74,12 @@ def heal_orphaned_repeating_reminders(user_id=None):
     now = timezone.now()
     window_start = now - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
-    base_filter = {'course__isnull': False}
+    series = Reminder.objects.repeating()
     if user_id is not None:
-        base_filter['user'] = user_id
+        series = series.for_user(user_id)
 
     all_series = list(
-        Reminder.objects
-        .filter(**base_filter)
+        series
         .values('course', 'user', 'type', 'offset', 'offset_type')
         .distinct()
     )
@@ -91,7 +90,8 @@ def heal_orphaned_repeating_reminders(user_id=None):
     for combo in all_series:
         unsent = (
             Reminder.objects
-            .filter(dismissed=False, sent=False, **combo)
+            .active()
+            .filter(**combo)
             .first()
         )
 
@@ -119,7 +119,7 @@ def heal_orphaned_repeating_reminders(user_id=None):
     for reminder in successor_templates:
         series_filter = dict(course=reminder.course, user=reminder.user, type=reminder.type,
                              offset=reminder.offset, offset_type=reminder.offset_type)
-        if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exists():
+        if Reminder.objects.active().filter(**series_filter).exists():
             continue
         try:
             logger.info(
@@ -174,7 +174,7 @@ def create_next_repeating_reminder(reminder):
         offset_type=reminder.offset_type,
     )
 
-    if Reminder.objects.filter(sent=False, dismissed=False, **series_filter).exclude(pk=reminder.pk).exists():
+    if Reminder.objects.active().filter(**series_filter).exclude(pk=reminder.pk).exists():
         return None
 
     # Compute the start time of the class that just fired so we skip it when searching.
@@ -217,136 +217,165 @@ def _delete_excess_past_reminders(just_fired):
     ).exclude(pk=just_fired.pk).delete()
 
 
-def process_email_reminders():
+def _reminder_for_processing(reminder_id, *prefetch):
+    return (Reminder.objects
+            .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
+                            'course', 'course__course_group')
+            .prefetch_related('course__schedules', *prefetch)
+            .filter(pk=reminder_id)
+            .first())
+
+
+def _claim(reminder):
+    """Take ownership of a reminder before anything is sent for it.
+
+    The update only matches while the row is still unsent, so of any number of workers holding
+    this reminder exactly one proceeds and the rest stop here.
+    """
+    if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
+        logger.info(f'Reminder {reminder.pk} was already claimed elsewhere. Nothing to do.')
+        return False
+
+    reminder.sent = True
+    return True
+
+
+def _continue_series(reminder, channel):
+    if reminder.course_id:
+        _delete_excess_past_reminders(reminder)
+        try:
+            new_reminder = create_next_repeating_reminder(reminder)
+            if new_reminder is None:
+                logger.info(
+                    f'No next occurrence for repeating {channel} reminder series (course ended): '
+                    f'course={reminder.course_id}, user={reminder.user_id}')
+        except Exception:
+            logger.error(f"An error occurred creating next repeating {channel} reminder.", exc_info=True)
+
+
+def _email_send_args(reminder, user):
+    """Everything fallible about an email send, resolved before the reminder is claimed."""
+    if not (user.email and user.is_active):
+        logger.warning(
+            f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
+        return None
+
+    subject = get_subject(reminder)
+    if not subject:
+        logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
+        return None
+
+    if reminder.event:
+        calendar_item_id, calendar_item_type = reminder.event.pk, enums.EVENT
+    elif reminder.homework:
+        calendar_item_id, calendar_item_type = reminder.homework.pk, enums.HOMEWORK
+    elif reminder.course:
+        calendar_item_id, calendar_item_type = reminder.course.pk, enums.COURSE
+    else:
+        logger.warning(f'Reminder {reminder.pk} was not for a homework, event, or course. Nothing to do.')
+        return None
+
+    return user.email, subject, reminder.pk, calendar_item_id, calendar_item_type
+
+
+def _push_send_args(reminder, user):
+    """Everything fallible about a push send, resolved before the reminder is claimed."""
+    subject = get_subject(reminder)
+    if not subject:
+        logger.info(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
+        return None
+
+    push_tokens = list({t.device_id: t.token for t in user.push_tokens.all()}.values())
+    if not push_tokens:
+        metricutils.increment('action.reminder.undeliverable', user=reminder.user,
+                              extra_tags=['channel:push'])
+        logger.info(
+            f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
+        return None
+
+    return (push_tokens, user.username, subject, _push_body(reminder),
+            PushReminderSerializer(reminder).data)
+
+
+def process_email_reminder(reminder_id):
     from helium.planner.tasks import send_email_reminder
 
-    rate_per_sec = settings.EMAIL_SEND_RATE_PER_SEC
-    queued_count = 0
+    reminder = _reminder_for_processing(reminder_id)
+    if reminder is None or reminder.sent:
+        return
 
-    for reminder in (Reminder.objects
-                     .with_type(enums.EMAIL)
-                     .unsent()
-                     .for_today()
-                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
-                                     'course', 'course__course_group')
-                     .prefetch_related('course__schedules')
-                     .iterator(chunk_size=2000)):
-        user = reminder.get_user()
+    user = reminder.get_user()
 
-        timezone.activate(ZoneInfo(user.settings.time_zone))
+    timezone.activate(ZoneInfo(user.settings.time_zone))
 
-        try:
-            if user.email and user.is_active:
-                subject = get_subject(reminder)
+    try:
+        send_args = _email_send_args(reminder, user)
 
-                if not subject:
-                    logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
-                else:
-                    if reminder.event:
-                        calendar_item_id = reminder.event.pk
-                        calendar_item_type = enums.EVENT
-                    elif reminder.homework:
-                        calendar_item_id = reminder.homework.pk
-                        calendar_item_type = enums.HOMEWORK
-                    elif reminder.course:
-                        calendar_item_id = reminder.course.pk
-                        calendar_item_type = enums.COURSE
-                    else:
-                        logger.warning(f'Reminder {reminder.pk} was not for a homework, event, or course. Nothing to do.')
-                        continue
+        if not _claim(reminder):
+            return
 
-                    logger.info(f'Sending email reminder {reminder.pk} for user {user.pk}')
+        if send_args is not None:
+            logger.info(f'Sending email reminder {reminder.pk} for user {user.pk}')
 
-                    metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
+            metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
 
-                    taskutils.safe_apply_async(send_email_reminder,
-                        args=(user.email, subject, reminder.pk, calendar_item_id, calendar_item_type),
-                        countdown=queued_count / rate_per_sec,
-                        priority=settings.CELERY_PRIORITY_HIGH,
-                    )
-                    queued_count += 1
-            else:
-                logger.warning(
-                    f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
+            # critical, because the reminder is already claimed: dropping the dispatch here would
+            # lose the send outright rather than leave it for the next sweep
+            taskutils.safe_apply_async(send_email_reminder,
+                args=send_args,
+                priority=settings.CELERY_PRIORITY_HIGH,
+                critical=True,
+            )
 
-            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
-                continue
-            reminder.sent = True
-        except Exception:
-            logger.error("An error occurred processing email reminder.", exc_info=True)
-            continue
+        _continue_series(reminder, 'email')
+    except Exception:
+        logger.error("An error occurred processing email reminder.", exc_info=True)
+    finally:
+        timezone.deactivate()
 
-        if reminder.course_id:
-            _delete_excess_past_reminders(reminder)
-            try:
-                new_reminder = create_next_repeating_reminder(reminder)
-                if new_reminder is None:
-                    logger.info(
-                        f'No next occurrence for repeating email reminder series (course ended): '
-                        f'course={reminder.course_id}, user={reminder.user_id}')
-            except Exception:
-                logger.error("An error occurred creating next repeating email reminder.", exc_info=True)
 
+def process_push_reminder(reminder_id, mark_sent_only=False):
+    reminder = _reminder_for_processing(reminder_id, 'user__push_tokens')
+    if reminder is None or reminder.sent:
+        return
+
+    user = reminder.get_user()
+
+    timezone.activate(ZoneInfo(user.settings.time_zone))
+
+    try:
+        send_args = None if mark_sent_only else _push_send_args(reminder, user)
+
+        if not _claim(reminder):
+            return
+
+        if mark_sent_only:
+            logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")
+        elif send_args is not None:
+            logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
+
+            metricutils.increment('task', value=len(send_args[0]), user=reminder.user,
+                                  extra_tags=['name:reminder.queue.push'])
+
+            # critical, for the same reason as the email send above
+            taskutils.safe_apply_async(send_pushes,
+                args=send_args,
+                priority=settings.CELERY_PRIORITY_HIGH,
+                critical=True,
+            )
+
+        _continue_series(reminder, 'push')
+    except Exception:
+        logger.error("An error occurred processing push reminder.", exc_info=True)
+    finally:
         timezone.deactivate()
 
 
 def process_push_reminders(mark_sent_only=False):
-    for reminder in (Reminder.objects
-                     .with_type(enums.PUSH)
-                     .unsent()
-                     .for_today()
-                     .select_related('user', 'user__settings', 'homework', 'homework__course', 'event',
-                                     'course', 'course__course_group')
-                     .prefetch_related('course__schedules', 'user__push_tokens')
-                     .iterator(chunk_size=2000)):
-        user = reminder.get_user()
-
-        timezone.activate(ZoneInfo(user.settings.time_zone))
-
-        try:
-            if not mark_sent_only:
-                subject = get_subject(reminder)
-
-                if not subject:
-                    logger.info(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
-                else:
-                    logger.info(f'Sending pushes for reminder {reminder.pk} for user {user.pk}')
-
-                    push_tokens = list({t.device_id: t.token for t in user.push_tokens.all()}.values())
-
-                    if len(push_tokens) > 0:
-                        metricutils.increment('task', value=len(push_tokens), user=reminder.user,
-                                              extra_tags=['name:reminder.queue.push'])
-
-                        taskutils.safe_apply_async(send_pushes,
-                            args=(push_tokens, user.username, subject, _push_body(reminder),
-                                  PushReminderSerializer(reminder).data),
-                            priority=settings.CELERY_PRIORITY_HIGH,
-                        )
-                    else:
-                        metricutils.increment('action.reminder.undeliverable', user=reminder.user,
-                                              extra_tags=['channel:push'])
-                        logger.info(
-                            f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
-            else:
-                logger.info(f"Marking reminder {reminder.pk} as sent without performing other actions")
-
-            if not Reminder.objects.filter(pk=reminder.pk, sent=False).update(sent=True):
-                continue
-            reminder.sent = True
-        except Exception:
-            logger.error("An error occurred processing push reminder.", exc_info=True)
-            continue
-
-        if reminder.course_id:
-            _delete_excess_past_reminders(reminder)
-            try:
-                new_reminder = create_next_repeating_reminder(reminder)
-                if new_reminder is None:
-                    logger.info(
-                        f'No next occurrence for repeating push reminder series (course ended): '
-                        f'course={reminder.course_id}, user={reminder.user_id}')
-            except Exception:
-                logger.error("An error occurred creating next repeating push reminder.", exc_info=True)
-
-        timezone.deactivate()
+    """Process every due push reminder inline, for callers that need it finished before returning."""
+    for reminder_id in (Reminder.objects
+                        .with_type(enums.PUSH)
+                        .unsent()
+                        .for_today()
+                        .values_list('pk', flat=True)):
+        process_push_reminder(reminder_id, mark_sent_only=mark_sent_only)
