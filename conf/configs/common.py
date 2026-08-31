@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.2.123"
+__version__ = "2.2.124"
 
 import json
 import os
@@ -708,8 +708,6 @@ CELERY_RESULT_EXPIRES = 3600 * 24 * 7
 CELERY_PRIORITY_HIGH = 0
 CELERY_PRIORITY_LOW = 9
 
-# Soft time limit for the longer-running feed reindex sweep (None = no limit; set per environment)
-CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT = None
 
 # Enable priority support in Redis broker
 CELERY_BROKER_TRANSPORT_OPTIONS = {

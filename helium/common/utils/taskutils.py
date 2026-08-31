@@ -15,12 +15,16 @@ class MetricsTask(Task):
 
     The failing task's own metrics, stashed by :func:`metricutils.task_start`, name the metric, so
     a failure is reported under the same name the body reports its successes under.
+
+    Those metrics live in the worker's memory, so a task killed outright leaves none behind to
+    report against. That case is counted separately as `task.lost`, under the Celery task name.
     """
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         metrics = getattr(self.request, 'helium_metrics', None)
 
         if not metrics:
+            metricutils.increment('task.lost', extra_tags=[f'name:{self.name}'])
             return
 
         metricutils.task_failure(metrics['Task-Metric-ID'],

@@ -11,7 +11,7 @@ from helium.feed.services import icalexternalcalendarservice
 logger = logging.getLogger(__name__)
 
 
-@app.task(bind=True, soft_time_limit=settings.CELERY_TASK_REINDEX_FEEDS_SOFT_TIME_LIMIT)
+@app.task(bind=True)
 def reindex_feeds(self, calendar_id=None):
     """Reindex one calendar, or queue a task for every calendar whose cache has gone stale.
 

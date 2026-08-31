@@ -36,13 +36,16 @@ class TestCaseMetricsTask(TestCase):
                          ['name:probe.failing', 'priority:high', 'exception:ValueError'])
 
     @mock.patch('helium.common.utils.metricutils.increment')
-    def test_failure_without_task_start_reports_nothing(self, mock_increment):
+    def test_failure_without_task_start_is_counted_as_lost(self, mock_increment):
         # WHEN
         _unstarted_task.apply(throw=False)
 
         # THEN
         failed = [c for c in mock_increment.call_args_list if c.args and c.args[0] == 'task.failed']
         self.assertEqual(failed, [])
+        lost = [c for c in mock_increment.call_args_list if c.args and c.args[0] == 'task.lost']
+        self.assertEqual(len(lost), 1)
+        self.assertEqual(lost[0].kwargs['extra_tags'], [f'name:{_unstarted_task.name}'])
 
 
 class TestCaseStashMetrics(TestCase):
