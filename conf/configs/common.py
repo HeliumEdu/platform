@@ -185,8 +185,8 @@ DORMANT_USER_PURGE_MAX_PER_RUN = 50
 
 # App store review prompt settings
 REVIEW_PROMPT_INITIAL_DELAY_DAYS = 21
-REVIEW_PROMPT_COOLDOWN_DAYS = 90
-REVIEW_PROMPT_MAX_REQUESTED = 5
+REVIEW_PROMPT_COOLDOWN_DAYS = 120
+REVIEW_PROMPT_MAX_REQUESTED = 3
 REVIEW_PROMPT_HOMEWORK_THRESHOLD = 7
 REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD = 4
 REVIEW_PROMPT_RECENT_WINDOW_DAYS = 7
@@ -578,7 +578,8 @@ JSM_CATEGORY_FIELD_ID = config('PLATFORM_JSM_CATEGORY_FIELD_ID', default=None)
 
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
 
-ADMIN_ALLOWED_DOMAINS = [d.strip() for d in config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com').split(',')]
+ADMIN_ALLOWED_DOMAINS = [d.strip() for d in
+                         config('ADMIN_ALLOWED_DOMAINS', default='heliumedu.com,heliumedu.dev').split(',')]
 
 ADMIN_ENFORCE_2FA = (config('PLATFORM_ADMIN_ENFORCE_2FA', default=None) or ('False' if 'local' in ENVIRONMENT else 'True')) == 'True'
 

@@ -7,7 +7,7 @@ from django.contrib.admin import ModelAdmin, SimpleListFilter, action
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth import logout
+from django.contrib.auth import get_user_model, logout
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -187,12 +187,7 @@ def staff_filter(user_field=None):
     Pass user_field as the FK path to the user (e.g. 'user', 'course_group__user').
     Omit for models where the queryset operates directly on the User model.
     """
-    prefix = f'{user_field}__' if user_field else ''
-    staff_q = (
-            Q(**{f'{prefix}is_superuser': True}) |
-            Q(**{f'{prefix}email__endswith': '@heliumedu.com'}) |
-            Q(**{f'{prefix}email__endswith': '@heliumedu.dev'})
-    )
+    lookup = f'{user_field}__in' if user_field else 'pk__in'
 
     class _StaffFilter(SimpleListFilter):
         title = 'staff'
@@ -203,9 +198,9 @@ def staff_filter(user_field=None):
 
         def queryset(self, request, queryset):
             if self.value() == 'yes':
-                return queryset.filter(staff_q)
+                return queryset.filter(**{lookup: get_user_model().objects.staff()})
             if self.value() == 'no':
-                return queryset.exclude(staff_q)
+                return queryset.exclude(**{lookup: get_user_model().objects.staff()})
             return queryset
 
     return _StaffFilter

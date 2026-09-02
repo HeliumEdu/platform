@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
@@ -13,7 +14,8 @@ class UserSettingsQuerySet(models.query.QuerySet):
                            prompt_for_review=False,
                            next_review_prompt_date__isnull=False,
                            next_review_prompt_date__lte=timezone.now(),
-                           review_prompts_requested__lt=settings.REVIEW_PROMPT_MAX_REQUESTED)
+                           review_prompts_requested__lt=settings.REVIEW_PROMPT_MAX_REQUESTED) \
+                   .exclude(user__in=get_user_model().objects.staff())
 
 
 class UserSettingsManager(models.Manager):
