@@ -682,7 +682,7 @@ def evaluate_review_prompt(self, user_settings_id):
         user_settings.save(update_fields=['prompt_for_review'])
         logger.info(f"Review prompt flagged for user {user_settings.user_id}")
 
-    metricutils.task_stop(metrics, value=1 if flagged else 0)
+    metricutils.task_stop(metrics, user=user_settings.user, value=1 if flagged else 0)
 
 
 @app.task(bind=True)
