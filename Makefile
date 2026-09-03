@@ -72,6 +72,7 @@ build-migrations: install-dev
 
 refresh-timezones: install-dev
 	@( \
+		set -e; \
 		source $(PLATFORM_VENV)/bin/activate; \
 		python bin/refresh-timezones.py $(REFRESH_TIMEZONES_ARGS); \
 		ENVIRONMENT=local python manage.py makemigrations; \
