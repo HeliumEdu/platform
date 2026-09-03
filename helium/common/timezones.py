@@ -1,6 +1,7 @@
 # AUTO-GENERATED — DO NOT EDIT.
 # Refreshed periodically from IANA tzdata via:
 #   platform/bin/refresh-timezones.py
+# IANA release: 2026c
 
 TIME_ZONE_CHOICES = (
     ('Africa', [

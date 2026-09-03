@@ -60,7 +60,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: 'pip'
-          cache-dependency-path: platform/requirements.txt
+          cache-dependency-path: |
+            platform/requirements.txt
+            platform/bin/requirements.txt
 
       - name: Refresh timezone files and migration
         run: |
@@ -95,8 +97,8 @@ jobs:
       - name: Commit and push frontend
         run: |
           cd frontend
-          git add lib/utils/time_zone_constants.dart
-          UNEXPECTED=$(git status --porcelain | awk '{print $2}' | grep -Ev '^lib/utils/time_zone_constants\.dart$' || true)
+          git add lib/utils/time_zone_constants.dart lib/utils/time_zone_aliases.dart
+          UNEXPECTED=$(git status --porcelain | awk '{print $2}' | grep -Ev '^lib/utils/time_zone_(constants|aliases)\.dart$' || true)
           if [ -n "$UNEXPECTED" ]; then
             echo "Unexpected file changes detected:"
             echo "$UNEXPECTED"
