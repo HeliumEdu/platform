@@ -321,6 +321,42 @@ class TestCaseUserSettingsViews(APITestCase):
                         if c.kwargs.get('args') == (event.pk, enums.EVENT)]
         self.assertTrue(queued_calls, 'expected adjust_reminder_times to be queued for the event')
 
+    @mock.patch('helium.auth.views.apis.usersettingsviews.taskutils.safe_apply_async')
+    def test_timezone_change_defers_side_effects_until_commit(self, mock_safe_apply_async):
+        """Neither side effect may run while the rebase is uncommitted.
+
+        The reminder task re-reads `start`, and a cache cleared mid-transaction can be
+        repopulated from the old rows by a concurrent read before the commit lands.
+        Without `captureOnCommitCallbacks` the test transaction never commits, so a
+        callback that fired here would prove it was not deferred.
+        """
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        coursehelper.given_course_exists(course_group)
+        event = eventhelper.given_event_exists(
+            user, all_day=True,
+            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
+            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+        )
+        reminderhelper.given_reminder_exists(user, event=event)
+
+        with mock.patch(
+                'helium.auth.views.apis.usersettingsviews.coursescheduleservice.clear_cached_course_schedule'
+        ) as mock_clear_course_cache:
+            # WHEN
+            response = _put_time_zone(self.client, 'America/Los_Angeles')
+
+            # THEN
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            queued_calls = [c for c in mock_safe_apply_async.call_args_list
+                            if c.kwargs.get('args') == (event.pk, enums.EVENT)]
+            self.assertFalse(queued_calls,
+                             'adjust_reminder_times must not dispatch before commit')
+            mock_clear_course_cache.assert_not_called()
+
     def test_timezone_change_invalidates_course_schedule_cache(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
