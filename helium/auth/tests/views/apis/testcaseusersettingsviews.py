@@ -335,7 +335,8 @@ class TestCaseUserSettingsViews(APITestCase):
                 'helium.auth.views.apis.usersettingsviews.coursescheduleservice.clear_cached_course_schedule'
         ) as mock_clear_course_cache:
             # WHEN
-            response = _put_time_zone(self.client, 'America/Los_Angeles')
+            with self.captureOnCommitCallbacks(execute=True):
+                response = _put_time_zone(self.client, 'America/Los_Angeles')
 
             # THEN
             self.assertEqual(response.status_code, status.HTTP_200_OK)

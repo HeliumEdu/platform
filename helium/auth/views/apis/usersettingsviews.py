@@ -77,7 +77,7 @@ def _normalize_all_day_for_timezone_change(user, old_time_zone, new_time_zone):
     _rebase_all_day(user, Event, old_tz, new_tz, reminder_field='event')
     _rebase_all_day(user, Homework, old_tz, new_tz, reminder_field='homework')
 
-    _invalidate_user_calendar_caches(user)
+    transaction.on_commit(functools.partial(_invalidate_user_calendar_caches, user))
 
     logger.info(f'Normalized all-day calendar items for user {user.pk} after timezone '
                 f'change ({old_time_zone} -> {new_time_zone})')
