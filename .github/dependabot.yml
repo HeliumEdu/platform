@@ -9,3 +9,5 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "pytz"
+        update-types: ["version-update:semver-major"]
