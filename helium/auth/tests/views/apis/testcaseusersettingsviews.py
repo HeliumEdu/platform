@@ -42,6 +42,32 @@ class TestCaseUserSettingsViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_time_zone_change_rolls_back_when_rebase_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
+        original_start = _midnight_in_tz_as_utc(
+            datetime.date(2025, 9, 4), 'America/Los_Angeles')
+        event = eventhelper.given_event_exists(
+            user,
+            all_day=True,
+            start=original_start,
+            end=_midnight_in_tz_as_utc(datetime.date(2025, 9, 5), 'America/Los_Angeles'))
+
+        # WHEN
+        with mock.patch(
+            'helium.auth.views.apis.usersettingsviews._rebase_all_day',
+            side_effect=RuntimeError('rebase blew up'),
+        ):
+            with self.assertRaises(RuntimeError):
+                _put_time_zone(self.client, 'Europe/Amsterdam')
+
+        # THEN
+        user.settings.refresh_from_db()
+        event.refresh_from_db()
+        self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
+        self.assertEqual(event.start, original_start)
+
     def test_put_user_setting(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -286,7 +312,8 @@ class TestCaseUserSettingsViews(APITestCase):
         reminderhelper.given_reminder_exists(user, event=event)
 
         # WHEN
-        response = _put_time_zone(self.client, 'America/Los_Angeles')
+        with self.captureOnCommitCallbacks(execute=True):
+            response = _put_time_zone(self.client, 'America/Los_Angeles')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

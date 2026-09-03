@@ -35,30 +35,34 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
 
         return response
 
-    def _reclaim_device_from_other_accounts(self, token) -> None:
+    def _reclaim_device(self, token, device_id) -> None:
         """
-        Retire any other account's registration for this device.
+        Retire every other registration holding this token.
 
-        FCM issues one token per install, so the same token under a different user means the device
-        changed hands. A client whose session expired rather than being signed out cannot reach the
-        API to retire its own registration, so the account signing in does it.
+        FCM issues one token per install, so another row holding it is a registration this device
+        has outgrown, whether an account that held the device before or an earlier registration of
+        this account. Either would keep delivering here, and a client whose session ended without
+        signing out cannot retire its own, so the registration being written claims the token.
 
         :param token: the registration token being claimed.
+        :param device_id: the device the token is being claimed for.
         """
-        reclaimed, _ = UserPushToken.objects.filter(token=token).exclude(user=self.request.user).delete()
+        reclaimed, _ = UserPushToken.objects.filter(token=token).exclude(
+            user=self.request.user, device_id=device_id).delete()
 
         if reclaimed:
-            logger.info(f'Reclaimed {reclaimed} push token(s) from a previous account on this device')
+            logger.info(f'Reclaimed {reclaimed} superseded push token(s) for this device')
             metricutils.increment('action.push.token.reclaimed', value=reclaimed)
 
     def perform_create(self, serializer):
         token = serializer.validated_data['token']
+        device_id = serializer.validated_data['device_id']
 
-        self._reclaim_device_from_other_accounts(token)
+        self._reclaim_device(token, device_id)
 
         obj, _ = UserPushToken.objects.update_or_create(
             user=self.request.user,
-            device_id=serializer.validated_data['device_id'],
+            device_id=device_id,
             defaults={'token': token},
         )
         serializer.instance = obj

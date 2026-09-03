@@ -11,8 +11,8 @@ from django.db.models import Count
 def is_admin_allowed_email(email):
     """
     Return True if the email's domain is in ADMIN_ALLOWED_DOMAINS. Security boundary — governs
-    who can be promoted to superuser. Not the right predicate for filtering internal staff out
-    of analytics/metrics; use `is_staff_user` for that.
+    admin access and superuser promotion, so it matches the domain exactly rather than allowing
+    subdomains the way `is_staff_user` does.
     """
     domain = email.split('@')[-1].lower() if '@' in email else ''
     return domain in settings.ADMIN_ALLOWED_DOMAINS
@@ -20,13 +20,14 @@ def is_admin_allowed_email(email):
 
 def is_staff_email(email):
     """
-    Return True if the email belongs to a staff domain. Matches the frontend's `setStaffStatus`
-    filter. Use when a User object isn't available (e.g. bounce handling with just an address).
+    Return True if the email belongs to an internal Helium domain or any of its subdomains.
+    Matches the frontend's `setStaffStatus` filter. Use when a User object isn't available
+    (e.g. bounce handling with just an address).
     """
     lowered = (email or '').lower()
     domain = lowered.split('@')[-1] if '@' in lowered else ''
-    return domain == 'heliumedu.com' or domain.endswith('.heliumedu.com') or \
-           domain == 'heliumedu.dev' or domain.endswith('.heliumedu.dev')
+    return any(domain == staff_domain or domain.endswith(f'.{staff_domain}')
+               for staff_domain in settings.ADMIN_ALLOWED_DOMAINS)
 
 
 def is_staff_user(user):
@@ -46,7 +47,7 @@ def generate_verification_code():
     return secrets.randbelow(900000) + 100000
 
 
-def rollup_power_users(UserModel, staff_filter):
+def rollup_power_users(UserModel):
     """
     Tag the top 5% of 30-day active non-staff users as power users based on a composite
     percentile score across homework depth, recent completions, and note-taking. Clears the
@@ -54,7 +55,6 @@ def rollup_power_users(UserModel, staff_filter):
     to tag anyone.
 
     :param UserModel: The active user model class.
-    :param staff_filter: A Q object matching staff/superuser accounts to exclude.
     :return: Tuple of (promoted_count, cleared_count).
     """
     from helium.planner.models import Course, Homework, Note
@@ -64,7 +64,7 @@ def rollup_power_users(UserModel, staff_filter):
 
     user_ids = list(
         UserModel.objects.filter(is_active=True, last_activity__gte=cutoff_30d)
-                         .filter(~staff_filter)
+                         .exclude(pk__in=UserModel.objects.staff())
                          .values_list('pk', flat=True)
     )
     total_users = len(user_ids)

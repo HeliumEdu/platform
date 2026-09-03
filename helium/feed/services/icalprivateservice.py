@@ -195,8 +195,8 @@ def events_to_private_ical_feed(user):
                 calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
                 calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
             else:
-                calendar_event["DTSTART"] = icalendar.vDate(event.start)
-                calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(event.start).date())
+                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(event.end).date())
             calendar_event["DESCRIPTION"] = _create_event_description(event)
 
             calendar.add_component(calendar_event)
@@ -228,8 +228,8 @@ def homework_to_private_ical_feed(user):
                 calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(homework.start))
                 calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(homework.end))
             else:
-                calendar_event["DTSTART"] = icalendar.vDate(homework.start)
-                calendar_event["DTEND"] = icalendar.vDate((homework.end + datetime.timedelta(days=1)))
+                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(homework.start).date())
+                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(homework.end).date())
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
             calendar.add_component(calendar_event)
@@ -269,8 +269,8 @@ def courseschedules_to_private_ical_feed(user):
                 calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
                 calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
             else:
-                calendar_event["DTSTART"] = icalendar.vDate(event.start)
-                calendar_event["DTEND"] = icalendar.vDate((event.end + datetime.timedelta(days=1)))
+                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(event.start).date())
+                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(event.end).date())
             description = f"Comments: {event.comments or ''}"
             if event.url:
                 description = f"URL: {event.url}\n" + description

@@ -1,8 +1,10 @@
+import functools
 import logging
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -39,14 +41,20 @@ class UserSettingsApiDetailView(HeliumAPIView):
 
         serializer = self.get_serializer(user.settings, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        new_time_zone = serializer.data.get('time_zone')
-        if new_time_zone and new_time_zone != old_time_zone:
-            # Run synchronously so the next GET reflects the rebased dates. Otherwise the
-            # client (which may already be rendering the planner) would briefly show all-day
-            # events spanning two days in the new timezone.
-            _normalize_all_day_for_timezone_change(user, old_time_zone, new_time_zone)
+        # The new time zone and the rebase it forces have to land together. `old_time_zone`
+        # lives only for this request, so a partial write — zone saved, items not rebased —
+        # leaves every all-day item off by the offset delta with nothing left to recover the
+        # correct dates from.
+        with transaction.atomic():
+            serializer.save()
+
+            new_time_zone = serializer.data.get('time_zone')
+            if new_time_zone and new_time_zone != old_time_zone:
+                # Run synchronously so the next GET reflects the rebased dates. Otherwise the
+                # client (which may already be rendering the planner) would briefly show all-day
+                # events spanning two days in the new timezone.
+                _normalize_all_day_for_timezone_change(user, old_time_zone, new_time_zone)
 
         logger.info(f'Settings updated for user {user.pk}')
 
@@ -97,12 +105,17 @@ def _rebase_all_day(user, model_cls, old_tz, new_tz, reminder_field):
         .values_list(f'{reminder_field}_id', flat=True)
         .distinct()
     )
+    # Deferred to commit: the task re-reads `start` to recalculate reminder offsets, so
+    # dispatching inside the transaction could hand it the pre-rebase values.
     for item in items_to_update:
         if item.pk in ids_with_reminders:
-            taskutils.safe_apply_async(
-                adjust_reminder_times,
-                args=(item.pk, item.calendar_item_type),
-                priority=settings.CELERY_PRIORITY_LOW,
+            transaction.on_commit(
+                functools.partial(
+                    taskutils.safe_apply_async,
+                    adjust_reminder_times,
+                    args=(item.pk, item.calendar_item_type),
+                    priority=settings.CELERY_PRIORITY_LOW,
+                )
             )
 
 

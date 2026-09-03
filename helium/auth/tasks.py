@@ -293,7 +293,8 @@ def emit_nightly_metrics(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
 
-    staff_filter = Q(is_superuser=True) | Q(email__endswith='@heliumedu.com') | Q(email__endswith='@heliumedu.dev')
+    staff_cohorts = [('true', lambda qs: qs.staff()),
+                     ('false', lambda qs: qs.exclude(pk__in=qs.staff()))]
 
     # Active users by window
     try:
@@ -303,8 +304,8 @@ def emit_nightly_metrics(self):
                 is_active=True,
                 last_activity__gte=cutoff
             )
-            for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
-                count = base_qs.filter(qs_filter).count()
+            for staff_tag, select_cohort in staff_cohorts:
+                count = select_cohort(base_qs).count()
                 metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}'])
             logger.debug(f"Emitted active users ({window_tag})")
     except Exception as e:
@@ -318,8 +319,8 @@ def emit_nightly_metrics(self):
             cutoff = now_utc - timedelta(days=days)
             base_qs = UserModel.objects.filter(is_active=True, last_activity__gte=cutoff)
 
-            for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
-                active_qs = base_qs.filter(qs_filter)
+            for staff_tag, select_cohort in staff_cohorts:
+                active_qs = select_cohort(base_qs)
                 user_ids = list(active_qs.values_list('pk', flat=True))
                 total_users = len(user_ids)
                 window_staff_tags = [f'window:{window_tag}', f'staff:{staff_tag}']
@@ -518,11 +519,11 @@ def emit_nightly_metrics(self):
         cutoff_14d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=14)
         today = datetime.now().replace(tzinfo=timezone.utc).date()
 
-        for staff_tag, qs_filter in [('true', staff_filter), ('false', ~staff_filter)]:
-            active_qs = UserModel.objects.filter(
+        for staff_tag, select_cohort in staff_cohorts:
+            active_qs = select_cohort(UserModel.objects.filter(
                 is_active=True,
                 last_activity__gte=cutoff_30d,
-            ).filter(qs_filter)
+            ))
             user_ids = list(active_qs.values_list('pk', flat=True))
             total_users = len(user_ids)
             staff_tags = [f'staff:{staff_tag}']
@@ -565,7 +566,7 @@ def emit_nightly_metrics(self):
         raise
 
     try:
-        promoted, cleared = rollup_power_users(UserModel, staff_filter)
+        promoted, cleared = rollup_power_users(UserModel)
         logger.info(f'Power user rollup: {promoted} tagged, {cleared} cleared')
     except Exception as e:
         logger.error(f"Failed to rollup power users: {e}", exc_info=True)
@@ -682,7 +683,7 @@ def evaluate_review_prompt(self, user_settings_id):
         user_settings.save(update_fields=['prompt_for_review'])
         logger.info(f"Review prompt flagged for user {user_settings.user_id}")
 
-    metricutils.task_stop(metrics, value=1 if flagged else 0)
+    metricutils.task_stop(metrics, user=user_settings.user, value=1 if flagged else 0)
 
 
 @app.task(bind=True)

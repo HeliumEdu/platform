@@ -49,6 +49,13 @@ class UserQuerySet(models.query.QuerySet):
     def fully_warned(self):
         return self.dormant().filter(deletion_warning_count__gte=4)
 
+    def staff(self):
+        predicate = Q(is_superuser=True)
+        for staff_domain in settings.ADMIN_ALLOWED_DOMAINS:
+            predicate |= Q(email__iendswith=f'@{staff_domain}') | Q(email__iendswith=f'.{staff_domain}')
+
+        return self.filter(predicate)
+
     def num_homework(self):
         return self.aggregate(homework_count=Count('course_group__courses__homework'))['homework_count']
 
@@ -148,6 +155,9 @@ class UserManager(BaseUserManager):
 
     def fully_warned(self):
         return self.get_queryset().fully_warned()
+
+    def staff(self):
+        return self.get_queryset().staff()
 
     def num_homework(self):
         return self.get_queryset().num_homework()

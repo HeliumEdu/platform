@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 
@@ -39,6 +40,89 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, event2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], f"Comments: {event2.comments}")
+
+    def _all_day_feed_components(self, user, url_name):
+        response = self.client.get(
+            reverse(url_name, kwargs={"private_slug": user.settings.private_slug}))
+        return icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents
+
+    def test_events_feed_all_day_uses_user_timezone_date(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Europe/Amsterdam'
+        user.settings.save()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(
+            user,
+            all_day=True,
+            start=datetime.datetime(2025, 9, 3, 22, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2025, 9, 4, 22, 0, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+
+        # THEN
+        self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
+        self.assertEqual(subcomponents[0]['DTEND'].dt, datetime.date(2025, 9, 5))
+
+    def test_events_feed_all_day_end_is_exclusive(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'America/Los_Angeles'
+        user.settings.save()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(
+            user,
+            all_day=True,
+            start=datetime.datetime(2025, 9, 4, 7, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2025, 9, 5, 7, 0, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+
+        # THEN
+        self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
+        self.assertEqual(subcomponents[0]['DTEND'].dt, datetime.date(2025, 9, 5))
+
+    def test_events_feed_all_day_spanning_multiple_days(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Europe/Amsterdam'
+        user.settings.save()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(
+            user,
+            all_day=True,
+            start=datetime.datetime(2025, 9, 3, 22, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2025, 9, 5, 22, 0, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+
+        # THEN
+        self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
+        self.assertEqual(subcomponents[0]['DTEND'].dt, datetime.date(2025, 9, 6))
+
+    def test_homework_feed_all_day_uses_user_timezone_date(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Europe/Amsterdam'
+        user.settings.save()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(
+            course,
+            all_day=True,
+            start=datetime.datetime(2025, 9, 3, 22, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2025, 9, 4, 22, 0, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        subcomponents = self._all_day_feed_components(user, "feed_private_homework_ical")
+
+        # THEN
+        self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
+        self.assertEqual(subcomponents[0]['DTEND'].dt, datetime.date(2025, 9, 5))
 
     def test_events_feed_with_linked_note(self):
         # GIVEN
