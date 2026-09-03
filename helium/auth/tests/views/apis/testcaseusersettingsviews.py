@@ -13,11 +13,9 @@ from helium.common import enums
 from helium.planner.tests.helpers import (coursegrouphelper, coursehelper, eventhelper,
                                           homeworkhelper, reminderhelper)
 
-
 def _midnight_in_tz_as_utc(date, tz_name):
     naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
     return naive.replace(tzinfo=ZoneInfo(tz_name)).astimezone(datetime.timezone.utc)
-
 
 def _put_time_zone(client, time_zone):
     return client.put(
@@ -25,7 +23,6 @@ def _put_time_zone(client, time_zone):
         json.dumps({'time_zone': time_zone}),
         content_type='application/json',
     )
-
 
 class TestCaseUserSettingsViews(APITestCase):
     def test_user_settings_login_required(self):
@@ -159,8 +156,6 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_rebases_single_day_all_day_event(self):
         # GIVEN
-        # All-day event "Project 2" on Friday May 8 2026 in Chicago, stored as midnight CDT
-        # (which is 05:00 UTC since CDT = UTC-5 in May).
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
         user.settings.save()
@@ -184,7 +179,6 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(
             event.end, _midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Los_Angeles')
         )
-        # And critically, the local date the user observes in LA is still May 8
         self.assertEqual(event.start.astimezone(ZoneInfo('America/Los_Angeles')).date(),
                          datetime.date(2026, 5, 8))
 
@@ -323,13 +317,6 @@ class TestCaseUserSettingsViews(APITestCase):
 
     @mock.patch('helium.auth.views.apis.usersettingsviews.taskutils.safe_apply_async')
     def test_timezone_change_defers_side_effects_until_commit(self, mock_safe_apply_async):
-        """Neither side effect may run while the rebase is uncommitted.
-
-        The reminder task re-reads `start`, and a cache cleared mid-transaction can be
-        repopulated from the old rows by a concurrent read before the commit lands.
-        Without `captureOnCommitCallbacks` the test transaction never commits, so a
-        callback that fired here would prove it was not deferred.
-        """
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.time_zone = 'America/Chicago'
@@ -365,8 +352,6 @@ class TestCaseUserSettingsViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
-        # Patch after fixture setup so post_save signals on Course (which themselves clear the
-        # cache) don't pollute the call count we're asserting against.
         with mock.patch(
                 'helium.auth.views.apis.usersettingsviews.coursescheduleservice.clear_cached_course_schedule'
         ) as mock_clear_course_cache:

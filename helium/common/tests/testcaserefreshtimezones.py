@@ -8,7 +8,6 @@ _spec = importlib.util.spec_from_file_location("refresh_timezones", _SCRIPT)
 refresh_timezones = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(refresh_timezones)
 
-
 class TestCaseResolveAliases(SimpleTestCase):
     def test_alias_resolves_to_its_link_target(self):
         # GIVEN
@@ -22,7 +21,6 @@ class TestCaseResolveAliases(SimpleTestCase):
         self.assertEqual(resolved, {'Asia/Calcutta': 'Asia/Kolkata'})
 
     def test_chain_stops_at_the_first_selectable_zone(self):
-        """IANA consolidates zones, so a chain can pass the recognizable one."""
         # GIVEN
         links = {'America/Buenos_Aires': 'America/Argentina/Buenos_Aires',
                  'America/Argentina/Buenos_Aires': 'America/Argentina/Cordoba'}
@@ -36,7 +34,6 @@ class TestCaseResolveAliases(SimpleTestCase):
             resolved['America/Buenos_Aires'], 'America/Argentina/Buenos_Aires')
 
     def test_selectable_identifiers_are_not_remapped(self):
-        # GIVEN a zone that is both a link and directly selectable
         links = {'Africa/Asmara': 'Africa/Nairobi'}
         selectable = {'Africa/Asmara', 'Africa/Nairobi'}
 
@@ -68,11 +65,8 @@ class TestCaseResolveAliases(SimpleTestCase):
         # THEN
         self.assertEqual(resolved, {})
 
-
 class TestCaseExtractAliasPairs(SimpleTestCase):
     def test_retired_link_is_carried_forward(self):
-        """A retired Link must not send devices reporting it back to UTC."""
-        # GIVEN a previously emitted map, and a derivation that no longer has it
         import tempfile
         from pathlib import Path
 

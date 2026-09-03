@@ -14,7 +14,6 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 logger = logging.getLogger(__name__)
 
-
 class TestCasePrivateViews(CacheTestCase):
     def test_events_feed(self):
         # GIVEN
@@ -269,8 +268,6 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
                          f'URL: {course1.website}\nComments: <a href="{course1.website}">{course1.title}</a> in {course1.room}')
 
-    # Events feed conditional request tests
-
     def test_events_feed_returns_etag_and_last_modified_headers(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -310,7 +307,6 @@ class TestCasePrivateViews(CacheTestCase):
         user.settings.enable_private_slug()
         eventhelper.given_event_exists(user)
 
-        # Get initial response to obtain ETag
         initial_response = self.client.get(
             reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
@@ -331,7 +327,6 @@ class TestCasePrivateViews(CacheTestCase):
         user.settings.enable_private_slug()
         eventhelper.given_event_exists(user)
 
-        # Get initial response to obtain Last-Modified
         initial_response = self.client.get(
             reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
         last_modified = initial_response['Last-Modified']
@@ -354,10 +349,8 @@ class TestCasePrivateViews(CacheTestCase):
             reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
-        # Sleep to ensure timestamp changes
         time.sleep(1.1)
 
-        # Modify event to change updated_at
         event.title = 'Updated Title'
         event.save()
 
@@ -369,8 +362,6 @@ class TestCasePrivateViews(CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response['ETag'], etag)
-
-    # Homework feed conditional request tests
 
     def test_homework_feed_returns_etag_and_last_modified_headers(self):
         # GIVEN
@@ -443,10 +434,8 @@ class TestCasePrivateViews(CacheTestCase):
             reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
-        # Sleep to ensure timestamp changes
         time.sleep(1.1)
 
-        # Modify homework to change updated_at
         homework.title = 'Updated Homework'
         homework.save()
 
@@ -458,8 +447,6 @@ class TestCasePrivateViews(CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response['ETag'], etag)
-
-    # Course schedules feed conditional request tests
 
     def test_courseschedules_feed_returns_etag_and_last_modified_headers(self):
         # GIVEN
@@ -532,10 +519,8 @@ class TestCasePrivateViews(CacheTestCase):
             reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
-        # Sleep to ensure timestamp changes
         time.sleep(1.1)
 
-        # Modify course to change updated_at
         course.title = 'Updated Course'
         course.save()
 

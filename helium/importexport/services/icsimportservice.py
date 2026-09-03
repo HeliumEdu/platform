@@ -123,7 +123,7 @@ def _import_as_assignments(request, calendar, course, time_zone):
             continue
 
         duration = parsed['end'] - parsed['start']
-        for start in _assignment_start_times(parsed, course.end_date):
+        for start in _assignment_start_times(parsed, course.end_date, time_zone):
             data = {
                 'title': parsed['title'],
                 'all_day': parsed['all_day'],
@@ -192,7 +192,7 @@ def _create_event(request, parsed, start, end, *, recurrence_rule=None, exceptio
     serializer.save(user=request.user)
 
 
-def _assignment_start_times(parsed, window_end_date):
+def _assignment_start_times(parsed, window_end_date, time_zone):
     """Return the UTC start datetimes an Assignment should be created for.
 
     Non-recurring VEVENT → its single start. Recurring VEVENT → RRULE occurrences (minus
@@ -206,7 +206,8 @@ def _assignment_start_times(parsed, window_end_date):
         exceptions = _exception_datetimes(parsed['exception_dates'])
         try:
             for occurrence in rrulestr(parsed['recurrence_rule'], dtstart=start):
-                if occurrence.date() > window_end_date or len(starts) >= _MAX_RECURRENCE_INSTANCES:
+                if occurrence.astimezone(time_zone).date() > window_end_date \
+                        or len(starts) >= _MAX_RECURRENCE_INSTANCES:
                     break
                 if occurrence not in exceptions:
                     starts.append(occurrence)
