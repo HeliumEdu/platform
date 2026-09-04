@@ -245,6 +245,48 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     return events_filtered
 
 
+_DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
+
+
+def move_course_schedule_times(course_schedule, from_time_zone, to_time_zone, on_date):
+    """
+    Move a schedule's times between timezones, using the offset in effect on `on_date`. A time
+    carried past midnight rotates `days_of_week` with it, except on rotating schedules, which
+    index that field by cycle position and are left alone.
+
+    :param course_schedule: Mutated in place, left unsaved.
+    :return: (fields changed, whether a day rotation was skipped)
+    """
+    converted = {}
+    day_delta = 0
+    for index, day in enumerate(_DAYS):
+        for suffix in ('start_time', 'end_time'):
+            value = getattr(course_schedule, f'{day}_{suffix}')
+            source = datetime.datetime.combine(on_date, value, tzinfo=from_time_zone)
+            target = source.astimezone(to_time_zone)
+            converted[(index, suffix)] = target.time()
+            if suffix == 'start_time':
+                day_delta = (target.date() - source.date()).days
+
+    rotates = day_delta != 0 and not course_schedule.is_rotating
+    skipped_rotation = day_delta != 0 and course_schedule.is_rotating
+
+    updated_fields = []
+    for index, day in enumerate(_DAYS):
+        source_index = (index - day_delta) % 7 if rotates else index
+        for suffix in ('start_time', 'end_time'):
+            field = f'{day}_{suffix}'
+            setattr(course_schedule, field, converted[(source_index, suffix)])
+            updated_fields.append(field)
+
+    if rotates:
+        course_schedule.days_of_week = ''.join(
+            course_schedule.days_of_week[(index - day_delta) % 7] for index in range(7))
+        updated_fields.append('days_of_week')
+
+    return updated_fields, skipped_rotation
+
+
 def clear_cached_course_schedule(course):
     """
     For a given course, clear all cached keys for course schedule events.

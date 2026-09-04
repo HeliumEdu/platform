@@ -1,4 +1,5 @@
 {
+  "time_zone": "America/Chicago",
   "external_calendars": [
     {
         "id": 1,

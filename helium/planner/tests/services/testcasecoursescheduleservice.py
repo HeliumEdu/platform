@@ -1,5 +1,6 @@
 import datetime
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.db import IntegrityError, transaction
 from django.test import TestCase
@@ -12,6 +13,98 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 
 class TestCaseCourseScheduleService(TestCase):
+    def test_move_course_schedule_times_converts_to_the_target_zone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(11, 0), datetime.time(11, 50))
+
+        # WHEN
+        updated_fields, skipped_rotation = coursescheduleservice.move_course_schedule_times(
+            course_schedule, ZoneInfo('America/Chicago'), ZoneInfo('Europe/Amsterdam'),
+            datetime.date(2026, 10, 5))
+
+        # THEN
+        self.assertEqual(course_schedule.mon_start_time, datetime.time(18, 0))
+        self.assertEqual(course_schedule.mon_end_time, datetime.time(18, 50))
+        self.assertEqual(course_schedule.days_of_week, '0101010')
+        self.assertFalse(skipped_rotation)
+        self.assertIn('mon_start_time', updated_fields)
+
+    def test_move_course_schedule_times_is_a_noop_for_the_same_zone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(11, 0), datetime.time(11, 50))
+
+        # WHEN
+        coursescheduleservice.move_course_schedule_times(
+            course_schedule, ZoneInfo('America/Chicago'), ZoneInfo('America/Chicago'),
+            datetime.date(2026, 10, 5))
+
+        # THEN
+        self.assertEqual(course_schedule.mon_start_time, datetime.time(11, 0))
+        self.assertEqual(course_schedule.days_of_week, '0101010')
+
+    def test_move_course_schedule_times_rotates_days_when_crossing_midnight(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(11, 0), datetime.time(11, 50))
+
+        # WHEN
+        _updated_fields, skipped_rotation = coursescheduleservice.move_course_schedule_times(
+            course_schedule, ZoneInfo('America/Chicago'), ZoneInfo('Pacific/Kiritimati'),
+            datetime.date(2026, 10, 5))
+
+        # THEN
+        self.assertEqual(course_schedule.mon_start_time, datetime.time(6, 0))
+        self.assertEqual(course_schedule.days_of_week, '0010101',
+                         msg='a Mon/Wed/Fri class rolls into Tue/Thu/Sat at UTC+14')
+        self.assertFalse(skipped_rotation)
+
+    def test_move_course_schedule_times_uses_the_offset_in_effect_on_the_anchor_date(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(11, 0), datetime.time(11, 50))
+
+        # WHEN
+        coursescheduleservice.move_course_schedule_times(
+            course_schedule, ZoneInfo('America/Chicago'), ZoneInfo('Europe/Amsterdam'),
+            datetime.date(2026, 10, 27))
+
+        # THEN
+        self.assertEqual(course_schedule.mon_start_time, datetime.time(17, 0),
+                         msg='Amsterdam leaves DST before Chicago, narrowing the gap to six hours')
+
+    def test_move_course_schedule_times_leaves_rotating_days_alone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(11, 0), datetime.time(11, 50))
+        course_schedule.cycle_length = 4
+
+        # WHEN
+        _updated_fields, skipped_rotation = coursescheduleservice.move_course_schedule_times(
+            course_schedule, ZoneInfo('America/Chicago'), ZoneInfo('Pacific/Kiritimati'),
+            datetime.date(2026, 10, 5))
+
+        # THEN
+        self.assertEqual(course_schedule.mon_start_time, datetime.time(6, 0))
+        self.assertEqual(course_schedule.days_of_week, '0101010')
+        self.assertTrue(skipped_rotation)
+
     def test_get_start_time_for_weekday(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

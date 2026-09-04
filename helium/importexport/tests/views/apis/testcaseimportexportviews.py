@@ -897,23 +897,24 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(psychology.teacher_name, 'Dr. Jess Otter')
         self.assertEqual(psychology.teacher_email, 'jess.otter@university.edu')
 
-        # --- CourseSchedules ---
+        # --- CourseSchedules (authored 11:00/13:00 America/Chicago, read here in
+        # America/Los_Angeles so they line up with the assignment times around them) ---
         cw_schedule = CourseSchedule.objects.get(course=creative_writing)
         self.assertEqual(cw_schedule.days_of_week, '0010100')
-        self.assertEqual(cw_schedule.tue_start_time, datetime.time(11, 0))
-        self.assertEqual(cw_schedule.tue_end_time, datetime.time(11, 50))
-        self.assertEqual(cw_schedule.thu_start_time, datetime.time(11, 0))
-        self.assertEqual(cw_schedule.thu_end_time, datetime.time(11, 50))
+        self.assertEqual(cw_schedule.tue_start_time, datetime.time(9, 0))
+        self.assertEqual(cw_schedule.tue_end_time, datetime.time(9, 50))
+        self.assertEqual(cw_schedule.thu_start_time, datetime.time(9, 0))
+        self.assertEqual(cw_schedule.thu_end_time, datetime.time(9, 50))
 
         prog_schedule = CourseSchedule.objects.get(course=programming)
         self.assertEqual(prog_schedule.days_of_week, '0101010')
-        self.assertEqual(prog_schedule.mon_start_time, datetime.time(11, 0))
-        self.assertEqual(prog_schedule.mon_end_time, datetime.time(11, 50))
+        self.assertEqual(prog_schedule.mon_start_time, datetime.time(9, 0))
+        self.assertEqual(prog_schedule.mon_end_time, datetime.time(9, 50))
 
         psych_schedule = CourseSchedule.objects.get(course=psychology)
         self.assertEqual(psych_schedule.days_of_week, '0101010')
-        self.assertEqual(psych_schedule.mon_start_time, datetime.time(13, 0))
-        self.assertEqual(psych_schedule.mon_end_time, datetime.time(13, 50))
+        self.assertEqual(psych_schedule.mon_start_time, datetime.time(11, 0))
+        self.assertEqual(psych_schedule.mon_end_time, datetime.time(11, 50))
 
         # --- Categories (4 + 5 + 6 = 15) ---
         cw_categories = Category.objects.filter(course=creative_writing).order_by('title')

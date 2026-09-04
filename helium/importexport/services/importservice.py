@@ -892,7 +892,24 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
-def _adjust_schedule_relative_to(user, adjust_month):
+def _move_example_course_schedules(course, source_tz, user_tz, on_date):
+    """Bring class times into `user_tz`, where the assignments around them already read."""
+    schedules_to_update = []
+    fields_to_update = set()
+    for course_schedule in course.schedules.all():
+        updated_fields, skipped_rotation = coursescheduleservice.move_course_schedule_times(
+            course_schedule, source_tz, user_tz, on_date)
+        if skipped_rotation:
+            logger.warning(f'Example schedule {course_schedule.pk} crosses midnight in {user_tz} '
+                           f'but rotates, so its meeting days were left as authored')
+        schedules_to_update.append(course_schedule)
+        fields_to_update.update(updated_fields)
+
+    if schedules_to_update:
+        CourseSchedule.objects.bulk_update(schedules_to_update, sorted(fields_to_update))
+
+
+def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
     user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
@@ -991,6 +1008,9 @@ def _adjust_schedule_relative_to(user, adjust_month):
                     start_date=first_monday_date,
                     end_date=first_monday_date + datetime.timedelta(days=delta))
 
+                if source_tz:
+                    _move_example_course_schedules(course, source_tz, user_tz, first_monday_date)
+
                 coursescheduleservice.clear_cached_course_schedule(course)
 
             for reminder in (Reminder.objects
@@ -1022,10 +1042,18 @@ def import_example_schedule(user):
     try:
         data = json.loads(json_str)
 
+        # Fixture-internal, never read by the nominal import path.
+        source_time_zone = data.get('time_zone')
+        if source_time_zone:
+            source_tz = ZoneInfo(source_time_zone)
+        else:
+            source_tz = None
+            logger.warning('Example schedule declares no time_zone, leaving class times as authored')
+
         with transaction.atomic():
             _bulk_import_example_schedule(data, user)
 
-            _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1, source_tz)
 
             for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
                 gradingservice.recalculate_category_grade(category_id)
