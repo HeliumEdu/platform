@@ -805,6 +805,77 @@ class TestCaseImportExportViews(APITestCase):
         homework_with_notes = Homework.objects.filter(notes_set__isnull=False).distinct()
         self.assertGreater(homework_with_notes.count(), 0)
 
+    def test_import_ignores_time_zone_in_an_uploaded_payload(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'Asia/Tokyo'
+        user.settings.save()
+        payload = {
+            'time_zone': 'America/Chicago',
+            'course_groups': [{'id': 1, 'title': 'Group', 'start_date': '2026-01-05',
+                               'end_date': '2026-05-08', 'shown_on_calendar': True}],
+            'courses': [{'id': 1, 'title': 'Course', 'credits': 3.0, 'color': '#4986e7',
+                         'start_date': '2026-01-05', 'end_date': '2026-05-08',
+                         'course_group': 1}],
+            'course_schedules': [{'id': 1, 'days_of_week': '0101010', 'course': 1,
+                                  'sun_start_time': '11:00:00', 'sun_end_time': '11:50:00',
+                                  'mon_start_time': '11:00:00', 'mon_end_time': '11:50:00',
+                                  'tue_start_time': '11:00:00', 'tue_end_time': '11:50:00',
+                                  'wed_start_time': '11:00:00', 'wed_end_time': '11:50:00',
+                                  'thu_start_time': '11:00:00', 'thu_end_time': '11:50:00',
+                                  'fri_start_time': '11:00:00', 'fri_end_time': '11:50:00',
+                                  'sat_start_time': '11:00:00', 'sat_end_time': '11:50:00'}],
+            'homework': [{'id': 1, 'title': 'Quiz', 'all_day': False, 'show_end_time': True,
+                          'start': '2026-01-07T16:00:00Z', 'end': '2026-01-07T16:30:00Z',
+                          'current_grade': '-1/100', 'completed': False, 'course': 1}],
+        }
+
+        # WHEN
+        upload = SimpleUploadedFile('payload.json', json.dumps(payload).encode('utf-8'),
+                                    content_type='application/json')
+        response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, msg=response.data)
+        self.assertEqual(CourseSchedule.objects.get().mon_start_time, datetime.time(11, 0))
+        self.assertEqual(Homework.objects.get().start,
+                         datetime.datetime(2026, 1, 7, 16, 0, tzinfo=datetime.timezone.utc))
+
+    def _local_hours_after_example_import(self, time_zone):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = time_zone
+        user.settings.save()
+
+        self.client.post(reverse('importexport_import_exampleschedule'))
+
+        user_tz = ZoneInfo(time_zone)
+        course = Course.objects.get(title='Fundamentals of Programming 💻')
+        schedule = CourseSchedule.objects.get(course=course)
+        homework = (Homework.objects.filter(course=course, all_day=False)
+                    .order_by('start').first())
+        return schedule.mon_start_time, homework.start.astimezone(user_tz).time()
+
+    def test_example_schedule_lands_at_the_same_local_time_in_every_zone(self):
+        # GIVEN / WHEN
+        la_class, la_homework = self._local_hours_after_example_import('America/Los_Angeles')
+        User = get_user_model()
+        User.objects.all().delete()
+        tokyo_class, tokyo_homework = self._local_hours_after_example_import('Asia/Tokyo')
+
+        # THEN
+        self.assertEqual(la_class, tokyo_class,
+                         msg='the example schedule reads the same wall clock in every zone')
+        self.assertEqual(la_homework, tokyo_homework)
+
+    def test_example_schedule_class_and_homework_times_agree(self):
+        # GIVEN / WHEN
+        class_time, homework_time = self._local_hours_after_example_import('Europe/Amsterdam')
+
+        # THEN
+        self.assertEqual(class_time, datetime.time(11, 0))
+        self.assertEqual(homework_time, datetime.time(11, 0),
+                         msg='an assignment authored at class time stays at class time')
+
     def test_import_exampleschedule(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -897,24 +968,23 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(psychology.teacher_name, 'Dr. Jess Otter')
         self.assertEqual(psychology.teacher_email, 'jess.otter@university.edu')
 
-        # --- CourseSchedules (authored 11:00/13:00 America/Chicago, read here in
-        # America/Los_Angeles so they line up with the assignment times around them) ---
+        # --- CourseSchedules ---
         cw_schedule = CourseSchedule.objects.get(course=creative_writing)
         self.assertEqual(cw_schedule.days_of_week, '0010100')
-        self.assertEqual(cw_schedule.tue_start_time, datetime.time(9, 0))
-        self.assertEqual(cw_schedule.tue_end_time, datetime.time(9, 50))
-        self.assertEqual(cw_schedule.thu_start_time, datetime.time(9, 0))
-        self.assertEqual(cw_schedule.thu_end_time, datetime.time(9, 50))
+        self.assertEqual(cw_schedule.tue_start_time, datetime.time(11, 0))
+        self.assertEqual(cw_schedule.tue_end_time, datetime.time(11, 50))
+        self.assertEqual(cw_schedule.thu_start_time, datetime.time(11, 0))
+        self.assertEqual(cw_schedule.thu_end_time, datetime.time(11, 50))
 
         prog_schedule = CourseSchedule.objects.get(course=programming)
         self.assertEqual(prog_schedule.days_of_week, '0101010')
-        self.assertEqual(prog_schedule.mon_start_time, datetime.time(9, 0))
-        self.assertEqual(prog_schedule.mon_end_time, datetime.time(9, 50))
+        self.assertEqual(prog_schedule.mon_start_time, datetime.time(11, 0))
+        self.assertEqual(prog_schedule.mon_end_time, datetime.time(11, 50))
 
         psych_schedule = CourseSchedule.objects.get(course=psychology)
         self.assertEqual(psych_schedule.days_of_week, '0101010')
-        self.assertEqual(psych_schedule.mon_start_time, datetime.time(11, 0))
-        self.assertEqual(psych_schedule.mon_end_time, datetime.time(11, 50))
+        self.assertEqual(psych_schedule.mon_start_time, datetime.time(13, 0))
+        self.assertEqual(psych_schedule.mon_end_time, datetime.time(13, 50))
 
         # --- Categories (4 + 5 + 6 = 15) ---
         cw_categories = Category.objects.filter(course=creative_writing).order_by('title')

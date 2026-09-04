@@ -825,30 +825,26 @@ def import_user(request, data, example_schedule=False):
             reminders_count, notes_count)
 
 
-def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=False):
+def _shift_datetime_to_target_date(original_dt, target_date, target_tz, all_day=False, source_tz=None):
     """
-    Shift a datetime to a new target date while preserving the local wall-clock time.
-
-    For all-day events, wall-clock time is meaningless (the fixture's stored hour is an
-    artifact of whichever timezone authored it), so midnight in the user's timezone is
-    used instead.
+    Move a datetime onto `target_date`, translating the wall clock it reads in `source_tz` into
+    `target_tz`, so an 11:00 example item is 11:00 for everyone. Reads in `target_tz` when no source
+    is given. All-day items have no wall clock, so they land on midnight in `target_tz`.
 
     :param original_dt: The original aware datetime (in UTC)
-    :param target_date: The target date to shift to
-    :param user_tz: The user's ZoneInfo timezone
     :param all_day: If True, use midnight instead of preserving wall-clock time
-    :return: New aware datetime in UTC with same local time on target date
+    :return: New aware datetime in UTC
     """
     if all_day:
-        return local_midnight_as_utc(target_date, user_tz)
+        return local_midnight_as_utc(target_date, target_tz)
 
-    local_dt = original_dt.astimezone(user_tz)
+    local_dt = original_dt.astimezone(source_tz or target_tz)
     naive_target = datetime.datetime(
         target_date.year, target_date.month, target_date.day,
         local_dt.hour, local_dt.minute, 0, 0
     )
 
-    aware_target = naive_target.replace(tzinfo=user_tz)
+    aware_target = naive_target.replace(tzinfo=target_tz)
     return aware_target.astimezone(datetime.timezone.utc)
 
 
@@ -890,23 +886,6 @@ def _get_most_recent_course_occurrence_start(reminder):
         day -= datetime.timedelta(days=1)
 
     return None
-
-
-def _move_example_course_schedules(course, source_tz, user_tz, on_date):
-    """Bring class times into `user_tz`, where the assignments around them already read."""
-    schedules_to_update = []
-    fields_to_update = set()
-    for course_schedule in course.schedules.all():
-        updated_fields, skipped_rotation = coursescheduleservice.move_course_schedule_times(
-            course_schedule, source_tz, user_tz, on_date)
-        if skipped_rotation:
-            logger.warning(f'Example schedule {course_schedule.pk} crosses midnight in {user_tz} '
-                           f'but rotates, so its meeting days were left as authored')
-        schedules_to_update.append(course_schedule)
-        fields_to_update.update(updated_fields)
-
-    if schedules_to_update:
-        CourseSchedule.objects.bulk_update(schedules_to_update, sorted(fields_to_update))
 
 
 def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
@@ -953,9 +932,9 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
                 homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
-                                                                 all_day=homework.all_day)
+                                                                 all_day=homework.all_day, source_tz=source_tz)
                 homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
-                                                               all_day=homework.all_day)
+                                                               all_day=homework.all_day, source_tz=source_tz)
                 homework_to_update.append(homework)
 
             if homework_to_update:
@@ -986,9 +965,9 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
                 event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
-                                                              all_day=event.all_day)
+                                                              all_day=event.all_day, source_tz=source_tz)
                 event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
-                                                            all_day=event.all_day)
+                                                            all_day=event.all_day, source_tz=source_tz)
                 events_to_update.append(event)
 
             if events_to_update:
@@ -1007,9 +986,6 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                 Course.objects.filter(pk=course.pk).update(
                     start_date=first_monday_date,
                     end_date=first_monday_date + datetime.timedelta(days=delta))
-
-                if source_tz:
-                    _move_example_course_schedules(course, source_tz, user_tz, first_monday_date)
 
                 coursescheduleservice.clear_cached_course_schedule(course)
 
