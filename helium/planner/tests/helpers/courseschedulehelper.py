@@ -26,6 +26,19 @@ def given_course_schedule_exists(course, days_of_week='0101010',
     return course_schedule
 
 
+def given_uniform_course_schedule_exists(course, start_time, end_time, days_of_week='0101010'):
+    """A schedule meeting at the same time every day, for tests that vary only the time."""
+    return given_course_schedule_exists(
+        course, days_of_week=days_of_week,
+        sun_start_time=start_time, sun_end_time=end_time,
+        mon_start_time=start_time, mon_end_time=end_time,
+        tue_start_time=start_time, tue_end_time=end_time,
+        wed_start_time=start_time, wed_end_time=end_time,
+        thu_start_time=start_time, thu_end_time=end_time,
+        fri_start_time=start_time, fri_end_time=end_time,
+        sat_start_time=start_time, sat_end_time=end_time)
+
+
 def given_cycle_schedule_exists(course, cycle_length=2, anchor_date=datetime.date(2017, 1, 6), cycle_slots=None):
     if cycle_slots is None:
         cycle_slots = [{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}]

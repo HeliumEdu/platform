@@ -825,30 +825,26 @@ def import_user(request, data, example_schedule=False):
             reminders_count, notes_count)
 
 
-def _shift_datetime_to_target_date(original_dt, target_date, user_tz, all_day=False):
+def _shift_datetime_to_target_date(original_dt, target_date, target_tz, all_day=False, source_tz=None):
     """
-    Shift a datetime to a new target date while preserving the local wall-clock time.
-
-    For all-day events, wall-clock time is meaningless (the fixture's stored hour is an
-    artifact of whichever timezone authored it), so midnight in the user's timezone is
-    used instead.
+    Move a datetime onto `target_date`, translating the wall clock it reads in `source_tz` into
+    `target_tz`, so an 11:00 example item is 11:00 for everyone. Reads in `target_tz` when no source
+    is given. All-day items have no wall clock, so they land on midnight in `target_tz`.
 
     :param original_dt: The original aware datetime (in UTC)
-    :param target_date: The target date to shift to
-    :param user_tz: The user's ZoneInfo timezone
     :param all_day: If True, use midnight instead of preserving wall-clock time
-    :return: New aware datetime in UTC with same local time on target date
+    :return: New aware datetime in UTC
     """
     if all_day:
-        return local_midnight_as_utc(target_date, user_tz)
+        return local_midnight_as_utc(target_date, target_tz)
 
-    local_dt = original_dt.astimezone(user_tz)
+    local_dt = original_dt.astimezone(source_tz or target_tz)
     naive_target = datetime.datetime(
         target_date.year, target_date.month, target_date.day,
         local_dt.hour, local_dt.minute, 0, 0
     )
 
-    aware_target = naive_target.replace(tzinfo=user_tz)
+    aware_target = naive_target.replace(tzinfo=target_tz)
     return aware_target.astimezone(datetime.timezone.utc)
 
 
@@ -892,7 +888,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
-def _adjust_schedule_relative_to(user, adjust_month):
+def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
     user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
@@ -936,9 +932,9 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
                 homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
-                                                                 all_day=homework.all_day)
+                                                                 all_day=homework.all_day, source_tz=source_tz)
                 homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
-                                                               all_day=homework.all_day)
+                                                               all_day=homework.all_day, source_tz=source_tz)
                 homework_to_update.append(homework)
 
             if homework_to_update:
@@ -969,9 +965,9 @@ def _adjust_schedule_relative_to(user, adjust_month):
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
                 event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
-                                                              all_day=event.all_day)
+                                                              all_day=event.all_day, source_tz=source_tz)
                 event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
-                                                            all_day=event.all_day)
+                                                            all_day=event.all_day, source_tz=source_tz)
                 events_to_update.append(event)
 
             if events_to_update:
@@ -1022,10 +1018,18 @@ def import_example_schedule(user):
     try:
         data = json.loads(json_str)
 
+        # Fixture-internal, never read by the nominal import path.
+        source_time_zone = data.get('time_zone')
+        if source_time_zone:
+            source_tz = ZoneInfo(source_time_zone)
+        else:
+            source_tz = None
+            logger.warning('Example schedule declares no time_zone, leaving class times as authored')
+
         with transaction.atomic():
             _bulk_import_example_schedule(data, user)
 
-            _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1, source_tz)
 
             for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
                 gradingservice.recalculate_category_grade(category_id)
