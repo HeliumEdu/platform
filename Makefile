@@ -54,6 +54,7 @@ build-dev: install-dev build-docs
 
 build-docs: install-dev
 	@( \
+		set -e; \
 		source $(PLATFORM_VENV)/bin/activate; \
 		mkdir -p build; \
 		ENVIRONMENT=local python manage.py spectacular --file build/openapi.yaml; \
