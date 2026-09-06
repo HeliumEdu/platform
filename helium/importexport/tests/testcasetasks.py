@@ -5,13 +5,29 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.importexport.services.importservice import _adjust_schedule_relative_to
+from helium.importexport.services.importservice import _adjust_schedule_relative_to, \
+    _ImportedExampleSchedule
 from helium.importexport.tasks import import_example_schedule
-from helium.planner.models import Event, Homework
+from helium.planner.models import Course, CourseGroup, Event, Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
 
 class TestCaseImportExportTasks(APITestCase):
+    def given_example_schedule_rows(self, user):
+        def identity_remap(queryset):
+            return {pk: pk for pk in queryset.values_list('pk', flat=True)}
+
+        return _ImportedExampleSchedule(
+            course_group_remap=identity_remap(CourseGroup.objects.for_user(user.pk)
+                                              .filter(example_schedule=True)),
+            course_remap=identity_remap(Course.objects.for_user(user.pk)
+                                        .filter(course_group__example_schedule=True)),
+            event_remap=identity_remap(Event.objects.for_user(user.pk)
+                                       .filter(example_schedule=True)),
+            homework_remap=identity_remap(Homework.objects.for_user(user.pk)
+                                          .filter(course__course_group__example_schedule=True)),
+        )
+
     def test_import_example_schedule_sets_is_setup_complete(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -87,7 +103,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         hw_pre_dst.refresh_from_db()
@@ -184,7 +200,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1)
+            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         hw_week1.refresh_from_db()

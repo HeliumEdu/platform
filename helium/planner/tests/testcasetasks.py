@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.planner.models import Event
 from helium.planner.tasks import (
     email_reminders, push_reminders, process_email_reminder, process_push_reminder,
     recalculate_course_grade,
@@ -281,3 +282,89 @@ class TestCasePlannerTasks(TestCase):
         # Verify comments is passed as None when empty
         call_args = mock_send_multipart_email.call_args
         self.assertIsNone(call_args[0][1]['comments'])
+
+    def test_adjust_reminder_times_rearms_dismissed_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() + datetime.timedelta(days=1),
+            end=timezone.now() + datetime.timedelta(days=1, hours=1))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=1, sent=True,
+                                                         dismissed=True)
+        new_start = timezone.now() + datetime.timedelta(minutes=3)
+        Event.objects.filter(pk=event.pk).update(
+            start=new_start, end=new_start + datetime.timedelta(minutes=30))
+
+        # WHEN
+        adjust_reminder_times(event.pk, enums.EVENT)
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, new_start - datetime.timedelta(minutes=1))
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
+
+    def test_adjust_reminder_times_outside_send_window_leaves_dismissed_reminder_alone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() + datetime.timedelta(days=1),
+            end=timezone.now() + datetime.timedelta(days=1, hours=1))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=1, sent=True,
+                                                         dismissed=True)
+        new_start = timezone.now() - datetime.timedelta(days=2)
+        Event.objects.filter(pk=event.pk).update(
+            start=new_start, end=new_start + datetime.timedelta(minutes=30))
+
+        # WHEN
+        adjust_reminder_times(event.pk, enums.EVENT)
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range, new_start - datetime.timedelta(minutes=1))
+        self.assertTrue(reminder.sent)
+        self.assertTrue(reminder.dismissed)
+
+    @mock.patch('helium.planner.services.reminderservice.send_dismiss_pushes')
+    def test_adjust_reminder_times_clears_delivered_push_on_rearm(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() + datetime.timedelta(days=1),
+            end=timezone.now() + datetime.timedelta(days=1, hours=1))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=1, sent=True)
+        new_start = timezone.now() + datetime.timedelta(minutes=5)
+        Event.objects.filter(pk=event.pk).update(
+            start=new_start, end=new_start + datetime.timedelta(minutes=30))
+
+        # WHEN
+        adjust_reminder_times(event.pk, enums.EVENT)
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertFalse(reminder.sent)
+        mock_send_dismiss.apply_async.assert_called_once()
+        self.assertEqual(mock_send_dismiss.apply_async.call_args.kwargs['args'],
+                         (['tok'], reminder.pk))
+
+    @mock.patch('helium.planner.services.reminderservice.send_dismiss_pushes')
+    def test_adjust_reminder_times_outside_window_does_not_clear_push(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() + datetime.timedelta(days=1),
+            end=timezone.now() + datetime.timedelta(days=1, hours=1))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=1, sent=True)
+        new_start = timezone.now() - datetime.timedelta(days=2)
+        Event.objects.filter(pk=event.pk).update(
+            start=new_start, end=new_start + datetime.timedelta(minutes=30))
+
+        # WHEN
+        adjust_reminder_times(event.pk, enums.EVENT)
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+        mock_send_dismiss.apply_async.assert_not_called()

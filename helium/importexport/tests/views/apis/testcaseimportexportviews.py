@@ -1951,3 +1951,98 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('homework', response.data)
         self.assertIn('Unresolved `materials`', str(response.data['homework']))
+
+    def _import_payload_with_reminder(self, sent, dismissed):
+        payload = self._minimal_import_payload()
+        payload['events'] = [{
+            'id': 10, 'title': 'E', 'all_day': False, 'show_end_time': False,
+            'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T11:00:00Z', 'priority': 50,
+        }]
+        payload['reminders'] = [{
+            'id': 20, 'message': 'm', 'offset': 30, 'offset_type': enums.MINUTES,
+            'type': enums.PUSH, 'sent': sent, 'dismissed': dismissed,
+            'homework': None, 'event': 10, 'course': None,
+        }]
+        return payload
+
+    def test_import_reminder_dismissed_without_sent_is_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._import_payload_with_reminder(sent=False, dismissed=True)
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('reminders', response.data)
+        self.assertEqual(Reminder.objects.count(), 0)
+
+    def test_import_reminder_sent_and_dismissed_is_preserved(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._import_payload_with_reminder(sent=True, dismissed=True)
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder = Reminder.objects.get()
+        self.assertTrue(reminder.sent)
+        self.assertTrue(reminder.dismissed)
+
+    def test_reimport_exampleschedule_after_dismiss_all_still_rebases_the_new_schedule(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.post(reverse('importexport_import_exampleschedule'))
+        first_course_group = CourseGroup.objects.get()
+        self.client.patch(reverse('planner_reminders_dismiss_all') + '?sent=true')
+
+        # WHEN
+        response = self.client.post(reverse('importexport_import_exampleschedule'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        second_course_group = CourseGroup.objects.exclude(pk=first_course_group.pk).get()
+        self.assertEqual(second_course_group.start_date, first_course_group.start_date,
+                         'Second import must be rebased, not left on raw example_schedule.json dates')
+        self.assertEqual(second_course_group.end_date, first_course_group.end_date)
+
+    def test_import_duplicate_active_course_series_is_deduped(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['reminders'] = [
+            {'id': 1, 'message': 'Heads up', 'offset': 30, 'offset_type': enums.MINUTES,
+             'type': enums.PUSH, 'sent': False, 'dismissed': False, 'course': 1},
+            {'id': 2, 'message': 'Different text', 'offset': 30, 'offset_type': enums.MINUTES,
+             'type': enums.PUSH, 'sent': False, 'dismissed': False, 'course': 1},
+        ]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Reminder.objects.filter(course__isnull=False, sent=False,
+                                                  dismissed=False).count(), 1)
+
+    def test_import_course_series_with_distinct_offsets_are_both_kept(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['reminders'] = [
+            {'id': 1, 'message': 'Heads up', 'offset': 30, 'offset_type': enums.MINUTES,
+             'type': enums.PUSH, 'sent': False, 'dismissed': False, 'course': 1},
+            {'id': 2, 'message': 'Heads up', 'offset': 45, 'offset_type': enums.MINUTES,
+             'type': enums.PUSH, 'sent': False, 'dismissed': False, 'course': 1},
+        ]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Reminder.objects.filter(course__isnull=False, sent=False,
+                                                  dismissed=False).count(), 2)

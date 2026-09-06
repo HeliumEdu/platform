@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.test import TestCase
+from kombu.exceptions import OperationalError
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
@@ -756,3 +757,63 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertEqual(Reminder.objects.filter(course=course, sent=False, dismissed=False).count(), 1)
+
+    def given_a_due_reminder(self, type):
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(
+            user,
+            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+            end=timezone.now() + datetime.timedelta(minutes=30))
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        return reminderhelper.given_reminder_exists(user, type=type, event=event)
+
+    @mock.patch('helium.planner.services.reminderservice.send_pushes')
+    def test_push_dispatch_failure_does_not_re_send_inline(self, mock_send_pushes):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.PUSH)
+        mock_send_pushes.apply_async.side_effect = OperationalError('broker unavailable')
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_pushes.apply_async.assert_called_once()
+        mock_send_pushes.apply.assert_not_called()
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+
+    @mock.patch('helium.planner.tasks.send_email_reminder')
+    def test_email_dispatch_failure_does_not_re_send_inline(self, mock_send_email_reminder):
+        # GIVEN
+        reminder = self.given_a_due_reminder(enums.EMAIL)
+        mock_send_email_reminder.apply_async.side_effect = OperationalError('broker unavailable')
+
+        # WHEN
+        reminderservice.process_email_reminder(reminder.pk)
+
+        # THEN
+        mock_send_email_reminder.apply_async.assert_called_once()
+        mock_send_email_reminder.apply.assert_not_called()
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+
+    def test_firing_prunes_dismissed_past_occurrences(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        dismissed_past = reminderhelper.given_reminder_exists(
+            user, course=course, type=enums.PUSH, offset=30, offset_type=enums.MINUTES,
+            sent=True, dismissed=True,
+            start_of_range=timezone.now() - datetime.timedelta(days=7))
+        just_fired = reminderhelper.given_reminder_exists(
+            user, course=course, type=enums.PUSH, offset=30, offset_type=enums.MINUTES,
+            sent=True, start_of_range=timezone.now() - datetime.timedelta(minutes=1))
+
+        # WHEN
+        reminderservice._delete_excess_past_reminders(just_fired)
+
+        # THEN
+        self.assertFalse(Reminder.objects.filter(pk=dismissed_past.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=just_fired.pk).exists())
