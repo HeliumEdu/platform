@@ -26,10 +26,12 @@ class BlankedField(serializers.CharField):
 class PushCategorySerializer(serializers.ModelSerializer):
     """Category as it appears nested in a push payload."""
 
+    course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
+
     class Meta:
         model = Category
         fields = ('id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color',
-                  'course',)
+                  'course', 'course_group',)
 
 
 class PushCourseSerializer(serializers.ModelSerializer):
@@ -56,12 +58,13 @@ class PushHomeworkSerializer(serializers.ModelSerializer):
     comments = BlankedField()
     category = PushCategorySerializer()
     course = PushCourseSerializer()
+    course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
 
     class Meta:
         model = Homework
         fields = ('id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority',
                   'comments', 'current_grade', 'completed', 'completed_at', 'category', 'course',
-                  'calendar_item_type',)
+                  'course_group', 'calendar_item_type',)
 
 
 class PushEventSerializer(serializers.ModelSerializer):
