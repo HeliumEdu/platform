@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError, OperationalError
+from django.db import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 
 from conf.celery import app
@@ -136,29 +136,40 @@ def recalculate_category_grades_for_course(self, course_id):
 
 
 @app.task(bind=True)
-def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
+def adjust_reminder_times(self, calendar_item_id, calendar_item_type, retries=0):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("reminder.adjust-times", priority="low", published_at_ms=published_at_ms)
 
     count = 0
-    for reminder in (Reminder.objects
-                     .for_calendar_item(calendar_item_id, calendar_item_type)
-                     .select_related('homework', 'event', 'course', 'course__course_group')
-                     .prefetch_related('course__schedules')
-                     .iterator(chunk_size=2000)):
-        logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
+    try:
+        for reminder in (Reminder.objects
+                         .for_calendar_item(calendar_item_id, calendar_item_type)
+                         .select_related('homework', 'event', 'course', 'course__course_group')
+                         .prefetch_related('course__schedules')
+                         .iterator(chunk_size=2000)):
+            logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
-        was_sent = reminder.sent
+            was_sent = reminder.sent
 
-        # Forcing a reminder to save will recalculate its start_of_range, if necessary
-        reminder.save()
+            # Forcing a reminder to save will recalculate its start_of_range, if necessary
+            try:
+                reminder.save(force_update=True)
+            except (IntegrityError, OperationalError):
+                raise
+            except DatabaseError:
+                logger.info(f'Reminder {reminder.pk} does not exist. Nothing to do.')
+                continue
 
-        if was_sent and not reminder.sent:
-            reminderservice.clear_delivered_push(reminder)
+            if was_sent and not reminder.sent:
+                reminderservice.clear_delivered_push(reminder)
 
-        count += 1
+            count += 1
 
-    metricutils.task_stop(metrics, value=count)
+        metricutils.task_stop(metrics, value=count)
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        _retry_on_db_error(ex, metrics,
+                           adjust_reminder_times, (calendar_item_id, calendar_item_type, retries + 1),
+                           retries)
 
 
 @app.task(bind=True)

@@ -417,10 +417,9 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
             if reminder.get('course') else None
 
         # Skip exact duplicates: legacy exports paired a Popup and a Push reminder that now
-        # collapse to identical rows. Import only the first.
         key = (reminder.get('homework'), reminder.get('event'), reminder.get('course'),
                reminder.get('offset'), reminder.get('offset_type'), reminder.get('type'),
-               reminder.get('message'))
+               reminder.get('message'), reminder.get('sent'), reminder.get('dismissed'))
         if key in seen:
             continue
         seen.add(key)
