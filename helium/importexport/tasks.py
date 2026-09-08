@@ -31,7 +31,7 @@ def import_example_schedule(self, user_id, example_schedule=True):
                 importservice.import_example_schedule(user)
 
         user.settings.is_setup_complete = True
-        user.settings.save()
+        user.settings.save(update_fields=['is_setup_complete', 'updated_at'])
 
         elapsed_ms = int((timezone.now() - user.created_at).total_seconds() * 1000)
         metricutils.timing("user.setup.total_duration", elapsed_ms)

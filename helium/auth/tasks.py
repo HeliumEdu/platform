@@ -5,7 +5,7 @@ from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError, OperationalError
 from django.db.models import Count, Exists, OuterRef, Q
 from firebase_admin import auth as firebase_auth
 from rest_framework_simplejwt.exceptions import TokenError
@@ -680,7 +680,14 @@ def evaluate_review_prompt(self, user_settings_id):
                and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD)
     if flagged:
         user_settings.prompt_for_review = True
-        user_settings.save(update_fields=['prompt_for_review'])
+        try:
+            user_settings.save(update_fields=['prompt_for_review'])
+        except (IntegrityError, OperationalError):
+            raise
+        except DatabaseError:
+            logger.info(f'UserSettings {user_settings_id} does not exist. Nothing to do.')
+            metricutils.task_stop(metrics, value=0)
+            return
         logger.info(f"Review prompt flagged for user {user_settings.user_id}")
 
     metricutils.task_stop(metrics, user=user_settings.user, value=1 if flagged else 0)
