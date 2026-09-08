@@ -14,10 +14,12 @@ class CategorySerializer(serializers.ModelSerializer):
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
 
+    course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
+
     class Meta:
         model = Category
         fields = (
-            'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course',
+            'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course', 'course_group',
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
