@@ -10,12 +10,14 @@ from rest_framework import status
 from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
+from helium.common.services import pushservice
 from helium.common.tasks import send_dismiss_pushes
 from helium.common.utils import taskutils
 from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import ReminderFilter
 from helium.planner.models import Reminder
+from helium.planner.services import reminderservice
 from helium.planner.serializers.reminderserializer import ReminderSerializer, ReminderExtendedSerializer
 
 logger = logging.getLogger(__name__)
@@ -168,7 +170,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         return response
 
     def perform_update(self, serializer):
-        was_dismissed = Reminder.objects.values_list('dismissed', flat=True).get(
+        was_sent, was_dismissed = Reminder.objects.values_list('sent', 'dismissed').get(
             pk=serializer.instance.pk
         )
         reminder = serializer.save()
@@ -176,15 +178,15 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         # On the false->true dismiss transition, clear the reminder's already-
         # delivered push from all of the user's devices.
         if reminder.dismissed and not was_dismissed:
-            push_tokens = list(
-                {t.device_id: t.token for t in reminder.user.push_tokens.all()}.values()
-            )
+            push_tokens = pushservice.get_push_tokens(reminder.user)
             if push_tokens:
                 taskutils.safe_apply_async(
                     send_dismiss_pushes,
                     args=(push_tokens, reminder.pk),
                     priority=settings.CELERY_PRIORITY_HIGH,
                 )
+        elif was_sent and not reminder.sent:
+            reminderservice.clear_delivered_push(reminder)
 
     def perform_destroy(self, instance):
         if instance.course_id:
@@ -235,7 +237,7 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
-            return self.request.user.reminders.filter(dismissed=False)
+            return self.request.user.reminders.filter(sent=True, dismissed=False)
         else:
             return Reminder.objects.none()
 
@@ -245,8 +247,8 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
         Dismiss every reminder matching the given filters — the bulk equivalent of `PATCH
         /planner/reminders/{id}/` with `dismissed: true`, applied to all matches instead of one.
 
-        Accepts the same filters as the reminders list endpoint (`type`, `sent`, `start_of_range__lte`,
-        etc.) to scope which reminders are dismissed; already-dismissed reminders are always excluded.
+        Dismissal applies to a delivery that already happened, so unsent and already-dismissed
+        reminders are always excluded.
         """
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -255,9 +257,7 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
         if reminder_ids:
             queryset.update(dismissed=True)
 
-            push_tokens = list(
-                {t.device_id: t.token for t in request.user.push_tokens.all()}.values()
-            )
+            push_tokens = pushservice.get_push_tokens(request.user)
             if push_tokens:
                 for reminder_id in reminder_ids:
                     taskutils.safe_apply_async(

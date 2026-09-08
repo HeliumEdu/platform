@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.3.6"
+__version__ = "2.3.7"
 
 import json
 import os
@@ -677,10 +677,6 @@ if 'local' in ENVIRONMENT:
 # Logging
 
 DEBUG = config('PLATFORM_DEBUG', 'False') == 'True'
-
-SILENCED_SYSTEM_CHECKS = [
-    'fields.W342',  # ForeignKey(unique=True) on CourseSchedule.course; intentional, not converting to OneToOneField
-]
 
 if 'prod' in ENVIRONMENT and DEBUG:
     raise ImproperlyConfigured("DEBUG must not be enabled in production environments")

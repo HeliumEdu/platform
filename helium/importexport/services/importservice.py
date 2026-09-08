@@ -4,6 +4,7 @@ import logging
 import os
 from contextlib import contextmanager
 from decimal import Decimal
+from typing import Dict, NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -397,6 +398,7 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
 
 def _import_reminders(reminders, user, event_remap, homework_remap, course_remap):
     seen = set()
+    seen_active_series = set()
     created = 0
     for reminder in reminders:
         # Forward-migrate deprecated reminder types (POPUP=0, TEXT=2) to PUSH so legacy exports
@@ -422,6 +424,14 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
         if key in seen:
             continue
         seen.add(key)
+
+        # A course series holds one active reminder; `message` does not distinguish a series.
+        if reminder.get('course') and not reminder.get('sent') and not reminder.get('dismissed'):
+            series_key = (reminder.get('course'), reminder.get('type'),
+                          reminder.get('offset'), reminder.get('offset_type'))
+            if series_key in seen_active_series:
+                continue
+            seen_active_series.add(series_key)
 
         serializer = ReminderSerializer(data=reminder)
 
@@ -502,6 +512,17 @@ def suppress_post_save_signals():
     finally:
         post_save.receivers = original_receivers
         post_save.sender_receivers_cache.clear()
+
+
+class _ImportedExampleSchedule(NamedTuple):
+    """The remaps one seed import produced. A user can hold several example schedules, all
+    flagged `example_schedule`, so the rebase scopes to these rather than to that flag.
+    """
+
+    course_group_remap: Dict[int, int]
+    course_remap: Dict[int, int]
+    event_remap: Dict[int, int]
+    homework_remap: Dict[int, int]
 
 
 @transaction.atomic
@@ -720,6 +741,13 @@ def _bulk_import_example_schedule(data, user):
         f"{len(data.get('notes', []))} notes"
     )
 
+    return _ImportedExampleSchedule(
+        course_group_remap=course_group_remap,
+        course_remap=course_remap,
+        event_remap=event_remap,
+        homework_remap=homework_remap,
+    )
+
 
 def _resolve_top_level_resources(data):
     """
@@ -888,7 +916,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
-def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
+def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
     user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
@@ -915,7 +943,7 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
             logger.info(f'First Monday set to {first_monday}')
 
             for course_group in (CourseGroup.objects.for_user(user.pk)
-                    .filter(example_schedule=True).iterator()):
+                    .filter(pk__in=imported.course_group_remap.values()).iterator()):
                 delta = (course_group.end_date - course_group.start_date).days
                 CourseGroup.objects.filter(pk=course_group.pk).update(
                     start_date=first_monday_date,
@@ -923,7 +951,7 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
 
             homework_to_update = []
             for homework in (Homework.objects.for_user(user.pk)
-                    .filter(course__course_group__example_schedule=True)
+                    .filter(pk__in=imported.homework_remap.values())
                     .select_related('course')):
                 course = homework.course
                 start_delta = (homework.start.date() - course.start_date).days
@@ -947,7 +975,8 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                     if homework.pk in hw_ids_with_reminders:
                         adjust_reminder_times(homework.pk, homework.calendar_item_type)
 
-            first_event_start = Event.objects.for_user(user.pk).filter(example_schedule=True).first().start
+            first_event_start = Event.objects.for_user(user.pk).filter(
+                pk__in=imported.event_remap.values()).first().start
 
             first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             days_ahead = 0 - first_event_month.weekday()
@@ -958,7 +987,7 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
 
             events_to_update = []
             for event in (Event.objects.for_user(user.pk)
-                    .filter(example_schedule=True)):
+                    .filter(pk__in=imported.event_remap.values())):
                 start_delta = (event.start.date() - first_monday.date()).days + events_delta
                 end_delta = (event.end.date() - first_monday.date()).days + events_delta
                 target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
@@ -981,7 +1010,7 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                         adjust_reminder_times(event.pk, event.calendar_item_type)
 
             for course in (Course.objects.for_user(user.pk)
-                    .filter(course_group__example_schedule=True).iterator()):
+                    .filter(pk__in=imported.course_remap.values()).iterator()):
                 delta = (course.end_date - course.start_date).days
                 Course.objects.filter(pk=course.pk).update(
                     start_date=first_monday_date,
@@ -990,7 +1019,7 @@ def _adjust_schedule_relative_to(user, adjust_month, source_tz=None):
                 coursescheduleservice.clear_cached_course_schedule(course)
 
             for reminder in (Reminder.objects
-                    .filter(course__isnull=False, sent=True, course__course_group__example_schedule=True, user=user)
+                    .filter(course_id__in=imported.course_remap.values(), sent=True, user=user)
                     .select_related('user', 'user__settings', 'course', 'course__course_group')
                     .prefetch_related('course__schedules')
                     .iterator(chunk_size=2000)):
@@ -1027,9 +1056,9 @@ def import_example_schedule(user):
             logger.warning('Example schedule declares no time_zone, leaving class times as authored')
 
         with transaction.atomic():
-            _bulk_import_example_schedule(data, user)
+            imported = _bulk_import_example_schedule(data, user)
 
-            _adjust_schedule_relative_to(user, -1, source_tz)
+            _adjust_schedule_relative_to(user, -1, imported, source_tz)
 
             for category_id in Category.objects.for_user(user.pk).values_list('pk', flat=True):
                 gradingservice.recalculate_category_grade(category_id)

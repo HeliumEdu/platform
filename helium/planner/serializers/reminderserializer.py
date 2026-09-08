@@ -37,6 +37,11 @@ class ReminderSerializer(serializers.ModelSerializer):
         # `start_of_range` is derived state — the model's `save()` always recomputes it from
         # parent + offset, so accepting it on the write API would be misleading.
         read_only_fields = ('user', 'start_of_range',)
+        # `validate()` derives `start_of_range` from these before the model's defaults would apply.
+        extra_kwargs = {
+            'offset': {'default': Reminder._meta.get_field('offset').default},
+            'offset_type': {'default': Reminder._meta.get_field('offset_type').default},
+        }
 
     def validate(self, attrs):
         # Check what's being explicitly set in this request
@@ -98,7 +103,7 @@ class ReminderSerializer(serializers.ModelSerializer):
                     attrs['start_of_range'] = None
 
         # On update, only reset sent when offset or parent actually changed — not just because
-        # they appear in a full PUT payload.
+        # they appear in a full PUT payload. Dismissal clears with it, per `Reminder.save()`.
         if self.instance and self.instance.sent and 'start_of_range' in attrs:
             offset_changed = (
                 ('offset' in attrs and attrs['offset'] != self.instance.offset) or
@@ -112,8 +117,44 @@ class ReminderSerializer(serializers.ModelSerializer):
             if offset_changed or parent_changed:
                 if Reminder.should_reset_sent(attrs.get('start_of_range')):
                     attrs['sent'] = False
+                    attrs['dismissed'] = False
+
+        self._validate_dismissed_requires_sent(attrs)
+        self._validate_one_active_per_course_series(attrs)
 
         return attrs
+
+    def _validate_dismissed_requires_sent(self, attrs):
+        sent = attrs.get('sent', getattr(self.instance, 'sent', False))
+        dismissed = attrs.get('dismissed', getattr(self.instance, 'dismissed', False))
+
+        if dismissed and not sent:
+            raise serializers.ValidationError(
+                "A reminder cannot be `dismissed` unless it has been `sent`.")
+
+    def _validate_one_active_per_course_series(self, attrs):
+        course = attrs.get('course', getattr(self.instance, 'course', None))
+        if not course:
+            return
+
+        sent = attrs.get('sent', getattr(self.instance, 'sent', False))
+        dismissed = attrs.get('dismissed', getattr(self.instance, 'dismissed', False))
+        if sent or dismissed:
+            return
+
+        series = Reminder.objects.active().filter(
+            course=course,
+            type=attrs.get('type', getattr(self.instance, 'type', None)),
+            offset=attrs.get('offset', getattr(self.instance, 'offset', None)),
+            offset_type=attrs.get('offset_type', getattr(self.instance, 'offset_type', None)),
+        )
+        if self.instance:
+            series = series.exclude(pk=self.instance.pk)
+
+        if series.exists():
+            raise serializers.ValidationError(
+                "An active reminder already exists for this `course`, `type`, `offset` and "
+                "`offset_type`.")
 
 
 @extend_schema_serializer(exclude_fields=('title',))

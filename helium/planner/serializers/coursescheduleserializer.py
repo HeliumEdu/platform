@@ -94,12 +94,14 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     recurrence_groups = serializers.SerializerMethodField()
 
+    course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
+
     class Meta:
         model = CourseSchedule
         fields = (
             'id', 'days_of_week', 'sun_start_time', 'sun_end_time', 'mon_start_time', 'mon_end_time', 'tue_start_time',
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
-            'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'cycle_length', 'anchor_date', 'cycle_slots',
+            'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'course_group', 'cycle_length', 'anchor_date', 'cycle_slots',
             'is_week_based', 'week_offset', 'start_date', 'end_date', 'template', 'recurrence_groups')
         read_only_fields = ('course',)
         extra_kwargs = {

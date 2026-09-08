@@ -6,7 +6,8 @@ from django.conf import settings
 from django.utils import timezone
 
 from helium.common import enums
-from helium.common.tasks import send_pushes
+from helium.common.services import pushservice
+from helium.common.tasks import send_dismiss_pushes, send_pushes
 from helium.common.utils.commonutils import format_short_time
 from helium.common.utils import metricutils, taskutils
 from helium.planner.models import Reminder
@@ -201,19 +202,34 @@ def create_next_repeating_reminder(reminder):
     return None
 
 
+def clear_delivered_push(reminder):
+    """Clear a delivered reminder's notification from the user's devices.
+
+    A reschedule that un-sends a reminder leaves the old notification in the tray with nothing to
+    clear it: it is no longer `sent`, so it drops out of the notification list and cannot be
+    dismissed.
+    """
+    push_tokens = pushservice.get_push_tokens(reminder.get_user())
+    if not push_tokens:
+        return
+
+    taskutils.safe_apply_async(send_dismiss_pushes,
+                               args=(push_tokens, reminder.pk),
+                               priority=settings.CELERY_PRIORITY_HIGH)
+
+
 def _delete_excess_past_reminders(just_fired):
     """
-    After a repeating course reminder fires, delete any other sent+undismissed reminders for
-    the same course/user/type. Only the reminder that just fired is kept as the single past
-    record visible in notifications. Intentionally does not filter by offset/offset_type so
-    that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
+    After a repeating course reminder fires, delete every other sent reminder for the same
+    course/user/type, dismissed ones included. Only the reminder that just fired is kept as the
+    single past record visible in notifications. Intentionally does not filter by offset/offset_type
+    so that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
     """
     Reminder.objects.filter(
         course=just_fired.course,
         user=just_fired.user,
         type=just_fired.type,
         sent=True,
-        dismissed=False,
     ).exclude(pk=just_fired.pk).delete()
 
 
@@ -285,7 +301,7 @@ def _push_send_args(reminder, user):
         logger.info(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
         return None
 
-    push_tokens = list({t.device_id: t.token for t in user.push_tokens.all()}.values())
+    push_tokens = pushservice.get_push_tokens(user)
     if not push_tokens:
         metricutils.increment('action.reminder.undeliverable', user=reminder.user,
                               extra_tags=['channel:push'])
@@ -319,12 +335,11 @@ def process_email_reminder(reminder_id):
 
             metricutils.increment('task', user=user, extra_tags=['name:reminder.queue.email'])
 
-            # critical, because the reminder is already claimed: dropping the dispatch here would
-            # lose the send outright rather than leave it for the next sweep
+            # Never critical: the synchronous fallback risks re-sending a message the broker
+            # already accepted.
             taskutils.safe_apply_async(send_email_reminder,
                 args=send_args,
                 priority=settings.CELERY_PRIORITY_HIGH,
-                critical=True,
             )
 
         _continue_series(reminder, 'email')
@@ -357,11 +372,10 @@ def process_push_reminder(reminder_id, mark_sent_only=False):
             metricutils.increment('task', value=len(send_args[0]), user=reminder.user,
                                   extra_tags=['name:reminder.queue.push'])
 
-            # critical, for the same reason as the email send above
+            # Never critical, for the same reason as the email send above
             taskutils.safe_apply_async(send_pushes,
                 args=send_args,
                 priority=settings.CELERY_PRIORITY_HIGH,
-                critical=True,
             )
 
         _continue_series(reminder, 'push')

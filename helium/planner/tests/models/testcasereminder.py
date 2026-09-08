@@ -1,6 +1,7 @@
 import datetime
 
 from django.conf import settings
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -198,3 +199,115 @@ class TestCaseReminder(TestCase):
         self.assertEqual(reminder.start_of_range, datetime.datetime(2017, 5, 8, 13, 45, 0, tzinfo=datetime.timezone.utc))
         self.assertTrue(reminder.sent)
 
+
+    def test_event_date_change_within_send_window_rearms_dismissed_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True, dismissed=True)
+
+        # WHEN
+        new_start = datetime.datetime(2030, 5, 8, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        event.start = new_start
+        event.end = new_start + datetime.timedelta(hours=1)
+        event.save()
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2030, 5, 8, 11, 45, 0, tzinfo=datetime.timezone.utc))
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
+
+    def test_homework_date_change_within_send_window_rearms_dismissed_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, sent=True, dismissed=True)
+
+        # WHEN
+        new_start = datetime.datetime(2030, 5, 8, 16, 0, 0, tzinfo=datetime.timezone.utc)
+        homework.start = new_start
+        homework.end = new_start + datetime.timedelta(hours=2)
+        homework.save()
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2030, 5, 8, 15, 45, 0, tzinfo=datetime.timezone.utc))
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
+
+    def test_event_date_change_outside_send_window_leaves_dismissed_reminder_alone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True, dismissed=True)
+
+        # WHEN
+        new_start = datetime.datetime(2017, 5, 8, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        event.start = new_start
+        event.end = new_start + datetime.timedelta(hours=1)
+        event.save()
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.start_of_range,
+                         datetime.datetime(2017, 5, 8, 11, 45, 0, tzinfo=datetime.timezone.utc))
+        self.assertTrue(reminder.sent)
+        self.assertTrue(reminder.dismissed)
+
+    def test_rearmed_dismissed_reminder_becomes_sendable_again(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True, dismissed=True)
+
+        # WHEN
+        new_start = timezone.now() + datetime.timedelta(minutes=15)
+        event.start = new_start
+        event.end = new_start + datetime.timedelta(hours=1)
+        event.save()
+
+        # THEN
+        reminder.refresh_from_db()
+        self.assertIn(reminder, Reminder.objects.active())
+        self.assertIn(reminder, Reminder.objects.unsent().for_today())
+
+    def test_active_course_series_is_unique_at_the_database(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        reminderhelper.given_reminder_exists(user, course=course, offset=30,
+                                              start_of_range=timezone.now())
+
+        # WHEN / THEN
+        with self.assertRaises(IntegrityError):
+            reminderhelper.given_reminder_exists(user, course=course, offset=30,
+                                                  start_of_range=timezone.now())
+
+    def test_sent_course_reminders_do_not_occupy_the_active_series_slot(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        past = reminderhelper.given_reminder_exists(user, course=course, offset=30, sent=True,
+                                                     start_of_range=timezone.now())
+        dismissed = reminderhelper.given_reminder_exists(user, course=course, offset=30, sent=True,
+                                                          dismissed=True,
+                                                          start_of_range=timezone.now())
+
+        # WHEN
+        active = reminderhelper.given_reminder_exists(user, course=course, offset=30,
+                                                       start_of_range=timezone.now())
+
+        # THEN
+        past.refresh_from_db()
+        dismissed.refresh_from_db()
+        active.refresh_from_db()
+        self.assertIsNone(past.active_course_series)
+        self.assertIsNone(dismissed.active_course_series)
+        self.assertEqual(active.active_course_series, course.pk)

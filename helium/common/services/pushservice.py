@@ -151,6 +151,10 @@ def send_notifications(push_tokens, subject, message, reminder_data):
         raise
 
 
+def get_push_tokens(user):
+    return list(user.push_tokens.values_list('token', flat=True))
+
+
 def send_dismiss(push_tokens, reminder_id):
     """Send a silent, data-only push telling clients to clear a dismissed
     reminder's notification from their tray. Returns permanently-invalid tokens."""

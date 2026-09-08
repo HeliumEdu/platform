@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Case, F, Q, Value, When
 from django.utils import timezone
 
 from helium.common import enums
@@ -49,6 +49,18 @@ class Reminder(BaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='reminders', on_delete=models.CASCADE)
 
+    #: `course` while this is the live occurrence of its series, NULL otherwise; MySQL treats
+    #: those NULLs as distinct, so a plain unique index over it enforces one-active-per-series.
+    active_course_series = models.GeneratedField(
+        expression=Case(
+            When(sent=False, dismissed=False, then=F('course')),
+            default=Value(None),
+            output_field=models.BigIntegerField(),
+        ),
+        output_field=models.BigIntegerField(null=True),
+        db_persist=False,
+    )
+
     objects = ReminderManager()
 
     class Meta:
@@ -67,8 +79,7 @@ class Reminder(BaseModel):
                 name='reminder_exactly_one_parent',
             ),
             models.UniqueConstraint(
-                fields=['course', 'user', 'type', 'offset', 'offset_type'],
-                condition=Q(sent=False, dismissed=False),
+                fields=['active_course_series', 'user', 'type', 'offset', 'offset_type'],
                 name='reminder_one_active_per_course_series',
             ),
             models.CheckConstraint(
@@ -180,10 +191,10 @@ class Reminder(BaseModel):
         For homework and event reminders, start_of_range is always recalculated so that
         moving a due date or event time is reflected immediately. If the recalculated
         start_of_range falls within or after the send window (i.e. the reminder hasn't
-        meaningfully expired), a previously-sent reminder is reset to sent=False so it
-        re-fires at the new time. Reminders whose start_of_range lands more than
-        REMINDER_SEND_WINDOW_MINUTES in the past are left as-is — the window acts as the
-        natural guard against re-fires for trivial date nudges.
+        meaningfully expired), a previously-sent reminder is reset to sent=False, and
+        dismissed with it, so it re-fires at the new time. Reminders whose start_of_range
+        lands more than REMINDER_SEND_WINDOW_MINUTES in the past are left as-is, dismissal
+        included.
 
         Course reminders retain the sent=False gate because their recalculation logic is
         being refactored separately.
@@ -199,6 +210,7 @@ class Reminder(BaseModel):
             if self.pk and self.sent and new_start_of_range != self.start_of_range:
                 if Reminder.should_reset_sent(new_start_of_range):
                     self.sent = False
+                    self.dismissed = False
             self.start_of_range = new_start_of_range
         elif self.course and not self.sent:
             if self.pk is not None or self.start_of_range is None:

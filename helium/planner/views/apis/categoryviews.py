@@ -28,7 +28,7 @@ class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Category.objects.for_user(user.pk).annotate(
+            return Category.objects.for_user(user.pk).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))
@@ -57,7 +57,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).annotate(
+            return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))
@@ -123,7 +123,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).annotate(
+            return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))

@@ -1227,3 +1227,231 @@ class TestCaseReminderViews(APITestCase):
         self.assertEqual(post_heal_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(post_heal_response.data), 1,
                          'Watchdog should have created the next pending reminder for the series')
+
+    def test_patch_offset_on_sent_and_dismissed_reminder_rearms(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() + timedelta(hours=2), end=timezone.now() + timedelta(hours=3))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=15, sent=True,
+                                                        dismissed=True)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     {'offset': 20}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
+
+    def test_patch_offset_outside_send_window_leaves_dismissed_reminder_alone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(
+            user, start=timezone.now() - timedelta(days=5), end=timezone.now() - timedelta(days=5))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=15, sent=True,
+                                                        dismissed=True)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     {'offset': 20}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+        self.assertTrue(reminder.dismissed)
+
+    def test_patch_dismissed_on_unsent_reminder_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=False)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     {'dismissed': True}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        reminder.refresh_from_db()
+        self.assertFalse(reminder.dismissed)
+
+    def test_patch_unsending_a_dismissed_reminder_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True, dismissed=True)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     {'sent': False}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+        self.assertTrue(reminder.dismissed)
+
+    def test_patch_clearing_both_flags_on_a_dismissed_reminder_is_allowed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True, dismissed=True)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': reminder.pk}),
+                                     {'sent': False, 'dismissed': False}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reminder.refresh_from_db()
+        self.assertFalse(reminder.sent)
+        self.assertFalse(reminder.dismissed)
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_dismiss_all_without_sent_filter_skips_unsent(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        sent_reminder = reminderhelper.given_reminder_exists(user, event=event, sent=True,
+                                                              type=enums.PUSH)
+        unsent_reminder = reminderhelper.given_reminder_exists(user, event=event, sent=False,
+                                                                type=enums.PUSH)
+        userhelper.given_user_push_token_exists(user, token='tok_phone', device_id='phone')
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_dismiss_all'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        sent_reminder.refresh_from_db()
+        unsent_reminder.refresh_from_db()
+        self.assertTrue(sent_reminder.dismissed)
+        self.assertFalse(unsent_reminder.dismissed)
+        self.assertEqual(mock_send_dismiss.apply_async.call_count, 1)
+
+    def test_create_reminder_dismissed_without_sent_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    {'message': 'm', 'event': event.pk, 'dismissed': True},
+                                    format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reminder.objects.count(), 0)
+
+    def test_create_duplicate_active_course_reminder_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        payload = {'message': 'Class starts soon', 'course': course.pk, 'type': enums.PUSH,
+                   'offset': 30, 'offset_type': enums.MINUTES}
+        self.assertEqual(self.client.post(reverse('planner_reminders_list'), payload,
+                                          format='json').status_code, status.HTTP_201_CREATED)
+
+        # WHEN
+        response = self.client.post(reverse('planner_reminders_list'), payload, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reminder.objects.filter(course=course).count(), 1)
+
+    def test_create_course_reminder_with_different_offset_is_allowed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        payload = {'message': 'Class starts soon', 'course': course.pk, 'type': enums.PUSH,
+                   'offset': 30, 'offset_type': enums.MINUTES}
+        self.client.post(reverse('planner_reminders_list'), payload, format='json')
+
+        # WHEN
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    {**payload, 'offset': 45}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reminder.objects.filter(course=course).count(), 2)
+
+    def test_patch_active_course_reminder_message_is_allowed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        created = self.client.post(
+            reverse('planner_reminders_list'),
+            {'message': 'Class starts soon', 'course': course.pk, 'type': enums.PUSH,
+             'offset': 30, 'offset_type': enums.MINUTES}, format='json')
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_reminders_detail', kwargs={'pk': created.data['id']}),
+            {'message': 'Heads up'}, format='json', HTTP_X_CLIENT_VERSION='3.5.0')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_create_course_reminder_alongside_a_past_sent_one_is_allowed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        reminderhelper.given_reminder_exists(user, course=course, type=enums.PUSH, offset=30,
+                                              offset_type=enums.MINUTES, sent=True,
+                                              start_of_range=timezone.now() - timedelta(days=1))
+
+        # WHEN
+        response = self.client.post(
+            reverse('planner_reminders_list'),
+            {'message': 'Class starts soon', 'course': course.pk, 'type': enums.PUSH,
+             'offset': 30, 'offset_type': enums.MINUTES}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_reminder_without_offset_uses_model_defaults(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        response = self.client.post(reverse('planner_reminders_list'),
+                                    {'message': 'm', 'event': event.pk}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reminder = Reminder.objects.get()
+        self.assertEqual(reminder.offset, Reminder._meta.get_field('offset').default)
+        self.assertEqual(reminder.offset_type, Reminder._meta.get_field('offset_type').default)
+        self.assertEqual(reminder.start_of_range,
+                         event.start - timedelta(minutes=reminder.offset))
+
+    @mock.patch('helium.planner.views.apis.reminderviews.send_dismiss_pushes')
+    def test_dismiss_all_filtered_to_unsent_dismisses_nothing(self, mock_send_dismiss):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        unsent = reminderhelper.given_reminder_exists(user, event=event, sent=False,
+                                                       type=enums.PUSH)
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_dismiss_all') + '?sent=false')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        unsent.refresh_from_db()
+        self.assertFalse(unsent.dismissed)
+        mock_send_dismiss.apply_async.assert_not_called()

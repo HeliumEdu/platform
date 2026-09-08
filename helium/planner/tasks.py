@@ -148,8 +148,14 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type):
                      .iterator(chunk_size=2000)):
         logger.info(f'Adjusting start_of_range for reminder {reminder.pk}.')
 
+        was_sent = reminder.sent
+
         # Forcing a reminder to save will recalculate its start_of_range, if necessary
         reminder.save()
+
+        if was_sent and not reminder.sent:
+            reminderservice.clear_delivered_push(reminder)
+
         count += 1
 
     metricutils.task_stop(metrics, value=count)

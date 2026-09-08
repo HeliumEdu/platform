@@ -41,6 +41,42 @@ class TestCaseHomeworkViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_homework_carries_its_course_group_id(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_homework_list'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['course'], course.pk)
+        self.assertEqual(response.data[0]['course_group'], course_group.pk,
+                         msg='a nested resource must carry its grandparent id so a client can '
+                             'address it without resolving the parent first')
+
+    def test_homework_course_group_is_read_only(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        other_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_homework_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk}),
+            json.dumps({'course_group': other_group.pk}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['course_group'], course_group.pk)
+
     def test_get_homework(self):
         user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
