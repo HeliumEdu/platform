@@ -22,7 +22,7 @@ from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
 from helium.feed.services.icalparseservice import parse_events
 from helium.planner.models import Event
-from helium.feed.serializers.feedeventserializer import FeedEventSerializer
+from helium.planner.serializers.eventserializer import GeneratedEventSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             if _apply_event_filters(extra_event, _from, to, search):
                 events_filtered.append(extra_event)
 
-    serializer = FeedEventSerializer(events, many=True)
+    serializer = GeneratedEventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
