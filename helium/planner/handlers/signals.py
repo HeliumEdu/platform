@@ -130,8 +130,8 @@ def save_event(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Homework)
 def save_homework(sender, instance, **kwargs):
-    if instance.category:
-        recalculate_category_grade.apply(args=(instance.category.pk,))
+    if instance.category_id:
+        recalculate_category_grade.apply(args=(instance.category_id,))
 
     if not Reminder.objects.for_calendar_item(instance.pk, instance.calendar_item_type).exists():
         return

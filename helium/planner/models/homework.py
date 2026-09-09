@@ -83,7 +83,7 @@ class Homework(BaseCalendar):
         category grade recalculation for the previously linked category should be invoked manually before executing this
         method, as this method will only recalculate the grade for the category to which the field is being changed.
         """
-        if not self.category:
+        if not self.category_id:
             self.category = Category.objects.get_uncategorized(self.course_id)
 
         if self.completed and self.completed_at is None:
