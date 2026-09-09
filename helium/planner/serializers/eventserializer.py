@@ -67,3 +67,25 @@ class EventExtendedSerializer(EventSerializer):
     attachments = AttachmentSerializer(many=True)
 
     reminders = ReminderSerializer(many=True)
+
+class GeneratedEventSerializer(EventSerializer):
+    """An event generated on the fly rather than stored, which owns none of the relations a
+    saved event can.
+
+    Course schedules and external calendars both synthesise events in memory and never save
+    them, so nothing can reference one. The deterministic id each carries is non-null though,
+    so Django would query for those relations on its behalf regardless.
+    """
+
+    attachments = serializers.SerializerMethodField()
+    reminders = serializers.SerializerMethodField()
+    notes = serializers.SerializerMethodField()
+
+    def get_attachments(self, obj) -> list:
+        return []
+
+    def get_reminders(self, obj) -> list:
+        return []
+
+    def get_notes(self, obj) -> list:
+        return []

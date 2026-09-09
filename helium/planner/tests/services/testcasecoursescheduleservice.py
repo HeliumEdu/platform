@@ -2,8 +2,10 @@ import datetime
 from unittest import mock
 from zoneinfo import ZoneInfo
 
-from django.db import IntegrityError, transaction
+from django.core.cache import cache
+from django.db import IntegrityError, connection, transaction
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import CourseSchedule
@@ -556,3 +558,23 @@ class TestCaseCourseScheduleService(TestCase):
         # Occurrences all share the slot's UTC time-of-day, so an exception at that same time-of-day
         # lands on the same UTC date as the occurrence it cancels.
         self.assertEqual(groups[0].exception_dates[0].timetz(), groups[0].start.timetz())
+
+    def test_generating_events_does_not_query_relations_they_cannot_own(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0111110',
+                                                          mon_start_time=datetime.time(9, 0, 0))
+        cache.clear()
+
+        # WHEN
+        with CaptureQueriesContext(connection) as queries:
+            events = coursescheduleservice.course_schedules_to_events(course, course.schedules.all())
+
+        # THEN
+        self.assertTrue(events)
+        related = [q['sql'] for q in queries
+                   if any(table in q['sql'] for table in
+                          ('planner_attachment', 'planner_reminder', 'planner_note'))]
+        self.assertEqual(related, [])

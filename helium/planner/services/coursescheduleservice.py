@@ -14,7 +14,7 @@ from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.common.utils.validators import WEEKDAY_TO_ICAL
 from helium.planner.models import Event
-from helium.planner.serializers.eventserializer import EventSerializer
+from helium.planner.serializers.eventserializer import GeneratedEventSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +231,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
         day += datetime.timedelta(days=1)
 
-    serializer = EventSerializer(events, many=True)
+    serializer = GeneratedEventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
     if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
         cache.set(_get_cache_prefix(course), events_json, settings.FEED_CACHE_TTL_SECONDS)
