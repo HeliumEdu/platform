@@ -941,12 +941,16 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
             logger.info(f'Start of week adjusted ahead {days_ahead} days')
             logger.info(f'First Monday set to {first_monday}')
 
+            course_groups_to_update = []
             for course_group in (CourseGroup.objects.for_user(user.pk)
-                    .filter(pk__in=imported.course_group_remap.values()).iterator()):
+                    .filter(pk__in=imported.course_group_remap.values())):
                 delta = (course_group.end_date - course_group.start_date).days
-                CourseGroup.objects.filter(pk=course_group.pk).update(
-                    start_date=first_monday_date,
-                    end_date=first_monday_date + datetime.timedelta(days=delta))
+                course_group.start_date = first_monday_date
+                course_group.end_date = first_monday_date + datetime.timedelta(days=delta)
+                course_groups_to_update.append(course_group)
+
+            if course_groups_to_update:
+                CourseGroup.objects.bulk_update(course_groups_to_update, ['start_date', 'end_date'])
 
             homework_to_update = []
             for homework in (Homework.objects.for_user(user.pk)
@@ -1008,13 +1012,19 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
                     if event.pk in event_ids_with_reminders:
                         adjust_reminder_times(event.pk, event.calendar_item_type)
 
+            courses_to_update = []
             for course in (Course.objects.for_user(user.pk)
-                    .filter(pk__in=imported.course_remap.values()).iterator()):
+                    .filter(pk__in=imported.course_remap.values())
+                    .select_related('course_group')):
                 delta = (course.end_date - course.start_date).days
-                Course.objects.filter(pk=course.pk).update(
-                    start_date=first_monday_date,
-                    end_date=first_monday_date + datetime.timedelta(days=delta))
+                course.start_date = first_monday_date
+                course.end_date = first_monday_date + datetime.timedelta(days=delta)
+                courses_to_update.append(course)
 
+            if courses_to_update:
+                Course.objects.bulk_update(courses_to_update, ['start_date', 'end_date'])
+
+            for course in courses_to_update:
                 coursescheduleservice.clear_cached_course_schedule(course)
 
             for reminder in (Reminder.objects
