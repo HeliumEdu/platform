@@ -9,9 +9,10 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from helium.common import enums
+from helium.common.tasks import reconcile_show_getting_started_async
 from helium.common.utils import taskutils
-from helium.planner.models import Category, Course, CourseGroup, Event, Homework, CourseSchedule, Attachment, Material, \
-    Reminder
+from helium.planner.models import Category, Course, CourseGroup, Event, Homework, CourseSchedule, Attachment, \
+    Material, MaterialGroup, Note, Reminder
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -197,6 +198,8 @@ def delete_course_children(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Event)
 def delete_event(sender, instance, **kwargs):
+    reconcile_show_getting_started_async(instance)
+
     if _suppressed(sender):
         return
 
@@ -213,7 +216,19 @@ def delete_course_schedule(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=CourseGroup)
 def delete_course_group(sender, instance, **kwargs):
+    reconcile_show_getting_started_async(instance)
+
     if _suppressed(sender):
         return
 
     _mark_user_data_deleted(instance)
+
+
+@receiver(post_delete, sender=Note)
+def delete_note(sender, instance, **kwargs):
+    reconcile_show_getting_started_async(instance)
+
+
+@receiver(post_delete, sender=MaterialGroup)
+def delete_material_group(sender, instance, **kwargs):
+    reconcile_show_getting_started_async(instance)

@@ -1,13 +1,18 @@
 import logging
 
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Exists, OuterRef
+from django.utils import timezone
 
 from conf.celery import app
-from helium.auth.models import UserPushToken
+from helium.auth.models import UserPushToken, UserSettings
 from helium.common.periodic import PERIODIC_TASKS
 from helium.common.services.pushservice import send_dismiss, send_notifications
 from helium.common.services.sesreputationservice import process_ses_notification
-from helium.common.utils import metricutils
+from helium.common.utils import metricutils, taskutils
+from helium.feed.models import ExternalCalendar
+from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +65,49 @@ def process_ses_event(self, message_json):
     process_ses_notification(message_json)
 
     metricutils.task_stop(metrics)
+
+
+def _example_schedule_remains():
+    return (Exists(CourseGroup.objects.filter(user=OuterRef('user_id'), example_schedule=True))
+            | Exists(Event.objects.filter(user=OuterRef('user_id'), example_schedule=True))
+            | Exists(MaterialGroup.objects.filter(user=OuterRef('user_id'), example_schedule=True))
+            | Exists(Note.objects.filter(user=OuterRef('user_id'), example_schedule=True))
+            | Exists(ExternalCalendar.objects.filter(user=OuterRef('user_id'), example_schedule=True)))
+
+
+def reconcile_show_getting_started_async(instance):
+    """
+    Queue a check for whether `instance` was the last example schedule item.
+    """
+    if not instance.example_schedule:
+        return
+
+    user_id = instance.user_id
+    transaction.on_commit(lambda: taskutils.safe_apply_async(reconcile_show_getting_started,
+        args=(user_id,), priority=settings.CELERY_PRIORITY_LOW
+    ))
+
+
+@app.task(bind=True)
+def reconcile_show_getting_started(self, user_id):
+    """Unset `show_getting_started` once no example schedule items remain.
+
+    Importing the example schedule sets it, and clearing that data through the app unsets it;
+    deleting the example items by hand would otherwise leave it set, with the dialog returning
+    and re-import disabled.
+    """
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.gettingstarted.reconcile", published_at_ms=published_at_ms)
+
+    cleared = (UserSettings.objects
+               .filter(user_id=user_id, show_getting_started=True)
+               .exclude(_example_schedule_remains())
+               .update(show_getting_started=False, updated_at=timezone.now()))
+
+    if cleared:
+        logger.info(f'No example schedule items remain for user {user_id}, unset show_getting_started')
+
+    metricutils.task_stop(metrics, value=cleared)
 
 
 @app.on_after_finalize.connect

@@ -17,7 +17,7 @@ from rest_framework.exceptions import ValidationError, NotFound, AuthenticationF
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from helium.auth.models import UserOAuthProvider
+from helium.auth.models import UserOAuthProvider, UserSettings
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
@@ -457,6 +457,10 @@ def delete_example_schedule(user_id):
          .for_user(user_id)
          .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
          .delete())
+
+        (UserSettings.objects
+         .filter(user_id=user_id)
+         .update(show_getting_started=False, updated_at=timezone.now()))
 
     if user is not None and user.onboarding_completed_at is None:
         user.onboarding_completed_at = timezone.now()

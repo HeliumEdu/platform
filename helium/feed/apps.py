@@ -5,3 +5,7 @@ class FeedConfig(AppConfig):
     name = 'helium.feed'
     verbose_name = 'Feed'
     default_auto_field = 'django.db.models.AutoField'
+
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        import helium.feed.handlers

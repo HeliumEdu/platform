@@ -1,5 +1,6 @@
 import logging
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
@@ -21,3 +22,10 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'prompt_for_review',)
         read_only_fields = ('is_setup_complete', 'private_slug', 'user',
                             'prompt_for_review',)
+
+
+#: Legacy parameter, can be removed once all clients are reporting >= 3.9.4, after which
+#: `show_getting_started` becomes a read-only field above.
+@extend_schema_serializer(exclude_fields=('show_getting_started',), component_name='UserSettingsUpdate')
+class UserSettingsUpdateSerializer(UserSettingsSerializer):
+    pass

@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
+from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer, UserSettingsUpdateSerializer
 from helium.common.utils import taskutils
 from helium.common.utils.commonutils import local_midnight_as_utc
 from helium.common.views.base import HeliumAPIView
@@ -30,7 +30,8 @@ class UserSettingsApiDetailView(HeliumAPIView):
     def get_object(self):
         return self.request.user
 
-    @extend_schema(summary="Update the authenticated User's settings")
+    @extend_schema(summary="Update the authenticated User's settings",
+                   request=UserSettingsUpdateSerializer)
     def put(self, request, *args, **kwargs):
         """
         Update the authenticated user's settings. Only the fields supplied are updated.
