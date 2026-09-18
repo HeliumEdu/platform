@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from django.conf import settings
+
 from helium.common.pagination import DefaultPageNumberPagination
 
 
@@ -198,11 +200,12 @@ def rewrite_pagination_examples(result, generator, request, public):
     Point each ``Paginated*`` component's ``next`` / ``previous`` examples at the list endpoint
     that returns it, replacing DRF's stock ``http://api.example.org/accounts/``.
     """
+    server_url = settings.DOCS_API_HOST.rstrip('/')
     page_query_param = DefaultPageNumberPagination.page_query_param
     for component_name, path in _paginated_component_paths(result).items():
         properties = result['components']['schemas'][component_name]['properties']
-        properties['next']['example'] = f'{path}?{page_query_param}=4'
-        properties['previous']['example'] = f'{path}?{page_query_param}=2'
+        properties['next']['example'] = f'{server_url}{path}?{page_query_param}=4'
+        properties['previous']['example'] = f'{server_url}{path}?{page_query_param}=2'
 
     return result
 
