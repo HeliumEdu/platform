@@ -217,7 +217,8 @@ def purge_push_tokens(self):
 
 @app.task(bind=True)
 def sweep_dangling_users(self):
-    """Nightly cleanup for two classes of dangling users:
+    """
+    Nightly cleanup for two classes of dangling users:
 
     1. Never-verified users past `UNVERIFIED_USER_TTL_DAYS` — enqueue `delete_user`.
     2. Stuck pending-delete accounts — the async `delete_user` task raised or was lost but the

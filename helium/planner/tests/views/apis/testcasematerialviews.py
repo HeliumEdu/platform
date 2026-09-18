@@ -91,6 +91,100 @@ class TestCaseMaterialViews(APITestCase):
         material = Material.objects.get(pk=response.data['id'])
         materialhelper.verify_material_matches_data(self, material, response.data)
 
+    def test_create_resource_via_canonical_route_emits_both_group_keys(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'status': enums.TO_SELL,
+            'condition': enums.USED_POOR,
+            'resource_group': material_group.pk,
+        }
+        response = self.client.post(
+            reverse('planner_resourcegroups_resources_list', kwargs={'resource_group': material_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['resource_group'], material_group.pk)
+        self.assertEqual(response.data['material_group'], material_group.pk, msg='legacy clients still read `material_group`')
+
+    def test_create_resource_with_both_group_keys_prefers_resource_group(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        canonical_group = materialgrouphelper.given_material_group_exists(user, title='canonical')
+        legacy_group = materialgrouphelper.given_material_group_exists(user, title='legacy')
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'status': enums.TO_SELL,
+            'condition': enums.USED_POOR,
+            'resource_group': canonical_group.pk,
+            'material_group': legacy_group.pk,
+        }
+        response = self.client.post(
+            reverse('planner_resourcegroups_resources_list', kwargs={'resource_group': canonical_group.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['resource_group'], canonical_group.pk)
+        self.assertEqual(response.data['material_group'], canonical_group.pk)
+
+    def test_update_resource_without_group_keeps_group(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+
+        # WHEN
+        data = {
+            'title': 'renamed',
+            'status': enums.TO_SELL,
+            'condition': enums.USED_POOR,
+        }
+        response = self.client.put(
+            reverse('planner_resourcegroups_resources_detail',
+                    kwargs={'resource_group': material_group.pk, 'pk': material.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'renamed')
+        self.assertEqual(response.data['resource_group'], material_group.pk)
+
+    def test_canonical_and_legacy_routes_serve_the_same_resources(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+
+        # WHEN
+        responses = {
+            'planner_resources_list': self.client.get(reverse('planner_resources_list')),
+            'planner_materials_list': self.client.get(reverse('planner_materials_list')),
+            'planner_resourcegroups_resources_detail': self.client.get(reverse(
+                'planner_resourcegroups_resources_detail',
+                kwargs={'resource_group': material_group.pk, 'pk': material.pk})),
+            'planner_materialgroups_materials_detail': self.client.get(reverse(
+                'planner_materialgroups_materials_detail',
+                kwargs={'material_group': material_group.pk, 'pk': material.pk})),
+        }
+
+        # THEN
+        for route_name, response in responses.items():
+            self.assertEqual(response.status_code, status.HTTP_200_OK, msg=route_name)
+        self.assertEqual(responses['planner_resources_list'].data, responses['planner_materials_list'].data)
+        self.assertEqual(responses['planner_resourcegroups_resources_detail'].data,
+                         responses['planner_materialgroups_materials_detail'].data)
+
     def test_get_material_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

@@ -14,7 +14,8 @@ _UUID_RE = re.compile(
 
 
 def _middleware(captured=None):
-    """Build the middleware with a get_response that records the in-request
+    """
+    Build the middleware with a get_response that records the in-request
     request id (via `captured`) and returns a real HttpResponse."""
 
     def get_response(request):

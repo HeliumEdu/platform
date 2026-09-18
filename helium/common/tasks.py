@@ -90,7 +90,8 @@ def reconcile_show_getting_started_async(instance):
 
 @app.task(bind=True)
 def reconcile_show_getting_started(self, user_id):
-    """Unset `show_getting_started` once no example schedule items remain.
+    """
+    Unset `show_getting_started` once no example schedule items remain.
 
     Importing the example schedule sets it, and clearing that data through the app unsets it;
     deleting the example items by hand would otherwise leave it set, with the dialog returning

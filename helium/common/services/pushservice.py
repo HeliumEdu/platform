@@ -53,7 +53,8 @@ def _count_failures_by_reason(responses):
 
 
 def _failure_details(responses):
-    """The service's own wording for each meaningful failure, which is the only thing that
+    """
+    The service's own wording for each meaningful failure, which is the only thing that
     separates a token it rejects from a message it rejects."""
     details = {}
 
@@ -67,7 +68,8 @@ def _failure_details(responses):
 
 
 def _record_send_failures(response, operation):
-    """Count every failed send that carries meaning, leaving out routine token retirement.
+    """
+    Count every failed send that carries meaning, leaving out routine token retirement.
 
     :return: All failures keyed by reason, and the subset worth surfacing.
     """
@@ -156,7 +158,8 @@ def get_push_tokens(user):
 
 
 def send_dismiss(push_tokens, reminder_id):
-    """Send a silent, data-only push telling clients to clear a dismissed
+    """
+    Send a silent, data-only push telling clients to clear a dismissed
     reminder's notification from their tray. Returns permanently-invalid tokens."""
     multicast_message = messaging.MulticastMessage(
         data={"action": "dismiss", "reminder_id": str(reminder_id)},

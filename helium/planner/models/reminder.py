@@ -173,7 +173,8 @@ class Reminder(BaseModel):
 
     @staticmethod
     def should_reset_sent(new_start_of_range):
-        """Return True if a sent reminder should re-queue itself at new_start_of_range.
+        """
+        Return True if a sent reminder should re-queue itself at new_start_of_range.
 
         Resets when the new time is still actionable: within the send window (recent past
         the task will still catch) or in the future. Skips when the time has expired past

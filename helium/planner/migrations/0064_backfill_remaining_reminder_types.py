@@ -7,7 +7,8 @@ PUSH = 3
 
 
 def backfill_remaining_reminder_types(apps, schema_editor):
-    """Convert any lingering POPUP/TEXT reminders to PUSH.
+    """
+    Convert any lingering POPUP/TEXT reminders to PUSH.
 
     Follow-up to 0058: example_schedule.json still carried type=0 and the example
     importer saves it unvalidated, so imports after 0058 re-minted POPUP rows. The

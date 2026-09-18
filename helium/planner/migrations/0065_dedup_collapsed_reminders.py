@@ -2,7 +2,8 @@ from django.db import migrations
 
 
 def dedup_collapsed_reminders(apps, schema_editor):
-    """Remove reminders duplicated by the Popup/Text to Push merge.
+    """
+    Remove reminders duplicated by the Popup/Text to Push merge.
 
     0058/0064 converted deprecated Popup(0)/Text(2) codes to Push(3) but only deduped active
     course reminders, so users who had two of Popup/Text/Push at the same offset on the same

@@ -69,7 +69,8 @@ class EventExtendedSerializer(EventSerializer):
     reminders = ReminderSerializer(many=True)
 
 class GeneratedEventSerializer(EventSerializer):
-    """An event generated on the fly rather than stored, which owns none of the relations a
+    """
+    An event generated on the fly rather than stored, which owns none of the relations a
     saved event can.
 
     Course schedules and external calendars both synthesise events in memory and never save

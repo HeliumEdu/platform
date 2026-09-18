@@ -1,5 +1,6 @@
 import logging
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
@@ -28,8 +29,9 @@ class HomeworkExportSerializer(HomeworkSerializer):
     """Homework representation used in export bundles."""
 
     class Meta(HomeworkSerializer.Meta):
-        #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-        fields = tuple(f for f in HomeworkSerializer.Meta.fields if f != 'comments')
+        #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.5.0.
+        #: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
+        fields = tuple(f for f in HomeworkSerializer.Meta.fields if f not in ('comments', 'materials'))
 
 
 class EventExportSerializer(EventSerializer):
@@ -40,12 +42,15 @@ class EventExportSerializer(EventSerializer):
         fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
 
 
+#: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
+@extend_schema_serializer(component_name='ResourceExport')
 class MaterialExportSerializer(MaterialSerializer):
-    """Material representation used in export bundles."""
+    """Resource representation used in export bundles."""
 
     class Meta(MaterialSerializer.Meta):
-        #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-        fields = tuple(f for f in MaterialSerializer.Meta.fields if f != 'details')
+        #: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.5.0.
+        #: Legacy 'material_group' parameter, can be removed once all clients are reporting >= 3.9.4.
+        fields = tuple(f for f in MaterialSerializer.Meta.fields if f not in ('details', 'material_group'))
 
 
 class ReminderExportSerializer(ReminderSerializer):

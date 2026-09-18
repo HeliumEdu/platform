@@ -49,8 +49,8 @@ TAG_GROUPS = [
             'planner.homework',
             'planner.event',
             'planner.reminder',
-            'planner.materialgroup',
-            'planner.material',
+            'planner.resourcegroup',
+            'planner.resource',
             'planner.attachment',
             'planner.note',
             'planner.grades',
@@ -181,3 +181,8 @@ def collapse_nullable_enums(result, generator, request, public):
 
     _walk(result.get('components', {}).get('schemas', {}))
     return result
+
+
+#: Legacy route, can be removed once all clients are reporting >= 3.9.4.
+def exclude_legacy_paths(endpoints, **kwargs):
+    return [endpoint for endpoint in endpoints if not endpoint[0].startswith('/planner/material')]

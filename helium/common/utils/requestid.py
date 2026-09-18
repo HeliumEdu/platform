@@ -14,7 +14,8 @@ _request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
 
 
 def sanitize_request_id(value: Optional[str]) -> str:
-    """Return a trusted request id for the current request.
+    """
+    Return a trusted request id for the current request.
 
     A client-supplied value is accepted only if it is a well-formed UUID;
     otherwise a fresh one is generated. Validating (rather than trusting the
@@ -32,7 +33,8 @@ def sanitize_request_id(value: Optional[str]) -> str:
 
 
 def set_request_id(value: str) -> "contextvars.Token[Optional[str]]":
-    """Bind the request id to the current context.
+    """
+    Bind the request id to the current context.
 
     :param value: The request id to bind.
     :return: A reset token to pass to :func:`reset_request_id`.
@@ -41,7 +43,8 @@ def set_request_id(value: str) -> "contextvars.Token[Optional[str]]":
 
 
 def get_request_id() -> Optional[str]:
-    """Return the request id bound to the current context.
+    """
+    Return the request id bound to the current context.
 
     :return: The bound request id, or None outside of a request (e.g. Celery
         tasks, management commands, startup).
@@ -50,7 +53,8 @@ def get_request_id() -> Optional[str]:
 
 
 def reset_request_id(token: "contextvars.Token[Optional[str]]") -> None:
-    """Unbind the request id from the current context.
+    """
+    Unbind the request id from the current context.
 
     :param token: The reset token returned by :func:`set_request_id`.
     """

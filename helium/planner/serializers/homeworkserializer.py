@@ -13,13 +13,19 @@ from helium.planner.tasks import recalculate_category_grade
 logger = logging.getLogger(__name__)
 
 
-#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-@extend_schema_serializer(exclude_fields=('comments',))
+#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
+@extend_schema_serializer(exclude_fields=('comments', 'materials'))
 class HomeworkSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
         django_models.DateTimeField: TzAwareDateTimeField,
     }
+
+    #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
+    resources = serializers.PrimaryKeyRelatedField(source='materials', many=True, required=False,
+                                                   queryset=Material.objects.all(),
+                                                   help_text='A list of resources with which to associate.')
 
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
 
@@ -32,15 +38,17 @@ class HomeworkSerializer(serializers.ModelSerializer):
             self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)
             self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
             # ManyToMany fields need to have their `child_relation` queryset modified instead
-            self.fields['materials'].child_relation.queryset = Material.objects.for_user(
-                self.context['request'].user.pk)
+            #: Legacy parameter, can be removed once all clients are reporting >= 3.9.4.
+            for resources_field in ('resources', 'materials'):
+                self.fields[resources_field].child_relation.queryset = Material.objects.for_user(
+                    self.context['request'].user.pk)
 
     class Meta:
         model = Homework
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
-            'current_grade', 'completed', 'completed_at', 'category', 'materials', 'attachments', 'reminders', 'notes',
-            'course', 'course_group',
+            'current_grade', 'completed', 'completed_at', 'category', 'materials', 'resources', 'attachments',
+            'reminders', 'notes', 'course', 'course_group',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at',)
@@ -71,8 +79,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
         return instance
 
 
-#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-@extend_schema_serializer(exclude_fields=('comments',))
+#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
+@extend_schema_serializer(exclude_fields=('comments', 'materials'))
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
     reminders = ReminderSerializer(many=True)

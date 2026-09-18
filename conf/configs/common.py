@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.3.13"
+__version__ = "2.4.0"
 
 import json
 import os
@@ -293,7 +293,7 @@ SPECTACULAR_SETTINGS = {
         "homework, grades, and notes. "
         "The API exposes all entities in the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
-        "assignments, events, reminders, notes, file attachments, materials, external "
+        "assignments, events, reminders, notes, file attachments, resources, external "
         "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal "
         "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
@@ -330,8 +330,7 @@ SPECTACULAR_SETTINGS = {
         '<tr><td style="white-space: nowrap;"><code>course_group</code></td><td><strong>class group</strong> (semester / quarter / term)</td><td>Container for the classes a user is taking in a given period.</td></tr>\n'
         '<tr><td style="white-space: nowrap;"><code>course</code></td><td><strong>class</strong></td><td>A single class within a class group. The API uses <code>course</code> to avoid the reserved word <code>class</code>.</td></tr>\n'
         '<tr><td style="white-space: nowrap;"><code>homework</code></td><td><strong>assignment</strong></td><td>A graded item for a class. The API uses <code>homework</code> to avoid the reserved word <code>assignment</code>.</td></tr>\n'
-        '<tr><td style="white-space: nowrap;"><code>material</code></td><td><strong>resource</strong></td><td>A reference item (syllabus, textbook, link). <code>material</code> is the internal model name surfaced in API paths (<code>/planner/materials/</code>) and as the per-homework relation field (<code>homework.materials</code>, a list of resource IDs). The top-level bulk-import key is <code>resources</code> (matching the user-facing term).</td></tr>\n'
-        '<tr><td style="white-space: nowrap;"><code>material_group</code></td><td><strong>resource group</strong></td><td>A container for resources. <code>material_group</code> appears in API paths (<code>/planner/materialgroups/</code>). The top-level bulk-import key is <code>resource_groups</code>.</td></tr>\n'
+        '<tr><td style="white-space: nowrap;"><code>calendar</code></td><td><strong>Planner</strong></td><td>Calendar items (<code>calendar_item_type</code>, <code>shown_on_calendar</code>) are what the app renders on the Planner: a calendar, plus a Todos view of assignments.</td></tr>\n'
         '</tbody>\n'
         '</table>\n\n'
         "Integrations that surface these to end users should use the user-facing terms "
@@ -438,6 +437,9 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
     'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
+    'PREPROCESSING_HOOKS': [
+        'helium.common.utils.openapiutils.exclude_legacy_paths',
+    ],
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
         'helium.common.utils.openapiutils.collapse_nullable_enums',
@@ -449,7 +451,8 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
-        'MaterialStatusEnum': enums.MATERIAL_STATUS_CHOICES,
+        #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
+        'ResourceStatusEnum': enums.MATERIAL_STATUS_CHOICES,
         'ConditionEnum': enums.CONDITION_CHOICES,
         'CourseScheduleTemplateEnum': enums.SCHEDULE_TEMPLATE_CHOICES,
         'CourseTemplateEnum': enums.CATEGORY_TEMPLATE_CHOICES,

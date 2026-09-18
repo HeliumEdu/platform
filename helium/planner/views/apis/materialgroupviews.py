@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.materialgroup']
+    tags=['planner.resourcegroup']
 )
 class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = MaterialGroupSerializer
@@ -30,12 +30,12 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
             return MaterialGroup.objects.none()
 
     @extend_schema(
-        summary='List MaterialGroups for the User',
-        tags=['planner.materialgroup']
+        summary='List ResourceGroups for the User',
+        tags=['planner.resourcegroup']
     )
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all material group instances for the authenticated user.
+        Return a list of all resource group instances for the authenticated user.
         """
         response = self.list(request, *args, **kwargs)
 
@@ -45,14 +45,14 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         serializer.save(user=self.request.user)
 
     @extend_schema(
-        summary='Create a MaterialGroup',
+        summary='Create a ResourceGroup',
         responses={
             201: MaterialGroupSerializer
         }
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new material group instance for the authenticated user.
+        Create a new resource group instance for the authenticated user.
         """
         response = self.create(request, *args, **kwargs)
 
@@ -62,7 +62,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
 
 
 @extend_schema(
-    tags=['planner.materialgroup']
+    tags=['planner.resourcegroup']
 )
 class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = MaterialGroupSerializer
@@ -76,19 +76,19 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
         else:
             return MaterialGroup.objects.none()
 
-    @extend_schema(summary='Retrieve a MaterialGroup')
+    @extend_schema(summary='Retrieve a ResourceGroup')
     def get(self, request, *args, **kwargs):
         """
-        Return the given material group instance.
+        Return the given resource group instance.
         """
         response = self.retrieve(request, *args, **kwargs)
 
         return response
 
-    @extend_schema(summary='Update a MaterialGroup')
+    @extend_schema(summary='Update a ResourceGroup')
     def put(self, request, *args, **kwargs):
         """
-        Update the given material group instance.
+        Update the given resource group instance.
         """
         response = self.update(request, *args, **kwargs)
 
@@ -97,12 +97,12 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
         return response
 
     @extend_schema(
-        summary='Delete a MaterialGroup',
-        tags=['planner.materialgroup']
+        summary='Delete a ResourceGroup',
+        tags=['planner.resourcegroup']
     )
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given material group instance.
+        Delete the given resource group instance.
         """
         response = self.destroy(request, *args, **kwargs)
 

@@ -30,7 +30,8 @@ _DEFAULT_PRIORITY = 50
 
 def import_ics(request, calendar, *, target_type, course_id=None, course_group_id=None,
                default_course_title=None):
-    """Import a parsed calendar into Helium against the chosen target.
+    """
+    Import a parsed calendar into Helium against the chosen target.
 
     :param request: The request performing the import (its user owns the created rows).
     :param calendar: A parsed ``icalendar.Calendar``.
@@ -65,7 +66,8 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
 
 
 def _require_imported(count):
-    """Raise when nothing landed: a `new_course` target has already created its Course, and
+    """
+    Raise when nothing landed: a `new_course` target has already created its Course, and
     unwinding the transaction is what keeps an empty one from surviving.
     """
     if count == 0:
@@ -89,7 +91,8 @@ def _resolve_target_course(request, target_type, course_id, course_group_id, cal
 
 
 def _create_course_in_group(request, course_group, calendar, default_course_title):
-    """Create a net-new Course in the chosen Group, inheriting the Group's term (a Course requires
+    """
+    Create a net-new Course in the chosen Group, inheriting the Group's term (a Course requires
     a start/end date the calendar does not carry)."""
     title = _derive_course_title(calendar, default_course_title)
     data = {
@@ -193,7 +196,8 @@ def _create_event(request, parsed, start, end, *, recurrence_rule=None, exceptio
 
 
 def _assignment_start_times(parsed, window_end_date, time_zone):
-    """Return the UTC start datetimes an Assignment should be created for.
+    """
+    Return the UTC start datetimes an Assignment should be created for.
 
     Non-recurring VEVENT → its single start. Recurring VEVENT → RRULE occurrences (minus
     EXDATEs), bounded by ``window_end_date`` (the course end) and ``_MAX_RECURRENCE_INSTANCES``,

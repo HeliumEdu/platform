@@ -10,14 +10,14 @@ from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import MaterialFilter
 from helium.planner.models import Material
-from helium.planner.permissions import IsMaterialGroupOwner
+from helium.planner.permissions import IsMaterialGroupOwner, resource_group_id_from
 from helium.planner.serializers.materialserializer import MaterialSerializer
 
 logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.material']
+    tags=['planner.resource']
 )
 class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     serializer_class = MaterialSerializer
@@ -36,20 +36,20 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
             return Material.objects.none()
 
     @extend_schema(
-        summary='List all Materials for the User',
+        summary='List all Resources for the User',
         parameters=[
             OpenApiParameter(
                 name='courses',
                 type=int,
                 many=True,
-                description='Restrict the result to materials linked to any of the given class IDs. Repeat '
+                description='Restrict the result to resources linked to any of the given class IDs. Repeat '
                             'the parameter to pass multiple IDs: `?courses=1&courses=2`.',
             ),
         ],
     )
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all material instances for the authenticated user.
+        Return a list of all resource instances for the authenticated user.
         """
         response = self.list(request, *args, **kwargs)
 
@@ -57,7 +57,7 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
 
 
 @extend_schema(
-    tags=['planner.material']
+    tags=['planner.resource']
 )
 class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = MaterialSerializer
@@ -67,31 +67,31 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
             return Material.objects.none()
 
-    @extend_schema(summary='List Materials in a MaterialGroup')
+    @extend_schema(summary='List Resources in a ResourceGroup')
     def get(self, request, *args, **kwargs):
         """
-        Return a list of all material instances for the given material group.
+        Return a list of all resource instances for the given resource group.
         """
         response = self.list(request, *args, **kwargs)
 
         return response
 
     def perform_create(self, serializer, *args, **kwargs):
-        serializer.save(material_group_id=self.kwargs['material_group'])
+        serializer.save(material_group_id=resource_group_id_from(self.kwargs))
 
     @extend_schema(
-        summary='Create a Material in a MaterialGroup',
+        summary='Create a Resource in a ResourceGroup',
         responses={
             201: MaterialSerializer
         }
     )
     def post(self, request, *args, **kwargs):
         """
-        Create a new material instance for the given material group.
+        Create a new resource instance for the given resource group.
         """
         courses = request.data.get('courses', [])
         if courses:
@@ -101,13 +101,13 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Material {response.data['id']} created in MaterialGroup {kwargs['material_group']} for user {request.user.pk}")
+            f"Material {response.data['id']} created in MaterialGroup {resource_group_id_from(kwargs)} for user {request.user.pk}")
 
         return response
 
 
 @extend_schema(
-    tags=['planner.material']
+    tags=['planner.resource']
 )
 class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = MaterialSerializer
@@ -117,23 +117,23 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['material_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
             return Material.objects.none()
 
-    @extend_schema(summary='Retrieve a Material')
+    @extend_schema(summary='Retrieve a Resource')
     def get(self, request, *args, **kwargs):
         """
-        Return the given material instance.
+        Return the given resource instance.
         """
         response = self.retrieve(request, *args, **kwargs)
 
         return response
 
-    @extend_schema(summary='Update a Material')
+    @extend_schema(summary='Update a Resource')
     def put(self, request, *args, **kwargs):
         """
-        Update the given material instance.
+        Update the given resource instance.
         """
         courses = request.data.get('courses', [])
         if courses:
@@ -147,16 +147,16 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         return response
 
     @extend_schema(
-        summary='Delete a Material',
-        tags=['planner.material']
+        summary='Delete a Resource',
+        tags=['planner.resource']
     )
     def delete(self, request, *args, **kwargs):
         """
-        Delete the given material instance.
+        Delete the given resource instance.
         """
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            f"Material {kwargs['pk']} deleted from MaterialGroup {kwargs['material_group']} for user {request.user.pk}")
+            f"Material {kwargs['pk']} deleted from MaterialGroup {resource_group_id_from(kwargs)} for user {request.user.pk}")
 
         return response

@@ -3,7 +3,8 @@ from html.parser import HTMLParser
 
 
 def is_quill_delta_terminated(ops):
-    """A Quill document delta must end in a newline. True when the last op is a
+    """
+    A Quill document delta must end in a newline. True when the last op is a
     string insert ending in ``\\n``."""
     if not ops:
         return False
@@ -13,7 +14,8 @@ def is_quill_delta_terminated(ops):
 
 
 def ensure_quill_delta_terminated(content):
-    """Return `content` with its `ops` guaranteed to end in a newline, appending
+    """
+    Return `content` with its `ops` guaranteed to end in a newline, appending
     one when the delta ends in text-without-newline or an embed. Content that is
     not a dict with a non-empty `ops` list is returned unchanged; an empty
     document is a clear-content signal, not something this repairs."""
@@ -23,6 +25,24 @@ def ensure_quill_delta_terminated(content):
     if not isinstance(ops, list) or not ops or is_quill_delta_terminated(ops):
         return content
     return {**content, 'ops': [*ops, {'insert': '\n'}]}
+
+
+def quill_delta_to_plain_text(content) -> str:
+    """
+    Flatten a Quill Delta to the text a reader sees: string `insert` ops joined in order,
+    stripped. Attributes, embeds, and the Delta structure itself are never included, so
+    the result is safe for plain-text contexts (ICS feeds, search).
+
+    :param content: The Delta as stored on the model; anything but a dict with an `ops` list yields ``''``.
+    :return: The plain text.
+    """
+    if not isinstance(content, dict):
+        return ''
+    ops = content.get('ops')
+    if not isinstance(ops, list):
+        return ''
+    return ''.join(op['insert'] for op in ops
+                   if isinstance(op, dict) and isinstance(op.get('insert'), str)).strip()
 
 
 def html_to_quill(html):

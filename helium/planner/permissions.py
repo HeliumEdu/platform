@@ -28,12 +28,18 @@ class IsCourseOwner(permissions.BasePermission):
         return True
 
 
+#: Legacy route, can be removed once all clients are reporting >= 3.9.4.
+def resource_group_id_from(kwargs):
+    return kwargs.get('resource_group', kwargs.get('material_group'))
+
+
 class IsMaterialGroupOwner(permissions.BasePermission):
     def has_permission(self, request, view):
-        if 'material_group' not in view.kwargs:
+        resource_group_id = resource_group_id_from(view.kwargs)
+        if resource_group_id is None:
             return False
 
-        check_material_group_permission(request.user.pk, view.kwargs['material_group'])
+        check_material_group_permission(request.user.pk, resource_group_id)
 
         return True
 

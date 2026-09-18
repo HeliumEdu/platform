@@ -158,6 +158,94 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], note.title)
 
+    def test_content_search_query_matches_plain_text(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = notehelper.given_note_exists(
+            user, title='Bio', content={'ops': [{'insert': 'Mitochondria are the ', 'attributes': {'bold': True}},
+                                                {'insert': 'powerhouse\n'}]})
+        notehelper.given_note_exists(user, title='Chem', content={'ops': [{'insert': 'Moles and molarity\n'}]})
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=POWERHOUSE')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [match.pk])
+        self.assertNotIn('content', response.data[0])
+
+    def test_content_search_query_ignores_delta_syntax(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        notehelper.given_note_exists(
+            user, title='Formatted', content={'ops': [{'insert': 'text', 'attributes': {'bold': True, 'list': 'bullet'}},
+                                                     {'insert': '\n'}]})
+
+        # WHEN
+        responses = {delta_token: self.client.get(reverse('planner_notes_list') + f'?search={delta_token}')
+                     for delta_token in ('insert', 'attributes', 'bold', 'list', 'bullet', 'ops')}
+
+        # THEN
+        for delta_token, response in responses.items():
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 0, msg=f'`{delta_token}` should not match Delta syntax')
+
+    def test_search_query_requires_every_term(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = notehelper.given_note_exists(user, title='Week 3',
+                                             content={'ops': [{'insert': 'Krebs cycle overview\n'}]})
+        notehelper.given_note_exists(user, title='Week 4', content={'ops': [{'insert': 'Krebs quiz prep\n'}]})
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=krebs overview')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [match.pk])
+
+    def test_search_query_folds_diacritics_and_edge_punctuation(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = notehelper.given_note_exists(user, title='Café Notes', content={'ops': [{'insert': 'Über\n'}]})
+        notehelper.given_note_exists(user, title='Other')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=cafe uber.')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [match.pk])
+
+    def test_search_query_matches_linked_entity_title(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course, title='Lab Report Draft')
+        linked = notehelper.given_note_linked_to_homework(user, homework)
+        notehelper.given_note_exists(user, title='Unrelated')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=lab report')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [linked.pk])
+
+    def test_search_query_with_include_content_still_matches(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = notehelper.given_note_exists(user, content={'ops': [{'insert': 'osmosis\n'}]})
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=osmosis&include_content=true')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [match.pk])
+        self.assertEqual(response.data[0]['content'], match.content)
+
     def test_filter_by_linked_entity_type(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)

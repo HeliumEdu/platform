@@ -115,7 +115,8 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         return CourseScheduleRecurrenceGroupSerializer(groups, many=True).data
 
     def _resolve(self, attrs, key):
-        """Effective value of ``key`` for validation: the submitted value if present
+        """
+        Effective value of ``key`` for validation: the submitted value if present
         (including an explicit null), else the instance's current value on update."""
         if key in attrs:
             return attrs[key]

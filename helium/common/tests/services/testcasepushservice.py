@@ -8,7 +8,8 @@ from helium.common.services import pushservice
 
 
 def given_send_response(*failures):
-    """Build a BatchResponse whose per-token results carry the given exceptions, one per token,
+    """
+    Build a BatchResponse whose per-token results carry the given exceptions, one per token,
     with None standing in for a successful send."""
     responses = []
     for exception in failures:

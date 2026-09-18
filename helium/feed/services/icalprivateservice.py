@@ -12,6 +12,7 @@ from django.utils.http import http_date, parse_http_date_safe
 from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
 
 from helium.planner.services import coursescheduleservice
+from helium.planner.utils.quillutils import quill_delta_to_plain_text
 
 logger = logging.getLogger(__name__)
 
@@ -119,19 +120,10 @@ def _create_calendar(user):
     return calendar
 
 
-def _delta_to_plain_text(delta):
-    """Extract plain text from a Quill Delta dict for use in plain-text contexts like ICS feeds."""
-    if not delta or "ops" not in delta:
-        return ""
-    return "".join(
-        op["insert"] for op in delta["ops"] if isinstance(op.get("insert"), str)
-    ).strip()
-
-
 def _create_event_description(event):
     notes = list(event.notes_set.all())
     if notes and notes[0].content:
-        comments = _delta_to_plain_text(notes[0].content)
+        comments = quill_delta_to_plain_text(notes[0].content)
     else:
         comments = event.comments or ""
     description = f"Comments: {comments}"
@@ -166,7 +158,7 @@ def _create_homework_description(homework):
 
     notes = list(homework.notes_set.all())
     if notes and notes[0].content:
-        comments = _delta_to_plain_text(notes[0].content)
+        comments = quill_delta_to_plain_text(notes[0].content)
     else:
         comments = homework.comments or ""
     description += f"Comments: {comments}"

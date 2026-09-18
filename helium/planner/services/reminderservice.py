@@ -203,7 +203,8 @@ def create_next_repeating_reminder(reminder):
 
 
 def clear_delivered_push(reminder):
-    """Clear a delivered reminder's notification from the user's devices.
+    """
+    Clear a delivered reminder's notification from the user's devices.
 
     A reschedule that un-sends a reminder leaves the old notification in the tray with nothing to
     clear it: it is no longer `sent`, so it drops out of the notification list and cannot be
@@ -243,7 +244,8 @@ def _reminder_for_processing(reminder_id, *prefetch):
 
 
 def _claim(reminder):
-    """Take ownership of a reminder before anything is sent for it.
+    """
+    Take ownership of a reminder before anything is sent for it.
 
     The update only matches while the row is still unsent, so of any number of workers holding
     this reminder exactly one proceeds and the rest stop here.

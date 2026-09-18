@@ -15,7 +15,7 @@ class UserSettings(BaseModel):
                                            'schedule calculations.',
                                  default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
-    default_view = models.PositiveIntegerField(help_text='The view shown by default when opening the calendar.',
+    default_view = models.PositiveIntegerField(help_text='The view shown by default when opening the Planner.',
                                                choices=enums.VIEW_CHOICES, default=enums.MONTH)
 
     week_starts_on = models.PositiveIntegerField(help_text='The day on which the week starts in calendar views.',
@@ -41,7 +41,7 @@ class UserSettings(BaseModel):
         max_length=7, validators=[validate_hex_color], default='#9d629d')
 
     material_color = models.CharField(
-        help_text='A valid hex color code choice to determine the color material badges will be.',
+        help_text='A valid hex color code choice to determine the color resource badges will be.',
         max_length=7, validators=[validate_hex_color], default='#dc7d50')
 
     calendar_event_limit = models.BooleanField(

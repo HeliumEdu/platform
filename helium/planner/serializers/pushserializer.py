@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class BlankedField(serializers.CharField):
-    """Sends an empty string in place of the stored value.
+    """
+    Sends an empty string in place of the stored value.
 
     The app needs these keys to read a reminder but never shows them on a push, and they hold text
     long enough to push a notification past what the delivery service will accept.
@@ -85,7 +86,8 @@ class PushEventSerializer(serializers.ModelSerializer):
 
 
 class PushReminderSerializer(serializers.ModelSerializer):
-    """The shape of a reminder inside a push notification payload.
+    """
+    The shape of a reminder inside a push notification payload.
 
     Every field a push sends is named here, rather than subtracted from the API representation.
     Adding a field to the planner API can therefore never grow a push; adding one here is a

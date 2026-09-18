@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def drop_duplicate_active_series(apps, schema_editor):
-    """Collapse each course series to a single active reminder before the index is built.
+    """
+    Collapse each course series to a single active reminder before the index is built.
 
     MySQL never created the conditional UniqueConstraint this replaces, so production may hold
     duplicates that would make the new index fail to apply. The lowest pk in each series is kept.

@@ -12,7 +12,8 @@ def _is_terminated(ops):
 
 
 def fix_note_newline_termination_forward(apps, schema_editor):
-    """Ensure every note's content ends in a newline.
+    """
+    Ensure every note's content ends in a newline.
 
     Legacy notes migrated verbatim by 0026 were never guaranteed to be
     newline-terminated, which Quill requires. An un-terminated delta renders a

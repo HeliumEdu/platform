@@ -29,7 +29,8 @@ _suppressed_senders: contextvars.ContextVar[frozenset] = contextvars.ContextVar(
 
 @contextmanager
 def suppress_cascade_recalculation(*senders):
-    """Stop a cascading delete from recalculating grades for the rows it is removing.
+    """
+    Stop a cascading delete from recalculating grades for the rows it is removing.
 
     Name the senders whose recalculation the delete makes redundant. A sender left out still
     recalculates, which is what keeps a surviving parent's grade correct: deleting a Course has to
@@ -152,7 +153,8 @@ def delete_attachment(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Homework)
 def delete_homework_children(sender, instance, **kwargs):
-    """Explicitly delete Homework's children before the outer Collector reaches its
+    """
+    Explicitly delete Homework's children before the outer Collector reaches its
     field_updates step. Attachment and Reminder both carry a three-FK exactly_one_parent
     CHECK constraint; on MySQL (no deferrable constraints) Django's CASCADE for nullable
     FKs emits UPDATE homework_id=NULL before DELETE, which transiently leaves all three
@@ -166,7 +168,8 @@ def delete_homework_children(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Event)
 def delete_event_children(sender, instance, **kwargs):
-    """Explicitly delete Event's children before the outer Collector reaches its
+    """
+    Explicitly delete Event's children before the outer Collector reaches its
     field_updates step — see delete_homework_children for the full rationale.
     """
     instance.notes_set.all().delete()
@@ -176,7 +179,8 @@ def delete_event_children(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Material)
 def delete_material_notes(sender, instance, **kwargs):
-    """Delete linked Notes when a Material is deleted.
+    """
+    Delete linked Notes when a Material is deleted.
 
     Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
     Note's pre_delete signal, but that's OK since the linked entity (this
@@ -187,7 +191,8 @@ def delete_material_notes(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Course)
 def delete_course_children(sender, instance, **kwargs):
-    """Explicitly delete Course's direct Attachment and Reminder children before the outer
+    """
+    Explicitly delete Course's direct Attachment and Reminder children before the outer
     Collector reaches its field_updates step — see delete_homework_children for the full
     rationale. Homework-owned children are handled by delete_homework_children when the
     Homework cascade itself fires.

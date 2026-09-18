@@ -294,8 +294,8 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
             parent_key = 'material_group'
         material_group_id = _resolve_parent(
             material_group_remap, raw_group, 'materials', parent_key)
-        material['material_group'] = material_group_id
-        material.pop('resource_group', None)
+        material['resource_group'] = material_group_id
+        material.pop('material_group', None)
 
         courses = material.get('courses') or []
         if not isinstance(courses, list):
@@ -368,7 +368,8 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
             raise ValidationError({'homework': f"Field `{field_key}` must be a list."})
         for i, material in enumerate(materials):
             materials[i] = _resolve_parent(material_remap, material, 'homework', field_key)
-        h['materials'] = materials
+        h.pop('materials', None)
+        h['resources'] = materials
 
         legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
         serializer = HomeworkSerializer(data=h)
@@ -494,7 +495,8 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
 
 @contextmanager
 def suppress_post_save_signals():
-    """Skip the per-row grade and reminder recalculations an import makes redundant.
+    """
+    Skip the per-row grade and reminder recalculations an import makes redundant.
 
     Swaps the process-wide receiver list, so every thread sees it. Safe only where the caller owns
     the process, as a prefork Celery worker does; never use it to serve a request.
@@ -514,7 +516,8 @@ def suppress_post_save_signals():
 
 
 class _ImportedExampleSchedule(NamedTuple):
-    """The remaps one seed import produced. A user can hold several example schedules, all
+    """
+    The remaps one seed import produced. A user can hold several example schedules, all
     flagged `example_schedule`, so the rebase scopes to these rather than to that flag.
     """
 

@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def _resolve_component_time_zone(component, default_time_zone):
-    """Resolve a VTIMEZONE to a tzinfo from its own offset rules, honoring a non-IANA abbreviation
+    """
+    Resolve a VTIMEZONE to a tzinfo from its own offset rules, honoring a non-IANA abbreviation
     TZID (e.g. ``EDT``). Falls back to ``default_time_zone`` if it can't yield a usable tzinfo.
     """
     try:
@@ -21,7 +22,8 @@ def _resolve_component_time_zone(component, default_time_zone):
 
 
 def _extract_exception_dates(component):
-    """Return ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
+    """
+    Return ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
 
     EXDATE can appear once with multiple values or as multiple EXDATE lines, so
     ``component.get('EXDATE')`` may return a single vDDDLists or a list of them.
@@ -43,7 +45,8 @@ def _extract_exception_dates(component):
 
 
 def _extract_extra_dates(component, default_time_zone):
-    """Return UTC datetimes for any RDATE entries on the VEVENT.
+    """
+    Return UTC datetimes for any RDATE entries on the VEVENT.
 
     RDATE attaches extra one-off occurrences to a series; the caller emits each as a
     standalone event mirroring the parent's duration. Like EXDATE, RDATE may appear once
@@ -70,7 +73,8 @@ def _extract_extra_dates(component, default_time_zone):
 
 
 def _collect_recurrence_id_overrides(calendar, default_time_zone):
-    """Map UID to a list of UTC ISO-8601 strings naming the original occurrence datetimes
+    """
+    Map UID to a list of UTC ISO-8601 strings naming the original occurrence datetimes
     that any RECURRENCE-ID overrides replace.
 
     A moved/edited single occurrence of a recurring series is a separate VEVENT sharing the
@@ -103,7 +107,8 @@ def _collect_recurrence_id_overrides(calendar, default_time_zone):
 
 
 def parse_events(calendar, default_time_zone):
-    """Yield a normalized dict for each importable VEVENT in the parsed calendar.
+    """
+    Yield a normalized dict for each importable VEVENT in the parsed calendar.
 
     Each dict has: uid, identity, title, all_day, show_end_time, start, end, url, description,
     location, recurrence_rule, exception_dates, extra_starts. All datetimes are UTC.

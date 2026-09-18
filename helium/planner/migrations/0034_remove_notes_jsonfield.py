@@ -2,7 +2,8 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Remove the `notes` JSONField from Event, Homework, and Material.
+    """
+    Remove the `notes` JSONField from Event, Homework, and Material.
 
     The standalone Note model with M2M relationships is now the single source
     of truth for notes. The dual-write sync has been removed.

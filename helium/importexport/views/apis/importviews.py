@@ -142,7 +142,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'current_grade': '-1/100',
                             'completed': False,
                             'category': 200,
-                            'materials': [],
+                            'resources': [],
                             'course': 10,
                         },
                         {
@@ -156,7 +156,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'current_grade': '-1/100',
                             'completed': False,
                             'category': 201,
-                            'materials': [],
+                            'resources': [],
                             'course': 10,
                         },
                         {
@@ -170,7 +170,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'current_grade': '-1/100',
                             'completed': False,
                             'category': 203,
-                            'materials': [],
+                            'resources': [],
                             'course': 11,
                         },
                     ],

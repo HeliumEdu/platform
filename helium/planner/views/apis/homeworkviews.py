@@ -21,6 +21,11 @@ from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_R
 logger = logging.getLogger(__name__)
 
 
+#: Legacy parameter, can be removed once all clients are reporting >= 3.9.4.
+def _requested_resource_ids(request):
+    return request.data.get('resources') or request.data.get('materials') or []
+
+
 @extend_schema(
     tags=['planner.homework']
 )
@@ -114,7 +119,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
                     'current_grade': '-1/100',
                     'completed': False,
                     'category': 4242,
-                    'materials': [],
+                    'resources': [],
                 },
                 request_only=True,
             ),
@@ -136,7 +141,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
                     'current_grade': '87/100',
                     'completed': True,
                     'category': 4243,
-                    'materials': [],
+                    'resources': [],
                 },
                 request_only=True,
             ),
@@ -150,10 +155,8 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         if category:
             permissions.check_category_permission(request.user.pk, category)
 
-        materials = request.data.get('materials', [])
-        if materials:
-            for material_id in materials:
-                permissions.check_material_permission(request.user.pk, material_id)
+        for resource_id in _requested_resource_ids(request):
+            permissions.check_material_permission(request.user.pk, resource_id)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -207,10 +210,8 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         category = request.data.get('category', None)
         if category:
             permissions.check_category_permission(request.user.pk, category)
-        materials = request.data.get('materials', [])
-        if materials:
-            for material_id in materials:
-                permissions.check_material_permission(request.user.pk, material_id)
+        for resource_id in _requested_resource_ids(request):
+            permissions.check_material_permission(request.user.pk, resource_id)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
@@ -231,10 +232,8 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
         category = request.data.get('category', None)
         if category:
             permissions.check_category_permission(request.user.pk, category)
-        materials = request.data.get('materials', [])
-        if materials:
-            for material_id in materials:
-                permissions.check_material_permission(request.user.pk, material_id)
+        for resource_id in _requested_resource_ids(request):
+            permissions.check_material_permission(request.user.pk, resource_id)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)

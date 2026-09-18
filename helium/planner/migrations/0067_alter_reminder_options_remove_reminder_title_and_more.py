@@ -5,7 +5,8 @@ from django.db.models.functions import Length, Substr
 
 
 def truncate_long_messages(apps, schema_editor):
-    """Trim messages that predate the cap so the column narrowing can't fail.
+    """
+    Trim messages that predate the cap so the column narrowing can't fail.
 
     Under a strict `sql_mode` the ALTER aborts on the first over-long row rather than trimming it.
     """

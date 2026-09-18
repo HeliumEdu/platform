@@ -52,7 +52,7 @@ class Note(BaseModel):
         'Material',
         related_name='notes_set',
         blank=True,
-        help_text='The material with which to associate (if linked, mutually exclusive with `homework` and `events`).'
+        help_text='The resource with which to associate (if linked, mutually exclusive with `homework` and `events`).'
     )
 
     objects = NoteManager()

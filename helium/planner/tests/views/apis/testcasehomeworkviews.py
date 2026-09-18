@@ -140,6 +140,90 @@ class TestCaseHomeworkViews(APITestCase):
         homeworkhelper.verify_homework_matches_data(self, homework, data)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
 
+    def test_create_homework_with_resources_emits_both_keys(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        material = materialhelper.given_material_exists(material_group)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'start': '2014-05-08T12:00:00Z',
+            'end': '2014-05-08T14:00:00Z',
+            'current_grade': '-1/100',
+            'resources': [material.pk],
+            'course': course.pk
+        }
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['resources'], [material.pk])
+        self.assertEqual(response.data['materials'], [material.pk], msg='legacy clients still read `materials`')
+
+    def test_create_homework_with_both_keys_prefers_resources(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        canonical = materialhelper.given_material_exists(material_group, title='canonical')
+        legacy = materialhelper.given_material_exists(material_group, title='legacy')
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'start': '2014-05-08T12:00:00Z',
+            'end': '2014-05-08T14:00:00Z',
+            'current_grade': '-1/100',
+            'resources': [canonical.pk],
+            'materials': [legacy.pk],
+            'course': course.pk
+        }
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['resources'], [canonical.pk])
+        self.assertEqual(response.data['materials'], [canonical.pk])
+
+    def test_create_homework_with_resources_of_another_user_fails(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists(username='user1', email='test1@email.com')
+        user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
+                                                                   email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user2)
+        course = coursehelper.given_course_exists(course_group)
+        other_material_group = materialgrouphelper.given_material_group_exists(user1)
+        other_material = materialhelper.given_material_exists(other_material_group)
+
+        # WHEN
+        data = {
+            'title': 'some title',
+            'start': '2014-05-08T12:00:00Z',
+            'end': '2014-05-08T14:00:00Z',
+            'current_grade': '-1/100',
+            'resources': [other_material.pk],
+            'course': course.pk
+        }
+        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
+                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                                    json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertIn(response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND))
+        self.assertEqual(Homework.objects.count(), 0)
+
     def test_create_homework_without_category_lands_in_uncategorized(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

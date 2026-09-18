@@ -50,6 +50,6 @@ def verify_homework_matches_data(test_case, homework, data):
         test_case.assertEqual(homework.calendar_item_type, data['calendar_item_type'])
     if 'category' in data:
         test_case.assertEqual(homework.category.pk, int(data['category']))
-    for material_id in data['materials']:
-        test_case.assertTrue(homework.materials.filter(pk=material_id).exists())
+    for resource_id in data.get('resources', data.get('materials', [])):
+        test_case.assertTrue(homework.materials.filter(pk=resource_id).exists())
     test_case.assertEqual(homework.course.pk, int(data['course']))

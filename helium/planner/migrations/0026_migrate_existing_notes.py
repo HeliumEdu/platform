@@ -2,7 +2,8 @@ from django.db import migrations
 
 
 def migrate_notes_forward(apps, schema_editor):
-    """Migrate existing inline notes to Note table.
+    """
+    Migrate existing inline notes to Note table.
 
     Title derivation: "Notes for: {Entity.title}"
     """

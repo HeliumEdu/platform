@@ -3,9 +3,12 @@ import logging
 import django_filters
 from django.db.models import Q
 from django.utils import timezone
+from rest_framework import filters
 
 from helium.common.utils.commonutils import split_csv
+from helium.common.utils.searchutils import matches_search_terms, tokenize_search_query
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Material, MaterialGroup, Attachment, Note
+from helium.planner.utils.quillutils import quill_delta_to_plain_text
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +159,7 @@ class MaterialGroupFilter(django_filters.FilterSet):
 class MaterialFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to materials whose parent material group is visible on the user's calendar.",
+        help_text="Restrict to resources whose parent resource group is visible on the user's calendar.",
     )
 
     class Meta:
@@ -204,7 +207,7 @@ class NoteFilter(django_filters.FilterSet):
     linked_entity_type = django_filters.CharFilter(
         method='filter_linked_type',
         help_text='Filter by what kind of entity the note is linked to. '
-                  'One of `homework`, `event`, `resource` (a `Material`), or `standalone` (no link).',
+                  'One of `homework`, `event`, `resource`, or `standalone` (no link).',
     )
     has_link = django_filters.BooleanFilter(
         method='filter_has_link',
@@ -220,7 +223,7 @@ class NoteFilter(django_filters.FilterSet):
     event = django_filters.NumberFilter(field_name='events__id',
                                         help_text='Filter to the note linked to this event ID.')
     resource = django_filters.NumberFilter(field_name='resources__id',
-                                           help_text='Filter to the note linked to this resource ID (a `Material`).')
+                                           help_text='Filter to the note linked to this resource ID.')
 
     class Meta:
         model = Note
@@ -263,3 +266,28 @@ class NoteFilter(django_filters.FilterSet):
         no_group = Q(homework__isnull=True, resources__isnull=True)
 
         return queryset.filter(has_matching_homework | has_matching_resource | no_group).distinct()
+
+
+class NoteSearchFilter(filters.SearchFilter):
+    """
+    `?search=` over title, linked entity title, and the plain text of `content`, with the same
+    term semantics as the app's own search fields (`searchutils`). Matches in Python rather than
+    `icontains` on the column: `content` is Delta JSON, and a column match would hit its syntax.
+    """
+    search_description = 'Search by title, `content` text, and the title of the linked homework, event, or resource.'
+
+    def get_search_terms(self, request):
+        return tokenize_search_query(request.query_params.get(self.search_param, ''))
+
+    def filter_queryset(self, request, queryset, view):
+        terms = self.get_search_terms(request)
+        if not terms:
+            return queryset
+
+        matching_pks = [note.pk for note in queryset if self._matches(note, terms)]
+        return queryset.filter(pk__in=matching_pks)
+
+    @staticmethod
+    def _matches(note, terms):
+        return matches_search_terms(
+            (note.title, quill_delta_to_plain_text(note.content), note.linked_entity_title), terms)

@@ -11,7 +11,8 @@ _request_id_var = contextvars.ContextVar('request_id', default=None)
 
 
 def sanitize_request_id(value):
-    """Return a client-supplied request id only if it is a well-formed UUID;
+    """
+    Return a client-supplied request id only if it is a well-formed UUID;
     otherwise generate a fresh one. Validating (rather than trusting verbatim)
     prevents log injection from a crafted header."""
     if value:

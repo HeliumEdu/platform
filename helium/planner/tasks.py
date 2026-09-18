@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def _retry_on_db_error(ex, metrics, task, args, retries, kwargs=None):
-    """Reschedule `task` after a transient DB error, or re-raise once retries are exhausted or the
+    """
+    Reschedule `task` after a transient DB error, or re-raise once retries are exhausted or the
     error isn't retryable. Contending grade-recalc tasks can deadlock or raise an IntegrityError when
     they touch the same rows in different orders; both clear on a delayed retry.
     """

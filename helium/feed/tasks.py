@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(bind=True)
 def reindex_feeds(self, calendar_id=None):
-    """Reindex one calendar, or queue a task for every calendar whose cache has gone stale.
+    """
+    Reindex one calendar, or queue a task for every calendar whose cache has gone stale.
 
     Handing the workers a calendar apiece leaves the distribution to Celery, and keeps any one
     task well inside its time limit however far the fleet grows.

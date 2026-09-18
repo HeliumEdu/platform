@@ -4,6 +4,7 @@ from helium.planner.utils.quillutils import (
     ensure_quill_delta_terminated,
     html_to_quill,
     is_quill_delta_terminated,
+    quill_delta_to_plain_text,
 )
 
 
@@ -159,3 +160,48 @@ class TestCaseQuillUtils(TestCase):
         self.assertIsNone(ensure_quill_delta_terminated(None))
         self.assertEqual(ensure_quill_delta_terminated({}), {})
         self.assertEqual(ensure_quill_delta_terminated({'ops': []}), {'ops': []})
+
+
+class TestCaseQuillDeltaToPlainText(TestCase):
+    def test_concatenates_string_inserts_in_order_and_strips(self):
+        # GIVEN
+        content = {'ops': [{'insert': 'Hello '}, {'insert': 'world', 'attributes': {'bold': True}},
+                           {'insert': '\n'}]}
+
+        # WHEN
+        text = quill_delta_to_plain_text(content)
+
+        # THEN
+        self.assertEqual(text, 'Hello world')
+
+    def test_attributes_and_delta_keys_are_not_text(self):
+        # GIVEN
+        content = {'ops': [{'insert': 'plain', 'attributes': {'bold': True, 'list': 'bullet', 'link': 'x'}}]}
+
+        # WHEN
+        text = quill_delta_to_plain_text(content)
+
+        # THEN
+        self.assertEqual(text, 'plain')
+
+    def test_embed_ops_are_skipped(self):
+        # GIVEN
+        content = {'ops': [{'insert': 'before '}, {'insert': {'image': 'https://example.com/a.png'}},
+                           {'insert': ' after'}]}
+
+        # WHEN
+        text = quill_delta_to_plain_text(content)
+
+        # THEN
+        self.assertEqual(text, 'before  after')
+
+    def test_empty_and_malformed_content_yield_empty_string(self):
+        # GIVEN
+        contents = (None, {}, '', [], {'ops': 'nope'}, {'ops': [None, 'str', {'no_insert': 1}]})
+
+        # WHEN
+        texts = {repr(content): quill_delta_to_plain_text(content) for content in contents}
+
+        # THEN
+        for content, text in texts.items():
+            self.assertEqual(text, '', msg=content)

@@ -58,7 +58,8 @@ def _extract_zones(path: Path) -> set[str]:
 
 
 def _fetch_iana_links(release: str) -> dict[str, str]:
-    """Return ``{alias: target}`` from the ``backward`` file of IANA ``release``.
+    """
+    Return ``{alias: target}`` from the ``backward`` file of IANA ``release``.
 
     Link records are the only authoritative source. Matching UTC offsets instead maps
     ``Asia/Saigon`` onto ``Asia/Bangkok``; comparing TZif bytes cannot break ties
@@ -86,7 +87,8 @@ def _fetch_iana_links(release: str) -> dict[str, str]:
 
 
 def _resolve_aliases(links: dict[str, str], selectable: set[str]) -> dict[str, str]:
-    """Map each alias onto the first zone in ``selectable`` along its Link chain.
+    """
+    Map each alias onto the first zone in ``selectable`` along its Link chain.
 
     Stopping early matters: IANA consolidates zones, so walking a chain to its end
     can pass right by the zone a user would recognize.
@@ -112,7 +114,8 @@ _ALIAS_PATTERN = re.compile(
 
 
 def _extract_alias_pairs(path: Path) -> dict[str, str]:
-    """Alias pairs already emitted to ``path``, unioned in so a retired IANA Link
+    """
+    Alias pairs already emitted to ``path``, unioned in so a retired IANA Link
     does not send devices still reporting it back to the UTC fallback."""
     if not path.exists():
         return {}

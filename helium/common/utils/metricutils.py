@@ -70,7 +70,8 @@ def _client_tags(request):
 
 
 def _user_tags(user):
-    """Resolve the requester's identity tags. Anonymous users are tagged `staff:false` so that
+    """
+    Resolve the requester's identity tags. Anonymous users are tagged `staff:false` so that
     filter doesn't silently drop unauthenticated traffic."""
     if not user:
         return []
@@ -163,7 +164,8 @@ def path_to_metric_id(path):
 
 
 def route_to_metric_id(route):
-    """Normalize a resolved route template to a metric ID, dropping dynamic segments so per-request
+    """
+    Normalize a resolved route template to a metric ID, dropping dynamic segments so per-request
     values (e.g. private slugs) never inflate the metric's tag cardinality."""
     return path_to_metric_id(re.sub(r'<[^>]+>', '', route))
 
@@ -201,7 +203,8 @@ def request_stop(metrics, request, response):
 
 
 def _stash_metrics_on_request(metrics):
-    """Make a task's metrics reachable from :class:`taskutils.MetricsTask`, which otherwise has no
+    """
+    Make a task's metrics reachable from :class:`taskutils.MetricsTask`, which otherwise has no
     way to know the name the body started under. A no-op outside a task."""
     try:
         task = current_task

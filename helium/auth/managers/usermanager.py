@@ -17,7 +17,8 @@ class UserQuerySet(models.query.QuerySet):
         return self.filter(Q(email=email) | Q(email_changing=email)).exclude(pk=user_id).exists()
 
     def can_login(self):
-        """Exclude users with a pending async deletion. Use for any lookup in a login /
+        """
+        Exclude users with a pending async deletion. Use for any lookup in a login /
         verification / password-reset path, so a user mid-cascade-delete behaves as 'not found'
         while their email/username remain reserved against re-registration.
         """

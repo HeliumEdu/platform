@@ -1,5 +1,6 @@
 import logging
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.planner.models import MaterialGroup
@@ -7,6 +8,8 @@ from helium.planner.models import MaterialGroup
 logger = logging.getLogger(__name__)
 
 
+#: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
+@extend_schema_serializer(component_name='ResourceGroup')
 class MaterialGroupSerializer(serializers.ModelSerializer):
     """
     A bucket of resources, organized free-form (by term, by kind, all in

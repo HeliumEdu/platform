@@ -38,7 +38,8 @@ def add_publish_time(sender=None, headers=None, **kwargs):
 
 @before_task_publish.connect(weak=False)
 def propagate_request_id(sender=None, headers=None, **kwargs):
-    """Carry the publisher's request id into task headers so worker logs stay
+    """
+    Carry the publisher's request id into task headers so worker logs stay
     correlated with the originating request."""
     request_id = get_request_id()
     if headers is not None and request_id is not None:
@@ -49,7 +50,8 @@ def propagate_request_id(sender=None, headers=None, **kwargs):
 
 @task_prerun.connect(weak=False)
 def bind_request_id(sender=None, task_id=None, task=None, **kwargs):
-    """Bind the propagated request id (if any) to the worker context and Sentry
+    """
+    Bind the propagated request id (if any) to the worker context and Sentry
     scope for the duration of the task."""
     request = getattr(task, 'request', None)
     task_headers = getattr(request, 'headers', None) or {}

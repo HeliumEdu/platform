@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
-from helium.planner.filters import NoteFilter
+from helium.planner.filters import NoteFilter, NoteSearchFilter
 from helium.planner.models import Note
 from helium.planner.serializers.noteserializer import NoteSerializer, NoteExtendedSerializer, NoteListSerializer
 
@@ -21,9 +21,8 @@ logger = logging.getLogger(__name__)
 class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = NoteSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, NoteSearchFilter, filters.OrderingFilter)
     filterset_class = NoteFilter
-    search_fields = ('title',)
     ordering_fields = ('title', 'created_at', 'updated_at')
 
     def get_queryset(self):
@@ -71,7 +70,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         """
         Create a note for the authenticated user.
 
-        To link a note, pass exactly one of `homework`, `event`, or `resource` (a `Material`); giving more than one type,
+        To link a note, pass exactly one of `homework`, `event`, or `resource`; giving more than one type,
         more than one item of the same type, or an entity that already has a note returns a 400.
         """
         serializer = self.get_serializer(data=request.data)

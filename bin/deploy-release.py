@@ -103,7 +103,8 @@ def update_terraform_variables(deploy_repo_path, environment, version):
 
 
 def commit_and_push_changes(deploy_repo_path, version, environment):
-    """Commit and push Terraform changes.
+    """
+    Commit and push Terraform changes.
 
     Returns:
         tuple: (success: bool, changes_pushed: bool)
