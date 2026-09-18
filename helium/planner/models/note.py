@@ -6,6 +6,7 @@ from django.db import models
 
 from helium.common.models import BaseModel
 from helium.planner.managers.notemanager import NoteManager
+from helium.planner.utils.quillutils import quill_delta_to_plain_text
 
 
 class Note(BaseModel):
@@ -69,6 +70,10 @@ class Note(BaseModel):
     def _get_cached_m2m(self, attr_name):
         """Get M2M relation as list, using prefetch cache if available."""
         return list(getattr(self, attr_name).all())
+
+    @property
+    def content_text(self) -> str:
+        return quill_delta_to_plain_text(self.content)
 
     @property
     def linked_entity(self):

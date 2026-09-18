@@ -247,7 +247,7 @@ REST_FRAMEWORK = {
         'forgot_password_email': '1/min',
         'resend_verification_email': '1/min',
     },
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend', 'helium.common.search.HeliumSearchFilter',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'helium.common.pagination.DefaultPageNumberPagination',
 }

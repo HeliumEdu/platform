@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
+from helium.common.search import HeliumSearchFilter
 from helium.common.views.base import HeliumAPIView
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
@@ -27,9 +28,10 @@ logger = logging.getLogger(__name__)
 class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     serializer_class = EventSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
+    filter_backends = (DjangoFilterBackend, HeliumSearchFilter, filters.OrderingFilter,)
     filterset_class = EventFilter
-    search_fields = ('title', 'comments')
+    search_fields = ('title', 'comments_text')
+    search_description = 'Search by title and comments.'
     order_fields = ('start', 'title', 'priority',)
 
     def get_queryset(self):

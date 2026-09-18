@@ -95,21 +95,17 @@ def record_feed_success(external_calendar):
     external_calendar.last_sync_error = None
 
 
-def _apply_event_filters(event, _from, to, search):
+def _apply_event_filters(event, _from, to):
     if _from and to and not (
             (_from <= event.start <= to or _from <= event.end <= to) or
             # Also include results where start/end dates are wider than the window
             (event.start <= _from and event.end >= to)):
         return False
 
-    if search and not (search in event.title.lower() or
-                       (event.comments and search in event.comments.lower())):
-        return False
-
     return True
 
 
-def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None, search=None):
+def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None):
     events = []
     invalid_data = False
 
@@ -131,7 +127,7 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
             event.color = external_calendar.color
             event.location = event_data.get('location')
 
-            if _apply_event_filters(event, _from, to, search):
+            if _apply_event_filters(event, _from, to):
                 events.append(event)
     except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
@@ -143,7 +139,7 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None,
     return events, not invalid_data
 
 
-def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None, search=None):
+def _create_events_from_calendar(external_calendar, calendar, _from=None, to=None):
     events = []
     events_filtered = []
 
@@ -171,7 +167,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
         events.append(event)
 
-        if _apply_event_filters(event, _from, to, search):
+        if _apply_event_filters(event, _from, to):
             events_filtered.append(event)
 
         # RDATE: emit one standalone Event per extra occurrence, mirroring the
@@ -194,7 +190,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             extra_event.color = external_calendar.color
             extra_event.location = parsed['location']
             events.append(extra_event)
-            if _apply_event_filters(extra_event, _from, to, search):
+            if _apply_event_filters(extra_event, _from, to):
                 events_filtered.append(extra_event)
 
     serializer = GeneratedEventSerializer(events, many=True)
@@ -320,7 +316,7 @@ def fetch_ical_conditional(external_calendar):
         raise HeliumICalError("The URL did not return a valid iCal feed.", 'invalid_feed')
 
 
-def calendar_to_events(external_calendar, _from=None, to=None, search=None):
+def calendar_to_events(external_calendar, _from=None, to=None):
     """
     For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
     resources.
@@ -328,7 +324,6 @@ def calendar_to_events(external_calendar, _from=None, to=None, search=None):
     :param external_calendar: The external calendar source that is referenced by the calendar object.
     :param _from: The earliest date by which to filter results.
     :param to: The last date by which to filter results.
-    :param search: The search string to filter by.
     :return: A list of event resources.
     """
     events = []
@@ -336,12 +331,12 @@ def calendar_to_events(external_calendar, _from=None, to=None, search=None):
     cached = False
     cached_value = cache.get(_get_cache_prefix(external_calendar))
     if cached_value:
-        events, cached = _get_events_from_cache(external_calendar, cached_value, _from, to, search)
+        events, cached = _get_events_from_cache(external_calendar, cached_value, _from, to)
 
     if not cached:
         calendar = validate_url(external_calendar.url)
 
-        events = _create_events_from_calendar(external_calendar, calendar, _from, to, search)
+        events = _create_events_from_calendar(external_calendar, calendar, _from, to)
 
     return events
 

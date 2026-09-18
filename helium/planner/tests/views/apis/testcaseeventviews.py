@@ -564,6 +564,19 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_search_query_requires_every_term_across_title_and_comments(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = eventhelper.given_event_exists(user, title='Study group', comments='<p>Library, 3rd floor</p>')
+        eventhelper.given_event_exists(user, title='Study group', comments='<p>Dorm lounge</p>')
+
+        # WHEN
+        response = self.client.get(reverse('planner_events_list') + '?search=study library')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([event['id'] for event in response.data], [match.pk])
+
     def test_title_search_query(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

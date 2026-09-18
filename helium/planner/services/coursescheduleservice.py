@@ -103,21 +103,17 @@ def _get_cache_prefix(course):
     return f"users:{course.course_group.user_id}:courses:{course.pk}:coursescheduleevents:"
 
 
-def _apply_event_filters(event, _from, to, search):
+def _apply_event_filters(event, _from, to):
     if _from and to and not (
             (_from <= event.start <= to or _from <= event.end <= to) or
             # Also include results where start/end dates are wider than the window
             (event.start <= _from and event.end >= to)):
         return False
 
-    if search and not (search in event.title.lower() or
-                       (event.comments and search in event.comments.lower())):
-        return False
-
     return True
 
 
-def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None, search=None):
+def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None):
     events = []
     invalid_data = False
 
@@ -136,7 +132,7 @@ def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=No
                           comments=event['comments'])
             event.color = course.color
 
-            if _apply_event_filters(event, _from, to, search):
+            if _apply_event_filters(event, _from, to):
                 events.append(event)
     except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
@@ -186,7 +182,7 @@ def schedule_meeting_times_for_day(course_schedule, day, exceptions):
     return []
 
 
-def _create_events_from_course_schedules(course, course_schedules, _from=None, to=None, search=None):
+def _create_events_from_course_schedules(course, course_schedules, _from=None, to=None):
     events = []
     events_filtered = []
 
@@ -226,7 +222,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
                 events.append(event)
 
-                if _apply_event_filters(event, _from, to, search):
+                if _apply_event_filters(event, _from, to):
                     events_filtered.append(event)
 
         day += datetime.timedelta(days=1)
@@ -299,7 +295,7 @@ def clear_cached_course_schedule(course):
     cache.delete_many(cached_keys)
 
 
-def course_schedules_to_events(course, course_schedules, _from=None, to=None, search=None):
+def course_schedules_to_events(course, course_schedules, _from=None, to=None):
     """
     For the given course schedule model, generate an event for each class time within the course's start/end window.
 
@@ -307,7 +303,6 @@ def course_schedules_to_events(course, course_schedules, _from=None, to=None, se
     :param course_schedules: A list of course schedules to generate the events for.
     :param _from: The earliest date by which to filter results.
     :param to: The last date by which to filter results.
-    :param search: The search string to filter by.
     :return: A list of event resources.
     """
     events = []
@@ -316,10 +311,10 @@ def course_schedules_to_events(course, course_schedules, _from=None, to=None, se
     cache_prefix = _get_cache_prefix(course)
     cached_value = cache.get(_get_cache_prefix(course))
     if cached_value:
-        events, cached = _get_events_from_cache(course, cache_prefix, cached_value, _from, to, search)
+        events, cached = _get_events_from_cache(course, cache_prefix, cached_value, _from, to)
 
     if not cached:
-        events = _create_events_from_course_schedules(course, course_schedules, _from, to, search)
+        events = _create_events_from_course_schedules(course, course_schedules, _from, to)
 
     return events
 

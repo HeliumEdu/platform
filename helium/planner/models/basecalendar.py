@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models
+from django.utils.html import strip_tags
 
 from helium.common.models import BaseModel
 
@@ -47,6 +48,10 @@ class BaseCalendar(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
+
+    @property
+    def comments_text(self) -> str:
+        return strip_tags(self.comments)
 
     @property
     def calendar_item_type(self) -> int:

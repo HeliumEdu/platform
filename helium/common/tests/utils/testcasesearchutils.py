@@ -22,10 +22,16 @@ class TestCaseTokenizeSearchQuery(TestCase):
         self.assertEqual(tokenize_search_query('  Krebs   CYCLE\tcafé '), ['krebs', 'cycle', 'cafe'])
 
     def test_strips_edge_punctuation_but_keeps_internal(self):
-        self.assertEqual(tokenize_search_query('weekend. p.42-50 "quoted" c++'), ['weekend', 'p.42-50', 'quoted', 'c'])
+        self.assertEqual(tokenize_search_query('weekend. p.42-50 c++'), ['weekend', 'p.42-50', 'c'])
 
-    def test_quotes_carry_no_phrase_meaning(self):
-        self.assertEqual(tokenize_search_query('"weekend plan"'), ['weekend', 'plan'])
+    def test_double_quoted_span_is_one_phrase_term(self):
+        self.assertEqual(tokenize_search_query('"Lab  Report" due'), ['lab report', 'due'])
+
+    def test_phrase_edge_punctuation_is_stripped_and_unmatched_quote_is_punctuation(self):
+        self.assertEqual(tokenize_search_query('"weekend plan." draft"'), ['weekend plan', 'draft'])
+
+    def test_single_quotes_are_ordinary_characters(self):
+        self.assertEqual(tokenize_search_query("don't 'forget'"), ["don't", 'forget'])
 
     def test_blank_and_punctuation_only_queries_yield_no_terms(self):
         for query in ('', '   ', '...', '"" ,'):
