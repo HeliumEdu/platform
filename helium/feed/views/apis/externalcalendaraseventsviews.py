@@ -1,11 +1,12 @@
 import logging
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
+from helium.common.search import HeliumSearchFilter
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.planner.models import Event
@@ -23,6 +24,8 @@ logger = logging.getLogger(__name__)
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = GeneratedEventSerializer
     permission_classes = (IsAuthenticated,)
+    search_fields = ('title', 'comments_text')
+    search_description = 'Search by title and comments.'
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -33,7 +36,6 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         summary='List Events from all ExternalCalendars',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
-            OpenApiParameter(name='search', description='A search term.', type=str),
         ]
     )
     def get(self, request, *args, **kwargs):
@@ -64,15 +66,15 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             if "from" in request.query_params else None
         to = _parse_date_param_to_utc(request.query_params["to"], user_tz_name) \
             if "to" in request.query_params else None
-        search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         events = []
         for external_calendar in external_calendars:
             try:
-                events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
+                events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to)
             except HeliumICalError as e:
                 icalexternalcalendarservice.record_feed_failure(external_calendar, e)
 
+        events = HeliumSearchFilter().filter_queryset(request, events, self)
         serializer = self.get_serializer(events, many=True)
 
         return Response(serializer.data)
@@ -84,6 +86,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = GeneratedEventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
+    search_fields = ('title', 'comments_text')
+    search_description = 'Search by title and comments.'
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -95,7 +99,6 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         summary='List Events from an ExternalCalendar',
         parameters=[
             *CALENDAR_DATE_RANGE_PARAMETERS,
-            OpenApiParameter(name='search', description='A search term.', type=str),
         ]
     )
     def get(self, request, *args, **kwargs):
@@ -126,16 +129,16 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             if "from" in request.query_params else None
         to = _parse_date_param_to_utc(request.query_params["to"], user_tz_name) \
             if "to" in request.query_params else None
-        search = request.query_params["search"].lower() if "search" in request.query_params else None
 
         try:
-            events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to, search)
+            events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to)
         except HeliumICalError as e:
             if icalexternalcalendarservice.record_feed_failure(external_calendar, e):
                 raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
 
             raise ValidationError(str(e))
 
+        events = HeliumSearchFilter().filter_queryset(request, events, self)
         serializer = self.get_serializer(events, many=True)
 
         return Response(serializer.data)

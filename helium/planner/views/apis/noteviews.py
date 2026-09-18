@@ -10,7 +10,8 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
-from helium.planner.filters import NoteFilter, NoteSearchFilter
+from helium.common.search import HeliumSearchFilter
+from helium.planner.filters import NoteFilter
 from helium.planner.models import Note
 from helium.planner.serializers.noteserializer import NoteSerializer, NoteExtendedSerializer, NoteListSerializer
 
@@ -21,8 +22,10 @@ logger = logging.getLogger(__name__)
 class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = NoteSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, NoteSearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, HeliumSearchFilter, filters.OrderingFilter)
     filterset_class = NoteFilter
+    search_fields = ('title', 'content_text', 'linked_entity_title')
+    search_description = 'Search by title, content text, and the title of the linked homework, event, or resource.'
     ordering_fields = ('title', 'created_at', 'updated_at')
 
     def get_queryset(self):

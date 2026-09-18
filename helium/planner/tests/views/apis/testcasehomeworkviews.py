@@ -826,6 +826,39 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], homework.title)
 
+    def test_search_query_folds_diacritics_and_ignores_html_in_comments(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        match = homeworkhelper.given_homework_exists(course, title='Café reading', comments='<div>notes</div>')
+        homeworkhelper.given_homework_exists(course, title='Other', comments='<div>other</div>')
+
+        # WHEN
+        folded = self.client.get(reverse('planner_homework_list') + '?search=cafe')
+        html_tag = self.client.get(reverse('planner_homework_list') + '?search=div')
+
+        # THEN
+        self.assertEqual([homework['id'] for homework in folded.data], [match.pk])
+        self.assertEqual(html_tag.data, [])
+
+    def test_search_query_applies_within_date_range(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        in_range = homeworkhelper.given_homework_exists(course, title='Quiz', start=datetime.datetime(2017, 5, 8, 12, 0, tzinfo=datetime.timezone.utc),
+                                                        end=datetime.datetime(2017, 5, 8, 14, 0, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_homework_exists(course, title='Quiz', start=datetime.datetime(2017, 6, 8, 12, 0, tzinfo=datetime.timezone.utc),
+                                             end=datetime.datetime(2017, 6, 8, 14, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        response = self.client.get(reverse('planner_homework_list') + '?search=quiz&from=2017-05-01&to=2017-05-31')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([homework['id'] for homework in response.data], [in_range.pk])
+
     def test_course_search_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)

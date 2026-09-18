@@ -1898,6 +1898,48 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Material.objects.count(), 1)
 
+    def test_import_homework_resources_and_legacy_materials_keys_map_alike(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        homework_row = {
+            'all_day': False, 'show_end_time': False, 'start': '2024-02-01T10:00:00Z',
+            'end': '2024-02-01T12:00:00Z', 'priority': 50, 'current_grade': '-1/100', 'completed': False,
+            'category': 1, 'course': 1,
+        }
+        payload['homework'] = [
+            {'id': 20, 'title': 'Canonical', 'resources': [1], **homework_row},
+            {'id': 21, 'title': 'Legacy', 'materials': [1], **homework_row},
+        ]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
+        material = Material.objects.get()
+        for title in ('Canonical', 'Legacy'):
+            self.assertEqual(list(Homework.objects.get(title=title).materials.all()), [material], msg=title)
+
+    def test_import_resource_group_and_legacy_material_group_keys_map_alike(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        resource_row = {'status': 0, 'condition': 0, 'website': '', 'price': '', 'courses': []}
+        payload['materials'] = [
+            {'id': 1, 'title': 'Canonical', 'resource_group': 1, **resource_row},
+            {'id': 2, 'title': 'Legacy', 'material_group': 1, **resource_row},
+        ]
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
+        material_group = MaterialGroup.objects.get()
+        for title in ('Canonical', 'Legacy'):
+            self.assertEqual(Material.objects.get(title=title).material_group, material_group, msg=title)
+
     def test_import_note_both_resources_and_materials_rejected(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

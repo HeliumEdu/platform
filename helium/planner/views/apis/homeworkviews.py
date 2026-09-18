@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
+from helium.common.search import HeliumSearchFilter
 from helium.common.views.base import HeliumAPIView
 from helium.planner import permissions
 from helium.planner.filters import HomeworkFilter
@@ -32,9 +33,10 @@ def _requested_resource_ids(request):
 class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
+    filter_backends = (DjangoFilterBackend, HeliumSearchFilter, filters.OrderingFilter,)
     filterset_class = HomeworkFilter
-    search_fields = ('title', 'comments', 'category__title', 'course__title',)
+    search_fields = ('title', 'comments_text', 'category__title', 'course__title',)
+    search_description = 'Search by title, comments, category title, and class title.'
     order_fields = ('start', 'title', 'completed', 'priority', 'category__title', 'course__title',)
 
     def get_queryset(self):

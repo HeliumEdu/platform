@@ -217,6 +217,20 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual([note['id'] for note in response.data], [match.pk])
 
+    def test_search_query_quoted_phrase_must_match_contiguously(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        match = notehelper.given_note_exists(user, title='Lab Report Draft')
+        notehelper.given_note_exists(user, title='Report on the lab')
+
+        # WHEN
+        phrase = self.client.get(reverse('planner_notes_list') + '?search="lab report"')
+        words = self.client.get(reverse('planner_notes_list') + '?search=lab report')
+
+        # THEN
+        self.assertEqual([note['id'] for note in phrase.data], [match.pk])
+        self.assertEqual(len(words.data), 2)
+
     def test_search_query_matches_linked_entity_title(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
