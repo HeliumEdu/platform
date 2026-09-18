@@ -4,10 +4,10 @@ from zoneinfo import ZoneInfo
 
 import icalendar
 from django.conf import settings
-from django.db.models import Max, Prefetch
+from django.db.models import Max
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.http import http_date, parse_http_date_safe
+from django.utils.http import parse_http_date_safe
 
 from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
 

@@ -1,14 +1,11 @@
 import logging
-from datetime import datetime
-from unittest import mock
 
 from django.test import TestCase, RequestFactory
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.feed.services import icalprivateservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
-    homeworkhelper, eventhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper
 
 logger = logging.getLogger(__name__)
 

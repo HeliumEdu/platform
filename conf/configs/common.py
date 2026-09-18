@@ -2,11 +2,10 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.1"
+__version__ = "2.4.2"
 
 import json
 import os
-import socket
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -205,8 +204,6 @@ LOGOUT_URL = 'admin:logout'
 LOGOUT_REDIRECT_URL = '/admin/'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
-
-HOSTNAME = socket.gethostname()
 
 SUPPORT_URL = f"https://www.{ENVIRONMENT_PREFIX}heliumedu.com/support" if 'local' not in ENVIRONMENT else "https://www.heliumedu.com/support"
 STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
@@ -459,6 +456,7 @@ SPECTACULAR_SETTINGS = {
         'DefaultViewEnum': enums.VIEW_CHOICES,
         'DayOfWeekEnum': enums.DAY_OF_WEEK_CHOICES,
         'ColorSchemeThemeEnum': enums.COLOR_SCHEME_THEME,
+        'CalendarItemTypeEnum': enums.CALENDAR_ITEM_TYPE_CHOICES,
     },
     'TAGS': [
         {
@@ -559,8 +557,6 @@ SES_CONFIGURATION_SET = f'helium-{ENVIRONMENT}'
 SES_COMPLAINT_SUPPRESS_THRESHOLD = int(config('PLATFORM_SES_COMPLAINT_SUPPRESS_THRESHOLD', '2'))
 
 SES_SNS_TOPIC_ARN = config('PLATFORM_SES_SNS_TOPIC_ARN', '')
-
-SUPPORT_INBOX_EMAIL = config('PLATFORM_SUPPORT_INBOX_EMAIL', 'support@heliumedu.atlassian.net')
 
 # JSM (Jira Service Management) support intake
 

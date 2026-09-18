@@ -1,8 +1,6 @@
 import datetime
 
-from django.db import connection
 from django.test import TestCase
-from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper

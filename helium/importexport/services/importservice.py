@@ -10,11 +10,9 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save
-from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
-from rest_framework.request import Request
 
 from helium.common import enums
 from helium.common.utils import metricutils, taskutils

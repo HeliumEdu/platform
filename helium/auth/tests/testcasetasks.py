@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from helium.auth.tasks import (
     sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
-    evaluate_review_prompts, delete_user, process_dormant_users, send_dormant_user_warning_email
+    evaluate_review_prompts, delete_user, process_dormant_users
 )
 from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper

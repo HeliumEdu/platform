@@ -1,7 +1,6 @@
 import datetime
 from unittest.mock import patch
 
-from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper

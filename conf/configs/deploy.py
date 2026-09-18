@@ -58,7 +58,7 @@ if 'celery' not in sys.argv[0]:
         ALLOWED_HOSTS = common.ALLOWED_HOSTS + private_ips
 
         print(f"INFO: Added AWS private IP {private_ips} to ALLOWED_HOSTS")
-    except Exception as e:
+    except Exception:
         print("INFO: No AWS IPs added to ALLOWED_HOSTS, ignore if not running on AWS")
 else:
     ALLOWED_HOSTS = common.ALLOWED_HOSTS

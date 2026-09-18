@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from django.db import IntegrityError, transaction
-from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
@@ -136,7 +135,7 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.email_changing = None
                 instance.save()
 
-        old_password = validated_data.pop('old_password', None)
+        validated_data.pop('old_password', None)
         password = validated_data.pop('password', None)
         instance = super().update(instance, validated_data)
 
@@ -198,12 +197,6 @@ class UserCreateSerializer(serializers.Serializer):
 
     example_schedule = serializers.BooleanField(required=False, default=True,
                                                 help_text='If False, skip provisioning the user with an example schedule.')
-
-
-class UserVerifySerializer(serializers.Serializer):
-    email = serializers.CharField(help_text='The email for the user.')
-
-    code = serializers.CharField(help_text=get_user_model()._meta.get_field('verification_code').help_text)
 
 
 class UserForgotSerializer(serializers.Serializer):
