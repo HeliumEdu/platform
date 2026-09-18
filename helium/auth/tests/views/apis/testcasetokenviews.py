@@ -1,8 +1,6 @@
 import json
 from unittest import mock
 
-import jwt
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone

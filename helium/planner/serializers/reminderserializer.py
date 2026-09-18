@@ -60,14 +60,6 @@ class ReminderSerializer(serializers.ModelSerializer):
         if request_set_count > 1:
             raise serializers.ValidationError("Only one of `event`, `homework`, or `course` may be given.")
 
-        # Determine what the final parent will be after this update
-        # If a new parent is being set, it replaces any existing one
-        if request_set_count > 0:
-            final_has_course = bool(course_in_request)
-        else:
-            # No new parent in request, keep existing
-            final_has_course = self.instance and self.instance.course
-
         # Capture original parent refs before nulling them out below, for the sent-reset check.
         orig_homework = self.instance.homework if self.instance else None
         orig_event = self.instance.event if self.instance else None

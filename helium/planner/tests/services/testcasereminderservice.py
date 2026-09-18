@@ -694,14 +694,6 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertTrue(Reminder.objects.filter(pk=reminder.pk).exists())
 
-    def given_a_due_reminder(self, type):
-        user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(
-            user,
-            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
-            end=timezone.now() + datetime.timedelta(minutes=10))
-        return reminderhelper.given_reminder_exists(user, type=type, event=event)
-
     @mock.patch('helium.planner.services.reminderservice.taskutils.safe_apply_async')
     def test_process_email_reminder_claims_before_a_concurrent_worker_can_send(self, mock_apply):
         # GIVEN

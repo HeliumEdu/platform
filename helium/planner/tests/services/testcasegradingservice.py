@@ -620,7 +620,8 @@ class TestCaseGradingService(TestCase):
         course.refresh_from_db()
 
         # WHEN
-        homework_series = gradingservice.get_homework_series_for_course(course.pk)
+        grade_data = gradingservice.get_grade_data(user.pk)
+        homework_series = grade_data['course_groups'][0]['courses'][0]['homework_series']
         graded = [item for item in homework_series if item['graded']]
 
         # THEN
@@ -686,7 +687,8 @@ class TestCaseGradingService(TestCase):
         course.refresh_from_db()
 
         # WHEN
-        homework_series = gradingservice.get_homework_series_for_course(course.pk)
+        grade_data = gradingservice.get_grade_data(user.pk)
+        homework_series = grade_data['course_groups'][0]['courses'][0]['homework_series']
         graded = [item for item in homework_series if item['graded']]
 
         # THEN
@@ -749,7 +751,8 @@ class TestCaseGradingService(TestCase):
         course.refresh_from_db()
 
         # WHEN
-        homework_series = gradingservice.get_homework_series_for_course(course.pk)
+        grade_data = gradingservice.get_grade_data(user.pk)
+        homework_series = grade_data['course_groups'][0]['courses'][0]['homework_series']
         graded = [item for item in homework_series if item['graded']]
 
         # THEN
@@ -810,7 +813,8 @@ class TestCaseGradingService(TestCase):
         course.refresh_from_db()
 
         # WHEN
-        homework_series = gradingservice.get_homework_series_for_course(course.pk)
+        grade_data = gradingservice.get_grade_data(user.pk)
+        homework_series = grade_data['course_groups'][0]['courses'][0]['homework_series']
         graded = [item for item in homework_series if item['graded']]
 
         # THEN

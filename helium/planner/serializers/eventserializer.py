@@ -4,6 +4,7 @@ from django.db import models as django_models
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
+from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.utils.validators import (
     infer_byday_for_weekly_rrule,
@@ -29,6 +30,8 @@ class EventSerializer(serializers.ModelSerializer):
     location = serializers.CharField(read_only=True, required=False, allow_null=True)
     exception_dates = ExceptionDatesField(required=False, allow_null=True)
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
+    calendar_item_type = serializers.ChoiceField(choices=enums.CALENDAR_ITEM_TYPE_CHOICES, read_only=True,
+                                                 help_text='Which kind of calendar item this is; a client can key rendering off it without inspecting the URL it came from.')
 
     class Meta:
         model = Event

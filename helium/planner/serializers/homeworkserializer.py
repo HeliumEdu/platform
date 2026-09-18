@@ -4,6 +4,7 @@ from django.db import models as django_models
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
+from helium.common import enums
 from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
@@ -30,6 +31,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
 
     course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
+
+    calendar_item_type = serializers.ChoiceField(choices=enums.CALENDAR_ITEM_TYPE_CHOICES, read_only=True,
+                                                 help_text='Which kind of calendar item this is; a client can key rendering off it without inspecting the URL it came from.')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

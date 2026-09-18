@@ -16,14 +16,14 @@ from helium.planner.models import CourseGroup, Course, Category, Homework
 logger = logging.getLogger(__name__)
 
 
-def get_grade_points_for_course_group(course_group_id):
+def _get_grade_points_for_course_group(course_group_id):
     course_grade_points = []
     courses = (Course.objects.for_course_group(course_group_id)
                .annotate(annotated_has_weighted_grading=Exists(
                    Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)
                )))
     has_weighted_by_course = {course.id: course.annotated_has_weighted_grading for course in courses}
-    grade_points_by_course = get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course)
+    grade_points_by_course = _get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course)
     for course in courses:
         course_grade_points += grade_points_by_course.get(course.id, [])
     course_grade_points = sorted(course_grade_points, key=lambda x: x[0])
@@ -65,56 +65,24 @@ def _graded_grade_point_values(homework_queryset):
                     'grade'))
 
 
-def get_grade_points_for_course(course_id, has_weighted_grading=None):
+def _get_grade_points_for_course(course_id, has_weighted_grading=None):
     if has_weighted_grading is None:
         has_weighted_grading = Course.objects.has_weighted_grading(course_id)
     query_set = _graded_grade_point_values(Homework.objects.for_course(course_id))
 
-    return get_grade_points_for(query_set, has_weighted_grading)
+    return _get_grade_points_for(query_set, has_weighted_grading)
 
 
-def get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course):
+def _get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course):
     grade_points_by_course = {}
     for item in _graded_grade_point_values(Homework.objects.for_course_group(course_group_id)):
         grade_points_by_course.setdefault(item['course'], []).append(item)
 
-    return {course_id: get_grade_points_for(items, has_weighted_by_course.get(course_id, False))
+    return {course_id: _get_grade_points_for(items, has_weighted_by_course.get(course_id, False))
             for course_id, items in grade_points_by_course.items()}
 
 
-def get_homework_series_for_course(course_id, has_weighted_grading=None):
-    if has_weighted_grading is None:
-        has_weighted_grading = Course.objects.has_weighted_grading(course_id)
-    grade_points = get_grade_points_for_course(course_id, has_weighted_grading)
-    categories = list(Category.objects.for_course(course_id)
-                      .annotate(
-                          annotated_num_homework=Count('homework', distinct=True),
-                          annotated_num_homework_graded=Count(
-                              'homework',
-                              filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'),
-                              distinct=True
-                          )
-                      )
-                      .values('id', 'weight', 'average_grade',
-                              'annotated_num_homework', 'annotated_num_homework_graded'))
-    cat_dicts = []
-    for cat in categories:
-        cat_dicts.append({
-            'id': cat['id'],
-            'weight': cat['weight'],
-            'overall_grade': cat['average_grade'],
-            'num_homework': cat['annotated_num_homework'],
-            'num_homework_graded': cat['annotated_num_homework_graded'],
-        })
-    raw_ungraded = list(Homework.objects
-                        .for_course(course_id)
-                        .filter(current_grade='-1/100')
-                        .order_by('start')
-                        .values('id', 'title', 'start', 'course_id', 'category_id', 'current_grade'))
-    return _build_homework_series(grade_points, has_weighted_grading, cat_dicts, raw_ungraded)
-
-
-def get_grade_points_for(query_set, has_weighted_grading):
+def _get_grade_points_for(query_set, has_weighted_grading):
     total_earned = 0
     total_possible = 0
     grade_series = []
@@ -183,7 +151,7 @@ def get_grade_data(user_id):
         course_group.pop('annotated_num_homework')
         course_group.pop('annotated_num_homework_completed')
         course_group.pop('annotated_num_homework_graded')
-        course_group['grade_points'] = get_grade_points_for_course_group(course_group['id'])
+        course_group['grade_points'] = _get_grade_points_for_course_group(course_group['id'])
 
         # Annotate courses with homework counts and has_weighted_grading to avoid N+1 queries
         course_group['courses'] = (Course.objects.for_user(user_id)
@@ -227,7 +195,7 @@ def get_grade_data(user_id):
         # Batch grade points and categories for every course in one query each, rather than per course.
         has_weighted_by_course = {course['id']: course['annotated_has_weighted_grading']
                                   for course in course_group['courses']}
-        grade_points_by_course = get_grade_points_by_course_for_group(course_group['id'], has_weighted_by_course)
+        grade_points_by_course = _get_grade_points_by_course_for_group(course_group['id'], has_weighted_by_course)
 
         categories_by_course = {}
         for category in (Category.objects.for_user(user_id)
@@ -402,7 +370,7 @@ def _build_course_group_homework_series(courses):
     """
     Build course_group-level homework_series by merging per-course series and averaging
     cumulative_grade across courses at each graded point. Parallels
-    get_grade_points_for_course_group() logic.
+    _get_grade_points_for_course_group() logic.
 
     Ungraded items pass through with cumulative_grade=None and no averaging.
     """
@@ -446,7 +414,7 @@ def _build_course_group_homework_series(courses):
 
 def recalculate_course_group_grade(course_group_id):
     num_courses = Course.objects.for_course_group(course_group_id).count()
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_course_group(course_group_id) if points]
+    grade_points = [(points[1] / 100) for points in _get_grade_points_for_course_group(course_group_id) if points]
     overall_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 
@@ -460,7 +428,7 @@ def recalculate_course_group_grade(course_group_id):
 
 
 def recalculate_course_grade(course_id):
-    grade_points = [(points[1] / 100) for points in get_grade_points_for_course(course_id) if points]
+    grade_points = [(points[1] / 100) for points in _get_grade_points_for_course(course_id) if points]
     current_grade = grade_points[-1] * 100 if len(grade_points) > 0 else -1
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
 

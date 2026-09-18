@@ -5,7 +5,6 @@ import time
 import icalendar
 from django.conf import settings
 from django.urls import reverse
-from django.utils.http import http_date
 
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
