@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.2"
+__version__ = "2.4.3"
 
 import json
 import os
@@ -220,7 +220,8 @@ HEALTH_CHECK = {
     },
 }
 
-HEALTHCHECK_CELERY_TIMEOUT = 10
+HEALTHCHECK_CELERY_RESULT_TIMEOUT = 10
+HEALTHCHECK_CELERY_QUEUE_TIMEOUT = 10
 
 # API configuration
 
