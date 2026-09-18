@@ -1,3 +1,7 @@
+from collections import defaultdict
+
+from helium.common.pagination import DefaultPageNumberPagination
+
 
 def strip_enum_int_bounds(result, generator, request, public):
     """
@@ -186,3 +190,34 @@ def collapse_nullable_enums(result, generator, request, public):
 #: Legacy route, can be removed once all clients are reporting >= 3.9.4.
 def exclude_legacy_paths(endpoints, **kwargs):
     return [endpoint for endpoint in endpoints if not endpoint[0].startswith('/planner/material')]
+
+
+
+def rewrite_pagination_examples(result, generator, request, public):
+    """
+    Point each ``Paginated*`` component's ``next`` / ``previous`` examples at the list endpoint
+    that returns it, replacing DRF's stock ``http://api.example.org/accounts/``.
+    """
+    page_query_param = DefaultPageNumberPagination.page_query_param
+    for component_name, path in _paginated_component_paths(result).items():
+        properties = result['components']['schemas'][component_name]['properties']
+        properties['next']['example'] = f'{path}?{page_query_param}=4'
+        properties['previous']['example'] = f'{path}?{page_query_param}=2'
+
+    return result
+
+
+def _paginated_component_paths(result):
+    paths_by_component = defaultdict(list)
+    for path, operations in result['paths'].items():
+        for operation in operations.values():
+            content = operation.get('responses', {}).get('200', {}).get('content', {})
+            component_name = content.get('application/json', {}).get('schema', {}).get('$ref', '').rsplit('/', 1)[-1]
+            if component_name.startswith('Paginated'):
+                paths_by_component[component_name].append(path)
+
+    return {component_name: min(paths, key=_prefer_flat_path) for component_name, paths in paths_by_component.items()}
+
+
+def _prefer_flat_path(path):
+    return '{' in path, path

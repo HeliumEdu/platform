@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.3"
+__version__ = "2.4.4"
 
 import json
 import os
@@ -426,8 +426,8 @@ SPECTACULAR_SETTINGS = {
     },
     'SERVERS': [
         {
-            'url': PROJECT_API_HOST,
-            'description': f'{PROJECT_NAME} API' + (f' ({ENVIRONMENT})' if 'prod' not in ENVIRONMENT else ''),
+            'url': '/',
+            'description': f'{PROJECT_NAME} API',
         },
     ],
     'SERVE_INCLUDE_SCHEMA': False,
@@ -445,6 +445,7 @@ SPECTACULAR_SETTINGS = {
         'helium.common.utils.openapiutils.add_tag_groups',
         'helium.common.utils.openapiutils.order_security',
         'helium.common.utils.openapiutils.strip_enum_int_bounds',
+        'helium.common.utils.openapiutils.rewrite_pagination_examples',
     ],
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
