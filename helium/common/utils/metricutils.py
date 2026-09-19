@@ -186,12 +186,16 @@ def request_start(request):
         logger.error("An error occurred while emitting metrics", exc_info=True)
 
 
-def request_stop(metrics, request, response):
+def request_stop(metrics, request, response, searchable=False):
     try:
         metrics['Request-Metric-Millis'] = int(time.time() * 1000) - metrics['Request-Metric-Start']
 
-        increment('request', request=request, response=response, extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
-        timing('request.timing', metrics['Request-Metric-Millis'], extra_tags=[f"path:{metrics['Request-Metric-ID']}"])
+        request_tags = [f"path:{metrics['Request-Metric-ID']}"]
+        if searchable:
+            searching = bool((request.GET.get('search') or '').strip())
+            request_tags.append(f"search:{str(searching).lower()}")
+        increment('request', request=request, response=response, extra_tags=request_tags)
+        timing('request.timing', metrics['Request-Metric-Millis'], extra_tags=request_tags)
 
         increment('platform_version', extra_tags=[_platform_version_tag()])
         increment('client_version', extra_tags=[_client_version_tag(request)])

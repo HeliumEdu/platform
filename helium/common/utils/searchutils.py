@@ -140,8 +140,6 @@ _register('y', '\u0079\u24E8\uFF59\u1EF3\u00FD\u0177\u1EF9\u0233\u1E8F\u00FF\u1E
 _register('z', '\u007A\u24E9\uFF5A\u017A\u1E91\u017C\u017E\u1E93\u1E95\u01B6\u0225\u0240\u2C6C\uA763')
 
 _TERM = re.compile(r'"([^"]*)"|(\S+)')
-# Keyboards on iOS/macOS substitute typographic quotes; treat them as the phrase delimiter so a
-# quoted search behaves the same as the app's own search fields.
 _TYPOGRAPHIC_DOUBLE_QUOTE = re.compile('[\u201c\u201d\u201e\u201f\uff02]')
 _WHITESPACE = re.compile(r'\s+')
 _TOKEN_EDGE_PUNCT = re.compile(r'^[^a-z0-9]+|[^a-z0-9]+$')
