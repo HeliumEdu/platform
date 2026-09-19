@@ -27,6 +27,9 @@ class TestCaseTokenizeSearchQuery(TestCase):
     def test_double_quoted_span_is_one_phrase_term(self):
         self.assertEqual(tokenize_search_query('"Lab  Report" due'), ['lab report', 'due'])
 
+    def test_typographic_double_quotes_delimit_a_phrase_like_straight_quotes(self):
+        self.assertEqual(tokenize_search_query('\u201cstudy template\u201d due'), ['study template', 'due'])
+
     def test_phrase_edge_punctuation_is_stripped_and_unmatched_quote_is_punctuation(self):
         self.assertEqual(tokenize_search_query('"weekend plan." draft"'), ['weekend plan', 'draft'])
 
