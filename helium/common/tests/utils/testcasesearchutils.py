@@ -13,6 +13,9 @@ class TestCaseNormalizeSearchText(TestCase):
     def test_single_unit_folding_wins_over_multi_unit_as_in_the_package(self):
         self.assertEqual(normalize_search_text('Straße'), 'strase')
 
+    def test_folds_typographic_double_quotes_to_straight_quotes(self):
+        self.assertEqual(normalize_search_text('\u201cquoted\u201d \u201elow\u201f'), '"quoted" "low"')
+
     def test_drops_combining_marks_and_keeps_unmapped_characters(self):
         self.assertEqual(normalize_search_text('e\u0301 日本 🎓'), 'e 日本 🎓')
 

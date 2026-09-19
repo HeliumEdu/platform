@@ -150,13 +150,14 @@ _COMBINING_DIACRITICAL_MARKS = range(0x0300, 0x0370)
 
 def normalize_search_text(text: str) -> str:
     """
-    Lowercase and fold diacritics, e.g. ``'Café'`` -> ``'cafe'``, using the same replacement
-    table as the frontend's `diacritic` package.
+    Fold typographic double quotes to ``"``, then lowercase and fold diacritics, e.g. ``'Café'``
+    -> ``'cafe'``, using the same replacement table as the frontend's `diacritic` package. Applied
+    identically to queries and haystacks, in step with the frontend search helper.
 
     :param text: The query or haystack text.
     :return: The normalized text.
     """
-    return ''.join(_fold_code_unit(ord(char)) for char in text.lower())
+    return ''.join(_fold_code_unit(ord(char)) for char in _TYPOGRAPHIC_DOUBLE_QUOTE.sub('"', text).lower())
 
 
 def _fold_code_unit(unit: int) -> str:
@@ -178,8 +179,7 @@ def tokenize_search_query(query: str) -> List[str]:
     :return: The terms; empty when the query is blank.
     """
     terms = []
-    normalized = _TYPOGRAPHIC_DOUBLE_QUOTE.sub('"', normalize_search_text(query.strip()))
-    for phrase, word in _TERM.findall(normalized):
+    for phrase, word in _TERM.findall(normalize_search_text(query.strip())):
         raw_term = _WHITESPACE.sub(' ', phrase.strip()) if phrase else word
         term = _TOKEN_EDGE_PUNCT.sub('', raw_term)
         if term:
