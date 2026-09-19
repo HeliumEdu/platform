@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from helium.auth.tasks import (
     sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
-    evaluate_review_prompts, delete_user, process_dormant_users
+    emit_online_users, evaluate_review_prompts, delete_user, process_dormant_users
 )
 from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
@@ -151,6 +151,21 @@ class TestCaseTasks(APITestCase):
 
         # WHEN/THEN
         delete_user(99999)
+
+    @mock.patch('helium.auth.tasks.metricutils.count_online_users')
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_online_users_emits_a_gauge_per_cohort(self, mock_gauge, mock_count_online):
+        # GIVEN
+        mock_count_online.side_effect = lambda staff_tag: {'false': 12, 'true': 1}[staff_tag]
+
+        # WHEN
+        emit_online_users()
+
+        # THEN
+        online_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.online']
+        self.assertEqual(len(online_calls), 2)
+        by_cohort = {c.kwargs['extra_tags'][0]: c.args[1] for c in online_calls}
+        self.assertEqual(by_cohort, {'staff:true': 1, 'staff:false': 12})
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_emits_active_user_metrics(self, mock_gauge):

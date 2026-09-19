@@ -30,4 +30,7 @@ class HeliumAPIView(GenericAPIView):
             metricutils.request_stop(self.__request_metrics, request, response,
                                      searchable=bool(getattr(self, 'search_fields', None)))
 
+        if request.user and request.user.is_authenticated:
+            metricutils.record_presence(request.user)
+
         return response

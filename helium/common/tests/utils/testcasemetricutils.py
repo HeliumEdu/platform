@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from unittest import mock
 
 from django.test import SimpleTestCase
@@ -138,6 +139,66 @@ class TestCaseMetricUtils(SimpleTestCase):
         self.assertIn('user_agent:unknown', tags)
         self.assertIn('client:other', tags)
         self.assertIn('client_os:other', tags)
+
+
+class TestCasePresenceMetrics(SimpleTestCase):
+    @mock.patch('helium.common.utils.metricutils._current_minute')
+    @mock.patch('helium.common.utils.metricutils.is_staff_user', return_value=False)
+    @mock.patch('helium.common.utils.metricutils.redisutils.get_redis_client')
+    def test_record_presence_adds_user_to_this_minutes_cohort_bucket_with_expiry(
+            self, mock_get_client, mock_is_staff, mock_current_minute):
+        # GIVEN
+        mock_current_minute.return_value = datetime(2026, 9, 19, 14, 7, tzinfo=timezone.utc)
+        pipe = mock_get_client.return_value.pipeline.return_value
+
+        # WHEN
+        metricutils.record_presence(mock.Mock(pk=42))
+
+        # THEN
+        pipe.sadd.assert_called_once_with('presence:users:false:202609191407', 42)
+        pipe.expire.assert_called_once_with('presence:users:false:202609191407', 16 * 60)
+        pipe.execute.assert_called_once()
+
+    @mock.patch('helium.common.utils.metricutils._current_minute')
+    @mock.patch('helium.common.utils.metricutils.is_staff_user', return_value=True)
+    @mock.patch('helium.common.utils.metricutils.redisutils.get_redis_client')
+    def test_record_presence_keeps_staff_in_their_own_bucket(self, mock_get_client, mock_is_staff, mock_current_minute):
+        # GIVEN
+        mock_current_minute.return_value = datetime(2026, 9, 19, 14, 7, tzinfo=timezone.utc)
+        pipe = mock_get_client.return_value.pipeline.return_value
+
+        # WHEN
+        metricutils.record_presence(mock.Mock(pk=7))
+
+        # THEN
+        pipe.sadd.assert_called_once_with('presence:users:true:202609191407', 7)
+
+    @mock.patch('helium.common.utils.metricutils.redisutils.get_redis_client', side_effect=RuntimeError('down'))
+    def test_record_presence_swallows_redis_failures(self, mock_get_client):
+        # WHEN/THEN
+        metricutils.record_presence(mock.Mock(pk=42))
+
+    @mock.patch('helium.common.utils.metricutils._current_minute')
+    @mock.patch('helium.common.utils.metricutils.redisutils.get_redis_client')
+    def test_count_online_users_unions_the_window_of_buckets_ending_now(self, mock_get_client, mock_current_minute):
+        # GIVEN
+        mock_current_minute.return_value = datetime(2026, 9, 19, 14, 7, tzinfo=timezone.utc)
+        mock_get_client.return_value.sunion.return_value = {b'1', b'2', b'3'}
+
+        # WHEN
+        count = metricutils.count_online_users('false')
+
+        # THEN
+        self.assertEqual(count, 3)
+        keys = mock_get_client.return_value.sunion.call_args.args[0]
+        self.assertEqual(len(keys), 15)
+        self.assertEqual(keys[0], 'presence:users:false:202609191407')
+        self.assertEqual(keys[-1], 'presence:users:false:202609191353')
+
+    @mock.patch('helium.common.utils.metricutils.redisutils.get_redis_client', side_effect=RuntimeError('down'))
+    def test_count_online_users_is_zero_when_redis_is_unavailable(self, mock_get_client):
+        # WHEN/THEN
+        self.assertEqual(metricutils.count_online_users('false'), 0)
 
 
 class TestCaseTaskFailureMetrics(SimpleTestCase):

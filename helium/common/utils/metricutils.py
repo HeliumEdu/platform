@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from datetime import datetime, timedelta, timezone
 
 from celery import current_task
 from django.conf import settings
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 from datadog import initialize, statsd
 
 from helium.auth.utils.userutils import is_staff_user
+from helium.common.utils import redisutils
 from helium.common.utils.versionutils import get_client_version
 
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
@@ -291,3 +293,47 @@ def get_published_at_ms(celery_task):
     except Exception:
         logger.warning("Could not determine publish time", exc_info=True)
         return None
+
+
+ONLINE_WINDOW_MINUTES = 15
+
+_PRESENCE_BUCKET_TTL_SECONDS = (ONLINE_WINDOW_MINUTES + 1) * 60
+
+
+def _presence_bucket_key(staff_tag, minute):
+    return f"presence:users:{staff_tag}:{minute.strftime('%Y%m%d%H%M')}"
+
+
+def _current_minute():
+    return datetime.now(timezone.utc).replace(second=0, microsecond=0)
+
+
+def record_presence(user):
+    """
+    Note that ``user`` made a request this minute. Buckets are per minute and per staff cohort, and
+    expire on their own once older than the online window.
+    """
+    try:
+        staff_tag = 'true' if is_staff_user(user) else 'false'
+        key = _presence_bucket_key(staff_tag, _current_minute())
+        pipe = redisutils.get_redis_client().pipeline()
+        pipe.sadd(key, user.pk)
+        pipe.expire(key, _PRESENCE_BUCKET_TTL_SECONDS)
+        pipe.execute()
+    except Exception:
+        logger.warning("Failed to record user presence", exc_info=True)
+
+
+def count_online_users(staff_tag):
+    """
+    The number of distinct users in the ``staff_tag`` cohort with a request in the last
+    ``ONLINE_WINDOW_MINUTES``, including the current (partial) minute.
+    """
+    try:
+        now = _current_minute()
+        keys = [_presence_bucket_key(staff_tag, now - timedelta(minutes=offset))
+                for offset in range(ONLINE_WINDOW_MINUTES)]
+        return len(redisutils.get_redis_client().sunion(keys))
+    except Exception:
+        logger.warning("Failed to count online users", exc_info=True)
+        return 0
