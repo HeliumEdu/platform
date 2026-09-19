@@ -266,6 +266,19 @@ def emit_queue_depth(self):
     metricutils.task_stop(metrics)
 
 
+@app.task(bind=True)
+def emit_online_users(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("metrics.online-users", priority="low", published_at_ms=published_at_ms)
+
+    for staff_tag in ('true', 'false'):
+        count = metricutils.count_online_users(staff_tag)
+        metricutils.gauge('users.online', count, extra_tags=[f'staff:{staff_tag}'])
+    logger.debug("Emitted online users")
+
+    metricutils.task_stop(metrics)
+
+
 def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags):
     """Emit one distribution sample per entity ID, zero-filling for entities absent from qs."""
     counts = dict(
@@ -837,6 +850,9 @@ register_periodic(purge_push_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Purge stale push tokens")
 register_periodic(emit_queue_depth, 60,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  manually_triggerable=False)
+register_periodic(emit_online_users, 60,
                   priority=settings.CELERY_PRIORITY_LOW,
                   manually_triggerable=False)
 register_periodic(sweep_dangling_users, crontab(hour=2, minute=0),
