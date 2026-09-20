@@ -123,7 +123,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
         # WHEN
         data = {
-            'date_format': 3,
+            'date_format': 2,
             'time_format': 2,
             'number_format': 2,
         }

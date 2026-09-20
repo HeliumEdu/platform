@@ -120,11 +120,9 @@ CALENDAR_ITEM_TYPE_CHOICES = (
 
 MDY = 0
 DMY = 1
-YMD = 2
 DATE_FORMAT_CHOICES = (
     (MDY, 'Month/Day/Year'),
     (DMY, 'Day/Month/Year'),
-    (YMD, 'Year/Month/Day'),
 )
 
 TWELVE_HOUR = 0

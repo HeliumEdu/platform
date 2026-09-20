@@ -21,9 +21,6 @@ class TestCaseDateTimeUtils(TestCase):
     def test_format_date_day_first(self):
         self.assertEqual(format_date(self.friday_afternoon, self.european_settings), 'Fri, 4 Sep')
 
-    def test_format_date_year_first_renders_day_first_in_words(self):
-        self.assertEqual(format_date(self.friday_afternoon, UserSettings(date_format=enums.YMD)), 'Fri, 4 Sep')
-
     def test_format_time_twelve_hour_has_no_leading_zero(self):
         self.assertEqual(format_time(self.friday_afternoon, self.us_settings), '3:05 PM')
         self.assertEqual(format_time(self.just_after_midnight, self.us_settings), '12:05 AM')

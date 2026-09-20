@@ -26,7 +26,7 @@ def format_date(dt, user_settings):
 
     :param dt: An aware `datetime` already resolved to the user's timezone.
     :param user_settings: The `UserSettings` whose `date_format` decides the order.
-    :return: e.g. "Fri, Sep 4" (MDY) or "Fri, 4 Sep" (DMY, YMD).
+    :return: e.g. "Fri, Sep 4" (MDY) or "Fri, 4 Sep" (DMY).
     """
     if user_settings.date_format == enums.MDY:
         return f'{dt:%a}, {dt:%b} {dt.day}'
