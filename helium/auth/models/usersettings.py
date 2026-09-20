@@ -97,6 +97,15 @@ class UserSettings(BaseModel):
         help_text='Whether week numbers should be shown on the calendar.',
         default=True)
 
+    date_format = models.PositiveIntegerField(help_text='The order in which day, month, and year are shown in dates.',
+                                              choices=enums.DATE_FORMAT_CHOICES, default=enums.MDY)
+
+    time_format = models.PositiveIntegerField(help_text='The clock on which times are shown.',
+                                              choices=enums.TIME_FORMAT_CHOICES, default=enums.TWELVE_HOUR)
+
+    number_format = models.PositiveIntegerField(help_text='The decimal separator shown in grades and other numbers.',
+                                                choices=enums.NUMBER_FORMAT_CHOICES, default=enums.POINT)
+
     private_slug = models.SlugField(blank=True, null=True)
 
     last_deletion_at = models.DateTimeField(

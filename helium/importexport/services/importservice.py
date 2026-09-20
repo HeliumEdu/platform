@@ -16,7 +16,7 @@ from rest_framework.exceptions import ValidationError
 
 from helium.common import enums
 from helium.common.utils import metricutils, taskutils
-from helium.common.utils.commonutils import local_midnight_as_utc
+from helium.common.utils.datetimeutils import local_midnight_as_utc
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar

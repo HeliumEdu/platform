@@ -9,8 +9,7 @@ from django.utils import timezone
 from conf.celery import app
 from helium.common import enums
 from helium.common.periodic import register_periodic
-from helium.common.utils import commonutils
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import commonutils, datetimeutils, metricutils, taskutils
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import gradingservice
@@ -283,7 +282,8 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
         metricutils.task_stop(metrics, value=0)
         return
 
-    timezone.activate(ZoneInfo(reminder.user.settings.time_zone))
+    user_settings = reminder.user.settings
+    timezone.activate(ZoneInfo(user_settings.time_zone))
 
     try:
         if calendar_item_type == enums.COURSE:
@@ -291,7 +291,7 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             class_start = reminder.start_of_range + timedelta(
                 **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
             local_start = timezone.localtime(class_start)
-            start_str = local_start.strftime(settings.NORMALIZED_DATE_TIME_FORMAT)
+            start_str = datetimeutils.format_date_time(local_start, user_settings)
 
             weekday_idx = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[local_start.weekday()]
             day_name = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday_idx]
@@ -301,19 +301,18 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             )
             if active_schedule:
                 end_time = getattr(active_schedule, f'{day_name}_end_time')
-                end_str = local_start.replace(
-                    hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0
-                ).strftime('%I:%M %p')
+                end_str = datetimeutils.format_time(
+                    local_start.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0),
+                    user_settings)
                 normalized_datetime = f'{start_str} to {end_str}'
             else:
                 normalized_datetime = start_str
 
             comments = None
         else:
-            start = timezone.localtime(calendar_item.start).strftime(
-                settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
-            end = timezone.localtime(calendar_item.end).strftime(
-                settings.NORMALIZED_DATE_FORMAT if calendar_item.all_day else settings.NORMALIZED_DATE_TIME_FORMAT)
+            format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
+            start = format_when(timezone.localtime(calendar_item.start), user_settings)
+            end = format_when(timezone.localtime(calendar_item.end), user_settings)
             normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
 
             comments = calendar_item.comments if calendar_item.comments.strip() != '' else None

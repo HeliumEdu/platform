@@ -8,8 +8,7 @@ from django.utils import timezone
 from helium.common import enums
 from helium.common.services import pushservice
 from helium.common.tasks import send_dismiss_pushes, send_pushes
-from helium.common.utils.commonutils import format_short_time
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import datetimeutils, metricutils, taskutils
 from helium.planner.models import Reminder
 from helium.planner.serializers.pushserializer import PushReminderSerializer
 
@@ -28,7 +27,7 @@ def _push_body(reminder):
     else:
         return reminder.message
 
-    return f'{reminder.message} · {format_short_time(local_time)}'
+    return f'{reminder.message} · {datetimeutils.format_short_time(local_time, reminder.get_user().settings)}'
 
 
 def _offset_label(reminder):

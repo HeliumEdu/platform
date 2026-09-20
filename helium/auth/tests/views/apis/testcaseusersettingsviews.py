@@ -91,6 +91,51 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
         self.assertFalse(user.settings.show_planner_tooltips)
 
+    def test_put_regional_formats(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.assertEqual(user.settings.date_format, enums.MDY)
+        self.assertEqual(user.settings.time_format, enums.TWELVE_HOUR)
+        self.assertEqual(user.settings.number_format, enums.POINT)
+
+        # WHEN
+        data = {
+            'date_format': enums.DMY,
+            'time_format': enums.TWENTY_FOUR_HOUR,
+            'number_format': enums.COMMA,
+        }
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['date_format'], enums.DMY)
+        self.assertEqual(response.data['time_format'], enums.TWENTY_FOUR_HOUR)
+        self.assertEqual(response.data['number_format'], enums.COMMA)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.date_format, enums.DMY)
+        self.assertEqual(user.settings.time_format, enums.TWENTY_FOUR_HOUR)
+        self.assertEqual(user.settings.number_format, enums.COMMA)
+
+    def test_put_invalid_regional_format_fails(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'date_format': 3,
+            'time_format': 2,
+            'number_format': 2,
+        }
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_format', response.data)
+        self.assertIn('time_format', response.data)
+        self.assertIn('number_format', response.data)
+
     def test_put_resource_color_emits_both_keys(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

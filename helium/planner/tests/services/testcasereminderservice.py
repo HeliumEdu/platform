@@ -136,6 +136,23 @@ class TestCaseReminderService(TestCase):
         self.assertTrue(reminder.sent)
 
     @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminder_renders_regional_time_format(self, mock_send_notifications):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_format = enums.TWENTY_FOUR_HOUR
+        user.settings.save()
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, type=enums.PUSH)
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_notifications.assert_called_once()
+        self.assertEqual(mock_send_notifications.call_args[0][2], 'You need to do something now. · Mon, 05:00')
+
+    @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_no_push_tokens(self, mock_send_notifications):
         # GIVEN
         user = userhelper.given_a_user_exists()

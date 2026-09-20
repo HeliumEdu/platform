@@ -1,5 +1,4 @@
 import csv
-import datetime
 import io
 import logging
 import random
@@ -219,18 +218,6 @@ def random_color():
     return random.choice(enums.PREFERRED_COLORS)
 
 
-def local_midnight_as_utc(date, tz):
-    """
-    Return the UTC datetime that represents midnight on the given date in the given timezone.
-
-    :param date: A `date` (or `datetime`, of which only the date portion is used).
-    :param tz: A `tzinfo` (e.g. `ZoneInfo`) representing the local timezone.
-    :return: An aware UTC `datetime` at midnight `tz` on `date`.
-    """
-    naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
-    aware = naive.replace(tzinfo=tz)
-    return aware.astimezone(datetime.timezone.utc)
-
 
 def deterministic_id(*parts) -> int:
     """
@@ -251,16 +238,3 @@ def deterministic_id(*parts) -> int:
     """
     unique_str = ":".join(str(part) for part in parts)
     return zlib.crc32(unique_str.encode()) & 0x7FFFFFFF
-
-
-def format_short_time(dt):
-    """
-    Format a datetime as a short time string, omitting minutes when they are zero.
-    e.g. 11:00 AM -> "Tue, 11 AM", 11:30 AM -> "Tue, 11:30 AM", 1:00 PM -> "Tue, 1 PM"
-    """
-    if dt.minute == 0:
-        time_str = dt.strftime('%I %p').lstrip('0')
-    else:
-        time_str = dt.strftime('%I:%M %p').lstrip('0')
-
-    return f'{dt.strftime("%a")}, {time_str}'

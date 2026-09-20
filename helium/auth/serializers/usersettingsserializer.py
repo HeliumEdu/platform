@@ -25,8 +25,8 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'resource_color', 'remember_filter_state', 'color_scheme_theme', 'calendar_event_limit',
             'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
             'calendar_use_category_colors', 'show_planner_tooltips', 'drag_and_drop_on_mobile', 'at_risk_threshold',
-            'on_track_tolerance', 'show_week_numbers', 'receive_emails_from_admin', 'private_slug', 'user',
-            'prompt_for_review',)
+            'on_track_tolerance', 'show_week_numbers', 'date_format', 'time_format', 'number_format',
+            'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
         read_only_fields = ('is_setup_complete', 'private_slug', 'user',
                             'prompt_for_review',)
 

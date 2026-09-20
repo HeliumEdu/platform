@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer, UserSettingsUpdateSerializer
 from helium.common.utils import taskutils
-from helium.common.utils.commonutils import local_midnight_as_utc
+from helium.common.utils.datetimeutils import local_midnight_as_utc
 from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice

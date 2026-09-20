@@ -202,6 +202,39 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         mock_send_multipart_email.assert_called_once()
+        self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
+                         'Mon, May 8 at 5:00 AM to Mon, May 8 at 7:00 AM')
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    def test_send_email_reminder_renders_regional_formats(self, mock_send_multipart_email):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'Europe/Amsterdam'
+        user.settings.date_format = enums.DMY
+        user.settings.time_format = enums.TWENTY_FOUR_HOUR
+        user.settings.save()
+        event = eventhelper.given_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
+
+        # THEN
+        self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
+                         'Mon, 8 May at 14:00 to Mon, 8 May at 16:00')
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    def test_send_email_reminder_for_all_day_event_omits_time(self, mock_send_multipart_email):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user, all_day=True, show_end_time=False)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
+
+        # THEN
+        self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'], 'Mon, May 8')
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_send_email_reminder_for_homework(self, mock_send_multipart_email):

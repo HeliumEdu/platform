@@ -118,6 +118,29 @@ CALENDAR_ITEM_TYPE_CHOICES = (
     (COURSE, 'Class')
 )
 
+MDY = 0
+DMY = 1
+YMD = 2
+DATE_FORMAT_CHOICES = (
+    (MDY, 'Month/Day/Year'),
+    (DMY, 'Day/Month/Year'),
+    (YMD, 'Year/Month/Day'),
+)
+
+TWELVE_HOUR = 0
+TWENTY_FOUR_HOUR = 1
+TIME_FORMAT_CHOICES = (
+    (TWELVE_HOUR, '12-hour'),
+    (TWENTY_FOUR_HOUR, '24-hour'),
+)
+
+POINT = 0
+COMMA = 1
+NUMBER_FORMAT_CHOICES = (
+    (POINT, 'Point'),
+    (COMMA, 'Comma'),
+)
+
 LIGHT = 0
 DARK = 1
 SYSTEM = 2

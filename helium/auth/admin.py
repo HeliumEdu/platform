@@ -500,8 +500,9 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
 class UserSettingsAdmin(BaseModelAdmin):
     list_display = ['get_user', 'time_zone', 'default_view', 'default_reminder_type', 'color_scheme_theme',
                     'review_prompts_requested', 'get_last_activity']
-    list_filter = ['default_view', 'week_starts_on', 'remember_filter_state', 'calendar_event_limit',
-                   'calendar_use_category_colors', 'default_reminder_type', 'color_scheme_theme',
+    list_filter = ['default_view', 'week_starts_on', 'date_format', 'time_format', 'number_format',
+                   'remember_filter_state', 'calendar_event_limit', 'calendar_use_category_colors',
+                   'default_reminder_type', 'color_scheme_theme',
                    prompt_for_review_filter('prompt_for_review'),
                    review_prompts_requested_filter('review_prompts_requested'), staff_filter('user')]
     search_fields = ('user__id', 'user__email')

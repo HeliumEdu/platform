@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.8"
+__version__ = "2.4.9"
 
 import json
 import os
@@ -459,6 +459,9 @@ SPECTACULAR_SETTINGS = {
         'DefaultViewEnum': enums.VIEW_CHOICES,
         'DayOfWeekEnum': enums.DAY_OF_WEEK_CHOICES,
         'ColorSchemeThemeEnum': enums.COLOR_SCHEME_THEME,
+        'DateFormatEnum': enums.DATE_FORMAT_CHOICES,
+        'TimeFormatEnum': enums.TIME_FORMAT_CHOICES,
+        'NumberFormatEnum': enums.NUMBER_FORMAT_CHOICES,
         'CalendarItemTypeEnum': enums.CALENDAR_ITEM_TYPE_CHOICES,
     },
     'TAGS': [
@@ -489,11 +492,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
-
-# DateTime sanity
-
-NORMALIZED_DATE_FORMAT = '%a, %b %d'
-NORMALIZED_DATE_TIME_FORMAT = f'{NORMALIZED_DATE_FORMAT} at %I:%M %p'
 
 # File uploads
 
