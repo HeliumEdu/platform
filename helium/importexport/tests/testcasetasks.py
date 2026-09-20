@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from rest_framework.test import APITestCase
 
+from helium.common import enums
 from helium.auth.tests.helpers import userhelper
 from helium.importexport.services.importservice import _adjust_schedule_relative_to, \
     _ImportedExampleSchedule
@@ -27,17 +28,17 @@ class TestCaseImportExportTasks(APITestCase):
                                           .filter(course__course_group__example_schedule=True)),
         )
 
-    def test_import_example_schedule_sets_is_setup_complete(self):
+    def test_import_example_schedule_completes_setup(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        self.assertFalse(user.settings.is_setup_complete)
+        self.assertEqual(user.settings.setup_state, enums.SETUP_PENDING)
 
         # WHEN
         import_example_schedule(user.pk)
 
         # THEN
         user.refresh_from_db()
-        self.assertTrue(user.settings.is_setup_complete)
+        self.assertEqual(user.settings.setup_state, enums.SETUP_COMPLETE)
 
     def test_import_example_schedule_nonexistent_user_does_not_fail(self):
         # GIVEN

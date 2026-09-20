@@ -507,7 +507,7 @@ class UserSettingsAdmin(BaseModelAdmin):
                    review_prompts_requested_filter('review_prompts_requested'), staff_filter('user')]
     search_fields = ('user__id', 'user__email')
     ordering = ('-user__last_activity',)
-    readonly_fields = ('user', 'is_setup_complete', 'next_review_prompt_date', 'review_prompts_requested', 'last_deletion_at',)
+    readonly_fields = ('user', 'setup_state', 'next_review_prompt_date', 'review_prompts_requested', 'last_deletion_at',)
 
     def get_user(self, obj):
         if obj.user:

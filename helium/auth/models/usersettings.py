@@ -24,9 +24,9 @@ class UserSettings(BaseModel):
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
 
-    is_setup_complete = models.BooleanField(
-        help_text='Whether the account setup is complete (example schedule imported).',
-        default=False)
+    setup_state = models.PositiveIntegerField(
+        help_text='The account\'s progress through first-time setup.',
+        choices=enums.SETUP_STATE_CHOICES, default=enums.SETUP_PENDING)
 
     whats_new_version_seen = models.PositiveIntegerField(
         help_text='The "What\'s New" dialog version the user has seen.',
@@ -134,6 +134,10 @@ class UserSettings(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return f'{self.pk} ({self.user.get_username()})'
+
+    @property
+    def is_setup_complete(self):
+        return self.setup_state == enums.SETUP_COMPLETE
 
     def get_user(self):
         return self.user

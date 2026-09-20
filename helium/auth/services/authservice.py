@@ -23,8 +23,10 @@ from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
+from helium.common import enums
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
+from helium.common.utils.versionutils import client_version_gte
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
@@ -235,6 +237,30 @@ def resend_verification_email(request):
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
+def start_setup(user):
+    """
+    Move a pending account into first-time setup and provision it. Idempotent.
+
+    :param user: The user to set up.
+    :return: True if setup was started by this call, False if it had already started.
+    """
+    started = UserSettings.objects.filter(user=user, setup_state=enums.SETUP_PENDING).update(
+        setup_state=enums.SETUP_IMPORTING) == 1
+    if not started:
+        logger.info(f'Setup already started for user {user.pk}, nothing to do')
+        return False
+
+    taskutils.safe_apply_async(import_example_schedule,
+        args=(user.pk,),
+        critical=True,
+        priority=settings.CELERY_PRIORITY_HIGH,
+    )
+
+    logger.info(f'Setup started for user {user.pk}')
+
+    return True
+
+
 def oauth_login(request):
     """
     Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
@@ -366,12 +392,9 @@ def oauth_login(request):
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
-            # Import the example schedule for the user
-            taskutils.safe_apply_async(import_example_schedule,
-                args=(user.pk,),
-                critical=True,
-                priority=settings.CELERY_PRIORITY_HIGH,
-            )
+            #: Legacy behavior, can be removed once all clients are reporting >= 3.9.5.
+            if not client_version_gte(request, '3.9.5'):
+                start_setup(user)
 
             logger.info(f'New user {user.id} ({redact_email(user.email)}) created via {provider_name} Sign-In')
 

@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch, MagicMock
 from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
@@ -10,6 +11,7 @@ from rest_framework import status
 
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
 
 
 class TestCaseAuthenticationViews(TestCase):
@@ -150,6 +152,37 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(user.settings.time_zone, 'America/Chicago')
 
         self.assertTrue(UserSettings.objects.filter(user__email='test@test.com').exists())
+
+    @patch('helium.auth.services.authservice.import_example_schedule')
+    def test_registration_leaves_setup_pending_for_current_clients(self, mock_import_schedule):
+        # GIVEN
+        mock_import_schedule.apply_async = MagicMock()
+
+        # WHEN
+        data = {'email': 'pending@test.com', 'password': 'test_pass_1!', 'time_zone': 'America/Chicago'}
+        response = self.client.post(reverse('auth_user_resource_register'), json.dumps(data),
+                                    content_type='application/json', HTTP_X_CLIENT_VERSION='3.9.5')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['settings']['setup_state'], enums.SETUP_PENDING)
+        mock_import_schedule.apply_async.assert_not_called()
+
+    @patch('helium.auth.services.authservice.import_example_schedule')
+    def test_registration_starts_setup_for_legacy_clients(self, mock_import_schedule):
+        # GIVEN
+        mock_import_schedule.apply_async = MagicMock()
+
+        # WHEN
+        data = {'email': 'legacy@test.com', 'password': 'test_pass_1!', 'time_zone': 'America/Chicago'}
+        response = self.client.post(reverse('auth_user_resource_register'), json.dumps(data),
+                                    content_type='application/json', HTTP_X_CLIENT_VERSION='3.9.4')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = get_user_model().objects.get(email='legacy@test.com')
+        self.assertEqual(user.settings.setup_state, enums.SETUP_IMPORTING)
+        mock_import_schedule.apply_async.assert_called_once()
 
     def test_registration_success_without_username(self):
         # WHEN

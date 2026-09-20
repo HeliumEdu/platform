@@ -11,6 +11,7 @@ from firebase_admin import auth as firebase_auth
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
 
 
 class TestCaseOAuthViews(APITestCase):
@@ -30,7 +31,8 @@ class TestCaseOAuthViews(APITestCase):
         response = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -47,10 +49,9 @@ class TestCaseOAuthViews(APITestCase):
         # Verify username was generated from email
         self.assertTrue(user.username.startswith('newuser'))
 
-        # Verify example schedule import was triggered
-        mock_import_schedule.apply_async.assert_called_once()
-        call_args = mock_import_schedule.apply_async.call_args
-        self.assertEqual(call_args.kwargs['args'], (user.pk,))
+        # Setup waits for the app to start it, so the account is still pending
+        mock_import_schedule.apply_async.assert_not_called()
+        self.assertEqual(user.settings.setup_state, enums.SETUP_PENDING)
 
         # Verify tokens were created
         self.assertEqual(OutstandingToken.objects.count(), 1)
@@ -354,12 +355,14 @@ class TestCaseOAuthViews(APITestCase):
         response1 = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
         response2 = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -372,8 +375,8 @@ class TestCaseOAuthViews(APITestCase):
         # Verify different tokens were generated
         self.assertNotEqual(response1.data['access'], response2.data['access'])
 
-        # Verify example schedule only imported once (on first login)
-        self.assertEqual(mock_import_schedule.apply_async.call_count, 1)
+        # Setup waits for the app to start it
+        mock_import_schedule.apply_async.assert_not_called()
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_updates_provider_last_used(self, mock_verify_token):
@@ -427,7 +430,8 @@ class TestCaseOAuthViews(APITestCase):
         self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         user = get_user_model().objects.get(email='multiauth@gmail.com')
@@ -443,7 +447,8 @@ class TestCaseOAuthViews(APITestCase):
         response = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -459,8 +464,8 @@ class TestCaseOAuthViews(APITestCase):
         self.assertEqual(google_provider.provider_user_id, 'google-uid-multi')
         self.assertEqual(apple_provider.provider_user_id, 'apple-uid-multi')
 
-        # Verify example schedule only imported once (on first provider link)
-        self.assertEqual(mock_import_schedule.apply_async.call_count, 1)
+        # Setup waits for the app to start it
+        mock_import_schedule.apply_async.assert_not_called()
 
     def test_oauth_login_provider_case_insensitive(self):
         # WHEN
@@ -468,7 +473,8 @@ class TestCaseOAuthViews(APITestCase):
         response = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
-            content_type='application/json'
+            content_type='application/json',
+        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN

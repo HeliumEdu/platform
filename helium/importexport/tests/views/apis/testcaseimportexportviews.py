@@ -729,15 +729,23 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(homework_qs.count(), 2)
         self.assertEqual(homework_qs.last().completed_at, original_completed_at)
 
-    def test_user_registration_imports_example_schedule(self):
-        # WHEN
-        response = self.client.post(reverse('auth_user_resource_register'),
-                                    json.dumps({'email': 'test@test.com', 'username': 'my_test_user',
-                                                'password': 'test_pass_1!',
-                                                'time_zone': 'America/Chicago'}),
-                                    content_type='application/json')
-
+    def test_user_setup_imports_example_schedule(self):
         # GIVEN
+        register_response = self.client.post(reverse('auth_user_resource_register'),
+                                             json.dumps({'email': 'test@test.com', 'username': 'my_test_user',
+                                                         'password': 'test_pass_1!',
+                                                         'time_zone': 'America/Chicago'}),
+                                             content_type='application/json', HTTP_X_CLIENT_VERSION='3.9.5')
+        self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CourseGroup.objects.count(), 0)
+        user = get_user_model().objects.get(email='test@test.com')
+        user.is_active = True
+        user.save()
+        userhelper.reauthenticate(self.client, user)
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_setup'), json.dumps({}), content_type='application/json')
+
         user_tz = ZoneInfo('America/Chicago')
         now = timezone.now().astimezone(user_tz)
         adjusted_month = now.month - 1
@@ -754,7 +762,8 @@ class TestCaseImportExportViews(APITestCase):
         first_monday = adjusted_month + datetime.timedelta(days_ahead)
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['setup_state'], enums.SETUP_COMPLETE)
         start_of_month = adjusted_month.replace(day=first_monday.day, hour=0, minute=0, second=0, microsecond=0)
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(CourseGroup.objects.count(), 1)

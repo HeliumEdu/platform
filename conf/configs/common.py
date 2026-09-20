@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.10"
+__version__ = "2.4.11"
 
 import json
 import os
@@ -462,6 +462,7 @@ SPECTACULAR_SETTINGS = {
         'DateFormatEnum': enums.DATE_FORMAT_CHOICES,
         'TimeFormatEnum': enums.TIME_FORMAT_CHOICES,
         'NumberFormatEnum': enums.NUMBER_FORMAT_CHOICES,
+        'SetupStateEnum': enums.SETUP_STATE_CHOICES,
         'CalendarItemTypeEnum': enums.CALENDAR_ITEM_TYPE_CHOICES,
     },
     'TAGS': [

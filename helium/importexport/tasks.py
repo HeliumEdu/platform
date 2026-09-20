@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from conf.celery import app
+from helium.common import enums
 from helium.common.utils import metricutils
 from helium.importexport.services import importservice
 
@@ -30,8 +31,8 @@ def import_example_schedule(self, user_id, example_schedule=True):
             with importservice.suppress_post_save_signals():
                 importservice.import_example_schedule(user)
 
-        user.settings.is_setup_complete = True
-        user.settings.save(update_fields=['is_setup_complete', 'updated_at'])
+        user.settings.setup_state = enums.SETUP_COMPLETE
+        user.settings.save(update_fields=['setup_state', 'updated_at'])
 
         elapsed_ms = int((timezone.now() - user.created_at).total_seconds() * 1000)
         metricutils.timing("user.setup.total_duration", elapsed_ms)

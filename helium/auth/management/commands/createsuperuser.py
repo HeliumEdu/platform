@@ -19,6 +19,7 @@ from django.db import IntegrityError
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
+from helium.common import enums
 
 
 class Command(BaseCommand):
@@ -86,7 +87,7 @@ class Command(BaseCommand):
 
                     try:
                         user = UserModel._default_manager.db_manager(database).create_superuser(**user_data)
-                        user.settings.is_setup_complete = True
+                        user.settings.setup_state = enums.SETUP_COMPLETE
                         user.settings.show_getting_started = False
                         user.settings.save()
                         if settings.ADMIN_ENFORCE_2FA:
@@ -120,7 +121,7 @@ class Command(BaseCommand):
 
                 try:
                     user = UserModel._default_manager.db_manager(database).create_superuser(**user_data)
-                    user.settings.is_setup_complete = True
+                    user.settings.setup_state = enums.SETUP_COMPLETE
                     user.settings.save()
                 except IntegrityError:
                     raise CommandError("That email address is already taken.")

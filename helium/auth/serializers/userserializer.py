@@ -195,9 +195,6 @@ class UserCreateSerializer(serializers.Serializer):
     time_zone = serializers.ChoiceField(choices=enums.TIME_ZONE_CHOICES,
                                         help_text=UserSettings._meta.get_field('time_zone').help_text)
 
-    example_schedule = serializers.BooleanField(required=False, default=True,
-                                                help_text='If False, skip provisioning the user with an example schedule.')
-
 
 class UserForgotSerializer(serializers.Serializer):
     email = serializers.CharField(help_text='The email for the user.')

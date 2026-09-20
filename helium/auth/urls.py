@@ -6,6 +6,7 @@ from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshV
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView, UserForgotConfirmResourceView, UserResendVerificationResourceView
 from helium.auth.views.apis.userdeleteexamplescheduleviews import UserDeleteExampleScheduleView
+from helium.auth.views.apis.usersetupviews import UserSetupView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.userreviewpromptviews import UserReviewPromptAckView
 from helium.auth.views.apis.usersettingsviews import UserSettingsApiDetailView
@@ -49,6 +50,7 @@ urlpatterns = [
          name='auth_user_settings_detail'),
     path('auth/user/settings/review-prompt-ack/', UserReviewPromptAckView.as_view(),
          name='auth_user_settings_review_prompt_ack'),
+    path('auth/user/setup/', UserSetupView.as_view(), name='auth_user_setup'),
     path('auth/user/pushtoken/', UserPushTokenApiListView.as_view(),
          name='auth_user_pushtoken_list'),
     path('auth/user/pushtoken/<int:pk>/', UserPushTokenApiDetailView.as_view(),

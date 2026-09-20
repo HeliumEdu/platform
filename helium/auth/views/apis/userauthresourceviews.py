@@ -13,9 +13,8 @@ from helium.auth.serializers.userserializer import UserSerializer, UserCreateSer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.throttles import ForgotPasswordEmailThrottle, ResendVerificationEmailThrottle
-from helium.common.utils import taskutils
+from helium.common.utils.versionutils import client_version_gte
 from helium.common.views.base import HeliumAPIView
-from helium.importexport.tasks import import_example_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,11 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     )
     def register(self, request, *args, **kwargs):
         """
-        Register a new user.
+        Register a new user. The account starts with `settings.setup_state` pending and no example
+        schedule; the Helium app calls `POST /auth/user/setup/` while provisioning the new user after
+        registration. An integration that registers accounts itself can call that endpoint, or skip it
+        to leave the account empty. Until legacy clients are retired, a request without an
+        `X-Client-Version` header has setup started for it at registration.
         """
         response = self.create(request, *args, **kwargs)
 
@@ -50,13 +53,9 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
 
             response.data['settings'] = serializer.data
 
-        # Import the example schedule for the user (after timezone is set)
-        taskutils.safe_apply_async(import_example_schedule,
-            args=(response.data['id'],),
-            kwargs={'example_schedule': request.data.get('example_schedule', True)},
-            critical=True,
-            priority=settings.CELERY_PRIORITY_HIGH,
-        )
+        #: Legacy behavior, can be removed once all clients are reporting >= 3.9.5.
+        if not client_version_gte(request, '3.9.5'):
+            authservice.start_setup(get_user_model().objects.get(pk=response.data['id']))
 
         logger.info(f"User {response.data['id']} created")
 
