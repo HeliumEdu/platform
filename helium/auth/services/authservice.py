@@ -178,7 +178,9 @@ def verify_email(request):
 
             metricutils.increment('action.user.email-changed', request=request, user=user)
 
-        # Generate auth tokens for the verified user
+        # Verification hands back auth tokens, so it is the user's first login
+        update_last_login(None, user)
+
         token = RefreshToken.for_user(user)
 
         return Response({
