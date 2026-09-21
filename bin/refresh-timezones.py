@@ -5,14 +5,18 @@ Refresh the IANA timezone allow-list across platform and frontend.
 
 Computes the union of:
 
-* ``pytz.common_timezones`` (the canonical curated subset, refreshed with the
-  pinned pytz release in ``requirements.txt``), and
+* the canonical zones in ``zone.tab`` of the ``tzdata`` release pinned in
+  ``bin/requirements.txt`` (the only zone source the platform resolves against,
+  see ``CommonConfig.init_time_zones``), plus the
+  region-less ``UTC`` and ``GMT``, and
 * every IANA tz identifier already on disk in the target files.
 
 Writes the result to:
 
 * ``projects/platform/helium/common/timezones.py`` — ``TIME_ZONE_CHOICES``
-  grouped by region for Django ``CharField(choices=...)``.
+  grouped by region for Django ``CharField(choices=...)``, and
+  ``COUNTRY_BY_TIME_ZONE`` mapping each zone to its ISO 3166-1 alpha-2
+  country from ``zone.tab`` (region-less zones have no country).
 * ``projects/frontend/lib/utils/time_zone_constants.dart`` — flat ``all`` list
   consumed by the frontend dropdown, plus an ``aliases`` map of IANA link names
   to the selectable zone they resolve to.
@@ -24,18 +28,14 @@ map is what lets a reported link name be translated into something the platform
 will accept instead of silently falling back to UTC.
 
 Union-with-existing is what guarantees backwards compatibility: any zone we
-have ever shipped stays in the validation set, even if pytz later drops it as
+have ever shipped stays in the validation set, even if IANA later drops it as
 a deprecated alias. To prune, edit the source files manually.
 """
 
 import argparse
-import io
 import re
-import tarfile
-import urllib.request
+from importlib import resources
 from pathlib import Path
-
-_IANA_RELEASE_URL = "https://data.iana.org/time-zones/releases/tzdata{release}.tar.gz"
 
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -47,6 +47,9 @@ _DEFAULT_FRONTEND_ALIAS_FILE = (
     _REPO_ROOT.parent / "frontend" / "lib" / "utils" / "time_zone_aliases.dart"
 )
 
+# Selectable zones that live outside every region, and so outside zone.tab.
+_REGIONLESS_ZONES = {"GMT", "UTC"}
+
 # Matches an IANA tz identifier in single quotes (must contain a '/').
 _TZ_PATTERN = re.compile(r"'([A-Za-z]+(?:/[A-Za-z][A-Za-z0-9_+\-]*)+)'")
 
@@ -57,32 +60,39 @@ def _extract_zones(path: Path) -> set[str]:
     return set(_TZ_PATTERN.findall(path.read_text()))
 
 
-def _fetch_iana_links(release: str) -> dict[str, str]:
+def _read_country_by_zone() -> dict[str, str]:
     """
-    Return ``{alias: target}`` from the ``backward`` file of IANA ``release``.
+    Return ``{zone: country}`` from the ``zone.tab`` shipped in the installed ``tzdata``.
+
+    ``zone.tab`` lists every canonical zone with exactly one country; ``zone1970.tab``
+    merges countries that share a zone and is deliberately not used.
+    """
+    country_by_zone: dict[str, str] = {}
+    zone_tab = (resources.files("tzdata.zoneinfo") / "zone.tab").read_text()
+    for raw in zone_tab.splitlines():
+        if not raw or raw.startswith("#"):
+            continue
+        country, _, zone = raw.split("\t")[:3]
+        country_by_zone[zone] = country
+    return country_by_zone
+
+
+def _read_iana_links() -> dict[str, str]:
+    """
+    Return ``{alias: target}`` from the ``L`` records of ``tzdata.zi`` shipped in the installed ``tzdata``.
 
     Link records are the only authoritative source. Matching UTC offsets instead maps
     ``Asia/Saigon`` onto ``Asia/Bangkok``; comparing TZif bytes cannot break ties
     between zones that are themselves links.
     """
-    url = _IANA_RELEASE_URL.format(release=release)
-    with urllib.request.urlopen(url, timeout=60) as response:
-        payload = response.read()
-
     links: dict[str, str] = {}
-    with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
-        backward_member = archive.extractfile("backward")
-        if backward_member is None:
-            raise RuntimeError("IANA tzdata archive has no 'backward' file")
-        for raw in backward_member.read().decode().splitlines():
-            line = raw.split("#", 1)[0].strip()
-            if not line.startswith("Link"):
-                continue
-            parts = line.split()
-            if len(parts) >= 3:
-                # Link  <target>  <alias>
-                links[parts[2]] = parts[1]
-
+    zi = (resources.files("tzdata.zoneinfo") / "tzdata.zi").read_text()
+    for raw in zi.splitlines():
+        if not raw.startswith("L "):
+            continue
+        # L  <target>  <alias>
+        _, target, alias = raw.split()
+        links[alias] = target
     return links
 
 
@@ -157,7 +167,7 @@ def _autogen_banner_dart(iana_release: str) -> str:
     )
 
 
-def _render_platform(zones: list[str], iana_release: str) -> str:
+def _render_platform(zones: list[str], country_by_zone: dict[str, str], iana_release: str) -> str:
     groups = _group_by_region(zones)
     lines = [
         _autogen_banner_py(iana_release).rstrip(),
@@ -170,6 +180,12 @@ def _render_platform(zones: list[str], iana_release: str) -> str:
             lines.append(f"        ('{tz}', '{_label_for(tz)}'),")
         lines.append("    ]),")
     lines.append(")")
+    lines.append("")
+    lines.append("COUNTRY_BY_TIME_ZONE = {")
+    for tz in zones:
+        if tz in country_by_zone:
+            lines.append(f"    '{tz}': '{country_by_zone[tz]}',")
+    lines.append("}")
     lines.append("")
     return "\n".join(lines)
 
@@ -232,14 +248,14 @@ def _render_frontend_aliases(aliases: dict[str, str], iana_release: str) -> str:
 def refresh(
     platform_file: Path, frontend_file: Path, frontend_alias_file: Path
 ) -> tuple[int, int, int]:
-    # Imported lazily so the pure helpers stay testable without pytz installed.
-    import pytz
+    # Imported lazily so the pure helpers stay testable without tzdata installed.
+    import tzdata
 
-    # Pinned to pytz's tzdata so links and zones come from one IANA release.
-    iana_release = pytz.OLSON_VERSION
-    links = _fetch_iana_links(iana_release)
+    iana_release = tzdata.IANA_VERSION
+    links = _read_iana_links()
 
-    canonical = set(pytz.common_timezones)
+    country_by_zone = _read_country_by_zone()
+    canonical = set(country_by_zone) | _REGIONLESS_ZONES
     legacy = _extract_zones(platform_file) | _extract_zones(frontend_file)
     union = canonical | legacy
     zones = sorted(union)
@@ -251,7 +267,7 @@ def refresh(
     platform_file.parent.mkdir(parents=True, exist_ok=True)
     frontend_file.parent.mkdir(parents=True, exist_ok=True)
     frontend_alias_file.parent.mkdir(parents=True, exist_ok=True)
-    platform_file.write_text(_render_platform(zones, iana_release))
+    platform_file.write_text(_render_platform(zones, country_by_zone, iana_release))
     frontend_file.write_text(_render_frontend(zones, iana_release))
     frontend_alias_file.write_text(_render_frontend_aliases(aliases, iana_release))
 

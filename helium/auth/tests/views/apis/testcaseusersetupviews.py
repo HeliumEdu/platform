@@ -54,6 +54,21 @@ class TestCaseUserSetupViews(APITestCase):
         self.assertTrue(response.data['is_setup_complete'])
         mock_import_schedule.apply_async.assert_not_called()
 
+    @mock.patch('helium.auth.services.authservice.import_example_schedule')
+    def test_start_setup_applies_regional_at_risk_threshold(self, mock_import_schedule):
+        # GIVEN
+        mock_import_schedule.apply_async = mock.MagicMock()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.time_zone = 'Europe/Berlin'
+        user.settings.save()
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_setup'), json.dumps({}), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['at_risk_threshold'], 60)
+
     def test_start_setup_completes_setup_end_to_end(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
