@@ -24,7 +24,7 @@ from helium.auth.tasks import clear_email_suppression, send_analytics_event, sen
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
 from helium.common import enums
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import gradeutils, metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
 from helium.common.utils.versionutils import client_version_gte
 from helium.feed.models import ExternalCalendar
@@ -250,6 +250,8 @@ def start_setup(user):
         logger.info(f'Setup already started for user {user.pk}, nothing to do')
         return False
 
+    _apply_regional_at_risk_threshold(user)
+
     taskutils.safe_apply_async(import_example_schedule,
         args=(user.pk,),
         critical=True,
@@ -259,6 +261,14 @@ def start_setup(user):
     logger.info(f'Setup started for user {user.pk}')
 
     return True
+
+
+def _apply_regional_at_risk_threshold(user):
+    threshold = gradeutils.at_risk_threshold_for_time_zone(user.settings.time_zone)
+    if threshold is None:
+        return
+
+    UserSettings.objects.filter(user=user).update(at_risk_threshold=threshold)
 
 
 def oauth_login(request):

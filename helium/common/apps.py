@@ -1,4 +1,5 @@
 import sys
+import zoneinfo
 from urllib.parse import urlparse
 
 import firebase_admin
@@ -15,6 +16,8 @@ class CommonConfig(AppConfig):
     default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
+        self.init_time_zones()
+
         self.init_ngrok()
 
         self.init_firebase()
@@ -32,6 +35,9 @@ class CommonConfig(AppConfig):
 
         # noinspection PyUnresolvedReferences
         import helium.common.handlers
+
+    def init_time_zones(self):
+        zoneinfo.reset_tzpath([])
 
     def init_ngrok(self):
         if settings.USE_NGROK:

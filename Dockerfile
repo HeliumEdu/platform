@@ -13,6 +13,7 @@ ENV PATH="/venv/bin:$PATH"
 WORKDIR /app
 
 COPY requirements.txt .
+COPY bin/requirements.txt bin/
 COPY requirements-deploy.txt .
 
 # Since /venv/bin is the first thing on the PATH, once we've installed in to /venv, all subsequent
