@@ -34,8 +34,7 @@ def import_example_schedule(self, user_id, example_schedule=True):
         user.settings.setup_state = enums.SETUP_COMPLETE
         user.settings.save(update_fields=['setup_state', 'updated_at'])
 
-        elapsed_ms = int((timezone.now() - user.created_at).total_seconds() * 1000)
-        metricutils.timing("user.setup.total_duration", elapsed_ms)
+        metricutils.timing("user.setup.total_duration", _setup_elapsed_ms(user))
 
         value = 1
     except UserModel.DoesNotExist:
@@ -44,3 +43,14 @@ def import_example_schedule(self, user_id, example_schedule=True):
         value = 0
 
     metricutils.task_stop(metrics, user=user, value=value)
+
+
+def _setup_elapsed_ms(user):
+    """
+    Time from when the app took over provisioning the account until now. That is the login that handed the
+    user to the setup screen (OAuth creation or email verification), or creation for legacy clients that start
+    setup at registration before ever logging in.
+    """
+    handoff_at = user.last_login or user.created_at
+
+    return int((timezone.now() - handoff_at).total_seconds() * 1000)
