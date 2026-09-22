@@ -4,7 +4,7 @@ from rest_framework import serializers
 from helium.planner.models import Material, MaterialGroup, Course
 
 
-#: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.9.7.
 #: Legacy 'material_group' parameter, can be removed once all clients are reporting >= 3.9.4.
 #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
 @extend_schema_serializer(exclude_fields=('details', 'material_group'), component_name='Resource')

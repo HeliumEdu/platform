@@ -22,20 +22,27 @@ logger = logging.getLogger(__name__)
 class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     serializer_class = NoteSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, HeliumSearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, HeliumSearchFilter)
     filterset_class = NoteFilter
     search_fields = ('title', 'content_text', 'linked_entity_title')
     search_description = 'Search by title, content text, and the title of the linked homework, event, or resource.'
     ordering_fields = ('title', 'created_at', 'updated_at')
 
+    def _content_requested(self):
+        return (self.request.query_params.get('include_content') == 'true'
+                or bool((self.request.query_params.get('search') or '').strip()))
+
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
-            return self.request.user.notes.prefetch_related(
+            queryset = self.request.user.notes.prefetch_related(
                 'homework__course',
                 'homework__category',
                 'events',
                 'resources'
             ).all()
+            if self.request.method == 'GET' and not self._content_requested():
+                queryset = queryset.defer('content')
+            return queryset
         return Note.objects.none()
 
     def get_serializer_class(self):

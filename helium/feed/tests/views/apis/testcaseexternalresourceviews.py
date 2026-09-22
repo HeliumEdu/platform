@@ -329,13 +329,12 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         # WHEN
         response = self.client.get(
             reverse('feed_resource_externalcalendars_events', kwargs={'pk': external_calendar.pk})
-            + '?search=aLL')
+            + '?search=new year')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'New Year\'s Day')
-        self.assertEqual(response.data[0]['comments'], 'all day event test')
 
 
 class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCase):

@@ -12,7 +12,7 @@ from django.utils.http import parse_http_date_safe
 from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
 
 from helium.planner.services import coursescheduleservice
-from helium.planner.utils.quillutils import quill_delta_to_plain_text
+from helium.planner.utils import noteutils
 
 logger = logging.getLogger(__name__)
 
@@ -120,18 +120,18 @@ def _create_calendar(user):
     return calendar
 
 
+def _note_line(notes_set):
+    url = noteutils.note_url(notes_set)
+    return f"\U0001F517 Note: {url}" if url else ""
+
+
 def _create_event_description(event):
-    notes = list(event.notes_set.all())
-    if notes and notes[0].content:
-        comments = quill_delta_to_plain_text(notes[0].content)
-    else:
-        comments = event.comments or ""
-    description = f"Comments: {comments}"
+    lines = [
+        f"URL: {event.url}" if event.url else "",
+        _note_line(event.notes_set),
+    ]
 
-    if event.url:
-        description = f"URL: {event.url}\n" + description
-
-    return description
+    return "\n".join(line for line in lines if line)
 
 
 def _create_homework_description(homework):
@@ -156,14 +156,9 @@ def _create_homework_description(homework):
     if homework.completed and homework.current_grade != "-1/100":
         description += f"Grade: {homework.current_grade}\n"
 
-    notes = list(homework.notes_set.all())
-    if notes and notes[0].content:
-        comments = quill_delta_to_plain_text(notes[0].content)
-    else:
-        comments = homework.comments or ""
-    description += f"Comments: {comments}"
+    description += _note_line(homework.notes_set)
 
-    return description
+    return description.rstrip("\n")
 
 
 def events_to_private_ical_feed(user):

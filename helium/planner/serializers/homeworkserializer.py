@@ -14,7 +14,7 @@ from helium.planner.tasks import recalculate_category_grade
 logger = logging.getLogger(__name__)
 
 
-#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.9.7.
 #: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
 @extend_schema_serializer(exclude_fields=('comments', 'materials'))
 class HomeworkSerializer(serializers.ModelSerializer):
@@ -83,7 +83,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         return instance
 
 
-#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.9.7.
 #: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
 @extend_schema_serializer(exclude_fields=('comments', 'materials'))
 class HomeworkExtendedSerializer(HomeworkSerializer):

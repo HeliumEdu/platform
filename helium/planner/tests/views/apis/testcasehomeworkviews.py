@@ -77,6 +77,23 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['course_group'], course_group.pk)
 
+    def test_ordering_outside_allowlist_does_not_duplicate_rows(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        homework.materials.add(materialhelper.given_material_exists(material_group))
+        homework.materials.add(materialhelper.given_material_exists(material_group))
+
+        # WHEN
+        response = self.client.get(reverse('planner_homework_list') + '?ordering=materials')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([homework_data['id'] for homework_data in response.data], [homework.pk])
+
     def test_get_homework(self):
         user1 = userhelper.given_a_user_exists()
         user2 = userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2',
@@ -826,7 +843,7 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], homework.title)
 
-    def test_search_query_folds_diacritics_and_ignores_html_in_comments(self):
+    def test_search_query_folds_diacritics_and_does_not_match_legacy_comments(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -836,11 +853,11 @@ class TestCaseHomeworkViews(APITestCase):
 
         # WHEN
         folded = self.client.get(reverse('planner_homework_list') + '?search=cafe')
-        html_tag = self.client.get(reverse('planner_homework_list') + '?search=div')
+        commented = self.client.get(reverse('planner_homework_list') + '?search=notes')
 
         # THEN
         self.assertEqual([homework['id'] for homework in folded.data], [match.pk])
-        self.assertEqual(html_tag.data, [])
+        self.assertEqual(commented.data, [])
 
     def test_search_query_applies_within_date_range(self):
         # GIVEN

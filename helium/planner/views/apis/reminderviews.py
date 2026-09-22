@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.reminder']
+    tags=['planner.reminder'],
+    parameters=[OpenApiParameter(name='title', exclude=True)]
 )
 class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = ReminderSerializer

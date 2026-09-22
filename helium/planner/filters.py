@@ -137,7 +137,6 @@ class ReminderFilter(django_filters.FilterSet):
             'sent': ['exact'],
             'dismissed': ['exact'],
             'start_of_range': ['lte'],
-            'message': ['exact'],
             'updated_at': ['gte'],
         }
 

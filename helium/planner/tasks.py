@@ -13,6 +13,7 @@ from helium.common.utils import commonutils, datetimeutils, metricutils, taskuti
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import gradingservice
+from helium.planner.utils import noteutils
 from helium.planner.services import reminderservice
 
 logger = logging.getLogger(__name__)
@@ -308,14 +309,13 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             else:
                 normalized_datetime = start_str
 
-            comments = None
+            note_url = ''
         else:
             format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
             start = format_when(timezone.localtime(calendar_item.start), user_settings)
             end = format_when(timezone.localtime(calendar_item.end), user_settings)
             normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
-
-            comments = calendar_item.comments if calendar_item.comments.strip() != '' else None
+            note_url = noteutils.note_url(calendar_item.notes_set)
 
         commonutils.send_multipart_email('email/reminder',
                                          {
@@ -323,7 +323,7 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                                              'reminder': reminder,
                                              'calendar_item': calendar_item,
                                              'normalized_datetime': normalized_datetime,
-                                             'comments': comments,
+                                             'note_url': note_url,
                                              'notifications_url': f"{settings.PROJECT_APP_HOST}/notifications",
                                          },
                                          subject, [email],

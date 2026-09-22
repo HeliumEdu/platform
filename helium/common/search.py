@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from rest_framework import filters
 
 from helium.common.utils.searchutils import matches_search_terms, tokenize_search_query
@@ -22,10 +21,7 @@ class HeliumSearchFilter(filters.SearchFilter):
         if not search_fields or not terms:
             return queryset
 
-        matching = [item for item in queryset if self._matches(item, search_fields, terms)]
-        if isinstance(queryset, QuerySet):
-            return queryset.filter(pk__in=[item.pk for item in matching])
-        return matching
+        return [item for item in queryset if self._matches(item, search_fields, terms)]
 
     def get_schema_operation_parameters(self, view):
         if not getattr(view, 'search_fields', None):

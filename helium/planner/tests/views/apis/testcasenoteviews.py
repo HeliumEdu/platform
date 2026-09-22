@@ -1,6 +1,8 @@
 import datetime
 import json
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -189,6 +191,39 @@ class TestCaseNoteViews(APITestCase):
         for delta_token, response in responses.items():
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), 0, msg=f'`{delta_token}` should not match Delta syntax')
+
+    def test_search_query_does_not_add_queries(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        notehelper.given_note_linked_to_homework(user, homework, title='Krebs cycle')
+        notehelper.given_note_exists(user, title='Krebs quiz')
+
+        # WHEN
+        with CaptureQueriesContext(connection) as unsearched:
+            self.client.get(reverse('planner_notes_list'))
+        with CaptureQueriesContext(connection) as searched:
+            self.client.get(reverse('planner_notes_list') + '?search=krebs')
+
+        # THEN
+        self.assertEqual(len(searched.captured_queries), len(unsearched.captured_queries),
+                         'Search must not re-execute the queryset or discard the prefetch cache')
+
+    def test_search_query_applies_requested_ordering(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        beta = notehelper.given_note_exists(user, title='Beta Krebs')
+        alpha = notehelper.given_note_exists(user, title='Alpha Krebs')
+        notehelper.given_note_exists(user, title='Gamma Other')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?search=krebs&ordering=title')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([note['id'] for note in response.data], [alpha.pk, beta.pk])
 
     def test_search_query_requires_every_term(self):
         # GIVEN

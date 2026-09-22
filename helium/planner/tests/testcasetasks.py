@@ -300,22 +300,6 @@ class TestCasePlannerTasks(TestCase):
         # THEN
         mock_send_multipart_email.assert_not_called()
 
-    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
-    def test_send_email_reminder_with_empty_comments(self, mock_send_multipart_email):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(user, comments='   ')
-        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
-
-        # WHEN
-        send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
-
-        # THEN
-        mock_send_multipart_email.assert_called_once()
-        # Verify comments is passed as None when empty
-        call_args = mock_send_multipart_email.call_args
-        self.assertIsNone(call_args[0][1]['comments'])
-
     def test_adjust_reminder_times_rearms_dismissed_reminder(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

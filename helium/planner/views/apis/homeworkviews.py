@@ -33,11 +33,11 @@ def _requested_resource_ids(request):
 class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, HeliumSearchFilter, filters.OrderingFilter,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, HeliumSearchFilter,)
     filterset_class = HomeworkFilter
-    search_fields = ('title', 'comments_text', 'category__title', 'course__title',)
-    search_description = 'Search by title, comments, category title, and class title.'
-    order_fields = ('start', 'title', 'completed', 'priority', 'category__title', 'course__title',)
+    search_fields = ('title', 'category__title', 'course__title',)
+    search_description = 'Search by title, category title, and class title.'
+    ordering_fields = ('start', 'title', 'completed', 'priority', 'category__title', 'course__title',)
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
@@ -68,6 +68,8 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     serializer_class = HomeworkSerializer
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     filterset_class = HomeworkFilter
+    search_fields = ('title', 'category__title', 'course__title',)
+    search_description = 'Search by title, category title, and class title.'
 
     def get_queryset(self):
         if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):

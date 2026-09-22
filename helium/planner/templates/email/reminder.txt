@@ -13,7 +13,8 @@ Teacher: {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({
 {% if calendar_item.attachments.count > 0 %}Attachments:{% for attachment in calendar_item.attachments.all %}
  - {{ attachment.title }}: {{ attachment.attachment.url }}{% endfor %}{% endif %}{% endif %}
 
-{{ comments|safe }}
+{% if note_url %}
+🔗 Note: {{ note_url }}{% endif %}
 
 View in Helium: {{ notifications_url }}
 

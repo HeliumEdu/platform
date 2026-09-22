@@ -652,59 +652,39 @@ def evaluate_review_prompts(self):
     metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
 
     try:
-        user_settings_ids = list(UserSettings.objects.eligible_for_review_prompt()
-                                 .values_list('pk', flat=True))
+        eligible = list(UserSettings.objects.eligible_for_review_prompt()
+                        .values_list('pk', 'user_id', 'review_prompts_requested'))
 
-        for user_settings_id in user_settings_ids:
-            taskutils.safe_apply_async(evaluate_review_prompt,
-                                       args=(user_settings_id,),
-                                       priority=settings.CELERY_PRIORITY_LOW)
+        recent_cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(
+            days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
+        counts = (Homework.objects
+                  .filter(completed=True,
+                          course__course_group__example_schedule=False,
+                          course__course_group__user_id__in=[user_id for _, user_id, _ in eligible])
+                  .values('course__course_group__user_id')
+                  .annotate(total=Count('pk'),
+                            recent=Count('pk', filter=Q(completed_at__gte=recent_cutoff))))
+        counts_by_user = {row['course__course_group__user_id']: (row['total'], row['recent'])
+                          for row in counts}
 
-        metricutils.task_stop(metrics, value=len(user_settings_ids))
-        logger.info(f"Queued {len(user_settings_ids)} user(s) for review prompt evaluation")
+        flagged_ids = []
+        for user_settings_id, user_id, prompts_requested in eligible:
+            total_completed, recent_completed = counts_by_user.get(user_id, (0, 0))
+            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (prompts_requested + 1)
+            if (total_completed >= threshold
+                    and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD):
+                flagged_ids.append(user_settings_id)
+
+        if flagged_ids:
+            UserSettings.objects.filter(pk__in=flagged_ids).update(prompt_for_review=True)
+
+        metricutils.increment('action.review_prompt.flagged', value=len(flagged_ids))
+        metricutils.task_stop(metrics, value=len(eligible))
+        logger.info(f"Evaluated {len(eligible)} user(s) for review prompt, flagged {len(flagged_ids)}")
 
     except Exception as e:
         logger.error(f'Failed to evaluate review prompts: {e}', exc_info=True)
         raise
-
-
-@app.task(bind=True)
-def evaluate_review_prompt(self, user_settings_id):
-    published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("user.review-prompt.evaluate.user", priority="low",
-                                     published_at_ms=published_at_ms)
-
-    user_settings = UserSettings.objects.select_related('user').filter(pk=user_settings_id).first()
-    if user_settings is None:
-        metricutils.task_stop(metrics, value=0)
-        return
-
-    recent_cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(
-        days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
-
-    threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (user_settings.review_prompts_requested + 1)
-    base_qs = Homework.objects.for_user(user_settings.user.pk).filter(
-        completed=True,
-        course__course_group__example_schedule=False,
-    )
-    total_completed = base_qs.count()
-    recent_completed = base_qs.filter(completed_at__gte=recent_cutoff).count()
-
-    flagged = (total_completed >= threshold
-               and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD)
-    if flagged:
-        user_settings.prompt_for_review = True
-        try:
-            user_settings.save(update_fields=['prompt_for_review'])
-        except (IntegrityError, OperationalError):
-            raise
-        except DatabaseError:
-            logger.info(f'UserSettings {user_settings_id} does not exist. Nothing to do.')
-            metricutils.task_stop(metrics, value=0)
-            return
-        logger.info(f"Review prompt flagged for user {user_settings.user_id}")
-
-    metricutils.task_stop(metrics, user=user_settings.user, value=1 if flagged else 0)
 
 
 @app.task(bind=True)

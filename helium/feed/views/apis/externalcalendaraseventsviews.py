@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = GeneratedEventSerializer
     permission_classes = (IsAuthenticated,)
-    search_fields = ('title', 'comments_text')
-    search_description = 'Search by title and comments.'
+    search_fields = ('title',)
+    search_description = 'Search by title.'
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -86,8 +86,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     serializer_class = GeneratedEventSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    search_fields = ('title', 'comments_text')
-    search_description = 'Search by title and comments.'
+    search_fields = ('title',)
+    search_description = 'Search by title.'
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):

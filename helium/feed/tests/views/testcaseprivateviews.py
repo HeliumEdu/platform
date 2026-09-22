@@ -31,13 +31,13 @@ class TestCasePrivateViews(CacheTestCase):
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], event1.title)
-        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], f"Comments: {event1.comments}")
+        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], '')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, event1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, event1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], event1.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, event2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
-        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], f"Comments: {event2.comments}")
+        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], '')
 
     def _all_day_feed_components(self, user, url_name):
         response = self.client.get(
@@ -127,7 +127,7 @@ class TestCasePrivateViews(CacheTestCase):
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
         event = eventhelper.given_event_exists(user, comments='Legacy comment')
-        notehelper.given_note_linked_to_event(
+        note = notehelper.given_note_linked_to_event(
             user, event, content={'ops': [{'insert': 'Note content from linked note\n'}]}
         )
 
@@ -137,8 +137,10 @@ class TestCasePrivateViews(CacheTestCase):
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
-        self.assertIn('Note content from linked note', calendar.subcomponents[0]['DESCRIPTION'])
-        self.assertNotIn('Legacy comment', calendar.subcomponents[0]['DESCRIPTION'])
+        description = calendar.subcomponents[0]['DESCRIPTION']
+        self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
+        self.assertNotIn('Note content from linked note', description)
+        self.assertNotIn('Legacy comment', description)
 
     def test_events_feed_with_url(self):
         # GIVEN
@@ -153,8 +155,7 @@ class TestCasePrivateViews(CacheTestCase):
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertIn('URL: https://example.com/event', description)
-        self.assertIn('Comments:', description)
+        self.assertEqual(description, 'URL: https://example.com/event')
 
     def test_homework_feed(self):
         # GIVEN
@@ -184,14 +185,14 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], homework1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         f'Class Info: {homework1.course.title}\nGrade: {homework1.current_grade}\nComments: {homework1.comments}')
+                         f'Class Info: {homework1.course.title}\nGrade: {homework1.current_grade}')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, homework1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, homework1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], homework2.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, homework2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, homework2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
-                         f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}\nComments: {homework2.comments}')
+                         f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}')
 
     def test_homework_feed_with_linked_note(self):
         # GIVEN
@@ -201,7 +202,7 @@ class TestCasePrivateViews(CacheTestCase):
         course = coursehelper.given_course_exists(course_group, room='')
         category = categoryhelper.given_category_exists(course, title='Uncategorized')
         homework = homeworkhelper.given_homework_exists(course, category=category, comments='Legacy comment')
-        notehelper.given_note_linked_to_homework(
+        note = notehelper.given_note_linked_to_homework(
             user, homework, content={'ops': [{'insert': 'Homework note content\n'}]}
         )
 
@@ -211,8 +212,10 @@ class TestCasePrivateViews(CacheTestCase):
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
-        self.assertIn('Homework note content', calendar.subcomponents[0]['DESCRIPTION'])
-        self.assertNotIn('Legacy comment', calendar.subcomponents[0]['DESCRIPTION'])
+        description = calendar.subcomponents[0]['DESCRIPTION']
+        self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
+        self.assertNotIn('Homework note content', description)
+        self.assertNotIn('Legacy comment', description)
 
     def test_homework_feed_with_materials_and_url(self):
         # GIVEN

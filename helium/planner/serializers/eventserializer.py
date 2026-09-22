@@ -18,7 +18,8 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 logger = logging.getLogger(__name__)
 
 
-#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Permanently excluded: `comments` is only populated on the synthesised external calendar and
+#: course schedule events that inherit this serializer, never on a stored Event.
 @extend_schema_serializer(exclude_fields=('comments',))
 class EventSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
@@ -64,7 +65,8 @@ class EventSerializer(serializers.ModelSerializer):
         return attrs
 
 
-#: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
+#: Permanently excluded: `comments` is only populated on the synthesised external calendar and
+#: course schedule events that inherit this serializer, never on a stored Event.
 @extend_schema_serializer(exclude_fields=('comments',))
 class EventExtendedSerializer(EventSerializer):
     attachments = AttachmentSerializer(many=True)
