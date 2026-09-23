@@ -29,7 +29,7 @@ class HomeworkExportSerializer(HomeworkSerializer):
     """Homework representation used in export bundles."""
 
     class Meta(HomeworkSerializer.Meta):
-        #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.9.7.
+        #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
         #: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
         fields = tuple(f for f in HomeworkSerializer.Meta.fields if f not in ('comments', 'materials'))
 
@@ -38,7 +38,7 @@ class EventExportSerializer(EventSerializer):
     """Event representation used in export bundles."""
 
     class Meta(EventSerializer.Meta):
-        #: Legacy parameter, can be removed once all clients are reporting >= 3.9.7.
+        #: Legacy parameter, can be removed once all clients are reporting >= 3.10.0.
         fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
 
 
@@ -48,7 +48,7 @@ class MaterialExportSerializer(MaterialSerializer):
     """Resource representation used in export bundles."""
 
     class Meta(MaterialSerializer.Meta):
-        #: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.9.7.
+        #: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.10.0.
         #: Legacy 'material_group' parameter, can be removed once all clients are reporting >= 3.9.4.
         fields = tuple(f for f in MaterialSerializer.Meta.fields if f not in ('details', 'material_group'))
 

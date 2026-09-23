@@ -307,8 +307,9 @@ def emit_nightly_metrics(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
 
-    staff_cohorts = [('true', lambda qs: qs.staff()),
-                     ('false', lambda qs: qs.exclude(pk__in=qs.staff()))]
+    staff_ids = list(UserModel.objects.staff().values_list('pk', flat=True))
+    staff_cohorts = [('true', lambda qs: qs.filter(pk__in=staff_ids)),
+                     ('false', lambda qs: qs.exclude(pk__in=staff_ids))]
 
     # Active users by window
     try:
@@ -608,27 +609,33 @@ def rollup_client_activity(self):
             logger.info(f'Pruned {num_pruned} UserClientActivity row(s) older than 90 days')
 
         # Rollup per-user mobile app usage and emit DataDog gauges
-        users_with_activity = (
+        windows = [('7d', 7), ('30d', 30), ('90d', 90)]
+
+        users_with_activity = list(
             UserClientActivity.objects
             .filter(date__gte=cutoff_90d)
             .values_list('user_id', flat=True)
             .distinct()
         )
 
+        mobile_days_by_user = {
+            row['user_id']: row
+            for row in (UserClientActivity.objects
+                        .filter(date__gte=cutoff_90d, client=UserClientActivity.CLIENT_MOBILE_APP)
+                        .values('user_id')
+                        .annotate(**{f'days_{days}': Count('pk', filter=Q(date__gte=today - timedelta(days=days)))
+                                     for _, days in windows}))
+        }
+
         to_update = []
-        for user_id in users_with_activity:
-            user = UserModel.objects.filter(pk=user_id).first()
-            if not user:
-                continue
-
+        for user in UserModel.objects.filter(pk__in=users_with_activity):
             staff_tag = 'true' if is_staff_user(user) else 'false'
+            mobile_days = mobile_days_by_user.get(user.pk, {})
 
-            for window_tag, days in [('7d', 7), ('30d', 30), ('90d', 90)]:
-                cutoff = today - timedelta(days=days)
-                mobile_days = UserClientActivity.objects.filter(user_id=user_id, date__gte=cutoff, client=UserClientActivity.CLIENT_MOBILE_APP).count()
-                percent = mobile_days / days * 100
+            for window_tag, days in windows:
+                percent = mobile_days.get(f'days_{days}', 0) / days * 100
                 metricutils.gauge('users.mobile_app_usage_percent', percent,
-                                  extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}', f'user:{user_id}'])
+                                  extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}', f'user:{user.pk}'])
 
                 if window_tag == '30d':
                     user.mobile_app_usage_percent_30d = percent
