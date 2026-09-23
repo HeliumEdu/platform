@@ -1,7 +1,9 @@
 import datetime
+import io
 import json
 import os
 import tempfile
+import zipfile
 from unittest import mock
 from zoneinfo import ZoneInfo
 
@@ -39,34 +41,29 @@ class TestCaseImportExportViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
-    def test_import_success(self, mock_validate_url):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+    def _import_sample_twice(self, as_zip=False):
+        with open(os.path.join(os.path.dirname(__file__),
+                               os.path.join('../../resources', 'sample.json')), 'rb') as fp:
+            content = fp.read()
 
-        # WHEN
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
-            data = {
-                'file[]': [fp]
-            }
-            response1 = self.client.post(
-                reverse('importexport_import'),
-                data)
+        if as_zip:
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('sample.json', content)
+            content, filename = buffer.getvalue(), 'sample.zip'
+        else:
+            filename = 'sample.json'
+
+        # Uploaded twice so the key IDs do not line up and the remapping is properly tested
+        return [self.client.post(reverse('importexport_import'),
+                                 {'file[]': [SimpleUploadedFile(filename, content)]})
+                for _ in range(2)]
+
+    def _verify_sample_import(self, user, response1, response2):
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
              'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response1.data)
-        # We are intentionally uploading this file twice so that, in the case of unit tests, the key IDs do not line
-        # up and the remapping is properly tested
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))) as fp:
-            data = {
-                'file[]': [fp]
-            }
-            response2 = self.client.post(
-                reverse('importexport_import'),
-                data)
-
-        # THEN
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
@@ -238,6 +235,28 @@ class TestCaseImportExportViews(APITestCase):
                                                                          'sent': False, 'dismissed': False,
                                                                          'homework': homework[2].pk,
                                                                          'event': None, 'user': user.pk})
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
+    def test_import_success(self, mock_validate_url):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response1, response2 = self._import_sample_twice()
+
+        # THEN
+        self._verify_sample_import(user, response1, response2)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.validate_url')
+    def test_import_success_from_zip(self, mock_validate_url):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response1, response2 = self._import_sample_twice(as_zip=True)
+
+        # THEN
+        self._verify_sample_import(user, response1, response2)
 
     def test_import_blocks_template_and_provisions_uncategorized(self):
         # GIVEN

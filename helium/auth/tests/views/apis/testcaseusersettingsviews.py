@@ -39,6 +39,37 @@ class TestCaseUserSettingsViews(APITestCase):
         for response in responses:
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_three_day_view_can_be_set(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.put(
+            reverse('auth_user_settings_detail'),
+            json.dumps({'default_view': enums.THREE_DAY}),
+            content_type='application/json',
+            HTTP_X_CLIENT_VERSION='3.10.0',
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.default_view, enums.THREE_DAY)
+
+    def test_unknown_view_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.put(
+            reverse('auth_user_settings_detail'),
+            json.dumps({'default_view': 6}),
+            content_type='application/json',
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_time_zone_change_rolls_back_when_rebase_fails(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

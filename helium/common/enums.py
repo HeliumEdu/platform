@@ -7,9 +7,11 @@ WEEK = 1
 DAY = 2
 LIST = 3
 AGENDA_WEEK = 4
+THREE_DAY = 5
 VIEW_CHOICES = (
     (MONTH, 'Month'),
     (WEEK, 'Week'),
+    (THREE_DAY, '3-Day'),
     (DAY, 'Day'),
     (LIST, 'List'),
     (AGENDA_WEEK, 'Agenda')

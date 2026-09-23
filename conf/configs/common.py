@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.15"
+__version__ = "2.5.0"
 
 import json
 import os
@@ -260,6 +260,9 @@ REFRESH_TOKEN_TTL_DAYS = 14
 MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
 ADVANCED_SCHEDULES_MIN_VERSION = '3.8.0'
+
+#: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
+THREE_DAY_VIEW_MIN_VERSION = '3.10.0'
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")

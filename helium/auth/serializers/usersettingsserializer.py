@@ -1,10 +1,13 @@
 import logging
 
+from django.conf import settings
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
+from helium.common import enums
 from helium.common.utils.validators import validate_hex_color
+from helium.common.utils.versionutils import client_version_gte
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,18 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
         read_only_fields = ('setup_state', 'private_slug', 'user',
                             'prompt_for_review',)
+
+    #: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        request = self.context.get('request')
+        if (request is not None
+                and data.get('default_view') == enums.THREE_DAY
+                and not client_version_gte(request, settings.THREE_DAY_VIEW_MIN_VERSION)):
+            data['default_view'] = enums.WEEK
+
+        return data
 
 
 #: Legacy 'show_getting_started' parameter, can be removed once all clients are reporting >= 3.9.4, after which it becomes a read-only field above.
