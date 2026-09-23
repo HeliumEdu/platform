@@ -18,14 +18,15 @@ def seed_categories(course_id: int, template: int) -> None:
     """
     existing_titles = set(Category.objects.filter(course_id=course_id).values_list('title', flat=True))
 
-    for definition in enums.CATEGORY_TEMPLATES[template]:
-        if definition['title'] in existing_titles:
-            continue
-        Category.objects.create(
+    Category.objects.bulk_create([
+        Category(
             course_id=course_id,
             title=definition['title'],
             weight=0,
             color=definition['color'],
         )
+        for definition in enums.CATEGORY_TEMPLATES[template]
+        if definition['title'] not in existing_titles
+    ])
 
     logger.info(f"Seeded '{template}' default categories for Course {course_id}")

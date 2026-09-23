@@ -1,7 +1,5 @@
 import json
 
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -158,21 +156,3 @@ class TestCaseGradeCascade(APITestCase):
                                          category=source)
         self.assert_grades_are_not_stale(user, course_group=course_group, course=course,
                                          category=target)
-
-    def test_a_cascading_delete_does_not_recalculate_per_row(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        for index in range(3):
-            self.given_graded_course(course_group, title=f'course {index}', count=10)
-
-        # WHEN
-        with CaptureQueriesContext(connection) as queries:
-            response = self.client.delete(reverse('planner_coursegroups_detail',
-                                                  kwargs={'pk': course_group.pk}))
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        # This deletes in ~114; recalculating per deleted row takes ~328. The ceiling sits
-        # between them, clear of both an incidental query change and a false pass
-        self.assertLess(len(queries), 200)

@@ -1,13 +1,16 @@
 import datetime
-from unittest.mock import patch
+import json
+import os
+from unittest.mock import PropertyMock, patch
 
+from django.db import connection
 from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.importexport.services import importservice
 from helium.importexport.services.importservice import import_example_schedule
-from helium.planner.models import CourseGroup, CourseSchedule
+from helium.planner.models import CourseGroup, CourseSchedule, Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, reminderhelper
 
 
@@ -17,6 +20,31 @@ class TestCaseImportService(TestCase):
         user.settings.time_zone = tz_name
         user.settings.save()
         return user
+
+    def test_example_schedule_remaps_categories_when_bulk_insert_returns_no_pks(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        with open(os.path.join(os.path.dirname(importservice.__file__), '..', 'resources',
+                               'example_schedule.json'), 'rb') as f:
+            data = json.loads(f.read().decode('utf-8'))
+        course_titles = {c['id']: c['title'] for c in data['courses']}
+        category_titles = {c['id']: c['title'] for c in data['categories']}
+        expected = sorted(
+            (h['title'], course_titles[h['course']], category_titles[h['category']])
+            for h in data['homework'] if h.get('category'))
+
+        # WHEN
+        with patch.object(type(connection.features), 'can_return_rows_from_bulk_insert', new_callable=PropertyMock,
+                          return_value=False):
+            import_example_schedule(user)
+
+        # THEN
+        actual = sorted(Homework.objects.for_user(user.pk).filter(category__title__in=set(category_titles.values()))
+                        .exclude(category__title='Uncategorized')
+                        .values_list('title', 'course__title', 'category__title'))
+        self.assertEqual([e for e in expected if e[2] != 'Uncategorized'], actual)
+        self.assertTrue(all(h.category.course_id == h.course_id
+                            for h in Homework.objects.for_user(user.pk).select_related('category')))
 
     @patch('django.utils.timezone.now')
     def test_adjust_schedule_uses_user_timezone_when_behind_utc_at_month_boundary(self, mock_now):

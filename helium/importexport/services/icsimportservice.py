@@ -7,10 +7,11 @@ from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from helium.feed.services.icalparseservice import parse_events
-from helium.planner.models import Course, CourseGroup
+from helium.planner.models import Category, Course, CourseGroup, Event, Homework
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
+from helium.planner.tasks import recalculate_category_grade
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +119,8 @@ def _derive_course_title(calendar, default_course_title):
 
 
 def _import_as_assignments(request, calendar, course, time_zone):
-    created = 0
+    uncategorized = Category.objects.get_uncategorized(course.pk)
+    assignments = []
     seen_uids = set()
 
     for parsed in parse_events(calendar, time_zone):
@@ -137,46 +139,47 @@ def _import_as_assignments(request, calendar, course, time_zone):
                 'current_grade': _UNGRADED,
                 'completed': False,
                 'comments': parsed['description'] or '',
-                'course': course.pk,
-                'category': None,
             }
-            serializer = HomeworkSerializer(data=data, context={'request': request})
+            serializer = HomeworkSerializer(data=data, context={'request': request}, partial=True)
             if not serializer.is_valid():
                 raise ValidationError({'homework': serializer.errors})
-            serializer.save(course_id=course.pk)
-            created += 1
+            assignments.append(Homework(**serializer.validated_data, course=course, category=uncategorized))
 
-    logger.info(f"Imported {created} assignments from .ics into course {course.pk}.")
+    Homework.objects.bulk_create(assignments)
+    if assignments:
+        recalculate_category_grade.apply(args=(uncategorized.pk,))
 
-    return created
+    logger.info(f"Imported {len(assignments)} assignments from .ics into course {course.pk}.")
+
+    return len(assignments)
 
 
 def _import_as_events(request, calendar, time_zone):
-    created = 0
+    events = []
     seen_uids = set()
 
     for parsed in parse_events(calendar, time_zone):
         if _is_duplicate_uid(parsed, seen_uids):
             continue
 
-        _create_event(request, parsed, parsed['start'], parsed['end'],
-                      recurrence_rule=parsed['recurrence_rule'],
-                      exception_dates=parsed['exception_dates'])
-        created += 1
+        events.append(_build_event(request, parsed, parsed['start'], parsed['end'],
+                                   recurrence_rule=parsed['recurrence_rule'],
+                                   exception_dates=parsed['exception_dates']))
 
         # RDATE extras can't ride a single RRULE, so each becomes a standalone Event mirroring
         # the parent's duration (matching the external-calendar service).
         duration = parsed['end'] - parsed['start']
         for extra_start in parsed['extra_starts']:
-            _create_event(request, parsed, extra_start, extra_start + duration)
-            created += 1
+            events.append(_build_event(request, parsed, extra_start, extra_start + duration))
 
-    logger.info(f"Imported {created} events from .ics.")
+    Event.objects.bulk_create(events)
 
-    return created
+    logger.info(f"Imported {len(events)} events from .ics.")
+
+    return len(events)
 
 
-def _create_event(request, parsed, start, end, *, recurrence_rule=None, exception_dates=None):
+def _build_event(request, parsed, start, end, *, recurrence_rule=None, exception_dates=None):
     data = {
         'title': parsed['title'],
         'all_day': parsed['all_day'],
@@ -192,7 +195,7 @@ def _create_event(request, parsed, start, end, *, recurrence_rule=None, exceptio
     serializer = EventSerializer(data=data)
     if not serializer.is_valid():
         raise ValidationError({'events': serializer.errors})
-    serializer.save(user=request.user)
+    return Event(**serializer.validated_data, user=request.user)
 
 
 def _assignment_start_times(parsed, window_end_date, time_zone):

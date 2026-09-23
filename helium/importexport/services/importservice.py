@@ -594,8 +594,9 @@ def _bulk_import_example_schedule(data, user):
     CourseSchedule.objects.bulk_create(schedule_objects)
 
     # --- Category ---
-    for cat in data.get('categories', []):
-        instance = Category.objects.create(
+    categories = data.get('categories', [])
+    Category.objects.bulk_create([
+        Category(
             title=cat['title'],
             weight=Decimal(cat.get('weight', '0')),
             color=cat.get('color', '#000000'),
@@ -604,7 +605,15 @@ def _bulk_import_example_schedule(data, user):
             trend=cat.get('trend'),
             course_id=course_remap[cat['course']],
         )
-        category_remap[cat['id']] = instance.pk
+        for cat in categories
+    ])
+    category_pks_by_key = {
+        (course_id, title): pk
+        for pk, course_id, title in Category.objects.filter(
+            course_id__in=course_remap.values()).values_list('pk', 'course_id', 'title')
+    }
+    for cat in categories:
+        category_remap[cat['id']] = category_pks_by_key[(course_remap[cat['course']], cat['title'])]
 
     # --- MaterialGroup ---
     for mg in _resolve_top_level_resource_groups(data):

@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Course, Event, Homework
+from helium.planner.models import Category, Course, Event, Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper
 
 
@@ -144,6 +144,24 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual([datetime.date(2017, 1, 10), datetime.date(2017, 1, 17),
                           datetime.date(2017, 1, 24), datetime.date(2017, 1, 31)],
                          [h.start.date() for h in homework])
+
+    def test_import_ics_recurring_assignments_land_in_uncategorized(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        response = self._post_ics('import_recurring.ics', target_type='course', course=course.pk)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(4, response.data['homework'])
+        uncategorized = Category.objects.get(course=course, title='Uncategorized')
+        homework = Homework.objects.for_user(user.pk)
+        self.assertTrue(all(h.category_id == uncategorized.pk for h in homework))
+        self.assertTrue(all(h.completed_at is None for h in homework))
+        self.assertTrue(all(h.current_grade == '-1/100' for h in homework))
 
     def test_import_ics_recurring_as_events_preserves_rrule(self):
         # GIVEN

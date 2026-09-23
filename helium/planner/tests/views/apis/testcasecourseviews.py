@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Course, Category
-from helium.planner.services import categoryservice
+from helium.planner.services import categoryservice, gradingservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
@@ -183,6 +183,29 @@ class TestCaseCourseViews(APITestCase):
 
         # THEN
         self.assertEqual(Category.objects.filter(course=course).count(), len(expected))
+
+    def test_seed_categories_grades_match_a_recalculation(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        categoryservice.seed_categories(course.pk, enums.STANDARD)
+
+        # THEN
+        seeded = list(Category.objects.filter(course=course).values('pk', 'average_grade', 'grade_by_weight', 'trend')
+                      .order_by('pk'))
+        course.refresh_from_db()
+        course_grade = (course.current_grade, course.trend)
+        for category in seeded:
+            gradingservice.recalculate_category_grade(category['pk'])
+        gradingservice.recalculate_course_grade(course.pk)
+        self.assertEqual(seeded, list(Category.objects.filter(course=course)
+                                      .values('pk', 'average_grade', 'grade_by_weight', 'trend').order_by('pk')),
+                         'skipping the per-row save_category recalculation must leave the same grades')
+        course.refresh_from_db()
+        self.assertEqual(course_grade, (course.current_grade, course.trend))
 
     def test_get_course_by_id(self):
         # GIVEN
