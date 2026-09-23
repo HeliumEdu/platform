@@ -19,24 +19,6 @@ from helium.planner.services import reminderservice
 logger = logging.getLogger(__name__)
 
 
-def _retry_on_db_error(ex, metrics, task, args, retries, kwargs=None):
-    """
-    Reschedule `task` after a transient DB error, or re-raise once retries are exhausted or the
-    error isn't retryable. Contending grade-recalc tasks can deadlock or raise an IntegrityError when
-    they touch the same rows in different orders; both clear on a delayed retry.
-    """
-    non_retryable = (isinstance(ex, OperationalError)
-                     and (not ex.args or ex.args[0] not in settings.DB_RETRYABLE_ERROR_CODES))
-    if non_retryable or retries >= settings.DB_INTEGRITY_RETRIES:
-        raise ex
-
-    logger.warning(f"Retryable database error occurred, delaying before retrying `{task.name}` task")
-    taskutils.safe_apply_async(task, args, kwargs=kwargs,
-                               countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
-                               priority=settings.CELERY_PRIORITY_LOW)
-    metricutils.task_stop(metrics, value=0)
-
-
 @app.task(bind=True)
 def recalculate_course_group_grade(self, course_group_id, retries=0):
     published_at_ms = metricutils.get_published_at_ms(self)
@@ -47,7 +29,7 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
 
         metricutils.task_stop(metrics, value=1)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
-        _retry_on_db_error(ex, metrics,
+        taskutils.retry_on_db_error(ex, metrics,
                            recalculate_course_group_grade, (course_group_id, retries + 1), retries)
     except ObjectDoesNotExist:
         logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
@@ -69,7 +51,7 @@ def recalculate_course_grade(self, course_id, retries=0, recalculate_group=True)
 
         metricutils.task_stop(metrics, value=1)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
-        _retry_on_db_error(ex, metrics,
+        taskutils.retry_on_db_error(ex, metrics,
                            recalculate_course_grade, (course_id, retries + 1), retries,
                            kwargs={'recalculate_group': recalculate_group})
     except ObjectDoesNotExist:
@@ -110,7 +92,7 @@ def recalculate_category_grade(self, category_id, retries=0, recalculate_course=
 
         metricutils.task_stop(metrics, value=1)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
-        _retry_on_db_error(ex, metrics,
+        taskutils.retry_on_db_error(ex, metrics,
                            recalculate_category_grade, (category_id, retries + 1), retries,
                            kwargs={'recalculate_course': recalculate_course})
     except ObjectDoesNotExist:
@@ -168,7 +150,7 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type, retries=0)
 
         metricutils.task_stop(metrics, value=count)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
-        _retry_on_db_error(ex, metrics,
+        taskutils.retry_on_db_error(ex, metrics,
                            adjust_reminder_times, (calendar_item_id, calendar_item_type, retries + 1),
                            retries)
 

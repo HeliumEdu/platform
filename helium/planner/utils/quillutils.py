@@ -1,3 +1,4 @@
+import json
 import re
 from html.parser import HTMLParser
 
@@ -25,6 +26,18 @@ def ensure_quill_delta_terminated(content):
     if not isinstance(ops, list) or not ops or is_quill_delta_terminated(ops):
         return content
     return {**content, 'ops': [*ops, {'insert': '\n'}]}
+
+
+def delta_size(content) -> int:
+    """
+    The size of ``content`` in bytes, serialized the way a client serializes it: compact
+    separators, no ASCII escaping, UTF-8. Equivalent to Dart's
+    ``utf8.encode(jsonEncode(delta)).length``.
+
+    :param content: The Delta as stored on the model.
+    :return: The serialized size in bytes.
+    """
+    return len(json.dumps(content, separators=(',', ':'), ensure_ascii=False).encode('utf-8'))
 
 
 def quill_delta_to_plain_text(content) -> str:

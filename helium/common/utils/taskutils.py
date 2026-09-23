@@ -2,6 +2,8 @@ import logging
 from typing import Optional
 
 from celery import Task
+from django.conf import settings
+from django.db import OperationalError as DatabaseOperationalError
 from kombu.exceptions import OperationalError
 
 from helium.common.utils import metricutils
@@ -31,6 +33,24 @@ class MetricsTask(Task):
                                  exception_type=type(exc).__name__,
                                  priority=metrics.get('Task-Metric-Priority', 'low'),
                                  metrics=metrics)
+
+
+def retry_on_db_error(ex, metrics, task, args, retries, kwargs=None):
+    """
+    Reschedule `task` after a transient DB error, or re-raise once retries are exhausted or the
+    error isn't retryable. Contending tasks can deadlock or raise an IntegrityError when they touch
+    the same rows in different orders; both clear on a delayed retry.
+    """
+    non_retryable = (isinstance(ex, DatabaseOperationalError)
+                     and (not ex.args or ex.args[0] not in settings.DB_RETRYABLE_ERROR_CODES))
+    if non_retryable or retries >= settings.DB_INTEGRITY_RETRIES:
+        raise ex
+
+    logger.warning(f"Retryable database error occurred, delaying before retrying `{task.name}` task")
+    safe_apply_async(task, args, kwargs=kwargs,
+                     countdown=settings.DB_INTEGRITY_RETRY_DELAY_SECS,
+                     priority=settings.CELERY_PRIORITY_LOW)
+    metricutils.task_stop(metrics, value=0)
 
 
 def safe_apply_async(task, args=None, kwargs=None, critical=False, **options) -> Optional[object]:

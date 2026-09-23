@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, OperationalError, transaction
 from django.db.models import Exists, OuterRef
 from django.utils import timezone
 
@@ -89,7 +89,7 @@ def reconcile_show_getting_started_async(instance):
 
 
 @app.task(bind=True)
-def reconcile_show_getting_started(self, user_id):
+def reconcile_show_getting_started(self, user_id, retries=0):
     """
     Unset `show_getting_started` once no example schedule items remain.
 
@@ -100,15 +100,19 @@ def reconcile_show_getting_started(self, user_id):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.gettingstarted.reconcile", published_at_ms=published_at_ms)
 
-    cleared = (UserSettings.objects
-               .filter(user_id=user_id, show_getting_started=True)
-               .exclude(_example_schedule_remains())
-               .update(show_getting_started=False, updated_at=timezone.now()))
+    try:
+        cleared = (UserSettings.objects
+                   .filter(user_id=user_id, show_getting_started=True)
+                   .exclude(_example_schedule_remains())
+                   .update(show_getting_started=False, updated_at=timezone.now()))
 
-    if cleared:
-        logger.info(f'No example schedule items remain for user {user_id}, unset show_getting_started')
+        if cleared:
+            logger.info(f'No example schedule items remain for user {user_id}, unset show_getting_started')
 
-    metricutils.task_stop(metrics, value=cleared)
+        metricutils.task_stop(metrics, value=cleared)
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        taskutils.retry_on_db_error(ex, metrics, reconcile_show_getting_started,
+                                    (user_id, retries + 1), retries)
 
 
 @app.on_after_finalize.connect

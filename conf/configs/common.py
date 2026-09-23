@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.4.14"
+__version__ = "2.4.15"
 
 import json
 import os
@@ -496,9 +496,13 @@ USE_TZ = True
 
 # File uploads
 
-FILE_TYPES = ['json', 'ics']
+FILE_TYPES = ['json', 'ics', 'zip']
 
 MAX_UPLOAD_SIZE = 10485760
+
+MAX_NOTE_SIZE = 204800
+
+MAX_IMPORT_SIZE = 26214400
 
 BLOCKED_ATTACHMENT_EXTENSIONS = {
     # Browser-executable

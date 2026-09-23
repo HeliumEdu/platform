@@ -1,4 +1,3 @@
-import json
 
 from django.conf import settings
 from django.contrib.admin import action, SimpleListFilter
@@ -11,6 +10,7 @@ from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, 
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, logged_action
 from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
     Reminder, CourseSchedule, Note
+from helium.planner.utils.quillutils import delta_size
 from helium.common.utils import taskutils
 from helium.planner.tasks import recalculate_course_group_grade, recalculate_course_grade, recalculate_category_grade
 
@@ -684,7 +684,7 @@ class NoteAdmin(BaseModelAdmin):
     def get_content_size(self, obj):
         if obj.content is None:
             return '-'
-        return f'{len(json.dumps(obj.content).encode("utf-8"))} B'
+        return f'{delta_size(obj.content)} B'
 
     get_content_size.short_description = 'Content Size'
     get_content_size.admin_order_field = 'content_size'

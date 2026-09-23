@@ -1,9 +1,12 @@
+import math
+
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.common.utils.validators import validate_quill_delta
 from helium.planner.models import Event, Homework, Material, Note
-from helium.planner.utils.quillutils import ensure_quill_delta_terminated
+from helium.planner.utils.quillutils import delta_size, ensure_quill_delta_terminated
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -40,9 +43,24 @@ class NoteSerializer(serializers.ModelSerializer):
             data = {k: v for k, v in data.items() if k != 'materials'} | {'resources': data['materials']}
         return super().to_internal_value(data)
 
+    def _percent_past_max_size(self, content):
+        size = delta_size(content)
+        if size <= settings.MAX_NOTE_SIZE:
+            return None
+        if self.instance is not None and size <= delta_size(self.instance.content):
+            return None
+        return math.ceil(size / settings.MAX_NOTE_SIZE * 100)
+
     def validate_content(self, value):
         validate_quill_delta(value)
-        return ensure_quill_delta_terminated(value)
+        value = ensure_quill_delta_terminated(value)
+
+        percent = self._percent_past_max_size(value)
+        if percent is not None:
+            raise ValidationError(
+                f'This note is {percent}% of the max note size.')
+
+        return value
 
     def validate(self, attrs):
         """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""
