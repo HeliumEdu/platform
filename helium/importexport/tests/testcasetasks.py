@@ -49,9 +49,7 @@ class TestCaseImportExportTasks(APITestCase):
 
     def test_adjust_schedule_preserves_local_wall_clock_time_across_dst(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
 
         # Course group and course whose start_date aligns with first_monday in
         # the source file (2026-02-02 = the Monday we'll compute deltas from).
@@ -131,9 +129,7 @@ class TestCaseImportExportTasks(APITestCase):
 
     def test_adjust_schedule_shifts_all_items_to_target_month(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
 
         # Course starts Feb 2, 2026 (Monday)
         course_group = coursegrouphelper.given_course_group_exists(

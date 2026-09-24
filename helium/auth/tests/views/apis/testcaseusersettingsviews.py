@@ -292,9 +292,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_rebases_single_day_all_day_event(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         event = eventhelper.given_event_exists(
             user,
             title='Project 2',
@@ -320,9 +318,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_rebases_la_to_chicago(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Los_Angeles'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
         event = eventhelper.given_event_exists(
             user,
             all_day=True,
@@ -343,9 +339,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_rebases_multi_day_all_day_event(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         event = eventhelper.given_event_exists(
             user,
             title='Parents Weekend',
@@ -367,9 +361,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_leaves_non_all_day_event_alone(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         original_start = datetime.datetime(2026, 5, 8, 18, 0, 0, tzinfo=datetime.timezone.utc)
         original_end = datetime.datetime(2026, 5, 8, 19, 0, 0, tzinfo=datetime.timezone.utc)
         event = eventhelper.given_event_exists(
@@ -387,9 +379,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_rebases_homework(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(
@@ -410,9 +400,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_unchanged_does_not_touch_data(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         original_start = _midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago')
         event = eventhelper.given_event_exists(
             user, all_day=True,
@@ -431,9 +419,7 @@ class TestCaseUserSettingsViews(APITestCase):
     @mock.patch('helium.auth.views.apis.usersettingsviews.taskutils.safe_apply_async')
     def test_timezone_change_queues_reminder_recomputation(self, mock_safe_apply_async):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         event = eventhelper.given_event_exists(
             user, all_day=True,
             start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
@@ -454,9 +440,7 @@ class TestCaseUserSettingsViews(APITestCase):
     @mock.patch('helium.auth.views.apis.usersettingsviews.taskutils.safe_apply_async')
     def test_timezone_change_defers_side_effects_until_commit(self, mock_safe_apply_async):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         coursehelper.given_course_exists(course_group)
         event = eventhelper.given_event_exists(
@@ -482,9 +466,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_timezone_change_invalidates_course_schedule_cache(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 

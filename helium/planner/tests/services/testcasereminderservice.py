@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.planner.models import CourseSchedule, Reminder
+from helium.planner.models import Course, CourseSchedule, Reminder
 from helium.planner.services import reminderservice
 from helium.planner.tasks import email_reminders
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper, reminderhelper
@@ -487,9 +487,7 @@ class TestCaseReminderService(TestCase):
     def test_create_next_repeating_reminder_targets_next_class_not_current(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 30, 10, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
 
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -525,9 +523,7 @@ class TestCaseReminderService(TestCase):
     def test_create_next_repeating_reminder_uses_soonest_of_multiple_schedules_same_day(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 4, 8, 8, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
 
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
@@ -567,9 +563,7 @@ class TestCaseReminderService(TestCase):
     def test_get_next_course_occurrence_start_resolves_cycle_day(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 3, 8, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
@@ -588,9 +582,7 @@ class TestCaseReminderService(TestCase):
     def test_get_next_course_occurrence_start_skips_off_week_for_week_based(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 9, 8, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
@@ -608,9 +600,7 @@ class TestCaseReminderService(TestCase):
     def test_get_next_course_occurrence_start_week_based_skips_exception_date(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
@@ -664,9 +654,7 @@ class TestCaseReminderService(TestCase):
     def test_get_next_course_occurrence_start_respects_schedule_window(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 2, 7, 0, 0, tzinfo=datetime.timezone.utc)
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
@@ -711,10 +699,105 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertTrue(Reminder.objects.filter(pk=reminder.pk).exists())
 
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_orphaned_repeating_reminders_skips_series_whose_course_ended_in_every_time_zone(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 9, 24, 6, 0, 0, tzinfo=datetime.timezone.utc)
+        ahead = userhelper.given_a_user_exists(username='ahead', email='ahead@test.com',
+                                               time_zone='Pacific/Auckland')
+        behind = userhelper.given_a_user_exists(username='behind', email='behind@test.com',
+                                                time_zone='Pacific/Honolulu')
+        for user in (ahead, behind):
+            course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user),
+                                                      start_date=datetime.date(2026, 8, 24),
+                                                      end_date=datetime.date(2026, 9, 22))
+            reminderhelper.given_repeating_reminder_exists(
+                user, course, datetime.datetime(2026, 9, 21, 20, 0, 0, tzinfo=datetime.timezone.utc), sent=True)
+
+        # WHEN
+        with mock.patch.object(reminderservice, 'create_next_repeating_reminder',
+                               wraps=reminderservice.create_next_repeating_reminder) as mock_create:
+            reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        mock_create.assert_not_called()
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_orphaned_repeating_reminders_considers_series_whose_course_has_not_ended_everywhere(self,
+                                                                                                    mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 9, 24, 6, 0, 0, tzinfo=datetime.timezone.utc)
+        ahead = userhelper.given_a_user_exists(username='ahead', email='ahead@test.com',
+                                               time_zone='Pacific/Auckland')
+        behind = userhelper.given_a_user_exists(username='behind', email='behind@test.com',
+                                                time_zone='Pacific/Honolulu')
+        ended_locally = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(ahead),
+                                                         start_date=datetime.date(2026, 8, 24),
+                                                         end_date=datetime.date(2026, 9, 23))
+        last_day_locally = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(behind),
+                                                            start_date=datetime.date(2026, 8, 24),
+                                                            end_date=datetime.date(2026, 9, 23))
+        reminderhelper.given_repeating_reminder_exists(
+            ahead, ended_locally, datetime.datetime(2026, 9, 22, 20, 0, 0, tzinfo=datetime.timezone.utc), sent=True)
+        reminderhelper.given_repeating_reminder_exists(
+            behind, last_day_locally, datetime.datetime(2026, 9, 23, 19, 30, 0, tzinfo=datetime.timezone.utc),
+            sent=True)
+
+        # WHEN
+        with mock.patch.object(reminderservice, 'create_next_repeating_reminder',
+                               wraps=reminderservice.create_next_repeating_reminder) as mock_create:
+            reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        self.assertEqual({call.args[0].course_id for call in mock_create.call_args_list},
+                         {ended_locally.pk, last_day_locally.pk})
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_orphaned_repeating_reminders_deletes_stale_reminder_on_ended_course(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 9, 24, 6, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user),
+                                                  start_date=datetime.date(2026, 8, 24),
+                                                  end_date=datetime.date(2026, 9, 18))
+        reminderhelper.given_repeating_reminder_exists(
+            user, course, datetime.datetime(2026, 9, 18, 14, 30, 0, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        self.assertFalse(Reminder.objects.filter(course=course).exists())
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_orphaned_repeating_reminders_resumes_series_when_course_end_date_is_extended(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 9, 24, 6, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user),
+                                                  start_date=datetime.date(2026, 8, 24),
+                                                  end_date=datetime.date(2026, 9, 18))
+        courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                          mon_start_time=datetime.time(10, 0, 0),
+                                                          wed_start_time=datetime.time(10, 0, 0),
+                                                          fri_start_time=datetime.time(10, 0, 0))
+        reminderhelper.given_repeating_reminder_exists(
+            user, course, datetime.datetime(2026, 9, 18, 14, 30, 0, tzinfo=datetime.timezone.utc), sent=True)
+        reminderservice.heal_orphaned_repeating_reminders()
+        Course.objects.filter(pk=course.pk).update(end_date=datetime.date(2026, 10, 30))
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        self.assertTrue(Reminder.objects.filter(course=course, sent=False, dismissed=False).exists())
+
     @mock.patch('helium.planner.services.reminderservice.taskutils.safe_apply_async')
     def test_process_email_reminder_claims_before_a_concurrent_worker_can_send(self, mock_apply):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.EMAIL)
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        reminder = reminderhelper.given_due_reminder_exists(user, enums.EMAIL)
         concurrent_view = reminderservice._reminder_for_processing(reminder.pk)
 
         # WHEN
@@ -729,7 +812,9 @@ class TestCaseReminderService(TestCase):
     @mock.patch('helium.planner.services.reminderservice.taskutils.safe_apply_async')
     def test_process_push_reminder_claims_before_a_concurrent_worker_can_send(self, mock_apply):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.PUSH)
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        reminder = reminderhelper.given_due_reminder_exists(user, enums.PUSH)
         userhelper.given_user_push_token_exists(reminder.user)
         concurrent_view = reminderservice._reminder_for_processing(reminder.pk, 'user__push_tokens')
 
@@ -767,19 +852,12 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertEqual(Reminder.objects.filter(course=course, sent=False, dismissed=False).count(), 1)
 
-    def given_a_due_reminder(self, type):
-        user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(
-            user,
-            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
-            end=timezone.now() + datetime.timedelta(minutes=30))
-        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
-        return reminderhelper.given_reminder_exists(user, type=type, event=event)
-
     @mock.patch('helium.planner.services.reminderservice.send_pushes')
     def test_push_dispatch_failure_does_not_re_send_inline(self, mock_send_pushes):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.PUSH)
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        reminder = reminderhelper.given_due_reminder_exists(user, enums.PUSH)
         mock_send_pushes.apply_async.side_effect = OperationalError('broker unavailable')
 
         # WHEN
@@ -794,7 +872,9 @@ class TestCaseReminderService(TestCase):
     @mock.patch('helium.planner.tasks.send_email_reminder')
     def test_email_dispatch_failure_does_not_re_send_inline(self, mock_send_email_reminder):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.EMAIL)
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='tok', device_id='phone')
+        reminder = reminderhelper.given_due_reminder_exists(user, enums.EMAIL)
         mock_send_email_reminder.apply_async.side_effect = OperationalError('broker unavailable')
 
         # WHEN

@@ -102,9 +102,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedules_to_events_includes_every_schedule_active_same_day(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group,
@@ -151,9 +149,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_single_day(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
@@ -173,9 +169,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_multiple_days_same_time(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
@@ -195,9 +189,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_multiple_days_different_times(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
@@ -219,9 +211,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_excludes_course_exception_date(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))
@@ -279,9 +269,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_cycle(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 13))
@@ -319,9 +307,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_week_based(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
@@ -352,9 +338,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_week_based_excludes_exception_date(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
@@ -396,9 +380,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_respects_schedule_window(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
@@ -419,9 +401,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedules_to_events_cycle_emits_matching_cycle_days(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 6))
@@ -439,9 +419,7 @@ class TestCaseCourseScheduleService(TestCase):
 
     def test_course_schedule_to_recurrence_groups_exception_shares_utc_date_with_occurrence_in_positive_offset_tz(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'Asia/Kolkata'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='Asia/Kolkata')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(
             course_group, start_date=datetime.date(2026, 3, 23), end_date=datetime.date(2026, 4, 30))

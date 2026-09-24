@@ -1,7 +1,12 @@
+import datetime
+
 from dateutil import parser
+from django.conf import settings
+from django.utils import timezone
 
 from helium.common import enums
 from helium.planner.models import Reminder
+from helium.planner.tests.helpers import eventhelper
 
 
 def given_reminder_exists(user, message='You need to do something now.', offset=15,
@@ -20,6 +25,29 @@ def given_reminder_exists(user, message='You need to do something now.', offset=
                                        user=user)
 
     return reminder
+
+
+def given_due_reminder_exists(user, type, end=None):
+    event = eventhelper.given_event_exists(
+        user,
+        start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
+        end=end or timezone.now() + datetime.timedelta(minutes=30))
+
+    return given_reminder_exists(user, type=type, event=event)
+
+
+def given_repeating_reminder_exists(user, course, start_of_range, message='You need to do something now.',
+                                    offset=15, offset_type=enums.MINUTES, type=enums.PUSH, sent=False,
+                                    dismissed=False):
+    Reminder.objects.bulk_create([Reminder(message=message,
+                                           offset=offset,
+                                           offset_type=offset_type,
+                                           type=type,
+                                           sent=sent,
+                                           dismissed=dismissed,
+                                           start_of_range=start_of_range,
+                                           course=course,
+                                           user=user)])
 
 
 def verify_reminder_matches_data(test_case, reminder, data):

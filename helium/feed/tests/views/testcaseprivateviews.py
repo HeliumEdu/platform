@@ -46,9 +46,7 @@ class TestCasePrivateViews(CacheTestCase):
 
     def test_events_feed_all_day_uses_user_timezone_date(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'Europe/Amsterdam'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
         user.settings.enable_private_slug()
         eventhelper.given_event_exists(
             user,
@@ -65,9 +63,7 @@ class TestCasePrivateViews(CacheTestCase):
 
     def test_events_feed_all_day_end_is_exclusive(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'America/Los_Angeles'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='America/Los_Angeles')
         user.settings.enable_private_slug()
         eventhelper.given_event_exists(
             user,
@@ -84,9 +80,7 @@ class TestCasePrivateViews(CacheTestCase):
 
     def test_events_feed_all_day_spanning_multiple_days(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'Europe/Amsterdam'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
         user.settings.enable_private_slug()
         eventhelper.given_event_exists(
             user,
@@ -103,9 +97,7 @@ class TestCasePrivateViews(CacheTestCase):
 
     def test_homework_feed_all_day_uses_user_timezone_date(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'Europe/Amsterdam'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
         user.settings.enable_private_slug()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)

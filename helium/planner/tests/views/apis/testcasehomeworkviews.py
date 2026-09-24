@@ -406,9 +406,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_create_rejects_naive_datetime(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/New_York'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/New_York')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
@@ -542,9 +540,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_patch_rejects_naive_datetime(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/New_York'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/New_York')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
@@ -1033,9 +1029,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_range_query_date_only_from_boundary_edges(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -1074,9 +1068,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_range_query_date_only_to_boundary_edges(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 
@@ -1115,9 +1107,7 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_range_query_date_only_both_boundaries(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
 

@@ -16,18 +16,22 @@ def given_an_inactive_user_exists(username='test_user', email='user@test.com', p
     return user
 
 
-def given_a_user_exists(username='test_user', email='user@test.com', password='test_pass_1!'):
+def given_a_user_exists(username='test_user', email='user@test.com', password='test_pass_1!', time_zone=None):
     user = given_an_inactive_user_exists(username, email, password)
 
     user.is_active = True
 
     user.save()
 
+    if time_zone:
+        user.settings.time_zone = time_zone
+        user.settings.save()
+
     return user
 
 
 def given_a_user_exists_and_is_authenticated(client, username='test_user', email='user@test.com',
-                                             password='test_pass_1!'):
+                                             password='test_pass_1!', time_zone=None):
     user = given_a_user_exists(username, email, password)
 
     data = {
@@ -42,6 +46,10 @@ def given_a_user_exists_and_is_authenticated(client, username='test_user', email
 
     user.access = response.data['access']
     user.refresh = response.data['refresh']
+
+    if time_zone:
+        user.settings.time_zone = time_zone
+        user.settings.save()
 
     return user
 

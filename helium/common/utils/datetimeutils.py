@@ -1,5 +1,7 @@
 import datetime
 
+from django.utils import timezone
+
 from helium.common import enums
 
 
@@ -14,6 +16,15 @@ def local_midnight_as_utc(date, tz):
     naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
     aware = naive.replace(tzinfo=tz)
     return aware.astimezone(datetime.timezone.utc)
+
+
+def earliest_local_date():
+    """
+    Return the current date in the westernmost timezone (UTC-12), the earliest local date anywhere.
+
+    :return: A `date` on or before every user's local date.
+    """
+    return (timezone.now() - datetime.timedelta(hours=12)).date()
 
 
 def _twelve_hour(dt):
