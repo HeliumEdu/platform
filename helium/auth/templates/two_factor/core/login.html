@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block extrastyle %}{{ block.super }}{{ wizard.form.media }}
-<style>.login .form-row input { width: 100%; padding: 8px; box-sizing: border-box; }</style>
+<style>.login .form-row input:not([type=checkbox]) { width: 100%; padding: 8px; box-sizing: border-box; }</style>
 {% endblock %}
 
 {% block content %}
