@@ -2,11 +2,12 @@ from helium.feed.models import ExternalCalendar
 
 
 def given_external_calendar_exists(user, title='📅 My Calendar', url='http://go.com/valid-ical-feed', color='#fad165',
-                                   shown_on_calendar=True):
+                                   shown_on_calendar=True, last_index=None):
     external_calendar = ExternalCalendar.objects.create(title=title,
                                                         url=url,
                                                         color=color,
                                                         shown_on_calendar=shown_on_calendar,
+                                                        last_index=last_index,
                                                         user=user)
 
     return external_calendar

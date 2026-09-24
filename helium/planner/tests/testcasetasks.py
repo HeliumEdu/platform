@@ -21,18 +21,11 @@ from helium.planner.tests.helpers import (
 
 
 class TestCasePlannerTasks(TestCase):
-    def given_a_due_reminder(self, type):
-        user = userhelper.given_a_user_exists()
-        event = eventhelper.given_event_exists(
-            user,
-            start=timezone.now() + datetime.timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES),
-            end=timezone.now() + datetime.timedelta(minutes=10))
-        return reminderhelper.given_reminder_exists(user, type=type, event=event)
-
     @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
     def test_email_reminders_queues_a_task_for_each_due_reminder(self, mock_apply):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.EMAIL)
+        reminder = reminderhelper.given_due_reminder_exists(userhelper.given_a_user_exists(), enums.EMAIL,
+                                                            end=timezone.now() + datetime.timedelta(minutes=10))
 
         # WHEN
         email_reminders()
@@ -44,7 +37,8 @@ class TestCasePlannerTasks(TestCase):
     @mock.patch('helium.planner.tasks.taskutils.safe_apply_async')
     def test_push_reminders_queues_a_task_for_each_due_reminder(self, mock_apply):
         # GIVEN
-        reminder = self.given_a_due_reminder(enums.PUSH)
+        reminder = reminderhelper.given_due_reminder_exists(userhelper.given_a_user_exists(), enums.PUSH,
+                                                            end=timezone.now() + datetime.timedelta(minutes=10))
 
         # WHEN
         push_reminders()

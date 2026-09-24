@@ -259,9 +259,7 @@ class TestCaseEventViews(APITestCase):
 
     def test_patch_rejects_naive_datetime(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/New_York'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/New_York')
         event = eventhelper.given_event_exists(user)
         original_start = event.start
 

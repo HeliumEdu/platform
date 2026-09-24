@@ -3,6 +3,7 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from helium.common import enums
@@ -52,9 +53,14 @@ def get_subject(reminder):
     return subject
 
 
+_SERIES_FIELDS = ('course', 'user', 'type', 'offset', 'offset_type')
+
+
 def heal_orphaned_repeating_reminders(user_id=None):
     """
     Periodic maintenance for repeating course reminder series.
+
+    Series with no active reminder whose course has ended in every timezone are skipped.
 
     Phase 1 — collect series state and build delete list: for each series, examine the unsent
     undismissed reminder (at most one per series). If it is stale (start_of_range past the send
@@ -74,31 +80,32 @@ def heal_orphaned_repeating_reminders(user_id=None):
     now = timezone.now()
     window_start = now - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES)
 
-    series = Reminder.objects.repeating()
+    series = Reminder.objects.repeating().filter(
+        Q(sent=False, dismissed=False) | Q(course__end_date__gte=datetimeutils.earliest_local_date()))
     if user_id is not None:
         series = series.for_user(user_id)
 
     all_series = list(
         series
-        .values('course', 'user', 'type', 'offset', 'offset_type')
+        .values(*_SERIES_FIELDS)
         .distinct()
     )
+
+    active_by_series = {
+        tuple(row[field] for field in _SERIES_FIELDS): row
+        for row in series.active().values('pk', 'start_of_range', *_SERIES_FIELDS)
+    }
 
     to_delete_pks = []
     successor_templates = []
 
     for combo in all_series:
-        unsent = (
-            Reminder.objects
-            .active()
-            .filter(**combo)
-            .first()
-        )
+        unsent = active_by_series.get(tuple(combo[field] for field in _SERIES_FIELDS))
 
-        stale = unsent and (unsent.start_of_range is None or unsent.start_of_range <= window_start)
+        stale = unsent and (unsent['start_of_range'] is None or unsent['start_of_range'] <= window_start)
 
         if stale:
-            to_delete_pks.append(unsent.pk)
+            to_delete_pks.append(unsent['pk'])
 
         if stale or not unsent:
             template = (

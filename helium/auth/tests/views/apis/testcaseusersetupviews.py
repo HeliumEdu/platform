@@ -58,9 +58,7 @@ class TestCaseUserSetupViews(APITestCase):
     def test_start_setup_applies_regional_at_risk_threshold(self, mock_import_schedule):
         # GIVEN
         mock_import_schedule.apply_async = mock.MagicMock()
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'Europe/Berlin'
-        user.settings.save()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Berlin')
 
         # WHEN
         response = self.client.post(reverse('auth_user_setup'), json.dumps({}), content_type='application/json')

@@ -835,9 +835,7 @@ class TestCaseImportExportViews(APITestCase):
 
     def test_import_ignores_time_zone_in_an_uploaded_payload(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'Asia/Tokyo'
-        user.settings.save()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Asia/Tokyo')
         payload = {
             'time_zone': 'America/Chicago',
             'course_groups': [{'id': 1, 'title': 'Group', 'start_date': '2026-01-05',
@@ -870,9 +868,7 @@ class TestCaseImportExportViews(APITestCase):
                          datetime.datetime(2026, 1, 7, 16, 0, tzinfo=datetime.timezone.utc))
 
     def _local_hours_after_example_import(self, time_zone):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = time_zone
-        user.settings.save()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone=time_zone)
 
         self.client.post(reverse('importexport_import_exampleschedule'))
 

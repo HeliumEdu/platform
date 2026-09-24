@@ -16,9 +16,7 @@ from helium.planner.tests.helpers import coursegrouphelper, coursehelper, course
 
 class TestCaseImportService(TestCase):
     def _create_user_with_timezone(self, tz_name):
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = tz_name
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone=tz_name)
         return user
 
     def test_example_schedule_remaps_categories_when_bulk_insert_returns_no_pks(self):
@@ -93,9 +91,7 @@ class TestCaseImportService(TestCase):
 
     def test_get_most_recent_course_occurrence_start_uses_latest_of_multiple_schedules_same_day(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'UTC'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='UTC')
 
         day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
         target_day = datetime.date.today() - datetime.timedelta(days=1)

@@ -336,20 +336,14 @@ class TestCaseReindexSweepResilience(TestCase):
     def tearDown(self):
         cache.clear()
 
-    def given_two_stale_calendars(self):
-        stale = timezone.now() - timezone.timedelta(hours=5)
-        first = externalcalendarhelper.given_external_calendar_exists(self.user, title='A Calendar')
-        second = externalcalendarhelper.given_external_calendar_exists(self.user, title='B Calendar')
-        ExternalCalendar.objects.filter(pk__in=[first.pk, second.pk]).update(last_index=stale)
-
-        return first, second
-
     @mock.patch('helium.feed.services.icalexternalcalendarservice.metricutils.increment')
     @mock.patch('helium.feed.services.icalexternalcalendarservice.fetch_ical_conditional')
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_unexpected_error_does_not_stop_the_sweep(self, mock_fetch, mock_increment):
         # GIVEN
-        first, second = self.given_two_stale_calendars()
+        stale = timezone.now() - timezone.timedelta(hours=5)
+        first = externalcalendarhelper.given_external_calendar_exists(self.user, title='A Calendar', last_index=stale)
+        second = externalcalendarhelper.given_external_calendar_exists(self.user, title='B Calendar', last_index=stale)
         mock_fetch.side_effect = [AttributeError('malformed feed'), None]
 
         # WHEN
@@ -369,7 +363,9 @@ class TestCaseReindexSweepResilience(TestCase):
     @override_settings(FEED_CACHE_REFRESH_TTL_SECONDS=0)
     def test_soft_time_limit_is_not_swallowed(self, mock_fetch):
         # GIVEN
-        self.given_two_stale_calendars()
+        stale = timezone.now() - timezone.timedelta(hours=5)
+        externalcalendarhelper.given_external_calendar_exists(self.user, title='A Calendar', last_index=stale)
+        externalcalendarhelper.given_external_calendar_exists(self.user, title='B Calendar', last_index=stale)
         mock_fetch.side_effect = SoftTimeLimitExceeded()
 
         # WHEN

@@ -431,9 +431,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_interprets_in_user_timezone(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         externalcalendarhelper.given_external_calendar_exists(user)
         icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
@@ -449,9 +447,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_excludes_events_outside_user_timezone_window(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         externalcalendarhelper.given_external_calendar_exists(user)
         icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
@@ -467,9 +463,7 @@ class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCa
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_range_query_date_only_vs_full_timestamp_consistency(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         externalcalendarhelper.given_external_calendar_exists(user)
         icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
