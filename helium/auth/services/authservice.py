@@ -125,6 +125,8 @@ def confirm_password_reset(request):
     logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
     metricutils.increment('action.user.password-reset.confirmed', request=request, user=user)
 
+    update_last_login(None, user)
+
     token = RefreshToken.for_user(user)
 
     return Response({

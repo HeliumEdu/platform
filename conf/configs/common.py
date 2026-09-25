@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.5.5"
+__version__ = "2.5.6"
 
 import json
 import os
@@ -592,7 +592,7 @@ ADMIN_ALLOWED_DOMAINS = [d.strip() for d in
 ADMIN_ENFORCE_2FA = (config('PLATFORM_ADMIN_ENFORCE_2FA', default=None) or ('False' if 'local' in ENVIRONMENT else 'True')) == 'True'
 
 TWO_FACTOR_PATCH_ADMIN = False
-TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
+TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 90
 TWO_FACTOR_REMEMBER_COOKIE_SECURE = 'local' not in ENVIRONMENT
 
 AUTH_PASSWORD_VALIDATORS = [
