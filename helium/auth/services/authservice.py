@@ -127,6 +127,9 @@ def confirm_password_reset(request):
 
     update_last_login(None, user)
 
+    if user.settings.setup_state == enums.SETUP_PENDING:
+        start_setup(user)
+
     token = RefreshToken.for_user(user)
 
     return Response({

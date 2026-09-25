@@ -34,9 +34,9 @@ def import_example_schedule(self, user_id, example_schedule=True):
         user.settings.setup_state = enums.SETUP_COMPLETE
         user.settings.save(update_fields=['setup_state', 'updated_at'])
 
-        if user.last_login:
+        if published_at_ms is not None:
             metricutils.timing("user.setup.total_duration",
-                               int((timezone.now() - user.last_login).total_seconds() * 1000))
+                               int(timezone.now().timestamp() * 1000) - published_at_ms)
 
         value = 1
     except UserModel.DoesNotExist:
