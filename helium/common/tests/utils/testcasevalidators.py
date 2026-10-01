@@ -78,6 +78,8 @@ class TestCaseValidateQuillDelta(TestCase):
 class TestCaseValidateRecurrenceRule(TestCase):
     def test_valid_rrule_passes(self):
         validate_recurrence_rule('FREQ=WEEKLY;BYDAY=MO,WE,FR')
+        validate_recurrence_rule('FREQ=WEEKLY;UNTIL=20261126T000000Z;BYDAY=WE')
+        validate_recurrence_rule('FREQ=WEEKLY;UNTIL=20261126T000000;BYDAY=WE')
 
     def test_unsupported_freq_rejected(self):
         with self.assertRaises(ValidationError):

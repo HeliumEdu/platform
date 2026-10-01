@@ -26,7 +26,7 @@ class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
     filterset_class = CategoryFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Category.objects.for_user(user.pk).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
@@ -55,7 +55,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
     filterset_class = CategoryFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
@@ -121,7 +121,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),

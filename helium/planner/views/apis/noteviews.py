@@ -11,11 +11,22 @@ from rest_framework.response import Response
 from helium.common.permissions import IsOwner
 from helium.common.views.base import HeliumAPIView
 from helium.common.search import HeliumSearchFilter
+from helium.planner import permissions
 from helium.planner.filters import NoteFilter
 from helium.planner.models import Note
 from helium.planner.serializers.noteserializer import NoteSerializer, NoteExtendedSerializer, NoteListSerializer
 
 logger = logging.getLogger(__name__)
+
+
+def _check_linked_entity_permissions(request):
+    for homework_id in permissions.requested_ids(request.data, 'homework'):
+        permissions.check_homework_permission(request.user.pk, homework_id)
+    for event_id in permissions.requested_ids(request.data, 'events'):
+        permissions.check_event_permission(request.user.pk, event_id)
+    for resources_key in ('resources', 'materials'):
+        for material_id in permissions.requested_ids(request.data, resources_key):
+            permissions.check_material_permission(request.user.pk, material_id)
 
 
 @extend_schema(tags=['planner.note'])
@@ -33,7 +44,7 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
                 or bool((self.request.query_params.get('search') or '').strip()))
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
+        if self.has_request_user():
             queryset = self.request.user.notes.prefetch_related(
                 'homework__course',
                 'homework__category',
@@ -83,6 +94,8 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         To link a note, pass exactly one of `homework`, `event`, or `resource`; giving more than one type,
         more than one item of the same type, or an entity that already has a note returns a 400.
         """
+        _check_linked_entity_permissions(request)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save(user=request.user)
@@ -98,7 +111,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
     permission_classes = (IsAuthenticated, IsOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False):
+        if self.has_request_user():
             return self.request.user.notes.prefetch_related(
                 'homework__course',
                 'homework__category',
@@ -131,6 +144,8 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         If `content` is cleared while the note is linked to an entity, the note is deleted and a 204 is
         returned in place of the updated note.
         """
+        _check_linked_entity_permissions(request)
+
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -156,6 +171,8 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         If `content` is given and cleared while the note is linked to an entity, the note is deleted and a
         204 is returned in place of the updated note.
         """
+        _check_linked_entity_permissions(request)
+
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

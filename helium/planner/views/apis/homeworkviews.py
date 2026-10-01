@@ -40,7 +40,7 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     ordering_fields = ('start', 'title', 'completed', 'priority', 'category__title', 'course__title',)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
@@ -72,7 +72,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     search_description = 'Search by title, category title, and class title.'
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
@@ -155,6 +155,8 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         """
         Create a new homework instance for the given course.
         """
+        for course_id in permissions.requested_ids(request.data, 'course'):
+            permissions.check_course_permission(request.user.pk, course_id)
         category = request.data.get('category', None)
         if category:
             permissions.check_category_permission(request.user.pk, category)
@@ -184,7 +186,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
         else:
@@ -271,7 +273,7 @@ class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Homework.objects.for_user(user.pk).for_course(self.kwargs['course'])
         else:

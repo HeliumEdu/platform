@@ -1,9 +1,8 @@
 import logging
 
-from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from helium.common.utils.validators import validate_and_normalize_date_csv
+from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.planner.models import CourseGroup
 
 logger = logging.getLogger(__name__)
@@ -48,25 +47,6 @@ class CourseGroupSerializer(serializers.ModelSerializer):
         return getattr(obj, 'annotated_num_homework_graded', 0)
 
     def validate(self, attrs):
-        start_date = attrs.get('start_date', None)
-        if not start_date and self.instance:
-            start_date = self.instance.start_date
-        end_date = attrs.get('end_date', None)
-        if not end_date and self.instance:
-            end_date = self.instance.end_date
-
-        if start_date and end_date and start_date > end_date:
-            raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
-
-        if 'exceptions' in attrs or 'start_date' in attrs or 'end_date' in attrs:
-            exceptions = attrs.get('exceptions', None)
-            if exceptions is None and self.instance:
-                exceptions = self.instance.exceptions
-            if exceptions:
-                try:
-                    attrs['exceptions'] = validate_and_normalize_date_csv(
-                        exceptions, start_date, end_date, range_label='group date range')
-                except DjangoValidationError as e:
-                    raise serializers.ValidationError({'exceptions': e.message})
+        validate_date_range_and_exceptions(attrs, self.instance, 'group date range')
 
         return attrs

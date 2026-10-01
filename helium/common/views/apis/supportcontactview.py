@@ -28,16 +28,6 @@ class SupportContactView(HeliumAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [SupportContactThrottle]
 
-    def _client_ip(self, request):
-        """
-        Resolve the submitter IP. Returns the first ``X-Forwarded-For`` hop when
-        present, otherwise the direct peer address.
-        """
-        forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-        if forwarded:
-            return forwarded.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR')
-
     def post(self, request, *args, **kwargs):
         """
         Validate the submission and create a JSM service desk request on behalf
@@ -49,7 +39,7 @@ class SupportContactView(HeliumAPIView):
 
         if data.get('website'):
             logger.info(
-                f'support contact submission rejected (ip={self._client_ip(request)})'
+                f'support contact submission rejected (ip={SupportContactThrottle().get_ident(request)})'
             )
             metricutils.increment('action.support_contact.honeypot')
             return Response({'ok': True}, status=status.HTTP_200_OK)

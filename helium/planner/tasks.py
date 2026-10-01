@@ -1,3 +1,4 @@
+import datetime
 import logging
 from zoneinfo import ZoneInfo
 
@@ -10,9 +11,10 @@ from conf.celery import app
 from helium.common import enums
 from helium.common.periodic import register_periodic
 from helium.common.utils import commonutils, datetimeutils, metricutils, taskutils
+from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
-from helium.planner.services import gradingservice
+from helium.planner.services import coursescheduleservice, gradingservice
 from helium.planner.utils import noteutils
 from helium.planner.services import reminderservice
 
@@ -270,20 +272,19 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
 
     try:
         if calendar_item_type == enums.COURSE:
-            from datetime import timedelta
-            class_start = reminder.start_of_range + timedelta(
-                **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+            class_start = reminder.start_of_range + datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
             local_start = timezone.localtime(class_start)
             start_str = datetimeutils.format_date_time(local_start, user_settings)
 
-            weekday_idx = enums.PYTHON_TO_HELIUM_DAY_OF_WEEK[local_start.weekday()]
-            day_name = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][weekday_idx]
-            active_schedule = next(
-                (s for s in calendar_item.schedules.all() if s.days_of_week[weekday_idx] == "1"),
+            exceptions = get_course_exceptions(calendar_item)
+            end_time = next(
+                (slot_end for course_schedule in calendar_item.schedules.all()
+                 for slot_start, slot_end in coursescheduleservice.schedule_meeting_times_for_day(
+                     course_schedule, local_start.date(), exceptions)
+                 if slot_start == local_start.time()),
                 None,
             )
-            if active_schedule:
-                end_time = getattr(active_schedule, f'{day_name}_end_time')
+            if end_time is not None:
                 end_str = datetimeutils.format_time(
                     local_start.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0),
                     user_settings)
@@ -295,7 +296,10 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
         else:
             format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
             start = format_when(timezone.localtime(calendar_item.start), user_settings)
-            end = format_when(timezone.localtime(calendar_item.end), user_settings)
+            local_end = timezone.localtime(calendar_item.end)
+            if calendar_item.all_day:
+                local_end -= datetime.timedelta(days=1)
+            end = format_when(local_end, user_settings)
             normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
             note_url = noteutils.note_url(calendar_item.notes_set)
 

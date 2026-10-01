@@ -17,16 +17,21 @@ logger = logging.getLogger(__name__)
 
 
 def _push_body(reminder):
+    all_day = False
     if reminder.homework:
         local_time = timezone.localtime(reminder.homework.start)
+        all_day = reminder.homework.all_day
     elif reminder.event:
         local_time = timezone.localtime(reminder.event.start)
+        all_day = reminder.event.all_day
     elif reminder.course:
-        class_start = reminder.start_of_range + timedelta(
-            **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+        class_start = reminder.start_of_range + datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
         local_time = timezone.localtime(class_start)
     else:
         return reminder.message
+
+    if all_day:
+        return f'{reminder.message} · {local_time:%a}'
 
     return f'{reminder.message} · {datetimeutils.format_short_time(local_time, reminder.get_user().settings)}'
 
@@ -185,7 +190,7 @@ def create_next_repeating_reminder(reminder):
         return None
 
     # Compute the start time of the class that just fired so we skip it when searching.
-    offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+    offset_delta = datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
     fired_class_start = reminder.start_of_range + offset_delta if reminder.start_of_range else None
 
     new_reminder = Reminder(

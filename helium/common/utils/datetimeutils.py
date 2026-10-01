@@ -18,6 +18,49 @@ def local_midnight_as_utc(date, tz):
     return aware.astimezone(datetime.timezone.utc)
 
 
+def local_time_as_utc(date, time, tz):
+    """
+    Return the UTC datetime for a wall-clock time on the given date in the given timezone.
+
+    :param date: A `date` (or `datetime`, of which only the date portion is used).
+    :param time: A naive `time` read as wall-clock time in `tz`.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`) representing the local timezone.
+    :return: An aware UTC `datetime`.
+    """
+    return datetime.datetime.combine(date, time).replace(tzinfo=tz).astimezone(datetime.timezone.utc)
+
+
+def offset_to_timedelta(offset, offset_type):
+    """
+    Convert a reminder offset into the `timedelta` it spans.
+
+    :param offset: The offset amount.
+    :param offset_type: A `REMINDER_OFFSET_TYPE_CHOICES` value (minutes, hours, days or weeks).
+    :return: The offset as a `timedelta`.
+    """
+    return datetime.timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[offset_type][1]: int(offset)})
+
+
+def event_in_range(event, _from, to):
+    """
+    Return whether an event falls in the inclusive `_from`..`to` range: its start or end is inside the range, it
+    spans the whole range, or it is a recurring series that starts by the end of the range. Always True when either
+    bound is missing.
+
+    :param event: An object with aware `start` and `end` datetimes and a `recurrence_rule`.
+    :param _from: The range start, or None.
+    :param to: The range end, or None.
+    :return: True if the event belongs in the range.
+    """
+    if _from and to and not (
+            (_from <= event.start <= to or _from <= event.end <= to) or
+            (event.start <= _from and event.end >= to) or
+            (event.recurrence_rule and event.start <= to)):
+        return False
+
+    return True
+
+
 def earliest_local_date():
     """
     Return the current date in the westernmost timezone (UTC-12), the earliest local date anywhere.

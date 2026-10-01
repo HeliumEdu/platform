@@ -212,12 +212,12 @@ def _assignment_start_times(parsed, window_end_date, time_zone):
     if parsed['recurrence_rule']:
         exceptions = _exception_datetimes(parsed['exception_dates'])
         try:
-            for occurrence in rrulestr(parsed['recurrence_rule'], dtstart=start):
-                if occurrence.astimezone(time_zone).date() > window_end_date \
+            for occurrence in rrulestr(parsed['recurrence_rule'], dtstart=start.astimezone(time_zone)):
+                if occurrence.date() > window_end_date \
                         or len(starts) >= _MAX_RECURRENCE_INSTANCES:
                     break
                 if occurrence not in exceptions:
-                    starts.append(occurrence)
+                    starts.append(occurrence.astimezone(datetime.timezone.utc))
         except (ValueError, TypeError):
             logger.info('Falling back to a single Assignment for an unexpandable RRULE.')
             starts = [start]

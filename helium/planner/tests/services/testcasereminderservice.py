@@ -153,6 +153,28 @@ class TestCaseReminderService(TestCase):
         self.assertEqual(mock_send_notifications.call_args[0][2], 'You need to do something now. · Mon, 05:00')
 
     @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminder_for_all_day_event_shows_only_the_weekday(self, mock_send_notifications):
+        for zone_name in ('Asia/Tokyo', 'America/Chicago'):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                mock_send_notifications.reset_mock()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
+                user.settings.time_zone = zone_name
+                user.settings.save()
+                userhelper.given_user_push_token_exists(user)
+                local_midnight = datetime.datetime(2017, 5, 8, tzinfo=ZoneInfo(zone_name))
+                event = eventhelper.given_event_exists(user, all_day=True, start=local_midnight,
+                                                       end=local_midnight + datetime.timedelta(days=1))
+                reminder = reminderhelper.given_reminder_exists(user, event=event, type=enums.PUSH)
+
+                # WHEN
+                reminderservice.process_push_reminder(reminder.pk)
+
+                # THEN
+                mock_send_notifications.assert_called_once()
+                self.assertEqual(mock_send_notifications.call_args[0][2], 'You need to do something now. · Mon')
+
+    @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminders_no_push_tokens(self, mock_send_notifications):
         # GIVEN
         user = userhelper.given_a_user_exists()

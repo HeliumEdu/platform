@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from helium.common import enums
 from helium.common.models import BaseModel
+from helium.common.utils import datetimeutils
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.planner.managers.remindermanager import ReminderManager
 
@@ -155,8 +156,7 @@ class Reminder(BaseModel):
                     local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
                     if use_window_check:
-                        offset_delta = datetime.timedelta(
-                            **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+                        offset_delta = datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
                         reminder_time = local_start - offset_delta
                         if local_start > now and reminder_time > now:
                             candidates.append(local_start)
@@ -206,7 +206,7 @@ class Reminder(BaseModel):
         """
         if self.homework or self.event:
             calendar_item = self.homework or self.event
-            offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+            offset_delta = datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
             new_start_of_range = calendar_item.start - offset_delta
             if self.pk and self.sent and new_start_of_range != self.start_of_range:
                 if Reminder.should_reset_sent(new_start_of_range):
@@ -217,8 +217,7 @@ class Reminder(BaseModel):
             if self.pk is not None or self.start_of_range is None:
                 next_start = self._get_next_course_occurrence_start()
                 if next_start:
-                    self.start_of_range = next_start - timedelta(
-                        **{enums.REMINDER_OFFSET_TYPE_CHOICES[self.offset_type][1]: int(self.offset)})
+                    self.start_of_range = next_start - datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
                 else:
                     self.start_of_range = None
 

@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from helium.common import enums
-from helium.common.utils import metricutils
+from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.common.utils.validators import WEEKDAY_TO_ICAL
@@ -103,16 +103,6 @@ def _get_cache_prefix(course):
     return f"users:{course.course_group.user_id}:courses:{course.pk}:coursescheduleevents:"
 
 
-def _apply_event_filters(event, _from, to):
-    if _from and to and not (
-            (_from <= event.start <= to or _from <= event.end <= to) or
-            # Also include results where start/end dates are wider than the window
-            (event.start <= _from and event.end >= to)):
-        return False
-
-    return True
-
-
 def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=None):
     events = []
     invalid_data = False
@@ -132,7 +122,7 @@ def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=No
                           comments=event['comments'])
             event.color = course.color
 
-            if _apply_event_filters(event, _from, to):
+            if datetimeutils.event_in_range(event, _from, to):
                 events.append(event)
     except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
@@ -201,10 +191,8 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
         for course_schedule in schedule_list:
             for start_time, end_time in schedule_meeting_times_for_day(course_schedule, day, exceptions):
-                start = datetime.datetime.combine(day, start_time).replace(
-                    tzinfo=user_tz).astimezone(datetime.timezone.utc)
-                end = datetime.datetime.combine(day, end_time).replace(
-                    tzinfo=user_tz).astimezone(datetime.timezone.utc)
+                start = datetimeutils.local_time_as_utc(day, start_time, user_tz)
+                end = datetimeutils.local_time_as_utc(day, end_time, user_tz)
 
                 event = Event(id=deterministic_id(course_user.pk, course_schedule.pk, start.isoformat(),
                                                   end.isoformat()),
@@ -222,7 +210,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
                 events.append(event)
 
-                if _apply_event_filters(event, _from, to):
+                if datetimeutils.event_in_range(event, _from, to):
                     events_filtered.append(event)
 
         day += datetime.timedelta(days=1)
@@ -247,10 +235,7 @@ def clear_cached_course_schedule(course):
 
     :param course: The course to clear keys for.
     """
-    cache_prefix = _get_cache_prefix(course)
-    cached_keys = cache.keys(cache_prefix + "*")
-
-    cache.delete_many(cached_keys)
+    cache.delete(_get_cache_prefix(course))
 
 
 def course_schedules_to_events(course, course_schedules, _from=None, to=None):
@@ -420,21 +405,18 @@ def _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window):
 
     window_start, window_end = window
     sorted_exceptions = sorted(exceptions)
-    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
-        .astimezone(datetime.timezone.utc)
+    until = datetimeutils.local_time_as_utc(window_end, datetime.time(23, 59, 59), user_tz)
 
     for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
         first_occurrence = _find_first_occurrence(window_start, weekdays)
         if first_occurrence is None or first_occurrence > window_end:
             continue
 
-        start = datetime.datetime.combine(first_occurrence, start_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
-        end = datetime.datetime.combine(first_occurrence, end_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
+        start = datetimeutils.local_time_as_utc(first_occurrence, start_time, user_tz)
+        end = datetimeutils.local_time_as_utc(first_occurrence, end_time, user_tz)
 
         exception_dates = [
-            datetime.datetime.combine(exception, start_time).replace(tzinfo=user_tz).astimezone(datetime.timezone.utc)
+            datetimeutils.local_time_as_utc(exception, start_time, user_tz)
             for exception in sorted_exceptions
         ]
 
@@ -459,8 +441,7 @@ def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
     groups = []
 
     window_start, window_end = window
-    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
-        .astimezone(datetime.timezone.utc)
+    until = datetimeutils.local_time_as_utc(window_end, datetime.time(23, 59, 59), user_tz)
 
     # Single walk of the term: every school weekday, mapped to its cycle index (holidays absent → None).
     school_days = 0
@@ -491,13 +472,11 @@ def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
         first_occurrence = occurrences[0]
         occurrence_set = set(occurrences)
 
-        start = datetime.datetime.combine(first_occurrence, start_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
-        end = datetime.datetime.combine(first_occurrence, end_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
+        start = datetimeutils.local_time_as_utc(first_occurrence, start_time, user_tz)
+        end = datetimeutils.local_time_as_utc(first_occurrence, end_time, user_tz)
 
         exception_dates = [
-            datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz).astimezone(datetime.timezone.utc)
+            datetimeutils.local_time_as_utc(day, start_time, user_tz)
             for day in all_weekdays if day >= first_occurrence and day not in occurrence_set
         ]
 
@@ -535,21 +514,18 @@ def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
 
     window_start, window_end = window
     sorted_exceptions = sorted(exceptions)
-    until = datetime.datetime.combine(window_end, datetime.time(23, 59, 59), tzinfo=user_tz) \
-        .astimezone(datetime.timezone.utc)
+    until = datetimeutils.local_time_as_utc(window_end, datetime.time(23, 59, 59), user_tz)
 
     for (start_time, end_time), weekdays in _group_days_by_time_slot(course_schedule).items():
         first_occurrence = _find_first_week_occurrence(course_schedule, weekdays, window)
         if first_occurrence is None:
             continue
 
-        start = datetime.datetime.combine(first_occurrence, start_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
-        end = datetime.datetime.combine(first_occurrence, end_time).replace(
-            tzinfo=user_tz).astimezone(datetime.timezone.utc)
+        start = datetimeutils.local_time_as_utc(first_occurrence, start_time, user_tz)
+        end = datetimeutils.local_time_as_utc(first_occurrence, end_time, user_tz)
 
         exception_dates = [
-            datetime.datetime.combine(exception, start_time).replace(tzinfo=user_tz).astimezone(datetime.timezone.utc)
+            datetimeutils.local_time_as_utc(exception, start_time, user_tz)
             for exception in sorted_exceptions
         ]
 

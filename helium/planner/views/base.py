@@ -42,6 +42,12 @@ def _parse_date_param_to_utc(date_str, user_tz_name):
 
 
 class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
+    def date_range_filter(self, _from, to):
+        return (Q(start__range=(_from, to)) |
+                Q(end__range=(_from, to)) |
+                # Also include results where start/end dates are wider than the window
+                Q(start__lte=_from, end__gte=to))
+
     def filter_queryset(self, queryset):
         _from = self.request.query_params.get('from', None)
         to = self.request.query_params.get('to', None)
@@ -49,10 +55,7 @@ class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
             user_tz_name = self.request.user.settings.time_zone
             _from = _parse_date_param_to_utc(_from, user_tz_name)
             to = _parse_date_param_to_utc(to, user_tz_name)
-            queryset = queryset.filter(Q(start__range=(_from, to)) |
-                                       Q(end__range=(_from, to)) |
-                                       # Also include results where start/end dates are wider than the window
-                                       Q(start__lte=_from, end__gte=to))
+            queryset = queryset.filter(self.date_range_filter(_from, to))
 
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self)

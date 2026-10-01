@@ -44,6 +44,16 @@ class IsMaterialGroupOwner(permissions.BasePermission):
         return True
 
 
+def requested_ids(data, key):
+    """
+    Return the well-formed integer IDs a request body gives for `key`, as a single value or a list.
+    Malformed values are left for the serializer to reject with a 400.
+    """
+    value = data.get(key)
+    values = value if isinstance(value, list) else [value]
+    return [v for v in values if type(v) is int or (isinstance(v, str) and v.isdigit())]
+
+
 def check_course_group_permission(user_id, course_group_id):
     if not CourseGroup.objects.exists_for_user(course_group_id, user_id):
         raise NotFound('No CourseGroup matches the given query.')

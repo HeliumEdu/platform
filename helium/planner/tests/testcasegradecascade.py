@@ -156,3 +156,27 @@ class TestCaseGradeCascade(APITestCase):
                                          category=source)
         self.assert_grades_are_not_stale(user, course_group=course_group, course=course,
                                          category=target)
+
+    def test_moving_homework_to_a_course_in_another_course_group_leaves_both_correct(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        source_group = coursegrouphelper.given_course_group_exists(user)
+        target_group = coursegrouphelper.given_course_group_exists(user, title='🧪 Other Term')
+        source_course, source_category = self.given_graded_course(source_group, grade='100/100', count=1)
+        target_course, target_category = self.given_graded_course(target_group, title='🧪 Other Course')
+        moved = homeworkhelper.given_homework_exists(source_course, category=source_category,
+                                                     current_grade='50/100', completed=True)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_homework_detail',
+                    kwargs={'course_group': source_group.pk, 'course': source_course.pk, 'pk': moved.pk}),
+            json.dumps({'course': target_course.pk, 'category': target_category.pk}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assert_grades_are_not_stale(user, course_group=source_group, course=source_course,
+                                         category=source_category)
+        self.assert_grades_are_not_stale(user, course_group=target_group, course=target_course,
+                                         category=target_category)

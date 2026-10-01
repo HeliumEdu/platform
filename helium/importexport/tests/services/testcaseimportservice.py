@@ -11,13 +11,33 @@ from helium.common import enums
 from helium.importexport.services import importservice
 from helium.importexport.services.importservice import import_example_schedule
 from helium.planner.models import CourseGroup, CourseSchedule, Homework
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, reminderhelper
+from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, courseschedulehelper, \
+    reminderhelper
 
 
 class TestCaseImportService(TestCase):
     def _create_user_with_timezone(self, tz_name):
         user = userhelper.given_a_user_exists(time_zone=tz_name)
         return user
+
+    def test_import_homework_with_category_from_another_course_lands_in_uncategorized(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        other_course = coursehelper.given_course_exists(course_group, title='Other Course')
+        other_category = categoryhelper.given_category_exists(other_course)
+        homework = [{'id': 1, 'title': 'Imported', 'all_day': False, 'show_end_time': True,
+                     'start': '2026-09-08T14:00:00Z', 'end': '2026-09-08T15:00:00Z', 'priority': 50,
+                     'url': '', 'current_grade': '-1/100', 'completed': False, 'course': 10, 'category': 20}]
+
+        # WHEN
+        importservice._import_homework(homework, {10: course.pk}, {20: other_category.pk}, {}, user, False)
+
+        # THEN
+        imported = Homework.objects.get(course=course)
+        self.assertEqual(imported.category.title, 'Uncategorized')
+        self.assertEqual(imported.category.course_id, course.pk)
 
     def test_example_schedule_remaps_categories_when_bulk_insert_returns_no_pks(self):
         # GIVEN

@@ -21,7 +21,7 @@ def _resolve_component_time_zone(component, default_time_zone):
         return default_time_zone
 
 
-def _extract_exception_dates(component):
+def _extract_exception_dates(component, floating_time_zone, date_time_zone):
     """
     Return ISO-8601 UTC strings for any EXDATE entries on the VEVENT, or None.
 
@@ -38,13 +38,17 @@ def _extract_exception_dates(component):
             dt = vdt.dt
             if isinstance(dt, datetime.datetime):
                 if timezone.is_naive(dt):
-                    dt = timezone.make_aware(dt, datetime.timezone.utc)
+                    dt = timezone.make_aware(dt, floating_time_zone)
                 dt = dt.astimezone(datetime.timezone.utc)
+            else:
+                dt = timezone.make_aware(
+                    datetime.datetime.combine(dt, datetime.time.min), date_time_zone,
+                ).astimezone(datetime.timezone.utc)
             iso_dates.append(dt.isoformat())
     return iso_dates or None
 
 
-def _extract_extra_dates(component, default_time_zone):
+def _extract_extra_dates(component, floating_time_zone, date_time_zone):
     """
     Return UTC datetimes for any RDATE entries on the VEVENT.
 
@@ -62,11 +66,11 @@ def _extract_extra_dates(component, default_time_zone):
             dt = vdt.dt
             if isinstance(dt, datetime.datetime):
                 if timezone.is_naive(dt):
-                    dt = timezone.make_aware(dt, default_time_zone)
+                    dt = timezone.make_aware(dt, floating_time_zone)
                 dt = dt.astimezone(datetime.timezone.utc)
             else:
                 dt = timezone.make_aware(
-                    datetime.datetime.combine(dt, datetime.time.min), default_time_zone,
+                    datetime.datetime.combine(dt, datetime.time.min), date_time_zone,
                 ).astimezone(datetime.timezone.utc)
             extras.append(dt)
     return extras
@@ -100,7 +104,7 @@ def _collect_recurrence_id_overrides(calendar, default_time_zone):
             dt = dt.astimezone(datetime.timezone.utc)
         else:
             dt = timezone.make_aware(
-                datetime.datetime.combine(dt, datetime.time.min), time_zone,
+                datetime.datetime.combine(dt, datetime.time.min), default_time_zone,
             ).astimezone(datetime.timezone.utc)
         overrides_by_uid.setdefault(str(uid), []).append(dt.isoformat())
     return overrides_by_uid
@@ -138,7 +142,7 @@ def parse_events(calendar, default_time_zone):
 
         rrule_component = component.get("RRULE")
         recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
-        exception_dates = _extract_exception_dates(component)
+        exception_dates = _extract_exception_dates(component, time_zone, default_time_zone)
 
         if recurrence_rule:
             override_dates = recurrence_id_overrides.get(str(uid), []) if uid else []
@@ -174,20 +178,23 @@ def parse_events(calendar, default_time_zone):
         all_day = not isinstance(dt_start, datetime.datetime)
         show_end_time = isinstance(dt_start, datetime.datetime)
 
+        # A DATE value is a floating calendar date, so it anchors in the user's zone whatever the feed's VTIMEZONE.
+        anchor_time_zone = default_time_zone if all_day else time_zone
+
         if all_day:
             dt_start = datetime.datetime.combine(dt_start, datetime.time.min)
         if timezone.is_naive(dt_start):
-            dt_start = timezone.make_aware(dt_start, time_zone)
+            dt_start = timezone.make_aware(dt_start, anchor_time_zone)
         else:
-            dt_start = dt_start.astimezone(time_zone)
+            dt_start = dt_start.astimezone(anchor_time_zone)
         dt_start = dt_start.astimezone(datetime.timezone.utc)
 
         if all_day:
             dt_end = datetime.datetime.combine(dt_end, datetime.time.min)
         if timezone.is_naive(dt_end):
-            dt_end = timezone.make_aware(dt_end, time_zone)
+            dt_end = timezone.make_aware(dt_end, anchor_time_zone)
         else:
-            dt_end = dt_end.astimezone(time_zone)
+            dt_end = dt_end.astimezone(anchor_time_zone)
         dt_end = dt_end.astimezone(datetime.timezone.utc)
 
         # An iCal VEVENT without a SUMMARY is malformed, so skip it.
@@ -212,5 +219,5 @@ def parse_events(calendar, default_time_zone):
             'location': component.get("LOCATION"),
             'recurrence_rule': recurrence_rule,
             'exception_dates': exception_dates,
-            'extra_starts': _extract_extra_dates(component, time_zone),
+            'extra_starts': _extract_extra_dates(component, time_zone, default_time_zone),
         }

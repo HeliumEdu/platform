@@ -33,7 +33,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     filterset_class = ReminderFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             queryset = user.reminders.all().select_related(
                 'homework__category',
@@ -115,7 +115,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             queryset = user.reminders.all().select_related(
                 'homework__category',
@@ -237,7 +237,7 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
     filterset_class = ReminderFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             return self.request.user.reminders.filter(sent=True, dismissed=False)
         else:
             return Reminder.objects.none()

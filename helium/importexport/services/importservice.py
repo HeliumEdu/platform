@@ -15,7 +15,7 @@ from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums
-from helium.common.utils import metricutils, taskutils
+from helium.common.utils import datetimeutils, metricutils, taskutils
 from helium.common.utils.datetimeutils import local_midnight_as_utc
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
@@ -37,7 +37,6 @@ from helium.planner.services import gradingservice
 from helium.planner.services import reminderservice
 from helium.planner.tasks import adjust_reminder_times, recalculate_category_grades_for_course
 from helium.planner.utils.quillutils import html_to_quill
-from helium.planner.views.apis.coursescheduleviews import CourseGroupCourseCourseSchedulesApiListView
 
 logger = logging.getLogger(__name__)
 
@@ -222,10 +221,7 @@ def _import_course_schedules(course_schedules, course_remap):
             course_remap, course_schedule.get('course'), 'course_schedules', 'course')
         course_schedule['course'] = course_id
 
-        view = CourseGroupCourseCourseSchedulesApiListView()
-        view.kwargs = {'course': course_id}
-        context = {'view': view}
-        serializer = CourseScheduleSerializer(data=course_schedule, context=context)
+        serializer = CourseScheduleSerializer(data=course_schedule)
 
         if serializer.is_valid():
             serializer.save(course_id=course_id)
@@ -346,6 +342,7 @@ def _import_events(events, user, example_schedule):
 
 def _import_homework(homework, course_remap, category_remap, material_remap, user, example_schedule):
     homework_remap = {}
+    course_by_category = dict(Category.objects.filter(pk__in=category_remap.values()).values_list('pk', 'course_id'))
 
     for h in homework:
         course_id = _resolve_parent(course_remap, h.get('course'), 'homework', 'course')
@@ -353,6 +350,9 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
 
         if h.get('category'):
             h['category'] = _resolve_parent(category_remap, h.get('category'), 'homework', 'category')
+            if course_by_category.get(h['category']) != course_id:
+                logger.info(f"Homework {h.get('id')} imported into Uncategorized; its category belongs to another course")
+                h['category'] = None
         else:
             h['category'] = None
 
@@ -801,6 +801,10 @@ def import_user(request, data, example_schedule=False):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     """
+    return _import_user(request, data, example_schedule)[0]
+
+
+def _import_user(request, data, example_schedule=False):
     if not isinstance(data, dict):
         raise ValidationError("Import payload must be a JSON object.")
 
@@ -857,9 +861,16 @@ def import_user(request, data, example_schedule=False):
 
     metricutils.increment("user.import.schedule")
 
-    return (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
-            len(category_remap), len(material_group_remap), len(material_remap), len(event_remap), len(homework_remap),
-            reminders_count, notes_count)
+    counts = (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
+              len(category_remap), len(material_group_remap), len(material_remap), len(event_remap),
+              len(homework_remap), reminders_count, notes_count)
+
+    return counts, _ImportedExampleSchedule(
+        course_group_remap=course_group_remap,
+        course_remap=course_remap,
+        event_remap=event_remap,
+        homework_remap=homework_remap,
+    )
 
 
 def _shift_datetime_to_target_date(original_dt, target_date, target_tz, all_day=False, source_tz=None):
@@ -925,25 +936,28 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
+def _days_until_monday(dt):
+    days_ahead = 0 - dt.weekday()
+    if days_ahead < 0:
+        days_ahead += 7
+    return days_ahead
+
+
 def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
     user_tz = ZoneInfo(user.settings.time_zone)
     timezone.activate(user_tz)
 
     now = timezone.now().astimezone(user_tz)
-    adjusted_month = now.month + adjust_month
-    adjusted_year = now.year
-    if adjusted_month == 0:
-        adjusted_month = 12
-        adjusted_year -= 1
+    years_ahead, month_index = divmod(now.month - 1 + adjust_month, 12)
+    adjusted_year = now.year + years_ahead
+    adjusted_month = month_index + 1
 
     try:
         # Savepoint so a failure here can't poison import_example_schedule's outer transaction.
         with transaction.atomic():
             adjusted_month = now.replace(year=adjusted_year, month=adjusted_month, day=1, hour=0, minute=0, second=0,
                                          microsecond=0)
-            days_ahead = 0 - adjusted_month.weekday()
-            if days_ahead < 0:
-                days_ahead += 7
+            days_ahead = _days_until_monday(adjusted_month)
             first_monday = adjusted_month + datetime.timedelta(days_ahead)
             first_monday_date = first_monday.date()
 
@@ -992,9 +1006,7 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
                 pk__in=imported.event_remap.values()).first().start
 
             first_event_month = first_event_start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            days_ahead = 0 - first_event_month.weekday()
-            if days_ahead < 0:
-                days_ahead += 7
+            days_ahead = _days_until_monday(first_event_month)
             first_event_monday = first_event_month + datetime.timedelta(days_ahead)
             events_delta = (first_monday - first_event_monday).days
 
@@ -1044,8 +1056,7 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
                     .iterator(chunk_size=2000)):
                 past_start = _get_most_recent_course_occurrence_start(reminder)
                 if past_start:
-                    offset_delta = datetime.timedelta(
-                        **{enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]: int(reminder.offset)})
+                    offset_delta = datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
                     Reminder.objects.filter(pk=reminder.pk).update(
                         start_of_range=past_start - offset_delta)
 

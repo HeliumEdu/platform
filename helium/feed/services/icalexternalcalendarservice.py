@@ -1,6 +1,7 @@
 import http.client
 import json
 import logging
+from urllib.error import HTTPError
 from urllib.request import Request
 from zoneinfo import ZoneInfo
 
@@ -16,7 +17,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from helium.common import enums
-from helium.common.utils import metricutils
+from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.httputils import urlopen_secure
 from helium.feed.models import ExternalCalendar
@@ -95,16 +96,6 @@ def record_feed_success(external_calendar):
     external_calendar.last_sync_error = None
 
 
-def _apply_event_filters(event, _from, to):
-    if _from and to and not (
-            (_from <= event.start <= to or _from <= event.end <= to) or
-            # Also include results where start/end dates are wider than the window
-            (event.start <= _from and event.end >= to)):
-        return False
-
-    return True
-
-
 def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None):
     events = []
     invalid_data = False
@@ -127,7 +118,7 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None)
             event.color = external_calendar.color
             event.location = event_data.get('location')
 
-            if _apply_event_filters(event, _from, to):
+            if datetimeutils.event_in_range(event, _from, to):
                 events.append(event)
     except (json.JSONDecodeError, KeyError, TypeError):
         invalid_data = True
@@ -167,7 +158,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
         events.append(event)
 
-        if _apply_event_filters(event, _from, to):
+        if datetimeutils.event_in_range(event, _from, to):
             events_filtered.append(event)
 
         # RDATE: emit one standalone Event per extra occurrence, mirroring the
@@ -190,7 +181,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
             extra_event.color = external_calendar.color
             extra_event.location = parsed['location']
             events.append(extra_event)
-            if _apply_event_filters(extra_event, _from, to):
+            if datetimeutils.event_in_range(extra_event, _from, to):
                 events_filtered.append(extra_event)
 
     serializer = GeneratedEventSerializer(events, many=True)
@@ -280,12 +271,14 @@ def fetch_ical_conditional(external_calendar):
         if external_calendar.last_modified_header:
             request.add_header('If-Modified-Since', external_calendar.last_modified_header)
 
-        response = urlopen_secure(request)
-        response_code = response.getcode()
-
-        if response_code == status.HTTP_304_NOT_MODIFIED:
+        try:
+            response = urlopen_secure(request)
+        except HTTPError as ex:
+            if ex.code != status.HTTP_304_NOT_MODIFIED:
+                raise
             logger.info(f"External Calendar {external_calendar.pk} not modified (304)")
             return None
+        response_code = response.getcode()
 
         if response_code != status.HTTP_200_OK:
             raise HeliumICalError("The URL did not return a valid response.", 'bad_response')

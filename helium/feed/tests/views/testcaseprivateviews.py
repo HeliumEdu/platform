@@ -177,7 +177,7 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], homework1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         f'Class Info: {homework1.course.title}\nGrade: {homework1.current_grade}')
+                         f'Class Info: {homework1.course.title}\nStatus: Complete\nGrade: {homework1.current_grade}')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, homework1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, homework1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], homework2.title)
@@ -185,6 +185,27 @@ class TestCasePrivateViews(CacheTestCase):
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, homework2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
                          f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}')
+
+    def test_homework_feed_shows_status_only_when_complete(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, room='')
+        category = categoryhelper.given_category_exists(course, title='Uncategorized')
+        homeworkhelper.given_homework_exists(course, category=category, title='Complete ungraded', completed=True,
+                                             current_grade="-1/100")
+        homeworkhelper.given_homework_exists(course, category=category, title='Incomplete graded', completed=False,
+                                             current_grade="20/30")
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        descriptions = {str(component['SUMMARY']): component['DESCRIPTION'] for component in calendar.subcomponents}
+        self.assertEqual(descriptions['Complete ungraded'], f'Class Info: {course.title}\nStatus: Complete')
+        self.assertEqual(descriptions['Incomplete graded'], f'Class Info: {course.title}')
 
     def test_homework_feed_with_linked_note(self):
         # GIVEN

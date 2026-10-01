@@ -36,8 +36,22 @@ class GradeHolderSerializer(serializers.Serializer):
     homework_series = HomeworkSeriesItemSerializer(many=True, required=False)
 
 
+@extend_schema_serializer(exclude_fields=['grade_points'], component_name='GradeHolder')
+class GradeCategorySerializer(GradeHolderSerializer):
+    points_earned = serializers.FloatField(
+        help_text='Total points earned across the category\'s graded assignments (completed, with a grade).')
+    points_possible = serializers.FloatField(
+        help_text='Total points possible across the same assignments; `points_earned / points_possible` is the '
+                  'category\'s average grade.')
+
+
 class GradeCourseSerializer(GradeHolderSerializer):
-    categories = GradeHolderSerializer(many=True)
+    points_earned = serializers.FloatField(
+        help_text='Total points earned across the class\'s graded assignments (completed, with a grade).')
+    points_possible = serializers.FloatField(
+        help_text='Total points possible across the same assignments; `points_earned / points_possible` is the '
+                  'points-based class grade.')
+    categories = GradeCategorySerializer(many=True)
 
 
 class GradeCourseGroupSerializer(GradeHolderSerializer):

@@ -25,7 +25,7 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
     filterset_class = MaterialFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             materials = Material.objects.for_user(user.pk).select_related('material_group').prefetch_related('courses', 'notes_set')
             # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
@@ -65,7 +65,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     filterset_class = MaterialFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
@@ -97,6 +97,9 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         if courses:
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
+        for group_key in ('resource_group', 'material_group'):
+            for resource_group_id in permissions.requested_ids(request.data, group_key):
+                permissions.check_material_group_permission(request.user.pk, resource_group_id)
 
         response = self.create(request, *args, **kwargs)
 
@@ -115,7 +118,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
     filterset_class = MaterialFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
@@ -139,6 +142,9 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
         if courses:
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
+        for group_key in ('resource_group', 'material_group'):
+            for resource_group_id in permissions.requested_ids(request.data, group_key):
+                permissions.check_material_group_permission(request.user.pk, resource_group_id)
 
         response = self.update(request, *args, **kwargs)
 

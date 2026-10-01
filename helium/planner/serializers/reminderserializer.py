@@ -1,10 +1,9 @@
 import logging
-from datetime import timedelta
 
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common.utils import datetimeutils
 from helium.planner.models import Reminder, Homework, Event, Course
 
 logger = logging.getLogger(__name__)
@@ -80,7 +79,7 @@ class ReminderSerializer(serializers.ModelSerializer):
             course = attrs.get('course') or (self.instance and self.instance.course)
             offset = attrs.get('offset', getattr(self.instance, 'offset', None))
             offset_type = attrs.get('offset_type', getattr(self.instance, 'offset_type', None))
-            offset_delta = timedelta(**{enums.REMINDER_OFFSET_TYPE_CHOICES[offset_type][1]: int(offset)})
+            offset_delta = datetimeutils.offset_to_timedelta(offset, offset_type)
 
             if homework:
                 attrs['start_of_range'] = homework.start - offset_delta

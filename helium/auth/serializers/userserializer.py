@@ -11,8 +11,8 @@ from helium.auth.serializers.useroauthproviderserializer import UserOAuthProvide
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
-    is_admin_allowed_email
+from helium.auth.utils.userutils import admin_allowed_email_error, generate_verification_code, \
+    generate_unique_username_from_email, is_admin_allowed_email
 from helium.common import enums
 from helium.common.utils import taskutils
 
@@ -85,8 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         if self.instance and self.instance.is_superuser and self.instance.email != email:
             if not is_admin_allowed_email(email):
-                raise serializers.ValidationError(
-                    f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+                raise serializers.ValidationError(admin_allowed_email_error())
 
         if not self.instance:
             # A user pending deletion keeps their email reserved until the cascade finishes, so the

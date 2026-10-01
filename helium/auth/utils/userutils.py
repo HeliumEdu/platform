@@ -18,6 +18,13 @@ def is_admin_allowed_email(email):
     return domain in settings.ADMIN_ALLOWED_DOMAINS
 
 
+def admin_allowed_email_error():
+    """
+    The message shown when an admin email falls outside ADMIN_ALLOWED_DOMAINS.
+    """
+    return f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)})."
+
+
 def is_staff_email(email):
     """
     Return True if the email belongs to an internal Helium domain or any of its subdomains.

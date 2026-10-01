@@ -241,6 +241,27 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertIn(response.status_code, (status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND))
         self.assertEqual(Homework.objects.count(), 0)
 
+    def test_update_homework_course_without_matching_category_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        other_course = coursehelper.given_course_exists(course_group, title='Other Course')
+        category = categoryhelper.given_category_exists(course)
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_homework_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': homework.pk}),
+            json.dumps({'course': other_course.pk}), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('category', response.data)
+        homework.refresh_from_db()
+        self.assertEqual(homework.course_id, course.pk)
+
     def test_create_homework_without_category_lands_in_uncategorized(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

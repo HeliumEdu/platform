@@ -1,5 +1,6 @@
 import os
 from unittest import mock
+from urllib.error import HTTPError
 
 from rest_framework import status
 
@@ -24,7 +25,6 @@ def given_urlopen_mock_from_file(filename, mock_urlopen, status_code=status.HTTP
 
 
 def given_urlopen_mock_304_not_modified(mock_urlopen):
-    """Mock a 304 Not Modified response."""
-    magic_mock = mock.MagicMock()
-    magic_mock.getcode.return_value = status.HTTP_304_NOT_MODIFIED
-    mock_urlopen.return_value = magic_mock
+    """Mock a 304 Not Modified response, which urllib raises as an HTTPError."""
+    mock_urlopen.side_effect = HTTPError('https://example.com/calendar.ics', status.HTTP_304_NOT_MODIFIED,
+                                         'Not Modified', {}, None)

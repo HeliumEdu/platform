@@ -94,6 +94,12 @@ def infer_byday_for_weekly_rrule(value, dtstart):
     return f'{prefix}{rule_body};BYDAY={day_code}'
 
 
+def _validation_dtstart_for(parts):
+    if parts.get('UNTIL', '').endswith('Z'):
+        return _RRULE_VALIDATION_DTSTART.replace(tzinfo=datetime.timezone.utc)
+    return _RRULE_VALIDATION_DTSTART
+
+
 def validate_recurrence_rule(value):
     """
     Validate that ``value`` is a parseable RFC 5545 RRULE string (e.g. ``FREQ=WEEKLY;BYDAY=MO``).
@@ -125,7 +131,7 @@ def validate_recurrence_rule(value):
             raise ValidationError(f'{key} is not supported.')
 
     try:
-        rrulestr(value, dtstart=_RRULE_VALIDATION_DTSTART)
+        rrulestr(value, dtstart=_validation_dtstart_for(parts))
     except (ValueError, TypeError) as ex:
         raise ValidationError(f'Invalid RRULE: {ex}')
 

@@ -32,6 +32,34 @@ def _record_feed_fetch(user, private_slug):
         logger.warning("Failed to record feed fetch", exc_info=True)
 
 
+def _serve_private_feed(request, private_slug, last_modified_fn, feed_fn, filename, attachment_filename):
+    UserModel = get_user_model()
+
+    try:
+        user = UserModel.objects.get_by_private_slug(private_slug)
+        _record_feed_fetch(user, private_slug)
+
+        last_modified = last_modified_fn(user)
+        etag = icalprivateservice.generate_etag(user.pk, last_modified)
+
+        not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        if not_modified:
+            return not_modified
+
+        ical_feed = feed_fn(user)
+
+        response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
+        response['Filename'] = filename.format(username=user.username)
+        response['Content-Disposition'] = 'attachment; filename=' + attachment_filename.format(username=user.username)
+        response['ETag'] = etag
+        if last_modified:
+            response['Last-Modified'] = http_date(last_modified.timestamp())
+        response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
+        return response
+    except UserModel.DoesNotExist:
+        raise NotFound()
+
+
 @extend_schema(
     tags=['feed.private']
 )
@@ -60,31 +88,9 @@ class PrivateEventsICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_events.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
-        UserModel = get_user_model()
-
-        try:
-            user = UserModel.objects.get_by_private_slug(private_slug)
-            _record_feed_fetch(user, private_slug)
-
-            last_modified = icalprivateservice.get_events_last_modified(user)
-            etag = icalprivateservice.generate_etag(user.pk, last_modified)
-
-            not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
-            if not_modified:
-                return not_modified
-
-            ical_feed = icalprivateservice.events_to_private_ical_feed(user)
-
-            response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
-            response['Filename'] = 'he_' + user.username + '_events.ics'
-            response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '_events.ics'
-            response['ETag'] = etag
-            if last_modified:
-                response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
-            return response
-        except UserModel.DoesNotExist:
-            raise NotFound()
+        return _serve_private_feed(request, private_slug, icalprivateservice.get_events_last_modified,
+                                   icalprivateservice.events_to_private_ical_feed,
+                                   'he_{username}_events.ics', 'Helium_{username}_events.ics')
 
 
 @extend_schema(
@@ -115,31 +121,9 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_homework.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
-        UserModel = get_user_model()
-
-        try:
-            user = UserModel.objects.get_by_private_slug(private_slug)
-            _record_feed_fetch(user, private_slug)
-
-            last_modified = icalprivateservice.get_homework_last_modified(user)
-            etag = icalprivateservice.generate_etag(user.pk, last_modified)
-
-            not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
-            if not_modified:
-                return not_modified
-
-            ical_feed = icalprivateservice.homework_to_private_ical_feed(user)
-
-            response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
-            response['Filename'] = 'he_' + user.username + '_homework.ics'
-            response['Content-Disposition'] = 'attachment; filename=Helium_' + user.username + '_homework.ics'
-            response['ETag'] = etag
-            if last_modified:
-                response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
-            return response
-        except UserModel.DoesNotExist:
-            raise NotFound()
+        return _serve_private_feed(request, private_slug, icalprivateservice.get_homework_last_modified,
+                                   icalprivateservice.homework_to_private_ical_feed,
+                                   'he_{username}_homework.ics', 'Helium_{username}_homework.ics')
 
 
 @extend_schema(
@@ -170,29 +154,6 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_coursescheduleevents.ics` header is
         set so that browser-initiated requests download the feed as a file.
         """
-        UserModel = get_user_model()
-
-        try:
-            user = UserModel.objects.get_by_private_slug(private_slug)
-            _record_feed_fetch(user, private_slug)
-
-            last_modified = icalprivateservice.get_courseschedules_last_modified(user)
-            etag = icalprivateservice.generate_etag(user.pk, last_modified)
-
-            not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
-            if not_modified:
-                return not_modified
-
-            ical_feed = icalprivateservice.courseschedules_to_private_ical_feed(user)
-
-            response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
-            response['Filename'] = 'he_' + user.username + 'coursescheduleevents.ics'
-            response['Content-Disposition'] = 'attachment; ' \
-                                              'filename=Helium_' + user.username + '_coursescheduleevents.ics'
-            response['ETag'] = etag
-            if last_modified:
-                response['Last-Modified'] = http_date(last_modified.timestamp())
-            response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
-            return response
-        except UserModel.DoesNotExist:
-            raise NotFound()
+        return _serve_private_feed(request, private_slug, icalprivateservice.get_courseschedules_last_modified,
+                                   icalprivateservice.courseschedules_to_private_ical_feed,
+                                   'he_{username}coursescheduleevents.ics', 'Helium_{username}_coursescheduleevents.ics')

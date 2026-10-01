@@ -28,7 +28,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     filterset_class = AttachmentFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.attachments.all().select_related('course', 'event', 'homework', 'user')
         else:
@@ -112,7 +112,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.attachments.all().select_related('course', 'event', 'homework', 'user')
         else:

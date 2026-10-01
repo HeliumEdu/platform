@@ -23,7 +23,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
     filterset_class = ExternalCalendarFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.external_calendars.all()
         else:
@@ -68,7 +68,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.external_calendars.all()
         else:

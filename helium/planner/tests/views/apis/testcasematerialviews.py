@@ -334,8 +334,6 @@ class TestCaseMaterialViews(APITestCase):
                 json.dumps({'courses': [course2.pk]}),
                 content_type='application/json')
         ]
-        # Attempting to move a Material into a MaterialGroup owned by another user fails validation,
-        # since the field's queryset is scoped to the current user's MaterialGroups.
         move_attempt = self.client.put(
             reverse('planner_materialgroups_materials_detail',
                     kwargs={'material_group': material_group1.pk, 'pk': material.pk}),
@@ -354,7 +352,7 @@ class TestCaseMaterialViews(APITestCase):
         # THEN
         for response in forbidden_responses:
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(move_attempt.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(move_attempt.status_code, status.HTTP_404_NOT_FOUND)
         material.refresh_from_db()
         self.assertEqual(material.material_group_id, material_group1.pk)
 

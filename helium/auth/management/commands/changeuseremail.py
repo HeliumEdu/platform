@@ -1,10 +1,9 @@
 import sys
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
-from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.auth.utils.userutils import admin_allowed_email_error, is_admin_allowed_email
 
 
 class Command(BaseCommand):
@@ -39,7 +38,7 @@ class Command(BaseCommand):
                 raise CommandError(f"A user with email '{new_email}' already exists.")
 
             if user.is_superuser and not is_admin_allowed_email(new_email):
-                raise CommandError(f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+                raise CommandError(admin_allowed_email_error())
 
             user.email = new_email
             user.save()

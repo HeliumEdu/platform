@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.5.7"
+__version__ = "2.6.0"
 
 import json
 import os
@@ -232,6 +232,7 @@ REST_FRAMEWORK = {
         'helium.auth.backends.JWTAuthentication',
         'knox.auth.TokenAuthentication',
     ),
+    'NUM_PROXIES': 1,
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',

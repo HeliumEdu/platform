@@ -153,12 +153,35 @@ def _create_homework_description(homework):
     if homework.url:
         description += f"URL: {homework.url}\n"
 
-    if homework.completed and homework.current_grade != "-1/100":
-        description += f"Grade: {homework.current_grade}\n"
+    if homework.completed:
+        description += "Status: Complete\n"
+        if homework.current_grade != "-1/100":
+            description += f"Grade: {homework.current_grade}\n"
 
     description += _note_line(homework.notes_set)
 
     return description.rstrip("\n")
+
+
+def _to_vevent(user, item):
+    calendar_event = icalendar.Event()
+    calendar_event["UID"] = f"he-{user.pk}-{item.pk}"
+    calendar_event["SUMMARY"] = item.title
+    calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(item.created_at))
+    if not item.all_day:
+        calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(item.start))
+        calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(item.end))
+    else:
+        calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(item.start).date())
+        calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(item.end).date())
+    return calendar_event
+
+
+def _add_recurrence(calendar_event, event):
+    calendar_event.add('RRULE', icalendar.vRecur.from_ical(event.recurrence_rule))
+    if event.exception_dates:
+        exception_dates = [timezone.localtime(datetime.datetime.fromisoformat(iso)) for iso in event.exception_dates]
+        calendar_event.add('EXDATE', [d.date() for d in exception_dates] if event.all_day else exception_dates)
 
 
 def events_to_private_ical_feed(user):
@@ -174,16 +197,9 @@ def events_to_private_ical_feed(user):
         calendar = _create_calendar(user)
 
         for event in user.events.prefetch_related('notes_set'):
-            calendar_event = icalendar.Event()
-            calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
-            calendar_event["SUMMARY"] = event.title
-            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
-            if not event.all_day:
-                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
-                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
-            else:
-                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(event.start).date())
-                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(event.end).date())
+            calendar_event = _to_vevent(user, event)
+            if event.recurrence_rule:
+                _add_recurrence(calendar_event, event)
             calendar_event["DESCRIPTION"] = _create_event_description(event)
 
             calendar.add_component(calendar_event)
@@ -207,16 +223,7 @@ def homework_to_private_ical_feed(user):
         calendar = _create_calendar(user)
 
         for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('materials', 'notes_set'):
-            calendar_event = icalendar.Event()
-            calendar_event["UID"] = f"he-{user.pk}-{homework.pk}"
-            calendar_event["SUMMARY"] = homework.title
-            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(homework.created_at))
-            if not homework.all_day:
-                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(homework.start))
-                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(homework.end))
-            else:
-                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(homework.start).date())
-                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(homework.end).date())
+            calendar_event = _to_vevent(user, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
             calendar.add_component(calendar_event)
@@ -248,16 +255,7 @@ def courseschedules_to_private_ical_feed(user):
 
     try:
         for event in events:
-            calendar_event = icalendar.Event()
-            calendar_event["UID"] = f"he-{user.pk}-{event.pk}"
-            calendar_event["SUMMARY"] = event.title
-            calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(event.created_at))
-            if not event.all_day:
-                calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(event.start))
-                calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(event.end))
-            else:
-                calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(event.start).date())
-                calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(event.end).date())
+            calendar_event = _to_vevent(user, event)
             description = f"Comments: {event.comments or ''}"
             if event.url:
                 description = f"URL: {event.url}\n" + description

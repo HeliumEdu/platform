@@ -61,16 +61,18 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(len(response.data['course_groups'][1]['courses'][0]['grade_points']), 2)
 
         self.assertIn('title', response.data['course_groups'][0])
-        self.assertEqual(float(response.data['course_groups'][0]['overall_grade']), 66.6667)
+        self.assertEqual(float(response.data['course_groups'][0]['overall_grade']), 62.5)
         self.assertIn('trend', response.data['course_groups'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0])
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0])
-        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 66.6667)
+        self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['overall_grade']), 62.5)
         self.assertIn('trend', response.data['course_groups'][0]['courses'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][0]['courses'][0])
         self.assertIn('has_weighted_grading', response.data['course_groups'][0]['courses'][0])
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['points_earned'], 60)
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['points_possible'], 90)
 
         grade_points = response.data['course_groups'][0]['courses'][0]['grade_points']
         self.assertEqual(grade_points[0][0], homework1.start)
@@ -78,7 +80,7 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(grade_points[1][0], homework2.start)
         self.assertEqual(grade_points[1][1], 75.0)
         self.assertEqual(grade_points[2][0], homework3.start)
-        self.assertEqual(grade_points[2][1], 66.6667)
+        self.assertEqual(grade_points[2][1], 62.5)
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
@@ -88,6 +90,8 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][0])
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['categories'][0]['points_earned'], 15)
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['categories'][0]['points_possible'], 30)
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][0]['overall_grade']),
@@ -97,6 +101,8 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertIn('weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('color', response.data['course_groups'][0]['courses'][0]['categories'][1])
         self.assertIn('grade_by_weight', response.data['course_groups'][0]['courses'][0]['categories'][1])
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['categories'][1]['points_earned'], 45)
+        self.assertEqual(response.data['course_groups'][0]['courses'][0]['categories'][1]['points_possible'], 60)
 
         self.assertIn('title', response.data['course_groups'][1])
         self.assertEqual(float(response.data['course_groups'][1]['overall_grade']), 75.0)
@@ -108,6 +114,8 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertIn('trend', response.data['course_groups'][1]['courses'][0])
         self.assertIn('num_homework_graded', response.data['course_groups'][1]['courses'][0])
         self.assertIn('has_weighted_grading', response.data['course_groups'][1]['courses'][0])
+        self.assertEqual(response.data['course_groups'][1]['courses'][0]['points_earned'], 45)
+        self.assertEqual(response.data['course_groups'][1]['courses'][0]['points_possible'], 60)
 
         grade_points = response.data['course_groups'][1]['courses'][0]['grade_points']
         self.assertEqual(grade_points[0][0], homework4.start)

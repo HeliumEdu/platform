@@ -1,9 +1,10 @@
 import logging
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import filters, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -35,7 +36,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
     ordering_fields = ('start', 'title', 'priority',)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.events.select_related('user').prefetch_related(
                 'attachments',
@@ -44,6 +45,11 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             )
         else:
             return Event.objects.none()
+
+    def date_range_filter(self, _from, to):
+        recurring_series_started_by_window_end = (Q(start__lte=to, recurrence_rule__isnull=False) &
+                                                  ~Q(recurrence_rule=''))
+        return super().date_range_filter(_from, to) | recurring_series_started_by_window_end
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
@@ -117,7 +123,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.events.select_related('user').prefetch_related(
                 'attachments',
@@ -192,7 +198,7 @@ class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             return self.request.user.events.all()
         else:
             return Event.objects.none()
@@ -206,9 +212,13 @@ class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given event instance, including its reminders.
+        Clone the given event instance, including its reminders. A recurring event (one with a `recurrence_rule`)
+        cannot be cloned yet.
         """
         source = self.get_object()
+
+        if source.recurrence_rule:
+            raise ValidationError("Cloning recurring Events is not yet supported.")
 
         clone = clone_event(source)
 
@@ -223,7 +233,7 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.events.all()
         else:

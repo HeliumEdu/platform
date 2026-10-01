@@ -1,5 +1,6 @@
 import datetime
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import OperationalError
@@ -8,7 +9,7 @@ from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.planner.models import Event
+from helium.planner.models import Event, Reminder
 from helium.planner.tasks import (
     email_reminders, push_reminders, process_email_reminder, process_push_reminder,
     recalculate_course_grade,
@@ -16,7 +17,8 @@ from helium.planner.tasks import (
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
 )
 from helium.planner.tests.helpers import (
-    coursegrouphelper, coursehelper, categoryhelper, eventhelper, homeworkhelper, reminderhelper
+    coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, eventhelper, homeworkhelper,
+    reminderhelper
 )
 
 
@@ -229,6 +231,52 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'], 'Mon, May 8')
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    def test_send_email_reminder_for_course_uses_the_matching_schedule_end_time(self, mock_send_multipart_email):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.time_zone = 'America/Chicago'
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, start_date=datetime.date(2017, 5, 1),
+                                                  end_date=datetime.date(2017, 5, 31))
+        courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(9, 0), datetime.time(9, 50), days_of_week='0100000')
+        courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(14, 0), datetime.time(17, 0), days_of_week='0100000')
+        lab_start = datetime.datetime(2017, 5, 8, 14, 0, tzinfo=ZoneInfo('America/Chicago'))
+        reminder = Reminder(message='Lab', start_of_range=lab_start - datetime.timedelta(minutes=15),
+                            offset=15, offset_type=enums.MINUTES, type=enums.EMAIL, course=course, user=user)
+        Reminder.objects.bulk_create([reminder])
+        reminder = Reminder.objects.get(course=course)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, course.pk, enums.COURSE)
+
+        # THEN
+        self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
+                         'Mon, May 8 at 2:00 PM to 5:00 PM')
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    def test_send_email_reminder_for_all_day_event_shows_the_inclusive_end_date(self, mock_send_multipart_email):
+        for zone_name in ('Asia/Tokyo', 'America/Chicago'):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
+                user.settings.time_zone = zone_name
+                user.settings.save()
+                local_midnight = datetime.datetime(2017, 5, 8, tzinfo=ZoneInfo(zone_name))
+                event = eventhelper.given_event_exists(user, all_day=True, show_end_time=True, start=local_midnight,
+                                                       end=local_midnight + datetime.timedelta(days=2))
+                reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+                # WHEN
+                send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
+
+                # THEN
+                self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
+                                 'Mon, May 8 to Tue, May 9')
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_send_email_reminder_for_homework(self, mock_send_multipart_email):

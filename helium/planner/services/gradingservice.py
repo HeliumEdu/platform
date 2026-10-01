@@ -73,18 +73,73 @@ def _get_grade_points_for_course(course_id, has_weighted_grading=None):
     return _get_grade_points_for(query_set, has_weighted_grading)
 
 
-def _get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course):
-    grade_points_by_course = {}
+def _graded_items_by_course(course_group_id):
+    items_by_course = {}
     for item in _graded_grade_point_values(Homework.objects.for_course_group(course_group_id)):
-        grade_points_by_course.setdefault(item['course'], []).append(item)
+        items_by_course.setdefault(item['course'], []).append(item)
 
+    return items_by_course
+
+
+def _grade_points_by_course(graded_items_by_course, has_weighted_by_course):
     return {course_id: _get_grade_points_for(items, has_weighted_by_course.get(course_id, False))
-            for course_id, items in grade_points_by_course.items()}
+            for course_id, items in graded_items_by_course.items()}
+
+
+def _get_grade_points_by_course_for_group(course_group_id, has_weighted_by_course):
+    return _grade_points_by_course(_graded_items_by_course(course_group_id), has_weighted_by_course)
+
+
+def _add_category_points(category_totals, category_id, weight, earned, possible):
+    totals = category_totals.setdefault(category_id, {'weight': float(weight), 'earned': 0, 'possible': 0})
+    totals['earned'] += earned
+    totals['possible'] += possible
+
+
+def _weighted_course_grade(category_totals):
+    weighted_grade = sum((t['earned'] / t['possible']) * t['weight'] for t in category_totals.values())
+    total_weight = sum(t['weight'] for t in category_totals.values())
+    return weighted_grade / total_weight * 100
+
+
+def _points_totals(graded_items):
+    points_earned = 0.0
+    points_possible = 0.0
+    for item in graded_items:
+        earned, possible = item['grade'].split('/')
+        if float(possible) <= 0:
+            continue
+        points_earned += float(earned)
+        points_possible += float(possible)
+
+    return points_earned, points_possible
+
+
+def _points_totals_by_category(graded_items):
+    items_by_category = {}
+    for item in graded_items:
+        items_by_category.setdefault(item['category'], []).append(item)
+
+    return {category_id: _points_totals(items) for category_id, items in items_by_category.items()}
+
+
+def _weighted_category_totals(graded_items):
+    category_totals = {}
+    for item in graded_items:
+        if not item.get('weight'):
+            continue
+        earned, possible = item['grade'].split('/')
+        if float(possible) <= 0:
+            continue
+        _add_category_points(category_totals, item['category'], item['weight'], float(earned), float(possible))
+
+    return category_totals
 
 
 def _get_grade_points_for(query_set, has_weighted_grading):
     total_earned = 0
     total_possible = 0
+    category_totals = {}
     grade_series = []
     for item in query_set:
         earned, possible = item['grade'].split('/')
@@ -94,20 +149,22 @@ def _get_grade_points_for(query_set, has_weighted_grading):
             logger.warning(f'Skipping Homework {item["id"]} with non-positive denominator in current_grade')
             continue
         grade = (earned / possible) * 100
-        # Formula for weighted grading: ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... )
+        # Formula for weighted grading: ( w1xg1 + w2xg2 + w3xg3 ... ) / ( w1 + w2 + w3 ... ), where each g is a
+        # category's points grade (earned / possible) and only categories with graded homework so far are included
         if has_weighted_grading:
             # If no weight present, this category is ungraded
             if 'weight' not in item or not item['weight']:
                 continue
 
-            earned = (((earned / possible) * (float(item['weight']) / 100)) * 100)
-            possible = float(item['weight'])
-
-        total_earned += earned
-        total_possible += possible
+            _add_category_points(category_totals, item['category'], item['weight'], earned, possible)
+            cumulative_grade = _weighted_course_grade(category_totals)
+        else:
+            total_earned += earned
+            total_possible += possible
+            cumulative_grade = total_earned / total_possible * 100
 
         grade_series.append([item['start'],
-                             round((total_earned / total_possible * 100), 4),
+                             round(cumulative_grade, 4),
                              item['id'],
                              item['title'],
                              round(grade, 4),
@@ -195,7 +252,8 @@ def get_grade_data(user_id):
         # Batch grade points and categories for every course in one query each, rather than per course.
         has_weighted_by_course = {course['id']: course['annotated_has_weighted_grading']
                                   for course in course_group['courses']}
-        grade_points_by_course = _get_grade_points_by_course_for_group(course_group['id'], has_weighted_by_course)
+        graded_items_by_course = _graded_items_by_course(course_group['id'])
+        grade_points_by_course = _grade_points_by_course(graded_items_by_course, has_weighted_by_course)
 
         categories_by_course = {}
         for category in (Category.objects.for_user(user_id)
@@ -234,6 +292,9 @@ def get_grade_data(user_id):
             course.pop('annotated_has_weighted_grading')
             course.pop('current_grade')
             course['grade_points'] = grade_points_by_course.get(course['id'], [])
+            course_graded_items = graded_items_by_course.get(course['id'], [])
+            course['points_earned'], course['points_possible'] = _points_totals(course_graded_items)
+            points_by_category = _points_totals_by_category(course_graded_items)
 
             course['categories'] = categories_by_course.get(course['id'], [])
 
@@ -256,11 +317,14 @@ def get_grade_data(user_id):
                 category.pop('annotated_num_homework_graded')
                 category.pop('average_grade')
                 category['grade_points'] = category_grade_points.get(category['id'], [])
+                category['points_earned'], category['points_possible'] = points_by_category.get(category['id'],
+                                                                                                (0.0, 0.0))
 
             course['homework_series'] = _build_homework_series(
                 course['grade_points'],
                 course['has_weighted_grading'],
                 list(course['categories']),
+                _weighted_category_totals(graded_items_by_course.get(course['id'], [])),
                 ungraded_by_course.get(course['id'], [])
             )
 
@@ -279,20 +343,23 @@ def get_grade_data(user_id):
     }
 
 
-def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded):
+def _build_ungraded_series_items(has_weighted_grading, categories, category_totals, raw_ungraded):
     """
     Build the ungraded portion of a course's homework_series.
 
-    Each item carries an impact_score representing the grade impact if the assignment
-    is scored 100%. For non-weighted courses impact_score is None (all assignments are
-    equally weighted by points). raw_ungraded must be pre-sorted by start ascending so
-    that within-category ties retain the soonest-due assignment first.
+    In a weighted course, each item in a weighted category carries an impact_score: how many
+    points the course grade rises if the assignment is scored 100%, using the same category
+    points model as the course grade. With no graded work yet, the course grade is taken as 0.
+    For non-weighted courses impact_score is None (all assignments are equally weighted by
+    points). raw_ungraded must be pre-sorted by start ascending so that ties retain the
+    soonest-due assignment first.
 
     Makes no DB queries.
 
     :param has_weighted_grading: Whether the course uses weighted grading.
-    :param categories: List of category dicts with keys id, weight, num_homework,
-        num_homework_graded, overall_grade.
+    :param categories: List of category dicts with keys id and weight.
+    :param category_totals: The course's graded points per weighted category, as built by
+        _weighted_category_totals().
     :param raw_ungraded: List of homework dicts with keys id, title, start, course_id,
         category_id, current_grade.
     :return: List of homework_series item dicts with graded=False.
@@ -300,18 +367,12 @@ def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
     if not raw_ungraded:
         return []
 
-    category_impact = {}
+    weights = {}
+    current_grade = 0.0
     if has_weighted_grading:
-        for category in categories:
-            weight = float(category.get('weight') or 0)
-            if weight <= 0:
-                continue
-            if category['num_homework'] - category['num_homework_graded'] <= 0:
-                continue
-            num_graded = category['num_homework_graded']
-            current_grade = max(0.0, float(category['overall_grade']))
-            new_grade = (current_grade * num_graded + 100.0) / (num_graded + 1)
-            category_impact[category['id']] = round((new_grade - current_grade) * weight / 100.0, 4)
+        weights = {category['id']: float(category.get('weight') or 0) for category in categories}
+        if category_totals:
+            current_grade = _weighted_course_grade(category_totals)
 
     result = []
     for hw in raw_ungraded:
@@ -320,6 +381,12 @@ def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
         if possible <= 0:
             logger.warning(f'Skipping ungraded Homework {hw["id"]} with non-positive denominator in current_grade')
             continue
+        impact_score = None
+        weight = weights.get(hw['category_id'], 0)
+        if weight > 0:
+            projected_totals = {category_id: dict(totals) for category_id, totals in category_totals.items()}
+            _add_category_points(projected_totals, hw['category_id'], weight, possible, possible)
+            impact_score = round(_weighted_course_grade(projected_totals) - current_grade, 4)
         result.append({
             'id': hw['id'],
             'title': hw['title'],
@@ -330,13 +397,13 @@ def _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
             'graded': False,
             'homework_grade': None,
             'cumulative_grade': None,
-            'impact_score': category_impact.get(hw['category_id']),
+            'impact_score': impact_score,
         })
 
     return result
 
 
-def _build_homework_series(grade_points, has_weighted_grading, categories, raw_ungraded):
+def _build_homework_series(grade_points, has_weighted_grading, categories, category_totals, raw_ungraded):
     """
     Build the course-level homework_series by combining graded items (derived from the
     legacy grade_points tuples) with ungraded items, sorted by due date ascending.
@@ -344,6 +411,7 @@ def _build_homework_series(grade_points, has_weighted_grading, categories, raw_u
     :param grade_points: Legacy grade_points tuple list for this course.
     :param has_weighted_grading: Whether the course uses weighted grading.
     :param categories: List of category dicts (passed through to ungraded builder).
+    :param category_totals: Graded points per weighted category (passed through to ungraded builder).
     :param raw_ungraded: Pre-sorted list of raw ungraded homework dicts.
     :return: Sorted list of homework_series item dicts.
     """
@@ -362,7 +430,7 @@ def _build_homework_series(grade_points, has_weighted_grading, categories, raw_u
         }
         for gp in grade_points
     ]
-    ungraded = _build_ungraded_series_items(has_weighted_grading, categories, raw_ungraded)
+    ungraded = _build_ungraded_series_items(has_weighted_grading, categories, category_totals, raw_ungraded)
     return sorted(graded + ungraded, key=lambda item: item['start'])
 
 
@@ -471,12 +539,13 @@ def recalculate_course_grade(course_id):
 
             whens.append(When(pk=category_id, then=Value(grade_by_weight, output_field=FloatField())))
 
+    weighted_graded_category_ids = [cid for cid, t in category_totals.items() if t['weight']]
     if whens:
         Category.objects.filter(
-            pk__in=[cid for cid, t in category_totals.items() if t['weight']]
+            pk__in=weighted_graded_category_ids
         ).update(grade_by_weight=Case(*whens, output_field=FloatField()))
 
-    Category.objects.for_course(course_id).filter(weight=0).update(grade_by_weight=0)
+    Category.objects.for_course(course_id).exclude(pk__in=weighted_graded_category_ids).update(grade_by_weight=0)
 
 
 def recalculate_category_grade(category_id):

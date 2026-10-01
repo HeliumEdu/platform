@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 from unittest import mock
@@ -416,6 +417,27 @@ class TestCaseCalendarToEvents(TestCase):
 
         # THEN
         self.assertGreater(len(events), 0)
+
+    @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
+    def test_calendar_to_events_in_later_window_includes_recurring_series_anchored_before_it(self, mock_urlopen):
+        # GIVEN
+        external_calendar = externalcalendarhelper.given_external_calendar_exists(self.user)
+        icalfeedhelper.given_urlopen_mock_from_file(
+            os.path.join('resources', 'sample_with_recurring.ics'),
+            mock_urlopen
+        )
+
+        # WHEN
+        events = icalexternalcalendarservice.calendar_to_events(
+            external_calendar,
+            datetime.datetime(2025, 10, 1, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2025, 10, 31, tzinfo=datetime.timezone.utc))
+
+        # THEN
+        titles = sorted(event.title for event in events)
+        self.assertIn('Weekly All Day Event', titles, 'a weekly series anchored in August overlaps October')
+        self.assertNotIn('Canceled Standalone Event', titles)
+        self.assertNotIn('Some Timed Event at 9am CT Inside DST', titles)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_calendar_to_events_uses_cache_when_available(self, mock_urlopen):

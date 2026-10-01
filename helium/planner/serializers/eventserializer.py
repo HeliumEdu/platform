@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
+from helium.common.serializers.validation import validate_start_before_end
 from helium.common.utils.validators import (
     infer_byday_for_weekly_rrule,
     validate_hex_color,
@@ -49,15 +50,7 @@ class EventSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        start = attrs.get('start', None)
-        if not start and self.instance:
-            start = self.instance.start
-        end = attrs.get('end', None)
-        if not end and self.instance:
-            end = self.instance.end
-
-        if start and end and start > end:
-            raise serializers.ValidationError("The 'start' must be before the 'end'")
+        start = validate_start_before_end(attrs, self.instance)
 
         if 'recurrence_rule' in attrs and attrs['recurrence_rule'] and start:
             attrs['recurrence_rule'] = infer_byday_for_weekly_rrule(attrs['recurrence_rule'], start)

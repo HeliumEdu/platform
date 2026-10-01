@@ -26,7 +26,7 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
     filterset_class = CourseFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Course.objects.for_user(user.pk).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
@@ -55,7 +55,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
     filterset_class = CourseFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
@@ -143,7 +143,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
                 annotated_num_homework=Count('homework', distinct=True),

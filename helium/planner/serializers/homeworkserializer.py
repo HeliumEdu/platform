@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from helium.common import enums
 from helium.common.serializers.fields import TzAwareDateTimeField
+from helium.common.serializers.validation import validate_start_before_end
 from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
@@ -58,17 +59,28 @@ class HomeworkSerializer(serializers.ModelSerializer):
         read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at',)
 
     def validate(self, attrs):
-        start = attrs.get('start', None)
-        if not start and self.instance:
-            start = self.instance.start
-        end = attrs.get('end', None)
-        if not end and self.instance:
-            end = self.instance.end
-
-        if start and end and start > end:
-            raise serializers.ValidationError("The 'start' must be before the 'end'")
+        validate_start_before_end(attrs, self.instance)
+        self._validate_category_in_course(attrs)
 
         return attrs
+
+    def _validate_category_in_course(self, attrs):
+        if 'course' not in attrs and 'category' not in attrs:
+            return
+
+        category = attrs['category'] if 'category' in attrs else getattr(self.instance, 'category', None)
+        if category is None:
+            return
+
+        if self.instance:
+            course_id = attrs['course'].pk if 'course' in attrs else self.instance.course_id
+        else:
+            request = self.context.get('request')
+            url_kwargs = (request.parser_context or {}).get('kwargs', {}) if request else {}
+            course_id = url_kwargs.get('course') or (attrs['course'].pk if attrs.get('course') else None)
+
+        if course_id is not None and category.course_id != int(course_id):
+            raise serializers.ValidationError({'category': "The 'category' must belong to the same class."})
 
     def update(self, instance, validated_data):
         old_category = self.instance.category if 'category' in validated_data and self.instance.category_id != \
@@ -77,8 +89,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if old_category:
-            # The save above already recalculated the course; only the old category is stale
-            recalculate_category_grade(old_category.pk, recalculate_course=False)
+            moved_course = old_category.course_id != instance.course_id
+            recalculate_category_grade(old_category.pk, recalculate_course=moved_course)
 
         return instance
 

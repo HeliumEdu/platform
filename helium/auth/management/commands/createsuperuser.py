@@ -18,7 +18,8 @@ from django.core.management.base import CommandError
 from django.db import IntegrityError
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
+from helium.auth.utils.userutils import admin_allowed_email_error, generate_unique_username_from_email, \
+    is_admin_allowed_email
 from helium.common import enums
 
 
@@ -57,7 +58,7 @@ class Command(BaseCommand):
                             self.stderr.write("Error: This field cannot be blank.")
                         elif not is_admin_allowed_email(email):
                             self.stderr.write(
-                                f"Error: Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+                                f"Error: {admin_allowed_email_error()}")
                             email = None
                     user_data["email"] = email
 
@@ -103,8 +104,7 @@ class Command(BaseCommand):
                 if not email:
                     raise CommandError("You must use --email with --noinput.")
                 if not is_admin_allowed_email(email):
-                    raise CommandError(
-                        f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+                    raise CommandError(admin_allowed_email_error())
                 user_data["email"] = email
 
                 if PASSWORD_FIELD in user_data:

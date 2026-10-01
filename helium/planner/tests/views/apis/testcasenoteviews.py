@@ -118,6 +118,36 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Note.objects.filter(pk=note.pk).exists())
 
+    def test_link_to_another_users_homework_returns_404(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user2)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Note', 'homework': [homework.pk]}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_link_to_malformed_homework_id_returns_400(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Note', 'homework': ['abc']}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Note.objects.count(), 0)
+
     def test_no_access_object_owned_by_another_user(self):
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')

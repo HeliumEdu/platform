@@ -26,7 +26,8 @@ from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
-from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
+from helium.auth.utils.userutils import admin_allowed_email_error, generate_unique_username_from_email, \
+    is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, prompt_for_review_filter, \
     review_prompts_requested_filter, logged_action
@@ -60,8 +61,7 @@ class AdminUserChangeForm(UserChangeForm):
                 raise forms.ValidationError("Sorry, that email is already in use.")
             if self.instance.is_superuser:
                 if not is_admin_allowed_email(email):
-                    raise forms.ValidationError(
-                        f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)}).")
+                    raise forms.ValidationError(admin_allowed_email_error())
         return email
 
 

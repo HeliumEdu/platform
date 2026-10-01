@@ -21,7 +21,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     filterset_class = UserPushTokenFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.push_tokens.all()
         else:
@@ -84,7 +84,7 @@ class UserPushTokenApiDetailView(HeliumAPIView, UpdateModelMixin, DestroyModelMi
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.push_tokens.all()
         else:

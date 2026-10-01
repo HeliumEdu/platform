@@ -23,7 +23,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
     filterset_class = MaterialGroupFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.material_groups.all()
         else:
@@ -70,7 +70,7 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
     filterset_class = MaterialGroupFilter
 
     def get_queryset(self):
-        if hasattr(self.request, 'user') and not getattr(self, "swagger_fake_view", False):
+        if self.has_request_user():
             user = self.request.user
             return user.material_groups.all()
         else:

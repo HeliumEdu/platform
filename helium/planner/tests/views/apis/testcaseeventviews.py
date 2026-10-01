@@ -1,6 +1,7 @@
 import datetime
 import json
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 from dateutil import parser
 from django.urls import reverse
@@ -106,6 +107,19 @@ class TestCaseEventViews(APITestCase):
         self.assertFalse(cloned_reminder.dismissed)
         self.assertEqual(cloned_reminder.user_id, user.pk)
         self.assertEqual(cloned_reminder.start_of_range, clone.start - datetime.timedelta(minutes=30))
+
+    def test_clone_recurring_event_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        source = eventhelper.given_event_exists(user, recurrence_rule='FREQ=WEEKLY;BYDAY=MO')
+
+        # WHEN
+        response = self.client.post(reverse('planner_events_clone', kwargs={'pk': source.pk}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Event.objects.count(), 1)
 
     def test_clone_event_other_user_returns_404(self):
         # GIVEN
@@ -347,6 +361,47 @@ class TestCaseEventViews(APITestCase):
             reverse('planner_events_detail', kwargs={'pk': event.pk}))
         self.assertEqual(get_response.data['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO')
         self.assertEqual(get_response.data['exception_dates'], ['2025-10-13T18:00:00Z'])
+
+    def test_create_event_with_utc_until_recurrence_rule(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Weekly quiz',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2026-10-14T16:00:00Z',
+            'end': '2026-10-14T17:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=WEEKLY;UNTIL=20261126T000000Z;BYDAY=WE',
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['recurrence_rule'], 'FREQ=WEEKLY;UNTIL=20261126T000000Z;BYDAY=WE')
+
+    def test_get_events_in_later_window_includes_recurring_series_anchored_before_it(self):
+        for zone_name in ('Europe/Amsterdam', 'America/Los_Angeles'):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user_{zone_name}', email=f'{zone_name}@test.com', time_zone=zone_name)
+                series_start = datetime.datetime(2026, 10, 6, 10, 0, tzinfo=ZoneInfo(zone_name))
+                series = eventhelper.given_event_exists(user, title='Series', start=series_start,
+                                                        end=series_start + datetime.timedelta(hours=1),
+                                                        recurrence_rule='FREQ=WEEKLY;COUNT=5;BYDAY=TU')
+                eventhelper.given_event_exists(user, title='One-off', start=series_start,
+                                               end=series_start + datetime.timedelta(hours=1))
+
+                # WHEN
+                response = self.client.get(reverse('planner_events_list') + '?from=2026-11-01&to=2026-12-13')
+
+                # THEN
+                self.assertEqual([event['id'] for event in response.data], [series.pk],
+                                 'the series overlaps November; the October one-off does not')
 
     def test_create_event_without_recurrence_defaults_to_null(self):
         # GIVEN
