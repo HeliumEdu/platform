@@ -27,9 +27,9 @@ from helium.common import enums
 from helium.common.utils import gradeutils, metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
 from helium.common.utils.versionutils import client_version_gte
-from helium.feed.models import ExternalCalendar
+from helium.importexport.services import examplescheduleguardservice
 from helium.importexport.tasks import import_example_schedule
-from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
+from helium.planner.models import Course
 
 logger = logging.getLogger(__name__)
 
@@ -475,28 +475,13 @@ def delete_example_schedule(user_id):
         user = None
 
     with transaction.atomic():
-        (ExternalCalendar.objects
-         .for_user(user_id)
-         .filter(example_schedule=True)
-         .delete())
-        (CourseGroup.objects
-         .for_user(user_id)
-         .filter(example_schedule=True)
-         .delete())
-        (MaterialGroup.objects
-         .for_user(user_id)
-         .filter(example_schedule=True)
-         .delete())
-        (Event.objects
-         .for_user(user_id)
-         .filter(example_schedule=True)
-         .delete())
-        # Only delete standalone notes (no linked entities) - linked notes are already
-        # cascade-deleted when their parent entities are deleted above
-        (Note.objects
-         .for_user(user_id)
-         .filter(example_schedule=True, homework__isnull=True, events__isnull=True, resources__isnull=True)
-         .delete())
+        partition = examplescheduleguardservice.partition_example_schedule(user_id)
+
+        for course in partition.pristine_children:
+            Course.objects.filter(pk=course.pk).delete()
+        examplescheduleguardservice.promote(partition.modified)
+        for root in partition.pristine:
+            type(root).objects.filter(pk=root.pk).delete()
 
         (UserSettings.objects
          .filter(user_id=user_id)
@@ -521,3 +506,10 @@ def delete_example_schedule(user_id):
             )
 
     metricutils.task_stop(metrics, user=user)
+
+    if partition.modified:
+        logger.info(f'User {user_id} cleared the example schedule but kept {len(partition.modified)} edited roots')
+        metricutils.increment('user.exampleschedule.delete.partial', user=user)
+
+        raise ValidationError('The example schedule is cleared, except for the items you edited, which are now '
+                              'yours to keep.')

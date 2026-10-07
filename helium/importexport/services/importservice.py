@@ -8,6 +8,7 @@ from typing import Dict, NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.utils import timezone
@@ -22,6 +23,7 @@ from helium.feed.serializers.externalcalendarserializer import ExternalCalendarS
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Reminder, \
     MaterialGroup, Material
+from helium.importexport.services import examplescheduleguardservice
 from helium.planner.serializers.categoryserializer import CategorySerializer
 from helium.planner.serializers.coursegroupserializer import CourseGroupSerializer
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -1086,6 +1088,8 @@ def import_example_schedule(user):
             logger.warning('Example schedule declares no time_zone, leaving class times as authored')
 
         with transaction.atomic():
+            examplescheduleguardservice.promote_modified(user.pk)
+
             imported = _bulk_import_example_schedule(data, user)
 
             _adjust_schedule_relative_to(user, -1, imported, source_tz)
@@ -1102,6 +1106,10 @@ def import_example_schedule(user):
 
             for course_group_id in course_group_ids:
                 gradingservice.recalculate_course_group_grade(course_group_id)
+
+            user.example_schedule_imported_at = timezone.now()
+            get_user_model().objects.filter(pk=user.pk).update(
+                example_schedule_imported_at=user.example_schedule_imported_at)
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'

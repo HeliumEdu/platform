@@ -3,6 +3,8 @@ import logging
 import os
 
 import icalendar
+from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -11,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from helium.auth.models import UserSettings
 from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView
 from helium.importexport.serializers.importerializer import ImportCreateSerializer, \
@@ -318,10 +321,13 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
     @extend_schema(exclude=True)
     def import_exampleschedule(self, request, *args, **kwargs):
-        importservice.import_example_schedule(request.user)
+        with transaction.atomic():
+            if not (UserSettings.objects
+                    .filter(user=request.user, show_getting_started=False)
+                    .update(show_getting_started=True, updated_at=timezone.now())):
+                raise ValidationError('The example schedule has already been imported. Please clear it before '
+                                      'importing it again.')
 
-        # Re-show the Getting Started dialog so users can explore and clear the example data
-        request.user.settings.show_getting_started = True
-        request.user.settings.save()
+            importservice.import_example_schedule(request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

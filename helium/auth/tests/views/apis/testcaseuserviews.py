@@ -575,6 +575,7 @@ class TestCaseUserViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 0)
+        self.assertEqual(Homework.objects.filter(course__course_group__user=user).count(), 0)
         user.refresh_from_db()
         self.assertIsNotNone(user.onboarding_completed_at)
         mock_send_analytics.assert_called_once()

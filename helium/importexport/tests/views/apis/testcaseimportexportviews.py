@@ -22,6 +22,7 @@ from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
     Homework, Reminder, Note
+from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
 
@@ -868,7 +869,8 @@ class TestCaseImportExportViews(APITestCase):
                          datetime.datetime(2026, 1, 7, 16, 0, tzinfo=datetime.timezone.utc))
 
     def _local_hours_after_example_import(self, time_zone):
-        userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone=time_zone)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone=time_zone)
+        exampleschedulehelper.given_example_import_allowed(user)
 
         self.client.post(reverse('importexport_import_exampleschedule'))
 
@@ -903,6 +905,7 @@ class TestCaseImportExportViews(APITestCase):
     def test_import_exampleschedule(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        exampleschedulehelper.given_example_import_allowed(user)
 
         # WHEN
         response = self.client.post(reverse('importexport_import_exampleschedule'))
@@ -1292,9 +1295,18 @@ class TestCaseImportExportViews(APITestCase):
         user.settings.refresh_from_db()
         self.assertTrue(user.settings.show_getting_started)
 
+        # --- Import stamp ---
+        user.refresh_from_db()
+        self.assertIsNotNone(user.example_schedule_imported_at)
+        for model in (CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, Homework, Note):
+            for row in model.objects.for_user(user.pk):
+                self.assertLessEqual(row.updated_at, user.example_schedule_imported_at,
+                                     msg=f'{model.__name__} {row.pk} was written after the stamp')
+
     def test_reimport_exampleschedule_after_dismiss_all_does_not_touch_prior_import(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        exampleschedulehelper.given_example_import_allowed(user)
         first_response = self.client.post(reverse('importexport_import_exampleschedule'))
         self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -1329,6 +1341,7 @@ class TestCaseImportExportViews(APITestCase):
         }
 
         # WHEN
+        exampleschedulehelper.given_example_schedule_became_user_data(user)
         second_response = self.client.post(reverse('importexport_import_exampleschedule'))
 
         # THEN
@@ -1371,6 +1384,7 @@ class TestCaseImportExportViews(APITestCase):
     def test_reimport_exampleschedule_after_dismiss_all_succeeds_and_adds_second_group(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        exampleschedulehelper.given_example_import_allowed(user)
         first_response = self.client.post(reverse('importexport_import_exampleschedule'))
         self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
         first_course_group = CourseGroup.objects.get()
@@ -1381,6 +1395,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(dismiss_response.status_code, status.HTTP_204_NO_CONTENT)
 
         # WHEN
+        exampleschedulehelper.given_example_schedule_became_user_data(user)
         second_response = self.client.post(reverse('importexport_import_exampleschedule'))
 
         # THEN
@@ -2060,12 +2075,14 @@ class TestCaseImportExportViews(APITestCase):
 
     def test_reimport_exampleschedule_after_dismiss_all_still_rebases_the_new_schedule(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        exampleschedulehelper.given_example_import_allowed(user)
         self.client.post(reverse('importexport_import_exampleschedule'))
         first_course_group = CourseGroup.objects.get()
         self.client.patch(reverse('planner_reminders_dismiss_all') + '?sent=true')
 
         # WHEN
+        exampleschedulehelper.given_example_schedule_became_user_data(user)
         response = self.client.post(reverse('importexport_import_exampleschedule'))
 
         # THEN
