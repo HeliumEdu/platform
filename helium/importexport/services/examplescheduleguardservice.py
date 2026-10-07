@@ -1,19 +1,22 @@
 import logging
-from datetime import datetime, timedelta
-from typing import Iterator, List, NamedTuple, Optional
+from datetime import datetime
+from typing import Iterator, List, NamedTuple
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import router
+from django.db import router, transaction
 from django.db.models import Model, Q, QuerySet
 from django.db.models.deletion import Collector
+from django.utils import timezone
 
+from helium.auth.models import UserSettings
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import Course, CourseGroup, Event, Homework, Material, MaterialGroup, Note, Reminder
 
 logger = logging.getLogger(__name__)
 
-#: How long after a root's creation an unstamped (pre-tracking) example schedule is still considered untouched.
-LEGACY_IMPORT_WINDOW = timedelta(seconds=30)
+#: Every model that carries the example schedule flag.
+FLAGGED_MODELS = (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note)
 
 
 class ExamplePartition(NamedTuple):
@@ -35,7 +38,8 @@ def partition_example_schedule(user_id: int) -> ExamplePartition:
 
     A root is every flagged top-level example entity. Everything the database would cascade-delete with it is
     inspected, so a row the user added anywhere beneath a root keeps that root. Within a kept course group, each
-    course is judged on its own, so only the courses the user touched are kept alongside it.
+    course is judged on its own, so only the courses the user touched are kept alongside it. Without an import
+    stamp nothing can be proven untouched, so every root is kept.
 
     :param user_id: The user whose example schedule to inspect.
     :return: The pristine roots, the modified roots, and the untouched courses within the modified groups.
@@ -43,19 +47,24 @@ def partition_example_schedule(user_id: int) -> ExamplePartition:
     stamp = get_user_model().objects.filter(pk=user_id).values_list('example_schedule_imported_at',
                                                                     flat=True).first()
 
+    if stamp is None:
+        roots = list(_example_roots(user_id))
+        if roots:
+            logger.warning(f'User {user_id} has no example schedule import stamp, keeping all {len(roots)} roots')
+        return ExamplePartition(pristine=[], modified=roots, pristine_children=[])
+
     pristine = []
     modified = []
     pristine_children = []
     for root in _example_roots(user_id):
-        baseline = _baseline(root, stamp)
-        if not _is_modified(root, baseline):
+        if not _is_modified(root, stamp):
             pristine.append(root)
             continue
 
         modified.append(root)
         if isinstance(root, CourseGroup):
             pristine_children.extend(course for course in Course.objects.filter(course_group=root)
-                                     if not _is_modified(course, baseline))
+                                     if not _is_modified(course, stamp))
 
     return ExamplePartition(pristine=pristine, modified=modified, pristine_children=pristine_children)
 
@@ -83,6 +92,49 @@ def promote_modified(user_id: int) -> None:
     promote(partition_example_schedule(user_id).modified)
 
 
+def adopt(user_id: int) -> None:
+    """
+    Make the user's whole example schedule their own: unflag every example entity and stop the Getting Started
+    dialog. Nothing is deleted.
+
+    :param user_id: The user whose example schedule to adopt.
+    """
+    with transaction.atomic():
+        UserSettings.objects.select_for_update().filter(user_id=user_id).first()
+
+        adopted = sum(model.objects.filter(user_id=user_id, example_schedule=True).update(example_schedule=False)
+                      for model in FLAGGED_MODELS)
+        (UserSettings.objects
+         .filter(user_id=user_id, show_getting_started=True)
+         .update(show_getting_started=False, updated_at=timezone.now()))
+
+    logger.info(f'Adopted the example schedule for user {user_id} ({adopted} entities)')
+
+
+def adopt_stale(now: datetime = None) -> int:
+    """
+    Adopt the example schedule for every user who imported it more than EXAMPLE_SCHEDULE_ADOPTION_DAYS ago and
+    still has any of it flagged.
+
+    :param now: The current time, for tests.
+    :return: The number of users adopted.
+    """
+    cutoff = (now or timezone.now()) - settings.EXAMPLE_SCHEDULE_ADOPTION_AGE
+    stale_user_ids = set(get_user_model().objects
+                         .filter(example_schedule_imported_at__lte=cutoff)
+                         .values_list('pk', flat=True))
+    flagged_user_ids = set()
+    for model in FLAGGED_MODELS:
+        flagged_user_ids.update(model.objects
+                                .filter(example_schedule=True, user_id__in=stale_user_ids)
+                                .values_list('user_id', flat=True))
+
+    for user_id in flagged_user_ids:
+        adopt(user_id)
+
+    return len(flagged_user_ids)
+
+
 def _example_roots(user_id: int) -> Iterator[Model]:
     yield from ExternalCalendar.objects.for_user(user_id).filter(example_schedule=True)
     yield from CourseGroup.objects.for_user(user_id).filter(example_schedule=True)
@@ -90,13 +142,6 @@ def _example_roots(user_id: int) -> Iterator[Model]:
     yield from Event.objects.for_user(user_id).filter(example_schedule=True)
     yield from Note.objects.for_user(user_id).filter(example_schedule=True, homework__isnull=True,
                                                      events__isnull=True, resources__isnull=True)
-
-
-def _baseline(root: Model, stamp: Optional[datetime]) -> datetime:
-    if stamp is not None:
-        return stamp
-
-    return root.created_at + LEGACY_IMPORT_WINDOW
 
 
 def _is_modified(root: Model, baseline: datetime) -> bool:
@@ -119,10 +164,10 @@ def _cascade_instances(root: Model) -> Iterator[Model]:
 
 
 def _changed_after(instance: Model, baseline: datetime) -> bool:
-    # Reminders are re-saved by background jobs when their parent's schedule is adjusted, so only their
-    # creation reliably means the user authored one.
+    # Background jobs re-save reminders and create each repeating course reminder's successor when one fires, so a
+    # reminder's timestamps say nothing about the user. Only the item a reminder belongs to counts as edited.
     if isinstance(instance, Reminder):
-        return instance.created_at > baseline
+        return False
 
     updated_at = getattr(instance, 'updated_at', None)
 

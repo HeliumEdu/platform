@@ -465,6 +465,12 @@ def oauth_login(request):
 
 
 def delete_example_schedule(user_id):
+    """
+    Delete the user's untouched example schedule, keeping anything that changed, and stop the Getting Started dialog.
+
+    :param user_id: The user whose example schedule to clear.
+    :return: True if anything was kept, False if the whole example schedule was deleted.
+    """
     metrics = metricutils.task_start("user.exampleschedule.delete")
 
     UserModel = get_user_model()
@@ -475,6 +481,8 @@ def delete_example_schedule(user_id):
         user = None
 
     with transaction.atomic():
+        UserSettings.objects.select_for_update().filter(user_id=user_id).first()
+
         partition = examplescheduleguardservice.partition_example_schedule(user_id)
 
         for course in partition.pristine_children:
@@ -508,8 +516,7 @@ def delete_example_schedule(user_id):
     metricutils.task_stop(metrics, user=user)
 
     if partition.modified:
-        logger.info(f'User {user_id} cleared the example schedule but kept {len(partition.modified)} edited roots')
+        logger.info(f'User {user_id} cleared the example schedule but kept {len(partition.modified)} changed roots')
         metricutils.increment('user.exampleschedule.delete.partial', user=user)
 
-        raise ValidationError('The example schedule is cleared, except for the items you edited, which are now '
-                              'yours to keep.')
+    return bool(partition.modified)

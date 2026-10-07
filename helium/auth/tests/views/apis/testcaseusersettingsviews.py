@@ -4,7 +4,9 @@ import uuid
 from unittest import mock
 from zoneinfo import ZoneInfo
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -121,6 +123,25 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertFalse(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
         self.assertFalse(user.settings.show_planner_tooltips)
+
+    def test_getting_started_is_due_until_the_client_reports_showing_it(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=timezone.now())
+
+        # WHEN
+        before = self.client.get(reverse('auth_user_detail'))
+        reported = self.client.put(reverse('auth_user_settings_detail'),
+                                   json.dumps({'getting_started_due': False}),
+                                   content_type='application/json')
+        after = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertTrue(before.data['settings']['getting_started_due'])
+        self.assertEqual(reported.status_code, status.HTTP_200_OK)
+        self.assertFalse(after.data['settings']['getting_started_due'])
+        self.assertNotIn('getting_started_last_shown_at', after.data['settings'])
+        self.assertTrue(after.data['settings']['show_getting_started'], 'The example schedule is still there')
 
     def test_put_regional_formats(self):
         # GIVEN

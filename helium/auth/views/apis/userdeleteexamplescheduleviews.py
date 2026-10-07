@@ -22,12 +22,17 @@ class UserDeleteExampleScheduleView(HeliumAPIView):
     @extend_schema(exclude=True)
     def delete(self, request, *args, **kwargs):
         """
-        Delete any items marked as part of the example schedule for the user instance.
+        Delete the untouched example schedule for the user instance, keeping anything that changed. Returns 204 when
+        everything was deleted, or 200 with a message when anything was kept.
         """
         user = self.get_object()
 
-        delete_example_schedule(user.pk)
+        partial = delete_example_schedule(user.pk)
 
         logger.info(f'User {user.pk} deleted the example schedule')
+
+        if partial:
+            return Response({'message': 'The example schedule was cleared, except for anything that changed.'},
+                            status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

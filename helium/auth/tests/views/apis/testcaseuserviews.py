@@ -3,6 +3,7 @@ from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -565,6 +566,7 @@ class TestCaseUserViews(APITestCase):
         course_group.save()
         course = coursehelper.given_course_exists(course_group)
         homeworkhelper.given_homework_exists(course)
+        get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=timezone.now())
         self.assertEqual(Homework.objects.filter(course__course_group__user=user).count(), 1)
         self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 1)
         self.assertIsNone(user.onboarding_completed_at)
@@ -596,6 +598,7 @@ class TestCaseUserViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course_group.example_schedule = True
         course_group.save()
+        get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=timezone.now())
 
         def onboarding_call_count():
             return sum(1 for c in mock_timing.call_args_list if c[0][0] == 'onboarding.duration')
@@ -612,6 +615,7 @@ class TestCaseUserViews(APITestCase):
         course_group_2 = coursegrouphelper.given_course_group_exists(user)
         course_group_2.example_schedule = True
         course_group_2.save()
+        get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=timezone.now())
         self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 1)
 
         response = self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))

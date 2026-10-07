@@ -1,13 +1,15 @@
 import logging
 
+from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from conf.celery import app
 from helium.common import enums
+from helium.common.periodic import register_periodic
 from helium.common.utils import metricutils
-from helium.importexport.services import importservice
+from helium.importexport.services import examplescheduleguardservice, importservice
 
 logger = logging.getLogger(__name__)
 
@@ -45,3 +47,18 @@ def import_example_schedule(self, user_id, example_schedule=True):
         value = 0
 
     metricutils.task_stop(metrics, user=user, value=value)
+
+
+@app.task(bind=True)
+def adopt_stale_example_schedules(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("user.exampleschedule.adopt", priority="low", published_at_ms=published_at_ms)
+
+    adopted = examplescheduleguardservice.adopt_stale()
+
+    metricutils.task_stop(metrics, value=adopted)
+
+
+register_periodic(adopt_stale_example_schedules, crontab(hour=5, minute=0),
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Adopt example schedules older than the adoption age")

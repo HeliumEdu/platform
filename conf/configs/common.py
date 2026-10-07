@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.6.3"
+__version__ = "2.6.4"
 
 import json
 import os
@@ -148,6 +148,11 @@ SERVE_LOCAL = False
 REFRESH_TOKEN_PURGE_FREQUENCY_SEC = 60 * 60
 
 REMINDER_WATCHDOG_FREQUENCY_SEC = 60 * 60
+
+EXAMPLE_SCHEDULE_ADOPTION_AGE = timedelta(days=21)
+GETTING_STARTED_DAILY_WINDOW = timedelta(days=7)
+GETTING_STARTED_DAILY_GAP = timedelta(hours=20)
+GETTING_STARTED_WEEKLY_GAP = timedelta(days=7)
 
 FEED_MAX_CACHEABLE_SIZE = 3000000
 

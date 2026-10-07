@@ -6,6 +6,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.auth.managers.usersettingsmanager import UserSettingsManager
+from helium.auth.services import gettingstartedservice
 from helium.common.models import BaseModel
 from helium.common.utils.validators import validate_hex_color
 
@@ -23,6 +24,10 @@ class UserSettings(BaseModel):
 
     show_getting_started = models.BooleanField(help_text='Whether the "Getting Started" dialog should be shown.',
                                                default=True)
+
+    getting_started_last_shown_at = models.DateTimeField(
+        blank=True, null=True,
+        help_text='When the "Getting Started" dialog was last shown.')
 
     setup_state = models.PositiveIntegerField(
         help_text='The account\'s progress through first-time setup.',
@@ -138,6 +143,10 @@ class UserSettings(BaseModel):
     @property
     def is_setup_complete(self):
         return self.setup_state == enums.SETUP_COMPLETE
+
+    @property
+    def getting_started_due(self):
+        return gettingstartedservice.is_getting_started_due(self)
 
     def get_user(self):
         return self.user

@@ -87,7 +87,7 @@ class TestCaseImportExampleSchedule(APITestCase):
         response = self._clear()
 
         # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual([course.pk for course in Course.objects.for_user(user.pk)], [homework.course_id])
         self.assertEqual(Homework.objects.for_user(user.pk).count(), kept_course_homework_count)
         self.assertTrue(Homework.objects.filter(pk=homework.pk, title='Renamed by me').exists())
@@ -99,7 +99,7 @@ class TestCaseImportExampleSchedule(APITestCase):
         example = exampleschedulehelper.given_example_schedule_exists(user)
         example.homework.title = 'Renamed by me'
         example.homework.save()
-        self.assertEqual(self._clear().status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self._clear().status_code, status.HTTP_200_OK)
         kept_course_group = CourseGroup.objects.get(pk=example.course_group.pk)
         kept_updated_at = kept_course_group.updated_at
         kept_homework_updated_at = Homework.objects.get(pk=example.homework.pk).updated_at

@@ -21,7 +21,6 @@ COURSE_GROUP_TREE = ('course_group', 'course', 'schedule', 'category', 'homework
 
 OTHER_COURSE_TREE = ('other_course', 'other_schedule', 'other_category', 'other_homework')
 
-PARTIAL_CLEAR_MESSAGE = 'The example schedule is cleared, except for the items you edited, which are now yours to keep.'
 
 
 def _survivors(example, *names):
@@ -59,8 +58,8 @@ class TestCaseUserExampleSchedule(APITestCase):
         return sum(model.objects.for_user(user.pk).count() for model in ALL_EXAMPLE_MODELS)
 
     def _assert_cleared_with_notice_keeping(self, response, user, example, survivors):
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), [PARTIAL_CLEAR_MESSAGE])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {'message': 'The example schedule was cleared, except for anything that changed.'})
         user.refresh_from_db()
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.show_getting_started)
@@ -110,18 +109,11 @@ class TestCaseUserExampleSchedule(APITestCase):
             'schedule': (lambda e: courseschedulehelper.given_course_schedule_exists(e.course), 'course_group'),
             'category': (lambda e: categoryhelper.given_category_exists(e.course, title='My category'),
                          'course_group'),
-            'homework reminder': (lambda e: reminderhelper.given_reminder_exists(user, offset=45,
-                                                                                  homework=e.homework),
-                                  'course_group'),
-            'course reminder': (lambda e: reminderhelper.given_reminder_exists(user, offset=45, course=e.course),
-                                'course_group'),
             'homework attachment': (lambda e: attachmenthelper.given_attachment_exists(user, homework=e.homework),
                                     'course_group'),
             'course attachment': (lambda e: attachmenthelper.given_attachment_exists(user, course=e.course),
                                   'course_group'),
             'event attachment': (lambda e: attachmenthelper.given_attachment_exists(user, event=e.event), 'event'),
-            'event reminder': (lambda e: reminderhelper.given_reminder_exists(user, offset=45, event=e.event),
-                               'event'),
             'material': (lambda e: materialhelper.given_material_exists(e.material_group, title='My material'),
                          'material_group'),
         }
@@ -139,6 +131,21 @@ class TestCaseUserExampleSchedule(APITestCase):
                                                          [added, getattr(example, root_name)])
 
                 self._reset(user)
+
+    def test_clear_after_user_adds_reminders_still_deletes_everything(self):
+        # GIVEN
+        user, example = self._given_a_user_with_an_example_schedule()
+        reminderhelper.given_reminder_exists(user, offset=45, homework=example.homework)
+        reminderhelper.given_reminder_exists(user, offset=45, course=example.course)
+        reminderhelper.given_reminder_exists(user, offset=45, event=example.event)
+
+        # WHEN
+        response = self._clear()
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(sum(model.objects.for_user(user.pk).count() for model in (CourseGroup, Event)), 0,
+                         'Reminders never count as making the example schedule your own')
 
     def test_clear_after_user_edits_anything_in_an_example_schedule_keeps_what_was_edited(self):
         # GIVEN
@@ -236,13 +243,17 @@ class TestCaseUserExampleSchedule(APITestCase):
         self._assert_cleared_with_notice_keeping(response, user, example,
                                                  [note] + _survivors(example, *COURSE_GROUP_TREE))
 
-    def test_clear_after_user_edits_legacy_example_schedule_past_the_window_keeps_the_group(self):
+    def test_clear_without_an_import_stamp_keeps_everything(self):
         # GIVEN
         user, example = self._given_a_user_with_an_example_schedule(stamped=False)
-        _set_and_save(example.homework, title='Renamed by me')
 
         # WHEN
         response = self._clear()
 
         # THEN
-        self._assert_cleared_with_notice_keeping(response, user, example, _survivors(example, *COURSE_GROUP_TREE))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {'message': 'The example schedule was cleared, except for anything that changed.'})
+        self.assertEqual(exampleschedulehelper.count_example_flagged(user), 0)
+        for survivor in example.roots + [example.homework, example.other_homework]:
+            self.assertTrue(type(survivor).objects.filter(pk=survivor.pk).exists(),
+                            msg=f'{type(survivor).__name__} {survivor.pk} was deleted without an import stamp')

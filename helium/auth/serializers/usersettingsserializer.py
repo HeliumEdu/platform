@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
@@ -18,6 +19,10 @@ logger = logging.getLogger(__name__)
 class UserSettingsSerializer(serializers.ModelSerializer):
     is_setup_complete = serializers.BooleanField(read_only=True)
 
+    getting_started_due = serializers.BooleanField(
+        required=False,
+        help_text='Whether the "Getting Started" dialog should be shown now. Set to false once it has been shown.')
+
     #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
     resource_color = serializers.CharField(
         source='material_color', required=False, max_length=7, validators=[validate_hex_color],
@@ -26,7 +31,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSettings
         fields = (
-            'time_zone', 'default_view', 'week_starts_on', 'show_getting_started',
+            'time_zone', 'default_view', 'week_starts_on', 'show_getting_started', 'getting_started_due',
             'setup_state', 'is_setup_complete', 'whats_new_version_seen', 'events_color', 'grade_color', 'material_color',
             'resource_color', 'remember_filter_state', 'color_scheme_theme', 'calendar_event_limit',
             'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
@@ -35,6 +40,12 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
         read_only_fields = ('setup_state', 'private_slug', 'user',
                             'prompt_for_review',)
+
+    def update(self, instance, validated_data):
+        if validated_data.pop('getting_started_due', True) is False:
+            instance.getting_started_last_shown_at = timezone.now()
+
+        return super().update(instance, validated_data)
 
     #: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
     def to_representation(self, instance):
