@@ -26,7 +26,6 @@ from helium.auth.utils.userutils import generate_verification_code, generate_uni
 from helium.common import enums
 from helium.common.utils import gradeutils, metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
-from helium.common.utils.versionutils import client_version_gte
 from helium.importexport.services import examplescheduleguardservice
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import Course
@@ -408,10 +407,6 @@ def oauth_login(request):
                 critical=True,
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
-
-            #: Legacy behavior, can be removed once all clients are reporting >= 3.9.5.
-            if not client_version_gte(request, '3.9.5'):
-                start_setup(user)
 
             logger.info(f'New user {user.id} ({redact_email(user.email)}) created via {provider_name} Sign-In')
 

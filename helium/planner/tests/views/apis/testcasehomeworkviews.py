@@ -142,7 +142,7 @@ class TestCaseHomeworkViews(APITestCase):
             'current_grade': '25/30',
             'completed': False,
             'category': category.pk,
-            'materials': [material.pk],
+            'resources': [material.pk],
             'course': course.pk
         }
         response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
@@ -156,62 +156,6 @@ class TestCaseHomeworkViews(APITestCase):
         homework = Homework.objects.get(pk=response.data['id'])
         homeworkhelper.verify_homework_matches_data(self, homework, data)
         homeworkhelper.verify_homework_matches_data(self, homework, response.data)
-
-    def test_create_homework_with_resources_emits_both_keys(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-
-        # WHEN
-        data = {
-            'title': 'some title',
-            'start': '2014-05-08T12:00:00Z',
-            'end': '2014-05-08T14:00:00Z',
-            'current_grade': '-1/100',
-            'resources': [material.pk],
-            'course': course.pk
-        }
-        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
-                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['resources'], [material.pk])
-        self.assertEqual(response.data['materials'], [material.pk], msg='legacy clients still read `materials`')
-
-    def test_create_homework_with_both_keys_prefers_resources(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        canonical = materialhelper.given_material_exists(material_group, title='canonical')
-        legacy = materialhelper.given_material_exists(material_group, title='legacy')
-
-        # WHEN
-        data = {
-            'title': 'some title',
-            'start': '2014-05-08T12:00:00Z',
-            'end': '2014-05-08T14:00:00Z',
-            'current_grade': '-1/100',
-            'resources': [canonical.pk],
-            'materials': [legacy.pk],
-            'course': course.pk
-        }
-        response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
-                                            kwargs={'course_group': course_group.pk, 'course': course.pk}),
-                                    json.dumps(data),
-                                    content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['resources'], [canonical.pk])
-        self.assertEqual(response.data['materials'], [canonical.pk])
 
     def test_create_homework_with_resources_of_another_user_fails(self):
         # GIVEN
@@ -498,7 +442,7 @@ class TestCaseHomeworkViews(APITestCase):
             'current_grade': '33/40',
             'completed': True,
             'category': category2.pk,
-            'materials': [material2.pk],
+            'resources': [material2.pk],
             'course': course.pk
         }
         response = self.client.put(reverse('planner_coursegroups_courses_homework_detail',
@@ -626,7 +570,7 @@ class TestCaseHomeworkViews(APITestCase):
                              content_type='application/json'),
             self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group1.pk, 'course': course1.pk}),
-                             json.dumps({'materials': [material2.pk]}),
+                             json.dumps({'resources': [material2.pk]}),
                              content_type='application/json'),
             self.client.patch(
                 reverse('planner_coursegroups_courses_homework_detail',
@@ -636,7 +580,7 @@ class TestCaseHomeworkViews(APITestCase):
             self.client.patch(
                 reverse('planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
-                json.dumps({'materials': [material2.pk]}),
+                json.dumps({'resources': [material2.pk]}),
                 content_type='application/json'),
         ]
 

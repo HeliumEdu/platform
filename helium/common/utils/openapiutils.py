@@ -189,12 +189,6 @@ def collapse_nullable_enums(result, generator, request, public):
     return result
 
 
-#: Legacy route, can be removed once all clients are reporting >= 3.9.4.
-def exclude_legacy_paths(endpoints, **kwargs):
-    return [endpoint for endpoint in endpoints if not endpoint[0].startswith('/planner/material')]
-
-
-
 def rewrite_pagination_examples(result, generator, request, public):
     """
     Point each ``Paginated*`` component's ``next`` / ``previous`` examples at the list endpoint

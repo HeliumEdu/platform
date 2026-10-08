@@ -7,7 +7,7 @@ from rest_framework import serializers
 from helium.common import enums
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.planner.models import Course, CourseGroup
-from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer, get_gated_schedules
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 from helium.planner.services import categoryservice
 
 logger = logging.getLogger(__name__)
@@ -75,8 +75,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(CourseScheduleSerializer(many=True))
     def get_schedules(self, obj):
-        schedules = list(get_gated_schedules(sorted(obj.schedules.all(), key=lambda schedule: schedule.id),
-                                             self.context.get('request')))
+        schedules = sorted(obj.schedules.all(), key=lambda schedule: schedule.id)
 
         # These schedules belong to `obj`, so hand each its already-loaded parent course rather than
         # letting `recurrence_groups` re-fetch course/course group/owner settings per schedule.

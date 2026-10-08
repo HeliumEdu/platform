@@ -32,6 +32,6 @@ def verify_material_matches_data(test_case, material, data):
     test_case.assertEqual(material.price, data['price'])
     if 'details' in data:
         test_case.assertEqual(material.details, data['details'])
-    test_case.assertEqual(material.material_group.pk, int(data['material_group']))
+    test_case.assertEqual(material.material_group.pk, int(data.get('resource_group', data.get('material_group'))))
     for course_id in data['courses']:
         test_case.assertTrue(material.courses.filter(pk=course_id).exists())

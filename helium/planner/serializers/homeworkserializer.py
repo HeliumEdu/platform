@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
-#: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
-@extend_schema_serializer(exclude_fields=('comments', 'materials'))
+@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
@@ -43,16 +42,14 @@ class HomeworkSerializer(serializers.ModelSerializer):
             self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)
             self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
             # ManyToMany fields need to have their `child_relation` queryset modified instead
-            #: Legacy parameter, can be removed once all clients are reporting >= 3.9.4.
-            for resources_field in ('resources', 'materials'):
-                self.fields[resources_field].child_relation.queryset = Material.objects.for_user(
-                    self.context['request'].user.pk)
+            self.fields['resources'].child_relation.queryset = Material.objects.for_user(
+                self.context['request'].user.pk)
 
     class Meta:
         model = Homework
         fields = (
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
-            'current_grade', 'completed', 'completed_at', 'category', 'materials', 'resources', 'attachments',
+            'current_grade', 'completed', 'completed_at', 'category', 'resources', 'attachments',
             'reminders', 'notes', 'course', 'course_group', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
@@ -97,8 +94,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
 
 #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
-#: Legacy 'materials' parameter, can be removed once all clients are reporting >= 3.9.4.
-@extend_schema_serializer(exclude_fields=('comments', 'materials'))
+@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
     reminders = ReminderSerializer(many=True)

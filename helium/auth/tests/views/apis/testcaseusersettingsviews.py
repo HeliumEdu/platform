@@ -101,13 +101,11 @@ class TestCaseUserSettingsViews(APITestCase):
     def test_put_user_setting(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        self.assertTrue(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
         self.assertTrue(user.settings.show_planner_tooltips)
 
         # WHEN
         data = {
-            'show_getting_started': False,
             'time_zone': 'America/Chicago',
             'show_planner_tooltips': False,
         }
@@ -116,11 +114,9 @@ class TestCaseUserSettingsViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data['show_getting_started'])
         self.assertEqual(response.data['time_zone'], 'America/Chicago')
         self.assertFalse(response.data['show_planner_tooltips'])
         user.refresh_from_db()
-        self.assertFalse(user.settings.show_getting_started)
         self.assertEqual(user.settings.time_zone, response.data['time_zone'])
         self.assertFalse(user.settings.show_planner_tooltips)
 
@@ -188,7 +184,7 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertIn('time_format', response.data)
         self.assertIn('number_format', response.data)
 
-    def test_put_resource_color_emits_both_keys(self):
+    def test_put_resource_color(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -199,37 +195,6 @@ class TestCaseUserSettingsViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['resource_color'], '#123456')
-        self.assertEqual(response.data['material_color'], '#123456', msg='legacy clients still read `material_color`')
-        user.settings.refresh_from_db()
-        self.assertEqual(user.settings.material_color, '#123456')
-
-    def test_put_legacy_material_color_still_writes(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps({'material_color': '#abcdef'}),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['resource_color'], '#abcdef')
-        user.settings.refresh_from_db()
-        self.assertEqual(user.settings.material_color, '#abcdef')
-
-    def test_put_both_color_keys_prefers_resource_color(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        response = self.client.put(reverse('auth_user_settings_detail'),
-                                   json.dumps({'resource_color': '#123456', 'material_color': '#abcdef'}),
-                                   content_type='application/json')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['resource_color'], '#123456')
-        self.assertEqual(response.data['material_color'], '#123456')
         user.settings.refresh_from_db()
         self.assertEqual(user.settings.material_color, '#123456')
 

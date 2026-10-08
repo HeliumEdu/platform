@@ -22,9 +22,8 @@ from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_R
 logger = logging.getLogger(__name__)
 
 
-#: Legacy parameter, can be removed once all clients are reporting >= 3.9.4.
 def _requested_resource_ids(request):
-    return request.data.get('resources') or request.data.get('materials') or []
+    return request.data.get('resources') or []
 
 
 @extend_schema(

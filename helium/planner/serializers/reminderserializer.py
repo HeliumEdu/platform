@@ -1,6 +1,5 @@
 import logging
 
-from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common.utils import datetimeutils
@@ -9,11 +8,7 @@ from helium.planner.models import Reminder, Homework, Event, Course
 logger = logging.getLogger(__name__)
 
 
-@extend_schema_serializer(exclude_fields=('title',))
 class ReminderSerializer(serializers.ModelSerializer):
-    #: Legacy parameter, can be removed once all clients are reporting >= 3.9.0.
-    title = serializers.CharField(source='message', read_only=True)
-
     def to_internal_value(self, data):
         """Legacy parameter, permanently accepted as an alias for `message`; `message` wins."""
         if isinstance(data, dict) and not data.get('message') and data.get('title'):
@@ -31,7 +26,7 @@ class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
         fields = (
-            'id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
+            'id', 'message', 'start_of_range', 'offset', 'offset_type', 'type', 'sent', 'dismissed',
             'homework', 'event', 'course', 'user',)
         # `start_of_range` is derived state — the model's `save()` always recomputes it from
         # parent + offset, so accepting it on the write API would be misleading.
@@ -148,7 +143,6 @@ class ReminderSerializer(serializers.ModelSerializer):
                 "`offset_type`.")
 
 
-@extend_schema_serializer(exclude_fields=('title',))
 class ReminderExtendedSerializer(ReminderSerializer):
     def to_representation(self, instance):
         # Import serializers here to avoid circular imports

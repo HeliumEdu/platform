@@ -32,7 +32,6 @@ class TestCaseOAuthViews(APITestCase):
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -356,13 +355,11 @@ class TestCaseOAuthViews(APITestCase):
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
         response2 = self.client.post(
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -431,7 +428,6 @@ class TestCaseOAuthViews(APITestCase):
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         user = get_user_model().objects.get(email='multiauth@gmail.com')
@@ -448,7 +444,6 @@ class TestCaseOAuthViews(APITestCase):
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN
@@ -474,7 +469,6 @@ class TestCaseOAuthViews(APITestCase):
             reverse('auth_token_oauth'),
             json.dumps(data),
             content_type='application/json',
-        HTTP_X_CLIENT_VERSION='3.9.5'
         )
 
         # THEN

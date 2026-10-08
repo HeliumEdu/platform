@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema(
-    tags=['planner.reminder'],
-    parameters=[OpenApiParameter(name='title', exclude=True)]
+    tags=['planner.reminder']
 )
 class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = ReminderSerializer
@@ -48,13 +47,6 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
                 'event__reminders',
                 'course__schedules',
             )
-
-            # Frontend clients prior to 3.5.0 don't send X-Client-Version, and also have a bug
-            # where they'll crash on /notifications if course-based reminders are returned, so
-            # exclude them; this guard (and the one below) can be removed once all users are
-            # on 3.5.0 and higher
-            if not self.request.headers.get('X-Client-Version'):
-                queryset = queryset.exclude(homework=None, event=None, course__isnull=False)
 
             return queryset
         else:
@@ -129,13 +121,6 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 'event__attachments',
                 'event__reminders'
             )
-
-            # Frontend clients prior to 3.5.0 don't send X-Client-Version, and also have a bug
-            # where they'll crash on /notifications if course-based reminders are returned, so
-            # exclude them; this guard (and the one above) can be removed once all users are
-            # on 3.5.0 and higher
-            if not self.request.headers.get('X-Client-Version'):
-                queryset = queryset.exclude(homework=None, event=None, course__isnull=False)
 
             return queryset
         else:

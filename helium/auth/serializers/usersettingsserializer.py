@@ -13,9 +13,8 @@ from helium.common.utils.versionutils import client_version_gte
 logger = logging.getLogger(__name__)
 
 
-#: Legacy 'material_color' parameter, can be removed once all clients are reporting >= 3.9.4.
-#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.9.5.
-@extend_schema_serializer(exclude_fields=('material_color', 'is_setup_complete'))
+#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.11.1, which reads `setup_state` instead.
+@extend_schema_serializer(exclude_fields=('is_setup_complete',))
 class UserSettingsSerializer(serializers.ModelSerializer):
     is_setup_complete = serializers.BooleanField(read_only=True)
 
@@ -32,13 +31,13 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         model = UserSettings
         fields = (
             'time_zone', 'default_view', 'week_starts_on', 'show_getting_started', 'getting_started_due',
-            'setup_state', 'is_setup_complete', 'whats_new_version_seen', 'events_color', 'grade_color', 'material_color',
+            'setup_state', 'is_setup_complete', 'whats_new_version_seen', 'events_color', 'grade_color',
             'resource_color', 'remember_filter_state', 'color_scheme_theme', 'calendar_event_limit',
             'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
             'calendar_use_category_colors', 'show_planner_tooltips', 'drag_and_drop_on_mobile', 'at_risk_threshold',
             'on_track_tolerance', 'show_week_numbers', 'date_format', 'time_format', 'number_format',
             'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
-        read_only_fields = ('setup_state', 'private_slug', 'user',
+        read_only_fields = ('show_getting_started', 'setup_state', 'private_slug', 'user',
                             'prompt_for_review',)
 
     def update(self, instance, validated_data):
@@ -60,10 +59,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         return data
 
 
-#: Legacy 'show_getting_started' parameter, can be removed once all clients are reporting >= 3.9.4, after which it becomes a read-only field above.
-#: Legacy 'material_color' parameter, can be removed once all clients are reporting >= 3.9.4.
-#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.9.5.
-@extend_schema_serializer(exclude_fields=('show_getting_started', 'material_color', 'is_setup_complete'),
-                          component_name='UserSettingsUpdate')
+#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.11.1, which reads `setup_state` instead.
+@extend_schema_serializer(exclude_fields=('is_setup_complete',), component_name='UserSettingsUpdate')
 class UserSettingsUpdateSerializer(UserSettingsSerializer):
     pass

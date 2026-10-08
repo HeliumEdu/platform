@@ -10,7 +10,7 @@ from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, Precondi
 from helium.planner import permissions
 from helium.planner.filters import MaterialFilter
 from helium.planner.models import Material
-from helium.planner.permissions import IsMaterialGroupOwner, resource_group_id_from
+from helium.planner.permissions import IsMaterialGroupOwner
 from helium.planner.serializers.materialserializer import MaterialSerializer
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['resource_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
             return Material.objects.none()
 
@@ -81,7 +81,7 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         return response
 
     def perform_create(self, serializer, *args, **kwargs):
-        serializer.save(material_group_id=resource_group_id_from(self.kwargs))
+        serializer.save(material_group_id=self.kwargs['resource_group'])
 
     @extend_schema(
         summary='Create a Resource in a ResourceGroup',
@@ -97,14 +97,13 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         if courses:
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
-        for group_key in ('resource_group', 'material_group'):
-            for resource_group_id in permissions.requested_ids(request.data, group_key):
-                permissions.check_material_group_permission(request.user.pk, resource_group_id)
+        for resource_group_id in permissions.requested_ids(request.data, 'resource_group'):
+            permissions.check_material_group_permission(request.user.pk, resource_group_id)
 
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Material {response.data['id']} created in MaterialGroup {resource_group_id_from(kwargs)} for user {request.user.pk}")
+            f"Material {response.data['id']} created in MaterialGroup {kwargs['resource_group']} for user {request.user.pk}")
 
         return response
 
@@ -121,7 +120,7 @@ class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, Retr
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(resource_group_id_from(self.kwargs)).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['resource_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
         else:
             return Material.objects.none()
 
@@ -143,9 +142,8 @@ class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, Retr
         if courses:
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
-        for group_key in ('resource_group', 'material_group'):
-            for resource_group_id in permissions.requested_ids(request.data, group_key):
-                permissions.check_material_group_permission(request.user.pk, resource_group_id)
+        for resource_group_id in permissions.requested_ids(request.data, 'resource_group'):
+            permissions.check_material_group_permission(request.user.pk, resource_group_id)
 
         response = self.update(request, *args, **kwargs)
 
@@ -165,6 +163,6 @@ class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, Retr
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            f"Material {kwargs['pk']} deleted from MaterialGroup {resource_group_id_from(kwargs)} for user {request.user.pk}")
+            f"Material {kwargs['pk']} deleted from MaterialGroup {kwargs['resource_group']} for user {request.user.pk}")
 
         return response

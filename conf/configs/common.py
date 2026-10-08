@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.6.6"
+__version__ = "2.7.0"
 
 import json
 import os
@@ -267,8 +267,6 @@ REFRESH_TOKEN_TTL_DAYS = 14
 # Terraform code (never here) when it needs to be changed.
 MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
-ADVANCED_SCHEDULES_MIN_VERSION = '3.8.0'
-
 #: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
 THREE_DAY_VIEW_MIN_VERSION = '3.10.0'
 
@@ -447,9 +445,6 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
     'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
-    'PREPROCESSING_HOOKS': [
-        'helium.common.utils.openapiutils.exclude_legacy_paths',
-    ],
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
         'helium.common.utils.openapiutils.collapse_nullable_enums',

@@ -10,7 +10,7 @@ from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, Precondi
 from helium.planner.filters import CourseScheduleFilter
 from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
-from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer, get_gated_schedules
+from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +32,7 @@ class UserCourseSchedulesApiListView(HeliumAPIView, ListModelMixin):
             return CourseSchedule.objects.none()
 
     def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset).order_by('id')
-
-        return get_gated_schedules(queryset, self.request)
+        return super().filter_queryset(queryset).order_by('id')
 
     @extend_schema(summary='List all CourseSchedules for the User')
     def get(self, request, *args, **kwargs):
@@ -68,9 +66,7 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
         return context
 
     def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset).order_by('id')
-
-        return get_gated_schedules(queryset, self.request)
+        return super().filter_queryset(queryset).order_by('id')
 
     @extend_schema(summary='List CourseSchedules for a Course')
     def get(self, request, *args, **kwargs):

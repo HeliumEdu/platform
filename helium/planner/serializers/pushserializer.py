@@ -55,8 +55,6 @@ class PushHomeworkSerializer(serializers.ModelSerializer):
         django_models.DateTimeField: TzAwareDateTimeField,
     }
 
-    #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-    comments = BlankedField()
     category = PushCategorySerializer()
     course = PushCourseSerializer()
     course_group = serializers.IntegerField(source='course.course_group_id', read_only=True)
@@ -64,7 +62,7 @@ class PushHomeworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Homework
         fields = ('id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority',
-                  'comments', 'current_grade', 'completed', 'completed_at', 'category', 'course',
+                  'current_grade', 'completed', 'completed_at', 'category', 'course',
                   'course_group', 'calendar_item_type',)
 
 
@@ -76,13 +74,10 @@ class PushEventSerializer(serializers.ModelSerializer):
         django_models.DateTimeField: TzAwareDateTimeField,
     }
 
-    #: Legacy parameter, can be removed once all clients are reporting >= 3.5.0.
-    comments = BlankedField()
-
     class Meta:
         model = Event
         fields = ('id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority',
-                  'comments', 'owner_id', 'user', 'recurrence_rule', 'calendar_item_type',)
+                  'owner_id', 'user', 'recurrence_rule', 'calendar_item_type',)
 
 
 class PushReminderSerializer(serializers.ModelSerializer):
@@ -94,14 +89,11 @@ class PushReminderSerializer(serializers.ModelSerializer):
     deliberate act, and its cost against the delivery service's size limit is the thing to check.
     """
 
-    #: Legacy parameter, can be removed once all clients are reporting >= 3.9.0.
-    title = serializers.CharField(source='message', read_only=True)
-
     homework = PushHomeworkSerializer()
     event = PushEventSerializer()
     course = PushCourseSerializer()
 
     class Meta:
         model = Reminder
-        fields = ('id', 'title', 'message', 'start_of_range', 'offset', 'offset_type', 'type',
+        fields = ('id', 'message', 'start_of_range', 'offset', 'offset_type', 'type',
                   'sent', 'dismissed', 'homework', 'event', 'course', 'user',)

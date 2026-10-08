@@ -82,18 +82,6 @@ urlpatterns = [
          MaterialGroupMaterialsApiDetailView.as_view(),
          name='planner_resourcegroups_resources_detail'),
 
-    # Legacy route, can be removed once all clients are reporting >= 3.9.4.
-    path('planner/materialgroups/', MaterialGroupsApiListView.as_view(), name='planner_materialgroups_list'),
-    path('planner/materialgroups/<int:pk>/', MaterialGroupsApiDetailView.as_view(),
-         name='planner_materialgroups_detail'),
-    path('planner/materials/', UserMaterialsApiListView.as_view(), name='planner_materials_list'),
-    path('planner/materialgroups/<int:material_group>/materials/',
-         MaterialGroupMaterialsApiListView.as_view(),
-         name='planner_materialgroups_materials_list'),
-    path('planner/materialgroups/<int:material_group>/materials/<int:pk>/',
-         MaterialGroupMaterialsApiDetailView.as_view(),
-         name='planner_materialgroups_materials_detail'),
-
     # Event
     path('planner/events/', EventsApiListView.as_view(), name='planner_events_list'),
     path('planner/events/<int:pk>/', EventsApiDetailView.as_view(), name='planner_events_detail'),

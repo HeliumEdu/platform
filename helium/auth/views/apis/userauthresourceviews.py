@@ -13,7 +13,6 @@ from helium.auth.serializers.userserializer import UserSerializer, UserCreateSer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.throttles import ForgotPasswordEmailThrottle, ResendVerificationEmailThrottle
-from helium.common.utils.versionutils import client_version_gte
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -40,8 +39,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         Register a new user. The account starts with `settings.setup_state` pending and no example
         schedule; the Helium app calls `POST /auth/user/setup/` while provisioning the new user after
         registration. An integration that registers accounts itself can call that endpoint, or skip it
-        to leave the account empty. Until legacy clients are retired, a request without an
-        `X-Client-Version` header has setup started for it at registration.
+        to leave the account empty.
         """
         response = self.create(request, *args, **kwargs)
 
@@ -52,10 +50,6 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
             serializer.save()
 
             response.data['settings'] = serializer.data
-
-        #: Legacy behavior, can be removed once all clients are reporting >= 3.9.5.
-        if not client_version_gte(request, '3.9.5'):
-            authservice.start_setup(get_user_model().objects.get(pk=response.data['id']))
 
         logger.info(f"User {response.data['id']} created")
 

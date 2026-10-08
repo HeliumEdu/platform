@@ -5,11 +5,8 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from django.conf import settings
-
 from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
-from helium.common.utils.versionutils import client_version_gte
 from helium.planner.models import CourseSchedule
 from helium.planner.services import coursescheduleservice
 
@@ -26,39 +23,6 @@ _CYCLE_LENGTH_TO_TEMPLATE = {
     for template_id, spec in enums.SCHEDULE_TEMPLATES.items()
     if 'cycle_length' in spec['fields']
 }
-
-
-
-def get_gated_schedules(schedules, request):
-    """
-    Below `ADVANCED_SCHEDULES_MIN_VERSION`, reduce `schedules` to what a older clients
-    understands: at most one **weekly** schedule per course. Rotating rows — day cycles *and*
-    week-based ("Week A/B") rotations — are dropped entirely: there's nothing meaningful for such a
-    client to render, and it wouldn't understand the rotation config (a week-based row would
-    otherwise misrender as an every-week schedule). Dropping rotating rows first also means the
-    single-schedule truncation naturally *prefers a weekly row*: a course with a weekly + a rotating
-    schedule hands the client its weekly one, never a rotating row.
-
-    `schedules` may span more than one course (e.g. the user-wide list endpoint), so this can't be
-    a flat `[:1]`, and must already be ordered by `id` by the caller so the retained weekly row is
-    the earliest-created. At or above the gate, `schedules` is returned unmodified.
-
-    `request` is None for non-HTTP serialization (e.g. data export) — there's no client version to
-    gate against there, so nothing is dropped.
-    """
-    if request is None or client_version_gte(request, settings.ADVANCED_SCHEDULES_MIN_VERSION):
-        return schedules
-
-    seen_course_ids = set()
-    gated_schedules = []
-    for schedule in schedules:
-        if schedule.is_rotating:
-            continue
-        if schedule.course_id not in seen_course_ids:
-            seen_course_ids.add(schedule.course_id)
-            gated_schedules.append(schedule)
-
-    return gated_schedules
 
 
 class CourseScheduleRecurrenceGroupSerializer(serializers.Serializer):
@@ -149,8 +113,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 raise ValidationError("'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a "
                                       "rotating schedule.")
             self._validate_weekly(attrs)
-            request = self.context.get('request')
-            if request is not None and client_version_gte(request, settings.ADVANCED_SCHEDULES_MIN_VERSION):
+            if self.context.get('request') is not None:
                 self._require_meeting_day(attrs)
 
         # `template` is canonical: derived from the resulting rotation shape, so raw fields

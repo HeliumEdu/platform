@@ -482,8 +482,7 @@ class TestCaseReminderViews(APITestCase):
                                                                    sent=False, type=enums.EMAIL)
 
         # WHEN
-        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}),
-                                      HTTP_X_CLIENT_VERSION='3.5.0')
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -505,8 +504,7 @@ class TestCaseReminderViews(APITestCase):
                                                          type=enums.PUSH, offset=10)
 
         # WHEN
-        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}),
-                                      HTTP_X_CLIENT_VERSION='3.5.0')
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_30.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -525,8 +523,7 @@ class TestCaseReminderViews(APITestCase):
                                                              type=enums.PUSH, offset=10)
 
         # WHEN
-        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_9.pk}),
-                                      HTTP_X_CLIENT_VERSION='3.5.0')
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': unsent_9.pk}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -1070,8 +1067,7 @@ class TestCaseReminderViews(APITestCase):
         reminderhelper.given_reminder_exists(user, course=course2)
 
         # WHEN
-        response = self.client.get(reverse('planner_reminders_list') + f'?course={course1.pk}',
-                                   HTTP_X_CLIENT_VERSION='3.5.0')
+        response = self.client.get(reverse('planner_reminders_list') + f'?course={course1.pk}')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1143,7 +1139,6 @@ class TestCaseReminderViews(APITestCase):
                 'type': enums.PUSH,
                 'course': course.pk,
             },
-            HTTP_X_CLIENT_VERSION='3.5.0',
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
         # Force start_of_range into the send window — the API sets it to a future
@@ -1159,7 +1154,6 @@ class TestCaseReminderViews(APITestCase):
         notifications_response = self.client.get(
             reverse('planner_reminders_list'),
             {'sent': 'true', 'dismissed': 'false', 'type': enums.PUSH},
-            HTTP_X_CLIENT_VERSION='3.5.0',
         )
         self.assertEqual(notifications_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(notifications_response.data), 1,
@@ -1169,7 +1163,6 @@ class TestCaseReminderViews(APITestCase):
         course_reminders_response = self.client.get(
             reverse('planner_reminders_list'),
             {'course': course.pk, 'sent': 'false'},
-            HTTP_X_CLIENT_VERSION='3.5.0',
         )
         self.assertEqual(course_reminders_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(course_reminders_response.data), 1,
@@ -1209,7 +1202,6 @@ class TestCaseReminderViews(APITestCase):
         pre_heal_response = self.client.get(
             reverse('planner_reminders_list'),
             {'course': course.pk, 'sent': 'false'},
-            HTTP_X_CLIENT_VERSION='3.5.0',
         )
         self.assertEqual(pre_heal_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(pre_heal_response.data), 0,
@@ -1222,7 +1214,6 @@ class TestCaseReminderViews(APITestCase):
         post_heal_response = self.client.get(
             reverse('planner_reminders_list'),
             {'course': course.pk, 'sent': 'false'},
-            HTTP_X_CLIENT_VERSION='3.5.0',
         )
         self.assertEqual(post_heal_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(post_heal_response.data), 1,
@@ -1397,7 +1388,7 @@ class TestCaseReminderViews(APITestCase):
         # WHEN
         response = self.client.patch(
             reverse('planner_reminders_detail', kwargs={'pk': created.data['id']}),
-            {'message': 'Heads up'}, format='json', HTTP_X_CLIENT_VERSION='3.5.0')
+            {'message': 'Heads up'}, format='json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
