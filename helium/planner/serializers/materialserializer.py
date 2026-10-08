@@ -29,7 +29,7 @@ class MaterialSerializer(serializers.ModelSerializer):
         model = Material
         fields = (
             'id', 'title', 'status', 'condition', 'website', 'price', 'details', 'material_group', 'resource_group',
-            'courses', 'notes',)
-        read_only_fields = ('notes',)
+            'courses', 'notes', 'created_at', 'updated_at',)
+        read_only_fields = ('notes', 'created_at', 'updated_at',)
         #: Legacy 'material_group' parameter, can be removed once all clients are reporting >= 3.9.4.
         extra_kwargs = {'material_group': {'required': False}}

@@ -6,7 +6,7 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelM
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.feed.filters import ExternalCalendarFilter
 from helium.feed.models import ExternalCalendar
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
@@ -63,7 +63,8 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
 @extend_schema(
     tags=['feed.externalcalendar']
 )
-class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class ExternalCalendarsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                     DestroyModelMixin):
     serializer_class = ExternalCalendarSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
@@ -81,7 +82,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
         """
         return self.retrieve(request, *args, **kwargs)
 
-    @extend_schema(summary='Update an ExternalCalendar')
+    @extend_schema(summary='Update an ExternalCalendar', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given external calendar instance.
@@ -96,7 +97,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
         return response
 
-    @extend_schema(summary='Partially update an ExternalCalendar')
+    @extend_schema(summary='Partially update an ExternalCalendar', parameters=[IF_MATCH_PARAMETER])
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given external calendar instance.
@@ -113,6 +114,7 @@ class ExternalCalendarsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateMo
 
     @extend_schema(
         summary='Delete an ExternalCalendar',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['feed.externalcalendar']
     )
     def delete(self, request, *args, **kwargs):

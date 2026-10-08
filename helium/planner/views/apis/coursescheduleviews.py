@@ -6,7 +6,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import CourseScheduleFilter
 from helium.planner.models import CourseSchedule
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
@@ -165,8 +165,8 @@ class CourseGroupCourseCourseSchedulesApiListView(HeliumAPIView, ListModelMixin,
 @extend_schema(
     tags=['planner.courseschedule']
 )
-class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
-                                                    DestroyModelMixin):
+class CourseGroupCourseCourseSchedulesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin,
+                                                    UpdateModelMixin, DestroyModelMixin):
     serializer_class = CourseScheduleSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
@@ -186,7 +186,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
 
         return response
 
-    @extend_schema(summary='Update a CourseSchedule')
+    @extend_schema(summary='Update a CourseSchedule', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given course schedule instance.
@@ -197,7 +197,7 @@ class CourseGroupCourseCourseSchedulesApiDetailView(HeliumAPIView, RetrieveModel
 
         return response
 
-    @extend_schema(summary='Delete a CourseSchedule')
+    @extend_schema(summary='Delete a CourseSchedule', parameters=[IF_MATCH_PARAMETER])
     def delete(self, request, *args, **kwargs):
         """
         Delete the given course schedule instance. A Course may have any number of schedules,

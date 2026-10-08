@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.6.4"
+__version__ = "2.6.5"
 
 import json
 import os
@@ -659,6 +659,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'x-client-version',
     'x-client-platform',
     'x-request-id',
+    'if-match',
 )
 
 CORS_EXPOSE_HEADERS = ['x-request-id']

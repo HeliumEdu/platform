@@ -8,7 +8,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import CategoryFilter
 from helium.planner.models import Category, Homework
 from helium.planner.permissions import IsCourseOwner, IsCourseGroupOwner
@@ -116,7 +116,8 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
 @extend_schema(
     tags=['planner.category']
 )
-class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCourseCategoriesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                               DestroyModelMixin):
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
@@ -140,7 +141,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
         return response
 
-    @extend_schema(summary='Update a Category')
+    @extend_schema(summary='Update a Category', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given category instance.
@@ -153,6 +154,7 @@ class CourseGroupCourseCategoriesApiDetailView(HeliumAPIView, RetrieveModelMixin
 
     @extend_schema(
         summary='Delete a Category',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.category']
     )
     def delete(self, request, *args, **kwargs):

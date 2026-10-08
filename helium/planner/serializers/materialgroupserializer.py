@@ -19,5 +19,5 @@ class MaterialGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MaterialGroup
-        fields = ('id', 'title', 'shown_on_calendar', 'user',)
-        read_only_fields = ('user',)
+        fields = ('id', 'title', 'shown_on_calendar', 'user', 'created_at', 'updated_at',)
+        read_only_fields = ('user', 'created_at', 'updated_at',)

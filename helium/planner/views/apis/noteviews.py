@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.common.search import HeliumSearchFilter
 from helium.planner import permissions
 from helium.planner.filters import NoteFilter
@@ -106,8 +106,10 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 
 
 @extend_schema(tags=['planner.note'])
-class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class NotesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                         DestroyModelMixin):
     serializer_class = NoteSerializer
+    precondition_serializer_class = NoteExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
     def get_queryset(self):
@@ -132,7 +134,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         """
         return self.retrieve(request, *args, **kwargs)
 
-    @extend_schema(summary='Update a Note', responses={
+    @extend_schema(summary='Update a Note', parameters=[IF_MATCH_PARAMETER], responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
                                           'content cleared and is therefore deleted (see endpoint description).'),
@@ -159,7 +161,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} updated for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
-    @extend_schema(summary='Partially update a Note', responses={
+    @extend_schema(summary='Partially update a Note', parameters=[IF_MATCH_PARAMETER], responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
                                           'content cleared and is therefore deleted (see endpoint description).'),
@@ -186,7 +188,7 @@ class NotesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, De
         logger.info(f"Note {kwargs['pk']} patched for user {request.user.pk}")
         return Response(NoteExtendedSerializer(result).data)
 
-    @extend_schema(summary='Delete a Note')
+    @extend_schema(summary='Delete a Note', parameters=[IF_MATCH_PARAMETER])
     def delete(self, request, *args, **kwargs):
         """
         Delete the given note instance.

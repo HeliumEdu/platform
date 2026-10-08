@@ -13,7 +13,7 @@ from rest_framework.viewsets import ViewSet
 
 from helium.common.permissions import IsOwner
 from helium.common.search import HeliumSearchFilter
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
@@ -118,8 +118,10 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
 @extend_schema(
     tags=['planner.event']
 )
-class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class EventsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                          DestroyModelMixin):
     serializer_class = EventSerializer
+    precondition_serializer_class = EventExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):
@@ -147,7 +149,8 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return response
 
-    @extend_schema(summary='Update an Event', responses={200: EventExtendedSerializer})
+    @extend_schema(summary='Update an Event', parameters=[IF_MATCH_PARAMETER],
+                   responses={200: EventExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given Helium Event instance.
@@ -161,7 +164,8 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
         return Response(EventExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(summary='Partially update an Event', responses={200: EventExtendedSerializer})
+    @extend_schema(summary='Partially update an Event', parameters=[IF_MATCH_PARAMETER],
+                   responses={200: EventExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given Helium Event instance.
@@ -177,6 +181,7 @@ class EventsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, D
 
     @extend_schema(
         summary='Delete an Event',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.event']
     )
     def delete(self, request, *args, **kwargs):

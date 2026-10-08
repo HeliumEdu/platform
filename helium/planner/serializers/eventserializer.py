@@ -41,10 +41,11 @@ class EventSerializer(serializers.ModelSerializer):
             'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments',
             'owner_id',
             'color', 'location', 'attachments', 'reminders', 'notes', 'user',
-            'recurrence_rule', 'exception_dates',
+            'recurrence_rule', 'exception_dates', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
-        read_only_fields = ('attachments', 'reminders', 'notes', 'user', 'calendar_item_type',)
+        read_only_fields = ('attachments', 'reminders', 'notes', 'user', 'calendar_item_type', 'created_at',
+                            'updated_at',)
         extra_kwargs = {
             'recurrence_rule': {'validators': [validate_recurrence_rule]},
         }

@@ -20,11 +20,12 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = (
             'id', 'title', 'weight', 'average_grade', 'grade_by_weight', 'trend', 'color', 'course', 'course_group',
+            'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'average_grade', 'grade_by_weight', 'trend', 'course', 'num_homework', 'num_homework_completed',
-            'num_homework_graded',)
+            'average_grade', 'grade_by_weight', 'trend', 'course', 'created_at', 'updated_at', 'num_homework',
+            'num_homework_completed', 'num_homework_graded',)
 
     def get_num_homework(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0

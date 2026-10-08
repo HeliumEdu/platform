@@ -6,7 +6,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyMod
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner import permissions
 from helium.planner.filters import MaterialFilter
 from helium.planner.models import Material
@@ -112,7 +112,8 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
 @extend_schema(
     tags=['planner.resource']
 )
-class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                          DestroyModelMixin):
     serializer_class = MaterialSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
     filterset_class = MaterialFilter
@@ -133,7 +134,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
 
         return response
 
-    @extend_schema(summary='Update a Resource')
+    @extend_schema(summary='Update a Resource', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given resource instance.
@@ -154,6 +155,7 @@ class MaterialGroupMaterialsApiDetailView(HeliumAPIView, RetrieveModelMixin, Upd
 
     @extend_schema(
         summary='Delete a Resource',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.resource']
     )
     def delete(self, request, *args, **kwargs):

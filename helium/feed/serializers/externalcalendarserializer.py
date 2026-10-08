@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 class ExternalCalendarSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExternalCalendar
-        fields = ('id', 'title', 'url', 'color', 'shown_on_calendar', 'user',)
-        read_only_fields = ('user',)
+        fields = ('id', 'title', 'url', 'color', 'shown_on_calendar', 'user', 'created_at', 'updated_at',)
+        read_only_fields = ('user', 'created_at', 'updated_at',)
 
     def _is_url_changing(self, attrs):
         return 'url' in attrs and (not self.instance or attrs['url'] != self.instance.url)

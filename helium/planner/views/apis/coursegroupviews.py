@@ -7,7 +7,7 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner.filters import CourseGroupFilter
 from helium.planner.models import CourseGroup
@@ -69,7 +69,8 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
 @extend_schema(
     tags=['planner.coursegroup']
 )
-class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                DestroyModelMixin):
     serializer_class = CourseGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
 
@@ -93,7 +94,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
 
         return response
 
-    @extend_schema(summary='Update a CourseGroup')
+    @extend_schema(summary='Update a CourseGroup', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given course group instance.
@@ -104,7 +105,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
 
         return response
 
-    @extend_schema(summary='Partially update a CourseGroup')
+    @extend_schema(summary='Partially update a CourseGroup', parameters=[IF_MATCH_PARAMETER])
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given course group instance.
@@ -121,6 +122,7 @@ class CourseGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMi
 
     @extend_schema(
         summary='Delete a CourseGroup',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.coursegroup']
     )
     def delete(self, request, *args, **kwargs):

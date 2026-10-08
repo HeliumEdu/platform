@@ -23,6 +23,16 @@ class HeliumError(Exception):
     pass
 
 
+class PreconditionFailedError(HeliumError):
+    """
+    Raised when a conditional write's If-Match no longer matches the item, carrying the item's current representation.
+    """
+
+    def __init__(self, current):
+        self.current = current
+        super().__init__('The item changed since the If-Match version')
+
+
 class EmailSuppressedException(HeliumError):
     """Raised when an email send fails due to a rejected recipient and the address has been suppressed."""
 

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from helium.common.permissions import IsOwner
 from helium.common.search import HeliumSearchFilter
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner import permissions
 from helium.planner.filters import HomeworkFilter
 from helium.planner.models import Homework
@@ -181,8 +181,10 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
 @extend_schema(
     tags=['planner.homework']
 )
-class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                             DestroyModelMixin):
     serializer_class = HomeworkSerializer
+    precondition_serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
 
     def get_queryset(self):
@@ -207,7 +209,8 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return response
 
-    @extend_schema(summary='Update a Homework', responses={200: HomeworkExtendedSerializer})
+    @extend_schema(summary='Update a Homework', parameters=[IF_MATCH_PARAMETER],
+                   responses={200: HomeworkExtendedSerializer})
     def put(self, request, *args, **kwargs):
         """
         Update the given homework instance.
@@ -228,7 +231,8 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(summary='Partially update a Homework', responses={200: HomeworkExtendedSerializer})
+    @extend_schema(summary='Partially update a Homework', parameters=[IF_MATCH_PARAMETER],
+                   responses={200: HomeworkExtendedSerializer})
     def patch(self, request, *args, **kwargs):
         """
         Update only the given attributes of the given homework instance.
@@ -252,6 +256,7 @@ class CourseGroupCourseHomeworkApiDetailView(HeliumAPIView, RetrieveModelMixin, 
 
     @extend_schema(
         summary='Delete a Homework',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.homework']
     )
     def delete(self, request, *args, **kwargs):

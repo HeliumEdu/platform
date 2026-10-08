@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -85,6 +86,7 @@ def _normalize_all_day_for_timezone_change(user, old_time_zone, new_time_zone):
 
 
 def _rebase_all_day(user, model_cls, old_tz, new_tz, reminder_field):
+    rebased_at = timezone.now()
     items_to_update = []
     for item in (model_cls.objects.for_user(user.pk)
                  .filter(all_day=True)
@@ -93,12 +95,13 @@ def _rebase_all_day(user, model_cls, old_tz, new_tz, reminder_field):
         end_date = item.end.astimezone(old_tz).date()
         item.start = local_midnight_as_utc(start_date, new_tz)
         item.end = local_midnight_as_utc(end_date, new_tz)
+        item.updated_at = rebased_at
         items_to_update.append(item)
 
     if not items_to_update:
         return
 
-    model_cls.objects.bulk_update(items_to_update, ['start', 'end'])
+    model_cls.objects.bulk_update(items_to_update, ['start', 'end', 'updated_at'])
 
     ids_with_reminders = set(
         Reminder.objects

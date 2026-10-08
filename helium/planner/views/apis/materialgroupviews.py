@@ -6,7 +6,7 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import MaterialGroupFilter
 from helium.planner.models import MaterialGroup
 from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
@@ -64,7 +64,8 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
 @extend_schema(
     tags=['planner.resourcegroup']
 )
-class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class MaterialGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                  DestroyModelMixin):
     serializer_class = MaterialGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
     filterset_class = MaterialGroupFilter
@@ -85,7 +86,7 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
 
         return response
 
-    @extend_schema(summary='Update a ResourceGroup')
+    @extend_schema(summary='Update a ResourceGroup', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given resource group instance.
@@ -98,6 +99,7 @@ class MaterialGroupsApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModel
 
     @extend_schema(
         summary='Delete a ResourceGroup',
+        parameters=[IF_MATCH_PARAMETER],
         tags=['planner.resourcegroup']
     )
     def delete(self, request, *args, **kwargs):

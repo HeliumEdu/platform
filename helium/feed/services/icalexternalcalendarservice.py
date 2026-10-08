@@ -68,7 +68,7 @@ def record_feed_failure(external_calendar, error):
 
         return False
 
-    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(shown_on_calendar=False)
+    ExternalCalendar.objects.filter(pk=external_calendar.pk).update(shown_on_calendar=False, updated_at=timezone.now())
     external_calendar.shown_on_calendar = False
 
     logger.info(f"Disabling External Calendar {external_calendar.pk} after "

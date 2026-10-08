@@ -7,7 +7,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner.filters import CourseFilter
 from helium.planner.models import Course, Category, CourseSchedule, Homework
@@ -138,7 +138,8 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
 @extend_schema(
     tags=['planner.course']
 )
-class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+class CourseGroupCoursesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+                                      DestroyModelMixin):
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner)
 
@@ -163,7 +164,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
-    @extend_schema(summary='Update a Course')
+    @extend_schema(summary='Update a Course', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
         Update the given course instance.
@@ -174,7 +175,7 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
-    @extend_schema(summary='Partially update a Course')
+    @extend_schema(summary='Partially update a Course', parameters=[IF_MATCH_PARAMETER])
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given course instance.
@@ -185,14 +186,15 @@ class CourseGroupCoursesApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateM
 
         return response
 
-    @extend_schema(
-        summary='Delete a Course',
-        tags=['planner.course']
-    )
     def perform_destroy(self, instance):
         with suppress_cascade_recalculation(Category, CourseSchedule, Homework):
             instance.delete()
 
+    @extend_schema(
+        summary='Delete a Course',
+        parameters=[IF_MATCH_PARAMETER],
+        tags=['planner.course']
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given course instance.
