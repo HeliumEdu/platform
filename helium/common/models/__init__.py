@@ -21,4 +21,5 @@ from .emailreputationevent import (
     COMPLAINT_SUBTYPE_OTHER,
     COMPLAINT_SUBTYPE_VIRUS,
 )
+from .metricsample import MetricSample
 from .taskresultproxy import TaskResultProxy

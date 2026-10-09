@@ -20,7 +20,7 @@ from two_factor.forms import AuthenticationTokenForm, BackupTokenForm
 from two_factor.views import LoginView as TwoFactorLoginView
 
 from helium.auth.utils.userutils import is_admin_allowed_email
-from helium.common.models import EmailReputationEvent, TaskResultProxy
+from helium.common.models import EmailReputationEvent, MetricSample, TaskResultProxy
 from helium.common.periodic import PERIODIC_TASKS, format_schedule
 from helium.common.utils.commonutils import add_to_ses_suppression_list
 
@@ -435,6 +435,26 @@ class EmailReputationEventAdmin(ModelAdmin):
         return False
 
 
+class MetricSampleAdmin(ModelAdmin):
+    list_display = ('recorded_on', 'metric', 'dimension', 'value')
+    list_filter = ('metric',)
+    search_fields = ('metric', 'dimension')
+    date_hierarchy = 'recorded_on'
+    ordering = ('-recorded_on', 'metric', 'dimension')
+
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class LogEntryAdmin(ModelAdmin):
     list_display = ('action_time', 'user', 'content_type', 'object_repr', 'get_action_label', 'change_message')
     list_filter = ('action_flag', 'content_type', 'user')
@@ -459,4 +479,5 @@ class LogEntryAdmin(ModelAdmin):
 
 admin_site.register(TaskResultProxy, TaskResultAdmin)
 admin_site.register(EmailReputationEvent, EmailReputationEventAdmin)
+admin_site.register(MetricSample, MetricSampleAdmin)
 admin_site.register(LogEntry, LogEntryAdmin)

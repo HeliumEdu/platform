@@ -190,6 +190,9 @@ DORMANT_USER_WARNING_DAYS = [30, 14, 7, 1]
 # Set to 0 to pause dormant email warnings / account deletions
 DORMANT_USER_PURGE_MAX_PER_RUN = 50
 
+# Tenure milestones for cumulative user metrics; the smallest defines "tourists"
+USER_TENURE_MILESTONE_DAYS = (7, 30, 90)
+
 # App store review prompt settings
 REVIEW_PROMPT_INITIAL_DELAY_DAYS = 21
 REVIEW_PROMPT_COOLDOWN_DAYS = 120

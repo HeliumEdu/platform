@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from celery.schedules import crontab
@@ -16,7 +17,7 @@ from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.utils.userutils import is_staff_user, rollup_power_users
 from helium.common.periodic import register_periodic
-from helium.common.services import analyticsservice
+from helium.common.services import analyticsservice, cumulativeuserservice, metricsampleservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
@@ -177,6 +178,8 @@ def delete_user(self, user_id):
         except IntegrityError:
             logger.info('Skipping, token is already deleted.')
 
+    cumulativeuserservice.record_deleted_user(user)
+
     metricutils.task_stop(metrics, user=user, value=1)
 
 
@@ -246,7 +249,7 @@ def sweep_dangling_users(self):
             taskutils.safe_apply_async(delete_user, args=(user.pk,), priority=settings.CELERY_PRIORITY_LOW)
             logger.info(f'Re-queued delete_user for stuck user {user.pk}')
 
-    metricutils.gauge('users.pending_delete.stuck', len(stuck_users))
+    metricsampleservice.record_gauge('users.pending_delete.stuck', len(stuck_users))
     metricutils.task_stop(metrics, value=num_purged)
 
 
@@ -286,8 +289,8 @@ def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags)
     counts = dict(
         qs.values(group_field).annotate(c=Count('pk')).values_list(group_field, 'c')
     )
-    for entity_id in all_entity_ids:
-        metricutils.distribution(metric, counts.get(entity_id, 0), extra_tags=tags)
+    metricsampleservice.record_distribution(metric, [counts.get(entity_id, 0) for entity_id in all_entity_ids],
+                                            extra_tags=tags)
 
 
 def _count_distinct_feed_slugs(days, staff_tag, end_date):
@@ -323,10 +326,18 @@ def emit_nightly_metrics(self):
             )
             for staff_tag, select_cohort in staff_cohorts:
                 count = select_cohort(base_qs).count()
-                metricutils.gauge('users.active', count, extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}'])
+                metricsampleservice.record_gauge('users.active', count,
+                                                 extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}'])
             logger.debug(f"Emitted active users ({window_tag})")
     except Exception as e:
         logger.error(f"Failed to emit nightly metrics: {e}", exc_info=True)
+        raise
+
+    try:
+        cumulativeuserservice.record_cumulative_users()
+        logger.debug("Emitted cumulative users")
+    except Exception as e:
+        logger.error(f"Failed to emit cumulative user metrics: {e}", exc_info=True)
         raise
 
     try:
@@ -511,20 +522,20 @@ def emit_nightly_metrics(self):
                 ]:
                     adopters = active_qs.filter(adoption_filter).count()
                     adopter_counts[adoption_metric] = adopters
-                    metricutils.gauge(f'users.adoption.{adoption_metric}.pct',
-                                      adopters / total_users * 100,
-                                      extra_tags=window_staff_tags)
+                    metricsampleservice.record_gauge(f'users.adoption.{adoption_metric}.pct',
+                                                     adopters / total_users * 100,
+                                                     extra_tags=window_staff_tags)
 
                 scheduled_users = adopter_counts['class_schedules']
                 if scheduled_users:
-                    metricutils.gauge('users.adoption.rotating_schedules.of_scheduled.pct',
-                                      adopter_counts['rotating_schedules'] / scheduled_users * 100,
-                                      extra_tags=window_staff_tags)
+                    metricsampleservice.record_gauge('users.adoption.rotating_schedules.of_scheduled.pct',
+                                                     adopter_counts['rotating_schedules'] / scheduled_users * 100,
+                                                     extra_tags=window_staff_tags)
 
                 feed_adopters = _count_distinct_feed_slugs(days, staff_tag, now_utc.date())
-                metricutils.gauge('users.adoption.feeds.pct',
-                                  feed_adopters / total_users * 100,
-                                  extra_tags=window_staff_tags)
+                metricsampleservice.record_gauge('users.adoption.feeds.pct',
+                                                 feed_adopters / total_users * 100,
+                                                 extra_tags=window_staff_tags)
 
             logger.debug(f"Emitted data richness and adoption metrics ({window_tag})")
     except Exception as e:
@@ -573,9 +584,9 @@ def emit_nightly_metrics(self):
                     course_group__end_date__gte=today,
                 ))
             ).count()
-            metricutils.gauge('users.engagement.has_active_courses.pct',
-                              active_course_adopters / total_users * 100,
-                              extra_tags=staff_tags)
+            metricsampleservice.record_gauge('users.engagement.has_active_courses.pct',
+                                             active_course_adopters / total_users * 100,
+                                             extra_tags=staff_tags)
 
         logger.debug("Emitted engagement quality metrics")
     except Exception as e:
@@ -630,6 +641,7 @@ def rollup_client_activity(self):
         }
 
         to_update = []
+        percents_by_cohort = defaultdict(list)
         for user in UserModel.objects.filter(pk__in=users_with_activity):
             staff_tag = 'true' if is_staff_user(user) else 'false'
             mobile_days = mobile_days_by_user.get(user.pk, {})
@@ -638,6 +650,7 @@ def rollup_client_activity(self):
                 percent = mobile_days.get(f'days_{days}', 0) / days * 100
                 metricutils.gauge('users.mobile_app_usage_percent', percent,
                                   extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}', f'user:{user.pk}'])
+                percents_by_cohort[(window_tag, staff_tag)].append(percent)
 
                 if window_tag == '30d':
                     user.mobile_app_usage_percent_30d = percent
@@ -646,6 +659,10 @@ def rollup_client_activity(self):
 
         if to_update:
             UserModel.objects.bulk_update(to_update, ['mobile_app_usage_percent_30d'])
+
+        for (window_tag, staff_tag), percents in percents_by_cohort.items():
+            metricsampleservice.store_summary('users.mobile_app_usage_percent', percents,
+                                              extra_tags=[f'window:{window_tag}', f'staff:{staff_tag}'])
 
         metricutils.task_stop(metrics, value=len(to_update))
         logger.info(f'Client activity rollup complete: {len(to_update)} user(s) updated')
