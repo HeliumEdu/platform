@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import F, Q
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 
 from helium.auth.utils.userutils import is_staff_user
@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 CUMULATIVE_USERS_METRIC = 'users.cumulative'
 
 DELETED_USERS_METRIC = 'users.deleted'
+
+TOTAL_USERS_SEED_METRIC = 'users.registered.seed'
+
+TOTAL_USERS_DELETED_METRIC = 'users.total.deleted'
 
 
 def record_deleted_user(user):
@@ -30,12 +34,17 @@ def record_deleted_user(user):
         return
 
     _increment(DELETED_USERS_METRIC, f'span_days:{_span_days(user.created_at, user.last_activity)}')
+    if user.pk > _total_users_seed():
+        _increment(TOTAL_USERS_DELETED_METRIC, '')
 
 
 def record_cumulative_users():
     """
-    Record today's cumulative user counts, and emit each to Datadog. Staff accounts are never counted.
+    Record today's cumulative user counts, and emit each to Datadog. Staff accounts are only counted within the
+    `total` seed.
 
+    - `total`: every account when tracking began (the highest user ID then, staff and unverified included),
+      plus each verified, non-staff user created since.
     - `verified`: users who completed verification.
     - `tourists`: verified users who stopped using Helium within the smallest `USER_TENURE_MILESTONE_DAYS`.
     - one per `USER_TENURE_MILESTONE_DAYS`, e.g. `30d`: verified users whose last activity is at least that
@@ -48,11 +57,15 @@ def record_cumulative_users():
 
     verified = UserModel.objects.filter(is_active=True).exclude(
         pk__in=UserModel.objects.staff().values('pk'))
+    seed = _total_users_seed()
+    deleted_since_seed = MetricSample.objects.filter(metric=TOTAL_USERS_DELETED_METRIC).aggregate(
+        total=Sum('value'))['total'] or 0
     spans = _deleted_spans()
     tourist_days = min(settings.USER_TENURE_MILESTONE_DAYS)
     tourist_cutoff = timezone.now() - timedelta(days=tourist_days)
 
     counts = {
+        'total': seed + verified.filter(pk__gt=seed).count() + deleted_since_seed,
         'verified': verified.count() + sum(spans.values()),
         'tourists': (verified.filter(created_at__lte=tourist_cutoff).exclude(_reached(tourist_days)).count()
                      + sum(count for span, count in spans.items() if span < tourist_days)),
@@ -71,6 +84,11 @@ def _reached(days):
 
 def _span_days(created_at, last_activity):
     return max(0, (last_activity - created_at).days)
+
+
+def _total_users_seed():
+    sample = MetricSample.objects.filter(metric=TOTAL_USERS_SEED_METRIC).first()
+    return sample.value if sample else 0
 
 
 def _deleted_spans():
