@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import F, Q, Sum
+from django.db.models import F, Q
 from django.utils import timezone
 
 from helium.auth.utils.userutils import is_staff_user
@@ -15,49 +15,27 @@ logger = logging.getLogger(__name__)
 
 CUMULATIVE_USERS_METRIC = 'users.cumulative'
 
-REGISTERED_USERS_METRIC = 'users.registered'
-
-REGISTERED_USERS_SEED_METRIC = 'users.registered.seed'
-
 DELETED_USERS_METRIC = 'users.deleted'
-
-
-def record_registered_user(user):
-    """
-    Add a just-created account to the day's registration tally, unless it is a staff account.
-
-    :param user: The user whose row was just created.
-    """
-    if is_staff_user(user):
-        return
-
-    _increment(REGISTERED_USERS_METRIC, '')
 
 
 def record_deleted_user(user):
     """
     Add a just-deleted user to the day's anonymous deletion tally, so cumulative user counts keep including
-    them once their row is gone. Only the tally is stored, nothing that identifies the user. Staff accounts are
-    not tallied.
+    them once their row is gone. Only the tally is stored, nothing that identifies the user. Unverified and
+    staff accounts are not tallied, since cumulative counts never include them.
 
     :param user: The user whose row was just deleted.
     """
-    if is_staff_user(user):
+    if not user.is_active or is_staff_user(user):
         return
 
-    tags = {'verified': user.is_active}
-    if user.is_active:
-        tags['span_days'] = _span_days(user.created_at, user.last_activity)
-
-    _increment(DELETED_USERS_METRIC, _dimension(tags))
+    _increment(DELETED_USERS_METRIC, f'span_days:{_span_days(user.created_at, user.last_activity)}')
 
 
 def record_cumulative_users():
     """
     Record today's cumulative user counts, and emit each to Datadog. Staff accounts are never counted.
 
-    - `registered`: every account ever created: the highest user ID when tracking began (which predates the
-      staff exclusion), plus each non-staff account created since.
     - `verified`: users who completed verification.
     - `tourists`: verified users who stopped using Helium within the smallest `USER_TENURE_MILESTONE_DAYS`.
     - one per `USER_TENURE_MILESTONE_DAYS`, e.g. `30d`: verified users whose last activity is at least that
@@ -68,14 +46,9 @@ def record_cumulative_users():
     """
     UserModel = get_user_model()
 
-    registered = MetricSample.objects.filter(
-        metric__in=(REGISTERED_USERS_SEED_METRIC, REGISTERED_USERS_METRIC),
-    ).aggregate(total=Sum('value'))['total'] or 0
-    _record_cumulative('registered', registered)
-
     verified = UserModel.objects.filter(is_active=True).exclude(
         pk__in=UserModel.objects.staff().values('pk'))
-    spans = _deleted_verified_spans()
+    spans = _deleted_spans()
     tourist_days = min(settings.USER_TENURE_MILESTONE_DAYS)
     tourist_cutoff = timezone.now() - timedelta(days=tourist_days)
 
@@ -100,12 +73,10 @@ def _span_days(created_at, last_activity):
     return max(0, (last_activity - created_at).days)
 
 
-def _deleted_verified_spans():
+def _deleted_spans():
     spans = Counter()
     for dimension, value in MetricSample.objects.filter(metric=DELETED_USERS_METRIC).values_list('dimension', 'value'):
-        tags = _parse_dimension(dimension)
-        if tags['verified'] == 'true':
-            spans[int(tags['span_days'])] += value
+        spans[int(dimension.removeprefix('span_days:'))] += value
 
     return spans
 
@@ -118,15 +89,3 @@ def _increment(metric, dimension):
 
 def _record_cumulative(milestone, value):
     metricsampleservice.record_gauge(CUMULATIVE_USERS_METRIC, value, extra_tags=[f'milestone:{milestone}'])
-
-
-def _dimension(tags):
-    return ','.join(f'{key}:{_tag_value(value)}' for key, value in tags.items())
-
-
-def _parse_dimension(dimension):
-    return dict(pair.split(':', 1) for pair in dimension.split(',') if pair)
-
-
-def _tag_value(value):
-    return str(value).lower() if isinstance(value, bool) else str(value)
