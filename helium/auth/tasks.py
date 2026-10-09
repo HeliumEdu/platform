@@ -6,7 +6,7 @@ from celery.schedules import crontab
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from django.db import DatabaseError, IntegrityError, OperationalError
+from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.db.models import Count, Exists, OuterRef, Q
 from firebase_admin import auth as firebase_auth
 from rest_framework_simplejwt.exceptions import TokenError
@@ -169,7 +169,8 @@ def delete_user(self, user_id):
     Attachment.objects.filter(user=user).delete()
     Reminder.objects.filter(user=user).delete()
 
-    with suppress_cascade_recalculation():
+    with suppress_cascade_recalculation(), transaction.atomic():
+        cumulativeuserservice.record_deleted_user(user)
         user.delete()
 
     for token in outstanding_tokens + blacklisted_tokens:
@@ -177,8 +178,6 @@ def delete_user(self, user_id):
             token.delete()
         except IntegrityError:
             logger.info('Skipping, token is already deleted.')
-
-    cumulativeuserservice.record_deleted_user(user)
 
     metricutils.task_stop(metrics, user=user, value=1)
 

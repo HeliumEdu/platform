@@ -8,6 +8,11 @@ from helium.common.models import MetricSample
 from helium.common.services import cumulativeuserservice
 
 
+def given_total_users_seed(value):
+    MetricSample.objects.update_or_create(metric=cumulativeuserservice.TOTAL_USERS_SEED_METRIC, dimension='',
+                                          defaults={'recorded_on': timezone.now().date(), 'value': value})
+
+
 def given_a_user_with_tenure(username, email, created_days_ago, active_days_after_created, time_zone=None,
                              now=None):
     user = userhelper.given_a_user_exists(username=username, email=email, time_zone=time_zone)
