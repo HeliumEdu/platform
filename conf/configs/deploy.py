@@ -132,6 +132,8 @@ sentry_sdk.init(
 
 SENTRY_ENABLED = True
 
+CLOUDWATCH_METRICS_ENABLED = True
+
 if not common.DEBUG:
     ADMINS = (
         (common.PROJECT_NAME, common.ADMIN_EMAIL_ADDRESS),

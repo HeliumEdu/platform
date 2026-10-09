@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.0"
+__version__ = "2.7.1"
 
 import json
 import os
@@ -749,6 +749,10 @@ PIPELINE = {
 # Metrics
 
 DATADOG_STATSD_HOST = config('PROJECT_DATADOG_STATSD_HOST', 'localhost')
+
+CLOUDWATCH_METRICS_ENABLED = False
+
+CLOUDWATCH_METRICS_NAMESPACE = f'Helium/{ENVIRONMENT}'
 
 CLIENT_PLATFORM_HEADER = 'X-Client-Platform'
 

@@ -18,6 +18,8 @@ initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
 _BASE_TAGS = [f"env:{settings.ENVIRONMENT}"]
 
+_cloudwatch_client = None
+
 
 def _normalize_user_agent_tag(user_agent):
     if not user_agent:
@@ -145,6 +147,35 @@ def gauge(metric, value, user=None, extra_tags=None):
         logger.debug(f"Metric: {metric_id} gauge set to {value}, with tags {tags}")
     except Exception:
         logger.error("An error occurred while emitting metrics", exc_info=True)
+
+
+def cloudwatch_gauge(metric, value):
+    """
+    Publish a gauge to CloudWatch, for consumers that cannot read Datadog (e.g. ECS autoscaling alarms). A
+    no-op unless `CLOUDWATCH_METRICS_ENABLED`.
+
+    :param metric: The CloudWatch metric name, published under `CLOUDWATCH_METRICS_NAMESPACE`
+    :param value: The gauge value
+    """
+    if not settings.CLOUDWATCH_METRICS_ENABLED:
+        return
+
+    try:
+        _get_cloudwatch_client().put_metric_data(
+            Namespace=settings.CLOUDWATCH_METRICS_NAMESPACE,
+            MetricData=[{'MetricName': metric, 'Value': value, 'Unit': 'Count'}],
+        )
+        logger.debug(f"CloudWatch metric: {metric} gauge set to {value}")
+    except Exception:
+        logger.error("An error occurred while emitting CloudWatch metrics", exc_info=True)
+
+
+def _get_cloudwatch_client():
+    global _cloudwatch_client
+    if _cloudwatch_client is None:
+        import boto3
+        _cloudwatch_client = boto3.client('cloudwatch', region_name=settings.AWS_REGION)
+    return _cloudwatch_client
 
 
 def distribution(metric, value, user=None, extra_tags=None):

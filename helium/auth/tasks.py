@@ -253,12 +253,14 @@ def sweep_dangling_users(self):
 @app.task(bind=True)
 def emit_queue_depth(self):
     published_at_ms = metricutils.get_published_at_ms(self)
-    metrics = metricutils.task_start("metrics.queue-depth", priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start("metrics.queue-depth", priority="high", published_at_ms=published_at_ms)
 
     try:
-        queue_depth = redisutils.get_redis_client().llen('celery')
-        metricutils.gauge('celery.queue.depth', queue_depth)
-        logger.debug(f"Emitted queue depth: {queue_depth}")
+        queue_depths = redisutils.get_celery_queue_depths()
+        for priority, depth in queue_depths.items():
+            metricutils.gauge('celery.queue.depth', depth, extra_tags=[f'priority:{priority}'])
+        metricutils.cloudwatch_gauge('CeleryHighPriorityQueueDepth', queue_depths['high'])
+        logger.debug(f"Emitted queue depths: {queue_depths}")
     except Exception as e:
         logger.warning(f"Failed to get queue depth: {e}")
         raise
@@ -837,7 +839,7 @@ register_periodic(purge_push_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Purge stale push tokens")
 register_periodic(emit_queue_depth, 60,
-                  priority=settings.CELERY_PRIORITY_LOW,
+                  priority=settings.CELERY_PRIORITY_HIGH,
                   manually_triggerable=False)
 register_periodic(emit_online_users, 60,
                   priority=settings.CELERY_PRIORITY_LOW,
