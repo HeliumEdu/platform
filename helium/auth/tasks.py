@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, F, OuterRef, Q
 from firebase_admin import auth as firebase_auth
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -292,6 +292,19 @@ def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags)
                                             extra_tags=tags)
 
 
+def _changed_since_example_import(user_path):
+    imported_at = f'{user_path}__example_schedule_imported_at'
+    return Q(**{f'{imported_at}__isnull': True}) | Q(updated_at__gt=F(imported_at))
+
+
+def _reminder_item_changed_since_example_import():
+    imported_at = F('user__example_schedule_imported_at')
+    return (Q(user__example_schedule_imported_at__isnull=True) |
+            Q(homework__updated_at__gt=imported_at) |
+            Q(event__updated_at__gt=imported_at) |
+            Q(course__updated_at__gt=imported_at))
+
+
 def _count_distinct_feed_slugs(days, staff_tag, end_date):
     try:
         keys = [
@@ -358,16 +371,19 @@ def emit_nightly_metrics(self):
                 course_qs = Course.objects.filter(
                     course_group__user__in=user_ids,
                     course_group__example_schedule=False,
-                )
+                ).filter(_changed_since_example_import('course_group__user'))
                 course_ids = list(course_qs.values_list('pk', flat=True))
 
-                cg_qs = CourseGroup.objects.filter(user__in=user_ids, example_schedule=False)
+                cg_qs = CourseGroup.objects.filter(
+                    user__in=user_ids,
+                    example_schedule=False,
+                ).filter(_changed_since_example_import('user'))
                 cg_ids = list(cg_qs.values_list('pk', flat=True))
 
                 hw_qs = Homework.objects.filter(
-                    course__in=course_qs,
+                    course__course_group__user__in=user_ids,
                     course__course_group__example_schedule=False,
-                )
+                ).filter(_changed_since_example_import('course__course_group__user'))
 
                 _emit_per_entity_distribution('users.data.homework_per_course',
                                               hw_qs, 'course_id', course_ids, window_staff_tags)
@@ -383,20 +399,20 @@ def emit_nightly_metrics(self):
                                               Event.objects.filter(
                                                   user__in=user_ids,
                                                   example_schedule=False,
-                                              ),
+                                              ).filter(_changed_since_example_import('user')),
                                               'user_id', user_ids, window_staff_tags)
 
                 _emit_per_entity_distribution('users.data.external_calendars_per_user',
                                               ExternalCalendar.objects.filter(
                                                   user__in=user_ids,
                                                   example_schedule=False,
-                                              ),
+                                              ).filter(_changed_since_example_import('user')),
                                               'user_id', user_ids, window_staff_tags)
 
                 schedule_qs = CourseSchedule.objects.filter(
                     course__course_group__user__in=user_ids,
                     course__course_group__example_schedule=False,
-                ).meeting()
+                ).filter(_changed_since_example_import('course__course_group__user')).meeting()
                 _emit_per_entity_distribution('users.data.schedules_per_user',
                                               schedule_qs, 'course__course_group__user_id', user_ids,
                                               window_staff_tags)
@@ -413,7 +429,7 @@ def emit_nightly_metrics(self):
                 note_qs = Note.objects.filter(
                     user__in=user_ids,
                     example_schedule=False,
-                )
+                ).filter(_changed_since_example_import('user'))
                 _emit_per_entity_distribution('users.data.notes_per_user',
                                               note_qs, 'user_id', user_ids, window_staff_tags)
                 has_homework = Exists(Homework.objects.filter(notes_set=OuterRef('pk')))
@@ -434,7 +450,7 @@ def emit_nightly_metrics(self):
                     Q(homework__course__course_group__example_schedule=True) |
                     Q(event__example_schedule=True) |
                     Q(course__course_group__example_schedule=True)
-                )
+                ).filter(_reminder_item_changed_since_example_import())
                 _emit_per_entity_distribution('users.data.reminders_per_user',
                                               reminder_qs, 'user_id', user_ids, window_staff_tags)
                 for entity_tag, entity_filter in [
@@ -473,7 +489,7 @@ def emit_nightly_metrics(self):
                                               Material.objects.filter(
                                                   material_group__user__in=user_ids,
                                                   material_group__example_schedule=False,
-                                              ),
+                                              ).filter(_changed_since_example_import('material_group__user')),
                                               'material_group__user_id', user_ids,
                                               window_staff_tags)
 
@@ -482,27 +498,27 @@ def emit_nightly_metrics(self):
                     ('class_schedules', Exists(CourseSchedule.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
-                    ).meeting())),
+                    ).filter(_changed_since_example_import('course__course_group__user')).meeting())),
                     ('rotating_schedules', Exists(CourseSchedule.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
-                    ).rotating())),
+                    ).filter(_changed_since_example_import('course__course_group__user')).rotating())),
                     ('grade_tracking', Exists(Category.objects.filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
-                    ))),
+                    ).filter(_changed_since_example_import('course__course_group__user')))),
                     ('external_calendars', Exists(ExternalCalendar.objects.filter(
                         user=OuterRef('pk'),
                         example_schedule=False,
-                    ))),
+                    ).filter(_changed_since_example_import('user')))),
                     ('notebook', Exists(Note.objects.filter(
                         user=OuterRef('pk'),
                         example_schedule=False,
-                    ))),
+                    ).filter(_changed_since_example_import('user')))),
                     ('resources', Exists(Material.objects.filter(
                         material_group__user=OuterRef('pk'),
                         material_group__example_schedule=False,
-                    ))),
+                    ).filter(_changed_since_example_import('material_group__user')))),
                     ('reminders', Exists(Reminder.objects.filter(
                         user=OuterRef('pk'),
                         sent=False,
@@ -510,7 +526,7 @@ def emit_nightly_metrics(self):
                         Q(homework__course__course_group__example_schedule=True) |
                         Q(event__example_schedule=True) |
                         Q(course__course_group__example_schedule=True)
-                    ))),
+                    ).filter(_reminder_item_changed_since_example_import()))),
                     ('attachments', Exists(Attachment.objects.filter(
                         user=OuterRef('pk'),
                     ).exclude(
@@ -558,14 +574,10 @@ def emit_nightly_metrics(self):
             if total_users == 0:
                 continue
 
-            course_qs = Course.objects.filter(
-                course_group__user__in=user_ids,
-                course_group__example_schedule=False,
-            )
             hw_qs = Homework.objects.filter(
-                course__in=course_qs,
+                course__course_group__user__in=user_ids,
                 course__course_group__example_schedule=False,
-            )
+            ).filter(_changed_since_example_import('course__course_group__user'))
 
             _emit_per_entity_distribution('users.engagement.completions_per_user',
                                           hw_qs.filter(completed=True, completed_at__gte=cutoff_14d),
@@ -581,7 +593,7 @@ def emit_nightly_metrics(self):
                     course_group__example_schedule=False,
                     course_group__start_date__lte=today,
                     course_group__end_date__gte=today,
-                ))
+                ).filter(_changed_since_example_import('course_group__user')))
             ).count()
             metricsampleservice.record_gauge('users.engagement.has_active_courses.pct',
                                              active_course_adopters / total_users * 100,
