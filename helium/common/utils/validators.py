@@ -2,6 +2,7 @@ import datetime
 import decimal
 import re
 import sys
+from zoneinfo import ZoneInfo
 
 from dateutil.rrule import rrulestr
 from django.core.exceptions import ValidationError
@@ -15,6 +16,9 @@ _RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
 _UNSUPPORTED_RRULE_FREQS = frozenset({'HOURLY', 'MINUTELY', 'SECONDLY'})
 _UNSUPPORTED_RRULE_PARTS = frozenset({'BYWEEKNO', 'BYYEARDAY', 'WKST'})
+_ORDINAL_WEEKDAY = re.compile(r'^([+-]?\d{1,2})(MO|TU|WE|TH|FR|SA|SU)$')
+_SFCALENDAR_SINGLE_VALUE_PARTS = ('BYDAY', 'BYMONTHDAY', 'BYMONTH', 'BYSETPOS')
+_SFCALENDAR_SET_POSITIONS = frozenset({1, 2, 3, 4, -1, -2})
 
 
 def validate_fraction(value):
@@ -94,6 +98,94 @@ def infer_byday_for_weekly_rrule(value, dtstart):
     return f'{prefix}{rule_body};BYDAY={day_code}'
 
 
+def _parse_recurrence_rule(value):
+    prefix = value[:6] if value.upper().startswith('RRULE:') else ''
+    parts = {}
+    for part in value[len(prefix):].split(';'):
+        if '=' in part:
+            k, v = part.split('=', 1)
+            parts[k.upper()] = v.upper()
+    return prefix, parts
+
+
+def _join_recurrence_rule(prefix, parts):
+    return prefix + ';'.join(f'{k}={v}' for k, v in parts.items())
+
+
+def _split_ordinal_byday(parts):
+    ordinal = _ORDINAL_WEEKDAY.match(parts.get('BYDAY', ''))
+    if ordinal and 'BYSETPOS' not in parts:
+        parts['BYDAY'] = ordinal.group(2)
+        parts['BYSETPOS'] = str(int(ordinal.group(1)))
+
+
+def normalize_recurrence_rule(value, local_start):
+    """
+    Rewrite ``value`` into the RRULE subset SfCalendar expands correctly, returning it.
+
+    SfCalendar reads a monthly or yearly weekday only as ``BYDAY=<day>;BYSETPOS=<n>``, so an ordinal
+    ``BYDAY=<n><day>`` is split into that form. It expands nothing for a monthly or yearly rule that names no
+    day, so the day (and, for yearly, the month) RFC 5545 implies from the series start is made explicit.
+    ``local_start`` is that start in the user's time zone, the zone the client expands in. Weekly rules go
+    through ``infer_byday_for_weekly_rrule``; anything else, including a rule ``validate_recurrence_rule``
+    rejects, is returned unchanged.
+    """
+    if not value:
+        return value
+
+    prefix, parts = _parse_recurrence_rule(value)
+    freq = parts.get('FREQ')
+    if freq == 'WEEKLY':
+        return infer_byday_for_weekly_rrule(_join_recurrence_rule(prefix, parts), local_start)
+    if freq not in ('MONTHLY', 'YEARLY'):
+        return value
+
+    _split_ordinal_byday(parts)
+    if 'BYDAY' not in parts and 'BYMONTHDAY' not in parts:
+        if freq == 'YEARLY':
+            parts.setdefault('BYMONTH', str(local_start.month))
+        parts['BYMONTHDAY'] = str(local_start.day)
+
+    return _join_recurrence_rule(prefix, parts)
+
+
+def _validate_sfcalendar_monthly_or_yearly(freq, parts):
+    """
+    Reject a monthly or yearly rule SfCalendar cannot expand, even after ``normalize_recurrence_rule``: it reads
+    one value per part, one of a weekday or a month day, and a weekday position of 1-4 or -1/-2, and it throws
+    on a weekday without a position or a yearly rule without a month.
+    """
+    for key in _SFCALENDAR_SINGLE_VALUE_PARTS:
+        if ',' in parts.get(key, ''):
+            raise ValidationError(f'Multiple {key} values are not supported for FREQ={freq}.')
+
+    if freq == 'MONTHLY' and 'BYMONTH' in parts:
+        raise ValidationError('BYMONTH is not supported for FREQ=MONTHLY.')
+
+    by_day = parts.get('BYDAY')
+    if by_day and 'BYMONTHDAY' in parts:
+        raise ValidationError('BYDAY with BYMONTHDAY is not supported.')
+
+    if by_day:
+        ordinal = _ORDINAL_WEEKDAY.match(by_day)
+        if ordinal and 'BYSETPOS' in parts:
+            raise ValidationError('BYDAY with both an ordinal and BYSETPOS is not supported.')
+        if not ordinal and 'BYSETPOS' not in parts:
+            raise ValidationError(f'BYDAY without an ordinal or BYSETPOS is not supported for FREQ={freq}.')
+        position = int(ordinal.group(1)) if ordinal else int(parts['BYSETPOS'])
+        if position not in _SFCALENDAR_SET_POSITIONS:
+            raise ValidationError(f'A BYDAY position of {position} is not supported.')
+    elif 'BYSETPOS' in parts:
+        raise ValidationError('BYSETPOS without BYDAY is not supported.')
+
+    by_month_day = parts.get('BYMONTHDAY')
+    if by_month_day and not (1 <= int(by_month_day) <= 31 or int(by_month_day) == -1):
+        raise ValidationError(f'A BYMONTHDAY of {by_month_day} is not supported.')
+
+    if freq == 'YEARLY' and (by_day or by_month_day) and 'BYMONTH' not in parts:
+        raise ValidationError('BYDAY or BYMONTHDAY without BYMONTH is not supported for FREQ=YEARLY.')
+
+
 def _validation_dtstart_for(parts):
     if parts.get('UNTIL', '').endswith('Z'):
         return _RRULE_VALIDATION_DTSTART.replace(tzinfo=datetime.timezone.utc)
@@ -110,17 +202,13 @@ def validate_recurrence_rule(value):
 
     Rejects properties that are valid per RFC 5545 but not rendered correctly by SfCalendar:
     FREQ=HOURLY/MINUTELY/SECONDLY (silently produces no instances), BYWEEKNO and BYYEARDAY
-    (silently ignored → wrong dates), and WKST (silently ignored → wrong week boundaries).
+    (silently ignored → wrong dates), WKST (silently ignored → wrong week boundaries), and the
+    monthly and yearly shapes ``normalize_recurrence_rule`` cannot rewrite into ones it expands.
     """
     if value is None or value == '':
         return
 
-    rule_body = value[6:] if value.upper().startswith('RRULE:') else value
-    parts = {}
-    for part in rule_body.split(';'):
-        if '=' in part:
-            k, v = part.split('=', 1)
-            parts[k.upper()] = v.upper()
+    _, parts = _parse_recurrence_rule(value)
 
     freq = parts.get('FREQ', '')
     if freq in _UNSUPPORTED_RRULE_FREQS:
@@ -134,6 +222,31 @@ def validate_recurrence_rule(value):
         rrulestr(value, dtstart=_validation_dtstart_for(parts))
     except (ValueError, TypeError) as ex:
         raise ValidationError(f'Invalid RRULE: {ex}')
+
+    if freq in ('MONTHLY', 'YEARLY'):
+        _validate_sfcalendar_monthly_or_yearly(freq, parts)
+
+
+def normalize_recurrence_rule_for_user(value, start, user):
+    """
+    Normalize ``value`` (see ``normalize_recurrence_rule``) against ``start`` in ``user``'s time zone, the zone the
+    client expands it in. Returned unchanged when there is no rule or no start.
+    """
+    if not value or not start:
+        return value
+    return normalize_recurrence_rule(value, start.astimezone(ZoneInfo(user.settings.time_zone)))
+
+
+def prepare_recurrence_rule(value, local_start):
+    """
+    Normalize ``value`` against ``local_start`` (see ``normalize_recurrence_rule``) and validate the result,
+    returning the rule ready to store or serve.
+
+    :raises ValidationError: if SfCalendar cannot expand the rule even once normalized
+    """
+    normalized = normalize_recurrence_rule(value, local_start)
+    validate_recurrence_rule(normalized)
+    return normalized
 
 
 def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range_label='date range'):

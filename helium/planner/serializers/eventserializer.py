@@ -8,7 +8,7 @@ from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
 from helium.common.utils.validators import (
-    infer_byday_for_weekly_rrule,
+    normalize_recurrence_rule_for_user,
     validate_hex_color,
     validate_recurrence_rule,
 )
@@ -51,12 +51,23 @@ class EventSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        start = validate_start_before_end(attrs, self.instance)
-
-        if 'recurrence_rule' in attrs and attrs['recurrence_rule'] and start:
-            attrs['recurrence_rule'] = infer_byday_for_weekly_rrule(attrs['recurrence_rule'], start)
+        validate_start_before_end(attrs, self.instance)
 
         return attrs
+
+    def create(self, validated_data):
+        if 'recurrence_rule' in validated_data:
+            validated_data['recurrence_rule'] = normalize_recurrence_rule_for_user(
+                validated_data['recurrence_rule'], validated_data.get('start'), validated_data['user'])
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'recurrence_rule' in validated_data:
+            validated_data['recurrence_rule'] = normalize_recurrence_rule_for_user(
+                validated_data['recurrence_rule'], validated_data.get('start', instance.start), instance.user)
+
+        return super().update(instance, validated_data)
 
 
 #: Permanently excluded: `comments` is only populated on the synthesised external calendar and

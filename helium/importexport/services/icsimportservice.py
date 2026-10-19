@@ -209,10 +209,10 @@ def _assignment_start_times(parsed, window_end_date, time_zone):
     start = parsed['start']
     starts = []
 
-    if parsed['recurrence_rule']:
+    if parsed['source_recurrence_rule']:
         exceptions = _exception_datetimes(parsed['exception_dates'])
         try:
-            for occurrence in rrulestr(parsed['recurrence_rule'], dtstart=start.astimezone(time_zone)):
+            for occurrence in rrulestr(parsed['source_recurrence_rule'], dtstart=start.astimezone(time_zone)):
                 if occurrence.date() > window_end_date \
                         or len(starts) >= _MAX_RECURRENCE_INSTANCES:
                     break

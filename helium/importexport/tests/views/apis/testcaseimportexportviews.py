@@ -558,6 +558,29 @@ class TestCaseImportExportViews(APITestCase):
             },
         )
 
+    def test_import_drops_recurrence_rule_sfcalendar_cannot_expand_instead_of_failing(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        eventhelper.given_event_exists(user, title='Legacy series', recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
+        export_data = json.loads(self.client.get(reverse('importexport_export')).content.decode('utf-8'))
+
+        # WHEN
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_unsupported_rrule.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported = Event.objects.filter(user=user).order_by('pk').last()
+        self.assertEqual(imported.title, 'Legacy series')
+        self.assertIsNone(imported.recurrence_rule, 'the event is kept as a single occurrence')
+
     def test_export_import_preserves_multiple_schedules_per_course(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

@@ -8,6 +8,7 @@ from typing import Dict, NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models.signals import post_save
@@ -18,6 +19,7 @@ from rest_framework.exceptions import ValidationError
 from helium.common import enums
 from helium.common.utils import datetimeutils, metricutils, taskutils
 from helium.common.utils.datetimeutils import local_midnight_as_utc
+from helium.common.utils.validators import validate_recurrence_rule
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
@@ -323,6 +325,11 @@ def _import_events(events, user, example_schedule):
     event_remap = {}
 
     for event in events:
+        try:
+            validate_recurrence_rule(event.get('recurrence_rule'))
+        except DjangoValidationError:
+            logger.info(f"Dropping unsupported recurrence rule from imported event {event.get('id')}.")
+            event['recurrence_rule'] = None
         legacy_notes_content = _extract_legacy_notes(event, legacy_field='comments')
         serializer = EventSerializer(data=event)
 

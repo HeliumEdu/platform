@@ -50,3 +50,64 @@ class TestCaseIcalParseService(SimpleTestCase):
                 timed = parsed['Lecture']
                 self.assertEqual(timed['start'],
                                  datetime.datetime(2025, 10, 6, 9, 0, tzinfo=ZoneInfo(feed_zone)))
+
+    def test_monthly_ordinal_rrule_normalized_to_bysetpos(self):
+        # GIVEN
+        calendar = _calendar_with_rrule('FREQ=MONTHLY;BYDAY=2TU', 'DTSTART;TZID=America/New_York:20261013T090000')
+
+        # WHEN
+        parsed = next(icalparseservice.parse_events(calendar, ZoneInfo('America/New_York')))
+
+        # THEN
+        self.assertEqual(parsed['recurrence_rule'], 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2')
+
+    def test_rrule_sfcalendar_cannot_expand_dropped(self):
+        for rule in ('FREQ=MONTHLY;BYDAY=MO,WE', 'FREQ=MONTHLY;BYDAY=TU', 'FREQ=YEARLY;BYMONTHDAY=15'):
+            with self.subTest(rule=rule):
+                # GIVEN
+                calendar = _calendar_with_rrule(rule, 'DTSTART;TZID=America/New_York:20261013T090000')
+
+                # WHEN
+                parsed = next(icalparseservice.parse_events(calendar, ZoneInfo('America/New_York')))
+
+                # THEN
+                self.assertIsNone(parsed['recurrence_rule'], 'the event is kept as a single occurrence')
+                self.assertEqual(parsed['source_recurrence_rule'], rule)
+
+    def test_inferred_rrule_day_follows_user_zone_not_feed_zone(self):
+        for user_zone, expected_weekly, expected_monthly in (
+                ('Europe/Amsterdam', 'FREQ=WEEKLY;BYDAY=WE', 'FREQ=MONTHLY;BYMONTHDAY=14'),
+                ('America/Los_Angeles', 'FREQ=WEEKLY;BYDAY=TU', 'FREQ=MONTHLY;BYMONTHDAY=13')):
+            for rule, expected in (('FREQ=WEEKLY', expected_weekly), ('FREQ=MONTHLY', expected_monthly)):
+                with self.subTest(user=user_zone, rule=rule):
+                    # GIVEN
+                    calendar = _calendar_with_rrule(rule, 'DTSTART;TZID=America/New_York:20261013T210000',
+                                                    feed_zone='America/New_York')
+
+                    # WHEN
+                    parsed = next(icalparseservice.parse_events(calendar, ZoneInfo(user_zone)))
+
+                    # THEN
+                    self.assertEqual(parsed['recurrence_rule'], expected,
+                                     'the client expands in the user\'s zone, so the implied day is the local one')
+
+    def test_all_day_yearly_rrule_infers_month_and_day_from_date(self):
+        # GIVEN
+        calendar = _calendar_with_rrule('FREQ=YEARLY', 'DTSTART;VALUE=DATE:20261013')
+
+        # WHEN
+        parsed = next(icalparseservice.parse_events(calendar, ZoneInfo('Asia/Tokyo')))
+
+        # THEN
+        self.assertEqual(parsed['recurrence_rule'], 'FREQ=YEARLY;BYMONTH=10;BYMONTHDAY=13')
+
+
+def _calendar_with_rrule(rule, dtstart_line, feed_zone=None):
+    vtimezone = f'BEGIN:VTIMEZONE\r\nTZID:{feed_zone}\r\nEND:VTIMEZONE\r\n' if feed_zone else ''
+    return icalendar.Calendar.from_ical(
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\n'
+        f'{vtimezone}'
+        'BEGIN:VEVENT\r\nUID:series-1\r\nSUMMARY:Series\r\n'
+        f'{dtstart_line}\r\n'
+        f'RRULE:{rule}\r\nEND:VEVENT\r\n'
+        'END:VCALENDAR\r\n')

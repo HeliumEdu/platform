@@ -12,7 +12,7 @@ class TestCaseAssignmentStartTimes(SimpleTestCase):
         amsterdam = ZoneInfo('Europe/Amsterdam')
         parsed = {
             'start': datetime.datetime(2025, 9, 15, 22, 30, tzinfo=datetime.timezone.utc),
-            'recurrence_rule': 'FREQ=DAILY',
+            'source_recurrence_rule': 'FREQ=DAILY',
             'exception_dates': None,
             'extra_starts': [],
         }
@@ -32,7 +32,7 @@ class TestCaseAssignmentStartTimes(SimpleTestCase):
         los_angeles = ZoneInfo('America/Los_Angeles')
         parsed = {
             'start': datetime.datetime(2025, 9, 17, 6, 0, tzinfo=datetime.timezone.utc),
-            'recurrence_rule': 'FREQ=DAILY',
+            'source_recurrence_rule': 'FREQ=DAILY',
             'exception_dates': None,
             'extra_starts': [],
         }
@@ -53,7 +53,7 @@ class TestCaseAssignmentStartTimes(SimpleTestCase):
                 zone = ZoneInfo(zone_name)
                 parsed = {
                     'start': first_start_utc.replace(tzinfo=datetime.timezone.utc),
-                    'recurrence_rule': 'FREQ=WEEKLY;COUNT=4;BYDAY=WE',
+                    'source_recurrence_rule': 'FREQ=WEEKLY;COUNT=4;BYDAY=WE',
                     'exception_dates': None,
                     'extra_starts': [],
                 }
@@ -89,3 +89,24 @@ class TestCaseAssignmentStartTimes(SimpleTestCase):
                 # THEN
                 self.assertEqual(parsed['recurrence_rule'], 'FREQ=WEEKLY;UNTIL=20261126T000000Z;BYDAY=WE')
                 self.assertEqual(len(starts), 7, 'every Wednesday from Oct 14 through Nov 25')
+
+    def test_series_sfcalendar_cannot_expand_still_expands_into_assignments(self):
+        # GIVEN
+        zone = ZoneInfo('America/New_York')
+        calendar = icalendar.Calendar.from_ical(
+            'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\n'
+            'BEGIN:VEVENT\r\nUID:lab-1\r\nSUMMARY:Lab report\r\n'
+            'DTSTART;TZID=America/New_York:20261005T090000\r\n'
+            'DTEND;TZID=America/New_York:20261005T100000\r\n'
+            'RRULE:FREQ=MONTHLY;BYDAY=1MO,3MO\r\nEND:VEVENT\r\n'
+            'END:VCALENDAR\r\n')
+        parsed = next(icalparseservice.parse_events(calendar, zone))
+
+        # WHEN
+        starts = icsimportservice._assignment_start_times(parsed, datetime.date(2026, 12, 31), zone)
+
+        # THEN
+        self.assertIsNone(parsed['recurrence_rule'], 'events cannot carry a rule SfCalendar cannot expand')
+        self.assertEqual([s.astimezone(zone).date().isoformat() for s in starts],
+                         ['2026-10-05', '2026-10-19', '2026-11-02', '2026-11-16', '2026-12-07', '2026-12-21'],
+                         'assignments are expanded server-side, so the 1st and 3rd Monday series survives')
