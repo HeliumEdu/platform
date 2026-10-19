@@ -482,6 +482,132 @@ class TestCaseEventViews(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, msg=rule)
             self.assertIn('recurrence_rule', response.data)
 
+    def test_create_event_monthly_ordinal_byday_normalized_to_bysetpos(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'title': 'Club meeting',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2026-10-13T16:00:00Z',
+            'end': '2026-10-13T17:00:00Z',
+            'priority': 50,
+            'recurrence_rule': 'FREQ=MONTHLY;BYDAY=2TU',
+        }
+        response = self.client.post(reverse('planner_events_list'),
+                                    json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['recurrence_rule'], 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2')
+        event = Event.objects.get(pk=response.data['id'])
+        self.assertEqual(event.recurrence_rule, 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2')
+
+    def test_create_event_yearly_rule_infers_month_and_day_in_user_zone(self):
+        for zone_name, expected in (('Europe/Amsterdam', 'FREQ=YEARLY;BYMONTH=10;BYMONTHDAY=14'),
+                                    ('America/Los_Angeles', 'FREQ=YEARLY;BYMONTH=10;BYMONTHDAY=13')):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user_{zone_name}', email=f'{zone_name}@test.com', time_zone=zone_name)
+
+                # WHEN
+                data = {
+                    'title': 'Anniversary',
+                    'all_day': False,
+                    'show_end_time': True,
+                    'start': '2026-10-13T23:30:00Z',
+                    'end': '2026-10-14T00:30:00Z',
+                    'priority': 50,
+                    'recurrence_rule': 'FREQ=YEARLY',
+                }
+                response = self.client.post(reverse('planner_events_list'),
+                                            json.dumps(data), content_type='application/json')
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(response.data['recurrence_rule'], expected,
+                                 'the day is the start\'s local date in the user\'s zone, where the client expands it')
+
+    def test_create_event_weekly_rrule_without_byday_inferred_in_user_zone(self):
+        for zone_name, expected in (('Europe/Amsterdam', 'FREQ=WEEKLY;BYDAY=WE'),
+                                    ('America/Los_Angeles', 'FREQ=WEEKLY;BYDAY=TU')):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user_{zone_name}', email=f'{zone_name}@test.com', time_zone=zone_name)
+
+                # WHEN
+                data = {
+                    'title': 'Late study group',
+                    'all_day': False,
+                    'show_end_time': True,
+                    'start': '2026-10-13T23:30:00Z',
+                    'end': '2026-10-14T00:30:00Z',
+                    'priority': 50,
+                    'recurrence_rule': 'FREQ=WEEKLY',
+                }
+                response = self.client.post(reverse('planner_events_list'),
+                                            json.dumps(data), content_type='application/json')
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(response.data['recurrence_rule'], expected,
+                                 'the weekday is the start\'s local weekday in the user\'s zone, not its UTC weekday')
+
+    def test_patch_event_rule_normalized_against_stored_start(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        start = datetime.datetime(2026, 10, 13, 23, 30, tzinfo=datetime.timezone.utc)
+        event = eventhelper.given_event_exists(user, start=start, end=start + datetime.timedelta(hours=1))
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps({'recurrence_rule': 'FREQ=MONTHLY'}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertEqual(event.recurrence_rule, 'FREQ=MONTHLY;BYMONTHDAY=14')
+
+    def test_patch_event_without_rule_leaves_stored_rule_unchanged(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user, recurrence_rule='FREQ=MONTHLY;BYMONTHDAY=8')
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_events_detail', kwargs={'pk': event.pk}),
+            json.dumps({'title': 'Renamed'}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertEqual(event.recurrence_rule, 'FREQ=MONTHLY;BYMONTHDAY=8')
+
+    def test_create_event_rejects_monthly_and_yearly_rules_sfcalendar_cannot_expand(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        base = {'title': 'Bad', 'all_day': False, 'show_end_time': True,
+                'start': '2026-10-13T16:00:00Z', 'end': '2026-10-13T17:00:00Z', 'priority': 50}
+
+        for rule in ('FREQ=MONTHLY;BYDAY=TU', 'FREQ=MONTHLY;BYDAY=MO,WE', 'FREQ=MONTHLY;BYDAY=5FR',
+                     'FREQ=YEARLY;BYMONTHDAY=15', 'FREQ=YEARLY;BYMONTH=11;BYDAY=TH'):
+            with self.subTest(rule=rule):
+                # WHEN
+                response = self.client.post(reverse('planner_events_list'),
+                                            json.dumps({**base, 'recurrence_rule': rule}),
+                                            content_type='application/json')
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn('recurrence_rule', response.data)
+
     def test_create_event_rejects_non_list_exception_dates(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

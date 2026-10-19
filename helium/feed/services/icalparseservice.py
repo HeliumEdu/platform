@@ -1,9 +1,10 @@
 import datetime
 import logging
 
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from helium.common.utils.validators import infer_byday_for_weekly_rrule, validate_recurrence_rule
+from helium.common.utils.validators import prepare_recurrence_rule
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,9 @@ def parse_events(calendar, default_time_zone):
     Yield a normalized dict for each importable VEVENT in the parsed calendar.
 
     Each dict has: uid, identity, title, all_day, show_end_time, start, end, url, description,
-    location, recurrence_rule, exception_dates, extra_starts. All datetimes are UTC.
+    location, recurrence_rule, source_recurrence_rule, exception_dates, extra_starts. All datetimes are UTC.
+    ``recurrence_rule`` is prepared for SfCalendar, or None if it cannot expand it; ``source_recurrence_rule`` is
+    the feed's own, for expanding server-side.
 
     :param calendar: A parsed ``icalendar.Calendar``.
     :param default_time_zone: Time zone assumed for naive/floating values (typically the
@@ -142,6 +145,7 @@ def parse_events(calendar, default_time_zone):
 
         rrule_component = component.get("RRULE")
         recurrence_rule = rrule_component.to_ical().decode('utf-8') if rrule_component else None
+        source_recurrence_rule = recurrence_rule
         exception_dates = _extract_exception_dates(component, time_zone, default_time_zone)
 
         if recurrence_rule:
@@ -159,14 +163,6 @@ def parse_events(calendar, default_time_zone):
             continue
 
         dt_start = dtstart.dt
-
-        if recurrence_rule:
-            recurrence_rule = infer_byday_for_weekly_rrule(recurrence_rule, dt_start)
-            try:
-                validate_recurrence_rule(recurrence_rule)
-            except Exception:
-                logger.info('Dropping unsupported RRULE from VEVENT: %s', recurrence_rule)
-                recurrence_rule = None
 
         if component.get("DTEND") is not None:
             dt_end = component.get("DTEND").dt
@@ -188,6 +184,13 @@ def parse_events(calendar, default_time_zone):
         else:
             dt_start = dt_start.astimezone(anchor_time_zone)
         dt_start = dt_start.astimezone(datetime.timezone.utc)
+
+        if recurrence_rule:
+            try:
+                recurrence_rule = prepare_recurrence_rule(recurrence_rule, dt_start.astimezone(default_time_zone))
+            except ValidationError:
+                logger.info('Dropping unsupported RRULE from VEVENT: %s', recurrence_rule)
+                recurrence_rule = None
 
         if all_day:
             dt_end = datetime.datetime.combine(dt_end, datetime.time.min)
@@ -218,6 +221,7 @@ def parse_events(calendar, default_time_zone):
             'description': component.get("DESCRIPTION"),
             'location': component.get("LOCATION"),
             'recurrence_rule': recurrence_rule,
+            'source_recurrence_rule': source_recurrence_rule,
             'exception_dates': exception_dates,
             'extra_starts': _extract_extra_dates(component, time_zone, default_time_zone),
         }
