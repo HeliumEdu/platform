@@ -102,7 +102,7 @@ There are also some special environment variables that can be set in development
 - `USE_AWS_SECRETS_MANAGER`
   - Set to `True` to use AWS Secrets Manager before falling back to environment variables
 - `USE_NGROK`
-  - Set to `True` to have [pyngrok](https://github.com/alexdlaird/pyngrok) open a `ngrok` tunnel and provide a real hostname (only works when `ENVIRONMENT` is not `prod`
+  - Set to `True` to have [pyngrok](https://github.com/alexdlaird/pyngrok) open a `ngrok` tunnel and provide a real hostname (only works with Django's `runserver` outside of Docker, and when `ENVIRONMENT` is not `prod`)
 
 These and other environment variables can be configured in the `.env` file. This is also where credentials to
 third-party services (for example, AWS services like SES) can be set. Do NOT commit real credentials to third-party

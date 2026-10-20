@@ -114,7 +114,6 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PLATFORM: amd64
       TAG_VERSION: ${{ needs.prereq.outputs.version }}
-      ENVIRONMENT: prod
       ANALYTICS_ENABLED: 1
 
     steps:
@@ -159,7 +158,6 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PLATFORM: arm64
       TAG_VERSION: ${{ needs.prereq.outputs.version }}
-      ENVIRONMENT: prod
       ANALYTICS_ENABLED: 1
 
     steps:
