@@ -19,9 +19,7 @@ class Category(BaseModel):
             'A weight of `0` is organizational only when at least one category in the class has '
             '`weight > 0` (weighted mode); when no category has a non-zero weight, the class is '
             'points-based and every assignment contributes via its `current_grade` fraction '
-            'regardless of category weight. '
-            'See `Course.has_weighted_grading` and '
-            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories.'
+            'regardless of category weight (see `Course.has_weighted_grading`).'
         ),
         max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)])
 

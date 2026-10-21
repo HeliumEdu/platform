@@ -47,17 +47,22 @@ class CommonConfig(AppConfig):
 
             # Get the dev server port (defaults to 8000 for Django, can be overridden with the
             # last arg when calling `runserver`)
-            addrport = urlparse(f"http://{sys.argv[-1]}")
-            port = addrport.port if addrport.netloc and addrport.port else 8000
+            addrport = sys.argv[-1]
+            if addrport.isdigit():
+                port = int(addrport)
+            else:
+                parsed_addrport = urlparse(f"http://{addrport}")
+                port = parsed_addrport.port if parsed_addrport.netloc and parsed_addrport.port else 8000
 
             # Open a ngrok tunnel to the dev server
             config = installer.get_ngrok_config(DEFAULT_NGROK_CONFIG_PATH)
-            if "tunnels" not in config or "heliumedu" not in config["tunnels"]:
-                print("ERROR:  Tunnel 'heliumedu' is not defined in the config files.")
+            endpoints = {endpoint.get("name"): endpoint for endpoint in config.get("endpoints", [])}
+            if "heliumedu" not in endpoints:
+                print("ERROR:  Endpoint 'heliumedu' is not defined in the config files.")
                 print(f"ERROR:  Config files read: [{DEFAULT_NGROK_CONFIG_PATH}]")
                 sys.exit(1)
-            frontend_ngrok_domain = config["tunnels"]["heliumedu"]["domain"]
-            public_url = ngrok.connect(name="heliumedu", addr=port, domain=f"api.{frontend_ngrok_domain}").public_url
+            frontend_ngrok_domain = urlparse(endpoints["heliumedu"]["url"]).hostname
+            public_url = ngrok.connect(addr=port, url=f"https://api.{frontend_ngrok_domain}").public_url
             print(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
 
     def init_firebase(self):

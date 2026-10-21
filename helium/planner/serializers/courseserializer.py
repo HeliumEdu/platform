@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from helium.common import enums
 from helium.common.serializers.validation import validate_date_range_and_exceptions
+from helium.common.utils.openapiutils import support_article_url
 from helium.planner.models import Course, CourseGroup
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 from helium.planner.services import categoryservice
@@ -104,7 +105,7 @@ class CourseSerializer(serializers.ModelSerializer):
             '`true` = weighted grading (any category has `weight > 0`); '
             '`false` = points-based grading (a simple `earned/possible` average across '
             'all assignments). Both are valid grading modes. See '
-            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories'
+            f"{support_article_url('grades-and-progress/setting-up-weighted-grading-assignment-categories')}"
         )))
     def get_has_weighted_grading(self, obj) -> bool:
         # Use annotated value if available, otherwise default to False

@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.7"
+__version__ = "2.7.8"
 
 import json
 import os
@@ -216,7 +216,7 @@ LOGOUT_REDIRECT_URL = '/admin/'
 ROOT_URLCONF = 'conf.urls'
 WSGI_APPLICATION = 'conf.wsgi.application'
 
-SUPPORT_URL = f"https://www.{ENVIRONMENT_PREFIX}heliumedu.com/support" if 'local' not in ENVIRONMENT else "https://www.heliumedu.com/support"
+SUPPORT_URL = f"https://www.{ENVIRONMENT_PREFIX}heliumedu.com/support/" if 'local' not in ENVIRONMENT else "https://www.heliumedu.com/support/"
 STATUS_URL = f"https://status.{ENVIRONMENT_PREFIX}heliumedu.com" if 'local' not in ENVIRONMENT else f"{PROJECT_API_HOST}/status"
 
 # Healthcheck
@@ -347,7 +347,7 @@ SPECTACULAR_SETTINGS = {
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
-        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}/getting-started/where-to-start-with-helium#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
+        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}getting-started/where-to-start-with-helium/#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
@@ -481,7 +481,7 @@ SPECTACULAR_SETTINGS = {
                 'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
                 'a category; `current_grade` rolls up into class and class-group grades. '
                 'Ungraded calendar items live under `Event`. See '
-                f'[this article]({SUPPORT_URL}/grades-and-progress/setting-up-weighted-grading-assignment-categories) for more info on grading.'
+                f'[this article]({SUPPORT_URL}grades-and-progress/setting-up-weighted-grading-assignment-categories/) for more info on grading.'
             ),
         },
         {
@@ -489,7 +489,7 @@ SPECTACULAR_SETTINGS = {
             'description': (
                 'Ungraded calendar items not tied to a class. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
-                f'[this article]({SUPPORT_URL}/grades-and-progress/how-helium-calculates-your-grades).'
+                f'[this article]({SUPPORT_URL}grades-and-progress/how-helium-calculates-your-grades/).'
             ),
         },
     ],

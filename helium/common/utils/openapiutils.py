@@ -40,6 +40,20 @@ def strip_enum_int_bounds(result, generator, request, public):
     return result
 
 
+def support_article_url(article_path: str) -> str:
+    """
+    The Support Portal URL for a knowledge base article, given its ``<category>/<slug>`` path.
+    """
+    return f'{settings.SUPPORT_URL}{article_path}/'
+
+
+def help_text_with_support_article(model, field_name: str, article_path: str) -> str:
+    """
+    The model field's ``help_text`` followed by a link to a Support Portal article.
+    """
+    return f'{model._meta.get_field(field_name).help_text} See {support_article_url(article_path)}.'
+
+
 TAG_GROUPS = [
     {
         'name': 'Authentication',

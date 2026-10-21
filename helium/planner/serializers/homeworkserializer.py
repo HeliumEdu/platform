@@ -7,6 +7,7 @@ from rest_framework import serializers
 from helium.common import enums
 from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
+from helium.common.utils.openapiutils import help_text_with_support_article
 from helium.planner.models import Homework, Category, Material, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
@@ -55,6 +56,12 @@ class HomeworkSerializer(serializers.ModelSerializer):
             'calendar_item_type',)
         read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at', 'created_at',
                             'updated_at',)
+        extra_kwargs = {
+            'completed': {
+                'help_text': help_text_with_support_article(
+                    Homework, 'completed', 'grades-and-progress/setting-up-weighted-grading-assignment-categories'),
+            },
+        }
 
     def validate(self, attrs):
         validate_start_before_end(attrs, self.instance)

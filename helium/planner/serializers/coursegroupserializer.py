@@ -1,20 +1,21 @@
 import logging
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common.serializers.validation import validate_date_range_and_exceptions
+from helium.common.utils.openapiutils import support_article_url
 from helium.planner.models import CourseGroup
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_serializer(description=(
+    'A group of classes within a given timeframe (typically a semester or quarter). `overall_grade` is a flat '
+    f"average of member classes. See {support_article_url('classes/setting-up-and-managing-classes')}. For "
+    'full-term imports, see also "Bulk import" in the API description.'
+))
 class CourseGroupSerializer(serializers.ModelSerializer):
-    """
-    A group of classes within a given timeframe (typically a semester or
-    quarter). `overall_grade` is a flat average of member classes. See
-    https://www.heliumedu.com/support/classes/setting-up-and-managing-classes.
-    For full-term imports, see also "Bulk import" in the API description.
-    """
 
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
