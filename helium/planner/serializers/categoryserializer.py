@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.db.models import Sum
 from rest_framework import serializers
 
+from helium.common.utils.openapiutils import help_text_with_support_article
 from helium.planner.models.category import Category
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,12 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = (
             'average_grade', 'grade_by_weight', 'trend', 'course', 'created_at', 'updated_at', 'num_homework',
             'num_homework_completed', 'num_homework_graded',)
+        extra_kwargs = {
+            'weight': {
+                'help_text': help_text_with_support_article(
+                    Category, 'weight', 'grades-and-progress/setting-up-weighted-grading-assignment-categories'),
+            },
+        }
 
     def get_num_homework(self, obj) -> int:
         # Use annotated value if available, otherwise default to 0

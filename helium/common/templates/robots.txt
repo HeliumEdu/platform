@@ -1,6 +1,6 @@
 User-agent: *
-Allow: /docs/
-Allow: /schema/
+Allow: /docs
+Allow: /schema
 Allow: /sitemap.xml
 Disallow: /
 

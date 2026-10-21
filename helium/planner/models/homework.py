@@ -23,8 +23,7 @@ class Homework(BaseCalendar):
             'Whether the homework has been completed. Once `completed=true` and '
             '`current_grade` holds a real fraction (e.g. `"25/30"` or `"0/100"`), the '
             'homework counts toward grade calc. For missed work: `completed=true`, '
-            '`current_grade="0/<possible>"`. See '
-            'https://www.heliumedu.com/support/grades-and-progress/setting-up-weighted-grading-assignment-categories.'
+            '`current_grade="0/<possible>"`.'
         ),
         default=False)
 
