@@ -1,9 +1,13 @@
+from datetime import timedelta
 from unittest import mock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.utils import timezone
 from firebase_admin import exceptions as firebase_exceptions
 from firebase_admin import messaging
 
+from helium.auth.models import UserPushToken
+from helium.auth.tests.helpers import userhelper
 from helium.common.services import pushservice
 
 
@@ -241,3 +245,33 @@ class TestCaseTokensFcmRejects(TestCase):
 
         # THEN
         self.assertEqual(invalid, ['t1', 't3'])
+
+
+class TestCaseGetPushTokens(TestCase):
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=2)
+    def test_get_push_tokens_returns_only_the_most_recently_registered(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        now = timezone.now()
+        for i, age_days in enumerate([1, 3, 2]):
+            push_token = userhelper.given_user_push_token_exists(user, token=f'token{i}', device_id=f'device{i}')
+            UserPushToken.objects.filter(pk=push_token.pk).update(updated_at=now - timedelta(days=age_days))
+
+        # WHEN
+        push_tokens = pushservice.get_push_tokens(user)
+
+        # THEN
+        self.assertEqual(push_tokens, ['token0', 'token2'])
+
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=2)
+    def test_get_push_tokens_within_the_limit_returns_them_all(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user, token='token1', device_id='device1')
+        userhelper.given_user_push_token_exists(user, token='token2', device_id='device2')
+
+        # WHEN
+        push_tokens = pushservice.get_push_tokens(user)
+
+        # THEN
+        self.assertCountEqual(push_tokens, ['token1', 'token2'])

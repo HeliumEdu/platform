@@ -1,11 +1,25 @@
 import json
+from datetime import timedelta
 
+from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tests.helpers import userhelper
+
+
+def given_push_tokens_registered_in_order(user, count):
+    now = timezone.now()
+    push_tokens = []
+    for i in range(count):
+        push_token = userhelper.given_user_push_token_exists(user, token=f'token{i}', device_id=f'device{i}')
+        UserPushToken.objects.filter(pk=push_token.pk).update(updated_at=now - timedelta(days=count - i))
+        push_tokens.append(push_token)
+
+    return push_tokens
 
 
 class TestCasePushTokenViews(APITestCase):
@@ -77,3 +91,68 @@ class TestCasePushTokenViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(UserPushToken.objects.filter(pk=push_token.pk).exists())
         self.assertEqual(UserPushToken.objects.count(), 0)
+
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=3)
+    def test_create_push_token_beyond_the_limit_evicts_the_least_recently_registered(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        oldest, middle, newest = given_push_tokens_registered_in_order(user, 3)
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_pushtoken_list'),
+                                    json.dumps({'device_id': 'new_device', 'token': 'new_token'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertCountEqual(UserPushToken.objects.filter(user=user).values_list('pk', flat=True),
+                              [middle.pk, newest.pk, response.data['id']])
+
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=3)
+    def test_create_push_token_up_to_the_limit_evicts_nothing(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        given_push_tokens_registered_in_order(user, 2)
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_pushtoken_list'),
+                                    json.dumps({'device_id': 'new_device', 'token': 'new_token'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(UserPushToken.objects.filter(user=user).count(), 3)
+
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=3)
+    def test_reregistering_the_oldest_device_at_the_limit_keeps_it(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        oldest, middle, newest = given_push_tokens_registered_in_order(user, 3)
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_pushtoken_list'),
+                                    json.dumps({'device_id': oldest.device_id, 'token': 'refreshed_token'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertCountEqual(UserPushToken.objects.filter(user=user).values_list('pk', flat=True),
+                              [oldest.pk, middle.pk, newest.pk])
+
+    @override_settings(MAX_PUSH_TOKENS_PER_USER=3)
+    def test_eviction_leaves_other_users_tokens_alone(self):
+        # GIVEN
+        other_user = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        other_push_tokens = given_push_tokens_registered_in_order(other_user, 3)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        given_push_tokens_registered_in_order(user, 3)
+
+        # WHEN
+        self.client.post(reverse('auth_user_pushtoken_list'),
+                         json.dumps({'device_id': 'new_device', 'token': 'new_token'}),
+                         content_type='application/json')
+
+        # THEN
+        self.assertEqual(UserPushToken.objects.filter(user=user).count(), 3)
+        self.assertCountEqual(UserPushToken.objects.filter(user=other_user).values_list('pk', flat=True),
+                              [push_token.pk for push_token in other_push_tokens])
