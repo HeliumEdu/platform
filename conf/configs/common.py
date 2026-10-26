@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.9"
+__version__ = "2.7.10"
 
 import json
 import os
@@ -110,6 +110,7 @@ INSTALLED_APPS = (
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'helium.common.middleware.requestid.RequestIDMiddleware',
+    'helium.common.middleware.muppets.MuppetsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
