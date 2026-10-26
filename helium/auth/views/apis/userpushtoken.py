@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -54,6 +55,17 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             logger.info(f'Reclaimed {reclaimed} superseded push token(s) for this device')
             metricutils.increment('action.push.token.reclaimed', value=reclaimed)
 
+    def _evict_beyond_limit(self) -> None:
+        evicted_pks = list(self.request.user.push_tokens.order_by('-updated_at', '-pk')
+                           .values_list('pk', flat=True)[settings.MAX_PUSH_TOKENS_PER_USER:])
+        if not evicted_pks:
+            return
+
+        evicted, _ = UserPushToken.objects.filter(pk__in=evicted_pks).delete()
+
+        logger.info(f'Evicted {evicted} least recently registered push token(s) for user {self.request.user.pk}')
+        metricutils.increment('action.push.token.evicted', value=evicted)
+
     def perform_create(self, serializer):
         token = serializer.validated_data['token']
         device_id = serializer.validated_data['device_id']
@@ -66,6 +78,8 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             defaults={'token': token},
         )
         serializer.instance = obj
+
+        self._evict_beyond_limit()
 
     def post(self, request, *args, **kwargs):
         """

@@ -1,6 +1,7 @@
 import logging
 import json
 
+from django.conf import settings
 from firebase_admin import exceptions as firebase_exceptions
 from firebase_admin import messaging
 
@@ -154,7 +155,9 @@ def send_notifications(push_tokens, subject, message, reminder_data):
 
 
 def get_push_tokens(user):
-    return list(user.push_tokens.values_list('token', flat=True))
+    """The user's most recently registered push tokens, at most ``MAX_PUSH_TOKENS_PER_USER``."""
+    return list(user.push_tokens.order_by('-updated_at', '-pk')
+                .values_list('token', flat=True)[:settings.MAX_PUSH_TOKENS_PER_USER])
 
 
 def send_dismiss(push_tokens, reminder_id):

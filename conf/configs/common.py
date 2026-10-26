@@ -184,6 +184,10 @@ UNVERIFIED_USER_TTL_DAYS = 7
 # registration on launch, so this is the window since a device last opened the app.
 PUSH_TOKEN_TTL_DAYS = 90
 
+# Keep only a user's most recently registered push tokens. Each sign-in from a fresh browser profile (e.g. a shared lab
+# computer) registers a new one, so this is generous enough that a personal device is not displaced between app opens.
+MAX_PUSH_TOKENS_PER_USER = 25
+
 # Dormant user purge settings
 PROCESS_DORMANT_USERS_FREQUENCY_SEC = 60 * 60
 DORMANT_USER_THRESHOLD_YEARS = 2
