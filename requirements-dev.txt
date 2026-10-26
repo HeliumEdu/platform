@@ -1,4 +1,4 @@
-pyngrok==9.0.0
+pyngrok==9.0.2
 django-debug-toolbar==6.2.0
 pytest-django==4.12.0
 coverage==7.13.5
