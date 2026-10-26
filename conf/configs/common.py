@@ -110,6 +110,7 @@ INSTALLED_APPS = (
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'helium.common.middleware.requestid.RequestIDMiddleware',
+    'helium.common.middleware.muppets.MuppetsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
