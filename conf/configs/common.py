@@ -312,7 +312,7 @@ OAUTH2_PROVIDER = {
         'planner:read': 'Read your classes, assignments, events, grades, and notes',
         'planner:import': 'Import a new term with its classes, schedules, assignments, and events',
     },
-    'DEFAULT_SCOPES': ['planner:read', 'planner:import'],
+    'DEFAULT_SCOPES': ['planner:read'],
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
     'ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 90,

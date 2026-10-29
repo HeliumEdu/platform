@@ -53,6 +53,17 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual({scope['scope'] for scope in response.data['scopes']}, {'planner:read', 'planner:import'})
         self.assertTrue(all(scope['description'] for scope in response.data['scopes']))
 
+    def test_request_without_scopes_asks_only_to_read(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(self.authorize_url(scope=None))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual([scope['scope'] for scope in response.data['scopes']], ['planner:read'])
+
     def test_approval_issues_a_code_that_exchanges_for_tokens(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
