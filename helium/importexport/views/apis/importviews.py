@@ -299,6 +299,14 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         summary='Import a calendar (.ics) file',
         request=ICSImportCreateSerializer,
         responses={200: ImportSerializer},
+        parameters=[
+            OpenApiParameter(
+                name='dry_run',
+                type=bool,
+                description='`true` validates the import and returns the counts it would import, without saving '
+                            'anything.',
+            ),
+        ],
     )
     def import_ics_data(self, request, *args, **kwargs):
         """
@@ -314,6 +322,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
         """
+        dry_run = request.query_params.get('dry_run') == 'true'
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected .ics import from user {request.user.pk} with {len(uploads)} files.')
@@ -335,6 +344,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             course_id=target.get('course'),
             course_group_id=target.get('course_group'),
             default_course_title=os.path.splitext(getattr(upload, 'name', '') or '')[0] or None,
+            dry_run=dry_run,
         )
 
         serializer = ImportSerializer({
