@@ -309,8 +309,8 @@ OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 
 OAUTH2_PROVIDER = {
     'SCOPES': {
-        'planner:read': 'Read your classes, assignments, events, grades, and notes',
-        'planner:import': 'Import a new term with its classes, schedules, assignments, and events',
+        'planner:read': 'Read your assignments, events, notes, classes, resources, and grades',
+        'planner:import': 'Import a new term with its assignments, events, classes, and class schedules',
     },
     'DEFAULT_SCOPES': ['planner:read'],
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,

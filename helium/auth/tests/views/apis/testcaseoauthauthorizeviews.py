@@ -334,7 +334,7 @@ class TestCaseOAuthTokenAccess(APITestCase):
         # WHEN / THEN
         for url_name in ('auth_user_detail', 'planner_coursegroups_list', 'planner_courses_list',
                          'planner_courseschedules_list', 'planner_categories_list', 'planner_resource_grades',
-                         'planner_notes_list'):
+                         'planner_notes_list', 'planner_resourcegroups_list', 'planner_resources_list'):
             self.assertEqual(self.client.get(reverse(url_name)).status_code, status.HTTP_200_OK, url_name)
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(reverse('planner_events_list')).status_code, status.HTTP_200_OK)
@@ -352,6 +352,7 @@ class TestCaseOAuthTokenAccess(APITestCase):
                          status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.client.get(reverse('planner_resources_list')).status_code, status.HTTP_403_FORBIDDEN)
 
     def test_account_and_destructive_endpoints_are_refused(self):
         # GIVEN
@@ -366,6 +367,7 @@ class TestCaseOAuthTokenAccess(APITestCase):
             'export': self.client.get(reverse('importexport_export')),
             'delete all events': self.client.delete(reverse('planner_events_resource_delete')),
             'create course group': self.client.post(reverse('planner_coursegroups_list'), {}, format='json'),
+            'create resource group': self.client.post(reverse('planner_resourcegroups_list'), {}, format='json'),
             'consent': self.client.post(reverse('auth_oauth_authorize'), {'allow': True}, format='json'),
         }
 
