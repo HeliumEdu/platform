@@ -17,6 +17,7 @@ from rest_framework_simplejwt.utils import get_md5_hash_password
 
 from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tasks import blacklist_refresh_token
+from helium.auth.utils.userutils import mark_user_active
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.metricutils import _normalize_user_agent_tag
 
@@ -100,10 +101,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
 
             update_last_login(None, user)
 
-            user.last_activity = timezone.now()
-            user.deletion_warning_count = 0
-            user.deletion_warning_sent_at = None
-            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+            mark_user_active(user)
 
             _record_client_activity(user, self.context.get('request'))
 
@@ -147,10 +145,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                 if refresh.payload.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
                     raise AuthenticationFailed("The user's password has been changed.")
 
-            user.last_activity = timezone.now()
-            user.deletion_warning_count = 0
-            user.deletion_warning_sent_at = None
-            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+            mark_user_active(user)
 
             _record_client_activity(user, self.context.get('request'))
 

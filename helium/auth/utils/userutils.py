@@ -1,11 +1,13 @@
 import math
 import re
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from django.utils import timezone
 
 
 def is_admin_allowed_email(email):
@@ -23,6 +25,17 @@ def admin_allowed_email_error():
     The message shown when an admin email falls outside ADMIN_ALLOWED_DOMAINS.
     """
     return f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)})."
+
+
+
+def mark_user_active(user):
+    """
+    Record that the user is active now, clearing any dormant-account deletion warnings.
+    """
+    user.last_activity = timezone.now()
+    user.deletion_warning_count = 0
+    user.deletion_warning_sent_at = None
+    user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
 
 
 def is_staff_email(email):
@@ -66,8 +79,8 @@ def rollup_power_users(UserModel):
     """
     from helium.planner.models import Course, Homework, Note
 
-    cutoff_30d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=30)
-    cutoff_14d = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=14)
+    cutoff_30d = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=30)
+    cutoff_14d = datetime.now().replace(tzinfo=dt_timezone.utc) - timedelta(days=14)
 
     user_ids = list(
         UserModel.objects.filter(is_active=True, last_activity__gte=cutoff_30d)

@@ -5,9 +5,11 @@ from django.db import models
 class UserClientActivity(models.Model):
     CLIENT_MOBILE_APP = 'mobile_app'
     CLIENT_WEB = 'web'
+    CLIENT_CONNECTOR = 'connector'
     CLIENT_CHOICES = [
         (CLIENT_MOBILE_APP, 'Mobile App'),
         (CLIENT_WEB, 'Web'),
+        (CLIENT_CONNECTOR, 'Connector'),
     ]
 
     user = models.ForeignKey(

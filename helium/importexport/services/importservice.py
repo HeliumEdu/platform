@@ -65,6 +65,30 @@ def _row_validation_error(section, row_id, errors):
     return ValidationError({section: messages})
 
 
+class _SectionErrors:
+    """
+    Collect every row error in a section, so one 400 lists them all. Later sections reference this one's ids, so
+    the import stops at the end of the first section with errors.
+    """
+
+    def __init__(self, section):
+        self.section = section
+        self.messages = []
+
+    @contextmanager
+    def row(self):
+        try:
+            yield
+        except ValidationError as error:
+            for messages in (error.detail.values() if isinstance(error.detail, dict) else [error.detail]):
+                self.messages.extend(str(message) for message in (messages if isinstance(messages, list)
+                                                                  else [messages]))
+
+    def raise_if_any(self):
+        if self.messages:
+            raise ValidationError({self.section: self.messages})
+
+
 def _extract_legacy_notes(data, legacy_field='comments'):
     """
     Legacy parameter, permanently accepted on import; converts legacy HTML to Quill JSON format.
@@ -163,13 +187,16 @@ def _create_note_from_payload(payload, user, example_schedule, section, row_id):
 
 
 def _import_external_calendars(external_calendars, user, example_schedule):
+    errors = _SectionErrors('external_calendars')
     for external_calendar in external_calendars:
-        serializer = ExternalCalendarSerializer(data=external_calendar)
+        with errors.row():
+            serializer = ExternalCalendarSerializer(data=external_calendar)
 
-        if serializer.is_valid():
-            serializer.save(user=user, example_schedule=example_schedule)
-        else:
-            raise _row_validation_error('external_calendars', external_calendar['id'], serializer.errors)
+            if serializer.is_valid():
+                serializer.save(user=user, example_schedule=example_schedule)
+            else:
+                raise _row_validation_error('external_calendars', external_calendar['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(external_calendars)} external calendars.")
 
@@ -179,17 +206,20 @@ def _import_external_calendars(external_calendars, user, example_schedule):
 def _import_course_groups(course_groups, user, example_schedule):
     course_group_remap = {}
 
+    errors = _SectionErrors('course_groups')
     for course_group in course_groups:
-        # Field named remapped for legacy purposes
-        if 'average_grade' in course_group:
-            course_group['overall_grade'] = course_group['average_grade']
-        serializer = CourseGroupSerializer(data=course_group)
+        with errors.row():
+            # Field named remapped for legacy purposes
+            if 'average_grade' in course_group:
+                course_group['overall_grade'] = course_group['average_grade']
+            serializer = CourseGroupSerializer(data=course_group)
 
-        if serializer.is_valid():
-            instance = serializer.save(user=user, example_schedule=example_schedule)
-            course_group_remap[course_group['id']] = instance.pk
-        else:
-            raise _row_validation_error('course_groups', course_group['id'], serializer.errors)
+            if serializer.is_valid():
+                instance = serializer.save(user=user, example_schedule=example_schedule)
+                course_group_remap[course_group['id']] = instance.pk
+            else:
+                raise _row_validation_error('course_groups', course_group['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(course_groups)} course groups.")
 
@@ -199,20 +229,23 @@ def _import_course_groups(course_groups, user, example_schedule):
 def _import_courses(courses, course_group_remap):
     course_remap = {}
 
+    errors = _SectionErrors('courses')
     for course in courses:
-        course.pop('template', None)
+        with errors.row():
+            course.pop('template', None)
 
-        course_group_id = _resolve_parent(
-            course_group_remap, course.get('course_group'), 'courses', 'course_group')
-        course['course_group'] = course_group_id
+            course_group_id = _resolve_parent(
+                course_group_remap, course.get('course_group'), 'courses', 'course_group')
+            course['course_group'] = course_group_id
 
-        serializer = CourseSerializer(data=course)
+            serializer = CourseSerializer(data=course)
 
-        if serializer.is_valid():
-            instance = serializer.save(course_group_id=course_group_id)
-            course_remap[course['id']] = instance.pk
-        else:
-            raise _row_validation_error('courses', course['id'], serializer.errors)
+            if serializer.is_valid():
+                instance = serializer.save(course_group_id=course_group_id)
+                course_remap[course['id']] = instance.pk
+            else:
+                raise _row_validation_error('courses', course['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(courses)} courses.")
 
@@ -220,17 +253,20 @@ def _import_courses(courses, course_group_remap):
 
 
 def _import_course_schedules(course_schedules, course_remap):
+    errors = _SectionErrors('course_schedules')
     for course_schedule in course_schedules:
-        course_id = _resolve_parent(
-            course_remap, course_schedule.get('course'), 'course_schedules', 'course')
-        course_schedule['course'] = course_id
+        with errors.row():
+            course_id = _resolve_parent(
+                course_remap, course_schedule.get('course'), 'course_schedules', 'course')
+            course_schedule['course'] = course_id
 
-        serializer = CourseScheduleSerializer(data=course_schedule)
+            serializer = CourseScheduleSerializer(data=course_schedule)
 
-        if serializer.is_valid():
-            serializer.save(course_id=course_id)
-        else:
-            raise _row_validation_error('course_schedules', course_schedule['id'], serializer.errors)
+            if serializer.is_valid():
+                serializer.save(course_id=course_id)
+            else:
+                raise _row_validation_error('course_schedules', course_schedule['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(course_schedules)} course schedules.")
 
@@ -240,17 +276,20 @@ def _import_course_schedules(course_schedules, course_remap):
 def _import_categories(categories, request, course_remap):
     category_remap = {}
 
+    errors = _SectionErrors('categories')
     for category in categories:
-        course_id = _resolve_parent(course_remap, category.get('course'), 'categories', 'course')
-        request.parser_context['kwargs']['course'] = course_id
+        with errors.row():
+            course_id = _resolve_parent(course_remap, category.get('course'), 'categories', 'course')
+            request.parser_context['kwargs']['course'] = course_id
 
-        serializer = CategorySerializer(data=category, context={'request': request})
+            serializer = CategorySerializer(data=category, context={'request': request})
 
-        if serializer.is_valid():
-            instance = serializer.save(course_id=course_id)
-            category_remap[category['id']] = instance.pk
-        else:
-            raise _row_validation_error('categories', category['id'], serializer.errors)
+            if serializer.is_valid():
+                instance = serializer.save(course_id=course_id)
+                category_remap[category['id']] = instance.pk
+            else:
+                raise _row_validation_error('categories', category['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(categories)} categories.")
 
@@ -266,14 +305,17 @@ def _ensure_courses_have_categories(course_remap):
 def _import_material_groups(material_groups, user, example_schedule):
     material_group_remap = {}
 
+    errors = _SectionErrors('material_groups')
     for material_group in material_groups:
-        serializer = MaterialGroupSerializer(data=material_group)
+        with errors.row():
+            serializer = MaterialGroupSerializer(data=material_group)
 
-        if serializer.is_valid():
-            instance = serializer.save(user=user, example_schedule=example_schedule)
-            material_group_remap[material_group['id']] = instance.pk
-        else:
-            raise _row_validation_error('material_groups', material_group['id'], serializer.errors)
+            if serializer.is_valid():
+                instance = serializer.save(user=user, example_schedule=example_schedule)
+                material_group_remap[material_group['id']] = instance.pk
+            else:
+                raise _row_validation_error('material_groups', material_group['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(material_groups)} resource groups.")
 
@@ -283,38 +325,41 @@ def _import_material_groups(material_groups, user, example_schedule):
 def _import_materials(materials, material_group_remap, course_remap, user, example_schedule):
     material_remap = {}
 
+    errors = _SectionErrors('materials')
     for material in materials:
-        if 'resource_group' in material:
-            raw_group = material.get('resource_group')
-            parent_key = 'resource_group'
-        else:
-            raw_group = material.get('material_group')
-            parent_key = 'material_group'
-        material_group_id = _resolve_parent(
-            material_group_remap, raw_group, 'materials', parent_key)
-        material['resource_group'] = material_group_id
-        material.pop('material_group', None)
+        with errors.row():
+            if 'resource_group' in material:
+                raw_group = material.get('resource_group')
+                parent_key = 'resource_group'
+            else:
+                raw_group = material.get('material_group')
+                parent_key = 'material_group'
+            material_group_id = _resolve_parent(
+                material_group_remap, raw_group, 'materials', parent_key)
+            material['resource_group'] = material_group_id
+            material.pop('material_group', None)
 
-        courses = material.get('courses') or []
-        if not isinstance(courses, list):
-            raise ValidationError({'materials': "Field `courses` must be a list."})
-        for i, course in enumerate(courses):
-            courses[i] = _resolve_parent(course_remap, course, 'materials', 'courses')
-        material['courses'] = courses
+            courses = material.get('courses') or []
+            if not isinstance(courses, list):
+                raise ValidationError({'materials': "Field `courses` must be a list."})
+            for i, course in enumerate(courses):
+                courses[i] = _resolve_parent(course_remap, course, 'materials', 'courses')
+            material['courses'] = courses
 
-        legacy_notes_content = _extract_legacy_notes(material, legacy_field='details')
-        serializer = MaterialSerializer(data=material)
+            legacy_notes_content = _extract_legacy_notes(material, legacy_field='details')
+            serializer = MaterialSerializer(data=material)
 
-        if serializer.is_valid():
-            instance = serializer.save(material_group_id=material_group_id)
-            material_remap[material['id']] = instance.pk
+            if serializer.is_valid():
+                instance = serializer.save(material_group_id=material_group_id)
+                material_remap[material['id']] = instance.pk
 
-            if legacy_notes_content:
-                _create_note_from_payload(
-                    _build_legacy_note_payload(legacy_notes_content, resource_id=instance.pk),
-                    user, example_schedule, 'materials', material['id'])
-        else:
-            raise _row_validation_error('materials', material['id'], serializer.errors)
+                if legacy_notes_content:
+                    _create_note_from_payload(
+                        _build_legacy_note_payload(legacy_notes_content, resource_id=instance.pk),
+                        user, example_schedule, 'materials', material['id'])
+            else:
+                raise _row_validation_error('materials', material['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(materials)} resources.")
 
@@ -324,25 +369,28 @@ def _import_materials(materials, material_group_remap, course_remap, user, examp
 def _import_events(events, user, example_schedule):
     event_remap = {}
 
+    errors = _SectionErrors('events')
     for event in events:
-        try:
-            validate_recurrence_rule(event.get('recurrence_rule'))
-        except DjangoValidationError:
-            logger.info(f"Dropping unsupported recurrence rule from imported event {event.get('id')}.")
-            event['recurrence_rule'] = None
-        legacy_notes_content = _extract_legacy_notes(event, legacy_field='comments')
-        serializer = EventSerializer(data=event)
+        with errors.row():
+            try:
+                validate_recurrence_rule(event.get('recurrence_rule'))
+            except DjangoValidationError:
+                logger.info(f"Dropping unsupported recurrence rule from imported event {event.get('id')}.")
+                event['recurrence_rule'] = None
+            legacy_notes_content = _extract_legacy_notes(event, legacy_field='comments')
+            serializer = EventSerializer(data=event)
 
-        if serializer.is_valid():
-            instance = serializer.save(user=user, example_schedule=example_schedule)
-            event_remap[event['id']] = instance.pk
+            if serializer.is_valid():
+                instance = serializer.save(user=user, example_schedule=example_schedule)
+                event_remap[event['id']] = instance.pk
 
-            if legacy_notes_content:
-                _create_note_from_payload(
-                    _build_legacy_note_payload(legacy_notes_content, event_id=instance.pk),
-                    user, example_schedule, 'events', event['id'])
-        else:
-            raise _row_validation_error('events', event['id'], serializer.errors)
+                if legacy_notes_content:
+                    _create_note_from_payload(
+                        _build_legacy_note_payload(legacy_notes_content, event_id=instance.pk),
+                        user, example_schedule, 'events', event['id'])
+            else:
+                raise _row_validation_error('events', event['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(events)} events.")
 
@@ -353,51 +401,54 @@ def _import_homework(homework, course_remap, category_remap, material_remap, use
     homework_remap = {}
     course_by_category = dict(Category.objects.filter(pk__in=category_remap.values()).values_list('pk', 'course_id'))
 
+    errors = _SectionErrors('homework')
     for h in homework:
-        course_id = _resolve_parent(course_remap, h.get('course'), 'homework', 'course')
-        h['course'] = course_id
+        with errors.row():
+            course_id = _resolve_parent(course_remap, h.get('course'), 'homework', 'course')
+            h['course'] = course_id
 
-        if h.get('category'):
-            h['category'] = _resolve_parent(category_remap, h.get('category'), 'homework', 'category')
-            if course_by_category.get(h['category']) != course_id:
-                logger.info(f"Homework {h.get('id')} imported into Uncategorized; its category belongs to another course")
+            if h.get('category'):
+                h['category'] = _resolve_parent(category_remap, h.get('category'), 'homework', 'category')
+                if course_by_category.get(h['category']) != course_id:
+                    logger.info(f"Homework {h.get('id')} imported into Uncategorized; its category belongs to another course")
+                    h['category'] = None
+            else:
                 h['category'] = None
-        else:
-            h['category'] = None
 
-        if 'resources' in h and 'materials' in h:
-            raise ValidationError(
-                {'homework': "Provide either 'resources' or 'materials' on a homework row, not both."})
-        field_key = 'resources' if 'resources' in h else 'materials'
-        materials = h.pop('resources', None) if 'resources' in h else h.get('materials')
-        materials = materials or []
-        if not isinstance(materials, list):
-            raise ValidationError({'homework': f"Field `{field_key}` must be a list."})
-        for i, material in enumerate(materials):
-            materials[i] = _resolve_parent(material_remap, material, 'homework', field_key)
-        h.pop('materials', None)
-        h['resources'] = materials
+            if 'resources' in h and 'materials' in h:
+                raise ValidationError(
+                    {'homework': "Provide either 'resources' or 'materials' on a homework row, not both."})
+            field_key = 'resources' if 'resources' in h else 'materials'
+            materials = h.pop('resources', None) if 'resources' in h else h.get('materials')
+            materials = materials or []
+            if not isinstance(materials, list):
+                raise ValidationError({'homework': f"Field `{field_key}` must be a list."})
+            for i, material in enumerate(materials):
+                materials[i] = _resolve_parent(material_remap, material, 'homework', field_key)
+            h.pop('materials', None)
+            h['resources'] = materials
 
-        legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
-        serializer = HomeworkSerializer(data=h)
+            legacy_notes_content = _extract_legacy_notes(h, legacy_field='comments')
+            serializer = HomeworkSerializer(data=h)
 
-        if serializer.is_valid():
-            instance = serializer.save(course_id=course_id)
-            homework_remap[h['id']] = instance.pk
+            if serializer.is_valid():
+                instance = serializer.save(course_id=course_id)
+                homework_remap[h['id']] = instance.pk
 
-            # completed_at is read-only (inferred by Homework.save() the first time completed flips true),
-            # so the serializer ignores it. Restore the original value from a user's own export rather
-            # than letting save() re-stamp it to import time. Seed imports keep the fresh stamp.
-            completed_at = parse_datetime(h['completed_at']) if h.get('completed_at') else None
-            if completed_at and not example_schedule:
-                Homework.objects.filter(pk=instance.pk).update(completed_at=completed_at)
+                # completed_at is read-only (inferred by Homework.save() the first time completed flips true),
+                # so the serializer ignores it. Restore the original value from a user's own export rather
+                # than letting save() re-stamp it to import time. Seed imports keep the fresh stamp.
+                completed_at = parse_datetime(h['completed_at']) if h.get('completed_at') else None
+                if completed_at and not example_schedule:
+                    Homework.objects.filter(pk=instance.pk).update(completed_at=completed_at)
 
-            if legacy_notes_content:
-                _create_note_from_payload(
-                    _build_legacy_note_payload(legacy_notes_content, homework_id=instance.pk),
-                    user, example_schedule, 'homework', h['id'])
-        else:
-            raise _row_validation_error('homework', h['id'], serializer.errors)
+                if legacy_notes_content:
+                    _create_note_from_payload(
+                        _build_legacy_note_payload(legacy_notes_content, homework_id=instance.pk),
+                        user, example_schedule, 'homework', h['id'])
+            else:
+                raise _row_validation_error('homework', h['id'], serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {len(homework)} homework.")
 
@@ -408,45 +459,48 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
     seen = set()
     seen_active_series = set()
     created = 0
+    errors = _SectionErrors('reminders')
     for reminder in reminders:
-        # Forward-migrate deprecated reminder types (POPUP=0, TEXT=2) to PUSH so legacy exports
-        # keep importing cleanly.
-        if reminder.get('type') in (0, 2):
-            reminder['type'] = enums.PUSH
+        with errors.row():
+            # Forward-migrate deprecated reminder types (POPUP=0, TEXT=2) to PUSH so legacy exports
+            # keep importing cleanly.
+            if reminder.get('type') in (0, 2):
+                reminder['type'] = enums.PUSH
 
-        reminder['homework'] = _resolve_parent(
-            homework_remap, reminder.get('homework'), 'reminders', 'homework') \
-            if reminder.get('homework') else None
-        reminder['event'] = _resolve_parent(
-            event_remap, reminder.get('event'), 'reminders', 'event') \
-            if reminder.get('event') else None
-        reminder['course'] = _resolve_parent(
-            course_remap, reminder.get('course'), 'reminders', 'course') \
-            if reminder.get('course') else None
+            reminder['homework'] = _resolve_parent(
+                homework_remap, reminder.get('homework'), 'reminders', 'homework') \
+                if reminder.get('homework') else None
+            reminder['event'] = _resolve_parent(
+                event_remap, reminder.get('event'), 'reminders', 'event') \
+                if reminder.get('event') else None
+            reminder['course'] = _resolve_parent(
+                course_remap, reminder.get('course'), 'reminders', 'course') \
+                if reminder.get('course') else None
 
-        # Skip exact duplicates: legacy exports paired a Popup and a Push reminder that now
-        key = (reminder.get('homework'), reminder.get('event'), reminder.get('course'),
-               reminder.get('offset'), reminder.get('offset_type'), reminder.get('type'),
-               reminder.get('message'), reminder.get('sent'), reminder.get('dismissed'))
-        if key in seen:
-            continue
-        seen.add(key)
-
-        # A course series holds one active reminder; `message` does not distinguish a series.
-        if reminder.get('course') and not reminder.get('sent') and not reminder.get('dismissed'):
-            series_key = (reminder.get('course'), reminder.get('type'),
-                          reminder.get('offset'), reminder.get('offset_type'))
-            if series_key in seen_active_series:
+            # Skip exact duplicates: legacy exports paired a Popup and a Push reminder that now
+            key = (reminder.get('homework'), reminder.get('event'), reminder.get('course'),
+                   reminder.get('offset'), reminder.get('offset_type'), reminder.get('type'),
+                   reminder.get('message'), reminder.get('sent'), reminder.get('dismissed'))
+            if key in seen:
                 continue
-            seen_active_series.add(series_key)
+            seen.add(key)
 
-        serializer = ReminderSerializer(data=reminder)
+            # A course series holds one active reminder; `message` does not distinguish a series.
+            if reminder.get('course') and not reminder.get('sent') and not reminder.get('dismissed'):
+                series_key = (reminder.get('course'), reminder.get('type'),
+                              reminder.get('offset'), reminder.get('offset_type'))
+                if series_key in seen_active_series:
+                    continue
+                seen_active_series.add(series_key)
 
-        if serializer.is_valid():
-            serializer.save(user=user)
-            created += 1
-        else:
-            raise _row_validation_error('reminders', reminder.get('id'), serializer.errors)
+            serializer = ReminderSerializer(data=reminder)
+
+            if serializer.is_valid():
+                serializer.save(user=user)
+                created += 1
+            else:
+                raise _row_validation_error('reminders', reminder.get('id'), serializer.errors)
+    errors.raise_if_any()
 
     logger.info(f"Imported {created} reminders.")
 
@@ -462,38 +516,41 @@ def _import_notes(notes, user, homework_remap, event_remap, material_remap, exam
     """
     notes_count = 0
 
+    errors = _SectionErrors('notes')
     for note_data in notes:
-        if not isinstance(note_data, dict):
-            raise ValidationError({'notes': "Each note must be an object."})
+        with errors.row():
+            if not isinstance(note_data, dict):
+                raise ValidationError({'notes': "Each note must be an object."})
 
-        if 'resources' in note_data and 'materials' in note_data:
-            raise ValidationError(
-                {'notes': "Provide either 'resources' or 'materials' on a note, not both."})
+            if 'resources' in note_data and 'materials' in note_data:
+                raise ValidationError(
+                    {'notes': "Provide either 'resources' or 'materials' on a note, not both."})
 
-        if 'materials' in note_data and 'resources' not in note_data:
-            resources_input = note_data.get('materials', [])
-        else:
-            resources_input = note_data.get('resources', [])
+            if 'materials' in note_data and 'resources' not in note_data:
+                resources_input = note_data.get('materials', [])
+            else:
+                resources_input = note_data.get('resources', [])
 
-        payload = {
-            'title': note_data.get('title', ''),
-            'content': note_data.get('content') or {},
-            'homework': [
-                _resolve_parent(homework_remap, raw_id, 'notes', 'homework')
-                for raw_id in (note_data.get('homework') or [])
-            ],
-            'events': [
-                _resolve_parent(event_remap, raw_id, 'notes', 'events')
-                for raw_id in (note_data.get('events') or [])
-            ],
-            'resources': [
-                _resolve_parent(material_remap, raw_id, 'notes', 'resources')
-                for raw_id in (resources_input or [])
-            ],
-        }
+            payload = {
+                'title': note_data.get('title', ''),
+                'content': note_data.get('content') or {},
+                'homework': [
+                    _resolve_parent(homework_remap, raw_id, 'notes', 'homework')
+                    for raw_id in (note_data.get('homework') or [])
+                ],
+                'events': [
+                    _resolve_parent(event_remap, raw_id, 'notes', 'events')
+                    for raw_id in (note_data.get('events') or [])
+                ],
+                'resources': [
+                    _resolve_parent(material_remap, raw_id, 'notes', 'resources')
+                    for raw_id in (resources_input or [])
+                ],
+            }
 
-        _create_note_from_payload(payload, user, example_schedule, 'notes', note_data['id'])
-        notes_count += 1
+            _create_note_from_payload(payload, user, example_schedule, 'notes', note_data['id'])
+            notes_count += 1
+    errors.raise_if_any()
 
     logger.info(f"Imported {notes_count} notes.")
 
@@ -530,8 +587,25 @@ class _ImportedExampleSchedule(NamedTuple):
 
     course_group_remap: Dict[int, int]
     course_remap: Dict[int, int]
+    category_remap: Dict[int, int]
+    material_group_remap: Dict[int, int]
+    material_remap: Dict[int, int]
     event_remap: Dict[int, int]
     homework_remap: Dict[int, int]
+
+    def ids(self):
+        """
+        The ids the import assigned, by section (as the API names them), then by the id each row had in the file.
+        """
+        return {
+            'course_groups': self.course_group_remap,
+            'courses': self.course_remap,
+            'categories': self.category_remap,
+            'resource_groups': self.material_group_remap,
+            'resources': self.material_remap,
+            'events': self.event_remap,
+            'homework': self.homework_remap,
+        }
 
 
 @transaction.atomic
@@ -762,6 +836,9 @@ def _bulk_import_example_schedule(data, user):
     return _ImportedExampleSchedule(
         course_group_remap=course_group_remap,
         course_remap=course_remap,
+        category_remap=category_remap,
+        material_group_remap=material_group_remap,
+        material_remap=material_remap,
         event_remap=event_remap,
         homework_remap=homework_remap,
     )
@@ -802,15 +879,22 @@ def _resolve_top_level_resource_groups(data):
 
 
 @transaction.atomic
-def import_user(request, data, example_schedule=False):
+def import_user(request, data, example_schedule=False, dry_run=False):
     """
     Parse the given JSON string and import its associated data for the given user. Each model will be imported in a
     schema matching that of the documented APIs.
 
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
+    :param dry_run: Validate the import, then roll it back.
+    :return: The counts imported per section, and the ids assigned (by section, then by the id in the file).
     """
-    return _import_user(request, data, example_schedule)[0]
+    counts, imported = _import_user(request, data, example_schedule)
+
+    if dry_run:
+        transaction.set_rollback(True)
+
+    return counts, imported.ids()
 
 
 def _import_user(request, data, example_schedule=False):
@@ -865,10 +949,10 @@ def _import_user(request, data, example_schedule=False):
                                 example_schedule) if notes else 0
 
     for course_id in set(course_remap.values()):
-        taskutils.safe_apply_async(recalculate_category_grades_for_course,
-            args=(course_id,), priority=settings.CELERY_PRIORITY_LOW)
+        transaction.on_commit(lambda course_id=course_id: taskutils.safe_apply_async(
+            recalculate_category_grades_for_course, args=(course_id,), priority=settings.CELERY_PRIORITY_LOW))
 
-    metricutils.increment("user.import.schedule")
+    transaction.on_commit(lambda: metricutils.increment("user.import.schedule"))
 
     counts = (external_calendar_count, len(course_group_remap), len(course_remap), course_schedules_count,
               len(category_remap), len(material_group_remap), len(material_remap), len(event_remap),
@@ -877,6 +961,9 @@ def _import_user(request, data, example_schedule=False):
     return counts, _ImportedExampleSchedule(
         course_group_remap=course_group_remap,
         course_remap=course_remap,
+        category_remap=category_remap,
+        material_group_remap=material_group_remap,
+        material_remap=material_remap,
         event_remap=event_remap,
         homework_remap=homework_remap,
     )

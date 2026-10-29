@@ -16,6 +16,8 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from oauth2_provider.admin import access_token_admin_class, access_token_model, application_admin_class, \
+    application_model, grant_admin_class, grant_model, refresh_token_admin_class, refresh_token_model
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
 
 from helium.auth.models import UserSettings
@@ -664,3 +666,7 @@ admin_site.register(UserOAuthProvider, UserOAuthProviderAdmin)
 admin_site.register(UserClientActivity, UserClientActivityAdmin)
 admin_site.register(OutstandingTokenProxy, HeliumOutstandingTokenAdmin)
 admin_site.register(BlacklistedTokenProxy, HeliumBlacklistedTokenAdmin)
+admin_site.register(application_model, application_admin_class)
+admin_site.register(access_token_model, access_token_admin_class)
+admin_site.register(refresh_token_model, refresh_token_admin_class)
+admin_site.register(grant_model, grant_admin_class)

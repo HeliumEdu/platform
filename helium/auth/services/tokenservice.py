@@ -1,6 +1,7 @@
 import logging
 
 from knox.models import AuthToken
+from oauth2_provider.models import get_access_token_model, get_grant_model, get_refresh_token_model
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -61,9 +62,21 @@ def revoke_api_token(user) -> None:
         logger.info(f'API token revoked for user {user.pk}')
 
 
+def revoke_oauth_tokens(user) -> None:
+    """
+    Revoke every OAuth grant the user made: their access tokens, refresh tokens, and unused authorization codes.
+
+    :param user: the user whose grants are revoked.
+    """
+    get_refresh_token_model().objects.filter(user=user).delete()
+    get_access_token_model().objects.filter(user=user).delete()
+    get_grant_model().objects.filter(user=user).delete()
+
+
 def revoke_auth_tokens(user) -> None:
     """
-    Revoke the user's long-lived credentials: blacklist every outstanding refresh token and delete the API token.
+    Revoke the user's long-lived credentials: blacklist every outstanding refresh token, delete the API token, and
+    revoke every OAuth grant.
 
     Call this from anything that changes a password or reserves an account for deletion. Short-lived access tokens
     aren't stored, so authentication rejects those instead (password-hash claim, pending-delete check).
@@ -81,3 +94,5 @@ def revoke_auth_tokens(user) -> None:
 
     if deleted:
         logger.info(f'API token revoked for user {user.pk} alongside session revocation')
+
+    revoke_oauth_tokens(user)

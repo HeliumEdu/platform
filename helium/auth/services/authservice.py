@@ -22,7 +22,8 @@ from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
-from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
+    mark_user_active
 from helium.common import enums
 from helium.common.utils import gradeutils, metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
@@ -418,10 +419,7 @@ def oauth_login(request):
 
         update_last_login(None, user)
         if not is_new_user:
-            user.last_activity = timezone.now()
-            user.deletion_warning_count = 0
-            user.deletion_warning_sent_at = None
-            user.save(update_fields=['last_activity', 'deletion_warning_count', 'deletion_warning_sent_at'])
+            mark_user_active(user)
 
         if not user.settings.next_review_prompt_date:
             user.settings.next_review_prompt_date = (

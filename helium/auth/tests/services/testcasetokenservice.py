@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from knox.models import AuthToken
+from oauth2_provider.models import get_access_token_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
@@ -8,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.services.tokenservice import blacklist_refresh_tokens, create_api_token, issue_session_tokens, \
     revoke_api_token, revoke_auth_tokens
-from helium.auth.tests.helpers import userhelper
+from helium.auth.tests.helpers import oauthhelper, userhelper
 
 
 class TestCaseTokenService(APITestCase):
@@ -86,3 +87,18 @@ class TestCaseTokenService(APITestCase):
         # THEN
         self.assertEqual(1, BlacklistedToken.objects.filter(token__user=user).count())
         self.assertFalse(AuthToken.objects.filter(user=user).exists())
+
+    def test_revoke_auth_tokens_revokes_oauth_grants(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        other_user = userhelper.given_a_user_exists(username='other_user', email='other@test.com')
+        application = oauthhelper.given_oauth_application_exists()
+        oauthhelper.given_oauth_token_exists(user, application)
+        oauthhelper.given_oauth_token_exists(other_user, application, token='other-token')
+
+        # WHEN
+        revoke_auth_tokens(user)
+
+        # THEN
+        self.assertFalse(get_access_token_model().objects.filter(user=user).exists())
+        self.assertTrue(get_access_token_model().objects.filter(user=other_user).exists())

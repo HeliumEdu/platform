@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.template.loader import get_template
 from django.test import override_settings
+from oauth2_provider.models import get_access_token_model
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -12,15 +13,43 @@ from unittest import mock
 
 from django.utils import timezone
 
+from helium.auth.models import UserClientActivity
 from helium.auth.tasks import (
     sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
-    emit_online_users, evaluate_review_prompts, delete_user, process_dormant_users
+    emit_online_users, evaluate_review_prompts, delete_user, process_dormant_users, purge_oauth_tokens,
+    rollup_client_activity
 )
-from helium.auth.tests.helpers import userhelper
+from helium.auth.tests.helpers import oauthhelper, userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
 class TestCaseTasks(APITestCase):
+    def test_purge_oauth_tokens(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        application = oauthhelper.given_oauth_application_exists()
+        oauthhelper.given_oauth_token_exists(user, application, token='expired', expires_in=-timedelta(days=1))
+        oauthhelper.given_oauth_token_exists(user, application, token='current')
+
+        # WHEN
+        purge_oauth_tokens()
+
+        # THEN
+        self.assertEqual(['current'], [token.token for token in get_access_token_model().objects.all()])
+
+    def test_client_activity_rollup_ignores_connector_only_users(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        UserClientActivity.objects.create(user=user, date=timezone.now().date(),
+                                          client=UserClientActivity.CLIENT_CONNECTOR)
+
+        # WHEN
+        rollup_client_activity()
+
+        # THEN
+        user.refresh_from_db()
+        self.assertIsNone(user.mobile_app_usage_percent_30d)
+
     def test_purge_refresh_tokens(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)

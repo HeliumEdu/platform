@@ -1,6 +1,9 @@
-from django.urls import path
+from django.urls import include, path
+from oauth2_provider import views as oauth2_views
 
 from helium.auth.views.apis.apitokenviews import ApiTokenView
+from helium.auth.views.apis.oauthauthorizeviews import OAuthAuthorizeView
+from helium.auth.views.apis.oauthmetadataviews import HeliumOAuthServerMetadataView
 from helium.auth.views.apis.oauthviews import OAuthLoginView
 from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
@@ -37,9 +40,20 @@ urlpatterns = [
          name='auth_token_oauth'),
 
     ##############################
+    # OAuth authorization server URLs (connectors acting for a user)
+    ##############################
+    path('.well-known/oauth-authorization-server', HeliumOAuthServerMetadataView.as_view(),
+         name='oauth_server_metadata'),
+    path('auth/oauth/', include(([
+        path('token/', oauth2_views.TokenView.as_view(), name='token'),
+        path('revoke/', oauth2_views.RevokeTokenView.as_view(), name='revoke-token'),
+    ], 'oauth2_provider'))),
+
+    ##############################
     # Authenticated URLs
     ##############################
     path('auth/api-token/', ApiTokenView.as_view(), name='auth_api_token'),
+    path('auth/oauth/authorize/', OAuthAuthorizeView.as_view(), name='auth_oauth_authorize'),
 
     # User
     path('auth/user/', UserApiDetailView.as_view(), name='auth_user_detail'),

@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.db.models import Count, Exists, F, OuterRef, Q
 from firebase_admin import auth as firebase_auth
+from oauth2_provider.models import clear_expired
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -204,6 +205,16 @@ def purge_refresh_tokens(self):
         expires_at__lte=datetime.now().replace(tzinfo=timezone.utc)).delete()
 
     metricutils.task_stop(metrics, value=num_deleted)
+
+
+@app.task(bind=True)
+def purge_oauth_tokens(self):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("token.oauth.purge", priority="low", published_at_ms=published_at_ms)
+
+    clear_expired()
+
+    metricutils.task_stop(metrics)
 
 
 @app.task(bind=True)
@@ -637,7 +648,8 @@ def rollup_client_activity(self):
 
         users_with_activity = list(
             UserClientActivity.objects
-            .filter(date__gte=cutoff_90d)
+            .filter(date__gte=cutoff_90d,
+                    client__in=(UserClientActivity.CLIENT_WEB, UserClientActivity.CLIENT_MOBILE_APP))
             .values_list('user_id', flat=True)
             .distinct()
         )
@@ -863,6 +875,9 @@ def process_dormant_users(self):
 register_periodic(purge_refresh_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Purge expired refresh tokens")
+register_periodic(purge_oauth_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
+                  priority=settings.CELERY_PRIORITY_LOW,
+                  description="Purge expired OAuth tokens")
 register_periodic(purge_push_tokens, settings.REFRESH_TOKEN_PURGE_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
                   description="Purge stale push tokens")
