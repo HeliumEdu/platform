@@ -3,7 +3,11 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 from oauth2_provider.exceptions import FatalClientError, OAuthToolkitError
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import (
+    get_access_token_model,
+    get_application_model,
+    get_refresh_token_model,
+)
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
@@ -92,6 +96,37 @@ def describe_authorization(request) -> dict:
     }
 
 
+def connected_apps(user) -> list[dict]:
+    """
+    The apps the user has granted access to that can still act for them (a refresh token not yet revoked, or an
+    access token not yet expired), most recently used first.
+
+    :param user: the user.
+    :return: each app's id, name, the scopes its latest token holds, and when it last obtained a token.
+    """
+    live = set(get_refresh_token_model().objects.filter(user=user, revoked__isnull=True)
+               .values_list('application_id', flat=True))
+    live |= set(get_access_token_model().objects.filter(user=user, expires__gt=timezone.now())
+                .values_list('application_id', flat=True))
+
+    latest = {}
+    for token in get_access_token_model().objects.filter(user=user, application_id__in=live).order_by('created'):
+        latest[token.application_id] = token
+
+    descriptions = get_scopes_backend().get_all_scopes()
+    apps = []
+    for application in get_application_model().objects.filter(pk__in=live):
+        token = latest.get(application.pk)
+        apps.append({
+            'id': application.pk,
+            'name': application.name,
+            'scopes': [{'scope': scope, 'description': descriptions.get(scope, scope)}
+                       for scope in (token.scope.split() if token else [])],
+            'last_used_at': token.created if token else None,
+        })
+    return sorted(apps, key=lambda app: app['last_used_at'] or timezone.now(), reverse=True)
+
+
 def decide_authorization(request, allow) -> str:
     """
     Complete an authorization request as the user decided: issue an authorization code to the client, or tell it
@@ -120,6 +155,7 @@ def decide_authorization(request, allow) -> str:
             raise _authorization_error(error, request)
         logger.info(f'OAuth authorization denied by user {request.user.pk}')
         metricutils.increment('action.oauth.denied', user=request.user)
+        error.oauthlib_error.description = 'The user denied access.'
         return _error_redirect(error, request)
 
     logger.info(f'OAuth authorization granted by user {request.user.pk} to client {credentials["client_id"]}')

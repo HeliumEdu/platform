@@ -160,6 +160,7 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         params = oauthhelper.redirect_params(response.data['redirect_uri'])
         self.assertEqual(params['error'], 'access_denied')
+        self.assertEqual(params['error_description'], 'The user denied access.')
         self.assertEqual(params['state'], 'xyz')
         self.assertEqual(params['iss'], settings.PROJECT_API_HOST)
         self.assertNotIn('code', params)

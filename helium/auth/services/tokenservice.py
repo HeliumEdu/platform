@@ -62,15 +62,18 @@ def revoke_api_token(user) -> None:
         logger.info(f'API token revoked for user {user.pk}')
 
 
-def revoke_oauth_tokens(user) -> None:
+def revoke_oauth_tokens(user, application=None) -> None:
     """
-    Revoke every OAuth grant the user made: their access tokens, refresh tokens, and unused authorization codes.
+    Revoke the OAuth grants the user made: their access tokens, refresh tokens, and unused authorization codes.
 
     :param user: the user whose grants are revoked.
+    :param application: only this app's grants, if given; otherwise every app's.
     """
-    get_refresh_token_model().objects.filter(user=user).delete()
-    get_access_token_model().objects.filter(user=user).delete()
-    get_grant_model().objects.filter(user=user).delete()
+    for model in (get_refresh_token_model(), get_access_token_model(), get_grant_model()):
+        tokens = model.objects.filter(user=user)
+        if application is not None:
+            tokens = tokens.filter(application=application)
+        tokens.delete()
 
 
 def revoke_auth_tokens(user) -> None:

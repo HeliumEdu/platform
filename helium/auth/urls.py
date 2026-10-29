@@ -2,6 +2,7 @@ from django.urls import include, path
 from oauth2_provider import views as oauth2_views
 
 from helium.auth.views.apis.apitokenviews import ApiTokenView
+from helium.auth.views.apis.connectedappviews import UserConnectedAppApiDetailView, UserConnectedAppApiListView
 from helium.auth.views.apis.oauthauthorizeviews import OAuthAuthorizeView
 from helium.auth.views.apis.oauthmetadataviews import HeliumOAuthServerMetadataView
 from helium.auth.views.apis.oauthviews import OAuthLoginView
@@ -69,6 +70,9 @@ urlpatterns = [
          name='auth_user_pushtoken_list'),
     path('auth/user/pushtoken/<int:pk>/', UserPushTokenApiDetailView.as_view(),
          name='auth_user_pushtoken_detail'),
+    path('auth/user/connectedapps/', UserConnectedAppApiListView.as_view(), name='auth_user_connectedapps_list'),
+    path('auth/user/connectedapps/<int:pk>/', UserConnectedAppApiDetailView.as_view(),
+         name='auth_user_connectedapps_detail'),
 
     ##############################
     # Authenticated URLs for many-delete actions
