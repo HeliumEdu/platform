@@ -48,7 +48,8 @@ OAUTH_SCOPE_ENDPOINTS = {
 
 class HeliumCIMDMetadataFetcher(SafeMetadataFetcher):
     """
-    Fetch a client's metadata document, keeping only the grant types Helium issues. Used as `CIMD_METADATA_FETCHER`.
+    Fetch a client's metadata document, keeping only the grant types and token endpoint auth method Helium supports.
+    Used as `CIMD_METADATA_FETCHER`.
     """
 
     def fetch(self, client_id):
@@ -56,6 +57,12 @@ class HeliumCIMDMetadataFetcher(SafeMetadataFetcher):
         if isinstance(metadata.get('grant_types'), list):
             metadata['grant_types'] = [grant for grant in metadata['grant_types']
                                        if grant in oauth2_settings.OAUTH2_GRANT_TYPES_SUPPORTED]
+        auth_methods = oauth2_settings.OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED
+        if (metadata.get('token_endpoint_auth_method') not in auth_methods
+                and isinstance(metadata.get('token_endpoint_auth_methods_supported'), list)):
+            offered = [method for method in metadata['token_endpoint_auth_methods_supported'] if method in auth_methods]
+            if offered:
+                metadata['token_endpoint_auth_method'] = offered[0]
         return metadata, max_age
 
 
