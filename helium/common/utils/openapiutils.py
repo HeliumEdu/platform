@@ -1,8 +1,19 @@
 from collections import defaultdict
 
 from django.conf import settings
+from drf_spectacular.openapi import AutoSchema
 
 from helium.common.pagination import DefaultPageNumberPagination
+
+
+class HeliumAutoSchema(AutoSchema):
+    """
+    Pages only list reads: a write that answers with a list (e.g. uploading several attachments) returns it whole,
+    which drf-spectacular would otherwise document as a page whenever the view has a paginator.
+    """
+
+    def _get_paginator(self):
+        return super()._get_paginator() if self.method == 'GET' else None
 
 
 def strip_enum_int_bounds(result, generator, request, public):
@@ -57,7 +68,7 @@ def help_text_with_support_article(model, field_name: str, article_path: str) ->
 TAG_GROUPS = [
     {
         'name': 'Authentication',
-        'tags': ['auth', 'auth.register', 'auth.token.api', 'auth.token.jwt'],
+        'tags': ['auth', 'auth.register', 'auth.password-reset', 'auth.token.api', 'auth.token.jwt', 'auth.oauth'],
     },
     {
         'name': 'Planner',

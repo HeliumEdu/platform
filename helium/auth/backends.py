@@ -94,6 +94,11 @@ class OAuth2Authentication(BaseOAuth2Authentication):
     """
 
     def authenticate(self, request):
+        # Without a bearer token there's nothing to check, and the toolkit would otherwise still build the request's
+        # absolute URI (and so validate its host) on every anonymous request
+        if not request.META.get('HTTP_AUTHORIZATION', '').startswith('Bearer '):
+            return None
+
         authenticated = super().authenticate(request)
         if authenticated is None:
             return None
