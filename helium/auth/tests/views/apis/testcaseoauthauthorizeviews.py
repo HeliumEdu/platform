@@ -261,9 +261,10 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
 class TestCaseOAuthClientMetadataDocuments(APITestCase):
     CLIENT_ID = 'https://mcp-client.example/oauth/client-metadata'
 
-    def given_metadata(self, client_id, grant_types=('authorization_code', 'refresh_token')):
+    def given_metadata(self, client_id, grant_types=('authorization_code', 'refresh_token'), auth_method='none',
+                       **extra):
         return {'client_id': client_id, 'client_name': 'MCP Client', 'redirect_uris': [oauthhelper.REDIRECT_URI],
-                'grant_types': list(grant_types), 'token_endpoint_auth_method': 'none'}, 3600
+                'grant_types': list(grant_types), 'token_endpoint_auth_method': auth_method, **extra}, 3600
 
     def test_allowed_client_registers_from_its_metadata_document(self):
         # GIVEN
@@ -300,6 +301,37 @@ class TestCaseOAuthClientMetadataDocuments(APITestCase):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         query = oauthhelper.authorization_query(self.CLIENT_ID)
         metadata = self.given_metadata(self.CLIENT_ID, grant_types=('urn:ietf:params:oauth:grant-type:jwt-bearer',))
+
+        # WHEN
+        with mock.patch.object(SafeMetadataFetcher, 'fetch', return_value=metadata):
+            response = self.client.get(f"{reverse('auth_oauth_authorize')}?{query}")
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(get_application_model().objects.filter(client_id=self.CLIENT_ID).exists())
+
+    def test_client_metadata_offering_an_auth_method_helium_supports(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        query = oauthhelper.authorization_query(self.CLIENT_ID)
+        metadata = self.given_metadata(self.CLIENT_ID, auth_method='private_key_jwt',
+                                       token_endpoint_auth_methods_supported=['private_key_jwt', 'none'])
+
+        # WHEN
+        with mock.patch.object(SafeMetadataFetcher, 'fetch', return_value=metadata):
+            response = self.client.get(f"{reverse('auth_oauth_authorize')}?{query}")
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        application = get_application_model().objects.get(client_id=self.CLIENT_ID)
+        self.assertEqual(application.client_type, get_application_model().CLIENT_PUBLIC)
+
+    def test_client_metadata_without_an_auth_method_helium_supports_is_refused(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        query = oauthhelper.authorization_query(self.CLIENT_ID)
+        metadata = self.given_metadata(self.CLIENT_ID, auth_method='private_key_jwt',
+                                       token_endpoint_auth_methods_supported=['private_key_jwt'])
 
         # WHEN
         with mock.patch.object(SafeMetadataFetcher, 'fetch', return_value=metadata):
