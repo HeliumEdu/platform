@@ -155,6 +155,7 @@ def decide_authorization(request, allow) -> str:
             raise _authorization_error(error, request)
         logger.info(f'OAuth authorization denied by user {request.user.pk}')
         metricutils.increment('action.oauth.denied', user=request.user)
+        error.oauthlib_error.description = 'The user denied access.'
         return _error_redirect(error, request)
 
     logger.info(f'OAuth authorization granted by user {request.user.pk} to client {credentials["client_id"]}')
