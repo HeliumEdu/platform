@@ -41,6 +41,12 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 description='`true` validates the import and returns the counts it would import, without saving '
                             'anything.',
             ),
+            OpenApiParameter(
+                name='course_group',
+                type=int,
+                description='An existing Course Group id to import every Course into. The file\'s `course_groups` '
+                            'are then not imported, and each Course\'s `course_group` is ignored.',
+            ),
         ],
         examples=[
             OpenApiExample(
@@ -201,8 +207,12 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         Each model will be imported in a schema matching that of the documented APIs. The import is all or
         nothing: a rejected import lists every row error in the first section that has any.
+
+        With `course_group`, the file's classes are added to that existing Course Group (a term already in the
+        account) rather than to a new one.
         """
         dry_run = request.query_params.get('dry_run') == 'true'
+        course_group_id = self._course_group_param(request)
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected import request from user {request.user.pk} with {len(uploads)} files.')
@@ -236,7 +246,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 ((external_calendar_count_file, course_groups_count_file, courses_count_file,
                   course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
                   events_count_file, homework_count_file, reminders_count_file,
-                  notes_count_file), ids) = importservice.import_user(request, data, dry_run=dry_run)
+                  notes_count_file), ids) = importservice.import_user(request, data, dry_run=dry_run,
+                                                                      course_group_id=course_group_id)
 
                 if not dry_run:
                     reminderservice.process_push_reminders(True)
@@ -273,6 +284,16 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         })
 
         return Response(serializer.data)
+
+    @staticmethod
+    def _course_group_param(request):
+        course_group = request.query_params.get('course_group')
+        if course_group is None:
+            return None
+        try:
+            return int(course_group)
+        except ValueError:
+            raise ValidationError({'course_group': f"Unresolved `course_group` reference `{course_group}`."})
 
     @extend_schema(
         summary='Import a calendar (.ics) file',

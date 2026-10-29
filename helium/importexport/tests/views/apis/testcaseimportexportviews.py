@@ -1822,6 +1822,45 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual({}, ids['homework'])
         self.assertTrue(callbacks)
 
+    def test_import_into_an_existing_course_group(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        upload = SimpleUploadedFile('import.json', json.dumps(self._minimal_import_payload()).encode(),
+                                    content_type='application/json')
+
+        # WHEN
+        response = self.client.post(f"{reverse('importexport_import')}?course_group={course_group.pk}",
+                                    {'file[]': [upload]})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual((0, 1), (response.data['course_groups'], response.data['courses']))
+        self.assertEqual([course_group.pk], list(CourseGroup.objects.for_user(user.pk).values_list('pk', flat=True)))
+        course = Course.objects.get(pk=response.data['ids']['courses']['1'])
+        self.assertEqual(course_group.pk, course.course_group_id)
+        self.assertTrue(Category.objects.filter(course=course, title='Default').exists())
+
+    def test_import_into_another_users_course_group_is_refused(self):
+        # GIVEN
+        other_user = userhelper.given_a_user_exists(username='other', email='other@heliumedu.com')
+        course_group = coursegrouphelper.given_course_group_exists(other_user)
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        uploads = [SimpleUploadedFile('import.json', json.dumps(self._minimal_import_payload()).encode(),
+                                      content_type='application/json') for _ in range(2)]
+
+        # WHEN
+        responses = [self.client.post(f"{reverse('importexport_import')}?course_group={course_group_id}",
+                                      {'file[]': [upload]})
+                     for course_group_id, upload in zip((course_group.pk, 'term'), uploads)]
+
+        # THEN
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn('course_group', response.data)
+        self.assertFalse(Course.objects.exists())
+        self.assertEqual(1, CourseGroup.objects.count())
+
     def test_rejected_import_lists_every_row_error_in_the_section(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

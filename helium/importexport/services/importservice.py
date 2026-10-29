@@ -226,7 +226,7 @@ def _import_course_groups(course_groups, user, example_schedule):
     return course_group_remap
 
 
-def _import_courses(courses, course_group_remap):
+def _import_courses(courses, course_group_remap, existing_course_group_id=None):
     course_remap = {}
 
     errors = _SectionErrors('courses')
@@ -234,7 +234,7 @@ def _import_courses(courses, course_group_remap):
         with errors.row():
             course.pop('template', None)
 
-            course_group_id = _resolve_parent(
+            course_group_id = existing_course_group_id or _resolve_parent(
                 course_group_remap, course.get('course_group'), 'courses', 'course_group')
             course['course_group'] = course_group_id
 
@@ -879,7 +879,7 @@ def _resolve_top_level_resource_groups(data):
 
 
 @transaction.atomic
-def import_user(request, data, example_schedule=False, dry_run=False):
+def import_user(request, data, example_schedule=False, dry_run=False, course_group_id=None):
     """
     Parse the given JSON string and import its associated data for the given user. Each model will be imported in a
     schema matching that of the documented APIs.
@@ -887,9 +887,11 @@ def import_user(request, data, example_schedule=False, dry_run=False):
     :param request: The request performing the import.
     :param data: The data that will be imported for the user.
     :param dry_run: Validate the import, then roll it back.
+    :param course_group_id: An existing Course Group of the user's to import every Course into, in place of the
+                            file's Course Groups (which are not imported).
     :return: The counts imported per section, and the ids assigned (by section, then by the id in the file).
     """
-    counts, imported = _import_user(request, data, example_schedule)
+    counts, imported = _import_user(request, data, example_schedule, course_group_id)
 
     if dry_run:
         transaction.set_rollback(True)
@@ -897,9 +899,18 @@ def import_user(request, data, example_schedule=False, dry_run=False):
     return counts, imported.ids()
 
 
-def _import_user(request, data, example_schedule=False):
+def _verify_course_group_is_users(course_group_id, user):
+    if not CourseGroup.objects.for_user(user.pk).filter(pk=course_group_id).exists():
+        raise ValidationError({'course_group': f"Unresolved `course_group` reference `{course_group_id}`."})
+
+
+def _import_user(request, data, example_schedule=False, course_group_id=None):
     if not isinstance(data, dict):
         raise ValidationError("Import payload must be a JSON object.")
+
+    if course_group_id is not None:
+        _verify_course_group_is_users(course_group_id, request.user)
+        data['course_groups'] = []
 
     materials = _resolve_top_level_resources(data)
     data['materials'] = materials
@@ -917,7 +928,7 @@ def _import_user(request, data, example_schedule=False):
     course_group_remap = _import_course_groups(course_groups, request.user, example_schedule) if course_groups else {}
 
     courses = data.get('courses', [])
-    course_remap = _import_courses(courses, course_group_remap) if courses else {}
+    course_remap = _import_courses(courses, course_group_remap, course_group_id) if courses else {}
 
     course_schedules = data.get('course_schedules', [])
     course_schedules_count = _import_course_schedules(course_schedules, course_remap) if course_schedules else 0
