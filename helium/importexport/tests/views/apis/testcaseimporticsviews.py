@@ -193,6 +193,37 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual(datetime.datetime(2026, 7, 1, 13, 0, tzinfo=datetime.timezone.utc), event.start)
         self.assertEqual(datetime.datetime(2026, 7, 1, 14, 0, tzinfo=datetime.timezone.utc), event.end)
 
+    def test_import_ics_dry_run_saves_nothing(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        path = os.path.join(os.path.dirname(__file__), '../../resources', 'import_generic.ics')
+
+        # WHEN
+        with open(path, 'rb') as fp:
+            response = self.client.post(f"{reverse('importexport_import_ics')}?dry_run=true",
+                                        {'file[]': [fp], 'target_type': 'course', 'course': course.pk})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(3, response.data['homework'])
+        self.assertFalse(Homework.objects.filter(course=course).exists())
+
+    def test_import_ics_dry_run_reports_the_same_errors(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        path = os.path.join(os.path.dirname(__file__), '../../resources', 'import_generic.ics')
+
+        # WHEN
+        with open(path, 'rb') as fp:
+            response = self.client.post(f"{reverse('importexport_import_ics')}?dry_run=true",
+                                        {'file[]': [fp], 'target_type': 'course', 'course': 9999})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('course', response.data)
+
     def test_import_ics_rejects_multiple_files(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

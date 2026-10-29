@@ -30,7 +30,7 @@ _DEFAULT_PRIORITY = 50
 
 
 def import_ics(request, calendar, *, target_type, course_id=None, course_group_id=None,
-               default_course_title=None):
+               default_course_title=None, dry_run=False):
     """
     Import a parsed calendar into Helium against the chosen target.
 
@@ -42,6 +42,7 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
         ``target_type == 'new_course'``.
     :param default_course_title: Fallback title for a created Course (typically the upload
         filename) when the calendar carries no ``X-WR-CALNAME``.
+    :param dry_run: Validate the import, then roll it back.
     :return: A ``(courses_count, events_count, homework_count)`` tuple (``courses_count`` is 1
         only when ``new_course`` auto-creates one).
     :raises ValidationError: On an unknown ``target_type``, a missing/unresolvable target id, or a
@@ -57,13 +58,18 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
         if target_type == TARGET_EVENTS:
             events_count = _import_as_events(request, calendar, time_zone)
             _require_imported(events_count)
-            return 0, events_count, 0
+            counts = 0, events_count, 0
+        else:
+            course, course_created = _resolve_target_course(
+                request, target_type, course_id, course_group_id, calendar, default_course_title)
+            homework_count = _import_as_assignments(request, calendar, course, time_zone)
+            _require_imported(homework_count)
+            counts = (1 if course_created else 0), 0, homework_count
 
-        course, course_created = _resolve_target_course(
-            request, target_type, course_id, course_group_id, calendar, default_course_title)
-        homework_count = _import_as_assignments(request, calendar, course, time_zone)
-        _require_imported(homework_count)
-        return (1 if course_created else 0), 0, homework_count
+        if dry_run:
+            transaction.set_rollback(True)
+
+    return counts
 
 
 def _require_imported(count):

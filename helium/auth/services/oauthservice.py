@@ -42,6 +42,7 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('auth_user_detail', 'GET'),
         ('planner_coursegroups_list', 'GET'),
         ('importexport_import', 'POST'),
+        ('importexport_import_ics', 'POST'),
     },
 }
 

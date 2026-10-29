@@ -403,6 +403,8 @@ class TestCaseOAuthTokenAccess(APITestCase):
         self.assertEqual(self.client.get(reverse('planner_events_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.post(reverse('importexport_import'), {}, format='multipart').status_code,
                          status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.client.post(reverse('importexport_import_ics'), {}, format='multipart').status_code,
+                         status.HTTP_403_FORBIDDEN)
 
     def test_import_scope_reaches_only_import(self):
         # GIVEN
@@ -412,6 +414,8 @@ class TestCaseOAuthTokenAccess(APITestCase):
         self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(reverse('planner_coursegroups_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.post(reverse('importexport_import'), {}, format='multipart').status_code,
+                         status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.client.post(reverse('importexport_import_ics'), {}, format='multipart').status_code,
                          status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_403_FORBIDDEN)
