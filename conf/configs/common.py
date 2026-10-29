@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.17"
+__version__ = "2.7.18"
 
 import json
 import os
@@ -330,6 +330,7 @@ OAUTH2_PROVIDER = {
     'OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED': ['none'],
     'OIDC_ISS_ENDPOINT': PROJECT_API_HOST,
     'CIMD_ENABLED': True,
+    'CIMD_METADATA_FETCHER': 'helium.auth.services.oauthservice.HeliumCIMDMetadataFetcher',
     'CIMD_REGISTRATION_PERMISSION_CLASSES': ('oauth2_provider.cimd.HostAllowlistCIMDPermission',),
     'CIMD_ALLOWED_HOSTS': [host for host in config('PLATFORM_OAUTH_CIMD_ALLOWED_HOSTS', '').split(',') if host],
     'RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR': 'helium.auth.services.oauthservice.allows_helium_resource',

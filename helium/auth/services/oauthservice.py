@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.utils import timezone
+from oauth2_provider.cimd import SafeMetadataFetcher
 from oauth2_provider.exceptions import FatalClientError, OAuthToolkitError
 from oauth2_provider.models import (
     get_access_token_model,
@@ -43,6 +44,19 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('importexport_import', 'POST'),
     },
 }
+
+
+class HeliumCIMDMetadataFetcher(SafeMetadataFetcher):
+    """
+    Fetch a client's metadata document, keeping only the grant types Helium issues. Used as `CIMD_METADATA_FETCHER`.
+    """
+
+    def fetch(self, client_id):
+        metadata, max_age = super().fetch(client_id)
+        if isinstance(metadata.get('grant_types'), list):
+            metadata['grant_types'] = [grant for grant in metadata['grant_types']
+                                       if grant in oauth2_settings.OAUTH2_GRANT_TYPES_SUPPORTED]
+        return metadata, max_age
 
 
 def allows_helium_resource(audience_uri, audiences) -> bool:

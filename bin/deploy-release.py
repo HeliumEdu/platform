@@ -214,8 +214,8 @@ def find_and_apply_terraform_run(environment, version, terraform_token, timeout_
             status = run['attributes']['status']
             message = run['attributes'].get('message', '')
 
-            # Discard non-[platform] planned/pending runs or wrong version
-            if status in ['planned', 'pending'] and \
+            # Discard non-[platform] planned/pending runs or wrong version; the connector's release applies its own
+            if status in ['planned', 'pending'] and not message.startswith('[connector]') and \
                (not message.startswith('[platform]') or version not in message):
 
                 actions = run['attributes'].get('actions', {})
