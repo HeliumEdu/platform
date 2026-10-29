@@ -49,7 +49,7 @@ class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
-@extend_schema(tags=['auth.token'])
+@extend_schema(tags=['auth.token.jwt'])
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
     @extend_schema(
         operation_id='token_refresh',
