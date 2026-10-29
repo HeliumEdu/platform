@@ -62,6 +62,9 @@ class JWTAuthentication(BaseJWTAuthentication):
         except self.user_model.DoesNotExist:
             raise AuthenticationFailed(_("User not found"), code="user_not_found")
 
+        if user.deletion_requested_at is not None:
+            raise AuthenticationFailed(_("User not found"), code="user_not_found")
+
         if api_settings.CHECK_USER_IS_ACTIVE and not user.is_active:
             raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
 

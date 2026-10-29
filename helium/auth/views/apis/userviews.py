@@ -9,11 +9,9 @@ from rest_framework.exceptions import AuthenticationFailed, NotFound, Validation
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.serializers.userserializer import UserSerializer
+from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
 from helium.common.utils import taskutils
@@ -23,20 +21,11 @@ from helium.common.views.base import HeliumAPIView
 logger = logging.getLogger(__name__)
 
 
-def _blacklist_outstanding_tokens(user):
-    for outstanding in OutstandingToken.objects.filter(user=user):
-        try:
-            RefreshToken(outstanding.token).blacklist()
-        except TokenError:
-            # Already expired or blacklisted — safe to ignore
-            pass
-
-
 def _reserve_pending_delete(user):
     user.deletion_requested_at = timezone.now()
     user.save(update_fields=['deletion_requested_at'])
 
-    _blacklist_outstanding_tokens(user)
+    revoke_auth_tokens(user)
 
 
 class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
@@ -77,11 +66,9 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
         data = serializer.data
 
         if request.data.get('password'):
-            _blacklist_outstanding_tokens(user)
+            revoke_auth_tokens(user)
 
-            token = RefreshToken.for_user(user)
-            data['access'] = str(token.access_token)
-            data['refresh'] = str(token)
+            data.update(issue_session_tokens(user))
 
         return Response(data)
 

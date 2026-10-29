@@ -15,11 +15,11 @@ from firebase_admin import auth as firebase_auth
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from helium.auth.models import UserOAuthProvider, UserSettings
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.services.pushtokenservice import revoke_push_tokens
+from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens
 from helium.auth.tasks import clear_email_suppression, send_analytics_event, send_password_reset_email, \
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email
@@ -119,6 +119,7 @@ def confirm_password_reset(request):
         user.is_active = True
     user.save()
 
+    revoke_auth_tokens(user)
     revoke_push_tokens([user])
 
     logger.info(f'Password reset confirmed for user {user.pk} ({redact_email(user.email)})')
@@ -129,12 +130,7 @@ def confirm_password_reset(request):
     if user.settings.setup_state == enums.SETUP_PENDING:
         start_setup(user)
 
-    token = RefreshToken.for_user(user)
-
-    return Response({
-        'access': str(token.access_token),
-        'refresh': str(token),
-    }, status=status.HTTP_200_OK)
+    return Response(issue_session_tokens(user), status=status.HTTP_200_OK)
 
 
 def verify_email(request):
@@ -185,12 +181,7 @@ def verify_email(request):
         # Verification hands back auth tokens, so it is the user's first login
         update_last_login(None, user)
 
-        token = RefreshToken.for_user(user)
-
-        return Response({
-            'access': str(token.access_token),
-            'refresh': str(token),
-        }, status=status.HTTP_202_ACCEPTED)
+        return Response(issue_session_tokens(user), status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:
         raise NotFound('No User matches the given query.')
 
@@ -438,12 +429,7 @@ def oauth_login(request):
             )
             user.settings.save(update_fields=['next_review_prompt_date'])
 
-        token = RefreshToken.for_user(user)
-
-        return Response({
-            'access': str(token.access_token),
-            'refresh': str(token),
-        }, status=status.HTTP_200_OK)
+        return Response(issue_session_tokens(user), status=status.HTTP_200_OK)
 
     except firebase_auth.ExpiredIdTokenError:
         logger.warning('Expired Firebase ID token')

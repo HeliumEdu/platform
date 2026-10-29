@@ -1,3 +1,7 @@
+import json
+from unittest import mock
+from urllib.parse import parse_qs, urlparse
+
 from django.urls import reverse
 from knox.models import AuthToken
 from rest_framework import status
@@ -93,20 +97,63 @@ class TestCaseApiTokenViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_password_change_does_not_invalidate_api_token(self):
+    def test_password_change_revokes_api_token(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        create_response = self.client.post(reverse('auth_api_token'))
-        token = create_response.data['token']
+        token = self.client.post(reverse('auth_api_token')).data['token']
 
         # WHEN
-        user.set_password('new_pass_2!')
-        user.save()
+        response = self.client.put(reverse('auth_user_detail'),
+                                   json.dumps({'old_password': 'test_pass_1!', 'password': 'new_pass_2!'}),
+                                   content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(AuthToken.objects.filter(user=user).count(), 0)
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {token}')
-        protected_response = self.client.get(reverse('auth_user_detail'))
-        self.assertEqual(protected_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code,
+                         status.HTTP_401_UNAUTHORIZED)
+
+    def test_password_reset_revokes_api_token(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        token = self.client.post(reverse('auth_api_token')).data['token']
+        self.client.credentials()
+        forgot_response = self.client.put(reverse('auth_user_resource_forgot'),
+                                          json.dumps({'email': user.email}),
+                                          content_type='application/json')
+        params = parse_qs(urlparse(forgot_response.context['reset_url']).query)
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_resource_forgot_confirm'),
+                                   json.dumps({'uid': params['uid'][0], 'token': params['token'][0],
+                                               'password': 'NewPass_Helium1!'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(AuthToken.objects.filter(user=user).count(), 0)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token}')
+        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code,
+                         status.HTTP_401_UNAUTHORIZED)
+
+    @mock.patch('helium.auth.views.apis.userviews.delete_user.apply_async')
+    def test_delete_request_revokes_api_token(self, mock_apply_async):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        token = self.client.post(reverse('auth_api_token')).data['token']
+
+        # WHEN
+        response = self.client.delete(reverse('auth_user_resource_delete'),
+                                      json.dumps({'password': 'test_pass_1!'}),
+                                      content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(AuthToken.objects.filter(user=user).count(), 0)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token}')
+        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code,
+                         status.HTTP_401_UNAUTHORIZED)
 
     def test_unauthenticated_cannot_create_or_revoke(self):
         # GIVEN
