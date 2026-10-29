@@ -36,7 +36,7 @@ class HeliumAPIView(GenericAPIView):
         Whether this is a real request with a `user`, as opposed to drf-spectacular's schema generation
         (`swagger_fake_view`), where querysets must stay empty.
         """
-        return hasattr(self.request, 'user') and not getattr(self, 'swagger_fake_view', False)
+        return not getattr(self, 'swagger_fake_view', False) and hasattr(self.request, 'user')
 
     def initial(self, request, *args, **kwargs):
         self.__request_metrics = metricutils.request_start(request)

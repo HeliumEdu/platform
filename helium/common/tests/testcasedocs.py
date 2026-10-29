@@ -1,6 +1,7 @@
 import json
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from drf_spectacular.generators import SchemaGenerator
 from rest_framework import status
 
 
@@ -47,6 +48,52 @@ class TestCaseDocs(TestCase):
         self.assertEqual(material_prose, [])
         self.assertIn('/planner/resources/', schema['paths'])
         self.assertIn('/planner/resourcegroups/{resource_group}/resources/{id}/', schema['paths'])
+
+
+class TestCaseDocsSidebar(TestCase):
+    def test_every_tag_is_in_a_sidebar_group(self):
+        # GIVEN
+        response = self.client.get('/schema/?format=json')
+        schema = json.loads(response.content)
+        grouped = {tag for group in schema['x-tagGroups'] for tag in group['tags']}
+
+        # WHEN
+        hidden = sorted({f'{tag}: {method.upper()} {path}'
+                         for path, operations in schema['paths'].items()
+                         for method, operation in operations.items()
+                         for tag in operation.get('tags') or ['(untagged)'] if tag not in grouped})
+
+        # THEN
+        self.assertEqual(hidden, [], 'Redoc hides operations whose tag is in no `TAG_GROUPS` group')
+
+
+class TestCaseDocsResponses(TestCase):
+    def setUp(self):
+        # As `make build-docs` generates it: offline, so drf-spectacular's stand-in request host isn't allowed
+        with override_settings(ALLOWED_HOSTS=['api.heliumedu.com']):
+            self.schema = SchemaGenerator().get_schema(request=None, public=True)
+
+    def test_every_read_documents_its_response(self):
+        # WHEN
+        undocumented = [path for path, operations in self.schema['paths'].items()
+                        if '200' in operations.get('get', {}).get('responses', {})
+                        and not operations['get']['responses']['200'].get('content')]
+
+        # THEN
+        self.assertEqual(undocumented, [], 'a view skipped during schema generation loses its response schema')
+
+    def test_only_reads_are_paged(self):
+        # WHEN
+        paged_writes = [f'{method.upper()} {path}'
+                        for path, operations in self.schema['paths'].items()
+                        for method, operation in operations.items() if method in ('post', 'put', 'patch', 'delete')
+                        for response in operation.get('responses', {}).values()
+                        if 'Paginated' in json.dumps(response.get('content', {}))]
+
+        # THEN
+        self.assertEqual(paged_writes, [])
+        self.assertEqual('array', self.schema['paths']['/planner/attachments/']['post']['responses']['201']['content']
+                         ['application/json']['schema']['type'])
 
 
 def _strings_in(node):

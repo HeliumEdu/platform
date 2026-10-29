@@ -21,6 +21,7 @@ class UserConnectedAppApiListView(HeliumAPIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = ConnectedAppSerializer
+    queryset = get_application_model().objects.none()
 
     @extend_schema(
         operation_id='list_connected_apps',

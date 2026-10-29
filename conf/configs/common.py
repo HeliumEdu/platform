@@ -266,7 +266,7 @@ REST_FRAMEWORK = {
         'resend_verification_email': '1/min',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend', 'helium.common.search.HeliumSearchFilter',),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'helium.common.utils.openapiutils.HeliumAutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'helium.common.pagination.DefaultPageNumberPagination',
 }
 
@@ -526,6 +526,14 @@ SPECTACULAR_SETTINGS = {
     'OAUTH2_TOKEN_URL': f'{PROJECT_API_HOST}/auth/oauth/token/',
     'OAUTH2_REFRESH_URL': f'{PROJECT_API_HOST}/auth/oauth/token/',
     'TAGS': [
+        {
+            'name': 'auth.oauth',
+            'description': (
+                'Let an app act for a user, with access the user approves on Helium\'s consent page (`/connect`) '
+                'and can revoke. Clients discover the authorization server at '
+                '`/.well-known/oauth-authorization-server`.'
+            ),
+        },
         {
             'name': 'planner.homework',
             'description': (
