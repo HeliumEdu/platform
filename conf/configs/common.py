@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.12"
+__version__ = "2.7.13"
 
 import json
 import os
@@ -33,6 +33,7 @@ PROJECT_TAGLINE = 'Student Planner & Academic Calendar App'
 
 PROJECT_APP_HOST = config('PROJECT_FLUTTER_APP_HOST', 'http://localhost:8080' if 'local' in ENVIRONMENT else f'https://app.{ENVIRONMENT_PREFIX}heliumedu.com')
 PROJECT_API_HOST = config('PROJECT_API_HOST', 'http://localhost:8000' if 'local' in ENVIRONMENT else f'https://api.{ENVIRONMENT_PREFIX}heliumedu.com')
+PROJECT_CONNECTOR_HOST = config('PROJECT_CONNECTOR_HOST', 'http://localhost:8001' if 'local' in ENVIRONMENT else f'https://mcp.{ENVIRONMENT_PREFIX}heliumedu.com')
 DOCS_API_HOST = PROJECT_API_HOST if 'local' not in ENVIRONMENT else 'https://api.heliumedu.com'
 
 # Version information
@@ -96,6 +97,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'knox',
+    'oauth2_provider',
     'drf_spectacular',
     'django_filters',
     'django_celery_results',
@@ -246,6 +248,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'helium.auth.backends.JWTAuthentication',
         'knox.auth.TokenAuthentication',
+        'helium.auth.backends.OAuth2Authentication',
     ),
     'NUM_PROXIES': 1,
     'DEFAULT_THROTTLE_CLASSES': (
@@ -300,6 +303,38 @@ REST_KNOX = {
     'AUTH_HEADER_PREFIX': 'Token',
 }
 
+# OAuth grants let a connector (e.g. an MCP server in an AI assistant) act for a user who consented, with scopes
+# that only reach the endpoints in `OAUTH_SCOPE_ENDPOINTS` (see `helium.auth.services.oauthservice`).
+OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
+
+OAUTH2_PROVIDER = {
+    'SCOPES': {
+        'planner:read': 'Read your classes, assignments, events, grades, and notes',
+        'planner:import': 'Import a new term with its classes, schedules, assignments, and events',
+    },
+    'DEFAULT_SCOPES': ['planner:read', 'planner:import'],
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 90,
+    'ROTATE_REFRESH_TOKEN': True,
+    'REFRESH_TOKEN_GRACE_PERIOD_SECONDS': BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
+    'REFRESH_TOKEN_REUSE_PROTECTION': True,
+    'PKCE_REQUIRED': True,
+    'ALLOW_LOCALHOST_LOOPBACK': True,
+    'COMPLIANT_BCP_RFC9700_IMPLICIT_GRANT': True,
+    'COMPLIANT_BCP_RFC9700_PASSWORD_GRANT': True,
+    'COMPLIANT_BCP_RFC9700_PKCE_METHOD': True,
+    'COMPLIANT_BCP_RFC9700_AUTHZ_RESPONSE_ISS': True,
+    'OAUTH2_RESPONSE_TYPES_SUPPORTED': ['code'],
+    'OAUTH2_GRANT_TYPES_SUPPORTED': ['authorization_code', 'refresh_token'],
+    'OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED': ['none'],
+    'OIDC_ISS_ENDPOINT': PROJECT_API_HOST,
+    'CIMD_ENABLED': True,
+    'CIMD_REGISTRATION_PERMISSION_CLASSES': ('oauth2_provider.cimd.HostAllowlistCIMDPermission',),
+    'CIMD_ALLOWED_HOSTS': config('PLATFORM_OAUTH_CIMD_ALLOWED_HOSTS', 'claude.ai').split(','),
+    'RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR': 'helium.auth.services.oauthservice.allows_helium_resource',
+}
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': f"{PROJECT_NAME} API Documentation",
@@ -313,14 +348,18 @@ SPECTACULAR_SETTINGS = {
         "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal "
         "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
-        "Two flows are supported:\n\n"
+        "Three flows are supported:\n\n"
         "- **API token**: POST `/auth/api-token/` with a JWT to generate a long-lived token "
         "(plaintext, returned once). Use `Authorization: Token <api_token>`; POST again to "
         "rotate, `DELETE` to revoke. Changing or resetting the password also revokes it.\n"
         "- **JWT**: POST `{\"email\": \"...\", \"password\": \"...\"}` to `/auth/token/` for an "
         "`access`/`refresh` pair. Use `Authorization: Bearer <jwt_token>`; rotate via "
         "`/auth/token/refresh/`. Lifetimes are published by `GET /info/` as "
-        "`access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n\n"
+        "`access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n"
+        "- **Connector** (OAuth 2.0, for an app acting for a user, e.g. an AI assistant): authorization code "
+        "with PKCE `S256`; discover the endpoints at `/.well-known/oauth-authorization-server`. Scope "
+        "`planner:read` reaches the planner reads and `planner:import` the bulk import. Connector requests "
+        "share the user's rate limit.\n\n"
         "## Rate Limits\n\n"
         "Requests are limited per client:\n\n"
         "| Authentication | Limit |\n"
@@ -365,7 +404,9 @@ SPECTACULAR_SETTINGS = {
         "- One atomic call, no token-expiry exposure mid-import.\n"
         "- Predictable shape — every relationship is expressed as an integer `id` within the same "
         "file, so there is no GET-then-POST dance.\n"
-        "- Forward-compatibility shims (e.g. legacy reminder types) are applied in one place.\n\n"
+        "- Forward-compatibility shims (e.g. legacy reminder types) are applied in one place.\n"
+        "- `?dry_run=true` checks a file without saving anything; a real import returns the `ids` it "
+        "assigned.\n\n"
         "The `Export` schema in this document is the canonical bulk-import target — its keys "
         "(`course_groups`, `courses`, `course_schedules`, `categories`, `homework`, `events`, "
         "`reminders`, `notes`, `resources`, `resource_groups`, `external_calendars`) and per-row "
@@ -480,6 +521,10 @@ SPECTACULAR_SETTINGS = {
         'SetupStateEnum': enums.SETUP_STATE_CHOICES,
         'CalendarItemTypeEnum': enums.CALENDAR_ITEM_TYPE_CHOICES,
     },
+    'OAUTH2_FLOWS': ['authorizationCode'],
+    'OAUTH2_AUTHORIZATION_URL': f'{PROJECT_APP_HOST}/connect',
+    'OAUTH2_TOKEN_URL': f'{PROJECT_API_HOST}/auth/oauth/token/',
+    'OAUTH2_REFRESH_URL': f'{PROJECT_API_HOST}/auth/oauth/token/',
     'TAGS': [
         {
             'name': 'planner.homework',

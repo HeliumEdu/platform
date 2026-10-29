@@ -5,7 +5,7 @@ import os
 import icalendar
 from django.db import transaction
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
@@ -34,6 +34,14 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         summary='Bulk import User data from JSON',
         request=ImportCreateSerializer,
         responses={200: ImportSerializer},
+        parameters=[
+            OpenApiParameter(
+                name='dry_run',
+                type=bool,
+                description='`true` validates the import and returns the counts it would import, without saving '
+                            'anything.',
+            ),
+        ],
         examples=[
             OpenApiExample(
                 'bulk_syllabus_import',
@@ -191,8 +199,10 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
-        Each model will be imported in a schema matching that of the documented APIs.
+        Each model will be imported in a schema matching that of the documented APIs. The import is all or
+        nothing: a rejected import lists every row error in the first section that has any.
         """
+        dry_run = request.query_params.get('dry_run') == 'true'
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected import request from user {request.user.pk} with {len(uploads)} files.')
@@ -211,6 +221,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         homework_count = 0
         reminders_count = 0
         notes_count = 0
+        ids = {}
 
         for upload in uploads:
             try:
@@ -222,12 +233,13 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                         'details': f'Invalid JSON structure: {upload}.'
                     })
 
-                (external_calendar_count_file, course_groups_count_file, courses_count_file,
-                 course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
-                 events_count_file, homework_count_file, reminders_count_file,
-                 notes_count_file) = importservice.import_user(request, data)
+                ((external_calendar_count_file, course_groups_count_file, courses_count_file,
+                  course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
+                  events_count_file, homework_count_file, reminders_count_file,
+                  notes_count_file), ids) = importservice.import_user(request, data, dry_run=dry_run)
 
-                reminderservice.process_push_reminders(True)
+                if not dry_run:
+                    reminderservice.process_push_reminders(True)
 
                 external_calendar_count += external_calendar_count_file
                 course_groups_count += course_groups_count_file
@@ -257,6 +269,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             'homework': homework_count,
             'reminders': reminders_count,
             'notes': notes_count,
+            **({} if dry_run else {'ids': ids}),
         })
 
         return Response(serializer.data)

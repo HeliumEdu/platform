@@ -74,3 +74,8 @@ class ImportSerializer(serializers.Serializer):
     reminders = serializers.IntegerField()
 
     notes = serializers.IntegerField()
+
+    ids = serializers.DictField(
+        child=serializers.DictField(child=serializers.IntegerField()), required=False,
+        help_text='The ids assigned to the imported rows, by section, then by the `id` each row had in the file. '
+                  'Omitted for a dry run.')

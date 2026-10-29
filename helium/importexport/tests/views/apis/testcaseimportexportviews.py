@@ -64,11 +64,13 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response1.data)
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0},
+            {key: value for key, value in response1.data.items() if key != 'ids'})
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0}, response2.data)
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0},
+            {key: value for key, value in response2.data.items() if key != 'ids'})
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
@@ -1757,6 +1759,86 @@ class TestCaseImportExportViews(APITestCase):
             f.flush()
             with open(f.name, 'rb') as fp:
                 return self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+
+    def _post_dry_run(self, payload):
+        upload = SimpleUploadedFile('dry_run.json', json.dumps(payload).encode(), content_type='application/json')
+        return self.client.post(f"{reverse('importexport_import')}?dry_run=true", {'file[]': [upload]})
+
+    @mock.patch('helium.importexport.views.apis.importviews.reminderservice.process_push_reminders')
+    def test_dry_run_validates_without_keeping_anything(self, mock_process_push_reminders):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+
+        # WHEN
+        with self.captureOnCommitCallbacks() as callbacks:
+            response = self._post_dry_run(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual((1, 1, 1, 1, 1), (response.data['course_groups'], response.data['courses'],
+                                           response.data['categories'], response.data['resource_groups'],
+                                           response.data['resources']))
+        self.assertNotIn('ids', response.data)
+        self.assertFalse(CourseGroup.objects.exists())
+        self.assertFalse(Course.objects.exists())
+        self.assertFalse(Material.objects.exists())
+        self.assertEqual([], callbacks)
+        mock_process_push_reminders.assert_not_called()
+
+    def test_dry_run_reports_the_same_errors_as_an_import(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['credits'] = 'three'
+
+        # WHEN
+        dry_run = self._post_dry_run(payload)
+        imported = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(dry_run.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(imported.data, dry_run.data)
+
+    def test_import_returns_the_assigned_ids(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+
+        # WHEN
+        with self.captureOnCommitCallbacks() as callbacks:
+            response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = response.data['ids']
+        self.assertEqual(CourseGroup.objects.get(user=user).pk, ids['course_groups']['1'])
+        self.assertEqual(Course.objects.get(course_group__user=user).pk, ids['courses']['1'])
+        self.assertEqual(Category.objects.get(course__course_group__user=user, title='Default').pk,
+                         ids['categories']['1'])
+        self.assertEqual(MaterialGroup.objects.get(user=user).pk, ids['resource_groups']['1'])
+        self.assertEqual(Material.objects.get(material_group__user=user).pk, ids['resources']['1'])
+        self.assertEqual({}, ids['events'])
+        self.assertEqual({}, ids['homework'])
+        self.assertTrue(callbacks)
+
+    def test_rejected_import_lists_every_row_error_in_the_section(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        second_course = dict(payload['courses'][0], id=2, credits='-4')
+        payload['courses'][0]['credits'] = 'three'
+        payload['courses'].append(second_course)
+
+        # WHEN
+        response = self._post_import(payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(2, len(response.data['courses']))
+        self.assertTrue(response.data['courses'][0].startswith('courses id 1, credits: '))
+        self.assertTrue(response.data['courses'][1].startswith('courses id 2, credits: '))
+        self.assertFalse(Course.objects.exists())
 
     def test_import_note_invalid_payload_rejects_whole_import(self):
         # GIVEN
