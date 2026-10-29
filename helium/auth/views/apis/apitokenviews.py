@@ -2,9 +2,9 @@ import logging
 
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from helium.auth.backends import JWTAuthentication
+from helium.auth.services.tokenservice import create_api_token, revoke_api_token
 from helium.common.throttles import UserTokenRateThrottle
 from helium.common.views.base import HeliumAPIView
-from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -44,10 +44,7 @@ class ApiTokenView(HeliumAPIView):
         If the user already has an API token, it is invalidated and a new
         one is issued.
         """
-        AuthToken.objects.filter(user=request.user).delete()
-        instance, token = AuthToken.objects.create(user=request.user)
-
-        logger.info(f'API token created for user {request.user.pk}')
+        instance, token = create_api_token(request.user)
 
         return Response(
             {'token': token, 'created_at': instance.created},
@@ -64,9 +61,6 @@ class ApiTokenView(HeliumAPIView):
         """
         Revoke the authenticated user's API token.
         """
-        deleted, _ = AuthToken.objects.filter(user=request.user).delete()
-
-        if deleted:
-            logger.info(f'API token revoked for user {request.user.pk}')
+        revoke_api_token(request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

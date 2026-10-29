@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import admin, password_validation
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import exceptions
 from django.db.models import Count, OuterRef, Subquery
@@ -17,7 +17,6 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from helium.auth.models import UserSettings
 from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingTokenProxy
@@ -25,6 +24,7 @@ from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.services.pushtokenservice import revoke_push_tokens
+from helium.auth.services.tokenservice import blacklist_refresh_tokens, revoke_auth_tokens
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
 from helium.auth.utils.userutils import admin_allowed_email_error, generate_unique_username_from_email, \
     is_admin_allowed_email
@@ -94,6 +94,17 @@ class AdminUserCreationForm(UserCreationForm):
         self.instance.save()
 
         return self.instance
+
+
+class AdminUserPasswordChangeForm(AdminPasswordChangeForm):
+    def save(self, commit=True):
+        user = super().save(commit)
+
+        if commit:
+            revoke_auth_tokens(user)
+            revoke_push_tokens([user])
+
+        return user
 
 
 class OAuthProviderFilter(SimpleListFilter):
@@ -299,9 +310,7 @@ def force_review_prompt(modeladmin, request, queryset):
 @logged_action
 @django_admin.action(description='Force logout selected users (invalidates next token refresh)')
 def force_logout(modeladmin, request, queryset):
-    tokens = OutstandingToken.objects.filter(user__in=queryset)
-    for token in tokens:
-        BlacklistedToken.objects.get_or_create(token=token)
+    blacklist_refresh_tokens(queryset)
     revoke_push_tokens(queryset)
     modeladmin.message_user(request, f'Logged out {queryset.count()} user(s).')
 
@@ -318,9 +327,7 @@ def force_review_prompt_for_activities(modeladmin, request, queryset):
 @django_admin.action(description='Force logout users of selected activities (invalidates next token refresh)')
 def force_logout_for_activities(modeladmin, request, queryset):
     user_ids = list(queryset.values_list('user_id', flat=True).distinct())
-    tokens = OutstandingToken.objects.filter(user_id__in=user_ids)
-    for token in tokens:
-        BlacklistedToken.objects.get_or_create(token=token)
+    blacklist_refresh_tokens(user_ids)
     revoke_push_tokens(user_ids)
     modeladmin.message_user(request, f'Logged out {len(user_ids)} user(s).')
 
@@ -347,6 +354,7 @@ def remove_from_ses_suppression(modeladmin, request, queryset):
 class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
     form = AdminUserChangeForm
     add_form = AdminUserCreationForm
+    change_password_form = AdminUserPasswordChangeForm
 
     list_display = ('email', 'last_activity', 'get_auth_type',
                     'num_notes', 'num_courses', 'num_homework', 'num_events',

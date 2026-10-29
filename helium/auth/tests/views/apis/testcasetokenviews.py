@@ -96,6 +96,18 @@ class TestCaseTokenViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_access_token_rejected_when_user_pending_deletion(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.deletion_requested_at = timezone.now()
+        user.save(update_fields=['deletion_requested_at'])
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_token_fail_no_password(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
