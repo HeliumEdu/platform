@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.19"
+__version__ = "2.7.20"
 
 import json
 import os
@@ -310,7 +310,7 @@ OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 OAUTH2_PROVIDER = {
     'SCOPES': {
         'planner:read': 'Read your assignments, events, notes, classes, resources, and grades',
-        'planner:import': 'Import a new term with its assignments, events, classes, and class schedules',
+        'planner:import': 'Import new terms and classes with their assignments, events, and class schedules',
     },
     'DEFAULT_SCOPES': ['planner:read'],
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
@@ -392,7 +392,7 @@ SPECTACULAR_SETTINGS = {
         "Integrations that surface these to end users should use the user-facing terms "
         f"to match the {PROJECT_NAME} App.\n\n"
         "## Importing a schedule from a syllabus\n\n"
-        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}getting-started/where-to-start-with-helium/#import-a-whole-syllabus-with-ai) using this endpoint.\n\n"
+        f"Helium's Support Portal documents an [LLM-assisted workflow for importing a syllabus into a schedule]({SUPPORT_URL}getting-started/where-to-start-with-helium/#use-ai-as-a-scheduling-assistant) using this endpoint.\n\n"
         "GET `/auth/user/` first and read `settings.time_zone` (an IANA name like "
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
@@ -407,7 +407,9 @@ SPECTACULAR_SETTINGS = {
         "file, so there is no GET-then-POST dance.\n"
         "- Forward-compatibility shims (e.g. legacy reminder types) are applied in one place.\n"
         "- `?dry_run=true` checks a file without saving anything; a real import returns the `ids` it "
-        "assigned.\n\n"
+        "assigned.\n"
+        "- `?course_group=<id>` adds the file's classes to a term already in the account (for a syllabus "
+        "that arrives after the term was imported); the file then needs no `course_groups`.\n\n"
         "The `Export` schema in this document is the canonical bulk-import target — its keys "
         "(`course_groups`, `courses`, `course_schedules`, `categories`, `homework`, `events`, "
         "`reminders`, `notes`, `resources`, `resource_groups`, `external_calendars`) and per-row "
