@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from django.utils import timezone
 from oauth2_provider.models import get_access_token_model, get_application_model
 
-REDIRECT_URI = 'https://claude.ai/api/mcp/auth_callback'
+REDIRECT_URI = 'https://mcp-client.example/oauth/callback'
 CODE_VERIFIER = 'a-code-verifier-that-is-long-enough-for-pkce-0123456789'
 
 
@@ -14,7 +14,7 @@ def code_challenge(verifier=CODE_VERIFIER):
     return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode('ascii')).digest()).decode('ascii').rstrip('=')
 
 
-def given_oauth_application_exists(name='Claude', redirect_uri=REDIRECT_URI):
+def given_oauth_application_exists(name='MCP Client', redirect_uri=REDIRECT_URI):
     application_model = get_application_model()
     return application_model.objects.create(name=name,
                                             client_type=application_model.CLIENT_PUBLIC,

@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.13"
+__version__ = "2.7.14"
 
 import json
 import os
@@ -303,7 +303,7 @@ REST_KNOX = {
     'AUTH_HEADER_PREFIX': 'Token',
 }
 
-# OAuth grants let a connector (e.g. an MCP server in an AI assistant) act for a user who consented, with scopes
+# OAuth grants let a connector (an MCP server) act for a user who consented, with scopes
 # that only reach the endpoints in `OAUTH_SCOPE_ENDPOINTS` (see `helium.auth.services.oauthservice`).
 OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 
@@ -312,7 +312,7 @@ OAUTH2_PROVIDER = {
         'planner:read': 'Read your classes, assignments, events, grades, and notes',
         'planner:import': 'Import a new term with its classes, schedules, assignments, and events',
     },
-    'DEFAULT_SCOPES': ['planner:read', 'planner:import'],
+    'DEFAULT_SCOPES': ['planner:read'],
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
     'ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 90,
@@ -331,7 +331,7 @@ OAUTH2_PROVIDER = {
     'OIDC_ISS_ENDPOINT': PROJECT_API_HOST,
     'CIMD_ENABLED': True,
     'CIMD_REGISTRATION_PERMISSION_CLASSES': ('oauth2_provider.cimd.HostAllowlistCIMDPermission',),
-    'CIMD_ALLOWED_HOSTS': config('PLATFORM_OAUTH_CIMD_ALLOWED_HOSTS', 'claude.ai').split(','),
+    'CIMD_ALLOWED_HOSTS': [host for host in config('PLATFORM_OAUTH_CIMD_ALLOWED_HOSTS', '').split(',') if host],
     'RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR': 'helium.auth.services.oauthservice.allows_helium_resource',
 }
 
@@ -356,7 +356,7 @@ SPECTACULAR_SETTINGS = {
         "`access`/`refresh` pair. Use `Authorization: Bearer <jwt_token>`; rotate via "
         "`/auth/token/refresh/`. Lifetimes are published by `GET /info/` as "
         "`access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n"
-        "- **Connector** (OAuth 2.0, for an app acting for a user, e.g. an AI assistant): authorization code "
+        "- **Connector** (OAuth 2.0, for an MCP server acting for a user): authorization code "
         "with PKCE `S256`; discover the endpoints at `/.well-known/oauth-authorization-server`. Scope "
         "`planner:read` reaches the planner reads and `planner:import` the bulk import. Connector requests "
         "share the user's rate limit.\n\n"
