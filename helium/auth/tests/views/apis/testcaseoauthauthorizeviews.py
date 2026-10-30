@@ -41,7 +41,7 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
 
     def test_describe_authorization(self):
         # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
         response = self.client.get(self.authorize_url())
@@ -49,6 +49,7 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['client_name'], 'MCP Client')
+        self.assertEqual(response.data['user_email'], user.email)
         self.assertEqual(response.data['redirect_uri'], oauthhelper.REDIRECT_URI)
         self.assertEqual({scope['scope'] for scope in response.data['scopes']}, {'planner:read', 'planner:import'})
         self.assertTrue(all(scope['description'] for scope in response.data['scopes']))

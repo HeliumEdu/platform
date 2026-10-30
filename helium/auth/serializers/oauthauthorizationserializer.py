@@ -18,6 +18,8 @@ class OAuthAuthorizationSerializer(serializers.Serializer):
 
     scopes = OAuthScopeSerializer(many=True, help_text='The scopes requested.')
 
+    user_email = serializers.EmailField(help_text='The signed-in User the access would be granted for.')
+
 
 class OAuthDecisionSerializer(serializers.Serializer):
     allow = serializers.BooleanField(help_text='`true` to approve the request, `false` to deny it.')

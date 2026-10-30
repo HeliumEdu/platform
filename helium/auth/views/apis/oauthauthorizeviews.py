@@ -34,9 +34,12 @@ class OAuthAuthorizeView(HeliumAPIView):
         parameters (`client_id`, `redirect_uri`, `response_type`, `scope`, `state`, `code_challenge`,
         `code_challenge_method`, `resource`) unchanged as this endpoint's query string.
 
+        Show `user_email` on the consent screen, so the user can tell which account they're granting access to.
+
         If a `400` includes `redirect_uri`, send the user there to report the error to the client.
         """
-        return Response(OAuthAuthorizationSerializer(oauthservice.describe_authorization(request._request)).data)
+        authorization = oauthservice.describe_authorization(request._request)
+        return Response(OAuthAuthorizationSerializer({**authorization, 'user_email': request.user.email}).data)
 
     @extend_schema(
         summary="Record the User's decision on an OAuth authorization request",
