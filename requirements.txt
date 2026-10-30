@@ -4,7 +4,7 @@ djangorestframework==3.18.3
 djangorestframework-simplejwt==5.5.1
 django-rest-knox==5.0.4
 django-oauth-toolkit==3.4.1
-jwcrypto==1.5.8
+jwcrypto==1.5.9
 django-cors-headers==4.9.0
 django-pipeline==4.1.0
 django-filter==25.2
