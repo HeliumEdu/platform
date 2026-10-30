@@ -505,6 +505,38 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Note.objects.filter(pk=note_pk).exists())
 
+    def test_clear_note_content_keeps_linked_note_with_title(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(
+            user, event, title='Lab prep', content={'ops': [{'insert': 'Some notes\n'}]}
+        )
+        data = {'content': {'ops': [{'insert': '\n'}]}}
+        response = self.client.patch(
+            reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        note.refresh_from_db()
+        self.assertEqual(note.title, 'Lab prep')
+        self.assertEqual(note.content, {'ops': [{'insert': '\n'}]})
+
+    def test_clear_note_title_and_content_deletes_linked_note(self):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(
+            user, event, title='Lab prep', content={'ops': [{'insert': 'Some notes\n'}]}
+        )
+        data = {'title': ' ', 'content': {'ops': [{'insert': '\n'}]}}
+        response = self.client.patch(
+            reverse('planner_notes_detail', kwargs={'pk': note.pk}),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Note.objects.filter(pk=note.pk).exists())
+
     def test_clear_note_content_standalone_note_not_deleted(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         note = notehelper.given_note_exists(

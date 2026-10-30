@@ -125,12 +125,13 @@ class NoteSerializer(serializers.ModelSerializer):
         return attrs
 
     def should_delete_on_empty_content(self, instance, validated_data):
-        """Return True if `content` was cleared while the note is linked to an entity."""
+        """Return True if `content` was cleared, leaving no title, while the note is linked to an entity."""
         if 'content' not in validated_data:
             return False
         content = validated_data.get('content')
         content_is_empty = not content or content == {} or content == {'ops': [{'insert': '\n'}]}
-        return content_is_empty and instance.has_linked_entity()
+        title_is_empty = not validated_data.get('title', instance.title).strip()
+        return content_is_empty and title_is_empty and instance.has_linked_entity()
 
 
 class NoteExtendedSerializer(NoteSerializer):

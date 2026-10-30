@@ -137,14 +137,15 @@ class NotesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, U
     @extend_schema(summary='Update a Note', parameters=[IF_MATCH_PARAMETER], responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
-                                          'content cleared and is therefore deleted (see endpoint description).'),
+                                          'content cleared with no title and is therefore deleted (see endpoint '
+                                          'description).'),
     })
     def put(self, request, *args, **kwargs):
         """
         Update the given note.
 
-        If `content` is cleared while the note is linked to an entity, the note is deleted and a 204 is
-        returned in place of the updated note.
+        If `content` is cleared while the note is linked to an entity and has no title, the note is deleted and a
+        204 is returned in place of the updated note.
         """
         _check_linked_entity_permissions(request)
 
@@ -164,14 +165,15 @@ class NotesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, U
     @extend_schema(summary='Partially update a Note', parameters=[IF_MATCH_PARAMETER], responses={
         200: NoteExtendedSerializer,
         204: OpenApiResponse(description='Returned in place of the updated note when a linked note has its '
-                                          'content cleared and is therefore deleted (see endpoint description).'),
+                                          'content cleared with no title and is therefore deleted (see endpoint '
+                                          'description).'),
     })
     def patch(self, request, *args, **kwargs):
         """
         Partially update the given note.
 
-        If `content` is given and cleared while the note is linked to an entity, the note is deleted and a
-        204 is returned in place of the updated note.
+        If `content` is given and cleared while the note is linked to an entity and has no title, the note is
+        deleted and a 204 is returned in place of the updated note.
         """
         _check_linked_entity_permissions(request)
 
