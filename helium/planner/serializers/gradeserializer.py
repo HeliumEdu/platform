@@ -60,3 +60,34 @@ class GradeCourseGroupSerializer(GradeHolderSerializer):
 
 class GradeSerializer(serializers.Serializer):
     course_groups = GradeCourseGroupSerializer(many=True)
+
+
+class NeededGradeTargetSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+
+
+class NeededGradeAssignmentSerializer(NeededGradeTargetSerializer):
+    points_possible = serializers.FloatField()
+    needed_points = serializers.FloatField(help_text='The points needed on this assignment.')
+
+
+class NeededGradeSerializer(serializers.Serializer):
+    state = serializers.ChoiceField(
+        choices=['achievable', 'above_target', 'unachievable', 'target_category_has_no_weight',
+                 'invalid_total_weight'],
+        help_text='`achievable`: the desired grade can be reached. `above_target`: the class is already there. '
+                  '`unachievable`: it would take more than 100%. `target_category_has_no_weight` or '
+                  '`invalid_total_weight`: the class\'s category weights don\'t allow an accurate answer.')
+    needed_grade = serializers.FloatField(
+        help_text='The percentage needed on `assignment`, or as the `category` average when there\'s no '
+                  '`assignment`. `0` when the category weights don\'t allow an answer.')
+    weighted = serializers.BooleanField(help_text='Whether the class uses weighted grading.')
+    category = NeededGradeTargetSerializer(allow_null=True,
+                                           help_text='The category, for a class with weighted grading.')
+    assignment = NeededGradeAssignmentSerializer(
+        allow_null=True,
+        help_text='The assignment the score is for: the chosen one, or the category\'s last ungraded assignment.')
+    total_weight_accounted_for = serializers.FloatField(
+        allow_null=True,
+        help_text='The total of the class\'s category weights, when it isn\'t 100% (`invalid_total_weight`).')

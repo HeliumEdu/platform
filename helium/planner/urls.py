@@ -12,7 +12,7 @@ from helium.planner.views.apis.courseviews import CourseGroupCoursesApiDetailVie
     UserCoursesApiListView
 from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDetailView, EventsApiDeleteResourceView, \
     EventsApiCloneView
-from helium.planner.views.apis.graderesourceviews import GradesApiResourceView
+from helium.planner.views.apis.graderesourceviews import GradesApiResourceView, NeededGradeApiResourceView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
     CourseGroupCourseHomeworkApiDetailView, CourseGroupCourseHomeworkApiCloneView
 from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
@@ -29,6 +29,7 @@ urlpatterns = [
     ##############################
     # Resource shortcuts
     path('planner/grades/', GradesApiResourceView.as_view(), name='planner_resource_grades'),
+    path('planner/grades/needed/', NeededGradeApiResourceView.as_view(), name='planner_resource_grades_needed'),
 
     # CourseGroup
     path('planner/coursegroups/', CourseGroupsApiListView.as_view(), name='planner_coursegroups_list'),

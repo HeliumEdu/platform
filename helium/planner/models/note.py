@@ -113,6 +113,13 @@ class Note(BaseModel):
         return None
 
     @property
+    def course_id(self) -> Optional[int]:
+        hw_list = self._get_cached_m2m('homework')
+        if hw_list:
+            return hw_list[0].course_id
+        return None
+
+    @property
     def category_color(self) -> Optional[str]:
         hw_list = self._get_cached_m2m('homework')
         if hw_list:

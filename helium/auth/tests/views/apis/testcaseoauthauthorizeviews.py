@@ -401,6 +401,8 @@ class TestCaseOAuthTokenAccess(APITestCase):
             self.assertEqual(self.client.get(reverse(url_name)).status_code, status.HTTP_200_OK, url_name)
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(reverse('planner_events_list')).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(reverse('planner_resource_grades_needed')).status_code,
+                         status.HTTP_400_BAD_REQUEST, 'reached the view, which wants course, target, desired_grade')
         self.assertEqual(self.client.post(reverse('importexport_import'), {}, format='multipart').status_code,
                          status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.post(reverse('importexport_import_ics'), {}, format='multipart').status_code,
@@ -420,6 +422,8 @@ class TestCaseOAuthTokenAccess(APITestCase):
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_resources_list')).status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.client.get(reverse('planner_resource_grades_needed')).status_code,
+                         status.HTTP_403_FORBIDDEN)
 
     def test_account_and_destructive_endpoints_are_refused(self):
         # GIVEN

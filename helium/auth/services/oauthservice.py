@@ -34,6 +34,7 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('planner_homework_list', 'GET'),
         ('planner_events_list', 'GET'),
         ('planner_resource_grades', 'GET'),
+        ('planner_resource_grades_needed', 'GET'),
         ('planner_notes_list', 'GET'),
         ('planner_resourcegroups_list', 'GET'),
         ('planner_resources_list', 'GET'),

@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -77,6 +77,9 @@ refresh-timezones: install-dev
 		python bin/refresh-timezones.py $(REFRESH_TIMEZONES_ARGS); \
 		ENVIRONMENT=local python manage.py makemigrations; \
 	)
+
+sync-assets:
+	bin/sync-assets.sh
 
 migrate-dev: install-dev
 	@( \

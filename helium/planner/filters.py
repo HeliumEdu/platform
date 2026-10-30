@@ -217,6 +217,10 @@ class NoteFilter(django_filters.FilterSet):
                                         help_text='Filter to the note linked to this event ID.')
     resource = django_filters.NumberFilter(field_name='resources__id',
                                            help_text='Filter to the note linked to this resource ID.')
+    course = django_filters.NumberFilter(
+        method='filter_course',
+        help_text='Filter to notes linked to this course ID\'s homework or resources.',
+    )
 
     class Meta:
         model = Note
@@ -252,6 +256,9 @@ class NoteFilter(django_filters.FilterSet):
             events__isnull=True,
             resources__isnull=True
         )
+
+    def filter_course(self, queryset, name, value):
+        return queryset.filter(Q(homework__course__id=value) | Q(resources__courses__id=value)).distinct()
 
     def filter_shown_on_calendar(self, queryset, name, value):
         has_matching_homework = Q(homework__course__course_group__shown_on_calendar=value)

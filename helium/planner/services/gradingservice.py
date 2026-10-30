@@ -2,7 +2,7 @@
 # projects/frontend/lib/utils/grade_helpers.dart. The frontend operates on
 # category aggregates produced by this service (it does NOT recompute course
 # grades from raw homework — those come from here). The "What Grade Do I Need?"
-# inverse calculation is frontend-only. If you change the weighted-grade math
+# inverse calculation lives in neededgradeservice.py. If you change the weighted-grade math
 # here, audit grade_helpers.dart for consistency. Both sides have their own
 # test suites covering the math at their respective layers.
 
