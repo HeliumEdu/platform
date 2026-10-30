@@ -13,7 +13,7 @@ from oauth2_provider.models import (
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from helium.auth.models import UserClientActivity
+from helium.auth.models import UserClientActivity, UserOAuthProvider
 from helium.auth.tests.helpers import oauthhelper, userhelper
 
 CONNECTOR_RESOURCE = settings.OAUTH_CONNECTOR_RESOURCES[0]
@@ -50,9 +50,22 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['client_name'], 'MCP Client')
         self.assertEqual(response.data['user_email'], user.email)
+        self.assertEqual(response.data['user_oauth_providers'], [])
         self.assertEqual(response.data['redirect_uri'], oauthhelper.REDIRECT_URI)
         self.assertEqual({scope['scope'] for scope in response.data['scopes']}, {'planner:read', 'planner:import'})
         self.assertTrue(all(scope['description'] for scope in response.data['scopes']))
+
+    def test_describe_authorization_shows_the_users_linked_providers(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        UserOAuthProvider.objects.create(user=user, provider='google', provider_user_id='google-user-123')
+
+        # WHEN
+        response = self.client.get(self.authorize_url())
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['user_oauth_providers'], ['google'])
 
     def test_request_without_scopes_asks_only_to_read(self):
         # GIVEN

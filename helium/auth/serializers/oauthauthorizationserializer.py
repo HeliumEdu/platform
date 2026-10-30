@@ -2,6 +2,8 @@ import logging
 
 from rest_framework import serializers
 
+from helium.auth.models import UserOAuthProvider
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,6 +21,10 @@ class OAuthAuthorizationSerializer(serializers.Serializer):
     scopes = OAuthScopeSerializer(many=True, help_text='The scopes requested.')
 
     user_email = serializers.EmailField(help_text='The signed-in User the access would be granted for.')
+
+    user_oauth_providers = serializers.ListField(
+        child=serializers.ChoiceField(choices=UserOAuthProvider.PROVIDER_CHOICES),
+        help_text="The OAuth providers linked to the signed-in User's account.")
 
 
 class OAuthDecisionSerializer(serializers.Serializer):
