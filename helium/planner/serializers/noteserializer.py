@@ -139,12 +139,13 @@ class NoteExtendedSerializer(NoteSerializer):
     linked_entity_due = serializers.ReadOnlyField()
     linked_entity_completed = serializers.ReadOnlyField()
     course_color = serializers.ReadOnlyField()
+    course_id = serializers.ReadOnlyField()
     category_color = serializers.ReadOnlyField()
 
     class Meta(NoteSerializer.Meta):
         fields = NoteSerializer.Meta.fields + (
             'linked_entity_type', 'linked_entity_title', 'linked_entity_due', 'linked_entity_completed',
-            'course_color', 'category_color'
+            'course_color', 'course_id', 'category_color'
         )
 
 

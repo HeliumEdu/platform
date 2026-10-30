@@ -63,6 +63,7 @@ class TestCaseNote(TestCase):
         self.assertEqual(note.linked_entity_type, 'homework')
         self.assertEqual(note.linked_entity_title, homework.title)
         self.assertEqual(note.course_color, course.color)
+        self.assertEqual(note.course_id, course.pk)
 
     def test_note_linked_to_event(self):
         user = userhelper.given_a_user_exists()
@@ -72,6 +73,7 @@ class TestCaseNote(TestCase):
         self.assertEqual(note.linked_entity_type, 'event')
         self.assertEqual(note.linked_entity_title, event.title)
         self.assertIsNone(note.course_color)
+        self.assertIsNone(note.course_id)
 
     def test_note_linked_to_resource(self):
         user = userhelper.given_a_user_exists()

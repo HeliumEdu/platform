@@ -314,6 +314,26 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], note_with_event.pk)
 
+    def test_filter_by_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        other_course = coursehelper.given_course_exists(course_group, title='Other Course')
+        homework_note = notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(course))
+        material_group = materialgrouphelper.given_material_group_exists(user)
+        resource_note = notehelper.given_note_linked_to_resource(
+            user, materialhelper.given_material_exists(material_group, courses=[course]))
+        notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(other_course))
+        notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + f'?course={course.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual({homework_note.pk, resource_note.pk}, {note['id'] for note in response.data})
+
     def test_filter_standalone_notes(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         event = eventhelper.given_event_exists(user)
@@ -392,6 +412,7 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['linked_entity_type'], 'homework')
         self.assertEqual(response.data['course_color'], course.color)
+        self.assertEqual(response.data['course_id'], course.pk)
 
     def test_get_note_includes_homework_due_and_completed(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
