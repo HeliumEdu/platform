@@ -307,6 +307,8 @@ REST_KNOX = {
 # that only reach the endpoints in `OAUTH_SCOPE_ENDPOINTS` (see `helium.auth.services.oauthservice`).
 OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 
+OAUTH_CONSENT_TTL_SECONDS = 60 * 60
+
 OAUTH2_PROVIDER = {
     'SCOPES': {
         'planner:read': 'Read your assignments, events, notes, classes, resources, and grades',
