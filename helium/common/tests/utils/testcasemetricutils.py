@@ -14,6 +14,7 @@ ANDROID_BROWSER = ('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 
 DESKTOP_BROWSER = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
                    'Chrome/120.0 Safari/537.36')
 CRAWLER = 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+CONNECTOR = 'heliumedu helium-connector/1.2.0'
 
 
 def _request(client_platform=None, user_agent=None):
@@ -105,6 +106,16 @@ class TestCaseMetricUtils(SimpleTestCase):
         # THEN
         self.assertIn('client:bot', tags)
         self.assertIn('client_os:other', tags)
+
+    def test_client_tags_identifies_the_connector(self):
+        # GIVEN
+        request = _request(user_agent=CONNECTOR)
+
+        # WHEN
+        tags = _client_tags(request)
+
+        # THEN
+        self.assertEqual(['user_agent:connector', 'client:connector', 'client_os:other'], tags)
 
     def test_client_tags_ignores_header_casing(self):
         # GIVEN

@@ -27,6 +27,9 @@ def _normalize_user_agent_tag(user_agent):
 
     ua = user_agent.lower()
 
+    if "helium-connector" in ua:
+        return "connector"
+
     if any(bot in ua for bot in ["bot", "spider", "crawler", "slurp", "curl", "wget", "postman"]):
         return "bot"
 
@@ -63,6 +66,8 @@ def _client_tags(request):
         client, client_os = "web", settings.UA_CLIENT_OS.get(normalized_ua, "other")
     elif normalized_ua == "mobile_app_flutter":
         client, client_os = "app", "other"
+    elif normalized_ua == "connector":
+        client, client_os = "connector", "other"
     elif normalized_ua == "bot":
         client, client_os = "bot", "other"
     elif normalized_ua in settings.UA_CLIENT_OS:
