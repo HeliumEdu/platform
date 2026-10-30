@@ -170,6 +170,9 @@ FEED_CONSECUTIVE_FAILURE_THRESHOLD = 10
 # aggregation query load from high-frequency pollers (e.g. iOS Calendar).
 FEED_ICS_MAX_AGE_SECONDS = 60 * 15
 
+# How long each day's set of fetched private feeds is kept for usage metrics (about six months)
+FEED_FETCH_SET_TTL_SECONDS = 86400 * 181
+
 DB_INTEGRITY_RETRIES = 2
 
 DB_INTEGRITY_RETRY_DELAY_SECS = 2
@@ -307,6 +310,7 @@ REST_KNOX = {
 # that only reach the endpoints in `OAUTH_SCOPE_ENDPOINTS` (see `helium.auth.services.oauthservice`).
 OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 
+# How long a consent screen stays tied to the user it was shown to; only that user can approve it meanwhile
 OAUTH_CONSENT_TTL_SECONDS = 60 * 60
 
 OAUTH2_PROVIDER = {

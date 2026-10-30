@@ -331,9 +331,9 @@ def get_published_at_ms(celery_task):
         return None
 
 
-ONLINE_WINDOW_MINUTES = 15
+_ONLINE_WINDOW_MINUTES = 15
 
-_PRESENCE_BUCKET_TTL_SECONDS = (ONLINE_WINDOW_MINUTES + 1) * 60
+_PRESENCE_BUCKET_TTL_SECONDS = (_ONLINE_WINDOW_MINUTES + 1) * 60
 
 
 def _presence_bucket_key(staff_tag, minute):
@@ -363,12 +363,12 @@ def record_presence(user):
 def count_online_users(staff_tag):
     """
     The number of distinct users in the ``staff_tag`` cohort with a request in the last
-    ``ONLINE_WINDOW_MINUTES``, including the current (partial) minute.
+    ``_ONLINE_WINDOW_MINUTES``, including the current (partial) minute.
     """
     try:
         now = _current_minute()
         keys = [_presence_bucket_key(staff_tag, now - timedelta(minutes=offset))
-                for offset in range(ONLINE_WINDOW_MINUTES)]
+                for offset in range(_ONLINE_WINDOW_MINUTES)]
         return len(redisutils.get_redis_client().sunion(keys))
     except Exception:
         logger.warning("Failed to count online users", exc_info=True)
