@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.conf import settings
+from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -8,6 +9,7 @@ from oauth2_provider.cimd import SafeMetadataFetcher
 from oauth2_provider.models import (
     get_access_token_model,
     get_application_model,
+    get_grant_model,
     get_refresh_token_model,
 )
 from rest_framework import status
@@ -21,6 +23,7 @@ CONNECTOR_RESOURCE = settings.OAUTH_CONNECTOR_RESOURCES[0]
 
 class TestCaseOAuthAuthorizeViews(APITestCase):
     def setUp(self):
+        cache.clear()
         self.application = oauthhelper.given_oauth_application_exists()
 
     def authorize_url(self, **overrides):
@@ -178,6 +181,62 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual(params['state'], 'xyz')
         self.assertEqual(params['iss'], settings.PROJECT_API_HOST)
         self.assertNotIn('code', params)
+
+    def test_approval_by_another_user_than_described_to_is_refused(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.get(self.authorize_url())
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='other_user',
+                                                            email='other@test.com')
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': True}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertNotIn('redirect_uri', response.data)
+        self.assertFalse(get_grant_model().objects.exists(), 'no authorization code is issued')
+
+    def test_approval_by_the_user_it_was_described_to_succeeds(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.get(self.authorize_url())
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': True}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('code', oauthhelper.redirect_params(response.data['redirect_uri']))
+
+    def test_denial_after_switching_accounts_still_redirects(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.get(self.authorize_url())
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='other_user',
+                                                            email='other@test.com')
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': False}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(oauthhelper.redirect_params(response.data['redirect_uri'])['error'], 'access_denied')
+
+    def test_approval_with_no_description_on_record_is_allowed(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.get(self.authorize_url())
+        cache.clear()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='other_user',
+                                                            email='other@test.com')
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': True}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         'an expired record or an unavailable cache never blocks connecting')
 
     def test_unknown_client_is_never_redirected(self):
         # GIVEN

@@ -1,6 +1,8 @@
+import hashlib
 import logging
 
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 from oauth2_provider.cimd import SafeMetadataFetcher
 from oauth2_provider.exceptions import FatalClientError, OAuthToolkitError
@@ -14,7 +16,8 @@ from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
 from oauthlib.common import add_params_to_uri
 from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
-from rest_framework.exceptions import ValidationError
+from rest_framework import status
+from rest_framework.exceptions import APIException, ValidationError
 
 from helium.auth.models import UserClientActivity
 from helium.auth.utils.userutils import mark_user_active
@@ -46,6 +49,17 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('importexport_import_ics', 'POST'),
     },
 }
+
+
+class ConsentAccountChangedError(APIException):
+    """
+    Raised when a different user approves an authorization request than the one it was described to, as when the user
+    switches Helium accounts in another tab after the consent screen loaded.
+    """
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = ("You switched Helium accounts since this page loaded. Reload it to see which account you're "
+                      "connecting.")
+    default_code = 'consent_account_changed'
 
 
 class HeliumCIMDMetadataFetcher(SafeMetadataFetcher):
@@ -95,9 +109,10 @@ def scope_allows(token, url_name, method) -> bool:
 def describe_authorization(request) -> dict:
     """
     Validate an authorization request (its parameters are in the request's query string) and describe what it asks
-    for, so the user can consent.
+    for, so the user can consent. Records who the request was described to, so only that user can approve it.
 
-    :param request: the current django.http.HttpRequest, with the OAuth parameters in its query string.
+    :param request: the current django.http.HttpRequest, with the OAuth parameters in its query string and the user
+        as `request.user`.
     :return: the client's name, where it redirects, and the requested scopes with their descriptions.
     :raises ValidationError: when the request is invalid. When the client may be told, `redirect_uri` is the error
         redirect to send the user to.
@@ -111,6 +126,7 @@ def describe_authorization(request) -> dict:
 
     application = get_application_model().objects.get(client_id=credentials['client_id'])
     descriptions = get_scopes_backend().get_all_scopes()
+    cache.set(_consent_key(request), request.user.pk, settings.OAUTH_CONSENT_TTL_SECONDS)
 
     return {
         'client_name': application.name,
@@ -161,10 +177,13 @@ def decide_authorization(request, allow) -> str:
     :return: the URL to send the user to, back at the client.
     :raises ValidationError: when the request is invalid. When the client may be told, `redirect_uri` is the error
         redirect to send the user to.
+    :raises ConsentAccountChangedError: when approving a request that was described to a different user.
     """
     core = get_oauthlib_core()
     try:
         scopes, credentials = core.validate_authorization_request(request)
+        if allow:
+            _require_described_to(request)
         resources = _requested_resources(request, credentials)
         if resources:
             credentials['resource'] = resources
@@ -225,6 +244,23 @@ def _requested_resources(request, credentials) -> list[str]:
                                         state=credentials.get('state')),
                 redirect_uri=credentials['redirect_uri'])
     return resources
+
+
+def _require_described_to(request):
+    """
+    Refuse an approval from a different user than the one the request was described to. A request with no record (it
+    expired, or the cache is unavailable) isn't refused, so the check never blocks connecting.
+    """
+    described_to = cache.get(_consent_key(request))
+    if described_to is not None and described_to != request.user.pk:
+        logger.info(f'OAuth approval refused for user {request.user.pk}: the request was described to another user')
+        raise ConsentAccountChangedError()
+
+
+def _consent_key(request) -> str:
+    params = request.GET
+    request_id = '\n'.join(params.get(name, '') for name in ('client_id', 'redirect_uri', 'state', 'code_challenge'))
+    return f"oauth:consent:{hashlib.sha256(request_id.encode()).hexdigest()}"
 
 
 def _authorization_error(error, request) -> ValidationError:

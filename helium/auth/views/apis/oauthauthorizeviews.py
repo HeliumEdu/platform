@@ -55,6 +55,9 @@ class OAuthAuthorizeView(HeliumAPIView):
         """
         Approve or deny an OAuth authorization request. Pass the request's OAuth parameters unchanged as this
         endpoint's query string. Returns the `redirect_uri` to send the user to.
+
+        A `409` means a different User is approving than the one the request was described to (they switched accounts
+        since loading the consent screen): describe the request again before approving.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
