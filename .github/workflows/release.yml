@@ -141,10 +141,11 @@ jobs:
           SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
 
   deploy:
-    name: Trigger Deploy Workflow
+    name: Deploy
     needs: [prereq, create-release-tag]
     if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs.prereq.result == 'success' && needs['create-release-tag'].result == 'success'"
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -154,27 +155,33 @@ jobs:
           private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
           skip-token-revoke: true
 
-      - name: Trigger deploy workflow
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          VERSION: ${{ needs.prereq.outputs.version }}
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: |
-          gh workflow run deploy.yml \
-            --repo ${{ github.repository }} \
-            -f version_type=specific \
-            -f specific_version="$VERSION" \
-            -f environment="$ENVIRONMENT"
+      - name: Run the deploy workflow and wait for it
+        id: wait-for-deploy
+        uses: alexdlaird/shipshape/run-workflow@v1
+        with:
+          workflow: deploy.yml
+          ref: develop
+          token: ${{ steps.app-token.outputs.token }}
+          timeout-minutes: 55
+          inputs: |
+            version_type=specific
+            specific_version=${{ needs.prereq.outputs.version }}
+            environment=${{ inputs.environment }}
 
       - name: Deployment trigger summary
+        if: always()
         env:
           VERSION: ${{ needs.prereq.outputs.version }}
           ENVIRONMENT: ${{ inputs.environment }}
+          RUN_URL: ${{ steps.wait-for-deploy.outputs.run-url }}
         run: |
           echo "### Deploy Workflow Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$RUN_URL" ]; then
+            echo "- **Run**: $RUN_URL" >> $GITHUB_STEP_SUMMARY
+          fi
 
   cleanup:
     needs: [prereq, create-release-tag, deploy]
