@@ -191,6 +191,6 @@ publish: build-docker
 promote:
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
 
-	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(SOURCE_TAG)
-	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(SOURCE_TAG)
-	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(SOURCE_TAG)
+	docker buildx imagetools create --prefer-index=false -t public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(SOURCE_TAG)
+	docker buildx imagetools create --prefer-index=false -t public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(SOURCE_TAG)
+	docker buildx imagetools create --prefer-index=false -t public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(SOURCE_TAG)
