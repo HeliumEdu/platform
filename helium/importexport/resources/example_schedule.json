@@ -1812,7 +1812,7 @@
           {"insert": "During the Session"},
           {"insert": "\n", "attributes": {"header": 2}},
           {"insert": "\nCapture notes, questions, and "},
-          {"insert": "ideas as you go", "attributes": {"background": "#66FFEB3B"}},
+          {"insert": "ideas as you go", "attributes": {"background": "#FFBD42A4"}},
           {"insert": ". Color helps when reviewing later:\n\n"},
           {"insert": "Concept to remember", "attributes": {"color": "#2196f3", "italic": true}},
           {"insert": "\n", "attributes": {"list": "bullet"}},
