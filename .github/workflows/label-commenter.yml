@@ -9,7 +9,7 @@ on:
 
 jobs:
   label-commenter:
-    uses: HeliumEdu/.github/.github/workflows/label-commenter.yml@main
+    uses: alexdlaird/.github/.github/workflows/label-commenter.yml@main
     permissions:
       issues: write
       pull-requests: write

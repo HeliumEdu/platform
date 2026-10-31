@@ -45,6 +45,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || 'test' }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || 'test' }}
       PLATFORM: amd64
+      TAG_VERSION: ${{ github.sha }}
+      ANALYTICS_ENABLED: 1
 
     runs-on: ubuntu-24.04
 
@@ -67,9 +69,11 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build and smoke test Docker images
         run: make docker-env build-docker smoke-test-docker
-      - name: Publish Docker `latest` artifacts
+      - name: Publish Docker artifacts (commit tag for releases, `latest` for dev)
         if: github.ref_name == 'develop'
-        run: make publish
+        run: |
+          make publish
+          make promote SOURCE_TAG=${{ github.sha }} TAG_VERSION=latest
       - name: Dump Docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
@@ -84,6 +88,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || 'test' }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || 'test' }}
       PLATFORM: arm64
+      TAG_VERSION: ${{ github.sha }}
+      ANALYTICS_ENABLED: 1
 
     runs-on: ubuntu-24.04-arm
 
@@ -106,9 +112,11 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build and smoke test Docker images
         run: make docker-env build-docker smoke-test-docker
-      - name: Publish Docker `latest` artifacts
+      - name: Publish Docker artifacts (commit tag for releases, `latest` for dev)
         if: github.ref_name == 'develop'
-        run: make publish
+        run: |
+          make publish
+          make promote SOURCE_TAG=${{ github.sha }} TAG_VERSION=latest
       - name: Upload test coverage
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v6

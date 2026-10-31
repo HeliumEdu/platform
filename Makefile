@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -187,3 +187,10 @@ publish: build-docker
 
 	docker tag helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
 	docker push public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION)
+
+promote:
+	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
+
+	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-resource:$(PLATFORM)-$(SOURCE_TAG)
+	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-api:$(PLATFORM)-$(SOURCE_TAG)
+	docker buildx imagetools create -t public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(TAG_VERSION) public.ecr.aws/heliumedu/helium/platform-worker:$(PLATFORM)-$(SOURCE_TAG)

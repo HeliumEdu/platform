@@ -30,5 +30,5 @@ class ResilientDatabaseBackend(DatabaseBackend):
         return super().exception_safe_to_retry(exc) or _is_lost_connection(exc)
 
     def on_backend_retryable_error(self, exc: Exception) -> None:
-        logger.warning(f"Result backend lost its database connection, reconnecting before retry: {exc}")
+        logger.info(f"Result backend lost its database connection, reconnecting before retry: {exc}")
         connection.close()
