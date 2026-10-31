@@ -1,19 +1,10 @@
 name: "Release"
 
-run-name: "Release `${{ inputs.bump_type }}`"
+run-name: "Release"
 
 on:
   workflow_dispatch:
     inputs:
-      bump_type:
-        description: 'Version bump type'
-        required: true
-        type: choice
-        default: patch
-        options:
-          - patch
-          - minor
-          - major
       trigger_deploy_after_release:
         description: 'Trigger deploy after release'
         required: true
@@ -34,11 +25,6 @@ on:
         default: false
   workflow_call:
     inputs:
-      bump_type:
-        description: "Version bump type"
-        required: false
-        type: string
-        default: patch
       trigger_deploy_after_release:
         description: "Trigger deploy after release"
         required: false
@@ -67,54 +53,25 @@ concurrency:
 
 jobs:
   prereq:
-    uses: HeliumEdu/.github/.github/workflows/release-prereq.yml@main
+    uses: alexdlaird/.github/.github/workflows/release-prereq.yml@main
     with:
-      bump_type: ${{ inputs.bump_type }}
-      version_format: python
+      version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
       version_file: conf/configs/common.py
       repo_slug: HeliumEdu/platform
     secrets:
       bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
       bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
 
-  test:
-    name: Test
+  promote:
+    name: Promote Containers
     needs: [prereq]
     runs-on: ubuntu-latest
 
     env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
-
-      - name: Set up Python "3.12"
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Test
-        run: make test
-
-  build-and-publish:
-    name: Build and Publish AMD64 Containers
-    needs: [prereq, test]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success'"
-    runs-on: ubuntu-24.04
-
-    env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PLATFORM: amd64
+      SOURCE_TAG: ${{ needs.prereq.outputs.squash_boundary_sha }}
       TAG_VERSION: ${{ needs.prereq.outputs.version }}
-      ANALYTICS_ENABLED: 1
 
     steps:
       - uses: actions/checkout@v6
@@ -124,74 +81,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to AWS ECR Public
+      - name: Tag the AMD64 and ARM64 images with the release version
         run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
-
-      - name: Build and smoke test containers
-        run: make docker-env build-docker smoke-test-docker
-
-      - name: Publish containers
-        run: make publish
-
-      - name: Dump Docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2
-
-  build-and-publish-arm64:
-    name: Build and Publish ARM64 Containers
-    needs: [prereq, test]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs.test.result == 'success'"
-    runs-on: ubuntu-24.04-arm
-
-    env:
-      FORCE_COLOR: 1
-      PYTHONUNBUFFERED: 1
-      PYTHONDONTWRITEBYTECODE: 1
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PLATFORM: arm64
-      TAG_VERSION: ${{ needs.prereq.outputs.version }}
-      ANALYTICS_ENABLED: 1
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prereq.outputs.squash_commit_sha }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to AWS ECR Public
-        run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu
-
-      - name: Build and smoke test containers
-        run: make docker-env build-docker smoke-test-docker
-
-      - name: Publish containers
-        run: make publish
-
-      - name: Dump Docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2
+          make promote PLATFORM=amd64
+          make promote PLATFORM=arm64
 
   create-release-tag:
     name: Create Release Tag
-    needs: [prereq, build-and-publish, build-and-publish-arm64]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs['build-and-publish'].result == 'success' && needs['build-and-publish-arm64'].result == 'success'"
+    needs: [prereq, promote]
+    if: "!cancelled() && needs.prereq.result == 'success' && needs.promote.result == 'success'"
     runs-on: ubuntu-latest
 
     steps:
@@ -281,7 +179,7 @@ jobs:
   cleanup:
     needs: [prereq, create-release-tag, deploy]
     if: always() && needs.prereq.result == 'success'
-    uses: HeliumEdu/.github/.github/workflows/release-cleanup.yml@main
+    uses: alexdlaird/.github/.github/workflows/release-cleanup.yml@main
     with:
       # Consolidation is honoured only when the release actually shipped. Any
       # earlier failure leaves the merge path, which keeps the granular history.
@@ -290,3 +188,11 @@ jobs:
     secrets:
       bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
       bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+
+  bump:
+    needs: [create-release-tag, cleanup]
+    if: always() && needs['create-release-tag'].result == 'success'
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      bump_type: next
+    secrets: inherit
