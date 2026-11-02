@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.32"
+__version__ = "2.7.33"
 
 import json
 import os
@@ -726,7 +726,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'if-match',
 )
 
-CORS_EXPOSE_HEADERS = ['x-request-id']
+CORS_EXPOSE_HEADERS = ['x-request-id', 'retry-after']
 
 if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [
