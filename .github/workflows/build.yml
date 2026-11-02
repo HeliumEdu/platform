@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/integration.yml
     with:
       suite: full
-      frontend_ref: develop
+      frontend_ref: ${{ vars.FRONTEND_INTEGRATION_REF || 'main' }}
       caller: build
     secrets: inherit
 

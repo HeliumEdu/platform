@@ -16,7 +16,15 @@ logger = logging.getLogger(__name__)
 class ApiTokenView(HeliumAPIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserTokenRateThrottle,)
+
+    def get_throttles(self):
+        """
+        Rotation is rate limited tightly; revoking keeps the standard per-user limit so a user can always shut off
+        a token.
+        """
+        if self.request.method == 'POST':
+            return [UserTokenRateThrottle()]
+        return super().get_throttles()
 
     @extend_schema(
         operation_id='create_api_token',

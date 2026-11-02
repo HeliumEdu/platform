@@ -119,6 +119,35 @@ class TestCaseApiTokenViews(APITestCase, CacheTestCase):
         # THEN
         self.assertIsNone(response.data['api_token_created_at'])
 
+    def test_rotation_is_throttled(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        for _ in range(5):
+            self.assertEqual(self.client.post(reverse('auth_api_token')).status_code,
+                             status.HTTP_201_CREATED)
+
+        # WHEN
+        response = self.client.post(reverse('auth_api_token'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn('Retry-After', response.headers)
+
+    def test_revoke_is_not_blocked_by_the_rotation_throttle(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        for _ in range(5):
+            self.client.post(reverse('auth_api_token'))
+        self.assertEqual(self.client.post(reverse('auth_api_token')).status_code,
+                         status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # WHEN
+        response = self.client.delete(reverse('auth_api_token'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(AuthToken.objects.filter(user=user).count(), 0)
+
     def test_delete_revokes_token(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
