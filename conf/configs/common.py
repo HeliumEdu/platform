@@ -726,7 +726,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'if-match',
 )
 
-CORS_EXPOSE_HEADERS = ['x-request-id']
+CORS_EXPOSE_HEADERS = ['x-request-id', 'retry-after']
 
 if 'prod' not in ENVIRONMENT:
     CSRF_TRUSTED_ORIGINS += [

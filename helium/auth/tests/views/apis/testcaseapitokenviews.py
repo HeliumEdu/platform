@@ -2,6 +2,7 @@ import json
 from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
+from django.conf import settings
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from knox.models import AuthToken
@@ -132,6 +133,20 @@ class TestCaseApiTokenViews(APITestCase, CacheTestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn('Retry-After', response.headers)
+
+    def test_throttled_response_exposes_retry_after_to_browsers(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        origin = settings.CORS_ALLOWED_ORIGINS[0]
+        for _ in range(5):
+            self.client.post(reverse('auth_api_token'))
+
+        # WHEN
+        response = self.client.post(reverse('auth_api_token'), HTTP_ORIGIN=origin)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn('retry-after', response.headers['Access-Control-Expose-Headers'].lower())
 
     def test_revoke_is_not_blocked_by_the_rotation_throttle(self):
         # GIVEN
