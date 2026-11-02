@@ -4,6 +4,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from django.db import IntegrityError, transaction
+from drf_spectacular.utils import extend_schema_field
+from knox.models import AuthToken
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
@@ -43,11 +45,17 @@ class UserSerializer(serializers.ModelSerializer):
         help_text='Whether the user has any OAuth providers linked.'
     )
 
+    api_token_created_at = serializers.SerializerMethodField(
+        help_text="When the user's API token was created, or null if they don't have one."
+    )
+
     class Meta:
         model = get_user_model()
         fields = ('id', 'email', 'email_changing', 'old_password', 'password',
-                  'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
-        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',)
+                  'settings', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',
+                  'api_token_created_at',)
+        read_only_fields = ('email_changing', 'oauth_providers', 'has_usable_password', 'has_oauth_providers',
+                            'api_token_created_at',)
         extra_kwargs = {
             'email': {'validators': []},
         }
@@ -57,6 +65,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_has_oauth_providers(self, obj) -> bool:
         return obj.oauth_providers.exists()
+
+    @extend_schema_field(serializers.DateTimeField(allow_null=True))
+    def get_api_token_created_at(self, obj):
+        created = AuthToken.objects.filter(user=obj).values_list('created', flat=True).first()
+        return serializers.DateTimeField().to_representation(created) if created else None
 
     def validate(self, attrs):
         # If setting a password and user has a usable password, require old_password for security
