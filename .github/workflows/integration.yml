@@ -80,6 +80,12 @@ jobs:
       - name: Checkout platform
         uses: actions/checkout@v6
 
+      - name: Flag a non-main frontend ref
+        if: ${{ (inputs.frontend_ref || 'main') != 'main' }}
+        run: |
+          echo "::warning::Integration tests are running against frontend '${{ inputs.frontend_ref }}', not main. Delete the FRONTEND_INTEGRATION_REF repo variable once it's no longer needed."
+          echo "> **Frontend ref:** \`${{ inputs.frontend_ref }}\` (not \`main\`)" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Checkout frontend
         uses: actions/checkout@v6
         with:
