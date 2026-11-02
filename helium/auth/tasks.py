@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.db.models import Count, Exists, F, OuterRef, Q
 from firebase_admin import auth as firebase_auth
+from knox.models import AuthToken
 from oauth2_provider.models import clear_expired
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -16,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
+from helium.auth.services import oauthservice
 from helium.auth.utils.userutils import is_staff_user, rollup_power_users
 from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice, cumulativeuserservice, metricsampleservice
@@ -613,6 +615,24 @@ def emit_nightly_metrics(self):
         logger.debug("Emitted engagement quality metrics")
     except Exception as e:
         logger.error(f"Failed to emit engagement quality metrics: {e}", exc_info=True)
+        raise
+
+    try:
+        account_qs = UserModel.objects.filter(is_active=True)
+        for staff_tag, select_cohort in staff_cohorts:
+            cohort_qs = select_cohort(account_qs)
+            staff_tags = [f'staff:{staff_tag}']
+            metricsampleservice.record_gauge('users.integrations.api_token',
+                                             cohort_qs.filter(Exists(AuthToken.objects.filter(user=OuterRef('pk'))))
+                                             .count(),
+                                             extra_tags=staff_tags)
+            metricsampleservice.record_gauge('users.integrations.connected_apps',
+                                             cohort_qs.filter(oauthservice.has_connected_app_filter(OuterRef('pk')))
+                                             .count(),
+                                             extra_tags=staff_tags)
+        logger.debug("Emitted integration metrics")
+    except Exception as e:
+        logger.error(f"Failed to emit integration metrics: {e}", exc_info=True)
         raise
 
     try:

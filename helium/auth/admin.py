@@ -10,12 +10,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import exceptions
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import Count, Exists, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from knox.models import AuthToken
 from oauth2_provider.admin import access_token_admin_class, access_token_model, application_admin_class, \
     application_model, grant_admin_class, grant_model, refresh_token_admin_class, refresh_token_model
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin, BlacklistedTokenAdmin
@@ -25,6 +26,7 @@ from helium.auth.models.tokenproxy import BlacklistedTokenProxy, OutstandingToke
 from helium.auth.models.userclientactivity import UserClientActivity
 from helium.auth.models.useroauthprovider import UserOAuthProvider
 from helium.auth.models.userpushtoken import UserPushToken
+from helium.auth.services import oauthservice
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.services.tokenservice import blacklist_refresh_tokens, revoke_auth_tokens
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
@@ -178,6 +180,44 @@ class PendingDeletionFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() == 'pending':
             return queryset.filter(deletion_requested_at__isnull=False)
+        return queryset
+
+
+class HasApiTokenFilter(SimpleListFilter):
+    title = 'has API token'
+    parameter_name = 'has_api_token'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        has_api_token = Exists(AuthToken.objects.filter(user=OuterRef('pk')))
+        if self.value() == 'yes':
+            return queryset.filter(has_api_token)
+        elif self.value() == 'no':
+            return queryset.exclude(has_api_token)
+        return queryset
+
+
+class HasConnectedAppFilter(SimpleListFilter):
+    title = 'has connected apps'
+    parameter_name = 'has_connected_apps'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        has_connected_app = oauthservice.has_connected_app_filter(OuterRef('pk'))
+        if self.value() == 'yes':
+            return queryset.filter(has_connected_app)
+        elif self.value() == 'no':
+            return queryset.exclude(has_connected_app)
         return queryset
 
 
@@ -368,7 +408,7 @@ class UserAdmin(ObjectActionsMixin, admin.UserAdmin, BaseModelAdmin):
                    'settings__default_view', 'settings__remember_filter_state',
                    'settings__calendar_event_limit', 'settings__default_reminder_type',
                    'settings__color_scheme_theme', 'settings__calendar_use_category_colors',
-                   OAuthProviderFilter, ClientFilter,
+                   OAuthProviderFilter, ClientFilter, HasApiTokenFilter, HasConnectedAppFilter,
                    has_weighted_grading_filter('course_groups__courses__categories__weight'),
                    has_credits_filter('course_groups__courses__credits'),
                    has_course_schedule_filter('course_groups__courses__schedules'),

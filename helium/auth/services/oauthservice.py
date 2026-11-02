@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Exists, Q
 from django.utils import timezone
 from oauth2_provider.cimd import SafeMetadataFetcher
 from oauth2_provider.exceptions import FatalClientError, OAuthToolkitError
@@ -133,6 +134,19 @@ def describe_authorization(request) -> dict:
         'redirect_uri': credentials['redirect_uri'],
         'scopes': [{'scope': scope, 'description': descriptions[scope]} for scope in scopes],
     }
+
+
+def has_connected_app_filter(user_ref) -> Q:
+    """
+    Matches users with at least one connected app, by the same rule as `connected_apps`.
+
+    :param user_ref: the user to match, e.g. `OuterRef('pk')` in a User queryset.
+    :return: a filter for that queryset.
+    """
+    live_refresh = get_refresh_token_model().objects.filter(user=user_ref, revoked__isnull=True)
+    live_access = get_access_token_model().objects.filter(user=user_ref, application__isnull=False,
+                                                          expires__gt=timezone.now())
+    return Q(Exists(live_refresh)) | Q(Exists(live_access))
 
 
 def connected_apps(user) -> list[dict]:
