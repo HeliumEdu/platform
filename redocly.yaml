@@ -7,6 +7,7 @@
 # content/page background or Markdown tables, so those are darkened by the CSS block in
 # `helium/common/templates/redoc-static.hbs`.
 openapi:
+  pathInMiddlePanel: true
   theme:
     colors:
       primary:
@@ -47,6 +48,9 @@ openapi:
       backgroundColor: '#0f1416'
       textColor: '#e2e6e8'
       activeTextColor: '#5aa2c2'
+    fab:
+      backgroundColor: '#1b2023'
+      color: '#5aa2c2'
     rightPanel:
       backgroundColor: '#1b2023'
       textColor: '#e2e6e8'

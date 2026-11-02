@@ -3,6 +3,7 @@ from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
 from django.urls import reverse
+from django.utils.dateparse import parse_datetime
 from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -68,6 +69,55 @@ class TestCaseApiTokenViews(APITestCase, CacheTestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {second_token}')
         self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code,
                          status.HTTP_200_OK)
+
+    def test_user_reports_no_api_token_until_one_is_created(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data['api_token_created_at'])
+
+    def test_user_reports_when_api_token_was_created(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        create_response = self.client.post(reverse('auth_api_token'))
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(parse_datetime(response.data['api_token_created_at']),
+                         create_response.data['created_at'])
+
+    def test_user_reports_rotated_api_token_creation(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.post(reverse('auth_api_token'))
+        rotated_response = self.client.post(reverse('auth_api_token'))
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(parse_datetime(response.data['api_token_created_at']),
+                         rotated_response.data['created_at'])
+
+    def test_user_reports_no_api_token_after_revoke(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        self.client.post(reverse('auth_api_token'))
+        self.client.delete(reverse('auth_api_token'))
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertIsNone(response.data['api_token_created_at'])
 
     def test_delete_revokes_token(self):
         # GIVEN
