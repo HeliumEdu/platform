@@ -79,6 +79,6 @@ class SupportContactThrottle(AnonRateThrottle):
 
 class UserTokenRateThrottle(DRFUserRateThrottle):
     """
-    Tight rate throttle for the API token management endpoint; rotations should be rare.
+    Tight rate throttle for creating or rotating an API token; rotations should be rare.
     """
     scope = 'user_token'
