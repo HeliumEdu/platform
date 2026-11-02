@@ -279,6 +279,58 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertEqual(Reminder.objects.count(), 2)
 
+    def test_heal_orphaned_repeating_reminders_heals_each_series_from_its_latest_reminder(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        courses = []
+        for title in ('Course A', 'Course B'):
+            course = coursehelper.given_course_exists(
+                course_group,
+                title=title,
+                start_date=datetime.date.today() - datetime.timedelta(days=7),
+                end_date=datetime.date.today() + datetime.timedelta(days=30)
+            )
+            courseschedulehelper.given_course_schedule_exists(course, days_of_week='0101010',
+                                                              mon_start_time=datetime.time(10, 0, 0),
+                                                              wed_start_time=datetime.time(10, 0, 0),
+                                                              fri_start_time=datetime.time(10, 0, 0))
+            courses.append(course)
+        orphaned = []
+        for course in courses:
+            for offset in (15, 30):
+                orphaned.append(Reminder(
+                    message=f'{course.title} {offset} older',
+                    start_of_range=timezone.now() - datetime.timedelta(days=2),
+                    offset=offset, offset_type=enums.MINUTES, type=enums.PUSH,
+                    sent=True, dismissed=False, course=course, user=user,
+                ))
+                orphaned.append(Reminder(
+                    message=f'{course.title} {offset} latest',
+                    start_of_range=timezone.now() - datetime.timedelta(hours=2),
+                    offset=offset, offset_type=enums.MINUTES, type=enums.PUSH,
+                    sent=True, dismissed=False, course=course, user=user,
+                ))
+        healthy_unsent = Reminder(
+            message='Healthy',
+            start_of_range=timezone.now() + datetime.timedelta(days=2),
+            offset=60, offset_type=enums.MINUTES, type=enums.PUSH,
+            sent=False, dismissed=False, course=courses[0], user=user,
+        )
+        Reminder.objects.bulk_create(orphaned + [healthy_unsent])
+
+        # WHEN
+        reminderservice.heal_orphaned_repeating_reminders()
+
+        # THEN
+        for course in courses:
+            for offset in (15, 30):
+                successors = Reminder.objects.filter(course=course, offset=offset, sent=False, dismissed=False)
+                self.assertEqual(
+                    list(successors.values_list('message', flat=True)), [f'{course.title} {offset} latest'])
+        self.assertEqual(Reminder.objects.filter(course=courses[0], offset=60).count(), 1)
+        self.assertEqual(Reminder.objects.count(), len(orphaned) + 1 + 4)
+
     def test_heal_orphaned_repeating_reminders_deletes_stale_and_creates_successor(self):
         # GIVEN
         user = userhelper.given_a_user_exists()

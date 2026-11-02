@@ -3,7 +3,7 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 from django.utils import timezone
 
 from helium.common import enums
@@ -102,10 +102,11 @@ def heal_orphaned_repeating_reminders(user_id=None):
     }
 
     to_delete_pks = []
-    successor_templates = []
+    orphaned_keys = set()
 
     for combo in all_series:
-        unsent = active_by_series.get(tuple(combo[field] for field in _SERIES_FIELDS))
+        series_key = tuple(combo[field] for field in _SERIES_FIELDS)
+        unsent = active_by_series.get(series_key)
 
         stale = unsent and (unsent['start_of_range'] is None or unsent['start_of_range'] <= window_start)
 
@@ -113,16 +114,24 @@ def heal_orphaned_repeating_reminders(user_id=None):
             to_delete_pks.append(unsent['pk'])
 
         if stale or not unsent:
-            template = (
-                Reminder.objects
-                .filter(**combo)
-                .select_related('user', 'user__settings', 'course', 'course__course_group')
-                .prefetch_related('course__schedules')
-                .order_by('-start_of_range')
-                .first()
-            )
-            if template:
-                successor_templates.append(template)
+            orphaned_keys.add(series_key)
+
+    latest_pk_in_series = (
+        Reminder.objects
+        .filter(**{field: OuterRef(field) for field in _SERIES_FIELDS})
+        .order_by('-start_of_range')
+        .values('pk')[:1]
+    )
+    successor_templates = [
+        reminder for reminder in (
+            Reminder.objects
+            .filter(course_id__in={key[0] for key in orphaned_keys}, pk=Subquery(latest_pk_in_series))
+            .select_related('user', 'user__settings', 'course', 'course__course_group')
+            .prefetch_related('course__schedules')
+        )
+        if (reminder.course_id, reminder.user_id, reminder.type, reminder.offset,
+            reminder.offset_type) in orphaned_keys
+    ]
 
     if to_delete_pks:
         logger.info(f'Deleting {len(to_delete_pks)} stale reminder(s)')

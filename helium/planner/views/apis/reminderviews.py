@@ -36,9 +36,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             user = self.request.user
             queryset = user.reminders.all().select_related(
                 'homework__category__course',
-                'homework__course',
+                'homework__course__course_group__user__settings',
                 'event__user',
-                'course',
+                'course__course_group__user__settings',
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
@@ -114,9 +114,9 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
             user = self.request.user
             queryset = user.reminders.all().select_related(
                 'homework__category__course',
-                'homework__course',
+                'homework__course__course_group__user__settings',
                 'event__user',
-                'course',
+                'course__course_group__user__settings',
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
