@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>{{title}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   {{{redocHead}}}
   <meta name="description" content="REST API documentation for Helium — free, color-coded online student planner for classes, homework, grades, and notes.">
   <meta property="og:title" content="Helium API Documentation">
@@ -21,7 +22,7 @@
        links) live in redocly.yaml. Validate locally — some styled-components elements (deep schema
        tables, response samples) may need additional rules. -->
   <style>
-    body { background-color: #0f1416; }
+    body { background-color: #0f1416; margin: 0; padding: 0; }
     /* Only the wrapper is painted so the content area stays transparent and ReDoc's own full-height
        right-column strip (#1b2023) shows through the gaps between sample blocks. */
     .redoc-wrap { background-color: #0f1416; }
@@ -45,6 +46,12 @@
     button:has(> .http-verb) + div { background: #1b2023 !important; color: #e2e6e8 !important;
       border: 1px solid rgba(255, 255, 255, 0.14) !important; border-top: 0 !important; }
     button:has(> .http-verb) + div div { background-color: transparent !important; color: #e2e6e8 !important; }
+    /* Phones: ReDoc's section padding (theme.spacing.sectionHorizontal, 40px) doesn't vary by width, so
+       halve it below ReDoc's `small` breakpoint (theme.breakpoints.small, 50rem) for the middle and right
+       panels, which sit directly inside each section row. */
+    @media (max-width: 50rem) {
+      [data-section-id] > [data-section-id] > div { padding-left: 20px; padding-right: 20px; }
+    }
   </style>
 </head>
 <body>
