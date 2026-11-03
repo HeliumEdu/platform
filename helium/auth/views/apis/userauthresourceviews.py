@@ -12,7 +12,7 @@ from helium.auth.serializers.userserializer import UserSerializer, UserCreateSer
     UserForgotConfirmSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
-from helium.common.throttles import ForgotPasswordEmailThrottle, ResendVerificationEmailThrottle
+from helium.common.throttles import AccountThrottle, AccountTotalThrottle, AnonThrottle, EmailThrottle
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 )
 class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
     serializer_class = UserSerializer
+    throttle_classes = [AnonThrottle, EmailThrottle]
 
     @extend_schema(
         operation_id='register',
@@ -61,6 +62,7 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
 )
 class UserVerifyResourceView(ViewSet, HeliumAPIView):
     serializer_class = TokenResponseFieldsMixin
+    throttle_classes = [AnonThrottle, AccountThrottle, AccountTotalThrottle]
 
     @extend_schema(
         operation_id='verify_email',
@@ -90,7 +92,7 @@ class UserVerifyResourceView(ViewSet, HeliumAPIView):
 )
 class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
-    throttle_classes = [ResendVerificationEmailThrottle]
+    throttle_classes = [AnonThrottle, EmailThrottle]
 
     @extend_schema(
         operation_id='resend_verification_email',
@@ -120,7 +122,7 @@ class UserResendVerificationResourceView(ViewSet, HeliumAPIView):
 @extend_schema(tags=['auth.password-reset'])
 class UserForgotResourceView(ViewSet, HeliumAPIView):
     serializer_class = UserSerializer
-    throttle_classes = [ForgotPasswordEmailThrottle]
+    throttle_classes = [AnonThrottle, EmailThrottle]
 
     @extend_schema(
         operation_id='forgot_password',

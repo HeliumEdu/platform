@@ -73,7 +73,7 @@ COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "gunicorn conf.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-8} --timeout 60 --keep-alive 65 --preload --access-logfile - --error-logfile -"]
+CMD ["sh", "-c", "gunicorn conf.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-8} --timeout 60 --keep-alive 65 --preload --access-logfile - --access-logformat '\"%({x-forwarded-for}i)s\" (%(h)s) %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"' --error-logfile -"]
 
 ######################################################################
 

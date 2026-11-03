@@ -13,7 +13,7 @@ from helium.common.services.jsmservice import (
     create_jsm_request,
     create_quarantined_jsm_request,
 )
-from helium.common.throttles import SupportContactThrottle
+from helium.common.throttles import AnonThrottle, EmailThrottle, SupportThrottle
 from helium.common.utils import metricutils, spamutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.common.views.base import HeliumAPIView
@@ -31,7 +31,12 @@ class SupportContactView(HeliumAPIView):
     serializer_class = SupportContactSerializer
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = [SupportContactThrottle]
+    throttle_classes = [AnonThrottle, EmailThrottle, SupportThrottle]
+
+    def throttled(self, request, wait):
+        metricutils.increment('action.support_contact.throttled')
+        logger.info(f'support contact submission throttled (ip={AnonThrottle().get_ident(request)})')
+        super().throttled(request, wait)
 
     def post(self, request, *args, **kwargs):
         """
@@ -44,7 +49,7 @@ class SupportContactView(HeliumAPIView):
 
         if data.get('website'):
             logger.info(
-                f'support contact submission rejected (ip={SupportContactThrottle().get_ident(request)})'
+                f'support contact submission rejected (ip={AnonThrottle().get_ident(request)})'
             )
             metricutils.increment('action.support_contact.honeypot')
             return Response({'ok': True}, status=status.HTTP_200_OK)

@@ -10,10 +10,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.common.tests.test import CacheTestCase
 
 
-class TestCaseApiTokenViews(APITestCase, CacheTestCase):
+class TestCaseApiTokenViews(APITestCase):
     def test_create_returns_plaintext_token_and_authenticates(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone as tz
+from functools import cached_property
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -17,51 +18,86 @@ from helium.feed.services import icalprivateservice
 logger = logging.getLogger(__name__)
 
 
-def _record_feed_fetch(user, private_slug):
-    try:
-        staff_tag = 'true' if is_staff_user(user) else 'false'
-        today = datetime.now(tz.utc).date().isoformat()
-        key = f'feeds:active_slugs:{staff_tag}:{today}'
-        pipe = redisutils.get_redis_client().pipeline()
-        pipe.sadd(key, private_slug)
-        pipe.expire(key, settings.FEED_FETCH_SET_TTL_SECONDS)
-        pipe.execute()
-    except Exception:
-        logger.warning("Failed to record feed fetch", exc_info=True)
+class PrivateFeedView(HeliumAPIView):
+    """
+    An iCal feed served at a user's private slug. Subclasses provide the feed's content and last-modified time, and
+    its two filename templates (``{username}`` is filled in).
+    """
+    filename = None
+    attachment_filename = None
 
+    def get_last_modified(self, user):
+        raise NotImplementedError
 
-def _serve_private_feed(request, private_slug, last_modified_fn, feed_fn, filename, attachment_filename):
-    UserModel = get_user_model()
+    def build_feed(self, user):
+        raise NotImplementedError
 
-    try:
-        user = UserModel.objects.get_by_private_slug(private_slug)
-        _record_feed_fetch(user, private_slug)
+    @cached_property
+    def owner(self):
+        """
+        The user whose feed this is, or ``None`` when the slug matches no enabled feed.
+        """
+        slug = self.kwargs.get('private_slug')
+        if not slug:
+            return None
+        UserModel = get_user_model()
+        try:
+            return UserModel.objects.get_by_private_slug(slug)
+        except UserModel.DoesNotExist:
+            return None
 
-        last_modified = last_modified_fn(user)
+    def get_throttle_identity(self, request):
+        return f'feed-{self.owner.pk}' if self.owner else None
+
+    def serve_feed(self, request):
+        user = self.owner
+        if user is None:
+            raise NotFound()
+        self._record_fetch(user)
+
+        last_modified = self.get_last_modified(user)
         etag = icalprivateservice.generate_etag(user.pk, last_modified)
 
         not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
         if not_modified:
             return not_modified
 
-        ical_feed = feed_fn(user)
-
-        response = HttpResponse(ical_feed, content_type='text/calendar; charset=utf-8')
-        response['Filename'] = filename.format(username=user.username)
-        response['Content-Disposition'] = 'attachment; filename=' + attachment_filename.format(username=user.username)
+        response = HttpResponse(self.build_feed(user), content_type='text/calendar; charset=utf-8')
+        response['Filename'] = self.filename.format(username=user.username)
+        response['Content-Disposition'] = 'attachment; filename=' + self.attachment_filename.format(
+            username=user.username)
         response['ETag'] = etag
         if last_modified:
             response['Last-Modified'] = http_date(last_modified.timestamp())
         response['Cache-Control'] = f'private, max-age={settings.FEED_ICS_MAX_AGE_SECONDS}, must-revalidate'
         return response
-    except UserModel.DoesNotExist:
-        raise NotFound()
+
+    def _record_fetch(self, user):
+        try:
+            staff_tag = 'true' if is_staff_user(user) else 'false'
+            today = datetime.now(tz.utc).date().isoformat()
+            key = f'feeds:active_slugs:{staff_tag}:{today}'
+            pipe = redisutils.get_redis_client().pipeline()
+            pipe.sadd(key, self.kwargs['private_slug'])
+            pipe.expire(key, settings.FEED_FETCH_SET_TTL_SECONDS)
+            pipe.execute()
+        except Exception:
+            logger.warning("Failed to record feed fetch", exc_info=True)
 
 
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateEventsICALResourceView(HeliumAPIView):
+class PrivateEventsICALResourceView(PrivateFeedView):
+    filename = 'he_{username}_events.ics'
+    attachment_filename = 'Helium_{username}_events.ics'
+
+    def get_last_modified(self, user):
+        return icalprivateservice.get_events_last_modified(user)
+
+    def build_feed(self, user):
+        return icalprivateservice.events_to_private_ical_feed(user)
+
     @extend_schema(
         operation_id='feed_private_events_ical',
         summary='Download the private Events iCal feed',
@@ -86,15 +122,22 @@ class PrivateEventsICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_events.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
-        return _serve_private_feed(request, private_slug, icalprivateservice.get_events_last_modified,
-                                   icalprivateservice.events_to_private_ical_feed,
-                                   'he_{username}_events.ics', 'Helium_{username}_events.ics')
+        return self.serve_feed(request)
 
 
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateHomeworkICALResourceView(HeliumAPIView):
+class PrivateHomeworkICALResourceView(PrivateFeedView):
+    filename = 'he_{username}_homework.ics'
+    attachment_filename = 'Helium_{username}_homework.ics'
+
+    def get_last_modified(self, user):
+        return icalprivateservice.get_homework_last_modified(user)
+
+    def build_feed(self, user):
+        return icalprivateservice.homework_to_private_ical_feed(user)
+
     @extend_schema(
         operation_id='feed_private_homework_ical',
         summary='Download the private Homework iCal feed',
@@ -119,15 +162,22 @@ class PrivateHomeworkICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_homework.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
-        return _serve_private_feed(request, private_slug, icalprivateservice.get_homework_last_modified,
-                                   icalprivateservice.homework_to_private_ical_feed,
-                                   'he_{username}_homework.ics', 'Helium_{username}_homework.ics')
+        return self.serve_feed(request)
 
 
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
+class PrivateCourseSchedulesICALResourceView(PrivateFeedView):
+    filename = 'he_{username}coursescheduleevents.ics'
+    attachment_filename = 'Helium_{username}_coursescheduleevents.ics'
+
+    def get_last_modified(self, user):
+        return icalprivateservice.get_courseschedules_last_modified(user)
+
+    def build_feed(self, user):
+        return icalprivateservice.courseschedules_to_private_ical_feed(user)
+
     @extend_schema(
         operation_id='feed_private_courseschedules_ical',
         summary='Download the private CourseSchedule iCal feed',
@@ -152,6 +202,4 @@ class PrivateCourseSchedulesICALResourceView(HeliumAPIView):
         A `Content-Disposition: attachment; filename=Helium_<user>_coursescheduleevents.ics` header is
         set so that browser-initiated requests download the feed as a file.
         """
-        return _serve_private_feed(request, private_slug, icalprivateservice.get_courseschedules_last_modified,
-                                   icalprivateservice.courseschedules_to_private_ical_feed,
-                                   'he_{username}coursescheduleevents.ics', 'Helium_{username}_coursescheduleevents.ics')
+        return self.serve_feed(request)

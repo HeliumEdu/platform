@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.36"
+__version__ = "2.7.37"
 
 import json
 import os
@@ -255,18 +255,17 @@ REST_FRAMEWORK = {
     ),
     'NUM_PROXIES': 1,
     'DEFAULT_THROTTLE_CLASSES': (
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'helium.common.throttles.AnonThrottle',
+        'helium.common.throttles.UserThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/min',
+        'anon': '100/min',
         'user': '130/min',
-        'user_token': '5/hour',
-        'ses_webhook': '60/min',
-        'delete_inactive': '1/min',
-        'support_contact': '5/hour',
-        'forgot_password_email': '1/min',
-        'resend_verification_email': '1/min',
+        'account': '5/min',
+        'account_total': '20/min',
+        'email': '1/min',
+        'support': '30/hour',
+        'credential': '5/hour',
     },
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend', 'helium.common.search.HeliumSearchFilter',),
     'DEFAULT_SCHEMA_CLASS': 'helium.common.utils.openapiutils.HeliumAutoSchema',

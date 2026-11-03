@@ -3,6 +3,7 @@ import logging
 from knox.models import AuthToken
 from oauth2_provider.models import get_access_token_model, get_grant_model, get_refresh_token_model
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -22,6 +23,21 @@ def issue_session_tokens(user) -> dict[str, str]:
         'access': str(token.access_token),
         'refresh': str(token),
     }
+
+
+def refresh_token_user_id(raw_token) -> str | None:
+    """
+    The id of the user a refresh token belongs to.
+
+    :param raw_token: the encoded refresh token, as a client submits it.
+    :return: the user's id, or ``None`` unless the token's signature, expiry and blacklist status check out.
+    """
+    if not isinstance(raw_token, str) or not raw_token:
+        return None
+    try:
+        return str(RefreshToken(raw_token)[jwt_settings.USER_ID_CLAIM])
+    except (TokenError, KeyError):
+        return None
 
 
 def blacklist_refresh_tokens(users) -> None:

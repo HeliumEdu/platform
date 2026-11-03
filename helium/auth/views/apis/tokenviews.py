@@ -5,6 +5,8 @@ from rest_framework import serializers
 from rest_framework_simplejwt import views
 
 from helium.auth.serializers.tokenserializer import TokenRefreshSerializer, TokenObtainSerializer
+from helium.auth.services import tokenservice
+from helium.common.throttles import AccountThrottle, AccountTotalThrottle, AnonThrottle
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -12,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 @extend_schema(tags=['auth.token.jwt'])
 class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
+    throttle_classes = [AnonThrottle, AccountThrottle, AccountTotalThrottle]
+
     @extend_schema(
         operation_id='login',
         summary='Log in and obtain a token pair',
@@ -51,6 +55,10 @@ class TokenObtainPairView(HeliumAPIView, views.TokenObtainPairView):
 
 @extend_schema(tags=['auth.token.jwt'])
 class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
+    def get_throttle_identity(self, request):
+        return tokenservice.refresh_token_user_id(
+            request.data.get('refresh') if hasattr(request.data, 'get') else None)
+
     @extend_schema(
         operation_id='token_refresh',
         summary='Refresh an access token',
@@ -92,6 +100,10 @@ class TokenRefreshView(HeliumAPIView, views.TokenRefreshView):
 
 @extend_schema(tags=['auth.token.jwt'])
 class TokenBlacklistView(HeliumAPIView, views.TokenBlacklistView):
+    def get_throttle_identity(self, request):
+        return tokenservice.refresh_token_user_id(
+            request.data.get('refresh') if hasattr(request.data, 'get') else None)
+
     @extend_schema(operation_id='logout', summary='Log out and blacklist a refresh token')
     def post(self, request, *args, **kwargs):
         """

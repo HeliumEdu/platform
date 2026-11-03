@@ -475,7 +475,7 @@ def emit_nightly_metrics(self):
                                                   window_staff_tags + [f'entity:{entity_tag}'])
 
                 _emit_per_entity_distribution('users.data.graded_homework_per_course',
-                                              hw_qs.exclude(current_grade=''), 'course_id',
+                                              hw_qs.graded(), 'course_id',
                                               course_ids, window_staff_tags)
 
                 attachment_qs = Attachment.objects.filter(user__in=user_ids).exclude(
@@ -595,7 +595,7 @@ def emit_nightly_metrics(self):
                                           'course__course_group__user_id', user_ids, staff_tags)
 
             _emit_per_entity_distribution('users.engagement.graded_homework_per_user',
-                                          hw_qs.exclude(current_grade=''),
+                                          hw_qs.graded(),
                                           'course__course_group__user_id', user_ids, staff_tags)
 
             active_course_adopters = active_qs.filter(

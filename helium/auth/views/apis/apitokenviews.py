@@ -3,7 +3,7 @@ import logging
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from helium.auth.backends import JWTAuthentication
 from helium.auth.services.tokenservice import create_api_token, revoke_api_token
-from helium.common.throttles import UserTokenRateThrottle
+from helium.common.throttles import CredentialThrottle
 from helium.common.views.base import HeliumAPIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -23,7 +23,7 @@ class ApiTokenView(HeliumAPIView):
         a token.
         """
         if self.request.method == 'POST':
-            return [UserTokenRateThrottle()]
+            return [CredentialThrottle()]
         return super().get_throttles()
 
     @extend_schema(

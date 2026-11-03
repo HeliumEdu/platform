@@ -7,12 +7,11 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.common.tests.test import CacheTestCase
 from helium.planner.models import CourseSchedule
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper
 
 
-class TestCaseCourseViews(APITestCase, CacheTestCase):
+class TestCaseCourseViews(APITestCase):
     def test_course_schedule_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()

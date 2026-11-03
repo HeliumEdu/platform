@@ -30,6 +30,10 @@ def given_a_user_exists(username='test_user', email='user@test.com', password='t
     return user
 
 
+def given_users_exist(count, domain='school.edu'):
+    return [given_a_user_exists(username=f'student{i}', email=f'student{i}@{domain}') for i in range(count)]
+
+
 def given_a_user_exists_and_is_authenticated(client, username='test_user', email='user@test.com',
                                              password='test_pass_1!', time_zone=None):
     user = given_a_user_exists(username, email, password)

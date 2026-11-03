@@ -8,13 +8,12 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.common.tests.test import CacheTestCase
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.feed.tests.helpers import icalfeedhelper
 
 
-class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
+class TestCaseExternalCalendarResourceViews(APITestCase):
     def test_externalevent_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -337,7 +336,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase, CacheTestCase):
         self.assertEqual(response.data[0]['title'], 'New Year\'s Day')
 
 
-class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase, CacheTestCase):
+class TestCaseUserExternalCalendarAsEventsResourceViews(APITestCase):
     def test_user_external_calendar_events_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()

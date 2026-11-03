@@ -280,6 +280,24 @@ class TestCaseTasks(APITestCase):
         self.assertTrue(any(c.args[1] == 100 for c in rotating_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.distribution')
+    def test_emit_nightly_metrics_counts_only_graded_homework_as_graded(self, mock_distribution):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course, title='Graded', completed=True, current_grade='8/10')
+        homeworkhelper.given_homework_exists(course, title='Completed, ungraded', completed=True)
+        homeworkhelper.given_homework_exists(course, title='Incomplete, graded', current_grade='5/10')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        for metric in ('users.data.graded_homework_per_course', 'users.engagement.graded_homework_per_user'):
+            samples = [c.args[1] for c in mock_distribution.call_args_list if c.args[0] == metric]
+            self.assertTrue(samples, f'no samples for {metric}')
+            self.assertTrue(all(sample == 1 for sample in samples), f'{metric}: {samples}')
+
+    @mock.patch('helium.auth.tasks.metricutils.distribution')
     def test_emit_nightly_metrics_partitions_schedules_per_user_by_type(self, mock_distribution):
         # GIVEN
         user = userhelper.given_a_user_exists()

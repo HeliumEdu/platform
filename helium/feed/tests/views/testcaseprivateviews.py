@@ -4,16 +4,16 @@ import time
 
 import icalendar
 from django.conf import settings
+from django.test import TestCase
 from django.urls import reverse
 
 from helium.auth.tests.helpers import userhelper
-from helium.common.tests.test import CacheTestCase
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     homeworkhelper, eventhelper, notehelper, resourcegrouphelper, resourcehelper
 
 logger = logging.getLogger(__name__)
 
-class TestCasePrivateViews(CacheTestCase):
+class TestCasePrivateViews(TestCase):
     def test_events_feed(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()

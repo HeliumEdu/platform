@@ -1,13 +1,12 @@
 from unittest import mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 
 from helium.common.tests.helpers import supportcontacthelper
 from helium.common.tests.helpers.supportcontacthelper import SUBMITTER_EMAIL, jsm_error, sent_payload
-from helium.common.tests.test import CacheTestCase
 
 SPAM_REPORTER_EMAIL = 'support+spam@heliumedu.com'
 
@@ -15,7 +14,7 @@ SPAM_REPORTER_EMAIL = 'support+spam@heliumedu.com'
 @override_settings(DISABLE_EMAILS=False, ADMIN_EMAIL_ADDRESS='support@heliumedu.com')
 @mock.patch('helium.common.views.apis.supportcontactview.clear_ses_suppression_if_exists')
 @mock.patch('helium.common.services.jsmservice.urlopen_secure')
-class TestCaseSupportContactViews(CacheTestCase):
+class TestCaseSupportContactViews(TestCase):
     def test_submit(self, mock_urlopen, mock_clear_ses):
         # GIVEN
         supportcontacthelper.given_jsm_responds(mock_urlopen, {'issueKey': 'HS-1'})
@@ -68,6 +67,38 @@ class TestCaseSupportContactViews(CacheTestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+
+    @mock.patch('helium.common.views.apis.supportcontactview.metricutils.increment')
+    def test_a_second_message_from_one_sender_within_a_minute_is_throttled_without_blocking_others(
+            self, mock_increment, mock_urlopen, mock_clear_ses):
+        # GIVEN
+        supportcontacthelper.given_jsm_responds(mock_urlopen, {'issueKey': 'HS-1'}, {'issueKey': 'HS-2'})
+        self.client.post(reverse('support_contact'), supportcontacthelper.given_a_submission())
+
+        # WHEN
+        repeat = self.client.post(reverse('support_contact'), supportcontacthelper.given_a_submission())
+        classmate = self.client.post(reverse('support_contact'),
+                                     supportcontacthelper.given_a_submission(email='classmate@school.edu'))
+
+        # THEN
+        self.assertEqual(repeat.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(classmate.status_code, status.HTTP_200_OK)
+        mock_increment.assert_any_call('action.support_contact.throttled')
+
+    def test_messages_from_rotating_senders_on_one_address_are_capped(self, mock_urlopen, mock_clear_ses):
+        # GIVEN
+        supportcontacthelper.given_jsm_responds(mock_urlopen, *[{'issueKey': f'HS-{i}'} for i in range(30)])
+        for i in range(30):
+            self.client.post(reverse('support_contact'),
+                             supportcontacthelper.given_a_submission(email=f'sender{i}@example.com'))
+
+        # WHEN
+        response = self.client.post(reverse('support_contact'),
+                                    supportcontacthelper.given_a_submission(email='sender-final@example.com'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(mock_urlopen.call_count, 30)
 
     @mock.patch('helium.common.views.apis.supportcontactview.metricutils.increment')
     def test_suspected_spam_quarantined(self, mock_increment, mock_urlopen, mock_clear_ses):
