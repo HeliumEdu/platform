@@ -76,6 +76,43 @@ class TestCaseValidateQuillDelta(TestCase):
         with self.assertRaises(ValidationError):
             validate_quill_delta({'ops': 'not-a-list'})
 
+    def test_formatted_text_and_embeds_pass(self):
+        # GIVEN
+        content = {'ops': [
+            {'insert': 'Bold', 'attributes': {'bold': True}},
+            {'insert': {'image': 'https://example.com/a.png'}},
+            {'insert': '\n', 'attributes': {'list': 'bullet'}},
+        ]}
+
+        # WHEN
+        validate_quill_delta(content)
+
+    def test_change_ops_are_rejected_because_a_note_must_be_a_document(self):
+        for op in ({'retain': 3}, {'retain': 3, 'attributes': {'bold': True}}, {'delete': 2}):
+            with self.subTest(op=op):
+                # GIVEN
+                content = {'ops': [{'insert': 'hello\n'}, op]}
+
+                # WHEN
+                with self.assertRaises(ValidationError) as raised:
+                    validate_quill_delta(content)
+
+                # THEN
+                self.assertIn('insert', str(raised.exception))
+
+    def test_malformed_ops_are_rejected(self):
+        for op in ('hello', {'insert': 5}, {'insert': 'a', 'attributes': 'bold'}, {'insert': 'a', 'retain': 1}):
+            with self.subTest(op=op):
+                # GIVEN
+                content = {'ops': [op]}
+
+                # WHEN
+                with self.assertRaises(ValidationError) as raised:
+                    validate_quill_delta(content)
+
+                # THEN
+                self.assertIn('insert', str(raised.exception))
+
 
 class TestCaseValidateRecurrenceRule(TestCase):
     def test_valid_rrule_passes(self):

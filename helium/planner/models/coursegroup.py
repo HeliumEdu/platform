@@ -1,4 +1,3 @@
-import datetime
 
 from django.conf import settings
 from django.db import models
@@ -51,14 +50,6 @@ class CourseGroup(BaseModel):
 
     def get_user(self):
         return self.user
-
-    @property
-    def num_days(self) -> int:
-        return (self.end_date - self.start_date).days
-
-    @property
-    def num_days_completed(self) -> int:
-        return (datetime.datetime.now().date() - self.start_date).days
 
     @property
     def num_courses(self) -> int:

@@ -49,11 +49,10 @@ class CourseSerializer(serializers.ModelSerializer):
             'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template', 'course_group',
             'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
-            'num_days', 'num_days_completed', 'has_weighted_grading', 'num_homework', 'num_homework_completed',
-            'num_homework_graded',)
-        read_only_fields = (
-            'course_group', 'current_grade', 'trend', 'created_at', 'updated_at', 'num_days', 'num_days_completed',
             'has_weighted_grading', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
+        read_only_fields = (
+            'course_group', 'current_grade', 'trend', 'created_at', 'updated_at', 'has_weighted_grading',
+            'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def create(self, validated_data):
         # `None` means the field was omitted; a provided template can be `0` (a falsy enum value), so

@@ -55,10 +55,11 @@ def validate_hex_color(value):
 
 def validate_quill_delta(value):
     """
-    Outer-shape check for Quill Delta JSON content: ``None``, ``{}`` (the
-    wire-level clear-content signal), or a dict with an ``ops`` list. Per-op
-    shape and attribute correctness are left to the client renderer
-    (`flutter_quill`'s ``Document.fromJson``).
+    Check that Quill Delta JSON content is a document: ``None``, ``{}`` (the
+    wire-level clear-content signal), or a dict whose ``ops`` are all inserts
+    (text or an embed object) with optional ``attributes``. Change ops
+    (``retain``, ``delete``) describe an edit, not a document, and no client
+    can render them. Attribute values are left to the client renderer.
     """
     if value is None or value == {}:
         return
@@ -66,6 +67,23 @@ def validate_quill_delta(value):
         raise ValidationError('Quill content must be an object.')
     if not isinstance(value.get('ops'), list):
         raise ValidationError('Quill content must have an `ops` list.')
+    if not all(is_quill_document_op(op) for op in value['ops']):
+        raise ValidationError('Quill content `ops` must each be an `insert` (text or an embed object), with optional '
+                              '`attributes`.')
+
+
+def is_quill_document_op(op):
+    """
+    Whether ``op`` belongs in a Quill document: an ``insert`` of text or an embed object, with optional
+    ``attributes``.
+
+    :param op: One entry of a Quill Delta's ``ops``.
+    :return: True if the op is a document insert.
+    """
+    return (isinstance(op, dict)
+            and set(op) <= {'insert', 'attributes'}
+            and isinstance(op.get('insert'), (str, dict))
+            and isinstance(op.get('attributes', {}), dict))
 
 
 def infer_byday_for_weekly_rrule(value, dtstart):

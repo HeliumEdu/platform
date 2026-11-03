@@ -10,8 +10,6 @@
             "trend": null,
             "private_slug": null,
             "user": 1,
-            "num_days": 122,
-            "num_days_completed": 397,
             "num_homework": 1,
             "num_homework_completed": 1,
             "num_homework_graded": 1
@@ -64,8 +62,6 @@
             "sat_start_time_alt": "12:00:00",
             "sat_end_time_alt": "12:00:00",
             "course_group": 1,
-            "num_days": 122,
-            "num_days_completed": 397,
             "has_weighted_grading": false,
             "num_homework": 1,
             "num_homework_completed": 1,

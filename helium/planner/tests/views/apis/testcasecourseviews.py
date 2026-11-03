@@ -224,8 +224,6 @@ class TestCaseCourseViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         course.refresh_from_db()
         coursehelper.verify_course_matches_data(self, course, response.data)
-        self.assertEqual(response.data['num_days'], 122)
-        self.assertEqual(response.data['num_days_completed'], (datetime.datetime.now().date() - course.start_date).days)
         self.assertEqual(response.data['num_homework'], 3)
         self.assertEqual(response.data['num_homework_completed'], 2)
         self.assertEqual(response.data['num_homework_graded'], 1)

@@ -1,4 +1,3 @@
-import datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -69,14 +68,6 @@ class Course(BaseModel):
 
     def get_user(self):
         return self.course_group.get_user()
-
-    @property
-    def num_days(self) -> int:
-        return (self.end_date - self.start_date).days
-
-    @property
-    def num_days_completed(self) -> int:
-        return (datetime.datetime.now().date() - self.start_date).days
 
     @property
     def has_weighted_grading(self) -> bool:
