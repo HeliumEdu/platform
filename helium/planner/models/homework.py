@@ -11,10 +11,10 @@ from helium.planner.models.basecalendar import BaseCalendar
 class Homework(BaseCalendar):
     current_grade = models.CharField(
         help_text=(
-            'Fraction of points earned, `"numerator/denominator"` (e.g. `"25/30"`). '
-            '`"-1/100"` marks the assignment ungraded. Within-category weighting is handled by '
-            '`Category.weight`, not by per-assignment denominators. Pairs with `completed=true` to count '
-            'toward grade calc.'
+            'Fraction of points earned, `"earned/possible"` (e.g. `"25/30"`). `"-1/100"` marks the assignment '
+            'ungraded. A category\'s grade is its assignments\' total earned over total possible, so an assignment with '
+            'more possible points counts for more; `Category.weight` then weights each category in the class grade. '
+            'Pairs with `completed=true` to count toward grade calc.'
         ),
         max_length=255, validators=[validate_fraction])
 

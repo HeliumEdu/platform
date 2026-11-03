@@ -53,6 +53,10 @@ class HomeworkSerializer(serializers.ModelSerializer):
         read_only_fields = ('attachments', 'reminders', 'notes', 'calendar_item_type', 'completed_at', 'created_at',
                             'updated_at',)
         extra_kwargs = {
+            'current_grade': {
+                'help_text': help_text_with_support_article(
+                    Homework, 'current_grade', 'grades-and-progress/how-helium-calculates-your-grades'),
+            },
             'completed': {
                 'help_text': help_text_with_support_article(
                     Homework, 'completed', 'grades-and-progress/setting-up-weighted-grading-assignment-categories'),
