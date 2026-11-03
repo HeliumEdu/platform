@@ -41,7 +41,7 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
+            return Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'resources', 'notes_set')
         else:
             return Homework.objects.none()
 
@@ -73,7 +73,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'resources', 'notes_set')
         else:
             return Homework.objects.none()
 
@@ -161,7 +161,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             permissions.check_category_permission(request.user.pk, category)
 
         for resource_id in _requested_resource_ids(request):
-            permissions.check_material_permission(request.user.pk, resource_id)
+            permissions.check_resource_permission(request.user.pk, resource_id)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -189,7 +189,7 @@ class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, R
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'materials', 'notes_set')
+            return Homework.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('category', 'course').prefetch_related('attachments', 'reminders', 'resources', 'notes_set')
         else:
             return Homework.objects.none()
 
@@ -219,7 +219,7 @@ class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, R
         if category:
             permissions.check_category_permission(request.user.pk, category)
         for resource_id in _requested_resource_ids(request):
-            permissions.check_material_permission(request.user.pk, resource_id)
+            permissions.check_resource_permission(request.user.pk, resource_id)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
@@ -242,7 +242,7 @@ class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, R
         if category:
             permissions.check_category_permission(request.user.pk, category)
         for resource_id in _requested_resource_ids(request):
-            permissions.check_material_permission(request.user.pk, resource_id)
+            permissions.check_resource_permission(request.user.pk, resource_id)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)

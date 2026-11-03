@@ -13,6 +13,13 @@ from helium.planner.tests.helpers import coursegrouphelper, eventhelper
 migration = importlib.import_module('helium.auth.migrations.0077_backfill_example_schedule_imported_at')
 
 
+class _AppsAtBackfill:
+    """The app registry as the backfill saw it, before `MaterialGroup` was renamed `ResourceGroup`."""
+
+    def get_model(self, app_label, model_name):
+        return apps.get_model(app_label, 'ResourceGroup' if model_name == 'MaterialGroup' else model_name)
+
+
 class TestCaseBackfillExampleScheduleImportedAt(TestCase):
     def test_stamps_unstamped_users_with_example_data_from_their_earliest_example_root(self):
         # GIVEN
@@ -25,7 +32,7 @@ class TestCaseBackfillExampleScheduleImportedAt(TestCase):
         no_example_user = userhelper.given_a_user_exists(username='plain', email='plain@example.com')
 
         # WHEN
-        migration.backfill_example_schedule_imported_at(apps, None)
+        migration.backfill_example_schedule_imported_at(_AppsAtBackfill(), None)
 
         # THEN
         user.refresh_from_db()
@@ -42,7 +49,7 @@ class TestCaseBackfillExampleScheduleImportedAt(TestCase):
         get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=stamp)
 
         # WHEN
-        migration.backfill_example_schedule_imported_at(apps, None)
+        migration.backfill_example_schedule_imported_at(_AppsAtBackfill(), None)
 
         # THEN
         user.refresh_from_db()

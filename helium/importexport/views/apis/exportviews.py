@@ -12,7 +12,7 @@ from rest_framework.viewsets import ViewSet
 from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
-from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, \
     Homework, Reminder, Note
 
 logger = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ class ExportResourceView(ViewSet, HeliumAPIView):
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100')),
             ),
-            'resource_groups': MaterialGroup.objects.for_user(user.pk),
-            'resources': Material.objects.for_user(user.pk),
+            'resource_groups': ResourceGroup.objects.for_user(user.pk),
+            'resources': Resource.objects.for_user(user.pk),
             'events': Event.objects.for_user(user.pk),
             'homework': Homework.objects.for_user(user.pk),
             'reminders': Reminder.objects.for_user(user.pk),

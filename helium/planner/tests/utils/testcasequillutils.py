@@ -4,6 +4,7 @@ from helium.planner.utils.quillutils import (
     ensure_quill_delta_terminated,
     html_to_quill,
     is_quill_delta_terminated,
+    plain_text_to_quill,
     quill_delta_to_plain_text,
 )
 
@@ -20,6 +21,21 @@ class TestCaseQuillUtils(TestCase):
         self.assertEqual(result['ops'][0]['insert'], 'Hello World')
         # Quill documents must end with newline
         self.assertEqual(result['ops'][-1]['insert'], '\n')
+
+    def test_trailing_text_resembling_a_character_reference_is_kept(self):
+        result = html_to_quill('https://canvas.example.edu/x?a=1&b=2')
+
+        self.assertEqual(result['ops'][0]['insert'], 'https://canvas.example.edu/x?a=1&b=2')
+
+    def test_plain_text_to_quill_keeps_markup_and_newlines_verbatim(self):
+        result = plain_text_to_quill('Bring <homework>\nand Q&A sheet')
+
+        self.assertEqual(result, {'ops': [{'insert': 'Bring <homework>\nand Q&A sheet\n'}]})
+
+    def test_plain_text_to_quill_blank_input_returns_none(self):
+        self.assertIsNone(plain_text_to_quill(''))
+        self.assertIsNone(plain_text_to_quill('  \n '))
+        self.assertIsNone(plain_text_to_quill(None))
 
     def test_inline_formatting(self):
         result = html_to_quill('<strong>Bold</strong> <em>Italic</em> <u>Under</u> <s>Strike</s>')
@@ -63,7 +79,7 @@ class TestCaseQuillUtils(TestCase):
         bg_op = next(op for op in result['ops'] if op.get('attributes', {}).get('background'))
         self.assertEqual(bg_op['attributes']['background'], '#ffff00')
 
-    def test_legacy_font_tag(self):
+    def test_font_tag(self):
         result = html_to_quill('<font color="#0000ff" face="Arial">Text</font>')
 
         ops = result['ops']

@@ -12,7 +12,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Homework, Reminder
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, categoryhelper, \
-    materialgrouphelper, materialhelper, reminderhelper
+    resourcegrouphelper, resourcehelper, reminderhelper
 
 
 class TestCaseHomeworkViews(APITestCase):
@@ -83,12 +83,12 @@ class TestCaseHomeworkViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        homework.materials.add(materialhelper.given_material_exists(material_group))
-        homework.materials.add(materialhelper.given_material_exists(material_group))
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        homework.resources.add(resourcehelper.given_resource_exists(resource_group))
+        homework.resources.add(resourcehelper.given_resource_exists(resource_group))
 
         # WHEN
-        response = self.client.get(reverse('planner_homework_list') + '?ordering=materials')
+        response = self.client.get(reverse('planner_homework_list') + '?ordering=resources')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -127,8 +127,8 @@ class TestCaseHomeworkViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
 
         # WHEN
         data = {
@@ -138,11 +138,10 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2014-05-08T12:00:00Z',
             'end': '2014-05-08T14:00:00Z',
             'priority': 12,
-            'comments': 'some comment',
             'current_grade': '25/30',
             'completed': False,
             'category': category.pk,
-            'resources': [material.pk],
+            'resources': [resource.pk],
             'course': course.pk
         }
         response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
@@ -164,8 +163,8 @@ class TestCaseHomeworkViews(APITestCase):
                                                                    email='test2@email.com')
         course_group = coursegrouphelper.given_course_group_exists(user2)
         course = coursehelper.given_course_exists(course_group)
-        other_material_group = materialgrouphelper.given_material_group_exists(user1)
-        other_material = materialhelper.given_material_exists(other_material_group)
+        other_resource_group = resourcegrouphelper.given_resource_group_exists(user1)
+        other_resource = resourcehelper.given_resource_exists(other_resource_group)
 
         # WHEN
         data = {
@@ -173,7 +172,7 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2014-05-08T12:00:00Z',
             'end': '2014-05-08T14:00:00Z',
             'current_grade': '-1/100',
-            'resources': [other_material.pk],
+            'resources': [other_resource.pk],
             'course': course.pk
         }
         response = self.client.post(reverse('planner_coursegroups_courses_homework_list',
@@ -234,17 +233,17 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(homework.category.title, 'Uncategorized')
         self.assertEqual(homework.category.course_id, course.pk)
 
-    def test_clone_homework_copies_fields_materials_and_reminders(self):
+    def test_clone_homework_copies_fields_resources_and_reminders(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
         source = homeworkhelper.given_homework_exists(course, title='Quiz', category=category,
-                                                     materials=[material], current_grade='25/30',
-                                                     completed=True, comments='Studied chapter 4')
+                                                     resources=[resource], current_grade='25/30',
+                                                     completed=True)
         reminderhelper.given_reminder_exists(user, message='15 min before', offset=15,
                                              offset_type=enums.MINUTES, type=enums.PUSH, homework=source)
         reminderhelper.given_reminder_exists(user, message='1 hour before', offset=1,
@@ -270,9 +269,8 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(clone.priority, source.priority)
         self.assertEqual(clone.course_id, source.course_id)
         self.assertEqual(clone.category_id, source.category_id)
-        self.assertEqual(list(clone.materials.values_list('pk', flat=True)), [material.pk])
+        self.assertEqual(list(clone.resources.values_list('pk', flat=True)), [resource.pk])
 
-        self.assertEqual(clone.comments, '')
         self.assertEqual(clone.current_grade, '-1/100')
         self.assertFalse(clone.completed)
         self.assertIsNone(clone.completed_at)
@@ -351,7 +349,6 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2014-05-08T12:00:00-0500',
             'end': '2014-05-08T14:00:00-0500',
             'priority': 50,
-            'comments': '',
             'current_grade': '-1/100',
             'completed': False,
             'category': category.pk,
@@ -384,7 +381,6 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2014-05-08 12:00:00',
             'end': '2014-05-08 14:00:00',
             'priority': 50,
-            'comments': '',
             'current_grade': '-1/100',
             'completed': False,
             'category': category.pk,
@@ -424,10 +420,10 @@ class TestCaseHomeworkViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         category1 = categoryhelper.given_category_exists(course)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material1 = materialhelper.given_material_exists(material_group)
-        material2 = materialhelper.given_material_exists(material_group)
-        homework = homeworkhelper.given_homework_exists(course, category=category1, materials=[material1])
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource1 = resourcehelper.given_resource_exists(resource_group)
+        resource2 = resourcehelper.given_resource_exists(resource_group)
+        homework = homeworkhelper.given_homework_exists(course, category=category1, resources=[resource1])
         self.assertEqual(homework.title, '💻 Test Homework')
 
         # WHEN
@@ -438,11 +434,10 @@ class TestCaseHomeworkViews(APITestCase):
             'start': '2016-05-08T12:00:00Z',
             'end': '2016-05-08T14:00:00Z',
             'priority': 12,
-            'comments': 'some comment',
             'current_grade': '33/40',
             'completed': True,
             'category': category2.pk,
-            'resources': [material2.pk],
+            'resources': [resource2.pk],
             'course': course.pk
         }
         response = self.client.put(reverse('planner_coursegroups_courses_homework_detail',
@@ -549,8 +544,8 @@ class TestCaseHomeworkViews(APITestCase):
         # GIVEN
         user1 = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
-        materialgroup2 = materialgrouphelper.given_material_group_exists(user2)
-        material2 = materialhelper.given_material_exists(materialgroup2)
+        resourcegroup2 = resourcegrouphelper.given_resource_group_exists(user2)
+        resource2 = resourcehelper.given_resource_exists(resourcegroup2)
         course_group1 = coursegrouphelper.given_course_group_exists(user1)
         course_group2 = coursegrouphelper.given_course_group_exists(user2)
         course1 = coursehelper.given_course_exists(course_group1)
@@ -570,7 +565,7 @@ class TestCaseHomeworkViews(APITestCase):
                              content_type='application/json'),
             self.client.post(reverse('planner_coursegroups_courses_homework_list',
                                      kwargs={'course_group': course_group1.pk, 'course': course1.pk}),
-                             json.dumps({'resources': [material2.pk]}),
+                             json.dumps({'resources': [resource2.pk]}),
                              content_type='application/json'),
             self.client.patch(
                 reverse('planner_coursegroups_courses_homework_detail',
@@ -580,7 +575,7 @@ class TestCaseHomeworkViews(APITestCase):
             self.client.patch(
                 reverse('planner_coursegroups_courses_homework_detail',
                         kwargs={'course_group': course_group1.pk, 'course': course1.pk, 'pk': homework.pk}),
-                json.dumps({'resources': [material2.pk]}),
+                json.dumps({'resources': [resource2.pk]}),
                 content_type='application/json'),
         ]
 
@@ -804,21 +799,19 @@ class TestCaseHomeworkViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], homework.title)
 
-    def test_search_query_folds_diacritics_and_does_not_match_legacy_comments(self):
+    def test_search_query_folds_diacritics(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
-        match = homeworkhelper.given_homework_exists(course, title='Café reading', comments='<div>notes</div>')
-        homeworkhelper.given_homework_exists(course, title='Other', comments='<div>other</div>')
+        match = homeworkhelper.given_homework_exists(course, title='Café reading')
+        homeworkhelper.given_homework_exists(course, title='Other')
 
         # WHEN
         folded = self.client.get(reverse('planner_homework_list') + '?search=cafe')
-        commented = self.client.get(reverse('planner_homework_list') + '?search=notes')
 
         # THEN
         self.assertEqual([homework['id'] for homework in folded.data], [match.pk])
-        self.assertEqual(commented.data, [])
 
     def test_search_query_applies_within_date_range(self):
         # GIVEN

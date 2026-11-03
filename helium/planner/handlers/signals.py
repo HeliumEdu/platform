@@ -12,7 +12,7 @@ from helium.common import enums
 from helium.common.tasks import reconcile_show_getting_started_async
 from helium.common.utils import taskutils
 from helium.planner.models import Category, Course, CourseGroup, Event, Homework, CourseSchedule, Attachment, \
-    Material, MaterialGroup, Note, Reminder
+    Resource, ResourceGroup, Note, Reminder
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
     adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
@@ -177,14 +177,14 @@ def delete_event_children(sender, instance, **kwargs):
     instance.reminders.all().delete()
 
 
-@receiver(pre_delete, sender=Material)
-def delete_material_notes(sender, instance, **kwargs):
+@receiver(pre_delete, sender=Resource)
+def delete_resource_notes(sender, instance, **kwargs):
     """
-    Delete linked Notes when a Material is deleted.
+    Delete linked Notes when a Resource is deleted.
 
     Uses bulk delete to avoid N+1 queries. Note: bulk delete doesn't trigger
     Note's pre_delete signal, but that's OK since the linked entity (this
-    Material) is being deleted anyway.
+    Resource) is being deleted anyway.
     """
     instance.notes_set.all().delete()
 
@@ -234,6 +234,6 @@ def delete_note(sender, instance, **kwargs):
     reconcile_show_getting_started_async(instance)
 
 
-@receiver(post_delete, sender=MaterialGroup)
-def delete_material_group(sender, instance, **kwargs):
+@receiver(post_delete, sender=ResourceGroup)
+def delete_resource_group(sender, instance, **kwargs):
     reconcile_show_getting_started_async(instance)

@@ -10,8 +10,8 @@ from helium.planner.serializers.coursescheduleserializer import CourseScheduleSe
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
-from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
-from helium.planner.serializers.materialserializer import MaterialSerializer
+from helium.planner.serializers.resourcegroupserializer import ResourceGroupSerializer
+from helium.planner.serializers.resourceserializer import ResourceSerializer
 from helium.planner.serializers.noteserializer import NoteSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 
@@ -28,27 +28,14 @@ class NoteExportSerializer(NoteSerializer):
 class HomeworkExportSerializer(HomeworkSerializer):
     """Homework representation used in export bundles."""
 
-    class Meta(HomeworkSerializer.Meta):
-        #: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
-        fields = tuple(f for f in HomeworkSerializer.Meta.fields if f != 'comments')
-
 
 class EventExportSerializer(EventSerializer):
     """Event representation used in export bundles."""
 
-    class Meta(EventSerializer.Meta):
-        #: Legacy parameter, can be removed once all clients are reporting >= 3.10.0.
-        fields = tuple(f for f in EventSerializer.Meta.fields if f != 'comments')
 
-
-#: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
 @extend_schema_serializer(component_name='ResourceExport')
-class MaterialExportSerializer(MaterialSerializer):
+class ResourceExportSerializer(ResourceSerializer):
     """Resource representation used in export bundles."""
-
-    class Meta(MaterialSerializer.Meta):
-        #: Legacy 'details' parameter, can be removed once all clients are reporting >= 3.10.0.
-        fields = tuple(f for f in MaterialSerializer.Meta.fields if f != 'details')
 
 
 class ReminderExportSerializer(ReminderSerializer):
@@ -66,9 +53,9 @@ class ExportSerializer(serializers.Serializer):
 
     categories = CategorySerializer(many=True)
 
-    resource_groups = MaterialGroupSerializer(many=True)
+    resource_groups = ResourceGroupSerializer(many=True)
 
-    resources = MaterialExportSerializer(many=True)
+    resources = ResourceExportSerializer(many=True)
 
     events = EventExportSerializer(many=True)
 

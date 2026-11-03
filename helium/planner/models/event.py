@@ -35,6 +35,7 @@ class Event(BaseCalendar):
 
     def __init__(self, *args, **kwargs):
         self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']
+        self.__comments = kwargs.pop('comments', '')
 
         kwargs.pop('calendar_item_type', None)
         super().__init__(*args, **kwargs)
@@ -45,6 +46,11 @@ class Event(BaseCalendar):
     @property
     def calendar_item_type(self) -> int:
         return self.__calendar_item_type
+
+    @property
+    def comments(self) -> str:
+        """Display text carried by synthesised events (course schedule, external calendar); never persisted."""
+        return self.__comments
 
     @property
     def num_reminders(self) -> int:

@@ -8,10 +8,10 @@ from helium.planner.models import Homework
 def given_homework_exists(course, title='💻 Test Homework', all_day=False, show_end_time=True,
                           start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=datetime.timezone.utc),
                           end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=datetime.timezone.utc),
-                          priority=65, url='', comments='A comment on a homework.', current_grade='-1/100',
-                          completed=False, category=None, materials=None):
-    if materials is None:
-        materials = []
+                          priority=65, url='', current_grade='-1/100',
+                          completed=False, category=None, resources=None):
+    if resources is None:
+        resources = []
 
     homework = Homework.objects.create(title=title,
                                        all_day=all_day,
@@ -20,14 +20,13 @@ def given_homework_exists(course, title='💻 Test Homework', all_day=False, sho
                                        end=end,
                                        priority=priority,
                                        url=url,
-                                       comments=comments,
                                        current_grade=current_grade,
                                        completed=completed,
                                        category=category,
                                        course=course)
 
-    for material in materials:
-        homework.materials.add(material)
+    for resource in resources:
+        homework.resources.add(resource)
 
     return homework
 
@@ -41,14 +40,12 @@ def verify_homework_matches_data(test_case, homework, data):
     test_case.assertEqual(homework.priority, data['priority'])
     if 'url' in data:
         test_case.assertEqual(homework.url, data['url'])
-    if 'comments' in data:
-        test_case.assertEqual(homework.comments, data['comments'])
     test_case.assertEqual(homework.current_grade, data['current_grade'])
     test_case.assertEqual(homework.completed, data['completed'])
     if 'calendar_item_type' in data:
         test_case.assertEqual(homework.calendar_item_type, data['calendar_item_type'])
     if 'category' in data:
         test_case.assertEqual(homework.category.pk, int(data['category']))
-    for resource_id in data.get('resources', data.get('materials', [])):
-        test_case.assertTrue(homework.materials.filter(pk=resource_id).exists())
+    for resource_id in data.get('resources', data.get('resources', [])):
+        test_case.assertTrue(homework.resources.filter(pk=resource_id).exists())
     test_case.assertEqual(homework.course.pk, int(data['course']))

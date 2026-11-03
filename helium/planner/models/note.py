@@ -50,7 +50,7 @@ class Note(BaseModel):
     )
 
     resources = models.ManyToManyField(
-        'Material',
+        'Resource',
         related_name='notes_set',
         blank=True,
         help_text='The resource with which to associate (if linked, mutually exclusive with `homework` and `events`).'

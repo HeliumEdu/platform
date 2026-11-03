@@ -3,7 +3,7 @@ import logging
 from rest_framework import permissions
 from rest_framework.exceptions import NotFound
 
-from helium.planner.models import Course, CourseGroup, MaterialGroup, Event, Homework, Category, Material
+from helium.planner.models import Course, CourseGroup, ResourceGroup, Event, Homework, Category, Resource
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,13 @@ class IsCourseOwner(permissions.BasePermission):
         return True
 
 
-class IsMaterialGroupOwner(permissions.BasePermission):
+class IsResourceGroupOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         resource_group_id = view.kwargs.get('resource_group')
         if resource_group_id is None:
             return False
 
-        check_material_group_permission(request.user.pk, resource_group_id)
+        check_resource_group_permission(request.user.pk, resource_group_id)
 
         return True
 
@@ -59,9 +59,9 @@ def check_course_permission(user_id, course_id):
         raise NotFound('No Course matches the given query.')
 
 
-def check_material_group_permission(user_id, material_group_id):
-    if not MaterialGroup.objects.exists_for_user(material_group_id, user_id):
-        raise NotFound('No MaterialGroup matches the given query.')
+def check_resource_group_permission(user_id, resource_group_id):
+    if not ResourceGroup.objects.exists_for_user(resource_group_id, user_id):
+        raise NotFound('No ResourceGroup matches the given query.')
 
 
 def check_event_permission(user_id, event_id):
@@ -79,6 +79,6 @@ def check_category_permission(user_id, category_id):
         raise NotFound('No Category matches the given query.')
 
 
-def check_material_permission(user_id, material_id):
-    if not Material.objects.exists_for_user(material_id, user_id):
-        raise NotFound('No Material matches the given query.')
+def check_resource_permission(user_id, resource_id):
+    if not Resource.objects.exists_for_user(resource_id, user_id):
+        raise NotFound('No Resource matches the given query.')

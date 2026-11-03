@@ -11,12 +11,12 @@ from django.utils import timezone
 
 from helium.auth.models import UserSettings
 from helium.feed.models import ExternalCalendar
-from helium.planner.models import Course, CourseGroup, Event, Homework, Material, MaterialGroup, Note, Reminder
+from helium.planner.models import Course, CourseGroup, Event, Homework, Resource, ResourceGroup, Note, Reminder
 
 logger = logging.getLogger(__name__)
 
 #: Every model that carries the example schedule flag.
-FLAGGED_MODELS = (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note)
+FLAGGED_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note)
 
 
 class ExamplePartition(NamedTuple):
@@ -138,7 +138,7 @@ def adopt_stale(now: datetime = None) -> int:
 def _example_roots(user_id: int) -> Iterator[Model]:
     yield from ExternalCalendar.objects.for_user(user_id).filter(example_schedule=True)
     yield from CourseGroup.objects.for_user(user_id).filter(example_schedule=True)
-    yield from MaterialGroup.objects.for_user(user_id).filter(example_schedule=True)
+    yield from ResourceGroup.objects.for_user(user_id).filter(example_schedule=True)
     yield from Event.objects.for_user(user_id).filter(example_schedule=True)
     yield from Note.objects.for_user(user_id).filter(example_schedule=True, homework__isnull=True,
                                                      events__isnull=True, resources__isnull=True)
@@ -175,11 +175,11 @@ def _changed_after(instance: Model, baseline: datetime) -> bool:
 
 
 def _linked_notes(cascade: List[Model]) -> QuerySet:
-    # Deleting a Homework, Event or Material deletes its linked notes from a pre_delete signal handler, which the
+    # Deleting a Homework, Event or Resource deletes its linked notes from a pre_delete signal handler, which the
     # collector cannot see, so they are looked up separately.
     homework_ids = [i.pk for i in cascade if isinstance(i, Homework)]
     event_ids = [i.pk for i in cascade if isinstance(i, Event)]
-    material_ids = [i.pk for i in cascade if isinstance(i, Material)]
+    resource_ids = [i.pk for i in cascade if isinstance(i, Resource)]
 
     return Note.objects.filter(
-        Q(homework__in=homework_ids) | Q(events__in=event_ids) | Q(resources__in=material_ids))
+        Q(homework__in=homework_ids) | Q(events__in=event_ids) | Q(resources__in=resource_ids))

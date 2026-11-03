@@ -1,37 +1,29 @@
 import logging
 
-from django.conf import settings
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
-from helium.common import enums
 from helium.common.utils.validators import validate_hex_color
-from helium.common.utils.versionutils import client_version_gte
 
 logger = logging.getLogger(__name__)
 
 
-#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.11.1, which reads `setup_state` instead.
-@extend_schema_serializer(exclude_fields=('is_setup_complete',))
 class UserSettingsSerializer(serializers.ModelSerializer):
-    is_setup_complete = serializers.BooleanField(read_only=True)
-
     getting_started_due = serializers.BooleanField(
         required=False,
         help_text='Whether the "Getting Started" dialog should be shown now. Set to false once it has been shown.')
 
-    #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
     resource_color = serializers.CharField(
-        source='material_color', required=False, max_length=7, validators=[validate_hex_color],
+        required=False, max_length=7, validators=[validate_hex_color],
         help_text='A valid hex color code choice to determine the color resource badges will be.')
 
     class Meta:
         model = UserSettings
         fields = (
             'time_zone', 'default_view', 'week_starts_on', 'show_getting_started', 'getting_started_due',
-            'setup_state', 'is_setup_complete', 'whats_new_version_seen', 'events_color', 'grade_color',
+            'setup_state', 'whats_new_version_seen', 'events_color', 'grade_color',
             'resource_color', 'remember_filter_state', 'color_scheme_theme', 'calendar_event_limit',
             'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
             'calendar_use_category_colors', 'show_planner_tooltips', 'drag_and_drop_on_mobile', 'at_risk_threshold',
@@ -46,20 +38,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    #: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
 
-        request = self.context.get('request')
-        if (request is not None
-                and data.get('default_view') == enums.THREE_DAY
-                and not client_version_gte(request, settings.THREE_DAY_VIEW_MIN_VERSION)):
-            data['default_view'] = enums.WEEK
-
-        return data
-
-
-#: Legacy 'is_setup_complete' parameter, can be removed once all clients are reporting >= 3.11.1, which reads `setup_state` instead.
-@extend_schema_serializer(exclude_fields=('is_setup_complete',), component_name='UserSettingsUpdate')
+@extend_schema_serializer(component_name='UserSettingsUpdate')
 class UserSettingsUpdateSerializer(UserSettingsSerializer):
     pass

@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.common.utils.validators import validate_quill_delta
-from helium.planner.models import Event, Homework, Material, Note
+from helium.planner.models import Event, Homework, Resource, Note
 from helium.planner.utils.quillutils import delta_size, ensure_quill_delta_terminated
 
 
@@ -28,20 +28,8 @@ class NoteSerializer(serializers.ModelSerializer):
                 self.context['request'].user.pk)
             self.fields['events'].child_relation.queryset = Event.objects.for_user(
                 self.context['request'].user.pk)
-            self.fields['resources'].child_relation.queryset = Material.objects.for_user(
+            self.fields['resources'].child_relation.queryset = Resource.objects.for_user(
                 self.context['request'].user.pk)
-
-    def to_internal_value(self, data):
-        """
-        Accept `materials` as a permanent key-based alias for `resources` on input only. If both
-        are present in the same payload the input is invalid. Output always emits `resources`.
-        """
-        if isinstance(data, dict) and 'materials' in data:
-            if 'resources' in data:
-                raise ValidationError(
-                    {'resources': ["Provide either 'resources' or 'materials', not both."]})
-            data = {k: v for k, v in data.items() if k != 'materials'} | {'resources': data['materials']}
-        return super().to_internal_value(data)
 
     def _percent_past_max_size(self, content):
         size = delta_size(content)

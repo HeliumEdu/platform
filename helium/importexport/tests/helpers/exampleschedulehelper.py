@@ -7,12 +7,12 @@ from django.utils import timezone
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
-    Material, MaterialGroup, Note, Reminder
+    Resource, ResourceGroup, Note, Reminder
 from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, courseschedulehelper, \
-    eventhelper, homeworkhelper, materialgrouphelper, materialhelper, notehelper, reminderhelper
+    eventhelper, homeworkhelper, resourcegrouphelper, resourcehelper, notehelper, reminderhelper
 
-_USER_OWNED_MODELS = (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note, Course, CourseSchedule, Category,
-                      Homework, Reminder, Material, Attachment)
+_USER_OWNED_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule, Category,
+                      Homework, Reminder, Resource, Attachment)
 
 
 def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(days=7)):
@@ -33,13 +33,13 @@ def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(day
                                                           category=other_category)
     homework_reminder = reminderhelper.given_reminder_exists(user, homework=homework)
     event = eventhelper.given_event_exists(user)
-    material_group = materialgrouphelper.given_material_group_exists(user)
-    material = materialhelper.given_material_exists(material_group)
+    resource_group = resourcegrouphelper.given_resource_group_exists(user)
+    resource = resourcehelper.given_resource_exists(resource_group)
     note = notehelper.given_note_exists(user)
     linked_note = notehelper.given_note_linked_to_homework(user, homework)
     external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
 
-    roots = [course_group, event, material_group, note, external_calendar]
+    roots = [course_group, event, resource_group, note, external_calendar]
     for flagged in roots + [linked_note]:
         flagged.example_schedule = True
         flagged.save()
@@ -54,14 +54,14 @@ def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(day
     return SimpleNamespace(course_group=course_group, course=course, schedule=schedule, category=category,
                            homework=homework, other_course=other_course, other_schedule=other_schedule,
                            other_category=other_category, other_homework=other_homework, course_reminder=course_reminder, homework_reminder=homework_reminder,
-                           event=event, material_group=material_group, material=material, note=note,
+                           event=event, resource_group=resource_group, resource=resource, note=note,
                            linked_note=linked_note, external_calendar=external_calendar, roots=roots,
                            imported_at=imported_at)
 
 
 def count_example_flagged(user):
     return sum(model.objects.for_user(user.pk).filter(example_schedule=True).count()
-               for model in (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note))
+               for model in (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note))
 
 
 def given_example_import_allowed(user):
@@ -70,6 +70,6 @@ def given_example_import_allowed(user):
 
 
 def given_example_schedule_became_user_data(user):
-    for model in (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note):
+    for model in (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note):
         model.objects.for_user(user.pk).update(example_schedule=False)
     given_example_import_allowed(user)

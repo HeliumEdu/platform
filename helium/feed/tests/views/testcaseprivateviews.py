@@ -9,7 +9,7 @@ from django.urls import reverse
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.test import CacheTestCase
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
-    homeworkhelper, eventhelper, notehelper, materialgrouphelper, materialhelper
+    homeworkhelper, eventhelper, notehelper, resourcegrouphelper, resourcehelper
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class TestCasePrivateViews(CacheTestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
-        event = eventhelper.given_event_exists(user, comments='Legacy comment')
+        event = eventhelper.given_event_exists(user)
         note = notehelper.given_note_linked_to_event(
             user, event, content={'ops': [{'insert': 'Note content from linked note\n'}]}
         )
@@ -132,7 +132,6 @@ class TestCasePrivateViews(CacheTestCase):
         description = calendar.subcomponents[0]['DESCRIPTION']
         self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
         self.assertNotIn('Note content from linked note', description)
-        self.assertNotIn('Legacy comment', description)
 
     def test_events_feed_with_url(self):
         # GIVEN
@@ -214,7 +213,7 @@ class TestCasePrivateViews(CacheTestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group, room='')
         category = categoryhelper.given_category_exists(course, title='Uncategorized')
-        homework = homeworkhelper.given_homework_exists(course, category=category, comments='Legacy comment')
+        homework = homeworkhelper.given_homework_exists(course, category=category)
         note = notehelper.given_note_linked_to_homework(
             user, homework, content={'ops': [{'insert': 'Homework note content\n'}]}
         )
@@ -228,21 +227,20 @@ class TestCasePrivateViews(CacheTestCase):
         description = calendar.subcomponents[0]['DESCRIPTION']
         self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
         self.assertNotIn('Homework note content', description)
-        self.assertNotIn('Legacy comment', description)
 
-    def test_homework_feed_with_materials_and_url(self):
+    def test_homework_feed_with_resources_and_url(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         category = categoryhelper.given_category_exists(course)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group, courses=[course])
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
         homework = homeworkhelper.given_homework_exists(
             course, category=category, url='https://example.com/assignment'
         )
-        homework.materials.add(material)
+        homework.resources.add(resource)
 
         # WHEN
         response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
@@ -251,7 +249,7 @@ class TestCasePrivateViews(CacheTestCase):
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertIn(f'Resources: {material.title}', description)
+        self.assertIn(f'Resources: {resource.title}', description)
         self.assertIn('URL: https://example.com/assignment', description)
 
     def test_courseschedules_feed(self):

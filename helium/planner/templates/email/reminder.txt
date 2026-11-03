@@ -8,8 +8,8 @@ Location: {{ calendar_item.course.room }}{% endif %}{% endif %}
 {% if reminder.course %}Info: {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
 Location: {{ calendar_item.room }}{% endif %}{% if calendar_item.teacher_name %}
 Teacher: {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({{ calendar_item.teacher_email }}){% endif %}{% endif %}{% endif %}
-{% if reminder.homework or reminder.event %}{% if calendar_item.materials and calendar_item.materials.count > 0 %}Resources:{% for material in calendar_item.materials.all %}
- - {{ material.title }}{% if material.website %} ({{ material.website }}){% endif %}{% endfor %}{% endif %}
+{% if reminder.homework or reminder.event %}{% if calendar_item.resources and calendar_item.resources.count > 0 %}Resources:{% for resource in calendar_item.resources.all %}
+ - {{ resource.title }}{% if resource.website %} ({{ resource.website }}){% endif %}{% endfor %}{% endif %}
 {% if calendar_item.attachments.count > 0 %}Attachments:{% for attachment in calendar_item.attachments.all %}
  - {{ attachment.title }}: {{ attachment.attachment.url }}{% endfor %}{% endif %}{% endif %}
 

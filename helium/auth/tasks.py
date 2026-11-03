@@ -9,7 +9,6 @@ from django.contrib.auth import get_user_model
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.db.models import Count, Exists, F, OuterRef, Q
 from firebase_admin import auth as firebase_auth
-from knox.models import AuthToken
 from oauth2_provider.models import clear_expired
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -17,7 +16,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
-from helium.auth.services import oauthservice
 from helium.auth.utils.userutils import is_staff_user, rollup_power_users
 from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice, cumulativeuserservice, metricsampleservice
@@ -26,7 +24,7 @@ from helium.common.utils.commonutils import clear_ses_suppression_if_exists, red
 from helium.feed.models import ExternalCalendar
 from helium.planner.handlers.signals import suppress_cascade_recalculation
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
-    Material, Note, Reminder
+    Resource, Note, Reminder
 
 logger = logging.getLogger(__name__)
 
@@ -447,7 +445,7 @@ def emit_nightly_metrics(self):
                                               note_qs, 'user_id', user_ids, window_staff_tags)
                 has_homework = Exists(Homework.objects.filter(notes_set=OuterRef('pk')))
                 has_event = Exists(Event.objects.filter(notes_set=OuterRef('pk')))
-                has_resource = Exists(Material.objects.filter(notes_set=OuterRef('pk')))
+                has_resource = Exists(Resource.objects.filter(notes_set=OuterRef('pk')))
                 for entity_tag, entity_filter in [
                     ('homework', has_homework),
                     ('event', ~has_homework & has_event),
@@ -499,11 +497,11 @@ def emit_nightly_metrics(self):
                                                   window_staff_tags + [f'entity:{entity_tag}'])
 
                 _emit_per_entity_distribution('users.data.resources_per_user',
-                                              Material.objects.filter(
-                                                  material_group__user__in=user_ids,
-                                                  material_group__example_schedule=False,
-                                              ).filter(_changed_since_example_import('material_group__user')),
-                                              'material_group__user_id', user_ids,
+                                              Resource.objects.filter(
+                                                  resource_group__user__in=user_ids,
+                                                  resource_group__example_schedule=False,
+                                              ).filter(_changed_since_example_import('resource_group__user')),
+                                              'resource_group__user_id', user_ids,
                                               window_staff_tags)
 
                 adopter_counts = {}
@@ -528,10 +526,10 @@ def emit_nightly_metrics(self):
                         user=OuterRef('pk'),
                         example_schedule=False,
                     ).filter(_changed_since_example_import('user')))),
-                    ('resources', Exists(Material.objects.filter(
-                        material_group__user=OuterRef('pk'),
-                        material_group__example_schedule=False,
-                    ).filter(_changed_since_example_import('material_group__user')))),
+                    ('resources', Exists(Resource.objects.filter(
+                        resource_group__user=OuterRef('pk'),
+                        resource_group__example_schedule=False,
+                    ).filter(_changed_since_example_import('resource_group__user')))),
                     ('reminders', Exists(Reminder.objects.filter(
                         user=OuterRef('pk'),
                         sent=False,
@@ -615,24 +613,6 @@ def emit_nightly_metrics(self):
         logger.debug("Emitted engagement quality metrics")
     except Exception as e:
         logger.error(f"Failed to emit engagement quality metrics: {e}", exc_info=True)
-        raise
-
-    try:
-        account_qs = UserModel.objects.filter(is_active=True)
-        for staff_tag, select_cohort in staff_cohorts:
-            cohort_qs = select_cohort(account_qs)
-            staff_tags = [f'staff:{staff_tag}']
-            metricsampleservice.record_gauge('users.integrations.api_token',
-                                             cohort_qs.filter(Exists(AuthToken.objects.filter(user=OuterRef('pk'))))
-                                             .count(),
-                                             extra_tags=staff_tags)
-            metricsampleservice.record_gauge('users.integrations.connected_apps',
-                                             cohort_qs.filter(oauthservice.has_connected_app_filter(OuterRef('pk')))
-                                             .count(),
-                                             extra_tags=staff_tags)
-        logger.debug("Emitted integration metrics")
-    except Exception as e:
-        logger.error(f"Failed to emit integration metrics: {e}", exc_info=True)
         raise
 
     try:

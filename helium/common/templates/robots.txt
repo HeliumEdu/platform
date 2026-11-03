@@ -1,4 +1,5 @@
 User-agent: *
+Allow: /$
 Allow: /docs
 Allow: /schema
 Allow: /sitemap.xml

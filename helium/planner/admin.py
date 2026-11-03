@@ -8,7 +8,7 @@ from django.utils.html import format_html, format_html_join
 
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, logged_action
-from helium.planner.models import CourseGroup, Course, Category, Attachment, MaterialGroup, Material, Event, Homework, \
+from helium.planner.models import CourseGroup, Course, Category, Attachment, ResourceGroup, Resource, Event, Homework, \
     Reminder, CourseSchedule, Note
 from helium.planner.utils.quillutils import delta_size
 from helium.common.utils import taskutils
@@ -351,7 +351,6 @@ class EventAdmin(BaseModelAdmin):
     search_fields = ('id', 'title', 'user__username', 'user__email')
     ordering = ('-start',)
     autocomplete_fields = ('user',)
-    exclude = ('comments',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -393,25 +392,25 @@ class HomeworkAdmin(BaseModelAdmin):
     search_fields = ('id', 'title', 'course__id', 'course__course_group__user__username', 'course__course_group__user__email')
     ordering = ('-start',)
     autocomplete_fields = ('category', 'course')
-    exclude = ('comments', 'materials',)
+    exclude = ('resources',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('completed_at', 'category', 'course', 'linked_materials', 'linked_notes')
+            return readonly_fields + self.readonly_fields + ('completed_at', 'category', 'course', 'linked_resources', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
 
-    def linked_materials(self, obj):
-        materials = obj.materials.all()
-        if not materials:
+    def linked_resources(self, obj):
+        resources = obj.resources.all()
+        if not resources:
             return '-'
         return format_html_join(
             ', ', '<a href="{}">{}</a>',
-            ((reverse('admin:planner_material_change', args=[m.pk]), m.title) for m in materials))
+            ((reverse('admin:planner_resource_change', args=[m.pk]), m.title) for m in resources))
 
-    linked_materials.short_description = 'Resources'
+    linked_resources.short_description = 'Resources'
 
     def linked_notes(self, obj):
         return _linked_notes(obj)
@@ -447,8 +446,8 @@ class HomeworkAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'course__course_group__user__username'
 
 
-class MaterialGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'shown_on_calendar', 'num_materials', 'updated_at', 'get_user',)
+class ResourceGroupAdmin(BaseModelAdmin):
+    list_display = ('title', 'shown_on_calendar', 'num_resources', 'updated_at', 'get_user',)
     list_filter = ('shown_on_calendar', 'example_schedule', staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -461,10 +460,10 @@ class MaterialGroupAdmin(BaseModelAdmin):
 
         return readonly_fields + self.readonly_fields
 
-    def num_materials(self, obj):
-        return obj.num_materials
+    def num_resources(self, obj):
+        return obj.num_resources
 
-    num_materials.short_description = 'Resources'
+    num_resources.short_description = 'Resources'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -476,19 +475,19 @@ class MaterialGroupAdmin(BaseModelAdmin):
     get_user.admin_order_field = 'user__username'
 
 
-class MaterialAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_material_group', 'status', 'condition', 'updated_at', 'get_user',)
-    list_filter = ('material_group__shown_on_calendar', 'material_group__example_schedule',
-                   staff_filter('material_group__user'))
-    search_fields = ('id', 'title', 'material_group__id', 'material_group__user__username', 'material_group__user__email')
-    autocomplete_fields = ('material_group',)
-    exclude = ('details', 'courses',)
+class ResourceAdmin(BaseModelAdmin):
+    list_display = ('title', 'get_resource_group', 'status', 'condition', 'updated_at', 'get_user',)
+    list_filter = ('resource_group__shown_on_calendar', 'resource_group__example_schedule',
+                   staff_filter('resource_group__user'))
+    search_fields = ('id', 'title', 'resource_group__id', 'resource_group__user__username', 'resource_group__user__email')
+    autocomplete_fields = ('resource_group',)
+    exclude = ('courses',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('material_group', 'linked_courses', 'linked_notes')
+            return readonly_fields + self.readonly_fields + ('resource_group', 'linked_courses', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
 
@@ -507,11 +506,11 @@ class MaterialAdmin(BaseModelAdmin):
 
     linked_notes.short_description = 'Notes'
 
-    def get_material_group(self, obj):
-        return obj.material_group.title
+    def get_resource_group(self, obj):
+        return obj.resource_group.title
 
-    get_material_group.short_description = 'Resource group'
-    get_material_group.admin_order_field = 'material_group__title'
+    get_resource_group.short_description = 'Resource group'
+    get_resource_group.admin_order_field = 'resource_group__title'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -520,7 +519,7 @@ class MaterialAdmin(BaseModelAdmin):
             return ''
 
     get_user.short_description = 'User'
-    get_user.admin_order_field = 'material_group__user__username'
+    get_user.admin_order_field = 'resource_group__user__username'
 
 
 class ReminderExampleScheduleFilter(SimpleListFilter):
@@ -637,7 +636,7 @@ class NoteExampleScheduleFilter(SimpleListFilter):
                 Q(example_schedule=True) |
                 Q(homework__course__course_group__example_schedule=True) |
                 Q(events__example_schedule=True) |
-                Q(resources__material_group__example_schedule=True)
+                Q(resources__resource_group__example_schedule=True)
         )
         if self.value() == 'yes':
             return queryset.filter(example_schedule_q).distinct()
@@ -702,7 +701,7 @@ class NoteAdmin(BaseModelAdmin):
 
         resource = obj.resources.first()
         if resource:
-            url = reverse('admin:planner_material_change', args=[resource.pk])
+            url = reverse('admin:planner_resource_change', args=[resource.pk])
             return format_html('<a href="{}">{} (Resource)</a>', url, resource.title)
 
         return '-'
@@ -718,7 +717,7 @@ admin_site.register(CourseSchedule, CourseScheduleAdmin)
 admin_site.register(Category, CategoryAdmin)
 admin_site.register(Event, EventAdmin)
 admin_site.register(Homework, HomeworkAdmin)
-admin_site.register(MaterialGroup, MaterialGroupAdmin)
-admin_site.register(Material, MaterialAdmin)
+admin_site.register(ResourceGroup, ResourceGroupAdmin)
+admin_site.register(Resource, ResourceAdmin)
 admin_site.register(Note, NoteAdmin)
 admin_site.register(Reminder, ReminderAdmin)

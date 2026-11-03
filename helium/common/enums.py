@@ -77,7 +77,7 @@ NEED = 4
 RECEIVED = 5
 TO_SELL = 6
 DIGITAL = 7
-MATERIAL_STATUS_CHOICES = (
+RESOURCE_STATUS_CHOICES = (
     (OWNED, 'Owned'),
     (RENTED, 'Rented'),
     (ORDERED, 'Ordered'),

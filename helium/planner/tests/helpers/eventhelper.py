@@ -8,7 +8,7 @@ from helium.planner.models import Event
 def given_event_exists(user, title='🏀 Test Event', all_day=False, show_end_time=True,
                        start=datetime.datetime(2017, 5, 8, 12, 0, 0, tzinfo=datetime.timezone.utc),
                        end=datetime.datetime(2017, 5, 8, 14, 0, 0, tzinfo=datetime.timezone.utc),
-                       priority=75, url='', comments='A comment on an event.', owner_id='12345',
+                       priority=75, url='', owner_id='12345',
                        recurrence_rule=None, exception_dates=None):
     event = Event.objects.create(title=title,
                                  all_day=all_day,
@@ -17,7 +17,6 @@ def given_event_exists(user, title='🏀 Test Event', all_day=False, show_end_ti
                                  end=end,
                                  priority=priority,
                                  url=url,
-                                 comments=comments,
                                  owner_id=owner_id,
                                  recurrence_rule=recurrence_rule,
                                  exception_dates=exception_dates,
@@ -35,8 +34,6 @@ def verify_event_matches_data(test_case, event, data):
     test_case.assertEqual(event.priority, data['priority'])
     if 'url' in data:
         test_case.assertEqual(event.url, data['url'])
-    if 'comments' in data:
-        test_case.assertEqual(event.comments, data['comments'])
     test_case.assertEqual(event.owner_id, data['owner_id'])
     if 'recurrence_rule' in data:
         test_case.assertEqual(event.recurrence_rule, data['recurrence_rule'])

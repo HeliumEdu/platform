@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from helium.common.utils.commonutils import split_csv
-from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Material, MaterialGroup, Attachment, Note
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Event, Homework, Reminder, Category, Resource, ResourceGroup, Attachment, Note
 
 logger = logging.getLogger(__name__)
 
@@ -138,9 +138,9 @@ class ReminderFilter(django_filters.FilterSet):
         }
 
 
-class MaterialGroupFilter(django_filters.FilterSet):
+class ResourceGroupFilter(django_filters.FilterSet):
     class Meta:
-        model = MaterialGroup
+        model = ResourceGroup
         fields = {
             'id': ['exact'],
             'shown_on_calendar': ['exact'],
@@ -149,14 +149,14 @@ class MaterialGroupFilter(django_filters.FilterSet):
         }
 
 
-class MaterialFilter(django_filters.FilterSet):
+class ResourceFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
         help_text="Restrict to resources whose parent resource group is visible on the user's calendar.",
     )
 
     class Meta:
-        model = Material
+        model = Resource
         fields = {
             'id': ['exact'],
             'title': ['exact'],
@@ -164,7 +164,7 @@ class MaterialFilter(django_filters.FilterSet):
         }
 
     def filter_shown_on_calendar(self, queryset, name, value):
-        return queryset.filter(material_group__shown_on_calendar=value)
+        return queryset.filter(resource_group__shown_on_calendar=value)
 
 
 class CourseScheduleFilter(django_filters.FilterSet):
@@ -262,7 +262,7 @@ class NoteFilter(django_filters.FilterSet):
 
     def filter_shown_on_calendar(self, queryset, name, value):
         has_matching_homework = Q(homework__course__course_group__shown_on_calendar=value)
-        has_matching_resource = Q(resources__material_group__shown_on_calendar=value)
+        has_matching_resource = Q(resources__resource_group__shown_on_calendar=value)
         no_group = Q(homework__isnull=True, resources__isnull=True)
 
         return queryset.filter(has_matching_homework | has_matching_resource | no_group).distinct()

@@ -7,9 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
-from helium.planner.filters import MaterialGroupFilter
-from helium.planner.models import MaterialGroup
-from helium.planner.serializers.materialgroupserializer import MaterialGroupSerializer
+from helium.planner.filters import ResourceGroupFilter
+from helium.planner.models import ResourceGroup
+from helium.planner.serializers.resourcegroupserializer import ResourceGroupSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 @extend_schema(
     tags=['planner.resourcegroup']
 )
-class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
-    serializer_class = MaterialGroupSerializer
+class ResourceGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
+    serializer_class = ResourceGroupSerializer
     permission_classes = (IsAuthenticated,)
-    filterset_class = MaterialGroupFilter
+    filterset_class = ResourceGroupFilter
 
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return user.material_groups.all()
+            return user.resource_groups.all()
         else:
-            return MaterialGroup.objects.none()
+            return ResourceGroup.objects.none()
 
     @extend_schema(
         summary='List ResourceGroups for the User',
@@ -47,7 +47,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
     @extend_schema(
         summary='Create a ResourceGroup',
         responses={
-            201: MaterialGroupSerializer
+            201: ResourceGroupSerializer
         }
     )
     def post(self, request, *args, **kwargs):
@@ -56,7 +56,7 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
         """
         response = self.create(request, *args, **kwargs)
 
-        logger.info(f"MaterialGroup {response.data['id']} created for user {request.user.pk}")
+        logger.info(f"ResourceGroup {response.data['id']} created for user {request.user.pk}")
 
         return response
 
@@ -64,18 +64,18 @@ class MaterialGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin)
 @extend_schema(
     tags=['planner.resourcegroup']
 )
-class MaterialGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+class ResourceGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
                                   DestroyModelMixin):
-    serializer_class = MaterialGroupSerializer
+    serializer_class = ResourceGroupSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
-    filterset_class = MaterialGroupFilter
+    filterset_class = ResourceGroupFilter
 
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return user.material_groups.all()
+            return user.resource_groups.all()
         else:
-            return MaterialGroup.objects.none()
+            return ResourceGroup.objects.none()
 
     @extend_schema(summary='Retrieve a ResourceGroup')
     def get(self, request, *args, **kwargs):
@@ -93,7 +93,7 @@ class MaterialGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveMode
         """
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"MaterialGroup {kwargs['pk']} updated for user {request.user.pk}")
+        logger.info(f"ResourceGroup {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -108,6 +108,6 @@ class MaterialGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveMode
         """
         response = self.destroy(request, *args, **kwargs)
 
-        logger.info(f"MaterialGroup {kwargs['pk']} deleted for user {request.user.pk}")
+        logger.info(f"ResourceGroup {kwargs['pk']} deleted for user {request.user.pk}")
 
         return response

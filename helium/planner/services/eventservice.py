@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def clone_event(source):
-    """Clone an Event with its reminders; ``comments`` is reset and ``owner_id`` / ``example_schedule`` are not copied."""
+    """Clone an Event with its reminders; ``owner_id`` / ``example_schedule`` are not copied."""
     clone = Event.objects.create(
         title=next_clone_title(source.title),
         all_day=source.all_day,
@@ -17,7 +17,6 @@ def clone_event(source):
         end=source.end,
         priority=source.priority,
         url=source.url,
-        comments='',
         user=source.user,
     )
 

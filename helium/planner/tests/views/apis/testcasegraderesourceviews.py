@@ -1,9 +1,14 @@
+from dateutil import parser
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
+
+
+def _graded_series(holder):
+    return [item for item in holder['homework_series'] if item['graded']]
 
 
 class TestCaseGradeResourceViews(APITestCase):
@@ -57,8 +62,8 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(len(response.data['course_groups'][1]['courses']), 1)
         self.assertEqual(len(response.data['course_groups'][0]['courses'][0]['categories']), 2)
         self.assertEqual(len(response.data['course_groups'][1]['courses'][0]['categories']), 1)
-        self.assertEqual(len(response.data['course_groups'][0]['courses'][0]['grade_points']), 3)
-        self.assertEqual(len(response.data['course_groups'][1]['courses'][0]['grade_points']), 2)
+        self.assertEqual(len(_graded_series(response.data['course_groups'][0]['courses'][0])), 3)
+        self.assertEqual(len(_graded_series(response.data['course_groups'][1]['courses'][0])), 2)
 
         self.assertIn('title', response.data['course_groups'][0])
         self.assertEqual(float(response.data['course_groups'][0]['overall_grade']), 62.5)
@@ -74,13 +79,13 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(response.data['course_groups'][0]['courses'][0]['points_earned'], 60)
         self.assertEqual(response.data['course_groups'][0]['courses'][0]['points_possible'], 90)
 
-        grade_points = response.data['course_groups'][0]['courses'][0]['grade_points']
-        self.assertEqual(grade_points[0][0], homework1.start)
-        self.assertEqual(grade_points[0][1], 66.6667)
-        self.assertEqual(grade_points[1][0], homework2.start)
-        self.assertEqual(grade_points[1][1], 75.0)
-        self.assertEqual(grade_points[2][0], homework3.start)
-        self.assertEqual(grade_points[2][1], 62.5)
+        graded = _graded_series(response.data['course_groups'][0]['courses'][0])
+        self.assertEqual(parser.parse(graded[0]['start']), homework1.start)
+        self.assertEqual(graded[0]['cumulative_grade'], 66.6667)
+        self.assertEqual(parser.parse(graded[1]['start']), homework2.start)
+        self.assertEqual(graded[1]['cumulative_grade'], 75.0)
+        self.assertEqual(parser.parse(graded[2]['start']), homework3.start)
+        self.assertEqual(graded[2]['cumulative_grade'], 62.5)
 
         self.assertIn('title', response.data['course_groups'][0]['courses'][0]['categories'][0])
         self.assertEqual(float(response.data['course_groups'][0]['courses'][0]['categories'][1]['overall_grade']),
@@ -117,11 +122,11 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(response.data['course_groups'][1]['courses'][0]['points_earned'], 45)
         self.assertEqual(response.data['course_groups'][1]['courses'][0]['points_possible'], 60)
 
-        grade_points = response.data['course_groups'][1]['courses'][0]['grade_points']
-        self.assertEqual(grade_points[0][0], homework4.start)
-        self.assertEqual(grade_points[0][1], 66.6667)
-        self.assertEqual(grade_points[1][0], homework5.start)
-        self.assertEqual(grade_points[1][1], 75.0)
+        graded = _graded_series(response.data['course_groups'][1]['courses'][0])
+        self.assertEqual(parser.parse(graded[0]['start']), homework4.start)
+        self.assertEqual(graded[0]['cumulative_grade'], 66.6667)
+        self.assertEqual(parser.parse(graded[1]['start']), homework5.start)
+        self.assertEqual(graded[1]['cumulative_grade'], 75.0)
 
         self.assertIn('title', response.data['course_groups'][1]['courses'][0]['categories'][0])
         self.assertEqual(float(response.data['course_groups'][1]['courses'][0]['categories'][0]['overall_grade']),

@@ -15,10 +15,10 @@ from helium.planner.views.apis.eventviews import EventsApiListView, EventsApiDet
 from helium.planner.views.apis.graderesourceviews import GradesApiResourceView, NeededGradeApiResourceView
 from helium.planner.views.apis.homeworkviews import UserHomeworkApiListView, CourseGroupCourseHomeworkApiListView, \
     CourseGroupCourseHomeworkApiDetailView, CourseGroupCourseHomeworkApiCloneView
-from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiDetailView
-from helium.planner.views.apis.materialgroupviews import MaterialGroupsApiListView
-from helium.planner.views.apis.materialviews import MaterialGroupMaterialsApiDetailView, UserMaterialsApiListView, \
-    MaterialGroupMaterialsApiListView
+from helium.planner.views.apis.resourcegroupviews import ResourceGroupsApiDetailView
+from helium.planner.views.apis.resourcegroupviews import ResourceGroupsApiListView
+from helium.planner.views.apis.resourceviews import ResourceGroupResourcesApiDetailView, UserResourcesApiListView, \
+    ResourceGroupResourcesApiListView
 from helium.planner.views.apis.noteviews import NotesApiListView, NotesApiDetailView
 from helium.planner.views.apis.reminderviews import RemindersApiListView, RemindersApiDetailView, \
     RemindersApiDismissAllView
@@ -70,17 +70,17 @@ urlpatterns = [
          name='planner_attachments_detail'),
 
     # ResourceGroup
-    path('planner/resourcegroups/', MaterialGroupsApiListView.as_view(), name='planner_resourcegroups_list'),
-    path('planner/resourcegroups/<int:pk>/', MaterialGroupsApiDetailView.as_view(),
+    path('planner/resourcegroups/', ResourceGroupsApiListView.as_view(), name='planner_resourcegroups_list'),
+    path('planner/resourcegroups/<int:pk>/', ResourceGroupsApiDetailView.as_view(),
          name='planner_resourcegroups_detail'),
 
     # Resource
-    path('planner/resources/', UserMaterialsApiListView.as_view(), name='planner_resources_list'),
+    path('planner/resources/', UserResourcesApiListView.as_view(), name='planner_resources_list'),
     path('planner/resourcegroups/<int:resource_group>/resources/',
-         MaterialGroupMaterialsApiListView.as_view(),
+         ResourceGroupResourcesApiListView.as_view(),
          name='planner_resourcegroups_resources_list'),
     path('planner/resourcegroups/<int:resource_group>/resources/<int:pk>/',
-         MaterialGroupMaterialsApiDetailView.as_view(),
+         ResourceGroupResourcesApiDetailView.as_view(),
          name='planner_resourcegroups_resources_detail'),
 
     # Event

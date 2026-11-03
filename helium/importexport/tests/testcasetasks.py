@@ -23,8 +23,8 @@ class TestCaseImportExportTasks(APITestCase):
             course_remap=identity_remap(Course.objects.for_user(user.pk)
                                         .filter(course_group__example_schedule=True)),
             category_remap={},
-            material_group_remap={},
-            material_remap={},
+            resource_group_remap={},
+            resource_remap={},
             event_remap=identity_remap(Event.objects.for_user(user.pk)
                                        .filter(example_schedule=True)),
             homework_remap=identity_remap(Homework.objects.for_user(user.pk)

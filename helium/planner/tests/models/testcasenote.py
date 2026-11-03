@@ -4,7 +4,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Note
 from helium.planner.tests.helpers import (
     coursegrouphelper, coursehelper, homeworkhelper, eventhelper,
-    materialgrouphelper, materialhelper, notehelper
+    resourcegrouphelper, resourcehelper, notehelper
 )
 
 
@@ -77,8 +77,8 @@ class TestCaseNote(TestCase):
 
     def test_note_linked_to_resource(self):
         user = userhelper.given_a_user_exists()
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
         note = notehelper.given_note_linked_to_resource(user, resource)
         self.assertEqual(note.linked_entity, resource)
         self.assertEqual(note.linked_entity_type, 'resource')
@@ -105,8 +105,8 @@ class TestCaseNote(TestCase):
 
     def test_delete_resource_cascades_to_note(self):
         user = userhelper.given_a_user_exists()
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
         note = notehelper.given_note_linked_to_resource(user, resource)
         note_pk = note.pk
         resource.delete()

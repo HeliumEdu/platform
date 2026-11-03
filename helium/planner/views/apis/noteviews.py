@@ -24,9 +24,8 @@ def _check_linked_entity_permissions(request):
         permissions.check_homework_permission(request.user.pk, homework_id)
     for event_id in permissions.requested_ids(request.data, 'events'):
         permissions.check_event_permission(request.user.pk, event_id)
-    for resources_key in ('resources', 'materials'):
-        for material_id in permissions.requested_ids(request.data, resources_key):
-            permissions.check_material_permission(request.user.pk, material_id)
+    for resource_id in permissions.requested_ids(request.data, 'resources'):
+        permissions.check_resource_permission(request.user.pk, resource_id)
 
 
 @extend_schema(tags=['planner.note'])

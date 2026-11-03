@@ -12,7 +12,7 @@ from helium.common.services.pushservice import send_dismiss, send_notifications
 from helium.common.services.sesreputationservice import process_ses_notification
 from helium.common.utils import metricutils, taskutils
 from helium.feed.models import ExternalCalendar
-from helium.planner.models import CourseGroup, Event, MaterialGroup, Note
+from helium.planner.models import CourseGroup, Event, ResourceGroup, Note
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def process_ses_event(self, message_json):
 def _example_schedule_remains():
     return (Exists(CourseGroup.objects.filter(user=OuterRef('user_id'), example_schedule=True))
             | Exists(Event.objects.filter(user=OuterRef('user_id'), example_schedule=True))
-            | Exists(MaterialGroup.objects.filter(user=OuterRef('user_id'), example_schedule=True))
+            | Exists(ResourceGroup.objects.filter(user=OuterRef('user_id'), example_schedule=True))
             | Exists(Note.objects.filter(user=OuterRef('user_id'), example_schedule=True))
             | Exists(ExternalCalendar.objects.filter(user=OuterRef('user_id'), example_schedule=True)))
 

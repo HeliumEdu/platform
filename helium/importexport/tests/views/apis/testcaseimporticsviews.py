@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
-from helium.planner.models import Category, Course, Event, Homework
+from helium.planner.models import Category, Course, Event, Homework, Note
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper
 
 
@@ -48,7 +48,7 @@ class TestCaseImportICSViews(APITestCase):
         self.assertNotIn('Read Chapter 1 (duplicate UID)', titles)
         self.assertEqual({'Read Chapter 1', 'Project Due', 'Lab Session'}, titles)
 
-    def test_import_ics_preserves_all_day_and_description(self):
+    def test_import_ics_preserves_all_day_and_keeps_description_as_a_linked_note(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -61,7 +61,9 @@ class TestCaseImportICSViews(APITestCase):
         self.assertTrue(all_day.all_day)
         timed = Event.objects.for_user(user.pk).get(title='Read Chapter 1')
         self.assertFalse(timed.all_day)
-        self.assertEqual('Pages 1-20', timed.comments)
+        self.assertEqual({'ops': [{'insert': 'Pages 1-20\n'}]}, timed.notes_set.get().content)
+        self.assertFalse(all_day.notes_set.exists())
+        self.assertEqual(1, Note.objects.for_user(user.pk).count())
 
     def test_import_ics_into_existing_course(self):
         # GIVEN
@@ -80,6 +82,9 @@ class TestCaseImportICSViews(APITestCase):
         homework = Homework.objects.for_user(user.pk)
         self.assertEqual(3, len(homework))
         self.assertTrue(all(h.course_id == course.pk for h in homework))
+        described = homework.get(title='Read Chapter 1')
+        self.assertEqual({'ops': [{'insert': 'Pages 1-20\n'}]}, described.notes_set.get().content)
+        self.assertEqual(1, Note.objects.for_user(user.pk).count())
 
     def test_import_ics_creates_new_course_in_group(self):
         # GIVEN

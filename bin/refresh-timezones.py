@@ -230,7 +230,7 @@ def _render_frontend_aliases(aliases: dict[str, str], iana_release: str) -> str:
         "/// IANA link (alias) names mapped to the selectable zone they point at.",
         "///",
         "/// Device APIs report whatever the device is set to without canonicalizing,",
-        "/// so a legacy alias will not be found in `TimeZoneConstants.all`.",
+        "/// so an alias will not be found in `TimeZoneConstants.all`.",
         "///",
         "/// Kept out of `time_zone_constants.dart`: the generator unions its output",
         "/// with what is on disk, and would read these back as shipped zones.",
@@ -256,8 +256,8 @@ def refresh(
 
     country_by_zone = _read_country_by_zone()
     canonical = set(country_by_zone) | _REGIONLESS_ZONES
-    legacy = _extract_zones(platform_file) | _extract_zones(frontend_file)
-    union = canonical | legacy
+    on_disk = _extract_zones(platform_file) | _extract_zones(frontend_file)
+    union = canonical | on_disk
     zones = sorted(union)
 
     # Fresh derivation wins on conflict; retired Links carry forward.
@@ -271,7 +271,7 @@ def refresh(
     frontend_file.write_text(_render_frontend(zones, iana_release))
     frontend_alias_file.write_text(_render_frontend_aliases(aliases, iana_release))
 
-    return len(zones), len(legacy - canonical), len(aliases)
+    return len(zones), len(on_disk - canonical), len(aliases)
 
 
 def main() -> int:
@@ -283,10 +283,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    total, legacy_only, alias_count = refresh(
+    total, deprecated_only, alias_count = refresh(
         args.platform_file, args.frontend_file, args.frontend_alias_file
     )
-    print(f"Wrote {total} zones ({legacy_only} preserved as deprecated aliases) "
+    print(f"Wrote {total} zones ({deprecated_only} preserved as deprecated aliases) "
           f"and {alias_count} alias mappings to:")
     print(f"  {args.platform_file}")
     print(f"  {args.frontend_file}")

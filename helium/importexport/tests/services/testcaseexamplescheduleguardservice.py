@@ -10,7 +10,7 @@ from helium.feed.models import ExternalCalendar
 from helium.importexport.services import examplescheduleguardservice
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
-    Material, MaterialGroup, Note, Reminder
+    Resource, ResourceGroup, Note, Reminder
 from helium.planner.tests.helpers import attachmenthelper, reminderhelper
 
 
@@ -33,8 +33,8 @@ class TestCaseExampleScheduleGuardService(TestCase):
 
         # THEN
         self.assertEqual({model for model in reached if not model._meta.auto_created},
-                         {ExternalCalendar, CourseGroup, MaterialGroup, Event, Note, Course, CourseSchedule,
-                          Category, Homework, Reminder, Material, Attachment})
+                         {ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule,
+                          Category, Homework, Reminder, Resource, Attachment})
 
     def test_unstamped_schedule_keeps_every_root(self):
         # GIVEN

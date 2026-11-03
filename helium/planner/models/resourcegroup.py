@@ -2,10 +2,10 @@ from django.conf import settings
 from django.db import models
 
 from helium.common.models import BaseModel
-from helium.planner.managers.materialgroupmanager import MaterialGroupManager
+from helium.planner.managers.resourcegroupmanager import ResourceGroupManager
 
 
-class MaterialGroup(BaseModel):
+class ResourceGroup(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255)
 
@@ -15,9 +15,9 @@ class MaterialGroup(BaseModel):
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='material_groups', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='resource_groups', on_delete=models.CASCADE)
 
-    objects = MaterialGroupManager()
+    objects = ResourceGroupManager()
 
     class Meta:
         verbose_name = 'Resource group'
@@ -30,5 +30,5 @@ class MaterialGroup(BaseModel):
         return self.user
 
     @property
-    def num_materials(self) -> int:
-        return self.materials.count()
+    def num_resources(self) -> int:
+        return self.resources.count()

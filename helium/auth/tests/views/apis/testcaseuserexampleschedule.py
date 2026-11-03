@@ -9,12 +9,12 @@ from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
-    Material, MaterialGroup, Note, Reminder
+    Resource, ResourceGroup, Note, Reminder
 from helium.planner.tests.helpers import attachmenthelper, categoryhelper, coursehelper, courseschedulehelper, \
-    homeworkhelper, materialhelper, notehelper, reminderhelper
+    homeworkhelper, resourcehelper, notehelper, reminderhelper
 
-ALL_EXAMPLE_MODELS = (ExternalCalendar, CourseGroup, MaterialGroup, Event, Note, Course, CourseSchedule, Category,
-                      Homework, Reminder, Material, Attachment)
+ALL_EXAMPLE_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule, Category,
+                      Homework, Reminder, Resource, Attachment)
 
 COURSE_GROUP_TREE = ('course_group', 'course', 'schedule', 'category', 'homework', 'course_reminder',
                      'homework_reminder')
@@ -114,8 +114,8 @@ class TestCaseUserExampleSchedule(APITestCase):
             'course attachment': (lambda e: attachmenthelper.given_attachment_exists(user, course=e.course),
                                   'course_group'),
             'event attachment': (lambda e: attachmenthelper.given_attachment_exists(user, event=e.event), 'event'),
-            'material': (lambda e: materialhelper.given_material_exists(e.material_group, title='My material'),
-                         'material_group'),
+            'resource': (lambda e: resourcehelper.given_resource_exists(e.resource_group, title='My material'),
+                         'resource_group'),
         }
 
         for name, (add, root_name) in additions.items():
@@ -158,9 +158,9 @@ class TestCaseUserExampleSchedule(APITestCase):
             'schedule': (lambda e: _set_and_save(e.schedule, mon_start_time=datetime.time(9, 0)),
                          ['course_group', 'schedule']),
             'event': (lambda e: _set_and_save(e.event, title='Mine'), ['event']),
-            'material group': (lambda e: _set_and_save(e.material_group, title='Mine'),
-                               ['material_group', 'material']),
-            'material': (lambda e: _set_and_save(e.material, title='Mine'), ['material_group', 'material']),
+            'resource group': (lambda e: _set_and_save(e.resource_group, title='Mine'),
+                               ['resource_group', 'resource']),
+            'resource': (lambda e: _set_and_save(e.resource, title='Mine'), ['resource_group', 'resource']),
             'note': (lambda e: _set_and_save(e.note, title='Mine'), ['note']),
             'external calendar': (lambda e: _set_and_save(e.external_calendar, title='Mine'),
                                   ['external_calendar']),
@@ -206,8 +206,8 @@ class TestCaseUserExampleSchedule(APITestCase):
         self.assertEqual(Course.objects.filter(course_group=example.course_group).count(), 0)
         self.assertFalse(Note.objects.filter(pk=example.linked_note.pk).exists())
         self.assertFalse(Event.objects.filter(pk=example.event.pk).exists())
-        self.assertFalse(MaterialGroup.objects.filter(pk=example.material_group.pk).exists())
-        self.assertFalse(Material.objects.filter(pk=example.material.pk).exists())
+        self.assertFalse(ResourceGroup.objects.filter(pk=example.resource_group.pk).exists())
+        self.assertFalse(Resource.objects.filter(pk=example.resource.pk).exists())
         self.assertFalse(Note.objects.filter(pk=example.note.pk).exists())
         self.assertFalse(ExternalCalendar.objects.filter(pk=example.external_calendar.pk).exists())
 

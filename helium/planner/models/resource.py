@@ -2,15 +2,15 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.planner.managers.materialmanager import MaterialManager
+from helium.planner.managers.resourcemanager import ResourceManager
 
 
-class Material(BaseModel):
+class Resource(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255)
 
     status = models.PositiveIntegerField(help_text='The status of the resource.',
-                                         choices=enums.MATERIAL_STATUS_CHOICES, default=enums.OWNED)
+                                         choices=enums.RESOURCE_STATUS_CHOICES, default=enums.OWNED)
 
     condition = models.PositiveIntegerField(help_text='The physical condition of the resource.',
                                             choices=enums.CONDITION_CHOICES, default=enums.BRAND_NEW)
@@ -21,17 +21,14 @@ class Material(BaseModel):
     price = models.CharField(help_text='A price string.',
                              max_length=255, blank=True)
 
-    details = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                               blank=True, default='')
-
-    material_group = models.ForeignKey('MaterialGroup', help_text='The resource group with which to associate.',
-                                       related_name='materials', on_delete=models.CASCADE)
+    resource_group = models.ForeignKey('ResourceGroup', help_text='The resource group with which to associate.',
+                                       related_name='resources', on_delete=models.CASCADE)
 
     courses = models.ManyToManyField('Course',
                                      help_text='Classes that share this resource. May be empty.',
-                                     related_name='materials', blank=True, default=None)
+                                     related_name='resources', blank=True, default=None)
 
-    objects = MaterialManager()
+    objects = ResourceManager()
 
     class Meta:
         verbose_name = 'Resource'
@@ -41,4 +38,4 @@ class Material(BaseModel):
         return f'{self.title} ({self.get_user().get_username()})'
 
     def get_user(self):
-        return self.material_group.get_user()
+        return self.resource_group.get_user()

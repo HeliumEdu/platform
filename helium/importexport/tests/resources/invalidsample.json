@@ -117,7 +117,7 @@
             "current_grade": "20/30",
             "completed": true,
             "category": 5,
-            "materials": [
+            "resources": [
                 1
             ],
             "attachments": [],

@@ -40,7 +40,7 @@ class Homework(BaseCalendar):
                                  related_name='homework', blank=True, null=True, default=None,
                                  on_delete=models.SET_NULL)
 
-    materials = models.ManyToManyField('Material', help_text='A list of resources with which to associate.',
+    resources = models.ManyToManyField('Resource', help_text='A list of resources with which to associate.',
                                        related_name='homework', blank=True, default=None)
 
     course = models.ForeignKey('Course', help_text='The course with which to associate.',

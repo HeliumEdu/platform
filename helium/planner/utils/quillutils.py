@@ -58,6 +58,20 @@ def quill_delta_to_plain_text(content) -> str:
                    if isinstance(op, dict) and isinstance(op.get('insert'), str)).strip()
 
 
+def plain_text_to_quill(text):
+    """
+    Wrap plain text in a Quill Delta verbatim, with no markup interpretation.
+
+    :param text: The plain text.
+    :return: The Delta, or ``None`` if the text is empty or blank.
+    """
+    if not text or not text.strip():
+        return None
+
+    text = str(text)
+    return {'ops': [{'insert': text if text.endswith('\n') else f'{text}\n'}]}
+
+
 def html_to_quill(html):
     """
     Convert HTML string to Quill Delta format.
@@ -70,6 +84,7 @@ def html_to_quill(html):
 
     parser = _QuillHTMLParser()
     parser.feed(html)
+    parser.close()
     ops = parser.ops
 
     if not ops:
@@ -136,7 +151,7 @@ class _QuillHTMLParser(HTMLParser):
             self.ops.append({'insert': '\n'})
             return
         elif tag == 'font':
-            # Legacy <font> tag from execCommand
+            # Deprecated HTML <font> tag, emitted by execCommand
             color = attrs_dict.get('color')
             if color:
                 inline_attrs['color'] = _normalize_color(color)

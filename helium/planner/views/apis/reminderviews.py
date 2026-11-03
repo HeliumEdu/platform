@@ -42,7 +42,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
-                'homework__materials',
+                'homework__resources',
                 'homework__notes_set',
                 'homework__course__schedules',
                 'event__attachments',
@@ -120,7 +120,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
             ).prefetch_related(
                 'homework__attachments',
                 'homework__reminders',
-                'homework__materials',
+                'homework__resources',
                 'homework__notes_set',
                 'homework__course__schedules',
                 'event__attachments',

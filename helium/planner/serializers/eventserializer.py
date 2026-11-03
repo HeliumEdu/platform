@@ -19,9 +19,6 @@ from helium.planner.serializers.reminderserializer import ReminderSerializer
 logger = logging.getLogger(__name__)
 
 
-#: Permanently excluded: `comments` is only populated on the synthesised external calendar and
-#: course schedule events that inherit this serializer, never on a stored Event.
-@extend_schema_serializer(exclude_fields=('comments',))
 class EventSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
@@ -38,7 +35,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url', 'comments',
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url',
             'owner_id',
             'color', 'location', 'attachments', 'reminders', 'notes', 'user',
             'recurrence_rule', 'exception_dates', 'created_at', 'updated_at',
@@ -70,14 +67,13 @@ class EventSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-#: Permanently excluded: `comments` is only populated on the synthesised external calendar and
-#: course schedule events that inherit this serializer, never on a stored Event.
-@extend_schema_serializer(exclude_fields=('comments',))
 class EventExtendedSerializer(EventSerializer):
     attachments = AttachmentSerializer(many=True)
 
     reminders = ReminderSerializer(many=True)
 
+
+@extend_schema_serializer(exclude_fields=('comments',))
 class GeneratedEventSerializer(EventSerializer):
     """
     An event generated on the fly rather than stored, which owns none of the relations a
@@ -91,6 +87,10 @@ class GeneratedEventSerializer(EventSerializer):
     attachments = serializers.SerializerMethodField()
     reminders = serializers.SerializerMethodField()
     notes = serializers.SerializerMethodField()
+    comments = serializers.CharField(read_only=True)
+
+    class Meta(EventSerializer.Meta):
+        fields = EventSerializer.Meta.fields + ('comments',)
 
     def get_attachments(self, obj) -> list:
         return []

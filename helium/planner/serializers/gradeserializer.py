@@ -19,7 +19,6 @@ class HomeworkSeriesItemSerializer(serializers.Serializer):
     impact_score = serializers.FloatField(allow_null=True)
 
 
-@extend_schema_serializer(exclude_fields=['grade_points'])
 class GradeHolderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
@@ -32,11 +31,10 @@ class GradeHolderSerializer(serializers.Serializer):
     num_homework_completed = serializers.IntegerField()
     num_homework_graded = serializers.IntegerField()
     has_weighted_grading = serializers.BooleanField(required=False)
-    grade_points = serializers.ListField(required=False)
     homework_series = HomeworkSeriesItemSerializer(many=True, required=False)
 
 
-@extend_schema_serializer(exclude_fields=['grade_points'], component_name='GradeHolder')
+@extend_schema_serializer(component_name='GradeHolder')
 class GradeCategorySerializer(GradeHolderSerializer):
     points_earned = serializers.FloatField(
         help_text='Total points earned across the category\'s graded assignments (completed, with a grade).')

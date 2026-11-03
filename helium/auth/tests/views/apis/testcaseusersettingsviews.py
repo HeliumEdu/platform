@@ -50,11 +50,11 @@ class TestCaseUserSettingsViews(APITestCase):
             reverse('auth_user_settings_detail'),
             json.dumps({'default_view': enums.THREE_DAY}),
             content_type='application/json',
-            HTTP_X_CLIENT_VERSION='3.10.0',
         )
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['default_view'], enums.THREE_DAY)
         user.settings.refresh_from_db()
         self.assertEqual(user.settings.default_view, enums.THREE_DAY)
 
@@ -196,7 +196,7 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['resource_color'], '#123456')
         user.settings.refresh_from_db()
-        self.assertEqual(user.settings.material_color, '#123456')
+        self.assertEqual(user.settings.resource_color, '#123456')
 
     def test_put_bad_data_fails(self):
         # GIVEN
@@ -232,17 +232,6 @@ class TestCaseUserSettingsViews(APITestCase):
         user.refresh_from_db()
         self.assertEqual(user.settings.private_slug, private_slug)
 
-    def test_is_setup_complete_in_response(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # WHEN
-        response = self.client.get(reverse('auth_user_detail'))
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('is_setup_complete', response.data['settings'])
-
     def test_setup_state_is_read_only(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -251,7 +240,6 @@ class TestCaseUserSettingsViews(APITestCase):
         # WHEN
         data = {
             'setup_state': enums.SETUP_COMPLETE,
-            'is_setup_complete': True
         }
         response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
                                    content_type='application/json')
@@ -259,22 +247,8 @@ class TestCaseUserSettingsViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['setup_state'], enums.SETUP_PENDING)
-        self.assertFalse(response.data['is_setup_complete'])
         user.settings.refresh_from_db()
         self.assertEqual(user.settings.setup_state, enums.SETUP_PENDING)
-
-    def test_is_setup_complete_mirrors_setup_state(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        user.settings.setup_state = enums.SETUP_COMPLETE
-        user.settings.save()
-
-        # WHEN
-        response = self.client.get(reverse('auth_user_detail'))
-
-        # THEN
-        self.assertEqual(response.data['settings']['setup_state'], enums.SETUP_COMPLETE)
-        self.assertTrue(response.data['settings']['is_setup_complete'])
 
     def test_timezone_change_rebases_single_day_all_day_event(self):
         # GIVEN

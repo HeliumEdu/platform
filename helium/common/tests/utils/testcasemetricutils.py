@@ -2,9 +2,12 @@ from datetime import datetime, timezone
 from unittest import mock
 
 from django.test import SimpleTestCase
+from knox.auth import TokenAuthentication
+from rest_framework.exceptions import NotAuthenticated
 
+from helium.auth.backends import JWTAuthentication, OAuth2Authentication
 from helium.common.utils import metricutils
-from helium.common.utils.metricutils import _client_tags
+from helium.common.utils.metricutils import _auth_tag, _client_tags
 
 DART_APP = 'Dart/3.5 (dart:io)'
 IOS_BROWSER = ('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 '
@@ -150,6 +153,85 @@ class TestCaseMetricUtils(SimpleTestCase):
         self.assertIn('user_agent:unknown', tags)
         self.assertIn('client:other', tags)
         self.assertIn('client_os:other', tags)
+
+
+class TestCaseAuthTag(SimpleTestCase):
+    def test_auth_tag_marks_a_signed_in_app_or_browser_as_session(self):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=JWTAuthentication())
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:session', tag)
+
+    def test_auth_tag_marks_an_api_token(self):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=TokenAuthentication())
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:api_token', tag)
+
+    def test_auth_tag_marks_a_connected_app(self):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=OAuth2Authentication())
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:connected_app', tag)
+
+    def test_auth_tag_marks_an_anonymous_request_as_none(self):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=None)
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:none', tag)
+
+    def test_auth_tag_marks_an_unknown_authenticator_as_other(self):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=object())
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:other', tag)
+
+    def test_auth_tag_falls_back_to_none_when_authentication_raises(self):
+        # GIVEN
+        request = mock.Mock()
+        type(request).successful_authenticator = mock.PropertyMock(side_effect=NotAuthenticated())
+
+        # WHEN
+        tag = _auth_tag(request)
+
+        # THEN
+        self.assertEqual('auth:none', tag)
+
+    @mock.patch('helium.common.utils.metricutils.timing')
+    @mock.patch('helium.common.utils.metricutils.increment')
+    def test_request_stop_tags_only_the_request_count_with_auth(self, mock_increment, mock_timing):
+        # GIVEN
+        request = mock.Mock(successful_authenticator=TokenAuthentication())
+        response = mock.Mock(headers={})
+        metrics = {'Request-Metric-ID': 'planner.homework', 'Request-Metric-Start': 0}
+
+        # WHEN
+        metricutils.request_stop(metrics, request, response)
+
+        # THEN
+        request_call = next(call for call in mock_increment.call_args_list if call.args[0] == 'request')
+        self.assertIn('auth:api_token', request_call.kwargs['extra_tags'])
+        self.assertNotIn('auth:api_token', mock_timing.call_args.kwargs['extra_tags'])
 
 
 class TestCasePresenceMetrics(SimpleTestCase):

@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models
-from django.utils.html import strip_tags
 
 from helium.common.models import BaseModel
 
@@ -34,9 +33,6 @@ class BaseCalendar(BaseModel):
     url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
                           blank=True, null=True)
 
-    comments = models.TextField(help_text='An arbitrary string (which may contain HTML formatting).',
-                                blank=True, default='')
-
     class Meta:
         abstract = True
         ordering = ('start', 'title')
@@ -48,10 +44,6 @@ class BaseCalendar(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
-
-    @property
-    def comments_text(self) -> str:
-        return strip_tags(self.comments)
 
     @property
     def calendar_item_type(self) -> int:

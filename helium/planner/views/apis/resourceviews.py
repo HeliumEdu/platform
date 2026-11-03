@@ -8,10 +8,10 @@ from rest_framework.permissions import IsAuthenticated
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner import permissions
-from helium.planner.filters import MaterialFilter
-from helium.planner.models import Material
-from helium.planner.permissions import IsMaterialGroupOwner
-from helium.planner.serializers.materialserializer import MaterialSerializer
+from helium.planner.filters import ResourceFilter
+from helium.planner.models import Resource
+from helium.planner.permissions import IsResourceGroupOwner
+from helium.planner.serializers.resourceserializer import ResourceSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -19,21 +19,21 @@ logger = logging.getLogger(__name__)
 @extend_schema(
     tags=['planner.resource']
 )
-class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
-    serializer_class = MaterialSerializer
+class UserResourcesApiListView(HeliumAPIView, ListModelMixin):
+    serializer_class = ResourceSerializer
     permission_classes = (IsAuthenticated,)
-    filterset_class = MaterialFilter
+    filterset_class = ResourceFilter
 
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            materials = Material.objects.for_user(user.pk).select_related('material_group').prefetch_related('courses', 'notes_set')
+            resources = Resource.objects.for_user(user.pk).select_related('resource_group').prefetch_related('courses', 'notes_set')
             # We do this here because the django-filters doesn't handle ManyToMany 'in' lookups well
             if 'courses' in self.request.query_params:
-                materials = materials.with_courses(self.request.query_params.getlist('courses'))
-            return materials
+                resources = resources.with_courses(self.request.query_params.getlist('courses'))
+            return resources
         else:
-            return Material.objects.none()
+            return Resource.objects.none()
 
     @extend_schema(
         summary='List all Resources for the User',
@@ -59,17 +59,17 @@ class UserMaterialsApiListView(HeliumAPIView, ListModelMixin):
 @extend_schema(
     tags=['planner.resource']
 )
-class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
-    serializer_class = MaterialSerializer
-    permission_classes = (IsAuthenticated, IsMaterialGroupOwner)
-    filterset_class = MaterialFilter
+class ResourceGroupResourcesApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
+    serializer_class = ResourceSerializer
+    permission_classes = (IsAuthenticated, IsResourceGroupOwner)
+    filterset_class = ResourceFilter
 
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['resource_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Resource.objects.for_user(user.pk).for_resource_group(self.kwargs['resource_group']).select_related('resource_group').prefetch_related('courses', 'notes_set')
         else:
-            return Material.objects.none()
+            return Resource.objects.none()
 
     @extend_schema(summary='List Resources in a ResourceGroup')
     def get(self, request, *args, **kwargs):
@@ -81,12 +81,12 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
         return response
 
     def perform_create(self, serializer, *args, **kwargs):
-        serializer.save(material_group_id=self.kwargs['resource_group'])
+        serializer.save(resource_group_id=self.kwargs['resource_group'])
 
     @extend_schema(
         summary='Create a Resource in a ResourceGroup',
         responses={
-            201: MaterialSerializer
+            201: ResourceSerializer
         }
     )
     def post(self, request, *args, **kwargs):
@@ -98,12 +98,12 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
         for resource_group_id in permissions.requested_ids(request.data, 'resource_group'):
-            permissions.check_material_group_permission(request.user.pk, resource_group_id)
+            permissions.check_resource_group_permission(request.user.pk, resource_group_id)
 
         response = self.create(request, *args, **kwargs)
 
         logger.info(
-            f"Material {response.data['id']} created in MaterialGroup {kwargs['resource_group']} for user {request.user.pk}")
+            f"Resource {response.data['id']} created in ResourceGroup {kwargs['resource_group']} for user {request.user.pk}")
 
         return response
 
@@ -111,18 +111,18 @@ class MaterialGroupMaterialsApiListView(HeliumAPIView, CreateModelMixin, ListMod
 @extend_schema(
     tags=['planner.resource']
 )
-class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
+class ResourceGroupResourcesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
                                           DestroyModelMixin):
-    serializer_class = MaterialSerializer
-    permission_classes = (IsAuthenticated, IsOwner, IsMaterialGroupOwner)
-    filterset_class = MaterialFilter
+    serializer_class = ResourceSerializer
+    permission_classes = (IsAuthenticated, IsOwner, IsResourceGroupOwner)
+    filterset_class = ResourceFilter
 
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Material.objects.for_user(user.pk).for_material_group(self.kwargs['resource_group']).select_related('material_group').prefetch_related('courses', 'notes_set')
+            return Resource.objects.for_user(user.pk).for_resource_group(self.kwargs['resource_group']).select_related('resource_group').prefetch_related('courses', 'notes_set')
         else:
-            return Material.objects.none()
+            return Resource.objects.none()
 
     @extend_schema(summary='Retrieve a Resource')
     def get(self, request, *args, **kwargs):
@@ -143,11 +143,11 @@ class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, Retr
             for course_id in courses:
                 permissions.check_course_permission(request.user.pk, course_id)
         for resource_group_id in permissions.requested_ids(request.data, 'resource_group'):
-            permissions.check_material_group_permission(request.user.pk, resource_group_id)
+            permissions.check_resource_group_permission(request.user.pk, resource_group_id)
 
         response = self.update(request, *args, **kwargs)
 
-        logger.info(f"Material {kwargs['pk']} updated for user {request.user.pk}")
+        logger.info(f"Resource {kwargs['pk']} updated for user {request.user.pk}")
 
         return response
 
@@ -163,6 +163,6 @@ class MaterialGroupMaterialsApiDetailView(PreconditionMixin, HeliumAPIView, Retr
         response = self.destroy(request, *args, **kwargs)
 
         logger.info(
-            f"Material {kwargs['pk']} deleted from MaterialGroup {kwargs['resource_group']} for user {request.user.pk}")
+            f"Resource {kwargs['pk']} deleted from ResourceGroup {kwargs['resource_group']} for user {request.user.pk}")
 
         return response

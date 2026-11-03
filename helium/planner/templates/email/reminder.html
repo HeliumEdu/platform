@@ -25,14 +25,14 @@
             {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %}</a>{% endif %}
         </p>{% endif %}{% endif %}
         {% if reminder.homework or reminder.event %}
-        {% if calendar_item.materials and calendar_item.materials.count > 0 %}
+        {% if calendar_item.resources and calendar_item.resources.count > 0 %}
         <h4>Resources</h4>
         <ul>
-            {% for material in calendar_item.materials.all %}
+            {% for resource in calendar_item.resources.all %}
             <li>
-                {% if material.website %}<a target="_blank" href="{{ material.website }}">{% endif %}
-                {{ material.title }}
-                {% if material.website %}</a>{% endif %}
+                {% if resource.website %}<a target="_blank" href="{{ resource.website }}">{% endif %}
+                {{ resource.title }}
+                {% if resource.website %}</a>{% endif %}
             </li>
             {% endfor %}
         </ul>

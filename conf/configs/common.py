@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.7.35"
+__version__ = "2.7.36"
 
 import json
 import os
@@ -281,9 +281,6 @@ REFRESH_TOKEN_TTL_DAYS = 14
 # Terraform code (never here) when it needs to be changed.
 MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
 
-#: Legacy 'default_view' downgrade, can be removed once all clients are reporting >= 3.10.0.
-THREE_DAY_VIEW_MIN_VERSION = '3.10.0'
-
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
 
@@ -383,7 +380,7 @@ SPECTACULAR_SETTINGS = {
         "- `page`: 1-based page number.\n"
         "- `page_size`: items per page (max 100).\n\n"
         "## Vocabulary (wire format vs. user-facing terms)\n\n"
-        f"The wire format keeps some legacy names that differ from what users see in the "
+        f"The wire format uses some names that differ from what users see in the "
         f"{PROJECT_NAME} App. Each wire name (used in API paths and JSON keys) below "
         f"corresponds to the term displayed in the app.\n\n"
         '<table>\n'
@@ -411,7 +408,6 @@ SPECTACULAR_SETTINGS = {
         "- One atomic call, no token-expiry exposure mid-import.\n"
         "- Predictable shape — every relationship is expressed as an integer `id` within the same "
         "file, so there is no GET-then-POST dance.\n"
-        "- Forward-compatibility shims (e.g. legacy reminder types) are applied in one place.\n"
         "- `?dry_run=true` checks a file without saving anything; a real import returns the `ids` it "
         "assigned.\n\n"
         "The `Export` schema in this document is the canonical bulk-import target — its keys "
@@ -514,8 +510,7 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'ReminderOffsetTypeEnum': enums.REMINDER_OFFSET_TYPE_CHOICES,
         'ReminderTypeEnum': enums.REMINDER_TYPE_CHOICES,
-        #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
-        'ResourceStatusEnum': enums.MATERIAL_STATUS_CHOICES,
+        'ResourceStatusEnum': enums.RESOURCE_STATUS_CHOICES,
         'ConditionEnum': enums.CONDITION_CHOICES,
         'CourseScheduleTemplateEnum': enums.SCHEDULE_TEMPLATE_CHOICES,
         'CourseTemplateEnum': enums.CATEGORY_TEMPLATE_CHOICES,

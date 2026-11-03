@@ -9,6 +9,10 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 from datadog import initialize, statsd
+from knox.auth import TokenAuthentication
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from rest_framework.exceptions import APIException
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.utils import redisutils
@@ -17,6 +21,12 @@ from helium.common.utils.versionutils import get_client_version
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
 _BASE_TAGS = [f"env:{settings.ENVIRONMENT}"]
+
+_AUTH_METHODS = (
+    (JWTAuthentication, "session"),
+    (TokenAuthentication, "api_token"),
+    (OAuth2Authentication, "connected_app"),
+)
 
 _cloudwatch_client = None
 
@@ -76,6 +86,24 @@ def _client_tags(request):
         client, client_os = "other", "other"
 
     return [f"user_agent:{normalized_ua}", f"client:{client}", f"client_os:{client_os}"]
+
+
+def _auth_tag(request):
+    """
+    Tag how the request authenticated: a signed-in app or browser (`session`), an API token (`api_token`), or a
+    connected app (`connected_app`); `none` when anonymous. Matched by the library classes Helium's authenticators
+    extend."""
+    try:
+        authenticator = request.successful_authenticator
+    except APIException:
+        authenticator = None
+
+    if authenticator is None:
+        return "auth:none"
+
+    method = next((name for cls, name in _AUTH_METHODS if isinstance(authenticator, cls)), "other")
+
+    return f"auth:{method}"
 
 
 def _user_tags(user):
@@ -232,7 +260,7 @@ def request_stop(metrics, request, response, searchable=False):
         if searchable:
             searching = bool((request.GET.get('search') or '').strip())
             request_tags.append(f"search:{str(searching).lower()}")
-        increment('request', request=request, response=response, extra_tags=request_tags)
+        increment('request', request=request, response=response, extra_tags=request_tags + [_auth_tag(request)])
         timing('request.timing', metrics['Request-Metric-Millis'], extra_tags=request_tags)
 
         increment('platform_version', extra_tags=[_platform_version_tag()])

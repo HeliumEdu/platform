@@ -11,7 +11,9 @@ from helium.planner.models import Category, Course, CourseGroup, Event, Homework
 from helium.planner.serializers.courseserializer import CourseSerializer
 from helium.planner.serializers.eventserializer import EventSerializer
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer
+from helium.planner.services import noteservice
 from helium.planner.tasks import recalculate_category_grade
+from helium.planner.utils.quillutils import plain_text_to_quill
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +129,7 @@ def _derive_course_title(calendar, default_course_title):
 def _import_as_assignments(request, calendar, course, time_zone):
     uncategorized = Category.objects.get_uncategorized(course.pk)
     assignments = []
+    descriptions = []
     seen_uids = set()
 
     for parsed in parse_events(calendar, time_zone):
@@ -144,14 +147,14 @@ def _import_as_assignments(request, calendar, course, time_zone):
                 'priority': _DEFAULT_PRIORITY,
                 'current_grade': _UNGRADED,
                 'completed': False,
-                'comments': parsed['description'] or '',
             }
             serializer = HomeworkSerializer(data=data, context={'request': request}, partial=True)
             if not serializer.is_valid():
                 raise ValidationError({'homework': serializer.errors})
             assignments.append(Homework(**serializer.validated_data, course=course, category=uncategorized))
+            descriptions.append(parsed['description'])
 
-    Homework.objects.bulk_create(assignments)
+    _create_with_description_notes(request, Homework, assignments, descriptions, 'homework')
     if assignments:
         recalculate_category_grade.apply(args=(uncategorized.pk,))
 
@@ -162,6 +165,7 @@ def _import_as_assignments(request, calendar, course, time_zone):
 
 def _import_as_events(request, calendar, time_zone):
     events = []
+    descriptions = []
     seen_uids = set()
 
     for parsed in parse_events(calendar, time_zone):
@@ -171,14 +175,16 @@ def _import_as_events(request, calendar, time_zone):
         events.append(_build_event(request, parsed, parsed['start'], parsed['end'],
                                    recurrence_rule=parsed['recurrence_rule'],
                                    exception_dates=parsed['exception_dates']))
+        descriptions.append(parsed['description'])
 
         # RDATE extras can't ride a single RRULE, so each becomes a standalone Event mirroring
         # the parent's duration (matching the external-calendar service).
         duration = parsed['end'] - parsed['start']
         for extra_start in parsed['extra_starts']:
             events.append(_build_event(request, parsed, extra_start, extra_start + duration))
+            descriptions.append(parsed['description'])
 
-    Event.objects.bulk_create(events)
+    _create_with_description_notes(request, Event, events, descriptions, 'events')
 
     logger.info(f"Imported {len(events)} events from .ics.")
 
@@ -194,7 +200,6 @@ def _build_event(request, parsed, start, end, *, recurrence_rule=None, exception
         'end': end,
         'priority': _DEFAULT_PRIORITY,
         'url': parsed['url'],
-        'comments': parsed['description'] or '',
         'recurrence_rule': recurrence_rule,
         'exception_dates': exception_dates,
     }
@@ -202,6 +207,26 @@ def _build_event(request, parsed, start, end, *, recurrence_rule=None, exception
     if not serializer.is_valid():
         raise ValidationError({'events': serializer.errors})
     return Event(**serializer.validated_data, user=request.user)
+
+
+def _create_with_description_notes(request, model, instances, descriptions, section):
+    """
+    Create the imported rows, giving each one whose calendar entry carries a DESCRIPTION a linked
+    Note holding that text. Rows without one are bulk created; a row with one is saved on its own,
+    since linking the Note needs a primary key that a MySQL bulk create does not return.
+    """
+    note_contents = [plain_text_to_quill(description) for description in descriptions]
+
+    model.objects.bulk_create([instance for instance, content in zip(instances, note_contents) if not content])
+
+    for instance, content in zip(instances, note_contents):
+        if not content:
+            continue
+        instance.save()
+        try:
+            noteservice.create_linked_note(content, request.user, instance, context={'request': request})
+        except ValidationError as e:
+            raise ValidationError({section: e.detail})
 
 
 def _assignment_start_times(parsed, window_end_date, time_zone):

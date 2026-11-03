@@ -9,12 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class ReminderSerializer(serializers.ModelSerializer):
-    def to_internal_value(self, data):
-        """Legacy parameter, permanently accepted as an alias for `message`; `message` wins."""
-        if isinstance(data, dict) and not data.get('message') and data.get('title'):
-            data = {**data, 'message': data['title']}
-        return super().to_internal_value(data)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

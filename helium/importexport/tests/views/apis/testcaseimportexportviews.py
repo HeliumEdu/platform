@@ -20,11 +20,11 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
-from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, \
+from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, \
     Homework, Reminder, Note
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
-    materialgrouphelper, materialhelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
+    resourcegrouphelper, resourcehelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
 
 
 class TestCaseImportExportViews(APITestCase):
@@ -64,20 +64,20 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0},
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 5},
             {key: value for key, value in response1.data.items() if key != 'ids'})
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(
             {'external_calendars': 1, 'course_groups': 2, 'courses': 2, 'course_schedules': 2, 'categories': 2,
-             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 0},
+             'resource_groups': 1, 'resources': 1, 'events': 2, 'homework': 2, 'reminders': 2, 'notes': 5},
             {key: value for key, value in response2.data.items() if key != 'ids'})
         external_calendars = ExternalCalendar.objects.all()
         course_groups = CourseGroup.objects.all()
         courses = Course.objects.all()
         course_schedules = CourseSchedule.objects.all()
         categories = Category.objects.all()
-        material_groups = MaterialGroup.objects.all()
-        materials = Material.objects.all()
+        resource_groups = ResourceGroup.objects.all()
+        resources = Resource.objects.all()
         events = Event.objects.all()
         homework = Homework.objects.all()
         reminders = Reminder.objects.all()
@@ -86,8 +86,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(len(courses), 4)
         self.assertEqual(len(course_schedules), 4)
         self.assertEqual(len(categories), 4)
-        self.assertEqual(len(material_groups), 2)
-        self.assertEqual(len(materials), 2)
+        self.assertEqual(len(resource_groups), 2)
+        self.assertEqual(len(resources), 2)
         self.assertEqual(len(events), 4)
         self.assertEqual(len(homework), 4)
         self.assertEqual(len(reminders), 4)
@@ -168,29 +168,27 @@ class TestCaseImportExportViews(APITestCase):
                                                     {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
                                                      'course': courses[2].pk})
-        materialgrouphelper.verify_material_group_matches_data(self, material_groups[1],
+        resourcegrouphelper.verify_resource_group_matches_data(self, resource_groups[1],
                                                                {'title': '📚 Test Material Group',
                                                                 'shown_on_calendar': True, 'user': user.pk})
-        materialhelper.verify_material_matches_data(self, materials[1],
+        resourcehelper.verify_resource_matches_data(self, resources[1],
                                                     {'title': '📘 Test Material', 'status': 3, 'condition': 7,
                                                      'website': 'http://www.material.com', 'price': '9.99',
-                                                     'details': 'Return by 7/1',
-                                                     'material_group': material_groups[1].pk, 'courses': []})
-        # Verify legacy 'details' was converted to Note
-        self.assertTrue(materials[1].notes_set.exists())
-        material_note = materials[1].notes_set.first()
-        self.assertIn('ops', material_note.content)
-        self.assertEqual(material_note.content['ops'][0]['insert'], 'Return by 7/1')
+                                                     'resource_group': resource_groups[1].pk, 'courses': []})
+        self.assertTrue(resources[1].notes_set.exists())
+        resource_note = resources[1].notes_set.first()
+        self.assertIn('ops', resource_note.content)
+        self.assertEqual(resource_note.content['ops'][0]['insert'], 'Return by 7/1')
 
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'priority': 75, 'url': None,
                                                'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None, 'comments': 'A comment on an event.',
+                                               'priority': 75, 'url': None,
                                                'owner_id': None, 'user': user.pk})
         self.assertTrue(events[2].notes_set.exists())
         event_note = events[2].notes_set.first()
@@ -202,27 +200,23 @@ class TestCaseImportExportViews(APITestCase):
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': 'A comment on a homework.',
                                                      'current_grade': '20/30',
                                                      'completed': True, 'category': categories[1].pk,
-                                                     'course': courses[2].pk, 'materials': [materials[1].pk]})
+                                                     'course': courses[2].pk, 'resources': [resources[1].pk]})
         homeworkhelper.verify_homework_matches_data(self, homework[3],
                                                     {'title': '💻 Test Homework', 'all_day': False,
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65, 'url': None,
-                                                     'comments': 'A comment on a homework.',
                                                      'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[3].pk,
-                                                     'course': courses[3].pk, 'materials': []})
+                                                     'course': courses[3].pk, 'resources': []})
         self.assertTrue(homework[2].notes_set.exists())
         homework_note = homework[2].notes_set.first()
         self.assertIn('ops', homework_note.content)
         self.assertEqual(homework_note.content['ops'][0]['insert'], 'A comment on a homework.')
 
-        # Verify total Note counts (4 events + 4 homework + 2 materials = 10 with legacy content)
-        # But we import twice, so 2x that, but items with empty comments don't create notes
-        # Events: 4 with comments, Homework: 4 with comments, Materials: 2 with details
+        # 5 linked notes in the sample, uploaded twice
         self.assertEqual(Note.objects.filter(user=user).count(), 10)
         reminderhelper.verify_reminder_matches_data(self, reminders[2], {'id': 1, 'title': 'Test Homework Reminder',
                                                                          'message': 'You need to do something now.',
@@ -347,8 +341,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 0)
         self.assertEqual(CourseSchedule.objects.count(), 0)
         self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(MaterialGroup.objects.count(), 0)
-        self.assertEqual(Material.objects.count(), 0)
+        self.assertEqual(ResourceGroup.objects.count(), 0)
+        self.assertEqual(Resource.objects.count(), 0)
         self.assertEqual(Event.objects.count(), 0)
         self.assertEqual(Homework.objects.count(), 0)
         self.assertEqual(Reminder.objects.count(), 0)
@@ -375,8 +369,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 0)
         self.assertEqual(CourseSchedule.objects.count(), 0)
         self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(MaterialGroup.objects.count(), 0)
-        self.assertEqual(Material.objects.count(), 0)
+        self.assertEqual(ResourceGroup.objects.count(), 0)
+        self.assertEqual(Resource.objects.count(), 0)
         self.assertEqual(Event.objects.count(), 0)
         self.assertEqual(Homework.objects.count(), 0)
         self.assertEqual(Reminder.objects.count(), 0)
@@ -417,8 +411,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 0)
         self.assertEqual(CourseSchedule.objects.count(), 0)
         self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(MaterialGroup.objects.count(), 0)
-        self.assertEqual(Material.objects.count(), 0)
+        self.assertEqual(ResourceGroup.objects.count(), 0)
+        self.assertEqual(Resource.objects.count(), 0)
         self.assertEqual(Event.objects.count(), 0)
         self.assertEqual(Homework.objects.count(), 0)
         self.assertEqual(Reminder.objects.count(), 0)
@@ -443,12 +437,12 @@ class TestCaseImportExportViews(APITestCase):
         category1 = categoryhelper.given_category_exists(course1, title='Uncategorized')
         category2 = categoryhelper.given_category_exists(course2, weight=100)
         category3 = categoryhelper.given_category_exists(course3)
-        material_group1 = materialgrouphelper.given_material_group_exists(user1)
-        material_group2 = materialgrouphelper.given_material_group_exists(user2)
-        material1 = materialhelper.given_material_exists(material_group1)
-        materialhelper.given_material_exists(material_group2)
+        resource_group1 = resourcegrouphelper.given_resource_group_exists(user1)
+        resource_group2 = resourcegrouphelper.given_resource_group_exists(user2)
+        resource1 = resourcehelper.given_resource_exists(resource_group1)
+        resourcehelper.given_resource_exists(resource_group2)
         homework1 = homeworkhelper.given_homework_exists(course1, category=category1, completed=True,
-                                                         current_grade="20/30", materials=[material1])
+                                                         current_grade="20/30", resources=[resource1])
         homework2 = homeworkhelper.given_homework_exists(course2, category=category2, current_grade="-1/100")
         homeworkhelper.given_homework_exists(course3, category=category3, completed=True, current_grade="-1/100")
         reminder = reminderhelper.given_reminder_exists(user1, homework=homework1)
@@ -563,7 +557,7 @@ class TestCaseImportExportViews(APITestCase):
     def test_import_drops_recurrence_rule_sfcalendar_cannot_expand_instead_of_failing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        eventhelper.given_event_exists(user, title='Legacy series', recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
+        eventhelper.given_event_exists(user, title='Monthly series', recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
         export_data = json.loads(self.client.get(reverse('importexport_export')).content.decode('utf-8'))
 
         # WHEN
@@ -580,7 +574,7 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
         imported = Event.objects.filter(user=user).order_by('pk').last()
-        self.assertEqual(imported.title, 'Legacy series')
+        self.assertEqual(imported.title, 'Monthly series')
         self.assertIsNone(imported.recurrence_rule, 'the event is kept as a single occurrence')
 
     def test_export_import_preserves_multiple_schedules_per_course(self):
@@ -815,8 +809,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 3)
         self.assertEqual(CourseSchedule.objects.count(), 3)
         self.assertEqual(Category.objects.count(), 15)
-        self.assertEqual(MaterialGroup.objects.count(), 3)
-        self.assertEqual(Material.objects.count(), 5)
+        self.assertEqual(ResourceGroup.objects.count(), 3)
+        self.assertEqual(Resource.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
         self.assertEqual(Reminder.objects.count(), 9)
         self.assertEqual(Event.objects.count(), 9)
@@ -849,10 +843,10 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(float(category2.grade_by_weight), 17.52)
         self.assertEqual(float(category2.trend), 0.011699999999999875)
 
-        # 1 standalone + 27 direct links + 2 legacy = 30
+        # 1 standalone + 29 linked = 30
         self.assertEqual(Note.objects.count(), 30)
 
-        # 1 welcome + 8 events + 15 homework = 24 (materials have blank titles)
+        # 1 welcome + 8 events + 15 homework = 24 (resources have blank titles)
         titled_notes = Note.objects.exclude(title='')
         self.assertEqual(titled_notes.count(), 24)
 
@@ -960,13 +954,13 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.count(), 3)
         self.assertEqual(CourseSchedule.objects.count(), 3)
         self.assertEqual(Category.objects.count(), 15)
-        self.assertEqual(MaterialGroup.objects.count(), 3)
-        self.assertEqual(Material.objects.count(), 5)
+        self.assertEqual(ResourceGroup.objects.count(), 3)
+        self.assertEqual(Resource.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
         self.assertEqual(Event.objects.count(), 9)
         # 8 from fixture + 1 created by create_next_repeating_reminder for the course reminder
         self.assertEqual(Reminder.objects.count(), 9)
-        # 28 direct notes + 1 legacy homework comment + 1 legacy material details = 30
+        # 1 standalone + 29 linked = 30
         self.assertEqual(Note.objects.count(), 30)
 
         # --- CourseGroup ---
@@ -1084,44 +1078,44 @@ class TestCaseImportExportViews(APITestCase):
             total_weight = sum(float(c.weight) for c in Category.objects.filter(course=course))
             self.assertLessEqual(total_weight, 100.0)
 
-        # --- MaterialGroups ---
-        material_groups = MaterialGroup.objects.all().order_by('title')
-        self.assertEqual(material_groups.count(), 3)
-        mg_titles = list(material_groups.values_list('title', flat=True))
-        self.assertEqual(mg_titles, ['Digital Tools', 'Supplies', 'Textbooks'])
-        for mg in material_groups:
-            self.assertTrue(mg.shown_on_calendar)
-            self.assertTrue(mg.example_schedule)
-            self.assertEqual(mg.user, user)
+        # --- ResourceGroups ---
+        resource_groups = ResourceGroup.objects.all().order_by('title')
+        self.assertEqual(resource_groups.count(), 3)
+        resource_group_titles = list(resource_groups.values_list('title', flat=True))
+        self.assertEqual(resource_group_titles, ['Digital Tools', 'Supplies', 'Textbooks'])
+        for resource_group in resource_groups:
+            self.assertTrue(resource_group.shown_on_calendar)
+            self.assertTrue(resource_group.example_schedule)
+            self.assertEqual(resource_group.user, user)
 
-        # --- Materials ---
-        materials = Material.objects.all().order_by('title')
-        self.assertEqual(materials.count(), 5)
+        # --- Resources ---
+        resources = Resource.objects.all().order_by('title')
+        self.assertEqual(resources.count(), 5)
 
-        automate = materials.get(title='Automate the Boring Stuff with Python')
+        automate = resources.get(title='Automate the Boring Stuff with Python')
         self.assertEqual(automate.price, '$28.99')
-        self.assertEqual(automate.material_group, material_groups.get(title='Textbooks'))
+        self.assertEqual(automate.resource_group, resource_groups.get(title='Textbooks'))
         self.assertEqual(list(automate.courses.values_list('title', flat=True)), ['Fundamentals of Programming 💻'])
 
-        google = materials.get(title='Google Workspace (Docs, Drive)')
+        google = resources.get(title='Google Workspace (Docs, Drive)')
         self.assertEqual(google.price, 'Free')
         self.assertEqual(google.status, 7)
         self.assertEqual(google.condition, 8)
-        self.assertEqual(google.material_group, material_groups.get(title='Digital Tools'))
+        self.assertEqual(google.resource_group, resource_groups.get(title='Digital Tools'))
         self.assertEqual(google.courses.count(), 3)
 
-        notebook = materials.get(title='Notebook 📓')
+        notebook = resources.get(title='Notebook 📓')
         self.assertEqual(notebook.price, '$5.00')
-        self.assertEqual(notebook.material_group, material_groups.get(title='Supplies'))
+        self.assertEqual(notebook.resource_group, resource_groups.get(title='Supplies'))
         self.assertEqual(notebook.courses.count(), 2)
         self.assertFalse(notebook.courses.filter(title='Fundamentals of Programming 💻').exists())
 
-        bird = materials.get(title='Bird by Bird: Some Instructions on Writing and Life')
+        bird = resources.get(title='Bird by Bird: Some Instructions on Writing and Life')
         self.assertEqual(bird.price, '$16.00')
         self.assertEqual(bird.status, 1)
         self.assertEqual(list(bird.courses.values_list('title', flat=True)), ['Creative Writing ✍️'])
 
-        psych_textbook = materials.get(title='Psychology, 14th Edition')
+        psych_textbook = resources.get(title='Psychology, 14th Edition')
         self.assertEqual(psych_textbook.price, '$45.00')
         self.assertEqual(list(psych_textbook.courses.values_list('title', flat=True)), ['Intro to Psychology 🧠'])
 
@@ -1172,9 +1166,9 @@ class TestCaseImportExportViews(APITestCase):
             self.assertIn(hw.course, courses)
             self.assertIsNotNone(hw.category)
 
-        # Verify homework-material M2M relationships
-        hw_with_materials = all_homework.filter(materials__isnull=False).distinct()
-        self.assertEqual(hw_with_materials.count(), 53)
+        # Verify homework-resource M2M relationships
+        hw_with_resources = all_homework.filter(resources__isnull=False).distinct()
+        self.assertEqual(hw_with_resources.count(), 53)
 
         # Verify completed homework has completed_at set
         for hw in all_homework.filter(completed=True):
@@ -1193,14 +1187,13 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIsNotNone(essay1.completed_at)
         self.assertEqual(essay1.course, creative_writing)
         self.assertEqual(essay1.category, essay_cat)
-        self.assertEqual(essay1.materials.count(), 2)
-        self.assertTrue(essay1.materials.filter(title='Google Workspace (Docs, Drive)').exists())
-        self.assertTrue(essay1.materials.filter(title='Notebook 📓').exists())
-        # Legacy comments field should be converted to a Note
+        self.assertEqual(essay1.resources.count(), 2)
+        self.assertTrue(essay1.resources.filter(title='Google Workspace (Docs, Drive)').exists())
+        self.assertTrue(essay1.resources.filter(title='Notebook 📓').exists())
         self.assertTrue(essay1.notes_set.exists())
-        legacy_note = essay1.notes_set.filter(title='').first()
-        self.assertIsNotNone(legacy_note)
-        self.assertIn('ops', legacy_note.content)
+        essay1_note = essay1.notes_set.filter(title='').first()
+        self.assertIsNotNone(essay1_note)
+        self.assertIn('ops', essay1_note.content)
 
         midterm_prog = Homework.objects.get(title='Midterm', course=programming)
         self.assertEqual(midterm_prog.current_grade, '55/50')
@@ -1282,7 +1275,7 @@ class TestCaseImportExportViews(APITestCase):
         titled_notes = Note.objects.exclude(title='')
         self.assertEqual(titled_notes.count(), 24)
 
-        # Untitled notes: 5 material links + 1 legacy homework comment = 6
+        # Untitled notes: 5 resource links + 1 homework link = 6
         untitled_notes = Note.objects.filter(title='')
         self.assertEqual(untitled_notes.count(), 6)
 
@@ -1299,16 +1292,15 @@ class TestCaseImportExportViews(APITestCase):
         self.assertTrue(sprint_note.events.exists())
         self.assertIn('ops', sprint_note.content)
 
-        # Notes linked to materials (resources)
-        material_notes = Note.objects.filter(resources__isnull=False).distinct()
-        self.assertEqual(material_notes.count(), 5)
-        for note in material_notes:
+        # Notes linked to resources
+        resource_notes = Note.objects.filter(resources__isnull=False).distinct()
+        self.assertEqual(resource_notes.count(), 5)
+        for note in resource_notes:
             self.assertIn('ops', note.content)
 
-        # Legacy notes: material 'Notebook' has legacy details
-        notebook_legacy_notes = notebook.notes_set.filter(title='')
-        self.assertEqual(notebook_legacy_notes.count(), 1)
-        notebook_note = notebook_legacy_notes.first()
+        notebook_untitled_notes = notebook.notes_set.filter(title='')
+        self.assertEqual(notebook_untitled_notes.count(), 1)
+        notebook_note = notebook_untitled_notes.first()
         self.assertIn('ops', notebook_note.content)
 
         # All notes should be marked as example_schedule and belong to user
@@ -1323,7 +1315,7 @@ class TestCaseImportExportViews(APITestCase):
         # --- Import stamp ---
         user.refresh_from_db()
         self.assertIsNotNone(user.example_schedule_imported_at)
-        for model in (CourseGroup, Course, CourseSchedule, Category, MaterialGroup, Material, Event, Homework, Note):
+        for model in (CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, Homework, Note):
             for row in model.objects.for_user(user.pk):
                 self.assertLessEqual(row.updated_at, user.example_schedule_imported_at,
                                      msg=f'{model.__name__} {row.pk} was written after the stamp')
@@ -1432,135 +1424,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(CourseGroup.objects.count(), 2)
         self.assertTrue(CourseGroup.objects.exclude(pk=first_course_group.pk).exists())
 
-    def test_import_legacy_notes_converted_to_quill(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-
-        # Import data with legacy HTML formatting
-        import_data = {
-            'course_groups': [{
-                'id': 1,
-                'title': 'Test Group',
-                'start_date': '2024-01-01',
-                'end_date': '2024-05-01',
-                'shown_on_calendar': True,
-                'overall_grade': '-1',
-                'user': 1
-            }],
-            'courses': [{
-                'id': 1,
-                'title': 'Test Course',
-                'room': '',
-                'credits': '3.00',
-                'color': '#4986e7',
-                'website': '',
-                'is_online': False,
-                'current_grade': '-1',
-                'teacher_name': '',
-                'teacher_email': '',
-                'start_date': '2024-01-01',
-                'end_date': '2024-05-01',
-                'course_group': 1
-            }],
-            'categories': [{
-                'id': 1,
-                'title': 'Uncategorized',
-                'weight': '0.00',
-                'average_grade': '-1',
-                'grade_by_weight': '0',
-                'color': '#4986e7',
-                'course': 1
-            }],
-            'material_groups': [{
-                'id': 1,
-                'title': 'Test Materials',
-                'shown_on_calendar': True,
-                'user': 1
-            }],
-            'materials': [{
-                'id': 1,
-                'title': 'Test Book',
-                'status': 0,
-                'condition': 0,
-                'website': '',
-                'price': '',
-                'details': '<b>ISBN:</b> 978-1234567890',
-                'material_group': 1,
-                'courses': []
-            }],
-            'events': [{
-                'id': 1,
-                'title': 'Test Event',
-                'all_day': False,
-                'show_end_time': True,
-                'start': '2024-02-01T10:00:00Z',
-                'end': '2024-02-01T11:00:00Z',
-                'priority': 50,
-                'url': None,
-                'comments': '<ul><li>Item 1</li><li>Item 2</li></ul>',
-                'user': 1
-            }],
-            'homework': [{
-                'id': 1,
-                'title': 'Test Assignment',
-                'all_day': False,
-                'show_end_time': True,
-                'start': '2024-02-01T10:00:00Z',
-                'end': '2024-02-01T12:00:00Z',
-                'priority': 50,
-                'url': None,
-                'comments': '<p>Due by <strong>midnight</strong></p>',
-                'current_grade': '-1/100',
-                'completed': False,
-                'category': 1,
-                'materials': [],
-                'course': 1
-            }],
-            'reminders': [],
-            'course_schedules': []
-        }
-
-        # WHEN
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(import_data, f)
-            f.flush()
-            with open(f.name, 'rb') as fp:
-                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Legacy fields should be preserved (not cleared) for backward compatibility
-        material = Material.objects.first()
-        self.assertEqual(material.details, '<b>ISBN:</b> 978-1234567890')
-        self.assertTrue(material.notes_set.exists())
-        material_note = material.notes_set.first()
-        self.assertIn('ops', material_note.content)
-        bold_op = next((op for op in material_note.content['ops'] if op.get('attributes', {}).get('bold')), None)
-        self.assertIsNotNone(bold_op)
-        self.assertEqual(bold_op['insert'], 'ISBN:')
-
-        event = Event.objects.first()
-        self.assertEqual(event.comments, '<ul><li>Item 1</li><li>Item 2</li></ul>')
-        self.assertTrue(event.notes_set.exists())
-        event_note = event.notes_set.first()
-        self.assertIn('ops', event_note.content)
-        list_op = next((op for op in event_note.content['ops'] if op.get('attributes', {}).get('list')), None)
-        self.assertIsNotNone(list_op)
-        self.assertEqual(list_op['attributes']['list'], 'bullet')
-
-        homework = Homework.objects.first()
-        self.assertEqual(homework.comments, '<p>Due by <strong>midnight</strong></p>')
-        self.assertTrue(homework.notes_set.exists())
-        homework_note = homework.notes_set.first()
-        self.assertIn('ops', homework_note.content)
-        bold_op = next((op for op in homework_note.content['ops'] if op.get('attributes', {}).get('bold')), None)
-        self.assertIsNotNone(bold_op)
-        self.assertEqual(bold_op['insert'], 'midnight')
-
-        self.assertEqual(Note.objects.filter(user=user).count(), 3)
-
     def test_import_notes_with_direct_entity_links(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -1599,20 +1462,20 @@ class TestCaseImportExportViews(APITestCase):
                 'color': '#4986e7',
                 'course': 1
             }],
-            'material_groups': [{
+            'resource_groups': [{
                 'id': 1,
                 'title': 'Test Materials',
                 'shown_on_calendar': True,
                 'user': 1
             }],
-            'materials': [{
+            'resources': [{
                 'id': 100,
                 'title': 'Test Textbook',
                 'status': 0,
                 'condition': 0,
                 'website': '',
                 'price': '$50.00',
-                'material_group': 1,
+                'resource_group': 1,
                 'courses': [1]
             }],
             'events': [{
@@ -1637,7 +1500,7 @@ class TestCaseImportExportViews(APITestCase):
                 'current_grade': '-1/100',
                 'completed': False,
                 'category': 1,
-                'materials': [100],
+                'resources': [100],
                 'course': 1
             }],
             'reminders': [],
@@ -1705,9 +1568,9 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Note.objects.count(), 4)
 
-        material = Material.objects.first()
+        resource = Resource.objects.first()
         textbook_note = Note.objects.get(title='Textbook ISBN')
-        self.assertTrue(textbook_note.resources.filter(pk=material.pk).exists())
+        self.assertTrue(textbook_note.resources.filter(pk=resource.pk).exists())
 
         event = Event.objects.first()
         study_note = Note.objects.get(title='Study Topics')
@@ -1738,12 +1601,12 @@ class TestCaseImportExportViews(APITestCase):
                 'id': 1, 'title': 'Default', 'weight': '0.00', 'average_grade': '-1',
                 'grade_by_weight': '0', 'color': '#4986e7', 'course': 1,
             }],
-            'material_groups': [{
+            'resource_groups': [{
                 'id': 1, 'title': 'MG', 'shown_on_calendar': True, 'user': 1,
             }],
-            'materials': [{
+            'resources': [{
                 'id': 1, 'title': 'M', 'status': 0, 'condition': 0, 'website': '',
-                'price': '', 'material_group': 1, 'courses': [],
+                'price': '', 'resource_group': 1, 'courses': [],
             }],
             'events': [],
             'homework': [],
@@ -1782,7 +1645,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertNotIn('ids', response.data)
         self.assertFalse(CourseGroup.objects.exists())
         self.assertFalse(Course.objects.exists())
-        self.assertFalse(Material.objects.exists())
+        self.assertFalse(Resource.objects.exists())
         self.assertEqual([], callbacks)
         mock_process_push_reminders.assert_not_called()
 
@@ -1816,8 +1679,8 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Course.objects.get(course_group__user=user).pk, ids['courses']['1'])
         self.assertEqual(Category.objects.get(course__course_group__user=user, title='Default').pk,
                          ids['categories']['1'])
-        self.assertEqual(MaterialGroup.objects.get(user=user).pk, ids['resource_groups']['1'])
-        self.assertEqual(Material.objects.get(material_group__user=user).pk, ids['resources']['1'])
+        self.assertEqual(ResourceGroup.objects.get(user=user).pk, ids['resource_groups']['1'])
+        self.assertEqual(Resource.objects.get(resource_group__user=user).pk, ids['resources']['1'])
         self.assertEqual({}, ids['events'])
         self.assertEqual({}, ids['homework'])
         self.assertTrue(callbacks)
@@ -1890,7 +1753,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['homework'] = [{
             'id': 20, 'title': 'H', 'all_day': False, 'show_end_time': False,
             'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T12:00:00Z', 'priority': 50,
-            'current_grade': '-1/100', 'completed': False, 'category': 1, 'materials': [],
+            'current_grade': '-1/100', 'completed': False, 'category': 1, 'resources': [],
             'course': 1,
         }]
         payload['notes'] = [{
@@ -2042,34 +1905,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertIn('courses', response.data)
         self.assertIn('missing required key `id`', str(response.data['courses']))
 
-    def test_import_both_resources_and_materials_top_level_rejected(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        payload['resources'] = list(payload['materials'])
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
-        self.assertEqual(Material.objects.count(), 0)
-
-    def test_import_top_level_resources_alias_succeeds(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        payload['resources'] = payload.pop('materials')
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Material.objects.count(), 1)
-
-    def test_import_top_level_materials_alias_succeeds(self):
+    def test_import_top_level_resources_succeeds(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
@@ -2079,85 +1915,9 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Material.objects.count(), 1)
+        self.assertEqual(Resource.objects.count(), 1)
 
-    def test_import_homework_resources_and_legacy_materials_keys_map_alike(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        homework_row = {
-            'all_day': False, 'show_end_time': False, 'start': '2024-02-01T10:00:00Z',
-            'end': '2024-02-01T12:00:00Z', 'priority': 50, 'current_grade': '-1/100', 'completed': False,
-            'category': 1, 'course': 1,
-        }
-        payload['homework'] = [
-            {'id': 20, 'title': 'Canonical', 'resources': [1], **homework_row},
-            {'id': 21, 'title': 'Legacy', 'materials': [1], **homework_row},
-        ]
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
-        material = Material.objects.get()
-        for title in ('Canonical', 'Legacy'):
-            self.assertEqual(list(Homework.objects.get(title=title).materials.all()), [material], msg=title)
-
-    def test_import_resource_group_and_legacy_material_group_keys_map_alike(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        resource_row = {'status': 0, 'condition': 0, 'website': '', 'price': '', 'courses': []}
-        payload['materials'] = [
-            {'id': 1, 'title': 'Canonical', 'resource_group': 1, **resource_row},
-            {'id': 2, 'title': 'Legacy', 'material_group': 1, **resource_row},
-        ]
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
-        material_group = MaterialGroup.objects.get()
-        for title in ('Canonical', 'Legacy'):
-            self.assertEqual(Material.objects.get(title=title).material_group, material_group, msg=title)
-
-    def test_import_note_both_resources_and_materials_rejected(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        payload['notes'] = [{
-            'id': 1, 'title': 'Bad', 'content': {'ops': [{'insert': 'x\n'}]},
-            'resources': [1], 'materials': [1],
-        }]
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
-        self.assertEqual(Note.objects.count(), 0)
-
-    def test_import_note_materials_alias_succeeds(self):
-        # GIVEN
-        userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        payload = self._minimal_import_payload()
-        payload['notes'] = [{
-            'id': 1, 'title': 'Alias', 'content': {'ops': [{'insert': 'x\n'}]},
-            'materials': [1],
-        }]
-
-        # WHEN
-        response = self._post_import(payload)
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        note = Note.objects.get(title='Alias')
-        self.assertEqual(note.resources.count(), 1)
-
-    def test_import_homework_unresolved_material_returns_400(self):
+    def test_import_homework_unresolved_resource_returns_400(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         payload = self._minimal_import_payload()
@@ -2165,7 +1925,7 @@ class TestCaseImportExportViews(APITestCase):
             'id': 10, 'title': 'H', 'all_day': False, 'show_end_time': False,
             'start': '2024-02-01T10:00:00Z', 'end': '2024-02-01T12:00:00Z', 'priority': 50,
             'current_grade': '-1/100', 'completed': False, 'category': 1,
-            'materials': [9999],
+            'resources': [9999],
             'course': 1,
         }]
 
@@ -2175,7 +1935,7 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('homework', response.data)
-        self.assertIn('Unresolved `materials`', str(response.data['homework']))
+        self.assertIn('Unresolved `resources`', str(response.data['homework']))
 
     def _import_payload_with_reminder(self, sent, dismissed):
         payload = self._minimal_import_payload()

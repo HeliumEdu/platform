@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def clone_homework(source):
-    """Clone a Homework with its reminders and materials; ``comments``, ``current_grade``, and ``completed`` are reset."""
+    """Clone a Homework with its reminders and resources; ``current_grade`` and ``completed`` are reset."""
     clone = Homework.objects.create(
         title=next_clone_title(source.title),
         all_day=source.all_day,
@@ -17,13 +17,12 @@ def clone_homework(source):
         end=source.end,
         priority=source.priority,
         url=source.url,
-        comments='',
         current_grade='-1/100',
         completed=False,
         category=source.category,
         course=source.course,
     )
-    clone.materials.set(source.materials.all())
+    clone.resources.set(source.resources.all())
 
     clone_reminders(source, clone)
 

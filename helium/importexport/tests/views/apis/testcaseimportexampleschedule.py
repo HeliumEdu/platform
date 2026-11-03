@@ -6,13 +6,13 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.importexport.tests.helpers import exampleschedulehelper
-from helium.planner.models import CourseGroup, Course, Homework, Category, CourseSchedule, Event, Material, \
-    MaterialGroup, Note
+from helium.planner.models import CourseGroup, Course, Homework, Category, CourseSchedule, Event, Resource, \
+    ResourceGroup, Note
 
 
 def _row_counts(user):
     return {model: model.objects.for_user(user.pk).count()
-            for model in (CourseGroup, Course, Category, CourseSchedule, Homework, Event, MaterialGroup, Material,
+            for model in (CourseGroup, Course, Category, CourseSchedule, Homework, Event, ResourceGroup, Resource,
                           Note)}
 
 

@@ -45,7 +45,7 @@ class UserSettings(BaseModel):
         help_text='A valid hex color code choice to determine the color grade badges will be.',
         max_length=7, validators=[validate_hex_color], default='#9d629d')
 
-    material_color = models.CharField(
+    resource_color = models.CharField(
         help_text='A valid hex color code choice to determine the color resource badges will be.',
         max_length=7, validators=[validate_hex_color], default='#dc7d50')
 
@@ -139,10 +139,6 @@ class UserSettings(BaseModel):
 
     def __str__(self):  # pragma: no cover
         return f'{self.pk} ({self.user.get_username()})'
-
-    @property
-    def is_setup_complete(self):
-        return self.setup_state == enums.SETUP_COMPLETE
 
     @property
     def getting_started_due(self):

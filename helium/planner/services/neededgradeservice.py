@@ -124,7 +124,7 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade):
     if course is None:
         raise NotFound('No Course matches the given query.')
     categories = course['categories']
-    ungraded = [item for item in course['homework_series'] if not item['graded']]
+    ungraded = [item for item in course['homework_series'] if not item.graded]
     weighted = any(float(category['weight']) > 0 for category in categories)
 
     if weighted:
@@ -135,19 +135,19 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade):
             raise ValidationError({'target': 'Select a category that is down to its last ungraded assignment.'})
 
         category_need = calculate_needed_grade(categories, target_id, desired_grade)
-        remaining = [item for item in ungraded if item['category_id'] == target_id]
+        remaining = [item for item in ungraded if item.category_id == target_id]
         assignment = remaining[0] if len(remaining) == 1 else None
         result = category_need if assignment is None else to_assignment_score(
             category_need, float(category['points_earned']), float(category['points_possible']),
-            assignment['points_possible'])
+            assignment.points_possible)
     else:
         category = None
-        assignment = next((item for item in ungraded if item['id'] == target_id), None)
+        assignment = next((item for item in ungraded if item.id == target_id), None)
         if assignment is None:
             raise ValidationError({'target': 'Select an ungraded assignment in this class.'})
 
         result = calculate_needed_assignment_score(float(course['points_earned']), float(course['points_possible']),
-                                                   assignment['points_possible'], desired_grade)
+                                                   assignment.points_possible, desired_grade)
 
     return _describe(result, weighted, category, assignment)
 
@@ -171,9 +171,9 @@ def _describe(result, weighted, category, assignment):
     }
     if assignment is not None and result['state'] not in WEIGHT_ERRORS:
         described['assignment'] = {
-            'id': assignment['id'],
-            'title': assignment['title'],
-            'points_possible': assignment['points_possible'],
-            'needed_points': result['needed_grade'] / 100 * assignment['points_possible'],
+            'id': assignment.id,
+            'title': assignment.title,
+            'points_possible': assignment.points_possible,
+            'needed_points': result['needed_grade'] / 100 * assignment.points_possible,
         }
     return described

@@ -1,14 +1,13 @@
 import logging
 
 from django.db import models as django_models
-from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.common import enums
 from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
 from helium.common.utils.openapiutils import help_text_with_support_article
-from helium.planner.models import Homework, Category, Material, Course
+from helium.planner.models import Homework, Category, Resource, Course
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
 from helium.planner.tasks import recalculate_category_grade
@@ -16,17 +15,14 @@ from helium.planner.tasks import recalculate_category_grade
 logger = logging.getLogger(__name__)
 
 
-#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
-@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkSerializer(serializers.ModelSerializer):
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
         django_models.DateTimeField: TzAwareDateTimeField,
     }
 
-    #: Once all backend code has been factored from Material terminology to Resource terminology, including data model changes and migrations, this line can be removed.
-    resources = serializers.PrimaryKeyRelatedField(source='materials', many=True, required=False,
-                                                   queryset=Material.objects.all(),
+    resources = serializers.PrimaryKeyRelatedField(many=True, required=False,
+                                                   queryset=Resource.objects.all(),
                                                    help_text='A list of resources with which to associate.')
 
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
@@ -43,13 +39,13 @@ class HomeworkSerializer(serializers.ModelSerializer):
             self.fields['category'].queryset = Category.objects.for_user(self.context['request'].user.pk)
             self.fields['course'].queryset = Course.objects.for_user(self.context['request'].user.pk)
             # ManyToMany fields need to have their `child_relation` queryset modified instead
-            self.fields['resources'].child_relation.queryset = Material.objects.for_user(
+            self.fields['resources'].child_relation.queryset = Resource.objects.for_user(
                 self.context['request'].user.pk)
 
     class Meta:
         model = Homework
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'comments',
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority',
             'current_grade', 'completed', 'completed_at', 'category', 'resources', 'attachments',
             'reminders', 'notes', 'course', 'course_group', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
@@ -100,8 +96,6 @@ class HomeworkSerializer(serializers.ModelSerializer):
         return instance
 
 
-#: Legacy 'comments' parameter, can be removed once all clients are reporting >= 3.10.0.
-@extend_schema_serializer(exclude_fields=('comments',))
 class HomeworkExtendedSerializer(HomeworkSerializer):
     attachments = AttachmentSerializer(many=True)
     reminders = ReminderSerializer(many=True)

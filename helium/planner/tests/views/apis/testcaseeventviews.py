@@ -61,7 +61,6 @@ class TestCaseEventViews(APITestCase):
             'start': '2014-05-08T12:00:00Z',
             'end': '2014-05-08T14:00:00Z',
             'priority': 75,
-            'comments': 'some comment',
             'owner_id': '12345',
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
@@ -80,8 +79,7 @@ class TestCaseEventViews(APITestCase):
     def test_clone_event_copies_fields_and_reminders(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        source = eventhelper.given_event_exists(user, title='Lunch with Pat',
-                                                comments='Brought up the syllabus')
+        source = eventhelper.given_event_exists(user, title='Lunch with Pat')
         reminderhelper.given_reminder_exists(user, message='30 min before', offset=30,
                                              offset_type=enums.MINUTES, type=enums.PUSH, event=source)
 
@@ -99,7 +97,6 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(clone.start, source.start)
         self.assertEqual(clone.end, source.end)
         self.assertEqual(clone.user_id, user.pk)
-        self.assertEqual(clone.comments, '')
 
         cloned_reminder = clone.reminders.get()
         self.assertEqual(cloned_reminder.offset, 30)
@@ -151,7 +148,6 @@ class TestCaseEventViews(APITestCase):
             'start': '2014-05-08T12:00:00-0500',
             'end': '2014-05-08T14:00:00-0500',
             'priority': 75,
-            'comments': 'some comment',
             # Read-only fields, unused in the POST but used in the validation of this dict afterward
             'user': user.pk
         }
@@ -178,7 +174,6 @@ class TestCaseEventViews(APITestCase):
             'start': '2014-05-08 12:00:00',
             'end': '2014-05-08 14:00:00',
             'priority': 75,
-            'comments': 'some comment',
         }
         response = self.client.post(reverse('planner_events_list'),
                                     json.dumps(data),
@@ -217,7 +212,6 @@ class TestCaseEventViews(APITestCase):
             'start': '2016-05-08T12:00:00Z',
             'end': '2016-05-08T14:00:00Z',
             'priority': 12,
-            'comments': 'some comment',
             'owner_id': '54321'
         }
         response = self.client.put(reverse('planner_events_detail',
@@ -741,19 +735,6 @@ class TestCaseEventViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-
-    def test_search_query_does_not_match_legacy_comments(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        match = eventhelper.given_event_exists(user, title='Library study', comments='<p>Dorm lounge</p>')
-        eventhelper.given_event_exists(user, title='Study group', comments='<p>Library, 3rd floor</p>')
-
-        # WHEN
-        response = self.client.get(reverse('planner_events_list') + '?search=library')
-
-        # THEN
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual([event['id'] for event in response.data], [match.pk])
 
     def test_title_search_query(self):
         # GIVEN

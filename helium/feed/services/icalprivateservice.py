@@ -141,14 +141,14 @@ def _create_homework_description(homework):
     if homework.course.room:
         class_info += f" in {homework.course.room}"
 
-    materials = []
-    for material in homework.materials.all():
-        materials.append(material.title)
+    resources = []
+    for resource in homework.resources.all():
+        resources.append(resource.title)
 
     description = f"Class Info: {class_info}\n"
 
-    if len(materials) > 0:
-        description += f"Resources: {','.join(materials)}\n"
+    if len(resources) > 0:
+        description += f"Resources: {','.join(resources)}\n"
 
     if homework.url:
         description += f"URL: {homework.url}\n"
@@ -222,7 +222,7 @@ def homework_to_private_ical_feed(user):
     try:
         calendar = _create_calendar(user)
 
-        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('materials', 'notes_set'):
+        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('resources', 'notes_set'):
             calendar_event = _to_vevent(user, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 

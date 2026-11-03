@@ -10,10 +10,10 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
-from helium.planner.models import Category, Course, CourseGroup, CourseSchedule, Event, Homework, Material, \
-    MaterialGroup, Note
+from helium.planner.models import Category, Course, CourseGroup, CourseSchedule, Event, Homework, Resource, \
+    ResourceGroup, Note
 from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, courseschedulehelper, \
-    eventhelper, homeworkhelper, materialgrouphelper, materialhelper, notehelper, reminderhelper
+    eventhelper, homeworkhelper, resourcegrouphelper, resourcehelper, notehelper, reminderhelper
 
 
 def _entities(user):
@@ -23,8 +23,8 @@ def _entities(user):
     category = categoryhelper.given_category_exists(course)
     homework = homeworkhelper.given_homework_exists(course)
     event = eventhelper.given_event_exists(user)
-    material_group = materialgrouphelper.given_material_group_exists(user)
-    material = materialhelper.given_material_exists(material_group)
+    resource_group = resourcegrouphelper.given_resource_group_exists(user)
+    resource = resourcehelper.given_resource_exists(resource_group)
     note = notehelper.given_note_exists(user)
     external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
     nested = {'course_group': course_group.pk, 'course': course.pk}
@@ -46,12 +46,12 @@ def _entities(user):
                                                 kwargs={**nested, 'pk': homework.pk})),
         'event': SimpleNamespace(model=Event, pk=event.pk,
                                  url=reverse('planner_events_detail', kwargs={'pk': event.pk})),
-        'resource': SimpleNamespace(model=Material, pk=material.pk,
+        'resource': SimpleNamespace(model=Resource, pk=resource.pk,
                                     url=reverse('planner_resourcegroups_resources_detail',
-                                                kwargs={'resource_group': material_group.pk, 'pk': material.pk})),
-        'resource group': SimpleNamespace(model=MaterialGroup, pk=material_group.pk,
+                                                kwargs={'resource_group': resource_group.pk, 'pk': resource.pk})),
+        'resource group': SimpleNamespace(model=ResourceGroup, pk=resource_group.pk,
                                           url=reverse('planner_resourcegroups_detail',
-                                                      kwargs={'pk': material_group.pk})),
+                                                      kwargs={'pk': resource_group.pk})),
         'note': SimpleNamespace(model=Note, pk=note.pk, url=reverse('planner_notes_detail', kwargs={'pk': note.pk})),
         'external calendar': SimpleNamespace(model=ExternalCalendar, pk=external_calendar.pk,
                                              url=reverse('feed_externalcalendars_detail',

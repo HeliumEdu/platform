@@ -37,7 +37,7 @@ class ExceptionDatesField(serializers.ListField):
         # Stored values are already Z-suffixed ISO strings (written by
         # ``to_internal_value`` for user input, or by the iCal import service
         # which writes any ISO form). Parse and re-emit through DateTimeField
-        # so legacy ``+00:00``-form values still come out as ``Z`` on the wire.
+        # so values stored in the ``+00:00`` form still come out as ``Z`` on the wire.
         normalized = []
         for value in data:
             if isinstance(value, str):

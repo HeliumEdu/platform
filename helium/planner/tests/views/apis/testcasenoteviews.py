@@ -9,7 +9,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Note
 from helium.planner.tests.helpers import (
     notehelper, eventhelper, homeworkhelper, coursegrouphelper, coursehelper,
-    materialgrouphelper, materialhelper
+    resourcegrouphelper, resourcehelper
 )
 
 
@@ -321,9 +321,9 @@ class TestCaseNoteViews(APITestCase):
         course = coursehelper.given_course_exists(course_group)
         other_course = coursehelper.given_course_exists(course_group, title='Other Course')
         homework_note = notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(course))
-        material_group = materialgrouphelper.given_material_group_exists(user)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource_note = notehelper.given_note_linked_to_resource(
-            user, materialhelper.given_material_exists(material_group, courses=[course]))
+            user, resourcehelper.given_resource_exists(resource_group, courses=[course]))
         notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(other_course))
         notehelper.given_note_exists(user, title='Standalone')
 
@@ -357,38 +357,6 @@ class TestCaseNoteViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], note2.pk)
-
-    def test_create_note_with_materials_alias(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-        data = {
-            'title': 'Aliased',
-            'content': {'ops': [{'insert': 'x\n'}]},
-            'materials': [material.pk],
-        }
-        response = self.client.post(reverse('planner_notes_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        note = Note.objects.get(pk=response.data['id'])
-        self.assertIn(material.pk, list(note.resources.values_list('pk', flat=True)))
-
-    def test_create_note_with_both_resources_and_materials_rejected(self):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        material = materialhelper.given_material_exists(material_group)
-        data = {
-            'title': 'Both',
-            'content': {'ops': [{'insert': 'x\n'}]},
-            'resources': [material.pk],
-            'materials': [material.pk],
-        }
-        response = self.client.post(reverse('planner_notes_list'),
-                                    json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Provide either 'resources' or 'materials'", str(response.data))
 
     def test_update_standalone_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -442,8 +410,8 @@ class TestCaseNoteViews(APITestCase):
 
     def test_get_note_includes_link_info_with_resource(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
         note = notehelper.given_note_linked_to_resource(user, resource)
         response = self.client.get(reverse('planner_notes_detail', kwargs={'pk': note.pk}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -616,9 +584,9 @@ class TestCaseNoteViews(APITestCase):
 
     def test_note_rejects_multiple_resources(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource1 = materialhelper.given_material_exists(material_group)
-        resource2 = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource1 = resourcehelper.given_resource_exists(resource_group)
+        resource2 = resourcehelper.given_resource_exists(resource_group)
         note = notehelper.given_note_exists(user)
         data = {
             'title': note.title,
@@ -673,8 +641,8 @@ class TestCaseNoteViews(APITestCase):
 
     def test_note_rejects_linking_to_resource_with_existing_note(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        material_group = materialgrouphelper.given_material_group_exists(user)
-        resource = materialhelper.given_material_exists(material_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
         notehelper.given_note_linked_to_resource(user, resource)
         new_note = notehelper.given_note_exists(user)
         data = {
@@ -771,15 +739,15 @@ class TestCaseNoteViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
-        visible_mat_group = materialgrouphelper.given_material_group_exists(user, shown_on_calendar=True)
-        hidden_mat_group = materialgrouphelper.given_material_group_exists(
+        visible_resource_group = resourcegrouphelper.given_resource_group_exists(user, shown_on_calendar=True)
+        hidden_resource_group = resourcegrouphelper.given_resource_group_exists(
             user, title='Hidden Resources', shown_on_calendar=False
         )
-        visible_material = materialhelper.given_material_exists(visible_mat_group)
-        hidden_material = materialhelper.given_material_exists(hidden_mat_group, title='Hidden Material')
+        visible_resource = resourcehelper.given_resource_exists(visible_resource_group)
+        hidden_resource = resourcehelper.given_resource_exists(hidden_resource_group, title='Hidden Material')
 
-        note_visible = notehelper.given_note_linked_to_resource(user, visible_material, title='Visible Res Note')
-        note_hidden = notehelper.given_note_linked_to_resource(user, hidden_material, title='Hidden Res Note')
+        note_visible = notehelper.given_note_linked_to_resource(user, visible_resource, title='Visible Res Note')
+        note_hidden = notehelper.given_note_linked_to_resource(user, hidden_resource, title='Hidden Res Note')
 
         # WHEN
         response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=true')

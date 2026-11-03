@@ -31,7 +31,6 @@ class TestCaseUserSetupViews(APITestCase):
         # THEN
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(response1.data['setup_state'], enums.SETUP_IMPORTING)
-        self.assertFalse(response1.data['is_setup_complete'])
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.data['setup_state'], enums.SETUP_IMPORTING)
         mock_import_schedule.apply_async.assert_called_once()
@@ -51,7 +50,6 @@ class TestCaseUserSetupViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['setup_state'], enums.SETUP_COMPLETE)
-        self.assertTrue(response.data['is_setup_complete'])
         mock_import_schedule.apply_async.assert_not_called()
 
     @mock.patch('helium.auth.services.authservice.import_example_schedule')

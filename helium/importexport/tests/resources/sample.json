@@ -161,7 +161,7 @@
             "num_homework_graded": 1
         }
     ],
-    "material_groups": [
+    "resource_groups": [
         {
             "id": 1,
             "title": "📚 Test Material Group",
@@ -169,7 +169,7 @@
             "user": 1
         }
     ],
-    "materials": [
+    "resources": [
         {
             "id": 1,
             "title": "📘 Test Material",
@@ -177,9 +177,8 @@
             "condition": 7,
             "website": "http://www.material.com",
             "price": "9.99",
-            "details": "Return by 7/1",
-            "material_group": 1,
-            "courses": []
+            "courses": [],
+            "resource_group": 1
         }
     ],
     "events": [
@@ -192,7 +191,6 @@
             "end": "2017-05-08T14:00:00Z",
             "priority": 75,
             "url": null,
-            "comments": "A comment on an event.",
             "attachments": [],
             "reminders": [
                 2
@@ -209,7 +207,6 @@
             "end": "2017-05-08T14:00:00Z",
             "priority": 75,
             "url": null,
-            "comments": "A comment on an event.",
             "attachments": [],
             "reminders": [],
             "user": 1,
@@ -226,19 +223,18 @@
             "end": "2017-05-08T18:00:00Z",
             "priority": 65,
             "url": null,
-            "comments": "A comment on a homework.",
             "current_grade": "20/30",
             "completed": true,
             "category": 1,
-            "materials": [
-                1
-            ],
             "attachments": [],
             "reminders": [
                 1
             ],
             "course": 1,
-            "calendar_item_type": 1
+            "calendar_item_type": 1,
+            "resources": [
+                1
+            ]
         },
         {
             "id": 2,
@@ -249,26 +245,24 @@
             "end": "2017-05-08T18:00:00Z",
             "priority": 65,
             "url": null,
-            "comments": "A comment on a homework.",
             "current_grade": "-1/100",
             "completed": false,
             "category": 2,
-            "materials": [],
             "attachments": [],
             "reminders": [],
             "course": 2,
-            "calendar_item_type": 1
+            "calendar_item_type": 1,
+            "resources": []
         }
     ],
     "reminders": [
         {
             "id": 1,
-            "title": "Test Homework Reminder",
             "message": "You need to do something now.",
             "start_of_range": "2017-05-08T15:45:00Z",
             "offset": 15,
             "offset_type": 0,
-            "type": 2,
+            "type": 3,
             "sent": false,
             "homework": 1,
             "event": null,
@@ -276,16 +270,102 @@
         },
         {
             "id": 2,
-            "title": "Test Event Reminder",
             "message": "You need to do something now.",
             "start_of_range": "2017-05-08T11:30:00Z",
             "offset": 30,
             "offset_type": 0,
-            "type": 2,
+            "type": 3,
             "sent": false,
             "homework": null,
             "event": 1,
             "user": 1
+        }
+    ],
+    "notes": [
+        {
+            "id": 1,
+            "title": "",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "A comment on a homework."
+                    },
+                    {
+                        "insert": "\n"
+                    }
+                ]
+            },
+            "homework": [
+                1
+            ]
+        },
+        {
+            "id": 2,
+            "title": "",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "A comment on a homework."
+                    },
+                    {
+                        "insert": "\n"
+                    }
+                ]
+            },
+            "homework": [
+                2
+            ]
+        },
+        {
+            "id": 3,
+            "title": "",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "A comment on an event."
+                    },
+                    {
+                        "insert": "\n"
+                    }
+                ]
+            },
+            "events": [
+                1
+            ]
+        },
+        {
+            "id": 4,
+            "title": "",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "A comment on an event."
+                    },
+                    {
+                        "insert": "\n"
+                    }
+                ]
+            },
+            "events": [
+                2
+            ]
+        },
+        {
+            "id": 5,
+            "title": "",
+            "content": {
+                "ops": [
+                    {
+                        "insert": "Return by 7/1"
+                    },
+                    {
+                        "insert": "\n"
+                    }
+                ]
+            },
+            "resources": [
+                1
+            ]
         }
     ]
 }

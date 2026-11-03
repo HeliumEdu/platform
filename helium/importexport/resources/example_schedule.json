@@ -399,7 +399,7 @@
       "num_homework_graded": 2
     }
   ],
-  "material_groups": [
+  "resource_groups": [
     {
       "id": 493,
       "title": "Digital Tools",
@@ -419,7 +419,7 @@
       "user": 118
     }
   ],
-  "materials": [
+  "resources": [
     {
       "id": 931,
       "title": "Automate the Boring Stuff with Python",
@@ -427,7 +427,7 @@
       "condition": 0,
       "website": "https://automatetheboringstuff.com",
       "price": "$28.99",
-      "material_group": 495,
+      "resource_group": 495,
       "courses": [
         513
       ]
@@ -439,7 +439,7 @@
       "condition": 0,
       "website": "https://www.amazon.com/Bird-Some-Instructions-Writing-Life/dp/0385480016",
       "price": "$16.00",
-      "material_group": 495,
+      "resource_group": 495,
       "courses": [
         512
       ]
@@ -451,7 +451,7 @@
       "condition": 8,
       "website": "https://workspace.google.com/",
       "price": "Free",
-      "material_group": 493,
+      "resource_group": 493,
       "courses": [
         512,
         513,
@@ -465,8 +465,7 @@
       "condition": 0,
       "website": "",
       "price": "$5.00",
-      "details": "College-ruled",
-      "material_group": 494,
+      "resource_group": 494,
       "courses": [
         512,
         514
@@ -479,7 +478,7 @@
       "condition": 0,
       "website": "https://www.pearson.com/en-us/subject-catalog/p/psychology/P200000009860",
       "price": "$45.00",
-      "material_group": 495,
+      "resource_group": 495,
       "courses": [
         514
       ]
@@ -637,7 +636,7 @@
       "current_grade": "41.5/50",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -656,7 +655,7 @@
       "current_grade": "87.5/100",
       "completed": true,
       "category": 2608,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -673,11 +672,10 @@
       "start": "2025-10-09T16:00:00Z",
       "end": "2025-10-09T16:30:00Z",
       "priority": 46,
-      "comments": "Upload essay to shared Google Drive folder before class.",
       "current_grade": "95/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -697,7 +695,7 @@
       "current_grade": "40/50",
       "completed": true,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -717,7 +715,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2607,
-      "materials": [
+      "resources": [
         932
       ],
       "attachments": [],
@@ -736,7 +734,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -755,7 +753,7 @@
       "current_grade": "41/50",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -774,7 +772,7 @@
       "current_grade": "78/100",
       "completed": true,
       "category": 2595,
-      "materials": [
+      "resources": [
         933,
         934,
         935
@@ -795,7 +793,7 @@
       "current_grade": "75/100",
       "completed": true,
       "category": 2605,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -814,7 +812,7 @@
       "current_grade": "98/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -834,7 +832,7 @@
       "current_grade": "44/50",
       "completed": true,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -854,7 +852,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -873,7 +871,7 @@
       "current_grade": "41/50",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -892,7 +890,7 @@
       "current_grade": "96/100",
       "completed": true,
       "category": 2608,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -912,7 +910,7 @@
       "current_grade": "81.25/100",
       "completed": true,
       "category": 2605,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -931,7 +929,7 @@
       "current_grade": "70/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -951,7 +949,7 @@
       "current_grade": "70/100",
       "completed": true,
       "category": 2603,
-      "materials": [
+      "resources": [
         933
       ],
       "attachments": [],
@@ -970,7 +968,7 @@
       "current_grade": "95/100",
       "completed": true,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -990,7 +988,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2607,
-      "materials": [
+      "resources": [
         932
       ],
       "attachments": [],
@@ -1009,7 +1007,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1028,7 +1026,7 @@
       "current_grade": "55/50",
       "completed": true,
       "category": 2601,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -1050,7 +1048,7 @@
       "current_grade": "100/100",
       "completed": true,
       "category": 2595,
-      "materials": [
+      "resources": [
         933,
         934,
         935
@@ -1071,7 +1069,7 @@
       "current_grade": "46.5/50",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         933
       ],
       "attachments": [],
@@ -1090,7 +1088,7 @@
       "current_grade": "89.75/100",
       "completed": true,
       "category": 2602,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1112,7 +1110,7 @@
       "current_grade": "85/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1132,7 +1130,7 @@
       "current_grade": "49/50",
       "completed": true,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -1152,7 +1150,7 @@
       "current_grade": "49/50",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -1171,7 +1169,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2608,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1191,7 +1189,7 @@
       "current_grade": "85/100",
       "completed": true,
       "category": 2605,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1210,7 +1208,7 @@
       "current_grade": "95/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1230,7 +1228,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2603,
-      "materials": [
+      "resources": [
         933
       ],
       "attachments": [],
@@ -1252,7 +1250,7 @@
       "current_grade": "100/100",
       "completed": true,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -1272,7 +1270,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2607,
-      "materials": [
+      "resources": [
         932
       ],
       "attachments": [],
@@ -1291,7 +1289,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1310,7 +1308,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -1329,7 +1327,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2605,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1348,7 +1346,7 @@
       "current_grade": "-1/100",
       "completed": true,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1368,7 +1366,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -1388,7 +1386,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1407,7 +1405,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -1426,7 +1424,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2595,
-      "materials": [
+      "resources": [
         933,
         934,
         935
@@ -1447,7 +1445,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2608,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1467,7 +1465,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2605,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1486,7 +1484,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2596,
-      "materials": [
+      "resources": [
         933,
         934
       ],
@@ -1506,7 +1504,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2600,
-      "materials": [
+      "resources": [
         931,
         933
       ],
@@ -1526,7 +1524,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2607,
-      "materials": [
+      "resources": [
         932
       ],
       "attachments": [],
@@ -1545,7 +1543,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2606,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1564,7 +1562,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2604,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -1583,7 +1581,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2594,
-      "materials": [
+      "resources": [
         933,
         934,
         935
@@ -1607,7 +1605,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2603,
-      "materials": [
+      "resources": [
         933
       ],
       "attachments": [],
@@ -1626,7 +1624,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2598,
-      "materials": [
+      "resources": [
         935
       ],
       "attachments": [],
@@ -1648,7 +1646,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2599,
-      "materials": [
+      "resources": [
         933
       ],
       "attachments": [],
@@ -1667,7 +1665,7 @@
       "current_grade": "-1/100",
       "completed": false,
       "category": 2597,
-      "materials": [
+      "resources": [
         931
       ],
       "attachments": [],
@@ -2227,6 +2225,30 @@
       "homework": [7866],
       "events": [],
       "resources": []
+    },
+    {
+      "id": 29,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "Upload essay to shared Google Drive folder before class.\n"}
+        ]
+      },
+      "homework": [7817],
+      "events": [],
+      "resources": []
+    },
+    {
+      "id": 30,
+      "title": "",
+      "content": {
+        "ops": [
+          {"insert": "College-ruled\n"}
+        ]
+      },
+      "homework": [],
+      "events": [],
+      "resources": [934]
     }
   ]
 }
