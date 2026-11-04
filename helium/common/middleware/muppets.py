@@ -5,6 +5,6 @@ class MuppetsMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        response['X-Muppets'] = '42'
+        response['X-Muppets'] = 'no strings attached'
 
         return response
