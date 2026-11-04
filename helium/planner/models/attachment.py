@@ -21,13 +21,16 @@ class Attachment(BaseModel):
 
     size = models.PositiveIntegerField(default=0)
 
-    course = models.ForeignKey('Course', help_text='The course with which to associate (mutually exclusive with `event` and `homework`).',
+    course = models.ForeignKey('Course', help_text='The course with which to associate (mutually exclusive with `event`, `homework`, and `resource`).',
                                related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    event = models.ForeignKey('Event', help_text='The event with which to associate (mutually exclusive with `course` and `homework`).',
+    event = models.ForeignKey('Event', help_text='The event with which to associate (mutually exclusive with `course`, `homework`, and `resource`).',
                               related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
-    homework = models.ForeignKey('Homework', help_text='The homework with which to associate (mutually exclusive with `course` and `event`).',
+    homework = models.ForeignKey('Homework', help_text='The homework with which to associate (mutually exclusive with `course`, `event`, and `resource`).',
+                                 related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
+
+    resource = models.ForeignKey('Resource', help_text='The resource with which to associate (mutually exclusive with `course`, `event`, and `homework`).',
                                  related_name='attachments', blank=True, null=True, on_delete=models.CASCADE)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attachments', on_delete=models.CASCADE)
@@ -39,9 +42,10 @@ class Attachment(BaseModel):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
-                    Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
-                    Q(homework__isnull=True, event__isnull=True, course__isnull=False)
+                    Q(homework__isnull=False, event__isnull=True, course__isnull=True, resource__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=False, course__isnull=True, resource__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=True, course__isnull=False, resource__isnull=True) |
+                    Q(homework__isnull=True, event__isnull=True, course__isnull=True, resource__isnull=False)
                 ),
                 name='attachment_exactly_one_parent',
             ),
@@ -57,6 +61,8 @@ class Attachment(BaseModel):
             return self.event.get_user()
         elif self.homework:
             return self.homework.get_user()
+        elif self.resource:
+            return self.resource.get_user()
 
         raise AttachmentError(f'Attachment {self.pk} is not associated with any models.')
 

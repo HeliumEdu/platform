@@ -411,10 +411,10 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
     return created
 
 
-def _import_notes(notes, user, homework_remap, event_remap, resource_remap, example_schedule):
+def _import_notes(notes, user, homework_remap, event_remap, resource_remap, course_remap, example_schedule):
     """
     Import notes via NoteSerializer, including those linked to entities. Handles both standalone
-    notes and notes linked to homework/events/resources. Entity ids are remapped to
+    notes and notes linked to homework/events/resources/courses. Entity ids are remapped to
     their newly-created values before serializer validation, so an unresolved id surfaces as a
     clean 400 rather than silently dropping the link.
     """
@@ -440,6 +440,10 @@ def _import_notes(notes, user, homework_remap, event_remap, resource_remap, exam
                 'resources': [
                     _resolve_parent(resource_remap, raw_id, 'notes', 'resources')
                     for raw_id in (note_data.get('resources') or [])
+                ],
+                'courses': [
+                    _resolve_parent(course_remap, raw_id, 'notes', 'courses')
+                    for raw_id in (note_data.get('courses') or [])
                 ],
             }
 
@@ -700,7 +704,7 @@ def _bulk_import_example_schedule(data, user):
 
     notes = data.get('notes', [])
     if notes:
-        _import_notes(notes, user, homework_remap, event_remap, resource_remap, example_schedule=True)
+        _import_notes(notes, user, homework_remap, event_remap, resource_remap, course_remap, example_schedule=True)
 
     metricutils.increment("user.import.schedule")
 
@@ -800,7 +804,7 @@ def _import_user(request, data, example_schedule=False, course_group_id=None):
     reminders_count = _import_reminders(reminders, request.user, event_remap, homework_remap, course_remap) if reminders else 0
 
     notes = data.get('notes', [])
-    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, resource_remap,
+    notes_count = _import_notes(notes, request.user, homework_remap, event_remap, resource_remap, course_remap,
                                 example_schedule) if notes else 0
 
     for course_id in set(course_remap.values()):

@@ -446,11 +446,13 @@ def emit_nightly_metrics(self):
                 has_homework = Exists(Homework.objects.filter(notes_set=OuterRef('pk')))
                 has_event = Exists(Event.objects.filter(notes_set=OuterRef('pk')))
                 has_resource = Exists(Resource.objects.filter(notes_set=OuterRef('pk')))
+                has_course = Exists(Course.objects.filter(notes_set=OuterRef('pk')))
                 for entity_tag, entity_filter in [
                     ('homework', has_homework),
                     ('event', ~has_homework & has_event),
                     ('resource', ~has_homework & ~has_event & has_resource),
-                    ('standalone', ~has_homework & ~has_event & ~has_resource),
+                    ('course', ~has_homework & ~has_event & ~has_resource & has_course),
+                    ('standalone', ~has_homework & ~has_event & ~has_resource & ~has_course),
                 ]:
                     _emit_per_entity_distribution('users.data.notes_per_user',
                                                   note_qs.filter(entity_filter), 'user_id',
@@ -481,7 +483,8 @@ def emit_nightly_metrics(self):
                 attachment_qs = Attachment.objects.filter(user__in=user_ids).exclude(
                     Q(course__course_group__example_schedule=True) |
                     Q(event__example_schedule=True) |
-                    Q(homework__course__course_group__example_schedule=True)
+                    Q(homework__course__course_group__example_schedule=True) |
+                    Q(resource__resource_group__example_schedule=True)
                 )
                 _emit_per_entity_distribution('users.data.attachments_per_user',
                                               attachment_qs, 'user_id', user_ids,
@@ -490,6 +493,7 @@ def emit_nightly_metrics(self):
                     ('homework', Q(homework__isnull=False)),
                     ('event', Q(event__isnull=False)),
                     ('course', Q(course__isnull=False)),
+                    ('resource', Q(resource__isnull=False)),
                 ]:
                     _emit_per_entity_distribution('users.data.attachments_per_user',
                                                   attachment_qs.filter(entity_filter), 'user_id',
@@ -543,7 +547,8 @@ def emit_nightly_metrics(self):
                     ).exclude(
                         Q(course__course_group__example_schedule=True) |
                         Q(event__example_schedule=True) |
-                        Q(homework__course__course_group__example_schedule=True)
+                        Q(homework__course__course_group__example_schedule=True) |
+                        Q(resource__resource_group__example_schedule=True)
                     ))),
                 ]:
                     adopters = active_qs.filter(adoption_filter).count()

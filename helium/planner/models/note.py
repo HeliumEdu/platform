@@ -39,21 +39,32 @@ class Note(BaseModel):
         'Homework',
         related_name='notes_set',
         blank=True,
-        help_text='The homework with which to associate (if linked, mutually exclusive with `events` and `resources`).'
+        help_text='The homework with which to associate (if linked, mutually exclusive with `events`, `resources`, '
+                  'and `courses`).'
     )
 
     events = models.ManyToManyField(
         'Event',
         related_name='notes_set',
         blank=True,
-        help_text='The event with which to associate (if linked, mutually exclusive with `homework` and `resources`).'
+        help_text='The event with which to associate (if linked, mutually exclusive with `homework`, `resources`, '
+                  'and `courses`).'
     )
 
     resources = models.ManyToManyField(
         'Resource',
         related_name='notes_set',
         blank=True,
-        help_text='The resource with which to associate (if linked, mutually exclusive with `homework` and `events`).'
+        help_text='The resource with which to associate (if linked, mutually exclusive with `homework`, `events`, '
+                  'and `courses`).'
+    )
+
+    courses = models.ManyToManyField(
+        'Course',
+        related_name='notes_set',
+        blank=True,
+        help_text='The course with which to associate (if linked, mutually exclusive with `homework`, `events`, and '
+                  '`resources`).'
     )
 
     objects = NoteManager()
@@ -86,6 +97,9 @@ class Note(BaseModel):
         resources_list = self._get_cached_m2m('resources')
         if resources_list:
             return resources_list[0]
+        courses_list = self._get_cached_m2m('courses')
+        if courses_list:
+            return courses_list[0]
         return None
 
     @property
@@ -96,6 +110,8 @@ class Note(BaseModel):
             return 'event'
         if self._get_cached_m2m('resources'):
             return 'resource'
+        if self._get_cached_m2m('courses'):
+            return 'course'
         return ''
 
     @property
@@ -110,6 +126,9 @@ class Note(BaseModel):
             hw = hw_list[0]
             if hw.course:
                 return hw.course.color
+        courses_list = self._get_cached_m2m('courses')
+        if courses_list:
+            return courses_list[0].color
         return None
 
     @property
@@ -117,6 +136,9 @@ class Note(BaseModel):
         hw_list = self._get_cached_m2m('homework')
         if hw_list:
             return hw_list[0].course_id
+        courses_list = self._get_cached_m2m('courses')
+        if courses_list:
+            return courses_list[0].pk
         return None
 
     @property
@@ -146,5 +168,6 @@ class Note(BaseModel):
         return bool(
             self._get_cached_m2m('homework') or
             self._get_cached_m2m('events') or
-            self._get_cached_m2m('resources')
+            self._get_cached_m2m('resources') or
+            self._get_cached_m2m('courses')
         )

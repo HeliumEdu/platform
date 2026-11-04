@@ -39,3 +39,7 @@ class Resource(BaseModel):
 
     def get_user(self):
         return self.resource_group.get_user()
+
+    @property
+    def num_attachments(self):
+        return self.attachments.count()

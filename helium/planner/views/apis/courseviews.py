@@ -28,7 +28,7 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Course.objects.for_user(user.pk).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
+            return Course.objects.for_user(user.pk).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
@@ -57,7 +57,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
+            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
@@ -146,7 +146,7 @@ class CourseGroupCoursesApiDetailView(PreconditionMixin, HeliumAPIView, Retrieve
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules').annotate(
+            return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),

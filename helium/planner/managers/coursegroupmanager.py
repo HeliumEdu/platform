@@ -21,7 +21,7 @@ class CourseGroupQuerySet(BaseQuerySet):
         return self.aggregate(homework_count=Count('courses__homework'))['homework_count']
 
     def num_attachments(self):
-        return self.aggregate(attachments_count=Count('courses__attachments'))['attachment_count']
+        return self.aggregate(attachments_count=Count('courses__attachments'))['attachments_count']
 
 
 class CourseGroupManager(BaseManager):

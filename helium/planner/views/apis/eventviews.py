@@ -254,7 +254,6 @@ class EventsApiDeleteResourceView(ViewSet, HeliumAPIView):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
-        # Delete associated notes first since bulk delete doesn't trigger signals
         Note.objects.filter(events__in=queryset).delete()
 
         queryset.delete()

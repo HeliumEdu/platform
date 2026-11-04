@@ -141,7 +141,8 @@ def _example_roots(user_id: int) -> Iterator[Model]:
     yield from ResourceGroup.objects.for_user(user_id).filter(example_schedule=True)
     yield from Event.objects.for_user(user_id).filter(example_schedule=True)
     yield from Note.objects.for_user(user_id).filter(example_schedule=True, homework__isnull=True,
-                                                     events__isnull=True, resources__isnull=True)
+                                                     events__isnull=True, resources__isnull=True,
+                                                     courses__isnull=True)
 
 
 def _is_modified(root: Model, baseline: datetime) -> bool:
@@ -175,11 +176,13 @@ def _changed_after(instance: Model, baseline: datetime) -> bool:
 
 
 def _linked_notes(cascade: List[Model]) -> QuerySet:
-    # Deleting a Homework, Event or Resource deletes its linked notes from a pre_delete signal handler, which the
-    # collector cannot see, so they are looked up separately.
+    # Deleting a Homework, Event, Resource or Course deletes its linked notes from a pre_delete signal handler, which
+    # the collector cannot see, so they are looked up separately.
     homework_ids = [i.pk for i in cascade if isinstance(i, Homework)]
     event_ids = [i.pk for i in cascade if isinstance(i, Event)]
     resource_ids = [i.pk for i in cascade if isinstance(i, Resource)]
+    course_ids = [i.pk for i in cascade if isinstance(i, Course)]
 
     return Note.objects.filter(
-        Q(homework__in=homework_ids) | Q(events__in=event_ids) | Q(resources__in=resource_ids))
+        Q(homework__in=homework_ids) | Q(events__in=event_ids) | Q(resources__in=resource_ids) |
+        Q(courses__in=course_ids))

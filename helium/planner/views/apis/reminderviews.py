@@ -45,10 +45,12 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
                 'homework__resources',
                 'homework__notes_set',
                 'homework__course__schedules',
+                'homework__course__notes_set',
                 'event__attachments',
                 'event__reminders',
                 'event__notes_set',
                 'course__schedules',
+                'course__notes_set',
             )
 
             return queryset
@@ -123,10 +125,12 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 'homework__resources',
                 'homework__notes_set',
                 'homework__course__schedules',
+                'homework__course__notes_set',
                 'event__attachments',
                 'event__reminders',
                 'event__notes_set',
                 'course__schedules',
+                'course__notes_set',
             )
 
             return queryset

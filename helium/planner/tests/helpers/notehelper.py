@@ -41,6 +41,16 @@ def given_note_linked_to_resource(user, resource, title=None, content=None):
     return note
 
 
+def given_note_linked_to_course(user, course, title=None, content=None):
+    note = Note.objects.create(
+        title=title or '',
+        content=content or {'ops': [{'insert': 'Class notes\n'}]},
+        user=user
+    )
+    note.courses.add(course)
+    return note
+
+
 def verify_note_matches_data(test_case, note, data):
     test_case.assertEqual(note.title, data['title'])
     if 'content' in data and data['content']:

@@ -9,7 +9,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Course, Category
 from helium.planner.services import categoryservice, gradingservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, notehelper
 
 
 class TestCaseCourseViews(APITestCase):
@@ -227,6 +227,25 @@ class TestCaseCourseViews(APITestCase):
         self.assertEqual(response.data['num_homework'], 3)
         self.assertEqual(response.data['num_homework_completed'], 2)
         self.assertEqual(response.data['num_homework_graded'], 1)
+
+    def test_get_course_includes_its_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        other_course = coursehelper.given_course_exists(course_group, title='Other Course')
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        detail_response = self.client.get(reverse('planner_coursegroups_courses_detail',
+                                                  kwargs={'course_group': course_group.pk, 'pk': course.pk}))
+        list_response = self.client.get(reverse('planner_courses_list'))
+
+        # THEN
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_response.data['notes'], [note.pk])
+        notes_by_course = {c['id']: c['notes'] for c in list_response.data}
+        self.assertEqual(notes_by_course, {course.pk: [note.pk], other_course.pk: []})
 
     def test_get_course_by_id_returns_all_schedules(self):
         # GIVEN

@@ -32,3 +32,7 @@ class ResourceGroup(BaseModel):
     @property
     def num_resources(self) -> int:
         return self.resources.count()
+
+    @property
+    def num_attachments(self):
+        return self.resources.num_attachments()

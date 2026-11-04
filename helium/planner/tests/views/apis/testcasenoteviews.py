@@ -777,3 +777,172 @@ class TestCaseNoteViews(APITestCase):
         returned_ids = {n['id'] for n in response.data}
         self.assertIn(note_hidden.pk, returned_ids)
         self.assertIn(note_standalone.pk, returned_ids)
+
+    def test_create_note_linked_to_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Class Note', 'courses': [course.pk]}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['courses'], [course.pk])
+        self.assertEqual(response.data['linked_entity_type'], 'course')
+        self.assertEqual(response.data['linked_entity_title'], course.title)
+        self.assertEqual(response.data['course_id'], course.pk)
+        self.assertEqual(response.data['course_color'], course.color)
+        self.assertEqual(list(Note.objects.get(pk=response.data['id']).courses.all()), [course])
+
+    def test_link_to_another_users_course_returns_404(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user2)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Note', 'courses': [course.pk]}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_note_rejects_course_with_another_link_type(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Note', 'courses': [course.pk], 'homework': [homework.pk]}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('only be linked to one type', str(response.data))
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_note_rejects_multiple_courses(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group)
+        course2 = coursehelper.given_course_exists(course_group, title='Other Course')
+
+        # WHEN
+        response = self.client.post(reverse('planner_notes_list'),
+                                    json.dumps({'title': 'Note', 'courses': [course1.pk, course2.pk]}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('only be linked to one class', str(response.data))
+
+    def test_note_rejects_linking_to_course_with_existing_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        notehelper.given_note_linked_to_course(user, course)
+        new_note = notehelper.given_note_exists(user)
+
+        # WHEN
+        response = self.client.put(reverse('planner_notes_detail', kwargs={'pk': new_note.pk}),
+                                   json.dumps({'title': new_note.title, 'content': new_note.content,
+                                               'courses': [course.pk]}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('This class already has a linked note', str(response.data))
+
+    def test_filter_by_linked_entity_type_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_note = notehelper.given_note_linked_to_course(user, course)
+        notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(course))
+        notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + '?linked_entity_type=course')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([course_note.pk], [note['id'] for note in response.data])
+
+    def test_filter_by_course_includes_its_own_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        other_course = coursehelper.given_course_exists(course_group, title='Other Course')
+        course_note = notehelper.given_note_linked_to_course(user, course)
+        homework_note = notehelper.given_note_linked_to_homework(user, homeworkhelper.given_homework_exists(course))
+        notehelper.given_note_linked_to_course(user, other_course)
+
+        # WHEN
+        response = self.client.get(reverse('planner_notes_list') + f'?course={course.pk}')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual({course_note.pk, homework_note.pk}, {note['id'] for note in response.data})
+
+    def test_course_linked_note_is_not_standalone(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course_note = notehelper.given_note_linked_to_course(user, coursehelper.given_course_exists(course_group))
+        standalone = notehelper.given_note_exists(user, title='Standalone')
+
+        # WHEN
+        standalone_response = self.client.get(reverse('planner_notes_list') + '?linked_entity_type=standalone')
+        unlinked_response = self.client.get(reverse('planner_notes_list') + '?has_link=false')
+        linked_response = self.client.get(reverse('planner_notes_list') + '?has_link=true')
+
+        # THEN
+        self.assertEqual([standalone.pk], [note['id'] for note in standalone_response.data])
+        self.assertEqual([standalone.pk], [note['id'] for note in unlinked_response.data])
+        self.assertEqual([course_note.pk], [note['id'] for note in linked_response.data])
+
+    def test_filter_shown_on_calendar_with_course_link(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        visible_group = coursegrouphelper.given_course_group_exists(user, shown_on_calendar=True)
+        hidden_group = coursegrouphelper.given_course_group_exists(user, title='Hidden Group', shown_on_calendar=False)
+        note_visible = notehelper.given_note_linked_to_course(user, coursehelper.given_course_exists(visible_group))
+        note_hidden = notehelper.given_note_linked_to_course(
+            user, coursehelper.given_course_exists(hidden_group, title='Hidden Course'))
+
+        # WHEN
+        shown_response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=true')
+        hidden_response = self.client.get(reverse('planner_notes_list') + '?shown_on_calendar=false')
+
+        # THEN
+        self.assertEqual([note_visible.pk], [note['id'] for note in shown_response.data])
+        self.assertEqual([note_hidden.pk], [note['id'] for note in hidden_response.data])
+
+    def test_delete_course_deletes_linked_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_coursegroups_courses_detail',
+                                              kwargs={'course_group': course_group.pk, 'pk': course.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Note.objects.filter(pk=note.pk).exists())

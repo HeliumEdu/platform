@@ -85,6 +85,52 @@ class TestCaseNote(TestCase):
         self.assertEqual(note.linked_entity_title, resource.title)
         self.assertIsNone(note.course_color)
 
+    def test_note_linked_to_course(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, color='#cabdbf')
+
+        # WHEN
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # THEN
+        self.assertEqual(note.linked_entity, course)
+        self.assertEqual(note.linked_entity_type, 'course')
+        self.assertEqual(note.linked_entity_title, course.title)
+        self.assertEqual(note.course_id, course.pk)
+        self.assertEqual(note.course_color, '#cabdbf')
+        self.assertIsNone(note.category_color)
+        self.assertIsNone(note.linked_entity_due)
+        self.assertIsNone(note.linked_entity_completed)
+        self.assertTrue(note.has_linked_entity())
+
+    def test_delete_course_deletes_its_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        course.delete()
+
+        # THEN
+        self.assertFalse(Note.objects.filter(pk=note.pk).exists())
+
+    def test_delete_course_group_deletes_its_class_notes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        course_group.delete()
+
+        # THEN
+        self.assertFalse(Note.objects.filter(pk=note.pk).exists())
+
     def test_delete_entity_cascades_to_note(self):
         user = userhelper.given_a_user_exists()
         event = eventhelper.given_event_exists(user)

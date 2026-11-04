@@ -35,6 +35,7 @@ class CourseSerializer(serializers.ModelSerializer):
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
     has_weighted_grading = serializers.SerializerMethodField()
+    notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,12 +47,12 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = (
             'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'trend', 'teacher_name',
-            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template', 'course_group',
+            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template', 'course_group', 'notes',
             'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'has_weighted_grading', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'course_group', 'current_grade', 'trend', 'created_at', 'updated_at', 'has_weighted_grading',
+            'course_group', 'notes', 'current_grade', 'trend', 'created_at', 'updated_at', 'has_weighted_grading',
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def create(self, validated_data):

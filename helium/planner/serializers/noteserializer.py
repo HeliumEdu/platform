@@ -5,19 +5,19 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.common.utils.validators import validate_quill_delta
-from helium.planner.models import Event, Homework, Resource, Note
+from helium.planner.models import Course, Event, Homework, Resource, Note
 from helium.planner.utils.quillutils import delta_size, ensure_quill_delta_terminated
 
 
 class NoteSerializer(serializers.ModelSerializer):
     """
     A user-owned note with optional rich-text `content` ([Quill Delta](https://quilljs.com/docs/delta/) JSON). May be optionally
-    linked to exactly one entity — a single homework assignment, event, or resource.
+    linked to exactly one entity — a single homework assignment, event, resource, or course.
     """
 
     class Meta:
         model = Note
-        fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'created_at', 'updated_at')
+        fields = ('id', 'title', 'content', 'homework', 'events', 'resources', 'courses', 'created_at', 'updated_at')
         read_only_fields = ('created_at', 'updated_at')
 
     def __init__(self, *args, **kwargs):
@@ -29,6 +29,8 @@ class NoteSerializer(serializers.ModelSerializer):
             self.fields['events'].child_relation.queryset = Event.objects.for_user(
                 self.context['request'].user.pk)
             self.fields['resources'].child_relation.queryset = Resource.objects.for_user(
+                self.context['request'].user.pk)
+            self.fields['courses'].child_relation.queryset = Course.objects.for_user(
                 self.context['request'].user.pk)
 
     def _percent_past_max_size(self, content):
@@ -51,10 +53,11 @@ class NoteSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        """Enforce mutual exclusivity: only one of homework, events, or resources can be set."""
+        """Enforce mutual exclusivity: only one of homework, events, resources, or courses can be set."""
         homework = attrs.get('homework', [])
         events = attrs.get('events', [])
         resources = attrs.get('resources', [])
+        courses = attrs.get('courses', [])
 
         # For updates, also consider existing values if not being updated
         if self.instance:
@@ -64,10 +67,12 @@ class NoteSerializer(serializers.ModelSerializer):
                 events = list(self.instance.events.all())
             if 'resources' not in attrs:
                 resources = list(self.instance.resources.all())
+            if 'courses' not in attrs:
+                courses = list(self.instance.courses.all())
 
-        if sum([bool(homework), bool(events), bool(resources)]) > 1:
+        if sum([bool(homework), bool(events), bool(resources), bool(courses)]) > 1:
             raise ValidationError(
-                'A note can only be linked to one type of entity (homework, event, or resource).'
+                'A note can only be linked to one type of entity (homework, event, resource, or course).'
             )
 
         if homework and len(homework) > 1:
@@ -81,6 +86,10 @@ class NoteSerializer(serializers.ModelSerializer):
         if resources and len(resources) > 1:
             raise ValidationError(
                 'A note can only be linked to one resource.'
+            )
+        if courses and len(courses) > 1:
+            raise ValidationError(
+                'A note can only be linked to one class.'
             )
 
         # Enforce one-to-one from entity side: entity can only have one linked note
@@ -108,6 +117,14 @@ class NoteSerializer(serializers.ModelSerializer):
             if existing.exists():
                 raise ValidationError(
                     'This resource already has a linked note.'
+                )
+        if courses:
+            existing = Note.objects.filter(courses__in=courses)
+            if exclude_pk:
+                existing = existing.exclude(pk=exclude_pk)
+            if existing.exists():
+                raise ValidationError(
+                    'This class already has a linked note.'
                 )
 
         return attrs

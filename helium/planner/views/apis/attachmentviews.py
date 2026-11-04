@@ -30,7 +30,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return user.attachments.all().select_related('course', 'event', 'homework', 'user')
+            return user.attachments.all().select_related('course', 'event', 'homework', 'resource', 'user')
         else:
             return Attachment.objects.none()
 
@@ -55,7 +55,7 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         },
         parameters=[
             OpenApiParameter(name=field, exclude=True)
-            for field in ('id', 'course', 'event', 'homework', 'updated_at__gte')
+            for field in ('id', 'course', 'event', 'homework', 'resource', 'updated_at__gte')
         ],
     )
     def post(self, request, *args, **kwargs):
@@ -68,8 +68,8 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
 
         Each file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
 
-        Exactly one of `course`, `event`, or `homework` must be given — the attachment is associated
-        with that single owning entity.
+        Exactly one of `course`, `event`, `homework`, or `resource` must be given — the attachment is
+        associated with that single owning entity.
         """
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
@@ -77,6 +77,8 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
             permissions.check_event_permission(request.user.pk, request.data['event'])
         if 'homework' in request.data:
             permissions.check_homework_permission(request.user.pk, request.data['homework'])
+        if 'resource' in request.data:
+            permissions.check_resource_permission(request.user.pk, request.data['resource'])
 
         response_data = []
         errors = []
@@ -114,7 +116,7 @@ class AttachmentsApiDetailView(HeliumAPIView, RetrieveModelMixin, DestroyModelMi
     def get_queryset(self):
         if self.has_request_user():
             user = self.request.user
-            return user.attachments.all().select_related('course', 'event', 'homework', 'user')
+            return user.attachments.all().select_related('course', 'event', 'homework', 'resource', 'user')
         else:
             return Attachment.objects.none()
 

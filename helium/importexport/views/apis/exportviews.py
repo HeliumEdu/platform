@@ -47,7 +47,7 @@ class ExportResourceView(ViewSet, HeliumAPIView):
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
                 annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
                 annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)),
-            ),
+            ).prefetch_related('notes_set'),
             'course_schedules': CourseSchedule.objects.for_user(user.pk),
             'categories': Category.objects.for_user(user.pk).annotate(
                 annotated_num_homework=Count('homework'),
@@ -59,7 +59,7 @@ class ExportResourceView(ViewSet, HeliumAPIView):
             'events': Event.objects.for_user(user.pk),
             'homework': Homework.objects.for_user(user.pk),
             'reminders': Reminder.objects.for_user(user.pk),
-            'notes': Note.objects.for_user(user.pk).prefetch_related('homework', 'events', 'resources'),
+            'notes': Note.objects.for_user(user.pk).prefetch_related('homework', 'events', 'resources', 'courses'),
         })
 
         json_str = JSONRenderer().render(serializer.data)

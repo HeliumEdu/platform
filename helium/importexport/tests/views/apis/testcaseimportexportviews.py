@@ -24,7 +24,7 @@ from helium.planner.models import CourseGroup, Course, CourseSchedule, Category,
     Homework, Reminder, Note
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
-    resourcegrouphelper, resourcehelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper
+    resourcegrouphelper, resourcehelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper, notehelper
 
 
 class TestCaseImportExportViews(APITestCase):
@@ -611,6 +611,38 @@ class TestCaseImportExportViews(APITestCase):
         imported_schedules = CourseSchedule.objects.filter(course=imported_course).order_by('pk')
         self.assertEqual(len(imported_schedules), 2)
         self.assertEqual({s.days_of_week for s in imported_schedules}, {'0101010', '0010100'})
+
+    def test_export_import_preserves_class_note_link(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        notehelper.given_note_linked_to_course(user, course, title='Class Note')
+
+        # WHEN
+        export_response = self.client.get(reverse('importexport_export'))
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+        export_data = json.loads(export_response.content.decode('utf-8'))
+
+        # THEN
+        self.assertEqual(export_data['notes'][0]['courses'], [course.pk])
+
+        # WHEN
+        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_class_note_roundtrip.json')
+        try:
+            with open(upload_path, 'w') as fp:
+                json.dump(export_data, fp)
+            with open(upload_path) as fp:
+                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        imported_note = Note.objects.get(courses=imported_course)
+        self.assertEqual(imported_note.title, 'Class Note')
 
     def test_export_import_preserves_cycle_schedule(self):
         # GIVEN

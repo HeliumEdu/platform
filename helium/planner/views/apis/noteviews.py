@@ -26,6 +26,8 @@ def _check_linked_entity_permissions(request):
         permissions.check_event_permission(request.user.pk, event_id)
     for resource_id in permissions.requested_ids(request.data, 'resources'):
         permissions.check_resource_permission(request.user.pk, resource_id)
+    for course_id in permissions.requested_ids(request.data, 'courses'):
+        permissions.check_course_permission(request.user.pk, course_id)
 
 
 @extend_schema(tags=['planner.note'])
@@ -35,7 +37,8 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, HeliumSearchFilter)
     filterset_class = NoteFilter
     search_fields = ('title', 'content_text', 'linked_entity_title')
-    search_description = 'Search by title, content text, and the title of the linked homework, event, or resource.'
+    search_description = ('Search by title, content text, and the title of the linked homework, event, resource, '
+                          'or course.')
     ordering_fields = ('title', 'created_at', 'updated_at')
 
     def _content_requested(self):
@@ -48,7 +51,8 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
                 'homework__course',
                 'homework__category',
                 'events',
-                'resources'
+                'resources',
+                'courses'
             ).all()
             if self.request.method == 'GET' and not self._content_requested():
                 queryset = queryset.defer('content')
@@ -90,8 +94,8 @@ class NotesApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
         """
         Create a note for the authenticated user.
 
-        To link a note, pass exactly one of `homework`, `event`, or `resource`; giving more than one type,
-        more than one item of the same type, or an entity that already has a note returns a 400.
+        To link a note, pass exactly one of `homework`, `events`, `resources`, or `courses`; giving more than one
+        type, more than one item of the same type, or an entity that already has a note returns a 400.
         """
         _check_linked_entity_permissions(request)
 
@@ -117,7 +121,8 @@ class NotesApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, U
                 'homework__course',
                 'homework__category',
                 'events',
-                'resources'
+                'resources',
+                'courses'
             ).all()
         return Note.objects.none()
 

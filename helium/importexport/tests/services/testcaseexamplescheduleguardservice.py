@@ -11,7 +11,7 @@ from helium.importexport.services import examplescheduleguardservice
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
     Resource, ResourceGroup, Note, Reminder
-from helium.planner.tests.helpers import attachmenthelper, reminderhelper
+from helium.planner.tests.helpers import attachmenthelper, notehelper, reminderhelper
 
 
 class TestCaseExampleScheduleGuardService(TestCase):
@@ -78,6 +78,34 @@ class TestCaseExampleScheduleGuardService(TestCase):
         # THEN
         self.assertEqual([root.pk for root in partition.modified], [example.course_group.pk])
         self.assertEqual([course.pk for course in partition.pristine_children], [example.other_course.pk])
+
+    def test_class_note_written_after_import_keeps_its_group_and_offers_the_untouched_course_for_deletion(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        example = exampleschedulehelper.given_example_schedule_exists(user)
+        notehelper.given_note_linked_to_course(user, example.course, title='My class note')
+
+        # WHEN
+        partition = examplescheduleguardservice.partition_example_schedule(user.pk)
+
+        # THEN
+        self.assertEqual([root.pk for root in partition.modified], [example.course_group.pk])
+        self.assertEqual([course.pk for course in partition.pristine_children], [example.other_course.pk])
+
+    def test_example_class_note_is_not_a_root(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        example = exampleschedulehelper.given_example_schedule_exists(user)
+        class_note = notehelper.given_note_linked_to_course(user, example.course)
+        Note.objects.filter(pk=class_note.pk).update(example_schedule=True, created_at=example.imported_at,
+                                                     updated_at=example.imported_at)
+
+        # WHEN
+        partition = examplescheduleguardservice.partition_example_schedule(user.pk)
+
+        # THEN
+        roots = partition.pristine + partition.modified
+        self.assertNotIn(class_note.pk, [root.pk for root in roots if isinstance(root, Note)])
 
     def test_adopt_unflags_every_example_entity_and_stops_the_dialog(self):
         # GIVEN

@@ -41,36 +41,48 @@ def recalculate_grade(modeladmin, request, queryset):
                             f"Grade recalculated for {queryset.count()} items (this action is recursive to children).")
 
 
-def planner_entity_type_filter(title, parameter_name):
-    """
-    Factory returning a SimpleListFilter that splits planner records by their linked entity type
-    (course, homework, or event).
-    """
+class AttachmentTypeFilter(SimpleListFilter):
+    title = 'Attachment Type'
+    parameter_name = 'attachment_type'
 
-    class _Filter(SimpleListFilter):
-        def lookups(self, request, model_admin):
-            return [('course', 'Course'), ('homework', 'Homework'), ('event', 'Event')]
+    def lookups(self, request, model_admin):
+        return [('course', 'Course'), ('homework', 'Homework'), ('event', 'Event'), ('resource', 'Resource')]
 
-        def queryset(self, request, queryset):
-            if self.value() == 'course':
-                return queryset.filter(course__isnull=False)
-            if self.value() == 'homework':
-                return queryset.filter(homework__isnull=False)
-            if self.value() == 'event':
-                return queryset.filter(event__isnull=False)
-            return queryset
+    def queryset(self, request, queryset):
+        if self.value() == 'course':
+            return queryset.filter(course__isnull=False)
+        if self.value() == 'homework':
+            return queryset.filter(homework__isnull=False)
+        if self.value() == 'event':
+            return queryset.filter(event__isnull=False)
+        if self.value() == 'resource':
+            return queryset.filter(resource__isnull=False)
+        return queryset
 
-    _Filter.title = title
-    _Filter.parameter_name = parameter_name
-    return _Filter
+
+class ReminderTypeFilter(SimpleListFilter):
+    title = 'Reminder Type'
+    parameter_name = 'reminder_type'
+
+    def lookups(self, request, model_admin):
+        return [('course', 'Course'), ('homework', 'Homework'), ('event', 'Event')]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'course':
+            return queryset.filter(course__isnull=False)
+        if self.value() == 'homework':
+            return queryset.filter(homework__isnull=False)
+        if self.value() == 'event':
+            return queryset.filter(event__isnull=False)
+        return queryset
 
 
 class AttachmentAdmin(BaseModelAdmin):
     list_display = ('title', 'get_attachment', 'size', 'updated_at', 'get_user',)
-    list_filter = (planner_entity_type_filter('Attachment Type', 'attachment_type'), staff_filter('user'))
+    list_filter = (AttachmentTypeFilter, staff_filter('user'))
     search_fields = ('id', 'user__username', 'user__email', 'title')
     autocomplete_fields = ('user',)
-    exclude = ('course', 'event', 'homework')
+    exclude = ('course', 'event', 'homework', 'resource')
 
     def has_add_permission(self, request):
         return False
@@ -105,6 +117,9 @@ class AttachmentAdmin(BaseModelAdmin):
         elif obj.homework:
             url = reverse('admin:planner_homework_change', args=[obj.homework.pk])
             return format_html('<a href="{}">{} (Homework)</a>', url, obj.homework.title)
+        elif obj.resource:
+            url = reverse('admin:planner_resource_change', args=[obj.resource.pk])
+            return format_html('<a href="{}">{} (Resource)</a>', url, obj.resource.title)
         return '-'
 
     linked_entity.short_description = 'Linked Entity'
@@ -211,7 +226,7 @@ class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('course_group', 'current_grade', 'trend',)
+            return readonly_fields + self.readonly_fields + ('course_group', 'current_grade', 'trend', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
 
@@ -220,6 +235,11 @@ class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
 
     get_course_group.short_description = 'Class Group'
     get_course_group.admin_order_field = 'course_group__title'
+
+    def linked_notes(self, obj):
+        return _linked_notes(obj)
+
+    linked_notes.short_description = 'Notes'
 
     def num_homework(self, obj):
         return obj.num_homework
@@ -447,7 +467,7 @@ class HomeworkAdmin(BaseModelAdmin):
 
 
 class ResourceGroupAdmin(BaseModelAdmin):
-    list_display = ('title', 'shown_on_calendar', 'num_resources', 'updated_at', 'get_user',)
+    list_display = ('title', 'shown_on_calendar', 'num_resources', 'num_attachments', 'updated_at', 'get_user',)
     list_filter = ('shown_on_calendar', 'example_schedule', staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
@@ -465,6 +485,11 @@ class ResourceGroupAdmin(BaseModelAdmin):
 
     num_resources.short_description = 'Resources'
 
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
+
     def get_user(self, obj):
         if obj.get_user():
             return obj.get_user().get_username()
@@ -476,8 +501,9 @@ class ResourceGroupAdmin(BaseModelAdmin):
 
 
 class ResourceAdmin(BaseModelAdmin):
-    list_display = ('title', 'get_resource_group', 'status', 'condition', 'updated_at', 'get_user',)
-    list_filter = ('resource_group__shown_on_calendar', 'resource_group__example_schedule',
+    list_display = ('title', 'get_resource_group', 'status', 'condition', 'num_attachments', 'updated_at',
+                    'get_user',)
+    list_filter = ('resource_group__shown_on_calendar', 'resource_group__example_schedule', HasAttachmentFilter,
                    staff_filter('resource_group__user'))
     search_fields = ('id', 'title', 'resource_group__id', 'resource_group__user__username', 'resource_group__user__email')
     autocomplete_fields = ('resource_group',)
@@ -511,6 +537,11 @@ class ResourceAdmin(BaseModelAdmin):
 
     get_resource_group.short_description = 'Resource group'
     get_resource_group.admin_order_field = 'resource_group__title'
+
+    def num_attachments(self, obj):
+        return obj.num_attachments
+
+    num_attachments.short_description = 'Attachments'
 
     def get_user(self, obj):
         if obj.get_user():
@@ -554,7 +585,7 @@ def mark_reminders_unsent(modeladmin, request, queryset):
 
 class ReminderAdmin(ObjectActionsMixin, BaseModelAdmin):
     list_display = ('message', 'start_of_range', 'type', 'sent', 'dismissed', 'updated_at', 'get_user',)
-    list_filter = ('type', 'sent', 'dismissed', planner_entity_type_filter('Reminder Type', 'reminder_type'),
+    list_filter = ('type', 'sent', 'dismissed', ReminderTypeFilter,
                    ReminderExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'message', 'user__username', 'user__email')
     ordering = ('-start_of_range',)
@@ -606,6 +637,7 @@ class NoteLinkedToFilter(SimpleListFilter):
             ('homework', 'Homework'),
             ('event', 'Event'),
             ('resource', 'Resource'),
+            ('course', 'Class'),
             ('none', 'Unlinked'),
         )
 
@@ -616,8 +648,11 @@ class NoteLinkedToFilter(SimpleListFilter):
             return queryset.filter(events__isnull=False).distinct()
         elif self.value() == 'resource':
             return queryset.filter(resources__isnull=False).distinct()
+        elif self.value() == 'course':
+            return queryset.filter(courses__isnull=False).distinct()
         elif self.value() == 'none':
-            return queryset.filter(homework__isnull=True, events__isnull=True, resources__isnull=True)
+            return queryset.filter(homework__isnull=True, events__isnull=True, resources__isnull=True,
+                                   courses__isnull=True)
         return queryset
 
 
@@ -636,7 +671,8 @@ class NoteExampleScheduleFilter(SimpleListFilter):
                 Q(example_schedule=True) |
                 Q(homework__course__course_group__example_schedule=True) |
                 Q(events__example_schedule=True) |
-                Q(resources__resource_group__example_schedule=True)
+                Q(resources__resource_group__example_schedule=True) |
+                Q(courses__course_group__example_schedule=True)
         )
         if self.value() == 'yes':
             return queryset.filter(example_schedule_q).distinct()
@@ -650,7 +686,7 @@ class NoteAdmin(BaseModelAdmin):
     list_filter = (NoteLinkedToFilter, NoteExampleScheduleFilter, staff_filter('user'))
     search_fields = ('id', 'title', 'user__username', 'user__email')
     autocomplete_fields = ('user',)
-    exclude = ('homework', 'events', 'resources')
+    exclude = ('homework', 'events', 'resources', 'courses')
 
     def get_exclude(self, request, obj=None):
         excluded = super().get_exclude(request, obj) or ()
@@ -703,6 +739,11 @@ class NoteAdmin(BaseModelAdmin):
         if resource:
             url = reverse('admin:planner_resource_change', args=[resource.pk])
             return format_html('<a href="{}">{} (Resource)</a>', url, resource.title)
+
+        course = obj.courses.first()
+        if course:
+            url = reverse('admin:planner_course_change', args=[course.pk])
+            return format_html('<a href="{}">{} (Class)</a>', url, course.title)
 
         return '-'
 

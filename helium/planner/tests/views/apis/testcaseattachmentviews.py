@@ -7,7 +7,8 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.planner.models import Attachment
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper, eventhelper, homeworkhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, attachmenthelper, eventhelper, homeworkhelper, \
+    resourcegrouphelper, resourcehelper
 
 
 class TestCaseAttachmentViews(APITestCase):
@@ -155,6 +156,131 @@ class TestCaseAttachmentViews(APITestCase):
         self.assertEqual(Attachment.objects.count(), 1)
         attachment = Attachment.objects.get(pk=response.data[0]['id'])
         attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
+
+    def test_create_resource_attachment(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
+        tmp_file = attachmenthelper.given_file_exists()
+
+        # WHEN
+        with open(tmp_file.name) as fp:
+            data = {
+                'resource': resource.pk,
+                'file[]': [fp]
+            }
+            response = self.client.post(
+                reverse('planner_attachments_list'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['title'], os.path.basename(tmp_file.name))
+        self.assertEqual(response.data[0]['size'], os.path.getsize(tmp_file.name))
+        self.assertEqual(response.data[0]['resource'], data['resource'])
+        self.assertIsNone(response.data[0]['course'])
+        self.assertEqual(Attachment.objects.count(), 1)
+        attachment = Attachment.objects.get(pk=response.data[0]['id'])
+        attachmenthelper.verify_attachment_matches_data(self, attachment, response.data[0])
+
+    def test_get_attachments_filtered_by_resource(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource1 = resourcehelper.given_resource_exists(resource_group)
+        resource2 = resourcehelper.given_resource_exists(resource_group)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        attachmenthelper.given_attachment_exists(user, resource=resource1)
+        attachmenthelper.given_attachment_exists(user, resource=resource1)
+        attachmenthelper.given_attachment_exists(user, resource=resource2)
+        attachmenthelper.given_attachment_exists(user, course=course)
+
+        # WHEN
+        response_all = self.client.get(reverse('planner_attachments_list'))
+        response_resource = self.client.get(reverse('planner_attachments_list') + f'?resource={resource1.pk}')
+
+        # THEN
+        self.assertEqual(response_all.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_resource.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response_all.data), 4)
+        self.assertEqual(len(response_resource.data), 2)
+        self.assertTrue(all(a['resource'] == resource1.pk for a in response_resource.data))
+
+    def test_create_attachment_with_course_and_resource_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
+        tmp_file = attachmenthelper.given_file_exists()
+
+        # WHEN
+        with open(tmp_file.name) as fp:
+            data = {
+                'course': course.pk,
+                'resource': resource.pk,
+                'file[]': [fp]
+            }
+            response = self.client.post(
+                reverse('planner_attachments_list'),
+                data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Only one of', response.data[0]['non_field_errors'][0])
+        self.assertEqual(Attachment.objects.count(), 0)
+
+    def test_resource_owned_by_another_user_forbidden(self):
+        # GIVEN
+        user1 = userhelper.given_a_user_exists()
+        userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
+        resource_group1 = resourcegrouphelper.given_resource_group_exists(user1)
+        resource1 = resourcehelper.given_resource_exists(resource_group1)
+        attachmenthelper.given_attachment_exists(user1, resource=resource1)
+
+        # WHEN
+        response_create = self.client.post(reverse('planner_attachments_list'), {'resource': resource1.pk})
+        response_list = self.client.get(reverse('planner_attachments_list') + f'?resource={resource1.pk}')
+
+        # THEN
+        self.assertEqual(response_create.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response_list.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response_list.data), 0)
+
+    def test_deleting_resource_deletes_its_attachments(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
+        other_resource = resourcehelper.given_resource_exists(resource_group)
+        attachmenthelper.given_attachment_exists(user, resource=resource)
+        kept = attachmenthelper.given_attachment_exists(user, resource=other_resource)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_resourcegroups_resources_detail',
+                                              kwargs={'resource_group': resource_group.pk, 'pk': resource.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(list(Attachment.objects.values_list('pk', flat=True)), [kept.pk])
+
+    def test_deleting_resource_group_deletes_its_resources_attachments(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group)
+        attachmenthelper.given_attachment_exists(user, resource=resource)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_resourcegroups_detail', kwargs={'pk': resource_group.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Attachment.objects.count(), 0)
 
     def test_create_orphaned_attachment_fails(self):
         # GIVEN

@@ -192,6 +192,7 @@ class AttachmentFilter(django_filters.FilterSet):
             'course': ['exact'],
             'event': ['exact'],
             'homework': ['exact'],
+            'resource': ['exact'],
             'updated_at': ['gte'],
         }
 
@@ -200,7 +201,7 @@ class NoteFilter(django_filters.FilterSet):
     linked_entity_type = django_filters.CharFilter(
         method='filter_linked_type',
         help_text='Filter by what kind of entity the note is linked to. '
-                  'One of `homework`, `event`, `resource`, or `standalone` (no link).',
+                  'One of `homework`, `event`, `resource`, `course`, or `standalone` (no link).',
     )
     has_link = django_filters.BooleanFilter(
         method='filter_has_link',
@@ -219,7 +220,7 @@ class NoteFilter(django_filters.FilterSet):
                                            help_text='Filter to the note linked to this resource ID.')
     course = django_filters.NumberFilter(
         method='filter_course',
-        help_text='Filter to notes linked to this course ID\'s homework or resources.',
+        help_text='Filter to notes linked to this course ID, or to its homework or resources.',
     )
 
     class Meta:
@@ -236,11 +237,14 @@ class NoteFilter(django_filters.FilterSet):
             return queryset.filter(events__isnull=False).distinct()
         if value == 'resource':
             return queryset.filter(resources__isnull=False).distinct()
+        if value == 'course':
+            return queryset.filter(courses__isnull=False).distinct()
         if value == 'standalone':
             return queryset.filter(
                 homework__isnull=True,
                 events__isnull=True,
-                resources__isnull=True
+                resources__isnull=True,
+                courses__isnull=True
             )
         return queryset
 
@@ -249,21 +253,26 @@ class NoteFilter(django_filters.FilterSet):
             return queryset.filter(
                 Q(homework__isnull=False) |
                 Q(events__isnull=False) |
-                Q(resources__isnull=False)
+                Q(resources__isnull=False) |
+                Q(courses__isnull=False)
             ).distinct()
         return queryset.filter(
             homework__isnull=True,
             events__isnull=True,
-            resources__isnull=True
+            resources__isnull=True,
+            courses__isnull=True
         )
 
     def filter_course(self, queryset, name, value):
-        return queryset.filter(Q(homework__course__id=value) | Q(resources__courses__id=value)).distinct()
+        return queryset.filter(
+            Q(courses__id=value) | Q(homework__course__id=value) | Q(resources__courses__id=value)
+        ).distinct()
 
     def filter_shown_on_calendar(self, queryset, name, value):
         has_matching_homework = Q(homework__course__course_group__shown_on_calendar=value)
         has_matching_resource = Q(resources__resource_group__shown_on_calendar=value)
-        no_group = Q(homework__isnull=True, resources__isnull=True)
+        has_matching_course = Q(courses__course_group__shown_on_calendar=value)
+        no_group = Q(homework__isnull=True, resources__isnull=True, courses__isnull=True)
 
-        return queryset.filter(has_matching_homework | has_matching_resource | no_group).distinct()
+        return queryset.filter(has_matching_homework | has_matching_resource | has_matching_course | no_group).distinct()
 

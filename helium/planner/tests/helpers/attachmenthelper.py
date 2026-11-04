@@ -20,7 +20,7 @@ def given_file_exists(ext='.txt'):
     return tmp_file
 
 
-def given_attachment_exists(user, course=None, event=None, homework=None):
+def given_attachment_exists(user, course=None, event=None, homework=None, resource=None):
     uploaded_file = SimpleUploadedFile('myfile.txt', 'Attachment File'.encode())
 
     attachment = Attachment.objects.create(title=uploaded_file.name,
@@ -28,6 +28,7 @@ def given_attachment_exists(user, course=None, event=None, homework=None):
                                            course=course,
                                            event=event,
                                            homework=homework,
+                                           resource=resource,
                                            user=user)
 
     return attachment
@@ -42,6 +43,8 @@ def verify_attachment_matches_data(test_case, attachment, data):
         test_case.assertEqual(attachment.event.pk, data['event'])
     if 'homework' in data and data['homework']:
         test_case.assertEqual(attachment.homework.pk, data['homework'])
+    if 'resource' in data and data['resource']:
+        test_case.assertEqual(attachment.resource.pk, data['resource'])
     test_case.assertEqual(attachment.user.pk, data['user'])
 
 

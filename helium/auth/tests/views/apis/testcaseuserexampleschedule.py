@@ -114,6 +114,8 @@ class TestCaseUserExampleSchedule(APITestCase):
             'course attachment': (lambda e: attachmenthelper.given_attachment_exists(user, course=e.course),
                                   'course_group'),
             'event attachment': (lambda e: attachmenthelper.given_attachment_exists(user, event=e.event), 'event'),
+            'resource attachment': (lambda e: attachmenthelper.given_attachment_exists(user, resource=e.resource),
+                                    'resource_group'),
             'resource': (lambda e: resourcehelper.given_resource_exists(e.resource_group, title='My material'),
                          'resource_group'),
         }

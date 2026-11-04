@@ -1,5 +1,7 @@
 import logging
 
+from django.db.models import Count
+
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,9 @@ class ResourceQuerySet(BaseQuerySet):
     def with_courses(self, courses):
         return self.filter(courses__in=courses)
 
+    def num_attachments(self):
+        return self.aggregate(attachments_count=Count('attachments'))['attachments_count']
+
 
 class ResourceManager(BaseManager):
     def get_queryset(self):
@@ -34,3 +39,6 @@ class ResourceManager(BaseManager):
 
     def with_courses(self, courses):
         return self.get_queryset().with_courses(courses)
+
+    def num_attachments(self):
+        return self.get_queryset().num_attachments()
