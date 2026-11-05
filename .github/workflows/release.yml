@@ -47,6 +47,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: helium-platform-release
@@ -86,64 +87,29 @@ jobs:
           make promote PLATFORM=amd64
           make promote PLATFORM=arm64
 
-  create-release-tag:
-    name: Create Release Tag
+  # Before Deploy, which reports its deploy of the release to Sentry.
+  sentry-release:
+    name: Create Sentry Release
     needs: [prereq, promote]
-    if: "!cancelled() && needs.prereq.result == 'success' && needs.promote.result == 'success'"
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
       - uses: actions/checkout@v6
         with:
-          token: ${{ steps.app-token.outputs.token }}
           ref: ${{ needs.prereq.outputs.squash_commit_sha }}
           fetch-depth: 0
 
-      - name: Get GitHub App bot user ID
-        id: get-bot-user-id
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-
-      - name: Create and push tag
-        env:
-          VERSION: ${{ needs.prereq.outputs.version }}
-          COMMIT_SHA: ${{ needs.prereq.outputs.squash_commit_sha }}
-        run: |
-          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "Tag $VERSION already exists, skipping"
-          else
-            echo "Creating tag $VERSION on commit $COMMIT_SHA"
-            git tag -a "$VERSION" -m "Release $VERSION" "$COMMIT_SHA"
-            git push origin "$VERSION"
-          fi
-
-      - name: Create Sentry release
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ needs.prereq.outputs.version }}
-        run: |
-          pip install sentry-cli==3.6.2
-          SENTRY_PROPERTIES=sentry.properties sentry-cli releases new "$VERSION"
-          SENTRY_PROPERTIES=sentry.properties sentry-cli releases set-commits --auto "$VERSION"
-          SENTRY_PROPERTIES=sentry.properties sentry-cli releases finalize "$VERSION"
+      - name: Create the Sentry release
+        uses: alexdlaird/shipshape/sentry-release@v1
+        with:
+          version: ${{ needs.prereq.outputs.version }}
+          sentry-properties: sentry.properties
+          sentry-auth-token: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
   deploy:
     name: Deploy
-    needs: [prereq, create-release-tag]
-    if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs.prereq.result == 'success' && needs['create-release-tag'].result == 'success'"
+    needs: [prereq, sentry-release]
+    if: "!cancelled() && (inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true') && needs['sentry-release'].result == 'success'"
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -183,24 +149,22 @@ jobs:
             echo "- **Run**: $RUN_URL" >> $GITHUB_STEP_SUMMARY
           fi
 
-  cleanup:
-    needs: [prereq, create-release-tag, deploy]
+  # Tags the release when it shipped (deployed, or released without a deploy), merges main back into develop either
+  # way, then bumps develop to the next patch.
+  finish:
+    needs: [prereq, sentry-release, deploy]
     if: always() && needs.prereq.result == 'success'
-    uses: alexdlaird/.github/.github/workflows/release-cleanup.yml@main
+    uses: alexdlaird/.github/.github/workflows/release-finish.yml@main
     with:
-      # Consolidation is honoured only when the release actually shipped. Any
-      # earlier failure leaves the merge path, which keeps the granular history.
-      consolidate_history: ${{ (inputs.consolidate_history == true || inputs.consolidate_history == 'true') && needs['create-release-tag'].result == 'success' }}
+      shipped: ${{ needs['sentry-release'].result == 'success' && (needs.deploy.result == 'success' || !(inputs.trigger_deploy_after_release == true || inputs.trigger_deploy_after_release == 'true')) }}
+      version: ${{ needs.prereq.outputs.version }}
+      squash_commit_sha: ${{ needs.prereq.outputs.squash_commit_sha }}
       squash_boundary_sha: ${{ needs.prereq.outputs.squash_boundary_sha }}
-      skip_ci: ${{ needs['create-release-tag'].result == 'success' }}
+      build_run_id: ${{ needs.prereq.outputs.build_run_id }}
+      consolidate_history: ${{ inputs.consolidate_history == true || inputs.consolidate_history == 'true' }}
+      version_file: conf/configs/common.py
+      version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
+      repo_slug: HeliumEdu/platform
     secrets:
       bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
       bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-
-  bump:
-    needs: [create-release-tag, cleanup]
-    if: always() && needs['create-release-tag'].result == 'success'
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      bump_type: next
-    secrets: inherit

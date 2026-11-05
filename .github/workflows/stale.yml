@@ -1,0 +1,15 @@
+name: "Stale Check"
+
+run-name: Stale Check
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  stale:
+    uses: alexdlaird/.github/.github/workflows/stale.yml@main
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: none
