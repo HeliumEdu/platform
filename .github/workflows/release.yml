@@ -23,31 +23,10 @@ on:
         required: false
         type: boolean
         default: false
-  workflow_call:
-    inputs:
-      trigger_deploy_after_release:
-        description: "Trigger deploy after release"
-        required: false
-        type: boolean
-        default: true
-      environment:
-        description: "Environment to deploy to"
-        required: false
-        type: string
-        default: prod
-      consolidate_history:
-        description: "Reset develop to main after release (force-push)"
-        required: false
-        type: boolean
-        default: false
-    outputs:
-      version:
-        description: "Released version"
-        value: ${{ jobs.prereq.outputs.version }}
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 concurrency:
   group: helium-platform-release
@@ -87,7 +66,6 @@ jobs:
           make promote PLATFORM=amd64
           make promote PLATFORM=arm64
 
-  # Before Deploy, which reports its deploy of the release to Sentry.
   sentry-release:
     name: Create Sentry Release
     needs: [prereq, promote]
@@ -113,21 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
-          private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          skip-token-revoke: true
-
       - name: Run the deploy workflow and wait for it
         id: wait-for-deploy
         uses: alexdlaird/shipshape/run-workflow@v1
         with:
           workflow: deploy.yml
           ref: develop
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ github.token }}
           timeout-minutes: 55
           inputs: |
             version_type=specific
@@ -149,8 +119,6 @@ jobs:
             echo "- **Run**: $RUN_URL" >> $GITHUB_STEP_SUMMARY
           fi
 
-  # Tags the release when it shipped (deployed, or released without a deploy), merges main back into develop either
-  # way, then bumps develop to the next patch.
   finish:
     needs: [prereq, sentry-release, deploy]
     if: always() && needs.prereq.result == 'success'

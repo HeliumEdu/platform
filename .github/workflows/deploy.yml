@@ -67,11 +67,11 @@ jobs:
 
       - name: Determine version to deploy
         id: version
-        uses: HeliumEdu/.github/actions/determine-version@main
+        uses: alexdlaird/shipshape/resolve-release@v1
         with:
           token: ${{ steps.app-token.outputs.token }}
-          repo: platform
-          specific-version: ${{ inputs.version_type != 'latest' && inputs.specific_version || '' }}
+          version: ${{ inputs.version_type != 'latest' && inputs.specific_version || '' }}
+          read-tag: false
 
   deploy:
     name: Deploy to ${{ inputs.environment }}
