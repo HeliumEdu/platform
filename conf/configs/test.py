@@ -69,18 +69,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    'staticfiles': {'BACKEND': 'pipeline.storage.PipelineStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 }
 
 # Media
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Pipelines
-
-common.PIPELINE['CSS_COMPRESSOR'] = None
-common.PIPELINE['JS_COMPRESSOR'] = None
 
 # Celery
 
