@@ -2,6 +2,7 @@ from datetime import timedelta
 from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from django.utils import timezone
 
 from helium.feed.models import ExternalCalendar
@@ -11,8 +12,8 @@ from helium.planner.models import Attachment, Category, Course, CourseGroup, Cou
 from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, courseschedulehelper, \
     eventhelper, homeworkhelper, resourcegrouphelper, resourcehelper, notehelper, reminderhelper
 
-_USER_OWNED_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule, Category,
-                      Homework, Reminder, Resource, Attachment)
+USER_OWNED_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule, Category,
+                     Homework, Reminder, Resource, Attachment)
 
 
 def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(days=7)):
@@ -45,7 +46,7 @@ def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(day
         flagged.save()
 
     imported_at = timezone.now() - imported_ago
-    for model in _USER_OWNED_MODELS:
+    for model in USER_OWNED_MODELS:
         model.objects.for_user(user.pk).update(created_at=imported_at, updated_at=imported_at)
 
     get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=imported_at if stamped else None)
@@ -57,6 +58,18 @@ def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(day
                            event=event, resource_group=resource_group, resource=resource, note=note,
                            linked_note=linked_note, external_calendar=external_calendar, roots=roots,
                            imported_at=imported_at)
+
+
+def count_rows_by_model(user, models=USER_OWNED_MODELS):
+    return {model: model.objects.for_user(user.pk).count() for model in models}
+
+
+def post_import_example_schedule(client):
+    return client.post(reverse('importexport_import_exampleschedule'))
+
+
+def delete_example_schedule(client):
+    return client.delete(reverse('auth_user_resource_delete_exampleschedule'))
 
 
 def count_example_flagged(user):

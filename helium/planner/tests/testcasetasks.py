@@ -235,9 +235,7 @@ class TestCasePlannerTasks(TestCase):
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_send_email_reminder_for_course_uses_the_matching_schedule_end_time(self, mock_send_multipart_email):
         # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.time_zone = 'America/Chicago'
-        user.settings.save()
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group, start_date=datetime.date(2017, 5, 1),
                                                   end_date=datetime.date(2017, 5, 31))
@@ -263,9 +261,8 @@ class TestCasePlannerTasks(TestCase):
         for zone_name in ('Asia/Tokyo', 'America/Chicago'):
             with self.subTest(zone=zone_name):
                 # GIVEN
-                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
-                user.settings.time_zone = zone_name
-                user.settings.save()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
                 local_midnight = datetime.datetime(2017, 5, 8, tzinfo=ZoneInfo(zone_name))
                 event = eventhelper.given_event_exists(user, all_day=True, show_end_time=True, start=local_midnight,
                                                        end=local_midnight + datetime.timedelta(days=2))

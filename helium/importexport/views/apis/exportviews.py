@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
 
+from helium.common import enums
 from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.importexport.serializers.exportserializer import ExportSerializer
@@ -40,19 +41,19 @@ class ExportResourceView(ViewSet, HeliumAPIView):
             'course_groups': CourseGroup.objects.for_user(user.pk).annotate(
                 annotated_num_homework=Count('courses__homework', distinct=True),
                 annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True),
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade=enums.UNGRADED), distinct=True),
             ),
             'courses': Course.objects.for_user(user.pk).annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), distinct=True),
                 annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0)),
             ).prefetch_related('notes_set'),
             'course_schedules': CourseSchedule.objects.for_user(user.pk),
             'categories': Category.objects.for_user(user.pk).annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100')),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED)),
             ),
             'resource_groups': ResourceGroup.objects.for_user(user.pk),
             'resources': Resource.objects.for_user(user.pk),

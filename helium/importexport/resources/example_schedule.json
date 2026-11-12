@@ -2044,7 +2044,7 @@
       "title": "Learning & Memory",
       "content": {
         "ops": [
-          {"insert": "Covers chapters 1–6", "attributes": {"bold": true}},
+          {"insert": "Covers chapters 1-6", "attributes": {"bold": true}},
           {"insert": "\n"}
         ]
       },

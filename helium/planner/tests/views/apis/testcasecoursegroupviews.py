@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import CourseGroup
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
@@ -25,8 +26,7 @@ class TestCaseCourseGroupViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_coursegroups(self):
         # GIVEN
@@ -166,8 +166,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # THEN
         self.assertTrue(CourseGroup.objects.filter(pk=course_group.pk, user_id=user1.pk).exists())
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -182,6 +181,7 @@ class TestCaseCourseGroupViews(APITestCase):
         data = {
             'overall_grade': 23,
             'trend': 1.5,
+            'example_schedule': True,
             'user': user1.pk,
             # Intentionally NOT changing these value
             'title': course_group.title,
@@ -196,6 +196,8 @@ class TestCaseCourseGroupViews(APITestCase):
         course_group.refresh_from_db()
         self.assertEqual(course_group.overall_grade, overall_grade)
         self.assertEqual(course_group.trend, trend)
+        self.assertFalse(course_group.example_schedule)
+        self.assertFalse(response.data['example_schedule'])
         self.assertEqual(course_group.get_user().pk, user2.pk)
 
     def test_not_found(self):
@@ -207,13 +209,7 @@ class TestCaseCourseGroupViews(APITestCase):
             self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': '9999'}))
         ]
 
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

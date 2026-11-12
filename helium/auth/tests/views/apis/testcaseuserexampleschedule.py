@@ -1,20 +1,15 @@
 import datetime
 from unittest import mock
 
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.feed.models import ExternalCalendar
 from helium.importexport.tests.helpers import exampleschedulehelper
-from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
-    Resource, ResourceGroup, Note, Reminder
+from helium.planner.models import Course, CourseGroup, Event, Resource, ResourceGroup, Note, Reminder
 from helium.planner.tests.helpers import attachmenthelper, categoryhelper, coursehelper, courseschedulehelper, \
     homeworkhelper, resourcehelper, notehelper, reminderhelper
-
-ALL_EXAMPLE_MODELS = (ExternalCalendar, CourseGroup, ResourceGroup, Event, Note, Course, CourseSchedule, Category,
-                      Homework, Reminder, Resource, Attachment)
 
 COURSE_GROUP_TREE = ('course_group', 'course', 'schedule', 'category', 'homework', 'course_reminder',
                      'homework_reminder')
@@ -44,18 +39,12 @@ class TestCaseUserExampleSchedule(APITestCase):
         return user, example
 
     def _reset(self, user):
-        for model in reversed(ALL_EXAMPLE_MODELS):
+        for model in reversed(exampleschedulehelper.USER_OWNED_MODELS):
             model.objects.for_user(user.pk).delete()
         user.settings.show_getting_started = True
         user.settings.save()
         user.onboarding_completed_at = None
         user.save()
-
-    def _clear(self):
-        return self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
-
-    def _row_count(self, user):
-        return sum(model.objects.for_user(user.pk).count() for model in ALL_EXAMPLE_MODELS)
 
     def _assert_cleared_with_notice_keeping(self, response, user, example, survivors):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -77,11 +66,11 @@ class TestCaseUserExampleSchedule(APITestCase):
         user, example = self._given_a_user_with_an_example_schedule()
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(self._row_count(user), 0)
+        self.assertEqual(sum(exampleschedulehelper.count_rows_by_model(user).values()), 0)
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.show_getting_started)
 
@@ -92,11 +81,11 @@ class TestCaseUserExampleSchedule(APITestCase):
             reminder.save(force_update=True)
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(self._row_count(user), 0)
+        self.assertEqual(sum(exampleschedulehelper.count_rows_by_model(user).values()), 0)
 
     def test_clear_after_user_adds_anything_beneath_an_example_root_keeps_that_root(self):
         # GIVEN
@@ -126,7 +115,7 @@ class TestCaseUserExampleSchedule(APITestCase):
                 added = add(example)
 
                 # WHEN
-                response = self._clear()
+                response = exampleschedulehelper.delete_example_schedule(self.client)
 
                 # THEN
                 self._assert_cleared_with_notice_keeping(response, user, example,
@@ -142,7 +131,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         reminderhelper.given_reminder_exists(user, offset=45, event=example.event)
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -174,7 +163,7 @@ class TestCaseUserExampleSchedule(APITestCase):
                 edit(example)
 
                 # WHEN
-                response = self._clear()
+                response = exampleschedulehelper.delete_example_schedule(self.client)
 
                 # THEN
                 self._assert_cleared_with_notice_keeping(response, user, example,
@@ -188,7 +177,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         _set_and_save(example.homework, title='Renamed by me')
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self._assert_cleared_with_notice_keeping(response, user, example, _survivors(example, *COURSE_GROUP_TREE))
@@ -200,7 +189,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         _set_and_save(example.course_group, title='Mine now')
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self._assert_cleared_with_notice_keeping(response, user, example, [example.course_group])
@@ -214,12 +203,12 @@ class TestCaseUserExampleSchedule(APITestCase):
         self.assertFalse(ExternalCalendar.objects.filter(pk=example.external_calendar.pk).exists())
 
         # WHEN
-        rows_after_first_clear = self._row_count(user)
-        second_response = self._clear()
+        rows_after_first_clear = sum(exampleschedulehelper.count_rows_by_model(user).values())
+        second_response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(second_response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(self._row_count(user), rows_after_first_clear)
+        self.assertEqual(sum(exampleschedulehelper.count_rows_by_model(user).values()), rows_after_first_clear)
 
     def test_clear_with_edited_homework_unflags_the_example_note_linked_to_it(self):
         # GIVEN
@@ -227,7 +216,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         _set_and_save(example.homework, title='Renamed by me')
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self._assert_cleared_with_notice_keeping(response, user, example, [example.linked_note])
@@ -239,7 +228,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         note = notehelper.given_note_linked_to_homework(user, example.homework, title='My study notes')
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self._assert_cleared_with_notice_keeping(response, user, example,
@@ -250,7 +239,7 @@ class TestCaseUserExampleSchedule(APITestCase):
         user, example = self._given_a_user_with_an_example_schedule(stamped=False)
 
         # WHEN
-        response = self._clear()
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -3,9 +3,14 @@ import logging
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
+from helium.common import enums
 from helium.common.serializers.validation import validate_date_range_and_exceptions
+from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
 from helium.planner.models import CourseGroup
+from helium.planner.serializers.gradescaleserializer import GradeScaleField
+from helium.planner.services import gradingservice
+from helium.planner.tasks import recalculate_course_group_gpa
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +25,26 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     num_homework = serializers.SerializerMethodField()
     num_homework_completed = serializers.SerializerMethodField()
     num_homework_graded = serializers.SerializerMethodField()
+    grade_scale = GradeScaleField(
+        required=False,
+        help_text='The bands that map a class grade to a grade point: none for no grade scale, or 2 to 20 in '
+                  'ascending `min_grade` order from `0`, whose `grade_point` values only rise or only fall. When '
+                  'omitted on create, it is filled from `grade_scale_template`, else copied from the most recent '
+                  'group outside the example schedule, else empty.')
+    grade_scale_template = serializers.ChoiceField(
+        choices=enums.GRADE_SCALE_TEMPLATE_CHOICES, required=False, allow_null=True,
+        help_text='A preset to fill `grade_scale` from when `grade_scale` is omitted. Always re-derived from the '
+                  'resulting `grade_scale`: the matching preset, or null for a custom scale.')
 
     class Meta:
         model = CourseGroup
         fields = (
-            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend',
-            'exceptions', 'user', 'created_at', 'updated_at',
+            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend', 'grade_scale',
+            'grade_scale_template', 'gpa', 'exceptions', 'example_schedule', 'user', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'overall_grade', 'trend', 'user', 'created_at', 'updated_at', 'num_homework',
+            'overall_grade', 'trend', 'gpa', 'example_schedule', 'user', 'created_at', 'updated_at', 'num_homework',
             'num_homework_completed', 'num_homework_graded',)
 
     def get_num_homework(self, obj) -> int:
@@ -50,4 +65,40 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validate_date_range_and_exceptions(attrs, self.instance, 'group date range')
 
+        template = attrs.get('grade_scale_template')
+        if template is not None and 'grade_scale' not in attrs:
+            attrs['grade_scale'] = gradeutils.preset_grade_scale(template)
+
+        if 'grade_scale' in attrs:
+            attrs['grade_scale_template'] = gradeutils.preset_for(attrs['grade_scale'])
+        elif self.instance is not None:
+            attrs['grade_scale_template'] = gradeutils.preset_for(self.instance.grade_scale)
+        else:
+            attrs.pop('grade_scale_template', None)
+
         return attrs
+
+    def create(self, validated_data):
+        if 'grade_scale' not in validated_data:
+            validated_data['grade_scale'] = _inherited_grade_scale(validated_data['user'])
+            validated_data['grade_scale_template'] = gradeutils.preset_for(validated_data['grade_scale'])
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        previous_grade_scale = instance.grade_scale
+
+        instance = super().update(instance, validated_data)
+
+        if instance.grade_scale != previous_grade_scale:
+            recalculate_course_group_gpa.apply(args=(instance.pk,))
+            instance.refresh_from_db(fields=['gpa'])
+
+        return instance
+
+
+def _inherited_grade_scale(user):
+    most_recent = gradingservice.most_recent_course_group(
+        CourseGroup.objects.for_user(user.pk).filter(example_schedule=False).values('id', 'start_date', 'grade_scale'))
+
+    return gradeutils.default_grade_scale() if most_recent is None else most_recent['grade_scale']

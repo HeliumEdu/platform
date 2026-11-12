@@ -34,8 +34,9 @@ class CourseScheduleRecurrenceGroupSerializer(serializers.Serializer):
     """
     start = TzAwareDateTimeField()
     end = TzAwareDateTimeField()
-    recurrence_rule = serializers.CharField()
-    exception_dates = ExceptionDatesField()
+    recurrence_rule = serializers.CharField(
+        help_text='iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats the class from `start`.')
+    exception_dates = ExceptionDatesField(help_text='List of ISO-8601 datetimes of occurrences to skip (iCal EXDATE).')
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):

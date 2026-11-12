@@ -12,9 +12,10 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import Reminder
 from helium.planner.services import reminderservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, categoryhelper, courseschedulehelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, eventhelper, reminderhelper, courseschedulehelper
 
 
 class TestCaseReminderViews(APITestCase):
@@ -33,8 +34,7 @@ class TestCaseReminderViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_reminders(self):
         user1 = userhelper.given_a_user_exists()
@@ -562,8 +562,7 @@ class TestCaseReminderViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_no_access_object_owned_by_another_user(self):
         # GIVEN
@@ -661,13 +660,7 @@ class TestCaseReminderViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -742,9 +735,7 @@ class TestCaseReminderViews(APITestCase):
     def test_get_reminders_returns_nested_homework_with_category(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         homework = homeworkhelper.given_homework_exists(course, category=category)
         reminder = reminderhelper.given_reminder_exists(user, homework=homework)
 
@@ -768,9 +759,7 @@ class TestCaseReminderViews(APITestCase):
     def test_get_reminder_by_id_returns_nested_homework_with_category(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         homework = homeworkhelper.given_homework_exists(course, category=category)
         reminder = reminderhelper.given_reminder_exists(user, homework=homework)
 
@@ -1104,8 +1093,7 @@ class TestCaseReminderViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_course_push_reminder_fires_and_creates_next_pending(self):
         # GIVEN
@@ -1446,3 +1434,120 @@ class TestCaseReminderViews(APITestCase):
         unsent.refresh_from_db()
         self.assertFalse(unsent.dismissed)
         mock_send_dismiss.apply_async.assert_not_called()
+
+
+class TestCaseRecurringEventReminderViews(APITestCase):
+    @mock.patch('django.utils.timezone.now')
+    def test_delete_reminder_on_recurring_event_deletes_its_whole_series(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        fired = reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        active = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+        other_offset = reminderhelper.given_reminder_exists(user, event=event, offset=60)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': active.pk}))
+        reminderservice.heal_repeating_item_reminders()
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk__in=[fired.pk, active.pk]).exists())
+        self.assertEqual(list(Reminder.objects.filter(event=event).values_list('pk', flat=True)), [other_offset.pk])
+
+    @mock.patch('django.utils.timezone.now')
+    def test_changing_offset_drops_the_old_fired_record_so_heal_cannot_revive_it(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        fired = reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        active = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_reminders_detail', kwargs={'pk': active.pk}),
+                                     json.dumps({'offset': 2, 'offset_type': enums.HOURS}),
+                                     content_type='application/json')
+        reminderservice.heal_repeating_item_reminders()
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Reminder.objects.filter(pk=fired.pk).exists())
+        reminders = list(Reminder.objects.filter(event=event).values_list('pk', 'offset', 'offset_type', 'sent'))
+        self.assertEqual(reminders, [(active.pk, 2, enums.HOURS, False)])
+        self.assertEqual(Reminder.objects.get(pk=active.pk).start_of_range,
+                         datetime.datetime(2030, 5, 13, 5, 0, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_create_duplicate_active_reminder_on_recurring_event_is_rejected(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        recurring = eventhelper.given_weekly_event_exists(user)
+        single = eventhelper.given_event_exists(user, start=datetime.datetime(2030, 6, 1, 7, 0, tzinfo=datetime.timezone.utc),
+                                                end=datetime.datetime(2030, 6, 1, 8, 0, tzinfo=datetime.timezone.utc))
+        payload = {'message': 'Lecture soon', 'type': enums.PUSH, 'offset': 30, 'offset_type': enums.MINUTES}
+        for event in (recurring, single):
+            self.assertEqual(self.client.post(reverse('planner_reminders_list'), {**payload, 'event': event.pk},
+                                              format='json').status_code, status.HTTP_201_CREATED)
+
+        # WHEN
+        recurring_response = self.client.post(reverse('planner_reminders_list'), {**payload, 'event': recurring.pk},
+                                              format='json')
+        single_response = self.client.post(reverse('planner_reminders_list'), {**payload, 'event': single.pk},
+                                           format='json')
+
+        # THEN
+        self.assertEqual(recurring_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('repeating `event`', str(recurring_response.data))
+        self.assertEqual(Reminder.objects.filter(event=recurring).count(), 1)
+        self.assertEqual(single_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reminder.objects.filter(event=single).count(), 2)
+
+
+class TestCaseRecurringHomeworkReminderViews(APITestCase):
+    @mock.patch('django.utils.timezone.now')
+    def test_delete_reminder_on_repeating_homework_deletes_its_whole_series(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(user)
+        fired = reminderhelper.given_reminder_exists(
+            user, homework=homework, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        active = reminderhelper.given_reminder_exists(user, homework=homework, offset=30)
+        other_offset = reminderhelper.given_reminder_exists(user, homework=homework, offset=60)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_reminders_detail', kwargs={'pk': active.pk}))
+        reminderservice.heal_repeating_item_reminders()
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Reminder.objects.filter(pk__in=[fired.pk, active.pk]).exists())
+        self.assertEqual(list(Reminder.objects.filter(homework=homework).values_list('pk', flat=True)),
+                         [other_offset.pk])
+
+    @mock.patch('django.utils.timezone.now')
+    def test_create_duplicate_active_reminder_on_repeating_homework_is_rejected(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(user)
+        payload = {'message': 'Quiz soon', 'type': enums.PUSH, 'offset': 30, 'offset_type': enums.MINUTES,
+                   'homework': homework.pk}
+        self.assertEqual(self.client.post(reverse('planner_reminders_list'), payload, format='json').status_code,
+                         status.HTTP_201_CREATED)
+
+        # WHEN
+        response = self.client.post(reverse('planner_reminders_list'), payload, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('repeating `homework`', str(response.data))
+        self.assertEqual(Reminder.objects.filter(homework=homework).count(), 1)

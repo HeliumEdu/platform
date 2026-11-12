@@ -9,6 +9,8 @@ from rest_framework.test import APITestCase
 
 from helium.auth.models import UserSettings
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
+from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
 
 
@@ -24,8 +26,7 @@ class TestCaseUserViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_user(self):
         # GIVEN
@@ -572,7 +573,7 @@ class TestCaseUserViews(APITestCase):
         self.assertIsNone(user.onboarding_completed_at)
 
         # WHEN
-        response = self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -604,7 +605,7 @@ class TestCaseUserViews(APITestCase):
             return sum(1 for c in mock_timing.call_args_list if c[0][0] == 'onboarding.duration')
 
         # WHEN
-        self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
+        exampleschedulehelper.delete_example_schedule(self.client)
         user.refresh_from_db()
         original_completed_at = user.onboarding_completed_at
         self.assertIsNotNone(original_completed_at)
@@ -618,7 +619,7 @@ class TestCaseUserViews(APITestCase):
         get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=timezone.now())
         self.assertEqual(CourseGroup.objects.filter(user=user, example_schedule=True).count(), 1)
 
-        response = self.client.delete(reverse('auth_user_resource_delete_exampleschedule'))
+        response = exampleschedulehelper.delete_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

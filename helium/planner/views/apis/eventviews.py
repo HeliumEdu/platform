@@ -1,10 +1,9 @@
 import logging
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import filters, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateModelMixin, \
     UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -18,7 +17,8 @@ from helium.planner.filters import EventFilter
 from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.services.eventservice import clone_event
-from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS
+from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, SCOPE_ALL, \
+    SCOPE_THIS, OCCURRENCE_START_PARAMETER, RepeatingItemDetailMixin, occurrence_start_param, scope_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +45,6 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
             )
         else:
             return Event.objects.none()
-
-    def date_range_filter(self, _from, to):
-        recurring_series_started_by_window_end = (Q(start__lte=to, recurrence_rule__isnull=False) &
-                                                  ~Q(recurrence_rule=''))
-        return super().date_range_filter(_from, to) | recurring_series_started_by_window_end
 
     def get_serializer_class(self):
         if self.request and self.request.method == 'GET':
@@ -80,11 +75,8 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
         examples=[
             OpenApiExample(
                 'office_hours',
-                summary='Weekly office-hours event (one occurrence)',
-                description=(
-                    'A single Event occurrence. For recurring events, enumerate one row per '
-                    'occurrence, use the bulk-import path, or clone-and-PATCH a canonical row.'
-                ),
+                summary='Weekly office-hours event',
+                description='Office hours every Wednesday, repeating from `start`.',
                 value={
                     'title': 'Office Hours — Prof. Smith',
                     'all_day': False,
@@ -93,6 +85,7 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
                     'end': '2026-09-23T16:30:00-07:00',
                     'priority': 30,
                     'url': 'https://example.edu/zoom/abc123',
+                    'recurrence_rule': 'FREQ=WEEKLY;BYDAY=WE',
                 },
                 request_only=True,
             ),
@@ -118,8 +111,8 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
 @extend_schema(
     tags=['planner.event']
 )
-class EventsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
-                          DestroyModelMixin):
+class EventsApiDetailView(RepeatingItemDetailMixin, PreconditionMixin, HeliumAPIView, RetrieveModelMixin,
+                          UpdateModelMixin, DestroyModelMixin):
     serializer_class = EventSerializer
     precondition_serializer_class = EventExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner,)
@@ -164,35 +157,42 @@ class EventsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, 
 
         return Response(EventExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(summary='Partially update an Event', parameters=[IF_MATCH_PARAMETER],
-                   responses={200: EventExtendedSerializer})
+    @extend_schema(
+        summary='Partially update an Event',
+        parameters=[
+            IF_MATCH_PARAMETER,
+            scope_parameter(SCOPE_ALL, '`all` updates the Event, and a repeating Event\'s whole series. `this` '
+                                       'makes the occurrence at `occurrence_start` its own Event, with the '
+                                       'series\' reminders, and leaves it out of the series, which keeps its note '
+                                       'and attachments.'),
+            OCCURRENCE_START_PARAMETER,
+        ],
+        responses={200: EventExtendedSerializer},
+    )
     def patch(self, request, *args, **kwargs):
         """
-        Update only the given attributes of the given Helium Event instance.
+        Update only the given attributes of the given Helium Event instance. With `occurrence_start`, `start` / `end`
+        are that occurrence's new times, and the whole series moves with it. With `scope=this`, the response is the
+        new Event.
         """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        logger.info(f"Event {kwargs['pk']} patched for user {request.user.pk}")
-
-        return Response(EventExtendedSerializer(serializer.instance).data)
+        return self.update_in_scope(request, EventExtendedSerializer)
 
     @extend_schema(
         summary='Delete an Event',
-        parameters=[IF_MATCH_PARAMETER],
+        parameters=[
+            IF_MATCH_PARAMETER,
+            scope_parameter(SCOPE_ALL, '`all` deletes the Event, and a repeating Event\'s whole series. `this` '
+                                       'deletes only the occurrence at `occurrence_start`; deleting the last one '
+                                       'deletes the series.'),
+            OCCURRENCE_START_PARAMETER,
+        ],
         tags=['planner.event']
     )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given Helium Event instance.
         """
-        response = self.destroy(request, *args, **kwargs)
-
-        logger.info(f"Event {kwargs['pk']} deleted for user {request.user.pk}")
-
-        return response
+        return self.destroy_in_scope(request, *args, **kwargs)
 
 
 @extend_schema(
@@ -211,21 +211,19 @@ class EventsApiCloneView(HeliumAPIView, RetrieveModelMixin):
     @extend_schema(
         summary='Clone an Event',
         request=None,
+        parameters=[OCCURRENCE_START_PARAMETER],
         responses={
             201: EventExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given event instance, including its reminders. A recurring event (one with a `recurrence_rule`)
-        cannot be cloned yet.
+        Clone the given event instance, including its reminders. A repeating event is cloned at the occurrence at
+        `occurrence_start`, or at its `start` when omitted, and the clone doesn't repeat.
         """
         source = self.get_object()
 
-        if source.recurrence_rule:
-            raise ValidationError("Cloning recurring Events is not yet supported.")
-
-        clone = clone_event(source)
+        clone = clone_event(source, occurrence_start_param(request, required=False))
 
         return Response(EventExtendedSerializer(clone).data, status=status.HTTP_201_CREATED)
 

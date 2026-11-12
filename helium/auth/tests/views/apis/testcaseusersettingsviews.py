@@ -12,12 +12,10 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
+from helium.common.utils import datetimeutils
 from helium.planner.tests.helpers import (coursegrouphelper, coursehelper, eventhelper,
                                           homeworkhelper, reminderhelper)
-
-def _midnight_in_tz_as_utc(date, tz_name):
-    naive = datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
-    return naive.replace(tzinfo=ZoneInfo(tz_name)).astimezone(datetime.timezone.utc)
 
 def _put_time_zone(client, time_zone):
     return client.put(
@@ -38,8 +36,7 @@ class TestCaseUserSettingsViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_three_day_view_can_be_set(self):
         # GIVEN
@@ -76,13 +73,12 @@ class TestCaseUserSettingsViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
-        original_start = _midnight_in_tz_as_utc(
-            datetime.date(2025, 9, 4), 'America/Los_Angeles')
+        original_start = datetimeutils.local_midnight_as_utc(datetime.date(2025, 9, 4), ZoneInfo('America/Los_Angeles'))
         event = eventhelper.given_event_exists(
             user,
             all_day=True,
             start=original_start,
-            end=_midnight_in_tz_as_utc(datetime.date(2025, 9, 5), 'America/Los_Angeles'))
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2025, 9, 5), ZoneInfo('America/Los_Angeles')))
 
         # WHEN
         with mock.patch(
@@ -257,8 +253,8 @@ class TestCaseUserSettingsViews(APITestCase):
             user,
             title='Project 2',
             all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Chicago')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Chicago')),
         )
 
         # WHEN
@@ -268,10 +264,10 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         event.refresh_from_db()
         self.assertEqual(
-            event.start, _midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Los_Angeles')
+            event.start, datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Los_Angeles'))
         )
         self.assertEqual(
-            event.end, _midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Los_Angeles')
+            event.end, datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Los_Angeles'))
         )
         self.assertEqual(event.start.astimezone(ZoneInfo('America/Los_Angeles')).date(),
                          datetime.date(2026, 5, 8))
@@ -282,8 +278,8 @@ class TestCaseUserSettingsViews(APITestCase):
         event = eventhelper.given_event_exists(
             user,
             all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Los_Angeles'),
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Los_Angeles'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Los_Angeles')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Los_Angeles')),
         )
 
         # WHEN
@@ -304,8 +300,8 @@ class TestCaseUserSettingsViews(APITestCase):
             user,
             title='Parents Weekend',
             all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2025, 10, 31), 'America/Chicago'),
-            end=_midnight_in_tz_as_utc(datetime.date(2025, 11, 3), 'America/Chicago'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2025, 10, 31), ZoneInfo('America/Chicago')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2025, 11, 3), ZoneInfo('America/Chicago')),
         )
 
         # WHEN
@@ -345,8 +341,8 @@ class TestCaseUserSettingsViews(APITestCase):
         homework = homeworkhelper.given_homework_exists(
             course,
             all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Chicago')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Chicago')),
         )
 
         # WHEN
@@ -361,11 +357,11 @@ class TestCaseUserSettingsViews(APITestCase):
     def test_timezone_unchanged_does_not_touch_data(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
-        original_start = _midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago')
+        original_start = datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Chicago'))
         event = eventhelper.given_event_exists(
             user, all_day=True,
             start=original_start,
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Chicago')),
         )
 
         # WHEN
@@ -382,8 +378,8 @@ class TestCaseUserSettingsViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Chicago')
         event = eventhelper.given_event_exists(
             user, all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Chicago')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Chicago')),
         )
         reminderhelper.given_reminder_exists(user, event=event)
 
@@ -405,8 +401,8 @@ class TestCaseUserSettingsViews(APITestCase):
         coursehelper.given_course_exists(course_group)
         event = eventhelper.given_event_exists(
             user, all_day=True,
-            start=_midnight_in_tz_as_utc(datetime.date(2026, 5, 8), 'America/Chicago'),
-            end=_midnight_in_tz_as_utc(datetime.date(2026, 5, 9), 'America/Chicago'),
+            start=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 8), ZoneInfo('America/Chicago')),
+            end=datetimeutils.local_midnight_as_utc(datetime.date(2026, 5, 9), ZoneInfo('America/Chicago')),
         )
         reminderhelper.given_reminder_exists(user, event=event)
 

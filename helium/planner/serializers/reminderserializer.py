@@ -100,7 +100,7 @@ class ReminderSerializer(serializers.ModelSerializer):
                     attrs['dismissed'] = False
 
         self._validate_dismissed_requires_sent(attrs)
-        self._validate_one_active_per_course_series(attrs)
+        self._validate_one_active_per_series(attrs)
 
         return attrs
 
@@ -112,9 +112,17 @@ class ReminderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "A reminder cannot be `dismissed` unless it has been `sent`.")
 
-    def _validate_one_active_per_course_series(self, attrs):
+    def _validate_one_active_per_series(self, attrs):
         course = attrs.get('course', getattr(self.instance, 'course', None))
-        if not course:
+        homework = attrs.get('homework', getattr(self.instance, 'homework', None))
+        event = attrs.get('event', getattr(self.instance, 'event', None))
+        if course:
+            parent, label = {'course': course}, '`course`'
+        elif homework and homework.recurrence_rule:
+            parent, label = {'homework': homework}, 'repeating `homework`'
+        elif event and event.recurrence_rule:
+            parent, label = {'event': event}, 'repeating `event`'
+        else:
             return
 
         sent = attrs.get('sent', getattr(self.instance, 'sent', False))
@@ -123,17 +131,17 @@ class ReminderSerializer(serializers.ModelSerializer):
             return
 
         series = Reminder.objects.active().filter(
-            course=course,
             type=attrs.get('type', getattr(self.instance, 'type', None)),
             offset=attrs.get('offset', getattr(self.instance, 'offset', None)),
             offset_type=attrs.get('offset_type', getattr(self.instance, 'offset_type', None)),
+            **parent,
         )
         if self.instance:
             series = series.exclude(pk=self.instance.pk)
 
         if series.exists():
             raise serializers.ValidationError(
-                "An active reminder already exists for this `course`, `type`, `offset` and "
+                f"An active reminder already exists for this {label}, `type`, `offset` and "
                 "`offset_type`.")
 
 

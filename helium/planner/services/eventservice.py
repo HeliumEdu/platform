@@ -1,20 +1,28 @@
 import logging
 
 from helium.planner.models import Event
+from helium.planner.services.recurrenceservice import find_occurrence
 from helium.planner.services.reminderservice import clone_reminders
 from helium.planner.utils.cloneutils import next_clone_title
 
 logger = logging.getLogger(__name__)
 
 
-def clone_event(source):
-    """Clone an Event with its reminders; ``owner_id`` / ``example_schedule`` are not copied."""
+def clone_event(source, occurrence_start=None):
+    """
+    Clone an Event with its reminders as a single Event; ``owner_id`` / ``example_schedule`` and the recurrence
+    rule are not copied. With ``occurrence_start``, the clone takes that occurrence's times.
+    """
+    start, end = source.start, source.end
+    if occurrence_start is not None:
+        start, end = find_occurrence(source, occurrence_start)
+
     clone = Event.objects.create(
         title=next_clone_title(source.title),
         all_day=source.all_day,
         show_end_time=source.show_end_time,
-        start=source.start,
-        end=source.end,
+        start=start,
+        end=end,
         priority=source.priority,
         url=source.url,
         user=source.user,

@@ -522,6 +522,10 @@ def emit_nightly_metrics(self):
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ).filter(_changed_since_example_import('course__course_group__user')))),
+                    ('gpa', Exists(CourseGroup.objects.filter(
+                        user=OuterRef('pk'),
+                        example_schedule=False,
+                    ).exclude(gpa=-1).filter(_changed_since_example_import('user')))),
                     ('external_calendars', Exists(ExternalCalendar.objects.filter(
                         user=OuterRef('pk'),
                         example_schedule=False,

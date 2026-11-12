@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 
 
 class TestCasePrivateFeedResourceViews(APITestCase):
@@ -17,8 +18,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_enable_private_url(self):
         # GIVEN

@@ -3,6 +3,7 @@ import datetime
 from dateutil import parser
 
 from helium.planner.models import Course
+from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, homeworkhelper
 
 
 def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', credits=0, color='#4986e7',
@@ -22,6 +23,27 @@ def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', 
                                    course_group=course_group)
 
     return course
+
+
+def given_course_with_category_exists(user, course_group_kwargs=None, course_kwargs=None, category_kwargs=None):
+    course_group = coursegrouphelper.given_course_group_exists(user, **(course_group_kwargs or {}))
+    course = given_course_exists(course_group, **(course_kwargs or {}))
+    category = categoryhelper.given_category_exists(course, **(category_kwargs or {}))
+
+    return course_group, course, category
+
+
+def given_graded_course_exists(course_group, grade, credits=0):
+    course = given_course_exists(course_group, credits=credits)
+    category = categoryhelper.given_category_exists(course)
+    homeworkhelper.given_homework_exists(course, category=category, completed=True, current_grade=f'{grade}/100')
+
+    return course
+
+
+def given_weekly_homework_in_a_new_course_exists(user, **kwargs):
+    course = given_course_exists(coursegrouphelper.given_course_group_exists(user))
+    return homeworkhelper.given_weekly_homework_exists(course, **kwargs)
 
 
 def verify_course_matches_data(test_case, course, data):

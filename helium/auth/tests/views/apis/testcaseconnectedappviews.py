@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import oauthhelper, userhelper
+from helium.common.tests.helpers import commonhelper
 
 
 def given_a_connected_app(user, name, token, scope='planner:read planner:import', expires_in=timedelta(hours=1)):
@@ -28,8 +29,7 @@ class TestCaseConnectedAppViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_connected_apps(self):
         # GIVEN
@@ -48,7 +48,8 @@ class TestCaseConnectedAppViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(['Study App', 'Claude'], [app['name'] for app in response.data])
         self.assertEqual([{'scope': 'planner:read',
-                           'description': 'Read your assignments, events, notes, classes, resources, and grades'}],
+                           'description': 'Read your assignments, events, classes, resources, and grades',
+                           'required': True}],
                          response.data[0]['scopes'])
         self.assertIsNotNone(response.data[0]['last_used_at'])
 
@@ -96,8 +97,7 @@ class TestCaseConnectedAppViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
         self.assertTrue(get_access_token_model().objects.filter(application=not_mine).exists())
 
     def test_an_oauth_token_cannot_manage_connected_apps(self):
@@ -113,6 +113,5 @@ class TestCaseConnectedAppViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(get_access_token_model().objects.filter(application=claude).exists())

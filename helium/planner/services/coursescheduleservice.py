@@ -12,7 +12,6 @@ from helium.common import enums
 from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.course_exception_helpers import get_course_exceptions
-from helium.common.utils.validators import WEEKDAY_TO_ICAL
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import GeneratedEventSerializer
 
@@ -428,7 +427,7 @@ def _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window):
             for exception in sorted_exceptions
         ]
 
-        byday = ','.join(WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
+        byday = ','.join(enums.WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
         recurrence_rule = f'FREQ=WEEKLY;BYDAY={byday};UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}'
 
         groups.append(CourseScheduleRecurrenceGroup(
@@ -466,7 +465,7 @@ def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
                     index_by_weekday[day] = (school_days - 1) % course_schedule.cycle_length + 1
         day += datetime.timedelta(days=1)
 
-    byday = ','.join(WEEKDAY_TO_ICAL[weekday] for weekday in _SCHOOL_WEEKDAYS)
+    byday = ','.join(enums.WEEKDAY_TO_ICAL[weekday] for weekday in _SCHOOL_WEEKDAYS)
 
     for slot in course_schedule.cycle_slots:
         indices = set(slot['indices'])
@@ -537,7 +536,7 @@ def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
             for exception in sorted_exceptions
         ]
 
-        byday = ','.join(WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
+        byday = ','.join(enums.WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
         recurrence_rule = (f'FREQ=WEEKLY;INTERVAL={_WEEK_ROTATION_INTERVAL};BYDAY={byday};'
                            f'UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}')
 

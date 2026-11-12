@@ -1,5 +1,6 @@
 import datetime
 from dataclasses import asdict
+from zoneinfo import ZoneInfo
 
 from django.test import TestCase
 
@@ -13,9 +14,7 @@ class TestCaseGradingService(TestCase):
     def test_trend_positive(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
@@ -42,9 +41,7 @@ class TestCaseGradingService(TestCase):
     def test_trend_negative(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category, completed=True,
@@ -71,9 +68,7 @@ class TestCaseGradingService(TestCase):
     def test_unweighted_grade_unchanged(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         homeworkhelper.given_homework_exists(course, category=category, current_grade='-1/100')
@@ -180,9 +175,7 @@ class TestCaseGradingService(TestCase):
     def test_unweighted_grade_imbalanced(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
 
@@ -212,9 +205,7 @@ class TestCaseGradingService(TestCase):
     def test_unweighted_incomplete_not_graded(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         categoryhelper.given_category_exists(course, title='Test Category 2')
 
         # WHEN
@@ -256,9 +247,7 @@ class TestCaseGradingService(TestCase):
     def test_unweighted_course_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
 
         # WHEN
@@ -330,9 +319,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=60)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=10)
 
@@ -410,9 +398,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_group_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=60)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=10)
 
@@ -588,9 +575,7 @@ class TestCaseGradingService(TestCase):
     def test_unweighted_course_homework_series(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -668,9 +653,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_homework_series_1(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -719,9 +703,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_homework_series_2(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -799,9 +782,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_homework_series_total_not_100(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         homework1 = homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                          start=datetime.datetime(2017, 4, 8, 20, 0, tzinfo=datetime.timezone.utc),
@@ -839,9 +821,8 @@ class TestCaseGradingService(TestCase):
     def test_category_changed_deleted_weighted_grade_changes(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, weight=30)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 30})
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=50)
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3', weight=20)
         homeworkhelper.given_homework_exists(course, category=category1, completed=True,
@@ -924,9 +905,8 @@ class TestCaseGradingService(TestCase):
                 # GIVEN
                 user = userhelper.given_a_user_exists(username=lose_last_graded_homework.__name__,
                                                       email=f'{lose_last_graded_homework.__name__}@test.com')
-                course_group = coursegrouphelper.given_course_group_exists(user)
-                course = coursehelper.given_course_exists(course_group)
-                category1 = categoryhelper.given_category_exists(course, weight=40)
+                course_group, course, category1 = coursehelper.given_course_with_category_exists(
+                    user, category_kwargs={'weight': 40})
                 category2 = categoryhelper.given_category_exists(course, title='Test Category 2', weight=60)
                 homeworkhelper.given_homework_exists(course, category=category1, completed=True,
                                                      current_grade='50/100')
@@ -947,9 +927,8 @@ class TestCaseGradingService(TestCase):
     def test_weighted_course_grade_weights_categories_not_assignments(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        homework_category = categoryhelper.given_category_exists(course, weight=20)
+        course_group, course, homework_category = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 20})
         exams_category = categoryhelper.given_category_exists(course, title='Exams', weight=80)
 
         # WHEN
@@ -971,9 +950,8 @@ class TestCaseGradingService(TestCase):
     def test_pending_impact_uses_category_points_model(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        homework_category = categoryhelper.given_category_exists(course, weight=20)
+        course_group, course, homework_category = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 20})
         exams_category = categoryhelper.given_category_exists(course, title='Exams', weight=60)
         for _ in range(10):
             homeworkhelper.given_homework_exists(course, category=homework_category, completed=True,
@@ -1027,9 +1005,8 @@ class TestCaseGradingService(TestCase):
     def test_grade_data_exposes_category_point_totals(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        graded_category = categoryhelper.given_category_exists(course, weight=60)
+        course_group, course, graded_category = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'weight': 60})
         homeworkhelper.given_homework_exists(course, category=graded_category, completed=True, current_grade='40/50')
         homeworkhelper.given_homework_exists(course, category=graded_category, completed=True, current_grade='5/0')
         homeworkhelper.given_homework_exists(course, category=graded_category, completed=False,
@@ -1167,9 +1144,7 @@ class TestCaseGradingService(TestCase):
     def test_poisoned_zero_denominator_skipped(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         homeworkhelper.given_homework_exists(course, category=category, completed=True, current_grade='80/100')
         poisoned = homeworkhelper.given_homework_exists(course, category=category, completed=True,
                                                        current_grade='50/100')
@@ -1187,6 +1162,36 @@ class TestCaseGradingService(TestCase):
         self.assertEqual(float(category.average_grade), 80)
         self.assertEqual(float(course.current_grade), 80)
         self.assertEqual(float(course_group.overall_grade), 80)
+
+    def test_grade_data_counts_each_remaining_occurrence_of_a_repeating_homework(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
+        first = datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz)
+        series = homeworkhelper.given_weekly_homework_exists(
+            course, category=category, start=first, recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+            exception_dates=['2030-05-13T07:00:00Z'])
+        broken_out = homeworkhelper.given_homework_exists(
+            course, category=category, completed=True, current_grade='80/100',
+            start=first + datetime.timedelta(weeks=1), end=first + datetime.timedelta(weeks=1, hours=1))
+
+        # WHEN
+        grade_data = gradingservice.get_grade_data(user.pk)
+
+        # THEN
+        course_group_data = grade_data['course_groups'][0]
+        course_data = course_group_data['courses'][0]
+        category_data = course_data['categories'][0]
+        for holder in (course_data, category_data):
+            self.assertEqual((holder['num_homework'], holder['num_homework_completed'], holder['num_homework_graded']),
+                             (4, 1, 1))
+        self.assertEqual(course_group_data['num_homework'], 4)
+        self.assertEqual([(item.id, item.start, item.graded) for item in course_data['homework_series']],
+                         [(series.pk, first, False),
+                          (broken_out.pk, broken_out.start, True),
+                          (series.pk, first + datetime.timedelta(weeks=2), False),
+                          (series.pk, first + datetime.timedelta(weeks=3), False)])
 
     def test_build_ungraded_series_items_empty(self):
         # GIVEN / WHEN

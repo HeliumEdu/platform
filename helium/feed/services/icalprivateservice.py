@@ -198,11 +198,11 @@ def _to_vevent(user, item):
     return calendar_event
 
 
-def _add_recurrence(calendar_event, event):
-    calendar_event.add('RRULE', icalendar.vRecur.from_ical(event.recurrence_rule))
-    if event.exception_dates:
-        exception_dates = [timezone.localtime(datetime.datetime.fromisoformat(iso)) for iso in event.exception_dates]
-        calendar_event.add('EXDATE', [d.date() for d in exception_dates] if event.all_day else exception_dates)
+def _add_recurrence(calendar_event, item):
+    calendar_event.add('RRULE', icalendar.vRecur.from_ical(item.recurrence_rule))
+    if item.exception_dates:
+        exception_dates = [timezone.localtime(datetime.datetime.fromisoformat(iso)) for iso in item.exception_dates]
+        calendar_event.add('EXDATE', [d.date() for d in exception_dates] if item.all_day else exception_dates)
 
 
 def events_to_private_ical_feed(user):
@@ -245,6 +245,8 @@ def homework_to_private_ical_feed(user):
         homework_shown = Homework.objects.for_user(user.pk).filter(course__course_group__shown_on_calendar=True)
         for homework in homework_shown.select_related('category', 'course').prefetch_related('resources', 'notes_set'):
             calendar_event = _to_vevent(user, homework)
+            if homework.recurrence_rule:
+                _add_recurrence(calendar_event, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
             calendar.add_component(calendar_event)

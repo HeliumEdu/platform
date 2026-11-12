@@ -6,6 +6,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common import enums
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.handlers.signals import suppress_cascade_recalculation
@@ -31,7 +32,7 @@ class UserCoursesApiListView(HeliumAPIView, ListModelMixin):
             return Course.objects.for_user(user.pk).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), distinct=True),
                 annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:
@@ -60,7 +61,7 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), distinct=True),
                 annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:
@@ -149,7 +150,7 @@ class CourseGroupCoursesApiDetailView(PreconditionMixin, HeliumAPIView, Retrieve
             return Course.objects.for_user(user.pk).for_course_group(self.kwargs['course_group']).select_related('course_group__user__settings').prefetch_related('schedules', 'notes_set').annotate(
                 annotated_num_homework=Count('homework', distinct=True),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), distinct=True),
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), distinct=True),
                 annotated_has_weighted_grading=Exists(Category.objects.filter(course_id=OuterRef('pk'), weight__gt=0))
             )
         else:

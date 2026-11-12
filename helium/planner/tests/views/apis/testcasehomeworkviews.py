@@ -1,6 +1,7 @@
 import datetime
 import json
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 from dateutil import parser
 from django.urls import reverse
@@ -10,9 +11,11 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
+from helium.common.utils import datetimeutils
 from helium.planner.models import Homework, Reminder
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper, categoryhelper, \
-    resourcegrouphelper, resourcehelper, reminderhelper
+from helium.planner.tests.helpers import attachmenthelper, coursegrouphelper, coursehelper, homeworkhelper, \
+    categoryhelper, notehelper, occurrencehelper, resourcegrouphelper, resourcehelper, reminderhelper
 
 
 class TestCaseHomeworkViews(APITestCase):
@@ -38,8 +41,7 @@ class TestCaseHomeworkViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_homework_carries_its_course_group_id(self):
         # GIVEN
@@ -124,9 +126,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_create_homework(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource = resourcehelper.given_resource_exists(resource_group)
 
@@ -236,9 +236,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_clone_homework_copies_fields_resources_and_reminders(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource = resourcehelper.given_resource_exists(resource_group)
         source = homeworkhelper.given_homework_exists(course, title='Quiz', category=category,
@@ -337,9 +335,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_create_converts_to_utc(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         data = {
@@ -369,9 +365,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_create_rejects_naive_datetime(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/New_York')
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         data = {
@@ -416,9 +410,7 @@ class TestCaseHomeworkViews(APITestCase):
     def test_update_homework_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource1 = resourcehelper.given_resource_exists(resource_group)
@@ -580,8 +572,7 @@ class TestCaseHomeworkViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_no_access_object_owned_by_another_user(self):
         # GIVEN
@@ -863,9 +854,8 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_category_search_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course, title='testcategory')
+        course_group, course, category = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'title': 'testcategory'})
         homework = homeworkhelper.given_homework_exists(course, title='test1', category=category)
         homeworkhelper.given_homework_exists(course, title='test2')
 
@@ -877,9 +867,8 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_filter_category_ids(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, title='category1')
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'title': 'category1'})
         category2 = categoryhelper.given_category_exists(course, title='category2')
         category3 = categoryhelper.given_category_exists(course, title='category3')
         homework1 = homeworkhelper.given_homework_exists(course, title='test1', category=category1)
@@ -896,9 +885,8 @@ class TestCaseHomeworkViews(APITestCase):
 
     def test_filter_category_titles(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course, title='category,1')
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'title': 'category,1'})
         category2 = categoryhelper.given_category_exists(course, title='category,2')
         category3 = categoryhelper.given_category_exists(course, title='category,3')
         homework1 = homeworkhelper.given_homework_exists(course, title='test1', category=category1)
@@ -1127,3 +1115,403 @@ class TestCaseHomeworkViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+
+class TestCaseHomeworkOccurrenceViews(APITestCase):
+    def test_create_open_ended_repeating_homework_ends_at_the_class_last_day_in_the_user_zone(self):
+        cases = (
+            ('Europe/Amsterdam', datetime.datetime(2030, 5, 7, 0, 30), 'FREQ=WEEKLY;BYDAY=TU',
+             'FREQ=WEEKLY;BYDAY=TU;UNTIL=20300603T215959Z', [datetime.date(2030, 5, day) for day in (7, 14, 21, 28)]),
+            ('America/Los_Angeles', datetime.datetime(2030, 5, 6, 23, 0), 'FREQ=WEEKLY;BYDAY=MO',
+             'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300604T065959Z',
+             [*(datetime.date(2030, 5, day) for day in (6, 13, 20, 27)), datetime.date(2030, 6, 3)]),
+        )
+        for index, (zone, local_start, rule, expected_rule, expected_dates) in enumerate(cases):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                course_group, course, category = _given_course(user)
+                start = local_start.replace(tzinfo=tz)
+
+                # WHEN
+                response = _post(self.client, course_group, course, {
+                    **_homework_data(course, category, start), 'recurrence_rule': rule})
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+                self.assertEqual(Homework.objects.filter(course=course).count(), 1)
+                homework = Homework.objects.get(pk=response.data['id'])
+                self.assertEqual(homework.recurrence_rule, expected_rule)
+                self.assertEqual(response.data['recurrence_rule'], expected_rule)
+                self.assertEqual([occurrence_start.astimezone(tz).date() for occurrence_start, _ in homework.occurrences()],
+                                 expected_dates)
+
+    def test_create_repeating_homework_beyond_the_occurrence_cap_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user, end_date=datetime.date(2032, 1, 1))
+        start = datetime.datetime(2030, 5, 6, 9, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+
+        # WHEN
+        response = _post(self.client, course_group, course, {
+            **_homework_data(course, category, start), 'recurrence_rule': 'FREQ=DAILY'})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['recurrence_rule'], 'It repeats more than 366 times.')
+        self.assertFalse(Homework.objects.exists())
+
+    def test_create_repeating_homework_with_no_dates_by_the_class_last_day_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        start = datetime.datetime(2030, 6, 10, 9, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+
+        # WHEN
+        response = _post(self.client, course_group, course, {
+            **_homework_data(course, category, start), 'recurrence_rule': 'FREQ=WEEKLY;BYDAY=MO'})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['recurrence_rule'], "It has no dates by the class's last day.")
+        self.assertFalse(Homework.objects.exists())
+
+    def test_create_repeating_homework_completed_or_graded_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        start = datetime.datetime(2030, 5, 6, 9, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        cases = ({'completed': True}, {'current_grade': '90/100'})
+
+        for overrides in cases:
+            with self.subTest(overrides=overrides):
+                # WHEN
+                response = _post(self.client, course_group, course, {
+                    **_homework_data(course, category, start), 'recurrence_rule': 'FREQ=WEEKLY;BYDAY=MO',
+                    **overrides})
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn("A repeating Homework isn't completed or graded itself", str(response.data))
+                self.assertFalse(Homework.objects.exists())
+
+    def test_patch_all_completing_or_grading_a_repeating_homework_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        cases = ({'completed': True}, {'current_grade': '90/100'})
+
+        for body in cases:
+            with self.subTest(body=body):
+                # WHEN
+                response = _patch(self.client, series, body, 'scope=all')
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn("A repeating Homework isn't completed or graded itself", str(response.data))
+                series.refresh_from_db()
+                self.assertFalse(series.completed)
+                self.assertEqual(series.current_grade, '-1/100')
+                self.assertIsNone(series.exception_dates)
+                self.assertEqual(Homework.objects.count(), 1)
+
+    def test_patch_this_occurrence_completes_and_grades_it_as_its_own_homework(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        resource = resourcehelper.given_resource_exists(resourcegrouphelper.given_resource_group_exists(user))
+        series = _given_weekly_series(course, category, resources=[resource])
+        reminderhelper.given_reminder_exists(user, homework=series, offset=30, message='Quiz soon')
+        occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _patch(self.client, series, {'completed': True, 'current_grade': '90/100'},
+                          occurrencehelper.occurrence_query(occurrence))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        detached = Homework.objects.get(pk=response.data['id'])
+        self.assertNotEqual(detached.pk, series.pk)
+        self.assertEqual(detached.title, 'Weekly quiz')
+        self.assertEqual(detached.start, occurrence)
+        self.assertEqual(detached.end, occurrence + datetime.timedelta(hours=1))
+        self.assertIsNone(detached.recurrence_rule)
+        self.assertTrue(detached.completed)
+        self.assertEqual(detached.current_grade, '90/100')
+        self.assertEqual(detached.course_id, course.pk)
+        self.assertEqual(detached.category_id, category.pk)
+        self.assertEqual(list(detached.resources.values_list('pk', flat=True)), [resource.pk])
+        reminder = detached.reminders.get()
+        self.assertEqual((reminder.message, reminder.offset, reminder.sent), ('Quiz soon', 30, False))
+        self.assertEqual(reminder.start_of_range, occurrence - datetime.timedelta(minutes=30))
+        series.refresh_from_db()
+        self.assertEqual(series.exception_dates, [datetimeutils.as_utc_iso(occurrence)])
+        self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z')
+        self.assertEqual(series.start, datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz))
+        self.assertFalse(series.completed)
+        self.assertEqual(series.current_grade, '-1/100')
+        self.assertEqual(series.title, 'Weekly quiz')
+        course.refresh_from_db()
+        category.refresh_from_db()
+        self.assertEqual(float(category.average_grade), 90.0)
+        self.assertEqual(float(course.current_grade), 90.0)
+
+    def test_patch_this_last_remaining_occurrence_hands_note_and_attachments_over(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        first = datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz)
+        series = _given_weekly_series(course, category, rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2',
+                                      exception_dates=[datetimeutils.as_utc_iso(first)])
+        attachment = attachmenthelper.given_attachment_exists(user, homework=series)
+        note = notehelper.given_note_linked_to_homework(user, series)
+        last = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _patch(self.client, series, {'completed': True}, occurrencehelper.occurrence_query(last))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertFalse(Homework.objects.filter(pk=series.pk).exists())
+        detached = Homework.objects.get(pk=response.data['id'])
+        self.assertEqual(detached.start, last)
+        self.assertTrue(detached.completed)
+        self.assertEqual(list(note.homework.all()), [detached])
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.homework_id, detached.pk)
+
+    def test_patch_this_with_a_recurrence_change_returns_400(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+        cases = ({'recurrence_rule': 'FREQ=WEEKLY;BYDAY=TU'}, {'exception_dates': []})
+
+        for body in cases:
+            with self.subTest(body=body):
+                # WHEN
+                response = _patch(self.client, series, body, occurrencehelper.occurrence_query(occurrence))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(response.data['scope'], 'A repeat changes with `scope=all`.')
+                self.assertEqual(Homework.objects.count(), 1)
+                series.refresh_from_db()
+                self.assertIsNone(series.exception_dates)
+                self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z')
+
+    def test_patch_from_an_occurrence_moves_the_whole_series(self):
+        cases = (
+            ('Europe/Amsterdam', 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z',
+             'FREQ=WEEKLY;BYDAY=TU;UNTIL=20300604T232959Z'),
+            ('America/Los_Angeles', 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300604T065959Z',
+             'FREQ=WEEKLY;BYDAY=TU;UNTIL=20300605T082959Z'),
+        )
+        for index, (zone, rule, expected_rule) in enumerate(cases):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                course_group, course, category = _given_course(user)
+                series = _given_weekly_series(
+                    course, category, rule=rule, start=datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz),
+                    exception_dates=[datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 27, 9, 0, tzinfo=tz))])
+                occurrence = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+                moved = datetime.datetime(2030, 5, 14, 10, 30, tzinfo=tz)
+
+                # WHEN
+                response = _patch(self.client, series, {'start': moved.isoformat(),
+                                                        'end': (moved + datetime.timedelta(hours=2)).isoformat()},
+                                  occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+                self.assertEqual(response.data['id'], series.pk)
+                series.refresh_from_db()
+                self.assertEqual(series.start, datetime.datetime(2030, 5, 7, 10, 30, tzinfo=tz))
+                self.assertEqual(series.end - series.start, datetime.timedelta(hours=2))
+                self.assertEqual(series.recurrence_rule, expected_rule)
+                self.assertEqual(series.exception_dates,
+                                 [datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 28, 10, 30, tzinfo=tz))])
+                self.assertEqual([start.astimezone(tz).date() for start, _ in series.occurrences()],
+                                 [datetime.date(2030, 5, 7), datetime.date(2030, 5, 14), datetime.date(2030, 5, 21),
+                                  datetime.date(2030, 6, 4)])
+                self.assertEqual(Homework.objects.filter(course=course).count(), 1)
+
+    def test_delete_this_occurrence_leaves_it_out_of_the_series(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        occurrence = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _delete(self.client, series, occurrencehelper.occurrence_query(occurrence))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        series.refresh_from_db()
+        self.assertEqual(series.exception_dates, [datetimeutils.as_utc_iso(occurrence)])
+        self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z')
+        self.assertEqual(len(list(series.occurrences())), 4)
+
+    def test_delete_this_last_remaining_occurrence_deletes_the_series(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(
+            course, category, rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2',
+            exception_dates=[datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz))])
+
+        # WHEN
+        response = _delete(self.client, series, occurrencehelper.occurrence_query('2030-05-13T07:00:00Z'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Homework.objects.filter(pk=series.pk).exists())
+
+    def test_delete_all_deletes_the_series_but_keeps_broken_out_homework(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        occurrence = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+        detached_id = _patch(self.client, series, {'completed': True},
+                             occurrencehelper.occurrence_query(occurrence)).data['id']
+
+        # WHEN
+        response = _delete(self.client, series, 'scope=all')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Homework.objects.filter(pk=series.pk).exists())
+        self.assertEqual(list(Homework.objects.values_list('pk', 'start', 'completed')),
+                         [(detached_id, occurrence, True)])
+
+    def test_range_query_includes_a_series_that_started_before_the_window(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        homeworkhelper.given_homework_exists(course, title='Before the window',
+                                             start=datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz),
+                                             end=datetime.datetime(2030, 5, 6, 10, 0, tzinfo=tz))
+        homeworkhelper.given_homework_exists(course, title='Series after the window',
+                                             start=datetime.datetime(2030, 6, 3, 9, 0, tzinfo=tz),
+                                             end=datetime.datetime(2030, 6, 3, 10, 0, tzinfo=tz),
+                                             recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2')
+
+        # WHEN
+        response = self.client.get(reverse('planner_homework_list') +
+                                   f"?from={quote('2030-05-20T00:00:00Z')}&to={quote('2030-05-21T00:00:00Z')}")
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([(item['id'], item['recurrence_rule']) for item in response.data],
+                         [(series.pk, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z')])
+
+    def test_clone_repeating_homework_at_an_occurrence_returns_a_single_homework_there(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+        occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _clone(self.client, series, occurrence)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        clone = Homework.objects.get(pk=response.data['id'])
+        self.assertEqual(clone.title, 'Weekly quiz 1')
+        self.assertIsNone(clone.recurrence_rule)
+        self.assertIsNone(clone.exception_dates)
+        self.assertEqual(clone.start, occurrence)
+        self.assertEqual(clone.end, occurrence + datetime.timedelta(hours=1))
+        self.assertEqual(clone.category_id, category.pk)
+        series.refresh_from_db()
+        self.assertIsNone(series.exception_dates)
+
+    def test_clone_repeating_homework_at_a_non_occurrence_returns_400(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        course_group, course, category = _given_course(user)
+        series = _given_weekly_series(course, category)
+
+        # WHEN
+        response = _clone(self.client, series, datetime.datetime(2030, 5, 21, 9, 0, tzinfo=tz))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['occurrence_start'], 'Not an occurrence of this assignment.')
+        self.assertEqual(Homework.objects.count(), 1)
+
+
+def _given_course(user, end_date=datetime.date(2030, 6, 3)):
+    return coursehelper.given_course_with_category_exists(
+        user, course_group_kwargs={'start_date': datetime.date(2030, 5, 1), 'end_date': end_date},
+        course_kwargs={'start_date': datetime.date(2030, 5, 1), 'end_date': end_date})
+
+
+def _given_weekly_series(course, category, rule='FREQ=WEEKLY;BYDAY=MO;UNTIL=20300603T215959Z', start=None,
+                         exception_dates=None, resources=None):
+    return homeworkhelper.given_weekly_homework_exists(
+        course, title='Weekly quiz', category=category,
+        start=start or datetime.datetime(2030, 5, 6, 9, 0, tzinfo=ZoneInfo('Europe/Amsterdam')),
+        recurrence_rule=rule, exception_dates=exception_dates, resources=resources)
+
+
+def _homework_data(course, category, start):
+    return {
+        'title': 'Weekly quiz',
+        'all_day': False,
+        'show_end_time': False,
+        'start': start.isoformat(),
+        'end': (start + datetime.timedelta(hours=1)).isoformat(),
+        'priority': 50,
+        'current_grade': '-1/100',
+        'completed': False,
+        'category': category.pk,
+        'course': course.pk,
+    }
+
+
+def _post(client, course_group, course, data):
+    return client.post(reverse('planner_coursegroups_courses_homework_list',
+                               kwargs={'course_group': course_group.pk, 'course': course.pk}),
+                       json.dumps(data), content_type='application/json')
+
+
+def _detail_url(homework):
+    return reverse('planner_coursegroups_courses_homework_detail',
+                   kwargs={'course_group': homework.course.course_group_id, 'course': homework.course_id,
+                           'pk': homework.pk})
+
+
+def _patch(client, homework, data, query):
+    return client.patch(f'{_detail_url(homework)}?{query}', json.dumps(data), content_type='application/json')
+
+
+def _delete(client, homework, query):
+    return client.delete(f'{_detail_url(homework)}?{query}')
+
+
+def _clone(client, homework, occurrence_start):
+    return client.post(reverse('planner_coursegroups_courses_homework_clone',
+                               kwargs={'course_group': homework.course.course_group_id,
+                                       'course': homework.course_id, 'pk': homework.pk}) +
+                       f'?{occurrencehelper.occurrence_query(occurrence_start, scope=None)}')

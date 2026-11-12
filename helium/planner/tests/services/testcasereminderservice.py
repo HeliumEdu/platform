@@ -11,7 +11,7 @@ from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.planner.models import Course, CourseSchedule, Reminder
 from helium.planner.services import reminderservice
-from helium.planner.tasks import email_reminders
+from helium.planner.tasks import adjust_reminder_times, email_reminders
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper, reminderhelper
 
 
@@ -158,9 +158,8 @@ class TestCaseReminderService(TestCase):
             with self.subTest(zone=zone_name):
                 # GIVEN
                 mock_send_notifications.reset_mock()
-                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
-                user.settings.time_zone = zone_name
-                user.settings.save()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
                 userhelper.given_user_push_token_exists(user)
                 local_midnight = datetime.datetime(2017, 5, 8, tzinfo=ZoneInfo(zone_name))
                 event = eventhelper.given_event_exists(user, all_day=True, start=local_midnight,
@@ -980,3 +979,247 @@ class TestCaseReminderService(TestCase):
         # THEN
         self.assertFalse(Reminder.objects.filter(pk=dismissed_past.pk).exists())
         self.assertTrue(Reminder.objects.filter(pk=just_fired.pk).exists())
+
+
+class TestCaseRecurringEventReminderService(TestCase):
+    @mock.patch('helium.common.tasks.send_notifications')
+    @mock.patch('django.utils.timezone.now')
+    def test_firing_arms_the_next_occurrence_and_keeps_one_past_record(self, mock_now, mock_send_notifications):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_weekly_event_exists(user)
+        older = reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 4, 29, 6, 30, tzinfo=datetime.timezone.utc))
+        other_offset = reminderhelper.given_reminder_exists(
+            user, event=event, offset=60, sent=True,
+            start_of_range=datetime.datetime(2030, 4, 29, 6, 0, tzinfo=datetime.timezone.utc))
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 35, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_notifications.assert_called_once()
+        self.assertEqual(mock_send_notifications.call_args[0][2], 'You need to do something now. · Mon, 9 AM')
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.sent)
+        self.assertFalse(Reminder.objects.filter(pk=older.pk).exists())
+        self.assertTrue(Reminder.objects.filter(pk=other_offset.pk).exists())
+        successor = Reminder.objects.get(event=event, offset=30, sent=False)
+        self.assertEqual(successor.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+        self.assertEqual(successor.message, reminder.message)
+        self.assertEqual(successor.type, enums.PUSH)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    @mock.patch('django.utils.timezone.now')
+    def test_firing_the_last_occurrence_queues_no_successor(self, mock_now, mock_send_notifications):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 4, 8, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_weekly_event_exists(user, recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2')
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+        mock_now.return_value = datetime.datetime(2030, 4, 8, 6, 35, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_notifications.assert_called_once()
+        self.assertEqual(list(Reminder.objects.filter(event=event).values_list('pk', 'sent')), [(reminder.pk, True)])
+
+    @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
+    @mock.patch('django.utils.timezone.now')
+    def test_email_shows_the_occurrence_time_rather_than_the_series_start(self, mock_now, mock_send_multipart_email):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 13, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30, type=enums.EMAIL)
+        mock_now.return_value = datetime.datetime(2030, 5, 13, 6, 35, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        reminderservice.process_email_reminder(reminder.pk)
+
+        # THEN
+        mock_send_multipart_email.assert_called_once()
+        self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
+                         'Mon, May 13 at 9:00 AM to Mon, May 13 at 10:00 AM')
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_rearms_a_series_whose_successor_is_missing(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        fired = reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        reminderservice.heal_repeating_item_reminders()
+
+        # THEN
+        successor = Reminder.objects.get(event=event, sent=False)
+        self.assertEqual(successor.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+        self.assertEqual(successor.offset, fired.offset)
+        self.assertEqual(Reminder.objects.filter(event=event).count(), 2)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_leaves_an_armed_series_alone(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        armed = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+        # WHEN
+        reminderservice.heal_repeating_item_reminders()
+
+        # THEN
+        self.assertEqual(list(Reminder.objects.filter(event=event, sent=False).values_list('pk', flat=True)),
+                         [armed.pk])
+        self.assertEqual(Reminder.objects.filter(event=event).count(), 2)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_for_one_event_revives_a_series_older_than_the_periodic_lookback(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2028, 5, 1, 6, 30, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        reminderservice.heal_repeating_item_reminders()
+        periodic_count = Reminder.objects.filter(event=event, sent=False).count()
+        reminderservice.heal_repeating_item_reminders(event_id=event.pk)
+
+        # THEN
+        self.assertEqual(periodic_count, 0)
+        self.assertEqual(Reminder.objects.get(event=event, sent=False).start_of_range,
+                         datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_adjust_reminder_times_rearms_a_series_after_its_rule_is_extended(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user, recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=6')
+        reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        event.recurrence_rule = 'FREQ=WEEKLY;BYDAY=MO;COUNT=8'
+        event.save()
+
+        # WHEN
+        adjust_reminder_times(event.pk, enums.EVENT)
+
+        # THEN
+        self.assertEqual(Reminder.objects.get(event=event, sent=False).start_of_range,
+                         datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_clone_reminders_from_a_recurring_event_copies_one_per_series(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        source = eventhelper.given_weekly_event_exists(user)
+        reminderhelper.given_reminder_exists(
+            user, event=source, offset=30, message='Old wording', sent=True,
+            start_of_range=datetime.datetime(2030, 4, 29, 6, 30, tzinfo=datetime.timezone.utc))
+        reminderhelper.given_reminder_exists(user, event=source, offset=30, message='Lecture soon')
+        reminderhelper.given_reminder_exists(user, event=source, offset=1, offset_type=enums.DAYS,
+                                             message='Lecture tomorrow')
+        target_start = datetime.datetime(2030, 6, 1, 7, 0, tzinfo=datetime.timezone.utc)
+        target = eventhelper.given_event_exists(user, start=target_start, end=target_start)
+
+        # WHEN
+        reminderservice.clone_reminders(source, target)
+
+        # THEN
+        self.assertEqual(sorted(target.reminders.values_list('message', 'offset', 'offset_type', 'sent')),
+                         [('Lecture soon', 30, enums.MINUTES, False), ('Lecture tomorrow', 1, enums.DAYS, False)])
+
+
+class TestCaseRecurringHomeworkReminderService(TestCase):
+    @mock.patch('django.utils.timezone.now')
+    def test_unsent_reminder_tracks_the_next_occurrence(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 4, 10, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(user)
+
+        # WHEN
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=30)
+
+        # THEN
+        self.assertEqual(reminder.start_of_range, datetime.datetime(2030, 4, 15, 6, 30, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    @mock.patch('django.utils.timezone.now')
+    def test_firing_arms_one_successor_for_the_next_occurrence(self, mock_now, mock_send_notifications):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        userhelper.given_user_push_token_exists(user)
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(user)
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=30)
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 35, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_notifications.assert_called_once()
+        self.assertTrue(Reminder.objects.get(pk=reminder.pk).sent)
+        successor = Reminder.objects.get(homework=homework, sent=False)
+        self.assertEqual(successor.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+        self.assertEqual(Reminder.objects.filter(homework=homework).count(), 2)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    @mock.patch('django.utils.timezone.now')
+    def test_push_shows_the_occurrence_it_fires_for_rather_than_the_series_start(self, mock_now,
+                                                                                 mock_send_notifications):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 4, 1, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        userhelper.given_user_push_token_exists(user)
+        start = datetime.datetime(2030, 4, 1, 7, 0, tzinfo=datetime.timezone.utc)
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(
+            user, start=start, duration=datetime.timedelta(0), recurrence_rule='FREQ=WEEKLY;BYDAY=MO,WE;COUNT=4')
+        reminder = reminderhelper.given_reminder_exists(user, homework=homework, offset=30, type=enums.PUSH)
+        mock_now.return_value = reminder.start_of_range + datetime.timedelta(minutes=1)
+
+        # WHEN
+        reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        mock_send_notifications.assert_called_once()
+        self.assertTrue(mock_send_notifications.call_args[0][2].endswith(' · Wed, 9 AM'))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_heal_rearms_a_homework_series_with_no_active_reminder(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 8, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        homework = coursehelper.given_weekly_homework_in_a_new_course_exists(user)
+        reminderhelper.given_reminder_exists(
+            user, homework=homework, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        reminderservice.heal_repeating_item_reminders(homework_id=homework.pk)
+
+        # THEN
+        successor = Reminder.objects.get(homework=homework, sent=False)
+        self.assertEqual(successor.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+        self.assertEqual(Reminder.objects.filter(homework=homework).count(), 2)

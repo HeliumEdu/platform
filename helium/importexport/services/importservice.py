@@ -8,7 +8,6 @@ from typing import Dict, NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models.signals import post_save
@@ -17,9 +16,9 @@ from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums
-from helium.common.utils import datetimeutils, metricutils, taskutils
+from helium.common.utils import datetimeutils, gradeutils, metricutils, taskutils
 from helium.common.utils.datetimeutils import local_midnight_as_utc
-from helium.common.utils.validators import validate_recurrence_rule
+from helium.common.utils.validators import shift_recurrence_rule_for_user
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
@@ -66,8 +65,8 @@ def _row_validation_error(section, row_id, errors):
 
 class _SectionErrors:
     """
-    Collect every row error in a section, so one 400 lists them all. Later sections reference this one's ids, so
-    the import stops at the end of the first section with errors.
+    Collect every row error in a section, so one 400 lists them all, each naming the row it came from. Later sections
+    reference this one's ids, so the import stops at the end of the first section with errors.
     """
 
     def __init__(self, section):
@@ -75,13 +74,16 @@ class _SectionErrors:
         self.messages = []
 
     @contextmanager
-    def row(self):
+    def row(self, row_id):
         try:
             yield
         except ValidationError as error:
-            for messages in (error.detail.values() if isinstance(error.detail, dict) else [error.detail]):
-                self.messages.extend(str(message) for message in (messages if isinstance(messages, list)
-                                                                  else [messages]))
+            detail = dict(error.detail) if isinstance(error.detail, dict) else {'non_field_errors': error.detail}
+            own = detail.pop(self.section, [])
+            self.messages.extend(str(message) for message in (own if isinstance(own, list) else [own]))
+            if detail:
+                self.messages.extend(str(message) for message in
+                                     _row_validation_error(self.section, row_id, detail).detail[self.section])
 
     def raise_if_any(self):
         if self.messages:
@@ -141,7 +143,7 @@ def _resolve_parent(remap, raw_id, section, parent_key):
 def _import_external_calendars(external_calendars, user, example_schedule):
     errors = _SectionErrors('external_calendars')
     for external_calendar in external_calendars:
-        with errors.row():
+        with errors.row(external_calendar['id']):
             serializer = ExternalCalendarSerializer(data=external_calendar)
 
             if serializer.is_valid():
@@ -160,7 +162,7 @@ def _import_course_groups(course_groups, user, example_schedule):
 
     errors = _SectionErrors('course_groups')
     for course_group in course_groups:
-        with errors.row():
+        with errors.row(course_group['id']):
             serializer = CourseGroupSerializer(data=course_group)
 
             if serializer.is_valid():
@@ -180,7 +182,7 @@ def _import_courses(courses, course_group_remap, existing_course_group_id=None):
 
     errors = _SectionErrors('courses')
     for course in courses:
-        with errors.row():
+        with errors.row(course['id']):
             course.pop('template', None)
 
             course_group_id = existing_course_group_id or _resolve_parent(
@@ -204,7 +206,7 @@ def _import_courses(courses, course_group_remap, existing_course_group_id=None):
 def _import_course_schedules(course_schedules, course_remap):
     errors = _SectionErrors('course_schedules')
     for course_schedule in course_schedules:
-        with errors.row():
+        with errors.row(course_schedule['id']):
             course_id = _resolve_parent(
                 course_remap, course_schedule.get('course'), 'course_schedules', 'course')
             course_schedule['course'] = course_id
@@ -227,7 +229,7 @@ def _import_categories(categories, request, course_remap):
 
     errors = _SectionErrors('categories')
     for category in categories:
-        with errors.row():
+        with errors.row(category['id']):
             course_id = _resolve_parent(course_remap, category.get('course'), 'categories', 'course')
             request.parser_context['kwargs']['course'] = course_id
 
@@ -256,7 +258,7 @@ def _import_resource_groups(resource_groups, user, example_schedule):
 
     errors = _SectionErrors('resource_groups')
     for resource_group in resource_groups:
-        with errors.row():
+        with errors.row(resource_group['id']):
             serializer = ResourceGroupSerializer(data=resource_group)
 
             if serializer.is_valid():
@@ -276,7 +278,7 @@ def _import_resources(resources, resource_group_remap, course_remap, user, examp
 
     errors = _SectionErrors('resources')
     for resource in resources:
-        with errors.row():
+        with errors.row(resource['id']):
             resource_group_id = _resolve_parent(
                 resource_group_remap, resource.get('resource_group'), 'resources', 'resource_group')
             resource['resource_group'] = resource_group_id
@@ -307,12 +309,7 @@ def _import_events(events, user, example_schedule):
 
     errors = _SectionErrors('events')
     for event in events:
-        with errors.row():
-            try:
-                validate_recurrence_rule(event.get('recurrence_rule'))
-            except DjangoValidationError:
-                logger.info(f"Dropping unsupported recurrence rule from imported event {event.get('id')}.")
-                event['recurrence_rule'] = None
+        with errors.row(event['id']):
             serializer = EventSerializer(data=event)
 
             if serializer.is_valid():
@@ -333,7 +330,7 @@ def _import_homework(homework, course_remap, category_remap, resource_remap, use
 
     errors = _SectionErrors('homework')
     for h in homework:
-        with errors.row():
+        with errors.row(h['id']):
             course_id = _resolve_parent(course_remap, h.get('course'), 'homework', 'course')
             h['course'] = course_id
 
@@ -378,7 +375,7 @@ def _import_reminders(reminders, user, event_remap, homework_remap, course_remap
     created = 0
     errors = _SectionErrors('reminders')
     for reminder in reminders:
-        with errors.row():
+        with errors.row(reminder.get('id')):
             reminder['homework'] = _resolve_parent(
                 homework_remap, reminder.get('homework'), 'reminders', 'homework') \
                 if reminder.get('homework') else None
@@ -422,7 +419,7 @@ def _import_notes(notes, user, homework_remap, event_remap, resource_remap, cour
 
     errors = _SectionErrors('notes')
     for note_data in notes:
-        with errors.row():
+        with errors.row(note_data['id']):
             if not isinstance(note_data, dict):
                 raise ValidationError({'notes': "Each note must be an object."})
 
@@ -529,6 +526,8 @@ def _bulk_import_example_schedule(data, user):
             shown_on_calendar=cg.get('shown_on_calendar', True),
             overall_grade=Decimal(cg.get('overall_grade', '-1')),
             trend=cg.get('trend'),
+            grade_scale=gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_0),
+            grade_scale_template=enums.GRADE_SCALE_4_0,
             exceptions=cg.get('exceptions', ''),
             example_schedule=True,
             user=user,
@@ -673,6 +672,8 @@ def _bulk_import_example_schedule(data, user):
             completed=h.get('completed', False),
             category_id=category_remap.get(h['category']) if h.get('category') else None,
             course_id=course_remap[h['course']],
+            recurrence_rule=h.get('recurrence_rule'),
+            exception_dates=h.get('exception_dates'),
         )
         instance.save()
         homework_remap[h['id']] = instance.pk
@@ -941,14 +942,20 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
                 target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
+                original_start = homework.start
                 homework.start = _shift_datetime_to_target_date(homework.start, target_start_date, user_tz,
                                                                  all_day=homework.all_day, source_tz=source_tz)
                 homework.end = _shift_datetime_to_target_date(homework.end, target_end_date, user_tz,
                                                                all_day=homework.all_day, source_tz=source_tz)
+                if homework.recurrence_rule:
+                    homework.recurrence_rule = shift_recurrence_rule_for_user(
+                        homework.recurrence_rule, original_start, homework.start, user)
+                    homework.exception_dates = datetimeutils.shift_exception_dates(
+                        homework.exception_dates, original_start, homework.start, user_tz)
                 homework_to_update.append(homework)
 
             if homework_to_update:
-                Homework.objects.bulk_update(homework_to_update, ['start', 'end'])
+                Homework.objects.bulk_update(homework_to_update, ['start', 'end', 'recurrence_rule', 'exception_dates'])
                 hw_ids_with_reminders = set(
                     Reminder.objects.filter(homework__in=[h.pk for h in homework_to_update])
                     .values_list('homework_id', flat=True).distinct()
@@ -973,14 +980,20 @@ def _adjust_schedule_relative_to(user, adjust_month, imported, source_tz=None):
                 target_start_date = first_monday_date + datetime.timedelta(days=start_delta)
                 target_end_date = first_monday_date + datetime.timedelta(days=end_delta)
 
+                original_start = event.start
                 event.start = _shift_datetime_to_target_date(event.start, target_start_date, user_tz,
                                                               all_day=event.all_day, source_tz=source_tz)
                 event.end = _shift_datetime_to_target_date(event.end, target_end_date, user_tz,
                                                             all_day=event.all_day, source_tz=source_tz)
+                if event.recurrence_rule:
+                    event.recurrence_rule = shift_recurrence_rule_for_user(
+                        event.recurrence_rule, original_start, event.start, user)
+                    event.exception_dates = datetimeutils.shift_exception_dates(
+                        event.exception_dates, original_start, event.start, user_tz)
                 events_to_update.append(event)
 
             if events_to_update:
-                Event.objects.bulk_update(events_to_update, ['start', 'end'])
+                Event.objects.bulk_update(events_to_update, ['start', 'end', 'recurrence_rule', 'exception_dates'])
                 event_ids_with_reminders = set(
                     Reminder.objects.filter(event__in=[e.pk for e in events_to_update])
                     .values_list('event_id', flat=True).distinct()
@@ -1054,7 +1067,7 @@ def import_example_schedule(user):
             for course in (Course.objects.for_user(user.pk)
                     .filter(course_group__example_schedule=True)
                     .select_related('course_group')):
-                gradingservice.recalculate_course_grade(course.pk)
+                gradingservice.recalculate_course_grade(course.pk, course.course_group.grade_scale)
                 course_group_ids.add(course.course_group_id)
 
             for course_group_id in course_group_ids:

@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import Course, Category
 from helium.planner.services import categoryservice, gradingservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, notehelper
@@ -31,8 +32,7 @@ class TestCaseCourseViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_courses(self):
         # GIVEN
@@ -485,13 +485,7 @@ class TestCaseCourseViews(APITestCase):
                                        kwargs={'course_group': '9999', 'pk': course.pk}))
         ]
 
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_range_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

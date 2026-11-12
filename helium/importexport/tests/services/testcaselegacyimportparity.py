@@ -1,11 +1,8 @@
 import copy
 import json
-import os
 from unittest import mock
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, override_settings
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
@@ -13,9 +10,8 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.importexport.services.legacyimportparity import upgrade_legacy_import
+from helium.importexport.tests.helpers import importexporthelper
 from helium.planner.models import Event, Homework, Resource, ResourceGroup, Note
-
-_RESOURCES_DIR = os.path.join(os.path.dirname(__file__), '..', 'resources')
 
 
 def _current_file():
@@ -132,16 +128,6 @@ class TestCaseLegacyImportParity(SimpleTestCase):
         self.assertTrue(message.startswith('resources id 10, details: This note is'), message)
 
 
-def _post_import(client, payload):
-    return client.post(reverse('importexport_import'),
-                       {'file[]': [SimpleUploadedFile('import.json', json.dumps(payload).encode())]})
-
-
-def _post_resource_file(client, filename):
-    with open(os.path.join(_RESOURCES_DIR, filename), 'rb') as fp:
-        return client.post(reverse('importexport_import'), {'file[]': [SimpleUploadedFile(filename, fp.read())]})
-
-
 def _older_minimal_payload():
     return {
         'course_groups': [{
@@ -183,12 +169,12 @@ class TestCaseLegacyImportParityViews(APITestCase):
     def test_older_export_imports_the_same_as_its_current_format_equivalent(self, mock_validate_url):
         # GIVEN
         older_user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        older = _post_resource_file(self.client, 'legacy_export.json')
+        older = importexporthelper.post_import_resource(self.client, 'legacy_export.json', content_type='text/plain')
         current_user = userhelper.given_a_user_exists_and_is_authenticated(
             self.client, username='current', email='current@test.com')
 
         # WHEN
-        current = _post_resource_file(self.client, 'sample.json')
+        current = importexporthelper.post_import_resource(self.client, 'sample.json', content_type='text/plain')
 
         # THEN
         self.assertEqual(older.status_code, status.HTTP_200_OK, msg=str(older.data))
@@ -288,7 +274,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         }
 
         # WHEN
-        response = _post_import(self.client, import_data)
+        response = importexporthelper.post_import(self.client, import_data, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -325,7 +311,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         payload = _older_minimal_payload()
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -338,7 +324,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         payload['resources'] = list(payload['materials'])
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -360,7 +346,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         ]
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
@@ -379,7 +365,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         ]
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=str(response.data))
@@ -397,7 +383,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         }]
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -414,7 +400,7 @@ class TestCaseLegacyImportParityViews(APITestCase):
         }]
 
         # WHEN
-        response = _post_import(self.client, payload)
+        response = importexporthelper.post_import(self.client, payload, content_type='text/plain')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)

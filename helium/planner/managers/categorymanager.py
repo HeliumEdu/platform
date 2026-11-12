@@ -2,6 +2,7 @@ import logging
 
 from django.db.models import Count, Q, Case, When
 
+from helium.common import enums
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class CategoryQuerySet(BaseQuerySet):
     def num_homework_graded(self):
         return self.aggregate(
             homework_count=Count(Case(
-                When(Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), then=1))))['homework_count']
+                When(Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), then=1))))['homework_count']
 
 
 class CategoryManager(BaseManager):

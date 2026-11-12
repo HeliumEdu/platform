@@ -4,6 +4,7 @@ import logging
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from helium.common.utils import datetimeutils
 from helium.common.utils.validators import prepare_recurrence_rule
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ def _extract_exception_dates(component, floating_time_zone, date_time_zone):
                 dt = timezone.make_aware(
                     datetime.datetime.combine(dt, datetime.time.min), date_time_zone,
                 ).astimezone(datetime.timezone.utc)
-            iso_dates.append(dt.isoformat())
+            iso_dates.append(datetimeutils.as_utc_iso(dt))
     return iso_dates or None
 
 
@@ -107,7 +108,7 @@ def _collect_recurrence_id_overrides(calendar, default_time_zone):
             dt = timezone.make_aware(
                 datetime.datetime.combine(dt, datetime.time.min), default_time_zone,
             ).astimezone(datetime.timezone.utc)
-        overrides_by_uid.setdefault(str(uid), []).append(dt.isoformat())
+        overrides_by_uid.setdefault(str(uid), []).append(datetimeutils.as_utc_iso(dt))
     return overrides_by_uid
 
 

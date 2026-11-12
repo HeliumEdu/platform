@@ -130,6 +130,67 @@ class TestCaseImportExportTasks(APITestCase):
             datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
+    def test_adjust_schedule_moves_a_recurring_events_until_and_exceptions_with_it(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, start_date=datetime.date(2026, 2, 2), end_date=datetime.date(2026, 4, 4))
+        course_group.example_schedule = True
+        course_group.save()
+        coursehelper.given_course_exists(course_group, start_date=datetime.date(2026, 2, 2),
+                                         end_date=datetime.date(2026, 4, 4))
+        event = Event.objects.create(
+            title='Study group', all_day=False, show_end_time=False,
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 18, 0, 0, tzinfo=datetime.timezone.utc),
+            priority=50, example_schedule=True, user=user,
+            recurrence_rule='FREQ=WEEKLY;BYDAY=MO;UNTIL=20260302T170000Z',
+            exception_dates=['2026-02-16T17:00:00Z'])
+        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        with patch('django.utils.timezone.now', return_value=mock_now):
+            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+
+        # THEN
+        event.refresh_from_db()
+        self.assertEqual(event.start, datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc))
+        self.assertEqual(event.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20260330T170000Z')
+        self.assertEqual(event.exception_dates, ['2026-03-16T16:00:00Z'],
+                         msg='the skipped occurrence keeps its 11 AM local slot across the DST change')
+
+    def test_adjust_schedule_moves_a_repeating_homeworks_until_and_exceptions_with_it(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, start_date=datetime.date(2026, 2, 2), end_date=datetime.date(2026, 4, 4))
+        course_group.example_schedule = True
+        course_group.save()
+        course = coursehelper.given_course_exists(course_group, start_date=datetime.date(2026, 2, 2),
+                                                  end_date=datetime.date(2026, 4, 4))
+        homework = homeworkhelper.given_homework_exists(
+            course,
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 18, 0, 0, tzinfo=datetime.timezone.utc),
+            recurrence_rule='FREQ=WEEKLY;BYDAY=MO;UNTIL=20260302T170000Z',
+            exception_dates=['2026-02-16T17:00:00Z'])
+        Event.objects.create(
+            title='Test Event', all_day=False, show_end_time=False,
+            start=datetime.datetime(2026, 2, 9, 17, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
+            priority=50, example_schedule=True, user=user)
+        mock_now = datetime.datetime(2026, 4, 6, 12, 0, 0, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        with patch('django.utils.timezone.now', return_value=mock_now):
+            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+
+        # THEN
+        homework.refresh_from_db()
+        self.assertEqual(homework.start, datetime.datetime(2026, 3, 9, 16, 0, 0, tzinfo=datetime.timezone.utc))
+        self.assertEqual(homework.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20260330T170000Z')
+        self.assertEqual(homework.exception_dates, ['2026-03-16T16:00:00Z'])
+
     def test_adjust_schedule_shifts_all_items_to_target_month(self):
         # GIVEN
         user = userhelper.given_a_user_exists(time_zone='America/Chicago')

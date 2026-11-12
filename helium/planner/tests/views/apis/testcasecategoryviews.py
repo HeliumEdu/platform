@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import Category
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
@@ -31,8 +32,7 @@ class TestCaseCategoryViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_categories(self):
         # GIVEN
@@ -121,9 +121,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_get_category_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         homeworkhelper.given_homework_exists(course, category=category)
         homeworkhelper.given_homework_exists(course, completed=True, category=category)
         homeworkhelper.given_homework_exists(course, completed=True, current_grade='25/30', category=category)
@@ -143,9 +141,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_update_category_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         self.assertEqual(category.title, '📊 Test Category 1')
 
         # WHEN
@@ -195,9 +191,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_delete_category_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         response = self.client.delete(reverse('planner_coursegroups_courses_categories_detail',
@@ -245,8 +239,7 @@ class TestCaseCategoryViews(APITestCase):
 
         # THEN
         self.assertTrue(Category.objects.filter(pk=category.pk, course__course_group__user_id=user1.pk).exists())
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -307,9 +300,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_update_bad_data(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         data = {
@@ -326,9 +317,7 @@ class TestCaseCategoryViews(APITestCase):
 
     def test_not_found(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         responses = [
             self.client.get(reverse('planner_coursegroups_courses_categories_list',
@@ -365,20 +354,12 @@ class TestCaseCategoryViews(APITestCase):
                                        kwargs={'course_group': '9999', 'course': '9999', 'pk': category.pk}))
         ]
 
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_create_category_title_already_exists(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
 
         # WHEN
         data = {
@@ -400,9 +381,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_updated_at_filter(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         category3 = categoryhelper.given_category_exists(course, title='Test Category 3')
 
@@ -446,9 +425,7 @@ class TestCaseCategoryViews(APITestCase):
     def test_delete_category_moves_homework_to_uncategorized(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category1 = categoryhelper.given_category_exists(course)
+        course_group, course, category1 = coursehelper.given_course_with_category_exists(user)
         category2 = categoryhelper.given_category_exists(course, title='Test Category 2')
         hw = homeworkhelper.given_homework_exists(course, category=category1)
 
@@ -467,9 +444,7 @@ class TestCaseCategoryViews(APITestCase):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
         userhelper.given_a_user_exists_and_is_authenticated(self.client, username='user2', email='test2@email.com')
-        course_group = coursegrouphelper.given_course_group_exists(user1)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user1)
 
         # WHEN
         response = self.client.get(reverse('planner_categories_list') + f'?id={category.pk}')

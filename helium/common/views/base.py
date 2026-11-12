@@ -25,6 +25,10 @@ IF_MATCH_PARAMETER = OpenApiParameter(
 )
 
 
+def is_dry_run(request):
+    return request.query_params.get('dry_run') == 'true'
+
+
 class HeliumAPIView(GenericAPIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

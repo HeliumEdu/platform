@@ -39,17 +39,35 @@ def recalculate_course_group_grade(self, course_group_id, retries=0):
 
 
 @app.task(bind=True)
+def recalculate_course_group_gpa(self, course_group_id, retries=0):
+    published_at_ms = metricutils.get_published_at_ms(self)
+    metrics = metricutils.task_start("grade.recalculate.course-group-gpa", priority="low",
+                                     published_at_ms=published_at_ms)
+
+    try:
+        gradingservice.recalculate_course_group_gpa(course_group_id)
+
+        metricutils.task_stop(metrics, value=1)
+    except (IntegrityError, OperationalError) as ex:  # pragma: no cover
+        taskutils.retry_on_db_error(ex, metrics,
+                           recalculate_course_group_gpa, (course_group_id, retries + 1), retries)
+    except ObjectDoesNotExist:
+        logger.info(f"CourseGroup {course_group_id}, or an associated resource, does not exist. Nothing to do.")
+        metricutils.task_stop(metrics, value=0)
+
+
+@app.task(bind=True)
 def recalculate_course_grade(self, course_id, retries=0, recalculate_group=True):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("grade.recalculate.course", priority="low", published_at_ms=published_at_ms)
 
     try:
-        course_group_id = Course.objects.select_related('course_group').get(pk=course_id).course_group.id
+        course_group = Course.objects.select_related('course_group').get(pk=course_id).course_group
 
-        gradingservice.recalculate_course_grade(course_id)
+        gradingservice.recalculate_course_grade(course_id, course_group.grade_scale)
 
         if recalculate_group:
-            recalculate_course_group_grade(course_group_id)
+            recalculate_course_group_grade(course_group.id)
 
         metricutils.task_stop(metrics, value=1)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
@@ -149,6 +167,11 @@ def adjust_reminder_times(self, calendar_item_id, calendar_item_type, retries=0)
                 reminderservice.clear_delivered_push(reminder)
 
             count += 1
+
+        if calendar_item_type == enums.HOMEWORK:
+            reminderservice.heal_repeating_item_reminders(homework_id=calendar_item_id)
+        elif calendar_item_type == enums.EVENT:
+            reminderservice.heal_repeating_item_reminders(event_id=calendar_item_id)
 
         metricutils.task_stop(metrics, value=count)
     except (IntegrityError, OperationalError) as ex:  # pragma: no cover
@@ -295,8 +318,9 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             note_url = ''
         else:
             format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
-            start = format_when(timezone.localtime(calendar_item.start), user_settings)
-            local_end = timezone.localtime(calendar_item.end)
+            occurrence_start, occurrence_end = reminder.occurrence_bounds()
+            start = format_when(timezone.localtime(occurrence_start), user_settings)
+            local_end = timezone.localtime(occurrence_end)
             if calendar_item.all_day:
                 local_end -= datetime.timedelta(days=1)
             end = format_when(local_end, user_settings)

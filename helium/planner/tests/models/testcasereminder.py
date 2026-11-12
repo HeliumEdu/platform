@@ -1,4 +1,6 @@
 import datetime
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import IntegrityError
@@ -311,3 +313,92 @@ class TestCaseReminder(TestCase):
         self.assertIsNone(past.active_course_series)
         self.assertIsNone(dismissed.active_course_series)
         self.assertEqual(active.active_course_series, course.pk)
+
+
+class TestCaseRecurringEventReminder(TestCase):
+    @mock.patch('django.utils.timezone.now')
+    def test_unsent_reminder_tracks_the_next_upcoming_occurrence(self, mock_now):
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        for zone, expected in (('Europe/Amsterdam', datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc)),
+                               ('America/Los_Angeles', datetime.datetime(2030, 5, 6, 15, 30, tzinfo=datetime.timezone.utc))):
+            with self.subTest(zone=zone):
+                # GIVEN
+                user = userhelper.given_a_user_exists(username=zone, email=f'{zone.replace("/", "")}@test.com',
+                                                      time_zone=zone)
+                event = eventhelper.given_weekly_event_exists(user)
+
+                # WHEN
+                reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+                # THEN
+                self.assertEqual(reminder.start_of_range, expected)
+                self.assertFalse(reminder.sent)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_unsent_reminder_skips_an_excluded_occurrence(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user, exception_dates=['2030-05-06T07:00:00Z'])
+
+        # WHEN
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+        # THEN
+        self.assertEqual(reminder.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
+    def test_sent_reminder_keeps_the_occurrence_it_fired_for_when_the_series_moves(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 7, 30, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        fired_at = datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc)
+        fired = reminderhelper.given_reminder_exists(user, event=event, offset=30, sent=True,
+                                                      start_of_range=fired_at)
+
+        # WHEN
+        event.start += datetime.timedelta(hours=2)
+        event.end += datetime.timedelta(hours=2)
+        event.save()
+        fired.save()
+
+        # THEN
+        fired.refresh_from_db()
+        self.assertTrue(fired.sent)
+        self.assertEqual(fired.start_of_range, fired_at)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_unsent_reminder_on_an_ended_series_falls_back_to_the_series_start(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        start = datetime.datetime(2030, 4, 1, 9, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        event = eventhelper.given_weekly_event_exists(user, start=start, recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2')
+
+        # WHEN
+        reminder = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+        # THEN
+        self.assertEqual(reminder.start_of_range, start - datetime.timedelta(minutes=30))
+        self.assertFalse(reminder.sent)
+
+    @mock.patch('django.utils.timezone.now')
+    def test_editing_the_series_in_the_send_window_never_rearms_the_occurrence_that_fired(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2030, 5, 6, 6, 40, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='Europe/Amsterdam')
+        event = eventhelper.given_weekly_event_exists(user)
+        reminderhelper.given_reminder_exists(
+            user, event=event, offset=30, sent=True,
+            start_of_range=datetime.datetime(2030, 5, 6, 6, 30, tzinfo=datetime.timezone.utc))
+        successor = reminderhelper.given_reminder_exists(user, event=event, offset=30)
+
+        # WHEN
+        event.title = 'Renamed'
+        event.save()
+        successor.save()
+
+        # THEN
+        successor.refresh_from_db()
+        self.assertEqual(successor.start_of_range, datetime.datetime(2030, 5, 13, 6, 30, tzinfo=datetime.timezone.utc))

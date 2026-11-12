@@ -3,6 +3,8 @@ import logging
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
+from helium.planner.serializers.gradescaleserializer import GradeScaleBandSerializer
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,15 +51,34 @@ class GradeCourseSerializer(GradeHolderSerializer):
     points_possible = serializers.FloatField(
         help_text='Total points possible across the same assignments; `points_earned / points_possible` is the '
                   'points-based class grade.')
+    credits = serializers.DecimalField(4, 2, coerce_to_string=False,
+                                       help_text='The class\'s weight in its group\'s `gpa`.')
+    grade_point = serializers.DecimalField(
+        5, 2, coerce_to_string=False,
+        help_text='The grade point `overall_grade` earns on the group\'s `grade_scale`, or `-1` when ungraded or '
+                  'the group has no grade scale.')
     categories = GradeCategorySerializer(many=True)
 
 
 class GradeCourseGroupSerializer(GradeHolderSerializer):
+    gpa = serializers.DecimalField(
+        7, 4, coerce_to_string=False,
+        help_text='The credit-weighted mean of the classes\' `grade_point`, or `-1` with no grade scale or no '
+                  'graded class with credits.')
+    grade_scale = GradeScaleBandSerializer(many=True)
+    in_cumulative_gpa = serializers.BooleanField(
+        help_text='Whether the group\'s classes count toward `cumulative_gpa`.')
+    example_schedule = serializers.BooleanField(
+        help_text='Whether the group is part of the example schedule.')
     courses = GradeCourseSerializer(many=True)
 
 
 class GradeSerializer(serializers.Serializer):
     course_groups = GradeCourseGroupSerializer(many=True)
+    cumulative_gpa = serializers.DecimalField(
+        7, 4, coerce_to_string=False,
+        help_text='The credit-weighted GPA across every group outside the example schedule on the same grade scale '
+                  'as the most recent group with one, or `-1` when there is none.')
 
 
 class NeededGradeTargetSerializer(serializers.Serializer):
