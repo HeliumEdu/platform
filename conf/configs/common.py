@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.8.2"
+__version__ = "2.8.3"
 
 import json
 import os
@@ -93,7 +93,6 @@ INSTALLED_APPS = (
     'django_otp.plugins.otp_totp',
     'two_factor',
     # Third-party modules
-    'pipeline',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'knox',
@@ -765,7 +764,6 @@ STATIC_ROOT = 'static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'pipeline.finders.PipelineFinder',
 )
 
 # Celery
@@ -794,20 +792,6 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 # Media files
 
 MEDIA_ROOT = 'media/'
-
-# Pipelines
-
-PIPELINE = {
-    'DISABLE_WRAPPER': True,
-    'STYLESHEETS': {
-        'error': {
-            'source_filenames': (
-                'css/error.css',
-            ),
-            'output_filename': f'css/{PROJECT_ID}_error_{PROJECT_VERSION}.min.css',
-        },
-    },
-}
 
 # Metrics
 

@@ -86,9 +86,17 @@ def _get_end_time_for_weekday(course_schedule, weekday):
         return course_schedule.sat_end_time
 
 
-def _get_comments(course):
+def get_comments(course, link=True):
+    """
+    Describe where a course meets, for its schedule's events: its title, and its room unless it's online.
+
+    :param course: The course.
+    :param link: Whether to link the title to the course's website, as HTML (the app renders it). A calendar feed's
+        description is plain text, so it passes ``False``.
+    :return: The comments, or an empty string when there's nothing to say.
+    """
     title = course.title
-    if course.website:
+    if link and course.website:
         title = f"<a href=\"{course.website}\">{title}</a>"
 
     if not course.is_online and course.room:
@@ -179,7 +187,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     exceptions = get_course_exceptions(course)
     course_user = course.get_user()
     user_tz = ZoneInfo(course_user.settings.time_zone)
-    comments = _get_comments(course)
+    comments = get_comments(course)
 
     schedule_list = list(course_schedules.all())
 

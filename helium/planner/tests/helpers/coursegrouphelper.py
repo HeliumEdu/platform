@@ -26,6 +26,4 @@ def verify_course_group_matches_data(test_case, course_group, data):
         test_case.assertEqual(float(course_group.overall_grade), float(data['overall_grade']))
     if 'trend' in data:
         test_case.assertEqual(course_group.trend, data['trend'])
-    if 'private_slug' in data:
-        test_case.assertEqual(course_group.private_slug, data['private_slug'])
     test_case.assertEqual(course_group.get_user().pk, data['user'])

@@ -22,8 +22,6 @@ class CourseGroup(BaseModel):
 
     trend = models.FloatField(default=None, blank=True, null=True)
 
-    private_slug = models.SlugField(unique=True, blank=True, null=True)
-
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 

@@ -32,7 +32,7 @@ def get_events_last_modified(user) -> datetime.datetime | None:
 
 def get_homework_last_modified(user) -> datetime.datetime | None:
     """
-    Get the maximum updated_at timestamp from homework, courses, and categories for a user.
+    Get the maximum updated_at timestamp from homework, courses, categories, and course groups for a user.
 
     :param user: The user whose homework-related models to check.
     :return: The max updated_at datetime across all related models, or None if no data exists.
@@ -40,8 +40,11 @@ def get_homework_last_modified(user) -> datetime.datetime | None:
     homework_max = Homework.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     category_max = Category.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    # Hiding a course group removes its homework from the feed
+    course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [homework_max, course_max, category_max, user.settings.last_deletion_at] if t is not None]
+    timestamps = [t for t in [homework_max, course_max, category_max, course_group_max,
+                              user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
@@ -107,15 +110,21 @@ def check_conditional_request(request, etag: str, last_modified: datetime.dateti
     return None
 
 
-def _create_calendar(user):
+def _create_calendar(name):
+    """
+    Start a feed's calendar. Its name says what the feed holds, never who it belongs to: a feed URL can reach
+    anyone, so nothing in it identifies the user (``UID`` values use the user's pk).
+
+    :param name: The calendar's name, e.g. "Helium Assignments".
+    """
     calendar = icalendar.Calendar()
 
-    calendar.add("PRODID", f"-//Helium Edu//{settings.PROJECT_VERSION}//EN")
+    calendar.add("PRODID", f"-//Helium Edu, LLC//{settings.PROJECT_VERSION}//EN")
     calendar.add("VERSION", "2.0")
     calendar.add("CALSCALE", "GREGORIAN")
     calendar.add("METHOD", "PUBLISH")
-    calendar.add("X-WR-CALNAME", f"{settings.PROJECT_NAME} for {user.username}")
-    calendar.add("X-WR-CALDESC", f"{settings.PROJECT_NAME} for {user.username}")
+    calendar.add("X-WR-CALNAME", name)
+    calendar.add("X-WR-CALDESC", name)
 
     return calendar
 
@@ -163,6 +172,18 @@ def _create_homework_description(homework):
     return description.rstrip("\n")
 
 
+def _create_course_schedule_description(course):
+    """
+    Describe a class meeting in plain text, as an ICS description must be: the app's comments link the title as HTML,
+    which calendar apps would show as literal tags.
+    """
+    description = f"Comments: {coursescheduleservice.get_comments(course, link=False)}"
+    if course.website:
+        description = f"URL: {course.website}\n" + description
+
+    return description
+
+
 def _to_vevent(user, item):
     calendar_event = icalendar.Event()
     calendar_event["UID"] = f"he-{user.pk}-{item.pk}"
@@ -194,7 +215,7 @@ def events_to_private_ical_feed(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
-        calendar = _create_calendar(user)
+        calendar = _create_calendar(f"{settings.PROJECT_NAME} Events")
 
         for event in user.events.prefetch_related('notes_set'):
             calendar_event = _to_vevent(user, event)
@@ -203,11 +224,10 @@ def events_to_private_ical_feed(user):
             calendar_event["DESCRIPTION"] = _create_event_description(event)
 
             calendar.add_component(calendar_event)
-    except Exception:
-        logger.error("An unknown error occurred.", exc_info=True)
-    timezone.deactivate()
 
-    return calendar.to_ical()
+        return calendar.to_ical()
+    finally:
+        timezone.deactivate()
 
 
 def homework_to_private_ical_feed(user):
@@ -220,19 +240,18 @@ def homework_to_private_ical_feed(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
-        calendar = _create_calendar(user)
+        calendar = _create_calendar(f"{settings.PROJECT_NAME} Assignments")
 
-        for homework in Homework.objects.for_user(user.pk).select_related('category', 'course').prefetch_related('resources', 'notes_set'):
+        homework_shown = Homework.objects.for_user(user.pk).filter(course__course_group__shown_on_calendar=True)
+        for homework in homework_shown.select_related('category', 'course').prefetch_related('resources', 'notes_set'):
             calendar_event = _to_vevent(user, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
 
             calendar.add_component(calendar_event)
-    except Exception:
-        logger.error("An error occurred generating homework iCal feed.", exc_info=True)
 
-    timezone.deactivate()
-
-    return calendar.to_ical()
+        return calendar.to_ical()
+    finally:
+        timezone.deactivate()
 
 
 def courseschedules_to_private_ical_feed(user):
@@ -245,26 +264,26 @@ def courseschedules_to_private_ical_feed(user):
     :param user: The user to generate an ICAL feed for.
     :return: An ICAL string of all the user's course schedules.
     """
-    calendar = _create_calendar(user)
+    calendar = _create_calendar(f"{settings.PROJECT_NAME} Class Schedules")
 
-    events = []
-    for course in Course.objects.for_user(user.pk).select_related('course_group', 'course_group__user', 'course_group__user__settings').prefetch_related('schedules'):
-        events += coursescheduleservice.course_schedules_to_events(course, course.schedules)
+    courses_shown = Course.objects.for_user(user.pk).filter(course_group__shown_on_calendar=True)
+    events_by_course = [
+        (course, coursescheduleservice.course_schedules_to_events(course, course.schedules))
+        for course in courses_shown.select_related('course_group', 'course_group__user',
+                                                   'course_group__user__settings').prefetch_related('schedules')
+    ]
 
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
-        for event in events:
-            calendar_event = _to_vevent(user, event)
-            description = f"Comments: {event.comments or ''}"
-            if event.url:
-                description = f"URL: {event.url}\n" + description
-            calendar_event["DESCRIPTION"] = description
+        for course, events in events_by_course:
+            description = _create_course_schedule_description(course)
+            for event in events:
+                calendar_event = _to_vevent(user, event)
+                calendar_event["DESCRIPTION"] = description
 
-            calendar.add_component(calendar_event)
-    except Exception:
-        logger.error("An error occurred generating course schedule iCal feed.", exc_info=True)
+                calendar.add_component(calendar_event)
 
-    timezone.deactivate()
-
-    return calendar.to_ical()
+        return calendar.to_ical()
+    finally:
+        timezone.deactivate()

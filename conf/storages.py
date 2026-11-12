@@ -1,21 +1,19 @@
 """
-Storages for funneling Pipelines to storage destinations.
+S3 storages for static files and user-uploaded media.
 """
 
 from django.conf import settings
 
-from pipeline.storage import PipelineMixin
-
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
-class S3StaticPipelineStorage(PipelineMixin, S3Boto3Storage):
+class S3StaticStorage(S3Boto3Storage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
 
-class S3MediaPipelineStorage(PipelineMixin, S3Boto3Storage):
+class S3MediaStorage(S3Boto3Storage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bucket_name = settings.AWS_MEDIA_STORAGE_BUCKET_NAME

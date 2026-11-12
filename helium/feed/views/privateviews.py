@@ -21,10 +21,9 @@ logger = logging.getLogger(__name__)
 class PrivateFeedView(HeliumAPIView):
     """
     An iCal feed served at a user's private slug. Subclasses provide the feed's content and last-modified time, and
-    its two filename templates (``{username}`` is filled in).
+    its file name, which never names the user.
     """
     filename = None
-    attachment_filename = None
 
     def get_last_modified(self, user):
         raise NotImplementedError
@@ -63,9 +62,8 @@ class PrivateFeedView(HeliumAPIView):
             return not_modified
 
         response = HttpResponse(self.build_feed(user), content_type='text/calendar; charset=utf-8')
-        response['Filename'] = self.filename.format(username=user.username)
-        response['Content-Disposition'] = 'attachment; filename=' + self.attachment_filename.format(
-            username=user.username)
+        response['Filename'] = self.filename
+        response['Content-Disposition'] = f'attachment; filename={self.filename}'
         response['ETag'] = etag
         if last_modified:
             response['Last-Modified'] = http_date(last_modified.timestamp())
@@ -89,8 +87,7 @@ class PrivateFeedView(HeliumAPIView):
     tags=['feed.private']
 )
 class PrivateEventsICALResourceView(PrivateFeedView):
-    filename = 'he_{username}_events.ics'
-    attachment_filename = 'Helium_{username}_events.ics'
+    filename = 'Helium_events.ics'
 
     def get_last_modified(self, user):
         return icalprivateservice.get_events_last_modified(user)
@@ -119,7 +116,7 @@ class PrivateEventsICALResourceView(PrivateFeedView):
         feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
         and immediately invalidates all existing feed URLs.
 
-        A `Content-Disposition: attachment; filename=Helium_<user>_events.ics` header is set so that
+        A `Content-Disposition: attachment; filename=Helium_events.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
         return self.serve_feed(request)
@@ -129,8 +126,7 @@ class PrivateEventsICALResourceView(PrivateFeedView):
     tags=['feed.private']
 )
 class PrivateHomeworkICALResourceView(PrivateFeedView):
-    filename = 'he_{username}_homework.ics'
-    attachment_filename = 'Helium_{username}_homework.ics'
+    filename = 'Helium_homework.ics'
 
     def get_last_modified(self, user):
         return icalprivateservice.get_homework_last_modified(user)
@@ -159,7 +155,7 @@ class PrivateHomeworkICALResourceView(PrivateFeedView):
         feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
         and immediately invalidates all existing feed URLs.
 
-        A `Content-Disposition: attachment; filename=Helium_<user>_homework.ics` header is set so that
+        A `Content-Disposition: attachment; filename=Helium_homework.ics` header is set so that
         browser-initiated requests download the feed as a file.
         """
         return self.serve_feed(request)
@@ -169,8 +165,7 @@ class PrivateHomeworkICALResourceView(PrivateFeedView):
     tags=['feed.private']
 )
 class PrivateCourseSchedulesICALResourceView(PrivateFeedView):
-    filename = 'he_{username}coursescheduleevents.ics'
-    attachment_filename = 'Helium_{username}_coursescheduleevents.ics'
+    filename = 'Helium_coursescheduleevents.ics'
 
     def get_last_modified(self, user):
         return icalprivateservice.get_courseschedules_last_modified(user)
@@ -199,7 +194,7 @@ class PrivateCourseSchedulesICALResourceView(PrivateFeedView):
         feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
         and immediately invalidates all existing feed URLs.
 
-        A `Content-Disposition: attachment; filename=Helium_<user>_coursescheduleevents.ics` header is
+        A `Content-Disposition: attachment; filename=Helium_coursescheduleevents.ics` header is
         set so that browser-initiated requests download the feed as a file.
         """
         return self.serve_feed(request)

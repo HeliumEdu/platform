@@ -51,7 +51,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 FROM ubuntu:24.04 AS platform_api
 
 RUN apt-get --fix-missing update && \
-    apt-get install -y --no-install-recommends python3-mysqldb libjpeg-dev ca-certificates && \
+    apt-get install -y --no-install-recommends python3-mysqldb ca-certificates && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -80,7 +80,7 @@ CMD ["sh", "-c", "gunicorn conf.wsgi:application --bind 0.0.0.0:8000 --workers $
 FROM ubuntu:24.04 AS platform_worker
 
 RUN apt-get --fix-missing update && \
-    apt-get install -y --no-install-recommends supervisor python3-mysqldb libjpeg-dev ca-certificates && \
+    apt-get install -y --no-install-recommends supervisor python3-mysqldb ca-certificates && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

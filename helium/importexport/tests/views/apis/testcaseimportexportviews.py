@@ -99,7 +99,6 @@ class TestCaseImportExportViews(APITestCase):
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[2], {'overall_grade': 66.6667,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
-                                                                                    'private_slug': None,
                                                                                     'shown_on_calendar': True,
                                                                                     'title': '🍂 Test Course Group',
                                                                                     'trend': None,
@@ -107,7 +106,6 @@ class TestCaseImportExportViews(APITestCase):
         coursegrouphelper.verify_course_group_matches_data(self, course_groups[3], {'overall_grade': -1.0,
                                                                                     'start_date': '2017-01-06',
                                                                                     'end_date': '2017-05-08',
-                                                                                    'private_slug': None,
                                                                                     'shown_on_calendar': True,
                                                                                     'title': '🍂 Test Course Group',
                                                                                     'trend': None,
@@ -116,7 +114,7 @@ class TestCaseImportExportViews(APITestCase):
                                                                    'credits': 5.0, 'color': '#4986e7',
                                                                    'website': 'http://mycourse.com', 'is_online': False,
                                                                    'current_grade': 66.6667, 'trend': None,
-                                                                   'private_slug': None, 'teacher_name': 'My Teacher',
+                                                                   'teacher_name': 'My Teacher',
                                                                    'teacher_email': 'teacher@email.com',
                                                                    'start_date': '2017-01-06', 'end_date': '2017-05-08',
                                                                    'course_group': course_groups[2].pk})
@@ -124,7 +122,7 @@ class TestCaseImportExportViews(APITestCase):
                                                 {'title': '🧪 Test Course', 'room': 'DNC 201', 'credits': 5.0,
                                                  'color': '#4986e7', 'website': 'http://mycourse.com',
                                                  'is_online': False, 'current_grade': -1.0, 'trend': None,
-                                                 'private_slug': None, 'teacher_name': 'My Teacher',
+                                                 'teacher_name': 'My Teacher',
                                                  'teacher_email': 'teacher@email.com',
                                                  'start_date': '2017-01-06', 'end_date': '2017-05-08',
                                                  'course_group': course_groups[3].pk})
