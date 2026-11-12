@@ -177,13 +177,11 @@ class TestCaseCourseGroupViews(APITestCase):
         course_group = coursegrouphelper.given_course_group_exists(user2)
         overall_grade = course_group.overall_grade
         trend = course_group.trend
-        private_slug = course_group.private_slug
 
         # WHEN
         data = {
             'overall_grade': 23,
             'trend': 1.5,
-            'private_slug': 'new_slug',
             'user': user1.pk,
             # Intentionally NOT changing these value
             'title': course_group.title,
@@ -198,7 +196,6 @@ class TestCaseCourseGroupViews(APITestCase):
         course_group.refresh_from_db()
         self.assertEqual(course_group.overall_grade, overall_grade)
         self.assertEqual(course_group.trend, trend)
-        self.assertEqual(course_group.private_slug, private_slug)
         self.assertEqual(course_group.get_user().pk, user2.pk)
 
     def test_not_found(self):

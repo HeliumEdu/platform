@@ -24,12 +24,12 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseGroup
         fields = (
-            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend', 'private_slug',
+            'id', 'title', 'start_date', 'end_date', 'shown_on_calendar', 'overall_grade', 'trend',
             'exceptions', 'user', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'overall_grade', 'trend', 'private_slug', 'user', 'created_at', 'updated_at', 'num_homework',
+            'overall_grade', 'trend', 'user', 'created_at', 'updated_at', 'num_homework',
             'num_homework_completed', 'num_homework_graded',)
 
     def get_num_homework(self, obj) -> int:

@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.auth.backends import JWTAuthentication
 from helium.auth.filters import UserPushTokenFilter
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.serializers.userpushtokenserializer import UserPushTokenSerializer
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 @extend_schema(exclude=True)
 class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
     serializer_class = UserPushTokenSerializer
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     filterset_class = UserPushTokenFilter
 
@@ -95,6 +97,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
 @extend_schema(exclude=True)
 class UserPushTokenApiDetailView(HeliumAPIView, UpdateModelMixin, DestroyModelMixin):
     serializer_class = UserPushTokenSerializer
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def get_queryset(self):

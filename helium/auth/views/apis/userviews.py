@@ -5,11 +5,12 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, NotFound, ValidationError
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from helium.auth.backends import JWTAuthentication
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens
 from helium.auth.tasks import delete_user
@@ -53,8 +54,12 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
     @extend_schema(summary='Update the authenticated User')
     def put(self, request, *args, **kwargs):
         """
-        Update the authenticated user instance. Only the fields supplied are updated.
+        Update the authenticated user instance. Only the fields supplied are updated. Requires signing in to Helium
+        (an access token): an API token gets `401`, as on the other account endpoints.
         """
+        if not isinstance(request.successful_authenticator, JWTAuthentication):
+            raise NotAuthenticated()
+
         user = self.get_object()
 
         serializer = self.get_serializer(user, data=request.data, partial=True)
@@ -75,6 +80,7 @@ class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):
 
 class UserDeleteResourceView(HeliumAPIView):
     serializer_class = UserSerializer
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):

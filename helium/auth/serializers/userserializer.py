@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema_field
 from knox.models import AuthToken
 from rest_framework import serializers
 
+from helium.auth.backends import OAuth2Authentication
 from helium.auth.models import UserSettings
 from helium.auth.serializers.useroauthproviderserializer import UserOAuthProviderSerializer
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
@@ -23,6 +24,8 @@ logger = logging.getLogger(__name__)
 EMAIL_IN_USE_MESSAGE = "Sorry, that email is already in use. Try signing in instead."
 
 REGISTRATION_RETRY_MESSAGE = "Please wait a moment and try again."
+
+CONNECTED_APP_SETTINGS_ALLOWLIST = ('time_zone',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -59,6 +62,25 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'email': {'validators': []},
         }
+
+    def to_representation(self, instance):
+        """
+        A connected app (OAuth token) gets only the user's ``id``, ``email`` and the settings in
+        ``CONNECTED_APP_SETTINGS_ALLOWLIST``, not how they sign in, whether they have an API token, or their private
+        feed slug.
+        """
+        data = super().to_representation(instance)
+
+        request = self.context.get('request')
+        if request is not None and isinstance(getattr(request, 'successful_authenticator', None),
+                                              OAuth2Authentication):
+            return {
+                'id': data['id'],
+                'email': data['email'],
+                'settings': {key: data['settings'][key] for key in CONNECTED_APP_SETTINGS_ALLOWLIST},
+            }
+
+        return data
 
     def get_has_usable_password(self, obj) -> bool:
         return obj.has_usable_password()

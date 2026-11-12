@@ -134,13 +134,13 @@ class TestCaseCourseScheduleService(TestCase):
         course = coursehelper.given_course_exists(course_group)
 
         # WHEN
-        comments1 = coursescheduleservice._get_comments(course)
+        comments1 = coursescheduleservice.get_comments(course)
         course.is_online = True
         course.save()
-        comments2 = coursescheduleservice._get_comments(course)
+        comments2 = coursescheduleservice.get_comments(course)
         course.website = None
         course.save()
-        comments3 = coursescheduleservice._get_comments(course)
+        comments3 = coursescheduleservice.get_comments(course)
 
         # THEN
         self.assertEqual(comments1, '<a href="http://mycourse.com">🧪 Test Course</a> in DNC 201')
