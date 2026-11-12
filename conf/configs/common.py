@@ -799,14 +799,6 @@ MEDIA_ROOT = 'media/'
 
 PIPELINE = {
     'DISABLE_WRAPPER': True,
-    'STYLESHEETS': {
-        'error': {
-            'source_filenames': (
-                'css/error.css',
-            ),
-            'output_filename': f'css/{PROJECT_ID}_error_{PROJECT_VERSION}.min.css',
-        },
-    },
 }
 
 # Metrics
