@@ -110,7 +110,7 @@ def check_conditional_request(request, etag: str, last_modified: datetime.dateti
 def _create_calendar(user):
     calendar = icalendar.Calendar()
 
-    calendar.add("PRODID", f"-//Helium Edu//{settings.PROJECT_VERSION}//EN")
+    calendar.add("PRODID", f"-//Helium Edu, LLC//{settings.PROJECT_VERSION}//EN")
     calendar.add("VERSION", "2.0")
     calendar.add("CALSCALE", "GREGORIAN")
     calendar.add("METHOD", "PUBLISH")
